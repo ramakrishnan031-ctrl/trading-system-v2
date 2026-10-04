@@ -1,0 +1,254 @@
+# A-009 — CONFIGURATION MODEL
+## FINAL SOURCE RECONCILIATION AND FREEZE — 30-SEP-2026
+
+STATUS: CLOSED / FROZEN FOR LEGACY DOCUMENTATION
+
+### Evidence basis
+- Production repository = primary legacy baseline.
+- Sandbox/Testing = comparison evidence only.
+- Records repository = historical/documentation evidence.
+- 30-Sep-2026 completed A-009 clarification file = user historical input.
+- Repository evidence prevails where recollection conflicts with direct code/config evidence.
+
+## 1. Final configuration model
+
+The legacy system used a layered configuration model.
+
+### Eight core AppConfig YAML files
+1. `config/system_config.yaml`
+2. `config/broker_costs.yaml`
+3. `config/broker_limits.yaml`
+4. `config/slippage_model.yaml`
+5. `config/scoring_weights.yaml`
+6. `config/scan_webhook_map.yaml`
+7. `config/chartink_scanners.yaml`
+8. `config/nse_holidays_2026.yaml`
+
+`core/config_loader.py` is the authoritative loader:
+- `load_all(config_dir: Path = Path("config")) -> AppConfig`
+- all eight files are loaded atomically
+- YAML uses `yaml.safe_load()`
+- strict Pydantic validation uses `extra="forbid"`
+- missing/invalid configuration raises configuration errors
+- no partial AppConfig is returned
+- SHA-256 raw-file hashes are retained in `AppConfig.file_hashes`
+- no env interpolation/includes in this loader
+- load-once; no hot reload.
+
+User confirms these eight were theoretically intended for Production, but actual material use of every field cannot be guaranteed because the legacy system had bugs/inconsistencies/missing behavior.
+
+### Strategy configuration
+Strategy YAMLs are loaded separately by `strategies/loader.py` and validated as `StrategyConfig`.
+Invalid strategy YAML fails the strategy-load path; no partial strategy set is returned; no hot reload.
+
+### Additional system/config-like files
+These are confirmed and have separate purposes:
+- `accounts.csv` — account/client credential references; secrets are never documented.
+- `index_universe.yaml` — index/reference universe.
+- `strategy_direction_registry.yaml` — direction/health mirror; does not override `StrategyConfig.direction`.
+- `symbol_aliases.yaml` — symbol alias/normalization mappings.
+- `cron_registry.yaml` — executable cron source of truth.
+- `expected_managers.yaml` — manager/state expectations and metadata.
+- `preflight.yaml` — standalone pre-flight configuration; not AppConfig.
+- `security.yaml` — standalone security-monitor configuration; not AppConfig.
+
+These must not be incorrectly counted as two additional AppConfig files.
+
+## 2. Startup / change behavior
+
+`main.py` is the runtime composition root and the core loader defaults to `config/`.
+
+Historical normal use of explicit `--config`:
+**UNKNOWN / NOT ESTABLISHED.**
+
+Configuration changes were historically made through multiple paths, including VM edits, local/Git changes and at times VS Code/Claude MCP. User recalls manual/uncommitted incidents. YAML changes required service restart because configuration was loaded at startup.
+
+Hot reload:
+**FACT — none for core or strategy YAMLs.**
+
+## 3. Failure behavior
+
+Core configuration loading is atomic: missing, malformed or schema-invalid required files prevent creation of a normal AppConfig.
+
+Strategy loading is fail-fast: invalid strategy YAML does not produce a partial strategy set.
+
+User does not recall deliberately testing invalid configuration rejection and did not recall historical incidents.
+
+Future requirement only (not legacy fact): new system should block boot on invalid required configuration and alert through Telegram + Email.
+
+## 4. Global vs strategy ownership
+
+Historical model:
+- `system_config.yaml` = master/global control panel.
+- strategy YAMLs = strategy/signal/trade-specific settings.
+
+Repository confirms concrete global constraints, including global `trading_hours.entry_start` acting as a floor over strategy entry windows.
+
+Global areas include trading mode, delivery enablement, timing, capital, sizing, risk, queue, safety, product mapping and other system controls.
+
+Strategy YAMLs include strategy identity, direction, intent/product, entry, SL, target/R:R, trailing/pullback, screening and position-cap-related fields.
+
+A universal precedence rule for every overlapping concept is **NOT ESTABLISHED**. Do not invent one.
+
+## 5. Runtime/broker values and hard-coding
+
+The repository contains broker/API-derived runtime values such as live margin, order/fill state and broker state.
+
+User remembers broker-related configured values were intended to come from official Zerodha information rather than arbitrary numbers. This is historical intent, not proof of provenance for every field.
+
+Absolute proof that no Python business value ever bypassed YAML would require exhaustive source audit. Therefore:
+- configuration-driven architecture = FACT
+- “zero hardcodes anywhere” = V2 requirement, not proven legacy fact.
+
+## 6. Defaults / fallbacks
+
+`core/config_loader.py` does not fill missing required keys with defaults, although individual schema fields may have defaults.
+
+Whether a schema default materially affected a real Production trade:
+**UNKNOWN.**
+
+Whether a coded fallback materially affected a real Production trade:
+**UNKNOWN.**
+
+Document schema defaults, runtime fallbacks, broker-derived values and configured values separately.
+
+## 7. Configuration snapshots
+
+`core/config_snapshotter.py` stores the **resolved runtime AppConfig**, not merely raw YAML:
+resolved AppConfig → canonical JSON → SHA-256 → `config_snapshots`.
+
+Same date + same hash = deduplicated.
+Same date + different hash = additional snapshot.
+
+Repository explicitly notes raw-byte changes can change file hashes and therefore configuration hash even where effective values are unchanged; comment-only changes can therefore affect recorded hash.
+
+Historical operator reliance on these snapshots:
+**UNKNOWN.**
+
+User remembers historical local/VM configuration non-uniformity, including changes made on one side without synchronized reverse update.
+
+## 8. Paper vs Live
+
+Same YAML set was intended for both Paper and Live.
+
+However, runtime behavior differed materially. User recalls differences in broker fills/prices, fill timing and P&L due to unavailable/equivalent market prices.
+
+Classification:
+**KNOWN HISTORICAL LIMITATION / DEFECT — same config did not imply behavioral parity.**
+
+V2 input: LIVE ONLY; no paper mode.
+
+## 9. Production vs Testing
+
+Production is primary baseline.
+
+Testing/Sandbox used the same broad configuration structure but had different edits/settings, including:
+- S&R functionality
+- market-start/config timing
+- other configuration changes
+- some bugs fixed in Testing but not Production.
+
+Testing therefore cannot be treated as Production authority.
+
+## 10. Configuration governance
+
+Historical:
+- direct Production VM edits occurred
+- VS Code/Claude MCP was sometimes used
+- Git commits were generally expected, but user qualified this as “I guess”
+- manual/uncommitted changes occurred
+- restart was required after YAML changes
+- no formal configuration approval/change register is remembered.
+
+This created a historical risk of local/Git/VM configuration drift.
+
+## 11. Runtime state vs configuration
+
+Examples of runtime/derived values:
+- capital availability/reservations
+- positions
+- orders/fills
+- broker margin/state
+- screening results
+- sizing results
+- target/SL management state.
+
+Do not label derived/runtime state as static YAML configuration. Exact storage/authority belongs in module-specific manuals.
+
+## 12. Cross-topic items deliberately preserved
+
+### Secrets/environment
+Future requirement: business settings in controlled configuration; credentials/secrets in secure environment/secret handling; never expose secret values.
+
+### A-011
+System state/lifecycle is deferred to A-011 and must not be silently frozen under A-009.
+
+### Chartink naming
+Historical Production vs Testing scanner naming differed because Testing used a broker-ID marker. Testing receiving logic was adjusted so the marker did not become the strategy identity.
+
+Future input: define one uniform scanner naming/payload convention.
+
+### S&R / filtering / shadow
+Later discussions must separately review:
+- strategy-specific filtering/adapters
+- score/rank filtering
+- S&R behavior
+- shadow mechanism.
+
+No Phase-1 repair is implied.
+
+### Capital / sizing / risk
+A-005 remains authoritative. Preserve its future inputs: one real-cash basis, segment buckets, broker-specific margin, no invented universal leverage, applicable margin/eligibility validation, tier/multiplier effects and failure alerts.
+
+### Broker/products/GTT
+Future implementation must review configuration for duplicate, irrelevant, unused and placeholder settings. Do not silently remove them from the legacy record.
+
+### Alerts/reports/evidence
+Legacy CSV reporting exists. Future GUI reporting and an evidence/change record were requested as V2 inputs.
+
+### Configuration cleanliness
+Future configuration should avoid duplicate/irrelevant/unused/placeholder settings and clearly segregate functional responsibilities, including Intraday and Delivery sections where applicable.
+
+## 13. Classification
+
+FACT:
+- layered configuration
+- eight-file AppConfig
+- separate strategy YAML loader
+- strict validation
+- atomic loading
+- no hot reload
+- resolved-config snapshotting
+- additional config-like files
+- Production/Testing differences.
+
+UNKNOWN / NOT ESTABLISHED:
+- normal historical use of explicit `--config`
+- material use of every config field
+- historical use of snapshots
+- universal precedence for every duplicate concept
+- exhaustive absence of hard-coded business values
+- historical effect of defaults/fallbacks.
+
+HISTORICAL / KNOWN DEFECT:
+- configuration drift/non-uniformity risk
+- manual/uncommitted edits
+- Paper/Live behavioral mismatch
+- Production/Testing differences.
+
+FUTURE / V2 INPUT:
+- LIVE ONLY
+- no hard-coded business values
+- clean ownership
+- clear Intraday/Delivery segregation
+- secure secret separation
+- uniform scanner naming
+- evidence/change register
+- stricter boot/alerting
+- remove duplicate/irrelevant/unused/placeholder settings only after V2 review.
+
+## 14. Freeze
+
+A-009 — Configuration Model is **CLOSED / FROZEN** for Phase-1 legacy documentation.
+
+This freeze records the legacy baseline only; it does not approve legacy configuration for V2.

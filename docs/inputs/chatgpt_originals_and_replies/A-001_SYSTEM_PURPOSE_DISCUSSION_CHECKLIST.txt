@@ -1,0 +1,142 @@
+A-001 — SYSTEM PURPOSE
+Discussion Checklist — Legacy System Documentation Phase 1
+
+OBJECTIVE
+Establish, discuss, and freeze the factual purpose of the DEAD legacy trading system before writing the A-001 manual.
+
+SOURCE BASIS
+Primary: Production GitHub repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Supporting evidence: existing project source inventory/manuals and records.
+Important: repository README currently describes the repository as “Trading System v2”; this label must NOT be treated as proof that the system under Phase 1 should become V2. We are documenting the historical/legacy system represented by the evidence.
+
+DISCUSSION POINTS
+
+1. SYSTEM PURPOSE — CORE STATEMENT
+   - What was the system actually built to do? - An Python based algo trading system who trades into Indian (NSE) Stock market in Equity segment only; (NSE & Equity only);
+   - What business/operational problem was it intended to automate? - An Fully headless automated system which trades on behalf of me;
+   - What is the narrowest factual one-sentence purpose supported by source evidence? - Headless automated algo trading system;
+
+2. MARKET / INSTRUMENT SCOPE
+   - Which market(s) did the system operate on? - Equity Market/Segment only;
+   - Which instrument universe was actually supported? - All NSE Equity instruments as per Zerodha [Zerodha has list of instruments, Search internet if required];
+   - Confirm NSE equity scope. - Yes, NSE & Equity only;
+   - Identify anything explicitly outside scope. - No, Scope of trading is only in NSE & Equity segment only [Broker: Zerodha only];
+
+3. SIGNAL ORIGIN
+   - Where did trade signals originate? - Signals originates from 'Chartink' website only based on expected strategies mounted in there [https://chartink.com/screener]; 
+   - Was the system itself a signal generator, or did it consume external scanner alerts? - No system wont generates any signals, Instead it consumes 100% of signals from Chartink website only;
+   - Confirm the role of Chartink/webhook from repository evidence. - Chartink sends signals based on expected strategies mounted in there thru webhook payloads;
+
+4. AUTOMATION SCOPE
+   Establish exactly which lifecycle stages the system automated:
+   - signal receipt
+   - validation/authentication
+   - screening/filtering
+   - trade decision / rejection
+   - price derivation
+   - position sizing
+   - capital reservation
+   - order placement
+   - fill/order monitoring
+   - stop-loss / target handling
+   - position management
+   - exit / square-off
+   - broker reconciliation
+   - reporting / alerts
+   Do NOT assume every listed stage was active merely because corresponding code exists.
+
+   ** Answer: Entire system must be automated right from headless system starting>system Health check/pre-flight check>Pull zerodha token>Pull zerodha instrument list>Check config file settings>Receive chartink signals>Validate>Make decision (Entry/Reject)>Trade follow-up>Capital management>P&L>Sending alerts in Telegram & Email>Prepare reports>System close>run independent cron jobs>Prepare the system for next trading day [Not next day];
+
+5. BROKER / EXECUTION ROLE
+   - What was the system's relationship with Zerodha? - Zerodha is the only official broker to be integrated with trading system for trading [Zerodha environment based trading system];
+   - Did it place real broker orders? - Yes, Off course
+   - What execution responsibilities are explicitly evidenced? - Need to re-establish the execution responsibilities after reviewing existing current system;
+   - Distinguish repository claims from independently established runtime facts. - We need to discuss each facts in respective agenda facts/areas;
+
+6. OPERATING MODE
+   - Paper vs live capability. - Current System has both Paper & Live, But new system must have Live capability only [Meaning no paper mode] and yeah I agree with it; why? system current system already went through paper mode, No-repetition again;
+   - What modes existed in code/config? - Both exists: Config is the main control panel of entire system on which entire system's code's replying/working;
+   - What was actually established for the legacy runtime? - Runtime or Trading time as per NSE, But trading system should start & stops as per config file;
+   - Record UNKNOWN where runtime evidence is unavailable. - Not Applicable;
+
+7. OPERATING MODEL
+   - Automated/unattended operation? - Automated Operations, But some current system has some features like 'Removal' of soft/hard kill the system manually;
+   - VM/service-based operation? - Production system should runs from Oracle VM (ubuntu OS), But Production/Debugging should be Windows 11 based environment [So ensure no file path reference & Other Collision effected in anywhere]; 
+   - Trading-day/service-window behavior? - Trading day as per NSE [Holidays + Weekends to be considered] & Service window as per config file settings;
+   - What was the intended operating boundary versus proven historical behavior? - Proved historical behaviour: Fully Automated + Trading day run only + VM (production system) + Windows 11 (Production/Debugging) passed;
+
+8. CONTROL / SAFETY PURPOSE
+   - What purpose did kill switches, capital controls, reconciliation, reject mapping,
+     alerts and other safety controls serve? - To controls are designed to avoid system malfunctions, repeated loss trades, accuracy capital calculation, Position sizing, Manual interruption whenever required & which is necessary;
+   - Document purpose only; do not assess whether they were effective here. - Yes, I understood
+
+9. SYSTEM BOUNDARIES
+   Explicitly identify what the system did NOT do.
+   Examples to verify from evidence:
+   - Did it generate its own scanner signals? - Nope, Instead it 100% consumes only Chartink signals only;
+   - Did it trade markets/instruments outside its documented scope? - Nope, It traded in NSE + Equity + Zerodha instruments only;
+   - Did it perform discretionary/manual decision-making? - Yes it performed established automated decisions after considering config settings [Additional Note: there issues/bugs in decision making criteria's too, We need to re-check and correct it into new system]
+   - Did it perform long-term portfolio management? - Yes it performed, But not expected manner [Not only holding stocks without auto-square-off, But expected telegram alert about status of current holdings example: Date of purchase, no of stocks, prices (entry, sl, tgt), something like this summary about each holding wise];
+   Only record exclusions supported by evidence.
+
+10. PURPOSE VS IMPLEMENTATION
+   Separate:
+   - stated/intended purpose
+   - implemented capability
+   - observed/historical runtime behavior
+   - known defect or limitation
+   This is important so code presence is not confused with actual operation.
+** Combined answers: Current system process signals (intraday & Holdings) using a centralised secondary score allocation > Places trades [Yes, there is issues/bugs in each of these sequence some examples as below]
+ (i)   Not honours slippage prices (ie, Intended price to place order + some cushion prices calculations);
+ (ii)  Confusing price means? either chartink fired price/system price/Actual LTP of stock/Price movements in between system order Vs Actually filled etc;
+ (iii) Time-out not followed-up perfectly (ie, 10min time out fixed for entry order, but there is no proper watchman who sees really 10min left? instead within 2mins orders cancelled);
+
+** Intended revised system: System must have each intended signal processor, instead of centralised secondary score allocation, Why? Since each signals has their different independent evaluation method example: Timeframe for Intraday orders & Positional trades are different; Secondly we need to review existing system logic or calculation bases or based on which it is calculated [Time/price/logic] etc in detail before fixing the logic/computation method;
+
+11. PAPER VS LIVE PURPOSE / BEHAVIOUR
+   - Was paper mode intended as a simulation of the same lifecycle? - Nope, Never So In new system there is no paper modules [meaning system=live modules only];
+   - Were there documented differences? - As above [No matches of paper & live, but no more paper modules required]
+   - Do not assume parity without evidence. - As above [No matches of paper & live, but no more paper modules required]
+
+12. HISTORICAL STATUS
+   - Identify the time period represented by the production repository/evidence.
+   - Record that the system is now DEAD / reference-only for this documentation exercise. - Current system is for Reference only
+   - Do not describe current production operation as fact unless separately evidenced. - Yes, I understood
+
+13. EVIDENCE CLASSIFICATION
+   For each conclusion, classify as:
+   FACT
+   HISTORICAL
+   UNKNOWN / NOT ESTABLISHED
+   KNOWN DEFECT
+   INTERPRETATION
+   OPEN QUESTION
+
+14. A-001 FREEZE DECISION
+   Before manual writing, agree:
+   - final factual purpose statement
+   - supported scope
+   - explicit exclusions
+   - unresolved questions
+   - evidence sources used
+   - whether A-001 is ready to freeze
+
+IMPORTANT GOVERNANCE
+- Do NOT discuss how V2 should work.
+- Do NOT propose redesigns, fixes, tuning, new architecture, or replacement behavior.
+- Do NOT judge whether the system was a good/bad trading system.
+- Do NOT infer purpose from module names alone.
+- Do NOT treat README marketing/summary language as sufficient evidence where implementation evidence is needed.
+- Do NOT silently reconcile conflicting sources; flag the conflict for discussion.
+
+PROPOSED DISCUSSION OUTPUT
+At the end of the review, provide:
+A. Agreed factual purpose
+B. Scope
+C. Explicit non-scope
+D. Purpose-related evidence
+E. Unknowns / conflicts
+F. A-001 freeze decision
+
+Only after this discussion is agreed should A-001 be written into the permanent legacy manual.

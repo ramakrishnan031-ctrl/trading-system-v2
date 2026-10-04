@@ -1,0 +1,579 @@
+# A-005 CAPITAL MODEL — FINAL SOURCE RECONCILIATION + FREEZE
+## 24-SEP-2026
+
+### STATUS
+**A-005 CLOSED / FROZEN for the legacy documentation phase.**
+
+The user's final capital-flow clarification confirms the intended flow:
+opening broker cash → configured segment split → maximum filled-trade divisor →
+base maximum cash allocation per trade → broker margin conversion → quantity →
+trade result → released/current segment capital → next trade, with the final
+trade(s) allowed to use a lower amount when current available segment capital is
+lower than the normal per-trade maximum.
+
+The final clarification confirms:
+`Actual trade cash allocation = MIN(base maximum capital per trade, current available segment capital)`.
+
+No further A-005 clarification is required before the permanent manual.
+
+---
+
+## 1. EVIDENCE BASIS
+
+### 1.1 User clarification / intended-flow evidence
+The final clarification file states that the spreadsheet represents the intended
+capital flow and confirms the `MIN(base maximum, current available segment capital)`
+rule. It also confirms daily margin authority, filled-trade counting, entry-margin
+sizing, 09:15 opening-balance basis, daily lock, and YAML ownership review.
+
+### 1.2 Preserved Production repository evidence
+The preserved Production/Test working-tree evidence establishes the legacy
+implementation components:
+
+- `config/system_config.yaml`
+- `capital/position_sizer.py`
+- `capital/fund_manager.py`
+- broker margin lookup
+- capital ledger / `fm_ledger`
+- intraday and positional buckets
+- capital reservation before order placement
+- fill commit and release lifecycle
+- broker reconciliation / capital-drift handling.
+
+The repository evidence also records the legacy capital invariant:
+
+`available + reserved + used == total`
+
+and the reservation sequence:
+
+`determine bucket → calculate required margin → apply applicable buffer →
+availability check → write ledger → mutate state → invariant check`.
+
+### 1.3 Broker evidence
+Official Zerodha documentation/support material was checked for:
+- order margin calculation,
+- user margin/funds,
+- product-dependent margin treatment,
+- GTT funding behaviour,
+- pending/open-order effects.
+
+This is supporting broker-behaviour evidence and is not a substitute for
+repository evidence when documenting what the dead legacy system actually did.
+
+### 1.4 GitHub retrieval limitation
+Direct public GitHub retrieval was unavailable in the latest web pass.
+Therefore this reconciliation uses the preserved Production/Test repository
+evidence already loaded in the project. No fresh GitHub retrieval is implied.
+
+---
+
+# 2. FINAL A-005 CLASSIFICATION
+
+| Subject | Classification | Reconciled statement |
+|---|---|---|
+| Capital source | FACT / HISTORICAL + V2 INPUT | Broker opening cash is the authoritative daily starting basis in the intended new flow. |
+| Segment split | LEGACY FACT + V2 INPUT | Intraday and Delivery are separate capital buckets; exact future percentages remain YAML-controlled. |
+| Per-trade divisor | LEGACY FACT / HISTORICAL | Existing legacy configuration used maximum-trade values as sizing divisors; exact historical values must be tied to dated configuration. |
+| Broker margin | LEGACY FACT + V2 INPUT | Legacy code had leverage/static-margin logic and live-margin lookup. Intended new flow uses broker-required margin %. |
+| Daily margin snapshot | V2 DESIGN INPUT | Daily snapshot is the day's sizing reference. |
+| Order-time margin API | V2 DESIGN INPUT | Final execution safety/validation authority. |
+| No margin data | V2 DESIGN INPUT | Treat as 100% cash requirement / zero assumed leverage, proceed, and alert. No invented leverage. |
+| Quantity | LEGACY FACT + V2 INPUT | Quantity is bounded by permitted notional and intended entry price, then rounded down. |
+| Filled trade count | V2 DESIGN INPUT / USER CONFIRMATION | Only broker-filled trades count toward the daily maximum. |
+| Cancelled/rejected orders | V2 DESIGN INPUT | Do not consume the filled-trade count; allocated capital remains available if not filled. |
+| Capital after completed trade | V2 DESIGN INPUT | Segment available capital changes by the realised result and becomes available for subsequent trades. |
+| Reduced final trade | V2 DESIGN INPUT / USER CONFIRMATION | `MIN(base maximum per trade, current available segment capital)`. |
+| Entry vs exits | V2 DESIGN INPUT | Entry broker margin is the sizing basis; no separate SL/TGT allocation unless broker/product behaviour requires it. |
+| Daily lock | V2 DESIGN INPUT | 09:15 opening-balance basis is locked; reconciliation does not rebase today's sizing basis. |
+| YAML ownership | OPEN DESIGN INPUT | Existing config/strategy settings must be reviewed before implementation and separated deliberately. |
+| Legacy concentration | LEGACY FACT | Legacy sizer contained concentration controls; this is not automatically retained in V2. |
+| Legacy static leverage | HISTORICAL / LEGACY FACT | Static leverage-map behaviour existed; it is not to be silently treated as the V2 model. |
+
+---
+
+# 3. LEGACY CAPITAL MODEL — DOCUMENTED AS-IS
+
+## 3.1 Capital domains
+
+The legacy system maintained separate capital buckets:
+- Intraday
+- Positional / Delivery
+
+Cross-bucket borrowing was documented as forbidden.
+
+Production configuration contained:
+- `capital.intraday_bucket_pct`
+- `capital.positional_bucket_pct`
+- `conditional_allocation_enabled`
+- `capital.slm_margin_buffer_pct`
+- `capital.sl_limit_offset_pct`
+- `capital.gtt_sl_limit_offset_pct`
+- `capital.emergency_exit_buffer_pct`
+- `leverage_map`.
+
+The preserved configuration contained historical comments describing a
+real-cash / planning-basis distinction and separate Delivery values. Because
+these values changed historically and conflict with some earlier recollections,
+the manual records the configuration as evidence rather than normalising it
+into one timeless number.
+
+## 3.2 Legacy PositionSizer
+
+`capital/position_sizer.py` converts a candidate signal into an integer quantity.
+
+Documented inputs include:
+- symbol
+- side
+- entry price
+- stop-loss
+- intent/product
+- score/tier
+- FundManager capital snapshot
+- optional lot size
+- optional broker live-margin percentage.
+
+The preserved working-tree documentation records this legacy formula family:
+
+`risk_per_trade_rs = total_capital × effective_risk_pct`
+
+`sl_distance = abs(entry_price - sl_price)`
+
+`qty_by_risk = floor(risk_per_trade_rs / sl_distance)`
+
+`effective_entry_price = entry_price × (1 + entry_offset_pct)`
+
+`margin_per_share = effective_entry_price / leverage`
+
+`qty_by_capital = floor(available_bucket / margin_per_share)`
+
+`qty_by_concentration = floor((total_capital × effective_concentration_pct) / entry_price)`
+
+`raw_qty = min(qty_by_risk, qty_by_capital, qty_by_concentration)`
+
+`tiered_qty = floor(raw_qty × tier_multiplier)`
+
+`final_qty = floor-to-lot-size(tiered_qty)`
+
+The sizer can use a broker live-margin percentage when available and has a
+fallback/static-leverage path in the preserved legacy evidence.
+
+IMPORTANT: this describes the preserved legacy implementation/formula family.
+It is not a V2 formula freeze.
+
+## 3.3 Legacy FundManager
+
+`capital/fund_manager.py` is the documented capital-ledger authority.
+
+Core invariant:
+
+`available + reserved + used == total`
+
+Legacy lifecycle:
+
+`AVAILABLE → RESERVED → USED → AVAILABLE + realised P&L`
+
+Rejected/cancelled pre-fill path:
+
+`RESERVED → AVAILABLE`
+
+Reservation occurs before broker order placement.
+
+The documented reservation sequence is:
+
+1. determine bucket;
+2. calculate required margin;
+3. add configured SL-M buffer where applicable;
+4. check availability;
+5. write `RESERVE` ledger row;
+6. apply reservation;
+7. verify invariant;
+8. return reservation ID.
+
+Every capital mutation is written to `fm_ledger` using write-ahead behaviour.
+
+---
+
+# 4. CAPITAL ADMISSION / FILL / RECONCILIATION
+
+Preserved admission flow:
+
+`PositionSizer → protected portfolio lock → per-strategy position cap →
+one trade per symbol once a day → RiskEngine.approve() → FundManager.reserve()
+→ signal RESERVED → order placement`.
+
+On entry fill:
+
+`RESERVED → USED`
+
+After exit:
+
+`USED → AVAILABLE + realised P&L`
+
+Rejected/cancelled before fill:
+
+`RESERVED → AVAILABLE`
+
+The legacy `OrderReconciler` compares local state with broker state and can
+repair state/capital differences. It exists because local DB state can lag
+broker truth.
+
+---
+
+# 5. FINAL CONFIRMED FUTURE CAPITAL FLOW
+
+This is a V2 DESIGN INPUT, not a claim that the dead legacy system operated
+exactly this way.
+
+```text
+09:15 BROKER OPENING CASH
+          |
+          v
+CONFIGURED INTRADAY / DELIVERY SPLIT
+          |
+          v
+SEGMENT CAPITAL LOCKED FOR THE DAY
+          |
+          v
+MAX FILLED-TRADE DIVISOR
+          |
+          v
+BASE MAXIMUM CASH CAPITAL PER TRADE
+          |
+          v
+ACTUAL CASH ALLOCATION
+= MIN(BASE MAXIMUM, CURRENT AVAILABLE SEGMENT CAPITAL)
+          |
+          v
+BROKER REQUIRED MARGIN %
+          |
+          v
+PERMITTED NOTIONAL
+= ACTUAL CASH ALLOCATION / MARGIN %
+          |
+          v
+QUANTITY
+= FLOOR(PERMITTED NOTIONAL / INTENDED ENTRY PRICE)
+          |
+          v
+BROKER ORDER
+          |
+          +---- CANCEL / REJECT / UNFILLED
+          |          |
+          |          +--> no filled-trade count consumed
+          |
+          +---- FILLED
+                     |
+                     v
+                 TRADE
+                     |
+                     v
+              EXIT / REALISED RESULT
+                     |
+                     v
+          CAPITAL RETURNED TO SEGMENT
+             +/- REALISED RESULT
+                     |
+                     v
+          NEXT TRADE USES CURRENT
+          AVAILABLE SEGMENT CAPITAL
+                     |
+                     v
+          STOP NEW TRADES WHEN
+          MAX FILLED COUNT REACHED
+```
+
+---
+
+# 6. FUTURE CAPITAL FORMULAS
+
+### Base maximum cash allocation
+
+`base_max_cash_per_trade = locked_segment_capital / configured_trade_divisor`
+
+### Actual cash allocation
+
+`actual_cash_allocation = MIN(base_max_cash_per_trade, current_available_segment_capital)`
+
+This means:
+- if available capital is greater than the normal allocation, spending remains
+  capped at the normal allocation;
+- if available capital is lower, the lower amount is used.
+
+### Broker permitted notional
+
+`permitted_notional = actual_cash_allocation / broker_required_margin_pct`
+
+The spreadsheet wording “Capital available after Margin” is therefore documented
+as **permitted/derived notional**, not remaining cash.
+
+### Quantity
+
+`quantity = FLOOR(permitted_notional / intended_entry_price)`
+
+Then apply actual instrument/lot constraints.
+
+---
+
+# 7. DAILY FILLED-TRADE LIMIT
+
+Confirmed intended rule:
+
+- maximum daily trade count = broker-filled trades;
+- pending/queued orders do not count as filled;
+- cancelled orders do not count;
+- rejected orders do not count;
+- the system continues processing later candidates after cancellation/rejection;
+- processing stops for new trades once the configured filled-trade maximum is reached.
+
+This is separate from capital/margin calculation.
+
+A pending order can still be relevant to broker margin/execution safety even though
+it is not a completed trade for the daily count.
+
+---
+
+# 8. DAILY MARGIN / CAPITAL LOCK
+
+Confirmed intended sequence:
+
+```text
+SYSTEM BOOT
+ → ZERODHA TOKEN / INSTRUMENT UPDATES
+ → MARGIN DB REFRESH (~08:30)
+ → SUCCESS / FAILURE ALERT
+ → 09:15 BROKER OPENING BALANCE
+ → INTRADAY / DELIVERY CAPITAL SPLIT
+ → LOCK DAILY CAPITAL BASIS
+ → TRADING
+```
+
+Daily margin snapshot:
+- authoritative sizing reference for the day.
+
+Order-time broker API:
+- final execution safety/validation authority;
+- may reject/adjust the proposed order.
+
+If neither DB nor API provides usable margin information:
+- use 100% cash requirement / zero assumed leverage;
+- proceed;
+- send mandatory incident alert;
+- do not invent leverage.
+
+Daily capital:
+- is based on the 09:15 opening balance;
+- remains locked for the day;
+- reconciliation may detect/report drift;
+- reconciliation must not rebase today's sizing capital;
+- next trading day obtains a new opening balance.
+
+---
+
+# 9. ENTRY VS SL / TARGET CAPITAL
+
+Confirmed future rule:
+
+- size from ENTRY broker margin;
+- SL/Target do not automatically receive independent capital allocations;
+- if actual broker/product behaviour requires additional margin, that broker
+  behaviour governs implementation.
+
+The previous “divide by three because entry + SL + target” concept is NOT frozen.
+
+Exact Zerodha product/order behaviour must be checked again immediately before
+implementation.
+
+---
+
+# 10. CONFIG.YAML / STRATEGY.YAML GOVERNANCE
+
+Confirmed principle:
+- business/user-controlled values must not be hardcoded in Python;
+- existing `config.yaml` and every `strategy.yaml` must be reviewed;
+- global and strategy-specific controls must be deliberately separated;
+- do not blindly carry every legacy setting into V2.
+
+Maximum:
+`effective maximum = LOWER(global/config maximum, strategy maximum)`
+
+Minimum:
+`effective minimum = HIGHER(global/config minimum, strategy minimum)`
+
+The actual settings must first be enumerated from the repository. Do not invent
+minimum settings where the legacy configuration has none.
+
+---
+
+# 11. PAPER VS LIVE
+
+Preserved evidence indicates:
+- broker-margin live lookup exists;
+- static leverage can be fallback;
+- broker adapter has a paper/live boundary.
+
+**UNKNOWN:** complete behavioural parity between paper and live for every capital
+path.
+
+---
+
+# 12. SCREENSHOT EVIDENCE REGISTER
+
+### 23-Sep-2026 ~20:00 IST
+`zerodha-1`:
+- opening balance ₹10,384.30
+- available margin/cash ₹10,351.12
+- used margin ₹33.18
+- commodity zero.
+
+`zerodha-2`:
+- five displayed instruments with quantity 0;
+- CNC and MIS examples;
+- total P&L -₹33.18.
+
+### 24-Sep-2026 ~12:25 IST
+Current funds:
+- opening balance ₹10,347.80
+- available margin/cash ₹10,124.90
+- used margin ₹222.90
+- commodity zero.
+
+Current position:
+- RELTD, EQ, MIS;
+- quantity -3;
+- average ₹147.76;
+- LTP ₹148.02;
+- P&L -₹0.78.
+
+Current orders:
+- open MIS orders;
+- completed/cancelled orders;
+- CNC and MIS examples.
+
+These screenshots are broker-state observations only and do not define V2 rules.
+
+---
+
+# 13. HISTORICAL / UNKNOWN / KNOWN-DEFECT REGISTER
+
+## FACT
+- Capital subsystem existed.
+- FundManager was capital-ledger authority.
+- PositionSizer calculated quantity.
+- Intraday and positional buckets existed.
+- Capital reservation preceded order placement.
+- Capital invariant existed.
+- Capital mutations were ledgered.
+- Broker reconciliation handled state divergence.
+- Legacy broker-margin lookup/static leverage mechanisms existed.
+
+## HISTORICAL
+- Capital/leverage configuration changed over time.
+- Existing configuration contained historical comments/changes.
+- Exact meaning of every historical setting must be tied to its dated source when
+  a timeline is required.
+
+## UNKNOWN / NOT ESTABLISHED
+- Complete dated history of every capital parameter.
+- Exact deployed value of every optional PositionSizer setting.
+- Exact runtime wiring of every live-margin branch in every deployment.
+- Complete historical database schema/event taxonomy for every `fm_ledger` mutation.
+- Complete paper/live parity.
+- Exact historical use of every configured product.
+- Exact historical relationship between every config comment and deployed runtime.
+
+## KNOWN DEFECT / AMBIGUITY
+- Historical terminology could confuse cash allocation with permitted notional.
+- Static leverage and live-margin branches coexist in the legacy evidence.
+- Historical capital values/comments changed over time.
+
+---
+
+# 14. CROSS-TOPIC / FUTURE AGENDA INPUTS
+## RETAINED TO PREVENT INFORMATION LOSS
+
+These points were discussed during A-005 but belong to later agenda topics.
+
+### Configuration
+- Deeply review existing `config.yaml`.
+- Deeply review every `strategy.yaml`.
+- Separate global and strategy settings deliberately.
+- Do not automatically retain every legacy setting.
+
+### Margin data operations
+- Daily replace/refresh margin DB.
+- Avoid stale/duplicate records.
+- Success and failure alerts.
+- Stock/trade-identifiable margin incidents.
+- Dated margin/eligibility snapshots for audit.
+- Silent repeated failures unacceptable.
+
+### Observability
+- Periodic capital-drift alerts.
+- Telegram/email for critical operational events.
+- Preserve evidence for later forensic review.
+
+### Broker verification
+Before implementation:
+- verify current Zerodha margin behaviour;
+- verify product-specific margin;
+- verify pending/open-order treatment;
+- verify GTT trigger funding;
+- verify entry/exit order margin treatment;
+- verify API response semantics.
+
+### Constraint governance
+- Maximum = lower applicable bound.
+- Minimum = higher applicable bound where a meaningful minimum exists.
+- Maximum quantity can independently bind.
+- Exact setting-by-setting precedence must be established during configuration
+  review.
+
+### General redesign governance
+All future agenda topics should be reviewed again before V2 design. These
+carry-forward notes are intentionally retained so the user does not need to
+remember and repeat them later.
+
+---
+
+# 15. FINAL FREEZE STATEMENT
+
+The legacy system implemented a capital/risk subsystem centred on PositionSizer
+and FundManager, with separate capital buckets, margin/leverage handling,
+pre-order reservation, write-ahead capital ledger mutations, fill-based capital
+commitment, release after exit, and broker reconciliation.
+
+The user's later intended flow for the redesigned system is separately captured
+as:
+
+`opening broker cash`
+→ `segment split`
+→ `filled-trade divisor`
+→ `base cash/trade`
+→ `MIN(base cash/trade, current available segment capital)`
+→ `broker margin %`
+→ `permitted notional`
+→ `quantity`
+→ `filled trade`
+→ `realised result`
+→ `updated available segment capital`
+→ `next trade`
+
+No part of this future flow should be treated as proof of legacy behaviour.
+
+**A-005 — CLOSED / FROZEN.**
+
+NO IMPLEMENTATION CHANGE IS IMPLIED.
+
+
+======================================================================
+NEW SYSTEM CHANGE — EXECUTION MODE
+======================================================================
+New system execution mode: LIVE ONLY; paper mode is not required.
+
+
+NEW SYSTEM CHANGES — STRICT SCOPE
+1. One trade per symbol once a day, irrespective of direction.
+2. Available-capital realised P&L effect = realised LOSS effect only; profit and trading expenses are adjusted after market EOD around midnight.
+3. Quantity remains risk/SL based: expected loss at SL determines quantity; maximum capital per trade remains an independent ceiling. The permitted-notional / intended-entry-price quantity formula is NOT used.
+4. Live operation only; paper mode is not required.
+No other A-005 logic is changed by this revision.

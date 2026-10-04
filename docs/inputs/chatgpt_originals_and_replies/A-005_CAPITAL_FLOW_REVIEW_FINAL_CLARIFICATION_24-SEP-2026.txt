@@ -1,0 +1,226 @@
+A-005 CAPITAL FLOW DESIGN — REVIEW RESULT / FINAL CLARIFICATIONS
+24-SEP-2026
+
+I reviewed the attached "A-005_FINAL_CLARIFICATION-Capital flow design.xlsx"
+as the intended capital-flow explanation.
+
+CONCLUSION
+----------
+Your spreadsheet makes your intended Q3 flow much clearer. I now understand
+that you are NOT asking for a separate complex "open reservation ceiling" rule
+as I described earlier.
+
+Your intended flow appears to be:
+
+OPENING CASH
+  -> configured Intraday / Delivery capital split
+  -> maximum orders/trades per day
+  -> base maximum cash capital per trade
+  -> apply the broker's margin percentage to determine permitted notional
+  -> calculate quantity from intended entry price
+  -> after a FILLED trade exits, release the trade capital plus/minus result
+  -> the released/current available segment capital becomes part of the
+     remaining capital available for subsequent trades
+  -> continue until the configured maximum number of FILLED trades is reached
+  -> queued/cancelled/rejected orders do not consume the filled-trade count
+
+This is materially different from my earlier explanation, so I do not want to
+freeze the wrong interpretation.
+
+============================================================
+1. WHAT I UNDERSTAND FROM YOUR SPREADSHEET
+============================================================
+
+The spreadsheet shows:
+
+A. Opening cash is the starting capital basis.
+
+B. Config.yaml splits that opening capital into segment capital:
+   - Intraday
+   - Delivery
+
+C. Maximum trades/orders per day determines the base maximum cash allocation
+   per trade for that segment.
+
+D. Broker margin percentage is then applied to that cash allocation.
+
+   Conceptually:
+
+       permitted notional
+           = cash capital allocated to trade
+             / broker required margin %
+
+   If broker margin is unavailable / 0%, the spreadsheet uses the allocated
+   cash amount itself rather than inventing leverage.
+
+E. Quantity is derived from permitted notional and intended entry/LTP, then
+   rounded down to an integer.
+
+F. Filled trade results change the capital available to the segment.
+
+   Example from the spreadsheet:
+       allocated capital
+       + result (profit/loss)
+       = capital released/returned to available capital
+
+G. A rejected/cancelled/unfilled order does not consume a filled-trade slot and
+   its allocated capital remains available.
+
+H. The system continues processing subsequent orders until the configured
+   maximum FILLED trades/orders for that day is reached.
+
+I. If earlier trades generate losses, the capital available for a later trade
+   can become lower than the original per-trade allocation.
+
+J. Therefore the final/remaining trade can receive LESS capital than the
+   original maximum per-trade amount.
+
+K. Once the maximum number of FILLED trades has been achieved, subsequent
+   signals/orders are not processed as new trades for that day.
+
+L. Your "Soft-kill or no new entry" note is a separate entry-control point and
+   should not be confused with the capital calculation itself.
+
+============================================================
+2. ONE IMPORTANT FORMULA/IMPLEMENTATION POINT TO CONFIRM
+============================================================
+
+The spreadsheet clearly shows the INTENDED behaviour, but the actual formulas
+in the example keep "Maximum Capital per Trade" equal to the original base
+amount in each row.
+
+The sheet's "Capital released after results" is calculated, but that released
+amount is not directly fed into the next row's "Maximum Capital per Trade".
+
+Your written note, however, says:
+
+"most probably in last trade ... will have lesser capital, in case earlier all
+trades hit SL"
+
+Therefore I believe the intended runtime rule is:
+
+    CURRENT CAPITAL AVAILABLE FOR SEGMENT
+        is continuously updated after each completed trade
+
+and for each new trade:
+
+    ACTUAL CASH ALLOCATION FOR THIS TRADE
+        = MIN(
+            BASE MAXIMUM CAPITAL PER TRADE,
+            CURRENT AVAILABLE SEGMENT CAPITAL
+          )
+
+Then:
+
+    broker permitted notional
+        = actual cash allocation / broker margin %
+
+    quantity
+        = floor(permitted notional / intended entry price)
+
+After the trade exits:
+
+    current available segment capital
+        = previous allocated/used capital
+          + realized result
+
+For a rejected/cancelled/unfilled order:
+
+    current available segment capital
+        remains unchanged
+
+THIS IS THE ONLY MATERIAL POINT I NEED YOU TO CONFIRM.
+
+============================================================
+3. PLEASE CONFIRM THIS ONE POINT
+============================================================
+
+Choose one:
+
+[ ] YES — this is exactly what I intend:
+
+    Each new trade starts with the normal maximum cash allocation, BUT if
+    current available segment capital is lower because of earlier realized
+    losses/other released results, the next trade uses the LOWER available
+    amount.
+
+    In other words:
+
+        Actual trade cash allocation
+        = MIN(base maximum capital per trade,
+              current available segment capital)
+
+    Therefore the last trade(s) can be smaller after earlier losses.
+
+[ ] NO — my intended rule is different:
+
+Answer: YES — this is exactly what I intend [Why? practically may only last trade might don't have intended capital Rs 700, Instead it might have Rs <700 so this correct "MIN(Intended capital or available)" rule, At the same if available capital is higher that Rs 700, still we are proacted to spend only upto Rs 700 due to "MIN(Intended capital or available)" - So correct design, appreciated!
+    ______________________________________________________
+    ______________________________________________________
+
+============================================================
+4. IMPORTANT: WHAT I AM NOT ASKING YOU TO DECIDE AGAIN
+============================================================
+
+I have understood these points from your clarification:
+
+- Daily margin DB/snapshot is the sizing reference for the day.
+- Order-time broker API is the final execution safety/validation check.
+- No usable margin data means 100% cash requirement / zero assumed leverage,
+  proceed and alert.
+- Maximum daily trade count = broker FILLED trades.
+- Queued/pending/cancelled/rejected orders do not count as filled trades.
+- Maximum capital per trade comes from segment capital divided by the configured
+  maximum-trade divisor.
+- Broker margin converts that cash allocation into permitted notional.
+- Entry margin is the primary capital-sizing basis; SL/Target do not receive a
+  separate independent capital allocation unless actual broker behaviour
+  requires it.
+- 09:15 opening balance is the day's capital basis.
+- Segment capital is locked for the day; reconciliation must not rebase it.
+- Config.yaml and strategy.yaml ownership must be reviewed from the existing
+  settings before implementation.
+- Examples in the spreadsheet are examples only, not frozen business values.
+
+============================================================
+5. ONE WORDING ISSUE I WILL CORRECT IN THE MANUAL
+============================================================
+
+The spreadsheet column "Capital available after Margin" is mathematically
+being used as:
+
+    allocated cash capital / broker margin %
+
+That is actually the permitted/derived NOTIONAL buying amount, not "cash
+available after margin".
+
+I will document the actual formula and distinguish:
+
+    cash capital allocation
+    broker-required margin %
+    permitted notional
+    quantity
+    remaining/available segment capital
+
+so the terminology does not create confusion later.
+
+This is a documentation clarification, not a change to your intended flow.
+
+Answer: Apologizes dude, Since I'm a human I may not used correct wordings in example, But if you understood my intention that's fine!
+
+============================================================
+6. AFTER YOUR ANSWER
+============================================================
+
+If the answer to Section 3 is YES, I do not see another material question
+preventing A-005 reconciliation/manual preparation.
+
+I will then prepare:
+
+1. A-005 FINAL SOURCE RECONCILIATION + FREEZE
+2. A-005 CAPITAL MODEL LEGACY MANUAL
+
+and retain all the useful non-A-005 points from this discussion under a clearly
+marked "Cross-Topic / Future Agenda Inputs" section.
+
+NO IMPLEMENTATION CHANGE IS IMPLIED.

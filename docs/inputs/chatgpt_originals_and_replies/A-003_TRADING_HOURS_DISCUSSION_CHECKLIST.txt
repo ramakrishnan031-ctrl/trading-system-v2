@@ -1,0 +1,484 @@
+A-003 — TRADING HOURS
+Discussion Checklist — Legacy System Documentation / Phase 1
+
+DATE
+22-Sep-2026
+
+OBJECTIVE
+Establish the factual historical trading-hours model of the DEAD legacy system:
+market hours, service window, entry window, cut-offs, square-off, shutdown,
+pre/post-market operations, weekends/holidays, and scheduled jobs.
+
+This is a discussion document only.
+Do NOT freeze A-003 or write the permanent manual until the answers are
+reviewed against the Production-source evidence.
+
+SOURCE BASIS
+Primary:
+Production repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Supporting:
+- 01_SYSTEM_OVERVIEW.md
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- cron registry / project records
+
+IMPORTANT
+A-003 is about the historical TIME MODEL.
+Do not redesign trading hours here.
+Do not assume a time from general NSE knowledge when repository/config evidence
+is available.
+
+Current evidence already shows multiple time layers and at least one historical
+environment difference. The reconciliation must therefore explicitly separate:
+1. Exchange/market time
+2. Service start window
+3. Trading/entry window
+4. EOD entry cutoff
+5. MIS square-off cutoff
+6. EOD square-off/backstop
+7. Market close
+8. Service shutdown window
+9. Cron/scheduled operational jobs
+
+======================================================================
+1. MARKET / EXCHANGE HOURS
+======================================================================
+
+Questions:
+- What did the legacy system treat as NSE market-open time? - 09.15am IST;
+- What did it treat as market-close time? - 15:30 IST;
+- Were these values hard-coded or configuration-driven? - Configuration-driven;
+- Which timezone was used? - IST [Not only in system try to use everywhere time=IST only, Including VM Cron UTC=IST conversion required, why? User is Indian, System is meant for Indian NSE market, So everything meant to be IST only];
+- Was IST enforced consistently? - Yes consistently IST implemented, new system also mandatorily with IST only;
+- Did the system itself start exactly at market open, or could it start earlier
+  and wait for the trading window? - Nope, System boots at 08:15am IST  and does zerodha token creation, Zerodha instruments pulling, Pre-flight checks (ie, System Health checks), Pre-market opening briefing (using agy/gemini ai) then stands by for first trade [Trade time starts] at 10:00am IST why? since config says market start time at 10:00am only even though NSE opens at 09:15am as per same config file;
+
+SOURCE CHECK REQUIRED
+
+The preserved overview currently records:
+- 09:15 as market open;
+- 15:30 as market close;
+- all times IST.
+
+Confirm against Production repository/config.
+
+Classification:
+FACT / HISTORICAL / UNKNOWN.
+
+** Additional comments: NSE Open time & Closing Time: 09:15-15:30, System starting & exit time: 08:15-18:30, why? system has some pre-opening & post-closing activities;
+
+======================================================================
+2. SERVICE START WINDOW
+======================================================================
+
+Questions:
+- During what time range was the trading service permitted to start? - Trading time starts at 10:00am IST as per config.yaml;
+- What happened if started outside that window? - As of now system correctly follows time vs activity [IST based], No such outside starting happened;
+- Did the process exit cleanly, refuse startup, or wait? - Yes process exits cleanly or system shuts cleanly when there is no open position exists [meaning buy qty=sell qty or vice-versa] called flatten books, But in case of non-flatten days due to 'Delivery' qty is in open condition [Also note: Intraday trades correctly squared-off before market closes] then system keep on running even after 18:30 due to reconciliation issue, In that time manually need to execute soft kill command in bash > then in next day boot auto-clears softkill then pulls open positions from db then starts to trades once 10:00am reached....what happens when soft kill not initiated? Simple system keep on runs till next day and while booting time system will trips/collides then next day can't be traded unless this issue is sorted out;
+- Was configuration loaded before or after this guard? - 
+- Was the guard based on market hours or a wider service window? - Trading hours is based on guards like market open & end time, auto-square off time, soft kill or new entry prohibited time, system start and closing time, every time was followed as per config file; But wider service window exists/followed to perform pre-market and post-market operations or maintenance or operational activities;
+
+CURRENT EVIDENCE TO VERIFY
+
+The repository/file-map evidence states:
+08:00–18:15 is the permitted service-start window and main.py exits 0 outside
+that window before configuration loading.
+
+Confirm:
+- exact function
+- exact config key
+- exact boundaries
+- behavior at boundary times.
+
+======================================================================
+3. ENTRY START TIME
+======================================================================
+
+Questions:
+- What was the earliest time an entry could be accepted?: Existing system starts or boots sharply at 08:15am without any fail in any normal trading day [meaning no booting during weekend/holidays calendar];
+- Was entry_start configuration-driven? - Yes config file driven;
+- Was the value different between Production repository and Testing VM? - Yes, I guess different things are: S&R function differs then rest of the function same as it is of production system, Some Config settings like market opening time, maximum qty, concentration value etc;
+- If different, which value belongs to the historical Production baseline? - Different things are: S&R function differs then rest of the function same as it is of production system, Some Config settings like market opening time, maximum qty, concentration value etc;
+- Did signal reception before entry_start queue/store the signal or reject it? - No storing of signals, why? market starts time says open at 10:00am only [Config driven] then system starts to process signals on/after 10:00am, but not process signals, So we can assume signals will be dropped before 10:00am, This is good design only why? even storing such signals before 10:00am has no guaranteed/assured same pattern after 10:00am [meaning assume if we store engulfing signals at 09:16am then no guarantee of same movement after 10:00 either stock already ran over or becomes flat or something else not tradable condition;
+- Did the system process pre-market signals? - Nope, No signals processed before market opening, also refer why? in above;
+- Was entry_start the same for Intraday and Delivery? Good question config.yaml says master controls (NSE open & closing time, System Booting & Shut time, Marker Open & Close time) & At the same time each strategy.yaml has their own start and close times why? Simple config.yaml is the master control then why each strategy.yaml has still times? simple to allow trades/signals of each strategy when favourable or unfavourable, basically controlling strategy time; (Example: Config says market open & close time 10:00-15:30 but one strategy.yaml (not all) says this 11:00-11:30 meaning even market is opened 10:00-15:30 that specific one strategy will be allowed trade in between 11:00-11:30, so signals of that strategy arriving after 11:30 will be rejected/cancelled/not traded;
+
+IMPORTANT CURRENT EVIDENCE
+
+The preserved overview records:
+- 10:00 for Production/repository;
+- 09:30 for Testing VM;
+- both are tied to trading_hours.entry_start.
+
+This MUST be reconciled rather than silently choosing one.
+
+======================================================================
+4. ENTRY END / LAST ENTRY
+======================================================================
+
+Questions:
+- What was the final permitted time for fresh entries? : At 14:45 (ie, 15-30mins before intended auto-square off time) by imitating/triggering soft kill;
+- Was it trading_hours.entry_end? : Yes, New entries cut-off at 14:45, then existing intraday open positions auto-square off at 15:00-15:10 (need to check exact time which falls in between these two);
+- Did the system reject new entries after this time? : Yes, It is rejecting after 14:45;
+- Did already-qualified/pending orders continue? : Yes orders placed till 14:44 are waiting for TGT/SL hit, If not then auto squared off at 15:00-15:10 (need to check exact time which falls in between these two);
+- Did entry_end differ by Intraday vs Delivery? : As of now both Intraday & delivery ends at same time, Thanks for pointing out this why? in new system I'll set soft kill or new entry cut-off applicability only to Intraday trades, So Delivery trades can be traded till 15:30 if that respective strategy time also allows, Still why only for delivery? Intraday trading risks due to remaining only 30-45mins to market closure, But Delivery trades are useful for BTST trades till entry at 15:30 Special thanks again to ChatGPT;
+- Did EOD processing impose another earlier cutoff?: How it is designed? New entries cut-off at 14:45 (currently for both Intraday & Delivery trades), then auto square off at 15:00-15:10 (need to check exact time which falls in between these two), but zerodha closes at 15:20 then why it is designed to close 15:00-15:10? Simple zerodha has some different auto-square off for different stocks, So for safely system designed to close much earlier then check the closure confirmation in second time before clock touches 15:20 [Simple: two checks about auto-square off or flatten books before 15:20 is mandatory]
+
+
+CURRENT EVIDENCE
+
+The preserved overview records 15:00 as the configured last-entry time.
+
+Confirm exact Production value and behavior.
+
+======================================================================
+5. EOD ENTRY CUTOFF
+======================================================================
+
+Questions:
+- Was there a separate eod_entry_cutoff?: Yes, Only one eod cut-off called soft kill to be triggered at 14:45, So no more new entries allowed;
+- Why did it exist in addition to entry_end?: Nope, there is only one new entries cut-off exists called 'Soft-kill' to be triggered at 14:45 IST;
+- What happened to new signals after this point?: No fresh entries or positions will be created in both Intraday & Delivery [Remember: In new system this needs to applied only on 'Intraday' trades why? Delivery trades for BTST till 15:30 requires];
+- Were existing orders cancelled?: Good catch, as of now no such instance occurred, So In new system there must be one watchman/something who ensures no queued orders at 14:45 with broker, If there is one that needs to be cancelled at 14:45 IST
+- Were positions affected?: Nope, Positions unchanged till exit (SL/TGT) or auto squared-off clock ticks;
+- Did this cutoff apply equally to both books?: Yes, as of now applied in both books, but in new system it must be applied on 'Intraday' only [Delivery=BTST calls requires till 15:30 IST];
+
+CURRENT EVIDENCE
+
+The preserved overview records 15:15 as eod_entry_cutoff.
+
+Do not infer its meaning beyond source evidence.
+
+======================================================================
+6. MIS SQUARE-OFF CUTOFF
+======================================================================
+
+Questions:
+- What was the exact MIS square-off cutoff?: As per confirmed telegram message it is at 15:15 IST soft-kill triggers [So auto-consider in all of the above wherever quoted 15:00-15:10 with note 'need to check in system'];
+- Was this a deadline for beginning the square-off sequence or a final
+  completion deadline?: Nope, Only one deadline or auto-square off, no more second thing exist for the same [But there is 2 checking to confirm 'yes auto-square off worked/executed'];
+- What happened before/at/after the cutoff?: Nothing happens before auto square-off [Till 15:14], At 15:15 auto square-off executed then makes first check within 30sec post-execution, At 15:16-15:18 second check initiated for confirmation;
+- Was there a pre-alert?: Yes, Telegram alerts exists for Soft-kill or new entry cut-off and Auto-square off execution at 15:15 IST;
+- Was cancellation of pending entry orders part of the sequence?: No Such occurance happened, but in new system that also needs to added as part of soft-kill stage itself, So during auto-square off not required again [Good Catch, applause for you];
+- Was the cutoff configuration-driven?: Yes, I found it in config.yaml [entry_end: "15:00", eod_entry_cutoff: "15:15", eod_squareoff_time: "15:17" and I'll attach config.yaml file too in chat while uploading this .txt file];
+- Did the system have a backstop after the cutoff?: Not understood, but can able to judge from my all of the answers in this file or with config.yaml;
+
+IMPORTANT
+
+Existing project discussions have referenced 15:10, while the preserved source
+overview currently records 15:09 as trading_hours.mis_squareoff_cutoff.
+
+This is a mandatory reconciliation item.
+Do NOT choose 15:09 or 15:10 until Production-source evidence establishes the
+correct historical value.
+
+======================================================================
+7. EOD SQUARE-OFF / BACKSTOP
+======================================================================
+
+Questions:
+- What was the exact eod_squareoff_time?: 15:15;
+- What happened at this time?: Open positions auto-squared off or flatten [Only Intraday positions, Not Delivery positions];
+- Did soft-kill occur?: Yes at 14:45 soft-kill triggers;
+- Were pending orders cancelled?: No such occurrence happened, but need to add it as part of soft-kill;
+- Were open MIS positions exited?: Yes
+- Was there a promotion to market after a timeout?: No idea;
+- Was a sweep performed?: Not sure, but new system suppose to have it [But reconciliation is happening after 15:45];
+- Was daily P&L reset?: Yes resettled, But not sure database (db) has this record;
+- Were reports produced?: Yes as of now .csv file is auto-generated, But in new system only thru GUI module [So no more reports other than Gui module];
+- What happened if broker state was unavailable?: No such occurrence was happened;
+- What happened if square-off failed?: Yes if it is failed then system sends me 'Telegram and Email' alerts immediately;
+
+CURRENT EVIDENCE
+
+The preserved overview records:
+15:17 as the EOD square-off backstop, with soft-kill/cancel/exit/market
+promotion/sweep/report sequence.
+
+Verify exact implementation in the detailed startup/runtime source.
+
+======================================================================
+8. MARKET CLOSE VS SYSTEM SHUTDOWN
+======================================================================
+
+Questions:
+- Was market close 15:30?: Yes as per config.yaml it is;
+- Did the system stop at market close?: Nope, System stopping at 18:30 due to maintenance/operational/some analysis reason holds till that time;
+- If not, what post-market work continued?: Mainly this strategy 'https://chartink.com/screener/pb01-breakout-retest' sends signals at 17:00 (market close) to analyse and store for tomorrow opening trade, But as of now this was lying as a placeholder concept, nothing moved, So in new system this needs to be addressed, apart from there is some cron jobs & I guess system not required to run cron jobs as like earlier before introduction of this strategy, system sharply boots at 08:15am IST and Stops at 15:31 IST;
+- What was service_window_end?: System stops at 18:30 IST;
+- When could the service safely shut down?: 18:30 IST;
+- What conditions prevented clean shutdown?: Flatten books including delivery (since intraday already flatten by 15:15 itself, Proven), So incase delivery open position exists, then manually need to cmd for soft-kill [Command: ssh trading-vm sudo systemctl stop trading-system]
+- Could positions keep the service alive?: Yes it is;
+- Did the service itself perform shutdown or was it killed externally?: system auto-shuts down unless there is no open delivery positions;
+
+CURRENT EVIDENCE
+
+The preserved overview records:
+- 15:30 market close;
+- 17:35 service clean-shutdown time, conditional on no position requiring the
+  service;
+- service window ending at 18:15.
+
+These three times must be documented separately.
+
+======================================================================
+9. INTRADAY VS DELIVERY TIME MODEL
+======================================================================
+
+Questions:
+- Did Intraday and Delivery use identical trading windows?: Nope intraday uses Cover order window, but Delivery uses GTT order window;
+- Which cutoffs applied only to MIS?: No separate cut-off only for Intraday, Currently it's global for Intraday and Delivery [But in new system it should be applied only on 'Intraday'];
+- Did Delivery remain active after market close because of GTT/overnight
+  management?: Yes, It appears tomorrow morning;
+- Did the service need to remain alive for Delivery positions?: Nope, But system refuses to shutdown at 18:30 if open delivery positions then this requires manual command to close [ssh trading-vm sudo systemctl stop trading-system];
+- Were fresh Delivery entries allowed during the same entry window?: Number of GTT order windows allowed for different stocks [one stock/one GTT window];
+- Were EOD rules different by book?: No idea;
+
+Do not assume parity.
+
+======================================================================
+10. SIGNALS RECEIVED OUTSIDE TRADING HOURS
+======================================================================
+
+Questions:
+- What happened if Chartink sent a signal before entry_start?: Not processed as referred above [Dropped];
+- What happened after entry_end?: No new entries in both Intraday and Delivery [But this needs to be applied only on 'Intraday' in new system];
+- What happened after market close?: Some cron jobs running (maintenance/Operational purposes) + One strategy exists as referred above with no functionality working;
+- Were signals persisted?: Signals not processed once soft-kill triggered same like before market opening;
+- Were they rejected?: Yes, Getting dropped/rejected;
+- Were they queued for the next valid trading window?: Yes, Signals getting queued, But not sure that every queued signals further processed or silent death occurs;
+- Did EOD/Daily signals follow a separate route?: As of now EOD signal at 17:00 only exists as placeholder/concept, But daily signals processed in between 10:00-14:45 as per config & soft-kill trigger conditions, Queued signals no idea;
+
+This is especially important because the project has separate “analyse today /
+trade tomorrow” concepts. Do not treat that future workflow as legacy behavior
+without source evidence.
+
+======================================================================
+11. WEEKENDS AND NSE HOLIDAYS
+======================================================================
+
+Questions:
+- How did the system identify non-trading days?: there is NSE trading calendar 2026 exists then weekends computed one for 2026, So in new system same 2026 & 2027 (as placeholder file) required; 
+- Was a holiday file/config used?: Yes, NSE Calendar + Weekend computed one;
+- Was the current year dynamically selected?: Currently 2026 holiday & weekend exists, no file (including placeholder) exists for 2027;
+- What happened if the system was manually started on a holiday?: As of now no such occurrence happened;
+- Did cron jobs still execute on holidays?: Some most probably disk checking, weekend pattern analysis (a cron job used by agy/gemini ai) [Also note in new system instead of agy, ChatGPT should be replaced];
+- Which jobs were guarded by the trading-day check and which were independent?: No idea;
+
+CURRENT EVIDENCE
+
+The repository file-map indicates:
+- a holiday guard in main.py;
+- a holidays configuration/file whose year is dynamically interpolated;
+- cron jobs operating independently.
+
+Verify exact behavior.
+
+======================================================================
+12. PRE-MARKET SCHEDULE
+======================================================================
+
+Document only what actually existed.
+
+Questions:
+- Token refresh time?: 08:15am IST [Telegram alert - Module:Script];
+- Monitoring canary?: 08:15am IST [Telegram alert - Module: monitoring_canary];
+- Pre-flight phases?: 3 Phases in between 08:20-09:15;
+- Instrument-master refresh?: Yes at 09:00;
+- F&O ban-list fetch? Yes at 08:35;
+- Cron Officer briefing? Yes at 08:55;
+- Other pre-market jobs?: Yes there are totally around 45 jobs through out the day;
+- Which are trading-hour functions versus operational preparation?: No idea
+
+CURRENT EVIDENCE
+
+The preserved overview records:
+05:00 token deletion
+08:15 token refresh
+08:20 monitoring canary
+08:30 / 09:14 / 09:15 pre-flight phases
+08:35 F&O ban list
+09:00 instrument refresh
+09:20 morning briefing
+
+Verify against cron registry and startup manual.
+
+** Additional comment: Add a note that specifying need to review/verify Module: cron_officer which has that total 45 jobs list & also refer cron_registry file to get to know how new cron jobs added or deleted that is how automatically updated in telegram/email alerts in each day;
+
+======================================================================
+13. POST-MARKET / EOD SCHEDULE
+======================================================================
+
+Questions:
+- Which jobs ran after market close?: Refer Module: cron_officer & Cron_registry;
+- At what times?: Module: Refer Module: cron_officer & Cron_registry;
+- Which were mandatory trading lifecycle functions?: Refer Module: cron_officer & Cron_registry;
+- Which were maintenance/evidence/reporting functions?: Refer Module: cron_officer & Cron_registry;
+- Did any post-market job affect the next trading day?: Yes, If Delivery orders qty exist in any day (ie, if reconciliation fails) system won't shutsdown unless manual cmd executed > Next day trips at booting > No trading in next day;
+- Did all jobs require the service to remain alive?: Nope, even mid-night jobs running correctly after system shut-down at 18:30;
+
+CURRENT EVIDENCE
+
+The preserved overview records post-market jobs beginning around 15:40 and
+continuing through the evening.
+
+Do not assume these all belong to “trading hours”; classify them as:
+TRADING LIFECYCLE / OPERATIONS / MAINTENANCE / REPORTING / DATA.
+
+======================================================================
+14. CRON VS IN-PROCESS TIMERS
+======================================================================
+
+Questions:
+- Which time events came from cron?: Refer Module: cron_officer & Cron_registry [Why? No Idea];
+- Which came from the running service?: Refer Module: cron_officer & Cron_registry [Why? No Idea];
+- Could cron and in-process timers perform overlapping actions?: Each cron jobs has good spread over 24hours span window, So as of now not collided [But No Idea];
+- Which was authoritative where both existed? : Each cron jobs has good spread over 24hours span window, So as of now not collided [But No Idea];
+- Did scheduled jobs continue if the service was down? : Yes, It is;
+- Did service timers disappear when the process stopped?: No idea;
+
+This is important because A-003 establishes the time model while A-003/B-001
+later establishes the runtime lifecycle.
+
+======================================================================
+15. TIME SOURCE / CLOCK
+======================================================================
+
+Questions:
+- What clock did the system use?: everywhere it is IST Zone including cron jobs have converted from UTC>IST time;
+- Was system local time assumed to be IST?: Yes;
+- Were timezone-aware timestamps used?: No idea, need to review/added in new system;
+- Was broker clock skew checked?: No idea, need to review/added in new system;
+- What happened if system clock and broker time differed?: No idea, need to review/added in new system;
+- Were database timestamps UTC or IST? : No idea, But I guess it is IST (assumed);
+- Did comparisons use naive or timezone-aware datetime values?: No idea, need to review/added in new system;
+
+Do not infer from Python conventions. Establish from source.
+
+======================================================================
+16. CONFIGURATION AUTHORITY
+======================================================================
+
+Identify every relevant trading-hours configuration key, including at minimum
+where evidenced:
+
+- trading_hours.market_open : 09:15am IST;
+- trading_hours.entry_start : 10:00am IST (in Trading VM) and 09:30am (in Testing VM);
+- trading_hours.entry_end : 14:45 IST;
+- trading_hours.eod_entry_cutoff : 14:45 IST;
+- trading_hours.mis_squareoff_cutoff : 15:15 IST;
+- trading_hours.eod_squareoff_time : 15:15 IST;
+- trading_hours.market_close: 15:30 IST;
+- trading_hours.service_window_end: 18:30 IST;
+
+For each:
+
+KEY
+→ SOURCE FILE
+→ DEFAULT (if any)
+→ VALIDATION
+→ CONSUMER
+→ EFFECT
+
+The repository evidence states TradingHoursConfig validates the complete
+ordering chain. Verify the exact rule.
+
+** Additional Info: refer the config.yaml as authoratative source [Github link + attached file];
+
+======================================================================
+17. TIME ORDERING / VALIDATION
+======================================================================
+
+Questions:
+- What ordering constraints existed?: (Time-Order issues) As I'm unable to find any one now, doesn't mean system is 100%, So either I'm unaware or unable to found such issues now;
+- What happens if configuration violates the ordering?: As I'm unable to find any one now, doesn't mean system is 100%, So either I'm unaware or unable to found such issues now;
+- Is startup blocked?: No idea, need to check the GitHub repo;
+- Which validator performs the check?: No idea, need to check the GitHub repo;
+
+CURRENT EVIDENCE
+
+The file-map states the configured chain is validated as:
+
+market_open
+<= entry_start
+< entry_end
+<= eod_entry_cutoff
+<= eod_squareoff_time
+<= market_close
+<= service_window_end
+< 18:15
+
+This must be verified against the actual Production source and recorded
+exactly if confirmed.
+
+======================================================================
+18. KNOWN / SUSPECTED TIME-RELATED ISSUES
+======================================================================
+
+Record only evidence-backed issues.
+
+Potential discussion items:
+- 10:00 Production vs 09:30 Testing VM entry_start difference.: Yes, I agreed
+- 15:09 vs previously discussed 15:10 MIS cutoff. : No idea, need to check the GitHub repo;
+- Entry timeout versus actual cancellation timing. : No idea, need to check the GitHub repo;
+- Any mismatch between config time and hard-coded time. : No idea, need to check the GitHub repo;
+- Any mismatch between cron and in-process timing. : No idea, need to check the GitHub repo;
+- Any timezone/clock ambiguity. : No idea, need to check the GitHub repo;
+- Any difference between paper/live timing. : Yes EOD summary alert (like what is today's P&L summary), Unable to fill correct prices of broker filled, Capital computation and allocation issues [Note: In new system paper mode not required completely in anywhere];
+
+Do not fix these here.
+
+======================================================================
+19. REQUIRED CLASSIFICATION
+======================================================================
+
+For every time rule classify:
+
+FACT
+HISTORICAL
+UNKNOWN / NOT ESTABLISHED
+INTERPRETATION
+KNOWN DEFECT
+OPEN QUESTION
+
+======================================================================
+20. A-003 FREEZE DECISION
+======================================================================
+
+Before the permanent A-003 manual is written, confirm:
+
+A. Market open
+B. Market close
+C. Service start window
+D. Entry start
+E. Entry end
+F. EOD entry cutoff
+G. MIS square-off cutoff
+H. EOD square-off/backstop
+I. Service shutdown/end
+J. Intraday vs Delivery differences
+K. Weekend/holiday behavior
+L. Pre-market schedule
+M. Post-market schedule
+N. Cron vs in-process timers
+O. Clock/timezone authority
+P. Configuration keys and validation
+Q. Known time-related defects
+R. Unknown/open questions
+
+======================================================================
+GOVERNANCE
+======================================================================
+
+- Document the legacy time model as it existed.
+- Do NOT redesign trading hours.
+- Do NOT select a preferred time where evidence conflicts.
+- Do NOT silently replace 15:09 with 15:10 or vice versa.
+- Do NOT assume NSE general knowledge overrides repository configuration.
+- Do NOT turn future trading workflows into legacy facts.
+- Detailed runtime implementation belongs to B-section, but A-003 must establish
+  the time contract that those later chapters reference.
+
+END OF A-003 DISCUSSION CHECKLIST

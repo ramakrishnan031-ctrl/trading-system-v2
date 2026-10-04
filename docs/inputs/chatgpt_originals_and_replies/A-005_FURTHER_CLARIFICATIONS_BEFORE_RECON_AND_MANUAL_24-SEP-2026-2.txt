@@ -1,0 +1,264 @@
+A-005 CAPITAL MODEL — FURTHER CLARIFICATIONS REQUIRED BEFORE RECONCILIATION
+24-SEP-2026 · 12:25 PM IST REVIEW
+
+STATUS
+A-005 is NOT yet ready to freeze because the answers contain several material
+cross-dependencies/contradictions that must be resolved before the permanent
+legacy manual and reconciliation are written.
+
+IMPORTANT GOVERNANCE
+- Legacy system remains DEAD / REFERENCE ONLY.
+- Example amounts/percentages/trade counts are examples, NOT frozen settings.
+- No user/business value is to be hardcoded in Python.
+- User/business-controlled values must be config.yaml / strategy.yaml driven.
+- Screenshots are evidence only; they do not define V2 rules.
+
+1. AUTHORITATIVE SOURCE AT ORDER TIME
+-------------------------------------
+Your answers say both:
+- Q7: order-time API has final authority / exclusive correct checker.
+- Q8: daily margin reference is authoritative.
+
+Please define the separation:
+
+[ ] Daily margin DB is authoritative for the day's sizing basis; order-time
+    API is the final execution safety/validation check and can reject/adjust.
+[ ] Daily margin DB remains authoritative even if order-time API differs.
+[ ] Other: ______________________________________________
+
+Recommended interpretation for confirmation:
+"Daily snapshot is authoritative for the frozen day's sizing basis; the
+order-time broker API is authoritative for whether the actual proposed order
+can be placed safely."
+
+Answer: Ok Recommendation accepted!! Daily margin DB is authoritative for the day's sizing basis; order-time API is the final execution safety/validation check and can reject/adjust.
+
+2. NO MARGIN DATA — FULL CAPITAL OR REJECT?
+-------------------------------------------
+There is a direct conflict:
+- Q9 / Step 14: no DB + no API => no margin => use 100% of maximum capital.
+- Q10: no usable API data => reject.
+- Q11: no usable API data => treat as no margin, place order, alert.
+- Q20: no broker margin data => no invented leverage.
+
+Choose:
+
+[ ] A. No margin data = 100% cash requirement; trade may proceed, with
+    mandatory Telegram/email incident alert.
+[ ] B. No margin data = reject trade, with mandatory Telegram/email alert.
+[ ] C. Other: ______________________________________________
+
+Note: 100% cash requirement is not invented leverage; it means zero leverage
+is assumed.
+
+Answer:  A. No margin data = 100% cash requirement; trade may proceed, with mandatory Telegram/email incident alert. [Yes proceed without margin]
+
+3. LOCKED SEGMENT CAPITAL / OPEN RESERVATIONS
+---------------------------------------------
+You stated:
+- broker opening cash is pulled at market opening;
+- Intraday and Delivery segment capital is derived from it;
+- segment capital is locked for the whole day;
+- later broker sync must NOT increase the maximum-capital-per-trade basis;
+- reconciliation only detects/reports drift.
+
+Q13 remains unanswered.
+
+Please define whether V2 must enforce:
+
+    active system reservations / broker margin usage
+        <= locked segment capital
+
+and separately:
+
+    max capital per trade
+      = locked segment capital / configured trade divisor
+        then bounded by config.yaml + strategy.yaml.
+
+[ ] YES — enforce both.
+[ ] NO — other rule: ______________________________________
+[ ] Discuss later.
+
+Answer: Not understood 'Please define whether V2 must enforce' things, So in next chat message explain me in plain English > I'll answer [So mark this Q3 'not answered']
+
+4. MAXIMUM TRADES VS SIZING DIVISOR
+-----------------------------------
+You wrote:
+"Maximum number of trades = Broker filled trades only
+(queued/cancelled/rejected won't be counted)."
+
+Please confirm these are three independent concepts:
+
+A. sizing divisor / maximum trades used to derive per-trade sizing
+B. maximum filled trades per day
+C. maximum open positions
+
+[ ] Confirm all three are separate.
+[ ] Other: ______________________________________________
+
+Answer: Appreciated! Good Catch before confusing, Everything is same like Capital amount/Maximum number of trades per day = maximum capital per trade Vs Strategy.yaml settings = whichever is lower concept, But in while actual trading some orders processed which might be in Queued/pending with broker to be filled, that orders will be counted as 'completed' only when filled, suppose if it's cancelled/rejected whatever reasons, then system continue process orders till 'maximum orders per day' is filled before stopping for the day, So maximum orders per day = broker filled orders, not system processed order for counting purpose use this criteria [not to be used for capital/margin calc]
+
+5. CONFIG.YAML VS STRATEGY.YAML MIN/MAX BOUNDING
+------------------------------------------------
+Your intended maximum rule is clear:
+
+    effective maximum = LOWER(config maximum, strategy maximum)
+
+Example only:
+    config 50k + strategy 25k -> 25k
+    config 50k + strategy 75k -> 50k
+
+Please confirm the mirrored minimum rule:
+
+    effective minimum = HIGHER(config minimum, strategy minimum)
+
+[ ] YES.
+[ ] NO — modify: __________________________________________
+
+Also confirm whether this independent bounding applies to capital, quantity,
+position value and positions as applicable.
+
+Answer: Appreciated! Good Catch before confusing, But this is my mistake only why? Generally minimum has no value (Example: if minimum capital amount or Qty set with '1', Fact is higher values (capital/qty) only matters in capital allocation or something, But I just want you to know 'which settings are should be with config.yaml and strategy.yaml purpose mentioned), So I agree with 'effective minimum = HIGHER(config minimum, strategy minimum)' [Refer existing config.yaml in GitHub for settings as used]
+
+6. ENTRY VS SL/TARGET CAPITAL CONSUMPTION
+-----------------------------------------
+Step 10 raises whether entry + SL + target consume separate capital.
+
+Official Zerodha evidence checked during this review establishes:
+- the margin API calculates margins for specified orders while considering
+  existing positions/open orders;
+- GTT creation itself does not require sufficient funds, but funds are
+  required when the GTT triggers;
+- exit stop-loss treatment can differ from a new opening order.
+
+Therefore the old "divide by 3 because entry + SL + target" idea must NOT be
+frozen without a specific product/order rule.
+
+Choose:
+
+[ ] A. Size from ENTRY broker margin only; exit protection does not receive a
+    separate independent capital allocation unless broker behaviour requires it.
+[ ] B. Include actual broker margin for every relevant live/pending order.
+[ ] C. Depends on product/order type; document MIS and CNC/GTT separately.
+[ ] D. Other: ______________________________________________
+
+Answer: A. Size from ENTRY broker margin only; exit protection does not receive a separate independent capital allocation unless broker behaviour requires it. [If broker also refers the same in Zerodha website], So take a careful note 'Refer zerodha broker site before implementing correct logic' in manual
+
+7. MORNING MARGIN REFRESH TIME
+------------------------------
+Q6 says 09:00, while the Additional Design Flow says 08:30 after boot.
+
+Please confirm final sequence:
+
+system boot
+ -> Zerodha token/instrument updates
+ -> margin DB refresh at 08:30
+ -> Telegram/email success OR failure alert
+ -> 09:15 broker opening balance
+ -> lock segment capital
+ -> trading later
+
+[ ] CONFIRM
+[ ] MODIFY: ______________________________________________
+
+Answer: CONFIRMED [Unless ambiguity or Collisions]
+
+8. DAILY CAPITAL LOCK / BROKER RECONCILIATION
+----------------------------------------------
+Please confirm:
+
+Today's 09:15 broker opening balance is the authoritative basis for TODAY.
+Broker reconciliation may report drift but must NOT rebase today's sizing
+capital. The next trading day's opening balance becomes the new basis.
+
+[ ] CONFIRM
+[ ] MODIFY: ______________________________________________
+
+Answer: CONFIRMED [Why? Zerodha broker usually credits today's profit and other trading expenses at midnight only (not during market hours except loss on trade made), so every morning sync is the correct & source of truth of available funds, If required make internet search for your satisfaction]
+
+9. SCREENSHOT EVIDENCE RECORDED
+-------------------------------
+Screenshots zerodha-1 and zerodha-2 were taken yesterday, approximately
+20:00 IST, after market close.
+
+Observed:
+- Opening balance ₹10,384.30
+- Available margin/cash ₹10,351.12
+- Used margin ₹33.18
+- Positions screen: five instruments, quantity 0, total P&L -₹33.18
+
+Remaining screenshots were taken today, 24-Sep-2026, around 12:25 PM IST.
+
+Observed current evidence:
+- Opening balance ₹10,347.80
+- Available margin/cash ₹10,124.90
+- Used margin ₹222.90
+- RELTD MIS position: quantity -3, average ₹147.76, LTP ₹148.02,
+  P&L -₹0.78
+- Orders screen: open MIS orders plus executed/cancelled orders, including
+  CNC and MIS orders.
+
+These are broker-state observations only, not V2 rules.
+
+Answer: Yes, broker-state observations only [Why shown? as per Q8 answer broker will debit/credits during mid-night only explanation purpose]
+
+10. CROSS-CHECK / RECORD NOTE
+-----------------------------
+Preserved Production/Test repository evidence confirms the legacy system has:
+- config/system_config.yaml capital/bucket/leverage controls;
+- capital/position_sizer.py capital/risk/concentration sizing;
+- capital/fund_manager.py as capital ledger authority;
+- available/reserved/used invariant;
+- fm_ledger write-ahead mutations;
+- broker reconciliation/capital-drift handling;
+- live broker-margin lookup with static-leverage fallback;
+- separate intraday/positional buckets.
+
+The legacy model and proposed V2 model will remain explicitly separated.
+
+Direct public GitHub retrieval was unavailable in this web pass; the repository
+cross-check therefore uses the preserved Production/Test repository evidence
+already loaded in the project. Official Zerodha API/support documentation was
+also checked.
+
+Answer: Also take a careful note in manual that "While designing Config.yaml and each strategy.yaml need to examine existing settings then accordingly > Discuss & separate the settings in new system for Config.yaml and Strategy.yaml]
+
+11. NON-A-005 NOTES TO CARRY FORWARD
+------------------------------------
+These are not being decided here, but MUST be retained for later agendas:
+
+- Config.yaml vs strategy.yaml segregation must be reviewed deeply before
+  implementation.
+- Global operational controls stay global; strategy-specific capital/qty/
+  position constraints should be strategy YAML where decided.
+- Margin DB should be refreshed/replaced daily to avoid stale/duplicate data.
+- Margin refresh success AND failure should alert Telegram/email.
+- Margin/API incidents should be stock/trade identifiable.
+- Capital drift should generate periodic Telegram/email alerts.
+- Silent repeated failures are explicitly unacceptable.
+- Dated margin/eligibility snapshots should be retained for audit.
+- Broker is the source of truth for opening cash.
+- Daily sizing capital is locked; reconciliation must not rebase it.
+- "Whichever is lower" applies to maximum capital constraints.
+- The mirrored minimum rule is proposed as "whichever is higher" pending Q5.
+- Maximum quantity can independently bind final quantity.
+- Filled broker trades only count toward the daily trade-count gate.
+- No user/business/system decision values should be hardcoded in Python.
+
+Answer: Don't ignore in current manual relating to only 'A-005 topic', but instead add it under the bottom with suitable headings like 'Not related to A-005, but noted here as valid points while discussing other relevant topics' why? I can't each time either type to explain each agenda topic or I'll forget to mention in upcoming topic or If we add here itself may accidentally might referred this file while implementing helps, So just add all the discussed points relating to 'A-005' under it's core area & un-related but useful notes with some other section/spacing clearly by using suitable heading [DONT SKIP ANYTHING]
+
+12. AFTER THESE ANSWERS
+-----------------------
+After these clarifications:
+1. Reconcile against preserved Production/Test evidence.
+2. Record the screenshots as dated broker evidence.
+3. Separate legacy FACTS from V2 DESIGN INPUTS.
+4. Record historical/known-defect/unknown points.
+5. Prepare:
+   - A-005 FINAL SOURCE RECONCILIATION + FREEZE
+   - A-005 PERMANENT LEGACY MANUAL
+6. Carry non-A-005 notes into a clearly marked
+   "Cross-Topic / Future Agenda Inputs" section.
+7. Close/freeze A-005 if no material contradiction remains.
+
+NO IMPLEMENTATION CHANGE IS IMPLIED BY THIS FILE.

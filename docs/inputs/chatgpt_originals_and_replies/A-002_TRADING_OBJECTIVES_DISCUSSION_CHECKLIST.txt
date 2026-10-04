@@ -1,0 +1,269 @@
+A-002 — TRADING OBJECTIVES
+Discussion Checklist — Legacy System Documentation / Phase 1
+
+OBJECTIVE
+Establish what the DEAD legacy system was intended to achieve as trading
+objectives, separately from A-001 system purpose.
+
+This is a discussion document only. Do NOT write/freeze the permanent A-002
+manual until the answers are reviewed, reconciled with Production-source
+evidence, classified, and explicitly frozen.
+
+SOURCE BASIS
+Primary:
+Production repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Supporting:
+- Existing legacy system overview
+- Repository/file map
+- Startup/runtime evidence
+- Project records
+
+IMPORTANT
+A-001 established WHAT the system was.
+A-002 establishes WHAT TRADING OUTCOMES / OBJECTIVES the legacy system was
+intended to pursue.
+
+Do not silently convert future V2 objectives into legacy objectives.
+
+======================================================================
+DISCUSSION POINTS
+======================================================================
+
+1. PRIMARY TRADING OBJECTIVE
+- What was the principal trading objective of the legacy system? - Fully automated, Improved from existing system, Bugs & Issues free system;
+- Was it intended primarily to identify and execute profitable short-term
+  opportunities? - Yes off course system must handles both Intraday & Positional trades;
+- Was the objective automated execution of externally generated signals? - Yes, same like current system 'automated execution of externally generated signals';
+- Was there an explicit objective regarding profitability, capital growth,
+  consistency, risk control, or execution quality? - Profitability or R:R as per each strategy wise.yaml files, Capital Growth must be established by correct strategies, Consistency refers number of trades, maximum positions amount, number of open positions as per config.yaml and each strategy wise.yaml files, execution quality - we must maintain separate signal filtration or established methods to pick only quality signals from Chartink payload [Current system has one centralised filtration for both Intraday and Delivery trades; Why this inappropriate? Both MIS & GTT trades had differed by their time frames in charts, atr and other things for decision making (Enter/Reject);
+- Which objectives are explicitly supported by repository/config/records? - Getting Signals from Chartink, Placing order, Placing SL & TGT, Orphan cancellation when either SL/TGT hits other leg cancelled (SL/TGT) correctly, Auto Square-off at 15:10 (fixed time), Sending alerts (Telegram & Email), 2 Pipeline Independence (ie, Intraday & Delivery trades separately), Capital Computations (Intraday with 5x margins and Delivery with 1x Margins, Honouring config file's settings through-out the system [But ignore Bugs/issues/inconsistency in all these areas which we need to corrected in new system];
+- Which are only reasonable interpretations? - Full Automation, Alerts, Working flow from System morning auto-start to evening auto-stop;
+
+Classify each as FACT / HISTORICAL / INTERPRETATION / UNKNOWN.
+
+2. SIGNAL-TO-TRADE OBJECTIVE
+- What was the intended outcome after Chartink generated a signal? - Once signals received, it's getting processed (validation, queueing, cancelling, duplication, order processing), Order follow-up (Filled/Pending/Cancelled by broker), 10min Timeout for entry order exists but no guarantee since there is no watchman  like thing exists;
+- Was every valid signal expected to become a trade? - Theoretically yes, Since still there is bugs in Signal processing (No end to end confirmation: Signal receipt to what happened to each signal still unknown so these bugs which are needs to be rectified), Secondary signal filtration mechanism still not considering all criteria's while filtering (ie, some criteria's are only placeholders now);
+- Or was the objective to evaluate the signal and trade only when conditions
+  passed the decision pipeline? - Yes, new system requires correct evaluations + confirmation of each signal processing;
+- Was avoiding unsuitable trades itself an objective? - Yes, unsuitable trades/Signals need to be eliminated from entry order itself (ie, Reject the trade);
+Do not examine detailed screening formulas here.
+
+3. TRADE-SELECTION OBJECTIVE
+- What characteristics was the system trying to select? - Simple how a normal professional trades evaluates signals as received from Chartink, Makes decision (Make entry or reject), So each strategy must have their own .yaml files & it's own secondary filtration mechanism;
+- Was it attempting to select higher-quality signals rather than execute all
+  Chartink signals? - Yes correct, Quality of trade matters over quantity [Even maximum 10 trades in Intraday & 2-3 trades in delivery sufficient], But at the same time due to very heavy stringent filtration we must not make very late entry or Stocks already ran over of the day or Poor R:R due to late entry etc;
+- Was score/ranking intended to prioritize opportunities? - Not sure, why? current system has 16 strategies for both Intraday and Delivery, But in new system we can implement maximum of 6 strategies with suitable secondary filtration mechanism so I guess we must discuss those 6 strategy conditions first then according it's suitable filtration either score/ranking or some other method if any in that time/respective topic arrives [Why? example: Incase Bullish engulfing we must give priority to price of engulfing, volumes, time instead of some other criteria's not suitable to consider/irrelevant];
+- Was there an objective for selecting among simultaneous candidates? - Yes, But with core objective: Quality trade over quantity & Again shouldn't be a late entry, improper entry, unsuitable R:R etc due to stringent conditions which filters almost late trades due to Quality first reason;
+- Was duplicate/concentration avoidance an objective? - Yes, But currently we do have stocks and their sector data which caps stocks of that sector, But in new system there's no checking of whether same sector stocks arrived again; Again Currently One stock one direction once a day followed which should be modified to One stock once a day only [By marking already traded same stock next time as duplicate];
+Do not judge effectiveness here.
+
+4. ENTRY OBJECTIVE
+- What was the intended objective of the entry process? - Ensure all signals are processes (ie, reconciliation like receipt > Order made, rejected, cancelled, duplicate, etc) + Quality Filtration (At the same time shouldn't be a late or unsuitable R:R or already ran over stock) + Proper order follow-up like 10min time-out;
+- Was the system attempting to enter near a calculated/derived price? - Yes, there is slippage concept in entry price [Why? Slippage prices fixed based on Stock's LTP price so that a cushion from intended entry price to actually filled prices is same, How assume For Rs 100 stock price slippage is Rs 0.50 and my intended entry price is Rs 105 means then system releases entry order when prices at Rs 104.50 So 0.50 cushion helps to actual filled price in between Rs 104.50-105 meaning covering slippage within Intended price, Note shown example meant for Long Trades, Not for Short trades which is intended price + Slippage which probably Rs 105+0.50=Rs 105.50 intended entry price);
+- Was price protection/slippage/cushion part of the intended objective? - 100% Yes, It must be part of it;
+- Was there an intended entry timeout? - 100% Yes, It must be part of it;
+- Was the objective immediate execution, controlled execution, or both? - Controlled execution [Example: For Intraday day once stock is qualified for entry, then don't make entry instead wait for 5min candle to be filled, At the same time within 5 min time candle if prices crosses Intended entry price-+Slippage make entry, So Probably Controlled execution I Guess, let's deeply discuss in that respective topic;
+Do not settle entry-price formulas, slippage formulas or timeout mechanics here.
+
+5. RISK / LOSS-CONTROL OBJECTIVE
+- Was limiting loss per trade an explicit objective? - Yes, SL % based on strategy.yaml [meaning strategy wise.yaml files];
+- Was stop-loss protection an intended objective? - Yes SL is intended as per strategy.yaml [meaning strategy wise.yaml files];
+- Was capital/risk allocation intended to constrain exposure? - Yes SL is intended as per config.yaml (ie, Capital/maximum trades per day = capital per trade) & strategy.yaml (In case each strategy.yaml) limits maximum capital which is below than config.yaml formula than consider the strategy.yaml [Meaning capital whichever is lower of config.yaml derived Vs config.yaml explicated limit];
+- Was concentration control an objective? - Nope, Skip it [In new system there is not sector/concentration caps];
+- Was the system intended to prevent trades failing configured risk conditions? - Yes, Trade must be made like: Signal receipt > Validate > Make decision (Enter/Reject) > Position sizing after checking config.yaml & strategy.yaml > All criteria's passed > Stock is qualified for entry > Wait for 5min candle confirmation > pass order;
+Separate objective from implementation and effectiveness.
+
+6. PROFIT / EXIT OBJECTIVE
+- Was the system intended to capture predefined profit targets? - Yes, TGT based on strategy.yaml [meaning strategy wise.yaml files has R:R ratios];
+- Was SL/TGT management part of the intended lifecycle? - Yes, SL/TGT as per R:R mentioned in strategy.yaml files [including smart target manager function if any, which basically modifies TGT range based on stock's expected movement];
+- Was intraday square-off an explicit objective? - Yes, Current system has it so just review the correctness implement as it is;
+- Was the system intended to avoid carrying intraday positions beyond its
+  trading window? - Yes, 2 things mandatory: Cut-off fresh entries as per config.yaml file time & Auto-Square off at 15:10 [Check current system behaviour > review > ensure correctness > Implement as it is];
+- Was delivery/holding management also part of the legacy objective? - Yes;
+Do not examine target/exit formulas here.
+
+7. INTRADAY VS DELIVERY OBJECTIVES
+The legacy overview identifies two books: Intraday (MIS/CO) and Delivery (CNC).
+- Were objectives different for each? - Yes where? Capital Computation (For Intraday at 5x margin, but for Delivery only 1x), Auto-Square off (Applicable for Intraday, Not for Delivery), Zerodha Ordering window (For Intraday it might be 'Normal' or 'Cover', But for Delivery it is 'GTT'), Strategies has different filtering mechanism example: Time frame for Intraday Vs Delivery differs; So need to discuss deeply in those respective topics;
+- Was intraday specifically intended to flatten same day? - Yes, Do it at 15:10 [Auto-Square off]
+- Was delivery intended to carry overnight? - Yes, Delivery trades (GTT trades in zerodha) will automatically carried forward unless otherwise TGT/SL hits in same day;
+- Were decision/risk/exit objectives documented separately? - Yes, then only helps for clear decision making & Future upgradation;
+Do not assume parity.
+
+8. CAPITAL OBJECTIVE
+- What was the system trying to achieve with its capital model? - Capital allocation (Margin computation: 5x/1x), Capital consumption (for order passing) and capital release (Once order exited due to SL/TGT hit) must be handled correctly, Handling P&L, Ordering expenses computation requires different approach, Capital sync with broker, Broker's capital is the final source of truth, Also note for 5x margin system deducts like Rs 100*5=Rs 500 [this Rs 500 inclusive of Margin] per order but broker has different approach like Rs 100/5x = Rs 20 actual cash deducted after considering margin, So we need deeper discussion while capital topic arrives;
+- Was capital preservation an explicit objective? - Yes, part of intent;
+- Was maximizing available trading capital an objective? - Yes, Maximizing doesn't allowed beyond margins (For Intraday at 5x, For Delivery at 1x only);
+- Was capital reservation intended to prevent conflicting orders? - Yes, wherever possible to avoid capital difference between broker vs system;
+- Was sizing intended to control exposure? - Yes, sizing as per config.yaml (capital inclusive of margin/maximum trades per day = Capital per trade) & Strategy.yaml (In case maximum capital amount specified per trade) which acts as constraint/limiting factor;
+Do not introduce later/future capital decisions; detailed capital belongs to A-005.
+
+9. EXECUTION-QUALITY OBJECTIVE
+- Was execution quality itself an objective? - Yes every execution must be processed after considering config.yaml, strategy.yaml, secondary filtration of respective strategy.yaml & More over very vital part of entire system why? based on execution quality basis only entire trade stands > Capital appreciation or depreciation > system performance is determined;
+- Was submitted price versus expected price controlled? - No we can't control whatever outside our hands (example: actual price filled at broker end), But what we do is entry price inclusive of slippage value (applicable to stock's LTP);
+- Was minimizing slippage explicit? - Yes, No complication So what we do Intended entry price should inclusive of slippage>Release order at price which includes slippage;
+- Was preventing stale orders an objective? - Yes, Prevent stale orders, duplicate orders and ensure one stock per day [meaning no more trade of same stock in same day];
+- Was timeout/cancellation intended to protect execution quality? - Yes, entry order should be cancelled >10min queue at broker's books and At the same time shouldn't be cancelled before 10mins is completed;
+Record only supported evidence.
+
+10. AUTOMATION / UNATTENDED OBJECTIVE
+- Was the system designed to operate without continuous human intervention? - Yes, ensure fully headless function right from system start-up (cron job) to system shutdown at evening and includes other cron jobs [refer existing system > review for correct function > Implement same as it is];
+- Was the complete lifecycle intended to be automated? - Yes, as said above and where human intervention required? Simple to halt the system if required; (Instead of stopping then VM in Oracle console)
+- What human intervention points existed? - Yes, here human intervention required? Simple to halt the system if required
+- Were kill switches emergency/operator controls rather than normal workflow? - Yes, Part of control mechanism;
+Separate normal automation from emergency intervention.
+
+11. MARKET-DAY OBJECTIVE
+- Was operation restricted to valid NSE trading days? - Yes, So maintain list of holidays & weekends list for 2026 & 2027 (just placeholder file now) > So system will auto-starts only on valid trading days;
+- Was the system intended to prepare before trading and complete the lifecycle
+  after the session? - Yes, refer existing system [Refer > Review > Correct it > Improve it > Implement it];
+- Was EOD processing a trading objective or an operational function? - I would say partly trading objective & partly operational function why? operation objective can be performed after EOD like maintenance/system operations, but the same time planning some strategies like 'analyse today eod, but trade tomorrow' meaning get signals from Chartink after 17:00 analyse store the data inside the system then shutdown, Next day check for confirmations then trade on yesterday's signals as already stored;
+Keep detailed schedules for A-003/B-section.
+
+12. REPORTING / VISIBILITY OBJECTIVE
+- Was reporting intended for audit/evidence? - No, Retire existing excel report generator, Once new system is built > stablished then lets add GUI where let's create reports (meaning database data > GUI window > Download based on customized settings/Selections];
+- Was Telegram/email intended for operational awareness? - Yes, same as current alerts in Telegram and Email [But Refer > Review > Correct it > Improve it > Implement it];
+- Was trade/position/capital status visibility an objective? - Yes, but let's make it in GUI which will be built after new system is built and ensured stability tested;
+- Was holding-status reporting actually a legacy objective, or a later request? - Holding status reporting a later request [meaning just status of existing holding?];
+Do not turn a future request into a historical objective without evidence.
+
+13. PROFITABILITY OBJECTIVE — SPECIAL CHECK
+Verify whether evidence establishes:
+- numerical profitability target: Numerical profitability target as per strategy.yaml;
+- target return % : as per strategy.yaml;
+- target win rate : Maximum as much as possible;
+- target R:R - 1:1.5 (Risk 1: Return 1.5)
+- maximum daily loss : as per strategy.yaml;
+- maximum trade count: as per config.yaml;
+- minimum expected edge: as per config.yaml or as per strategy.yaml (as applicable)
+If no evidence exists, record UNKNOWN / NOT ESTABLISHED.
+Do not infer a target merely because this was a trading system.
+   ** additional note: Why not giving definite numbers/values, Since entire system is operated based on config.yaml values which helps to change values in trading day, so once values changed then system automatically functions based on established values instead of hardcoded values anywhere;
+   ** Also note that config.yaml means single file, but strategy.yaml means multiple .yaml files to be maintained based on each strategy wise [meaning every strategy = every strategy.yaml files];
+   ** We must honour Support & Resistance points (S&R) while implementing R:R calculations
+   ** So consider all of the above as preliminary info & we will discuss deeply while discussing respective topics arrives;
+
+14. RISK / PERFORMANCE TARGETS — SPECIAL CHECK
+Check for documented objectives covering:
+- risk per trade : as per config.yaml or as per strategy.yaml (as applicable);
+- daily loss : as per config.yaml or as per strategy.yaml (as applicable);
+- open positions : as per config.yaml or as per strategy.yaml (as applicable);
+- capital deployment: as per config.yaml or as per strategy.yaml (as applicable);
+- concentration: Not Applicable, let's remove this criteria in new system;
+- drawdown : as per config.yaml or as per strategy.yaml (as applicable);
+- win rate : As much as possible with high success by maintaining suitable strategies & it's each secondary filteration methods;
+- expectancy : Discuss > implement (search internet before assuming > Discuss > implement);
+- R:R : as per config.yaml or as per strategy.yaml (as applicable);
+- slippage : Lets mainintain slippage slabs based in LTP of Stocks (example: Stock's LTP price 0-100=?, 101-200=?, 201-300=?.....>1500=?);
+- execution latency : Configuare based on zerodha + VM + Other infrastucture time (search internet before assuming > Discuss > implement);
+- rejected-signal rate: Discuss > implement (search internet before assuming > Discuss > implement);
+- fill rate : Discuss > implement (search internet before assuming > Discuss > implement);
+
+** Additional Info: Why not giving definite numbers/values, Since entire system is operated based on config.yaml values which helps to change values in trading day, so once values changed then system automatically functions based on established values instead of hardcoded values anywhere;
+** Also note that config.yaml means single file, but strategy.yaml means multiple .yaml files to be maintained based on each strategy wise [meaning every strategy = every strategy.yaml files];
+** So consider all of the above as preliminary info & we will discuss deeply while discussing respective topics arrives;
+
+For each:
+SOURCE → VALUE/RULE → OBJECTIVE OR IMPLEMENTATION? → CLASSIFICATION
+
+15. OBJECTIVE VS IMPLEMENTATION
+For every important objective separate:
+INTENDED OBJECTIVE
+→ IMPLEMENTED MECHANISM : 1 config which is central control panel > 2 pipelines (Intraday & Delivery) who trades independently > Each pipeline has it's own strategies > each strategies has its own .yaml > But centralised secondary filtration mechanism (Score/ranking based) > Decision making (enter/reject) based on minimum score is attained > Once orders passed then everything is centralised like order management > Capital should be appropriated for Intraday and Delivery as per config.yaml > Centralised Alerts and reports > other functions as same as current system;
+→ OBSERVED HISTORICAL BEHAVIOUR: Full automated system, Theoretically system worked as per designed flow (Ignore bugs/consistency/contradictions and some missing things while making calculations/computations);
+→ KNOWN DEFECT / LIMITATION: Bugs/issues in everywhere, system not fully following intended design, So Once all agenda topics concluded, Next need to make full system audit > Find issues > Record inside relevant topics > Design > Implement correctly, Some defects are (not exhaustive list): Not considering all criteria's in secondary filtration, Failure of 10min time-out, Slippage not followed up, Definition of price, time differs in every module/function that needs to be correctly addressed (Example: Price= Chartink fired/payload price? or System signal received time price? or System calculation time price?, system entry locked price? or during 5min candle movement price? or order realsed time price? or order filled price?) Like wise we must clearly review in each topic (agenda topic) while forming decision for each components like price, time, logic, numerator, denominator, calculator etc;
+
+Do not rewrite an objective because its implementation was defective.
+
+16. OBJECTIVE VS FUTURE REQUIREMENT
+Explicitly identify statements belonging to the future/replacement system.
+Examples to classify rather than automatically include:
+- live-only operation : Yes Live only operation [So Paper mode not required any more];
+- removal of paper mode : Yes, agreed remove it [Not required];
+- signal-specific independent processors : Yes 100% agreed [For each strategies has own .yaml (which gives input of R:R, SL%, Start & End Time and others-refer existing files] + Own Signal Processors or secondary filtration mechanism];
+- new S&R logic : Yes, I would say that why? Need to fix proper strategies (No late entry) > Suitable signal processor (correct criteria's for each strategies) > Accordingly let's set S&R logic;
+- new filtration : Yes, Either existing score/ranking based or new method, But each strategy=own filtration;
+- revised capital model: Capital logic is same as existing: Cash capital appropriate into Intraday capital including margin (Cash capital*5x) and Delivery capital including margin Cash capital*1x) then capital per trade as above said (config.yaml vs strategy.yaml) > Capital release, usage, remaining > Capital sync with broker; At the same time note that broker deducts like Cash capital/5x = per order? [Not Cash capital*5x], So if possible we also need implement such calculation logic [Search internet before assuming > Discuss > implement);
+- revised price semantics : We need fix Price means? in each modules/functions wherever using 'price' why? price always has movements from morning-evening so different module has different calc;
+- revised timeout/watchman behaviour - Yes needs to implement;
+- new holding-status reports - No new reports, Just telegram or email alert is sufficient in each day morning either consolidated or individual stocks wise [Later we will deeply discuss in those relevant topic];
+
+These are NOT legacy objectives unless historical evidence establishes them.
+
+17. CONFLICT / EVIDENCE REVIEW
+Check conflicts among:
+A. Production repository
+B. README/documentation
+C. Config files
+D. Code behavior
+E. Existing legacy manual
+F. Historical records
+G. User recollection
+
+Do not silently resolve conflicts.
+
+For each conflict:
+SOURCE A:
+SOURCE B:
+CONFLICT:
+WHAT CAN BE PROVEN:
+WHAT REMAINS UNKNOWN:
+** Combined answer is: Make a deep system relevant audit once all topics (or agenda) is completed > Make audit > Segregate the issues > Add to existing topic > Plan > Revised system design > Architecture > Implement;
+
+
+18. REQUIRED CLASSIFICATION
+Use:
+FACT
+HISTORICAL
+UNKNOWN / NOT ESTABLISHED
+INTERPRETATION
+KNOWN DEFECT
+OPEN QUESTION
+
+19. A-002 FREEZE DECISION
+Before writing the permanent manual, agree on:
+A. Primary trading objective
+B. Secondary trading objectives
+C. Signal-selection objective
+D. Entry objective
+E. Risk/loss-control objectives
+F. Profit/exit objectives
+G. Intraday vs delivery objectives
+H. Capital objective
+I. Execution-quality objectives
+J. Automation objective
+K. Reporting/visibility objective
+L. Explicitly UNKNOWN objectives
+M. Known objective-related defects
+N. Future/V2-only objectives excluded from legacy baseline
+
+20. PROPOSED FINAL DISCUSSION OUTPUT
+A. FROZEN LEGACY TRADING OBJECTIVES
+B. OBJECTIVES SUPPORTED BY CODE/EVIDENCE
+C. HISTORICAL / RECORD-DERIVED OBJECTIVES
+D. UNKNOWN / NOT ESTABLISHED
+E. KNOWN DEFECTS AFFECTING OBJECTIVES
+F. FUTURE REQUIREMENTS EXCLUDED FROM LEGACY BASELINE
+G. EVIDENCE SOURCES
+H. A-002 FREEZE DECISION
+
+======================================================================
+GOVERNANCE
+======================================================================
+- Do NOT design V2.
+- Do NOT decide whether an objective should be retained.
+- Do NOT rank objectives.
+- Do NOT judge whether objectives were good or bad.
+- Do NOT infer profitability targets without evidence.
+- Do NOT confuse implementation mechanisms with objectives.
+- Do NOT confuse future requests with legacy objectives.
+- Do NOT start detailed S&R, sizing, execution, order-management or
+  configuration analysis here.
+
+A-002 is complete only when historical trading objectives are separated from
+implementation details and future redesign requirements.
+
+END OF A-002 DISCUSSION CHECKLIST

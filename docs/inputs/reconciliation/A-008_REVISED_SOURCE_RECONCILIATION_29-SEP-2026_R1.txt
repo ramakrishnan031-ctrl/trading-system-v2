@@ -1,0 +1,1084 @@
+A-008 — STRATEGY MODEL
+REVISED SOURCE RECONCILIATION
+29-SEP-2026 — REVISION 1
+
+STATUS: REOPENED / SOURCE-COUNT VERIFICATION PENDING
+
+REVISION REASON:
+A further cross-check of the preserved project evidence found a material
+count contradiction that the previous freeze resolved too strongly. A locked
+strategy decision record explicitly lists 15 strategy YAML names, while the
+supplied Chartink inventory contains 16 named scanner/strategy definitions,
+including PB01 SHADOW. Therefore the previous statement that the legacy
+system had exactly 16 strategy YAMLs is withdrawn pending direct repository
+verification.
+
+======================================================================
+1. SCOPE / GOVERNANCE
+======================================================================
+
+A-008 documents the DEAD legacy Strategy Model only.
+
+It does not approve, repair, redesign, tune, or revive the legacy model.
+V2/new-system inputs are recorded separately and are not treated as legacy
+facts.
+
+Evidence hierarchy:
+1. Production repository / Production-derived repository documentation
+2. User-confirmed historical information
+3. Testing/Sandbox comparison
+4. User screenshots / Chartink scanner record
+5. Interpretation only where explicitly labelled
+
+Production remains the primary legacy baseline. Testing/Sandbox is comparison
+evidence only.
+
+Direct public GitHub page retrieval was attempted on 29-Sep-2026 but did not
+return the named private/public snapshot pages through the web cache. The
+reconciliation therefore relies on the repository-derived working-tree/file-map
+evidence already present in the Project, plus the newly supplied A-008 checklist,
+Chartink scanner file and screenshots. No unverified GitHub content has been
+substituted.
+
+======================================================================
+2. STRATEGY COUNT — MATERIAL SOURCE CONFLICT REMAINS
+======================================================================
+
+A new source cross-check changes the previous conclusion.
+
+SOURCE A — SUPPLIED CHARTINK INVENTORY:
+Chartink_scanners.v2.txt contains 16 named scanner/strategy definitions:
+
+01 POSITIONAL SWING LONG [Delivery]
+02 POSITIONAL SECTOR ROTATION [Delivery]
+03 POSITIONAL MOMENTUM LONG [Delivery]
+04 RANGE BREAKOUT SHORT
+05 RANGE BREAKOUT LONG
+06 GAP FADE SHORT
+07 GAP FADE LONG
+08 GAP GO SHORT
+09 GAP GO LONG
+10 VWAP REJECTION SHORT
+11 VWAP BOUNCE LONG
+12 FIRST PULLBACK SHORT
+13 FIRST PULLBACK LONG
+14 OPEN HIGH BREAKDOWN SHORT
+15 OPEN LOW BREAKOUT LONG
+16 PB01 BREAKOUT + RETEST (SHADOW)
+
+SOURCE B — PRESERVED LOCKED DECISION RECORD:
+`locked_decisions.yaml` contains decision S12 titled
+"The 15 strategy YAML file names (locked)" and lists 15 strategy names:
+- 6 Intraday LONG
+- 6 Intraday SHORT
+- 3 Positional
+
+This is materially different from the previous assumption that the 16th
+Chartink PB01 definition was necessarily a YAML strategy.
+
+SOURCE C — PRESERVED REPOSITORY MAP:
+The production working-tree evidence shows a `config/strategies/` directory
+loaded by StrategyLoader, while PB01 also has a separate `v3_chain.pb01_entry`
+shadow-entry component and the strategy-status tooling explicitly excludes
+`v3_playbook` shadow strategies from normal status rows.
+
+Therefore the evidence currently supports:
+
+FACT:
+    16 named scanner/strategy definitions exist in the supplied Chartink
+    inventory.
+
+FACT:
+    A preserved locked decision record identifies 15 strategy YAML names.
+
+FACT:
+    PB01 is explicitly identified as SHADOW in the supplied scanner inventory
+    and has separate V3 shadow components in the preserved repository map.
+
+UNKNOWN / NOT ESTABLISHED:
+    Whether PB01 had a YAML file in the Production snapshot.
+    Whether the 15-name locked decision record represents the exact Production
+    snapshot being documented, a later/earlier strategy set, or an already
+    normalized strategy registry.
+    Exact Production `config/strategies/*.yaml` filename count and membership
+    cannot be re-verified directly from GitHub in this run.
+
+IMPORTANT DOCUMENTATION RULE:
+    Do NOT state "16 YAMLs" as a frozen legacy fact.
+    Do NOT state "15 YAMLs" as the final Production count either.
+    The correct current classification is:
+        16 Chartink definitions;
+        15 YAML names in a preserved locked decision record;
+        exact Production YAML inventory = UNKNOWN / NOT ESTABLISHED.
+
+STATUS:
+    A-008 must remain OPEN for source-count verification.
+
+======================================================================
+3. STRATEGY INVENTORY FROM SUPPLIED CHARTINK SOURCE
+======================================================================
+
+The supplied Chartink scanner file shows materially different scanner
+conditions across the 16 strategy definitions.
+
+Examples of distinct condition families:
+
+- Positional / Delivery:
+  POSITIONAL SWING LONG
+  POSITIONAL SECTOR ROTATION
+  POSITIONAL MOMENTUM LONG
+
+- Range:
+  RANGE BREAKOUT SHORT
+  RANGE BREAKOUT LONG
+
+- Gap:
+  GAP FADE SHORT
+  GAP FADE LONG
+  GAP GO SHORT
+  GAP GO LONG
+
+- VWAP:
+  VWAP REJECTION SHORT
+  VWAP BOUNCE LONG
+
+- Pullback:
+  FIRST PULLBACK SHORT
+  FIRST PULLBACK LONG
+
+- Open:
+  OPEN HIGH BREAKDOWN SHORT
+  OPEN LOW BREAKOUT LONG
+
+- Shadow:
+  PB01 BREAKOUT + RETEST (SHADOW)
+
+The scanner file demonstrates distinct Chartink-level signal-generation
+conditions. It does NOT by itself establish that the downstream legacy
+secondary filter was strategy-specific.
+
+Important distinction:
+
+    Chartink scanner strategy conditions
+        !=
+    legacy secondary screening
+        !=
+    score/ranking
+        !=
+    final trade admission
+
+The user explicitly confirmed that the legacy secondary filtration was a
+common/universal score/rank mechanism across strategies.
+
+======================================================================
+4. LEGACY STRATEGY CONFIGURATION MODEL
+======================================================================
+
+Repository-derived evidence establishes:
+
+    config/strategies/*.yaml
+        ->
+    strategies.schema validation
+        ->
+    StrategyConfig
+        ->
+    strategy control / direction / reporting / signal processing
+
+The strategy loader:
+- loads strategy YAMLs once at startup;
+- validates them using strategies.schema;
+- keys loaded strategies by cfg.name;
+- can cross-validate scan_webhook_map references;
+- does not hot-reload strategies.
+
+Repository evidence also establishes StrategyConfig fields for:
+- identity;
+- direction;
+- intent/order protocol;
+- taxonomy/pipeline/horizon;
+- enabled switch;
+- entry/SL/target/trailing/pullback parameters;
+- screening thresholds;
+- position-cap related configuration;
+- entry time window.
+
+Therefore some answers in the user's checklist that were based on memory
+must be superseded by repository evidence where the two differ.
+
+======================================================================
+5. STRATEGY IDENTITY
+======================================================================
+
+FACT:
+Strategy YAMLs have a name and are loaded/validated as StrategyConfig objects.
+
+FACT:
+The direction registry builds a canonical:
+    strategy_name -> LONG | SHORT
+map from validated strategy YAMLs.
+
+HISTORICAL:
+User states each legacy strategy generated only one side:
+    LONG OR SHORT.
+
+UNKNOWN:
+Whether the YAML filename, YAML name, Chartink scanner name, webhook strategy
+field and DB strategy field were required to be identical.
+
+======================================================================
+6. STRATEGY DIRECTION
+======================================================================
+
+FACT:
+The repository recognizes LONG and SHORT direction values.
+
+HISTORICAL:
+User confirms every legacy strategy was one-sided.
+
+The supplied Chartink file supports the existence of explicitly directional
+strategy/scanner names such as:
+- RANGE BREAKOUT SHORT/LONG
+- GAP FADE SHORT/LONG
+- GAP GO SHORT/LONG
+- VWAP REJECTION SHORT
+- VWAP BOUNCE LONG
+- FIRST PULLBACK SHORT/LONG
+- OPEN HIGH BREAKDOWN SHORT
+- OPEN LOW BREAKOUT LONG.
+
+Important:
+The user states the YAML itself did not necessarily label LONG/SHORT, while
+the strategy's generated signals did. Therefore do not state that the YAML
+necessarily contained a direction field for every historical strategy without
+source confirmation.
+
+======================================================================
+7. STRATEGY CLASSIFICATION / PRODUCT INTENT
+======================================================================
+
+FACT:
+The legacy strategy model contained strategy intent/classification associated
+with Intraday versus Delivery.
+
+HISTORICAL USER RECORD:
+    10 Intraday
+    5 Delivery
+    1 PB01 shadow/placeholder treated as Intraday.
+
+HISTORICAL:
+A strategy was not intended to trade both MIS and Delivery.
+
+UNKNOWN:
+Exact precedence among:
+- strategy intent/classification;
+- global trade_type;
+- force_intraday_only;
+- product/order protocol;
+- any signal-level override.
+
+The strategy control code considers global trade_type,
+force_intraday_only and per-strategy enabled state.
+
+======================================================================
+8. GLOBAL CONTROL VS STRATEGY CONTROL
+======================================================================
+
+HISTORICAL USER CONFIRMATION:
+
+system_config.yaml was the global/universal controller.
+
+Strategy YAMLs were secondary/sub-controllers.
+
+The intended legacy operating concept was:
+
+    GLOBAL trade_type
+        +
+    strategy enabled/disabled
+        +
+    strategy classification
+        ->
+    strategy eligibility
+
+User's concrete example:
+- global BOTH permits both segments;
+- individual Delivery strategies can be enabled/disabled;
+- global INTRADAY blocks Delivery as a class.
+
+FACT:
+The repository contains this global trade_type / strategy-control relationship.
+
+V2 INPUT:
+User considers force_intraday_only redundant when trade_type already
+provides the segment-level master control. This is a future design input only;
+it is NOT a claim that the legacy implementation lacked the setting.
+
+======================================================================
+9. STRATEGY ENABLE / DISABLE
+======================================================================
+
+HISTORICAL:
+User confirms strategies could be independently enabled/disabled.
+
+FACT:
+The repository's strategy-control path considers per-strategy enable/disable
+state before sizing, reservation and order placement.
+
+UNKNOWN:
+Exact rejection code/status and whether disabled strategies remain visible
+in all reports.
+
+======================================================================
+10. STRATEGY ENTRY WINDOWS
+======================================================================
+
+FACT:
+There are two time layers:
+
+    global entry window
+        +
+    strategy-specific entry window.
+
+Production system_config evidence states the global entry_start acts as a
+floor over per-strategy windows.
+
+Historical Production example documented in the repository:
+- global entry_start = 10:00;
+- strategy declarations include 09:25;
+- 09:25 does not override the global 10:00 floor.
+
+User answered A-008 Q9 = UNKNOWN as to whether the per-strategy window
+materially controlled Production entry.
+
+Therefore:
+    configuration/implementation = FACT
+    actual historical behavioural use = UNKNOWN.
+
+Testing/Sandbox:
+User reports start-time difference:
+    Production = 10:00
+    Testing/Sandbox = 09:30
+This is retained as a Production-vs-Testing configuration difference.
+
+======================================================================
+11. STRATEGY → CHARTINK SCANNER MAPPING
+======================================================================
+
+FACT:
+config/scan_webhook_map.yaml exists.
+
+FACT:
+StrategyLoader validates mapped scanner entries and requires the referenced
+strategy to exist.
+
+FACT:
+The normal signal path performs scanner -> strategy lookup before strategy
+control and secondary screening.
+
+HISTORICAL USER CONFIRMATION:
+- each Chartink scanner mapped to one strategy;
+- one strategy could receive multiple signals from its own scanner;
+- strategies were not cross-fed by other strategies.
+
+UNKNOWN:
+- behavior of an unmapped scanner;
+- historical mapping collisions;
+- exact one-to-many mapping constraints at schema level;
+- whether mappings changed historically.
+
+User states no unmapped-scanner incident was tested/experienced.
+
+======================================================================
+12. STRATEGY → SECONDARY SCREENING
+======================================================================
+
+FACTUAL LEGACY ARCHITECTURE:
+
+    Chartink signal
+        ->
+    scanner identification
+        ->
+    scanner-to-strategy mapping
+        ->
+    strategy control
+        ->
+    strategy-specific entry-window check
+        ->
+    common secondary screener
+        ->
+    price derivation
+        ->
+    sizing
+        ->
+    risk admission
+        ->
+    capital reservation
+        ->
+    order placement
+
+The current repository-derived deep working tree explicitly documents this
+sequence.
+
+HISTORICAL USER CONFIRMATION:
+The legacy secondary filtration was NOT strategy-specific.
+
+Instead:
+    one common/universal score/rank-based filtration method
+    was applied across strategies and segments.
+
+Therefore the statement in the earlier checklist:
+"each strategy should have its own secondary filtration"
+is classified as USER INTENT / FUTURE INPUT, not legacy architecture.
+
+======================================================================
+13. STRATEGY-SPECIFIC CHARTINK CONDITIONS
+======================================================================
+
+The supplied Chartink source demonstrates different signal-generation
+conditions.
+
+Examples:
+
+POSITIONAL SWING LONG:
+- Daily Open = Daily Low
+- Close > Open
+- Close > VWAP
+- Close > previous-day High
+- Close > EMA200
+- volume > 1.5 × SMA20 volume
+- SMA20 volume > 50,000
+- price > 100 and < 5000
+- daily range > 0.5% of close.
+
+POSITIONAL SECTOR ROTATION:
+- Close > previous-day 20-day High maximum
+- Close > Open
+- Close > EMA50
+- volume > 1.5 × SMA50 volume
+- SMA50 volume > 50,000
+- price 100–5000.
+
+RANGE BREAKOUT:
+- 15-day range < 2% of close
+- directional breakout
+- directional Open/VWAP/EMA20 confirmation
+- volume and price filters.
+
+GAP FADE:
+- approximately ±1% gap condition from prior close
+- reversal confirmation
+- VWAP/EMA20/prior-close relationship
+- volume and price filters.
+
+GAP GO:
+- approximately ±1% gap condition
+- continuation confirmation
+- EMA200/prior-day level
+- volume and price filters.
+
+VWAP REJECTION / BOUNCE:
+- VWAP relationship and rejection/bounce structure
+- direction confirmation
+- EMA20/prior-close
+- volume and price filters.
+
+FIRST PULLBACK:
+- VWAP and EMA20 relationship
+- intraday/daily pullback condition
+- direction confirmation
+- volume and price filters.
+
+OPEN HIGH / OPEN LOW:
+- Open = High or Open = Low
+- directional confirmation
+- VWAP/prior-day level/EMA200
+- volume and price filters.
+
+PB01 BREAKOUT + RETEST (SHADOW):
+- previous 20-day high breakout
+- EMA50 > EMA200
+- close > EMA50 and Open
+- volume and price filters.
+
+These are documented as SOURCE FACTS from the supplied Chartink scanner
+record, not as V2 recommendations.
+
+======================================================================
+14. STRATEGY SCORE / RANK / TIER
+======================================================================
+
+FACT:
+The legacy common screening path produces:
+- pass/reject;
+- score;
+- tier;
+- rejected step;
+- step results;
+- errors;
+- latency;
+- market-data snapshot.
+
+FACT:
+Position sizing consumes tier/performance multipliers.
+
+HISTORICAL USER CONFIRMATION:
+- score/ranking restricted entry candidates;
+- lower-scoring candidates could be rejected;
+- tier multiplier affected position size.
+
+IMPORTANT:
+Score/rank was therefore a universal downstream qualification mechanism,
+not the unique definition of each strategy.
+
+KNOWN HISTORICAL DEFECT / USER-REPORTED PROBLEM:
+The common filtration could allow signals from stocks that had already run
+during the day, leading to late entries and SL hits. User reports this as a
+major historical problem and associates it with very low success ratio.
+The reported success ratio is retained as USER-REPORTED/HISTORICAL and is not
+independently recalculated in this manual.
+
+======================================================================
+15. STRATEGY RISK / SL / TARGET / R:R
+======================================================================
+
+USER A-008 ANSWERS:
+- strategy-specific SL was expected;
+- strategy-specific target/R:R was stated as being in strategy YAML;
+- target/R:R was stated to be derived from each strategy YAML.
+
+RECONCILIATION:
+Repository evidence confirms StrategyConfig contains entry/SL/target-related
+fields and the entry engine consumes target/R:R-related strategy information.
+
+Therefore:
+    FACT:
+    strategy configuration contains risk/target-related parameters.
+
+    HISTORICAL:
+    user states target/R:R was strategy-specific.
+
+    UNKNOWN:
+    exact field names/values and exact precedence between YAML and global
+    configuration for every historical strategy.
+
+The user's requested future principle:
+    every V2 strategy YAML should contain its own SL%
+is recorded as V2 INPUT, not used to rewrite the legacy manual.
+
+======================================================================
+16. STRATEGY + CAPITAL / POSITION SIZING
+======================================================================
+
+HISTORICAL USER ANSWER:
+Major capital/quantity/position controls were primarily global in
+system_config.yaml rather than strategy-specific.
+
+FACTUAL REPOSITORY QUALIFICATION:
+The StrategyConfig schema itself contains a per-strategy position-cap field.
+Therefore the user's statement "legacy had no strategy-specific position
+settings" cannot be accepted as an absolute repository fact.
+
+Correct classification:
+    FACT:
+    the strategy schema is capable of carrying strategy-level position
+    constraint information.
+
+    HISTORICAL USER REPORT:
+    the deployed legacy business controls were mainly in global config and
+    user does not recall strategy-specific position caps being used.
+
+    UNKNOWN:
+    whether the deployed Production YAMLs populated and enforced the
+    per-strategy position-cap field.
+
+This distinction is important and is intentionally preserved.
+
+======================================================================
+17. GLOBAL VS STRATEGY LIMITS
+======================================================================
+
+User's historical description:
+- global config held major controls such as maximum/minimum/time controls;
+- strategy YAML held strategy-specific classification/R:R/other strategy
+  properties.
+
+Current repository evidence shows both global constraints and strategy-level
+schema fields.
+
+Therefore the permanent record must not claim that one layer was the sole
+source of every limit without tracing each individual field.
+
+The A-005 capital model remains the authoritative separate manual for capital
+mechanics.
+
+======================================================================
+18. DUPLICATE / CONCURRENCY RULE
+======================================================================
+
+HISTORICAL USER CONFIRMATION:
+
+Legacy:
+    one stock + one direction once a day PER SEGMENT.
+
+Thus Intraday and Delivery were independent pipelines for duplicate treatment.
+
+V2 INPUT:
+    one stock + one direction once a day irrespective of segment/pipeline.
+
+Do not import this V2 rule into the legacy manual.
+
+Repository-derived runtime also contains:
+- one-trade-per-symbol-direction;
+- portfolio/risk checks;
+- concurrency-aware admission.
+
+FACT:
+These mechanisms exist.
+
+EXACT historical interaction with the two segment books remains documented
+according to the user's historical statement above.
+
+======================================================================
+19. MULTIPLE STRATEGIES / SAME SYMBOL
+======================================================================
+
+The historical duplicate rule was not "one symbol globally per day."
+
+The user describes the legacy rule as:
+    one stock + one direction once a day per segment.
+
+Therefore a symbol could be treated independently across Intraday and Delivery
+books.
+
+V2 input is different:
+    one stock + one direction once a day.
+
+The distinction is preserved.
+
+======================================================================
+20. STRATEGY GOVERNOR / CIRCUIT BREAKER
+======================================================================
+
+FACT:
+A strategy governor/circuit-breaker implementation and configuration exist.
+
+Known configuration fields include:
+- enabled
+- loss_multiplier
+- cutoff_time
+- lookback_days.
+
+USER ANSWER:
+Actual Production activation/use = UNKNOWN.
+
+Therefore:
+    code/configuration existence = FACT
+    actual historical operational effect = UNKNOWN.
+
+======================================================================
+21. PAPER VS LIVE
+======================================================================
+
+USER ANSWER:
+Paper and live used the same strategy configuration and decision logic.
+
+Classification:
+    HISTORICAL USER CONFIRMATION.
+
+The repository-derived paper/live differences found elsewhere in the system
+must not automatically be attributed to strategy decision logic.
+
+Q30 exact paper-only strategy decision differences = UNKNOWN.
+
+Therefore no stronger parity claim is made beyond the user's historical
+statement.
+
+======================================================================
+22. PRODUCTION VS TESTING STRATEGY DIFFERENCE
+======================================================================
+
+USER ANSWER:
+No known strategy-model difference except:
+    Production start = 10:00
+    Testing/Sandbox start = 09:30.
+
+Additional screenshot evidence reveals a separate integration/naming difference
+described below.
+
+Production Chartink screenshot:
+    scanner/alert name is "VWAP BOUNCE LONG".
+
+Testing Chartink screenshot:
+    scanner/alert name is "VBB097-VWAP BOUNCE LONG".
+
+The testing naming includes a client identifier marker that Production did not.
+
+User states:
+- Production strategy names/URLs/scanner names did not include the Zerodha
+  client ID.
+- Testing strategy/scanner naming included the client ID marker.
+- Testing therefore received payload data containing that marker.
+- A manual adjustment was made in the Testing system so that the marker was
+  not considered while receiving the Chartink payload.
+
+SECURITY NOTE:
+The screenshots contain webhook/token material. No token, secret, API key,
+or credential is reproduced in this manual.
+
+Classification:
+    HISTORICAL USER/Screenshot evidence:
+    Production and Testing used different Chartink naming conventions.
+
+    HISTORICAL USER-REPORTED BEHAVIOUR:
+    Testing required a normalization/ignore-marker adjustment.
+
+    V2 INPUT:
+    Establish one universal Chartink strategy/scanner naming and payload
+    convention so no one-off Production-vs-Testing adjustment is required.
+
+This is a cross-topic integration/governance point retained because it can
+materially affect strategy identity and scanner mapping.
+
+======================================================================
+23. KNOWN LEGACY STRATEGY DEFECTS / LIMITATIONS
+======================================================================
+
+The following are recorded as historical/user-reported unless separately
+proven by source:
+
+1. LATE / OVEREXTENDED SIGNALS
+   Strategy conditions could produce a signal after a stock had already run
+   significantly during the day. User reports these candidates often reached
+   SL because little room remained for continuation.
+
+2. UNIVERSAL SECONDARY FILTRATION
+   One common score/rank filtration layer was used across strategies/segments,
+   rather than strategy-specific qualification.
+
+3. STRATEGY DUPLICATION
+   User reports that some strategies were almost duplicates with different
+   names and therefore did not represent genuinely distinct strategy logic.
+   The supplied Chartink file should be used as the factual comparison source.
+
+4. PB01 SHADOW / PLACEHOLDER
+   PB01 BREAKOUT + RETEST is explicitly marked SHADOW and was treated as a
+   placeholder rather than an ordinary production strategy.
+
+Do not convert these observations into redesign decisions in A-008.
+
+======================================================================
+24. STRATEGY MODEL END-TO-END LEGACY FLOW
+======================================================================
+
+                    CHARTINK
+                       |
+                       v
+              Scanner / Alert
+                       |
+                       v
+            scan_webhook_map.yaml
+                       |
+                       v
+             Strategy lookup
+                       |
+                       v
+             StrategyConfig
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+      global trade_type     strategy enabled
+      / global controls     / classification
+             |                   |
+             +---------+---------+
+                       |
+                       v
+            strategy eligibility
+                       |
+                       v
+          strategy entry window
+                       |
+                       v
+          COMMON SECONDARY SCREEN
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+       hard gates               score / tier
+          |                         |
+          +------------+------------+
+                       |
+                       v
+             candidate qualified
+                       |
+                       v
+            entry / SL / target
+               derivation
+                       |
+                       v
+                  sizing
+                       |
+                       v
+               risk admission
+                       |
+                       v
+            capital reservation
+                       |
+                       v
+                order placement
+
+The exact internal branching around retest/S&R/shadow paths belongs to the
+corresponding later manuals and is not silently folded into A-008.
+
+======================================================================
+25. REQUIRED SOURCE → CONSUMER RECORD
+======================================================================
+
+STRATEGY NAME
+SOURCE:
+    config/strategies/*.yaml
+TRANSFORMATION:
+    StrategyLoader -> StrategyConfig keyed by cfg.name
+CONSUMERS:
+    strategy lookup, direction registry, screening/order pipeline
+STORAGE:
+    loaded in memory; direction registry also has tracked seed/state files
+STATUS:
+    FACT.
+
+DIRECTION
+SOURCE:
+    StrategyConfig.direction / direction registry
+TRANSFORMATION:
+    canonical strategy_name -> LONG/SHORT
+CONSUMERS:
+    signal processing and downstream order-side logic
+STATUS:
+    FACT for model; exact historical YAML labelling per file = partly OPEN.
+
+CLASSIFICATION / INTENT
+SOURCE:
+    StrategyConfig.intent / global trade_type / force_intraday_only
+CONSUMERS:
+    strategy control and product intent resolution
+STATUS:
+    FACT implementation; exact precedence = UNKNOWN.
+
+SCANNER MAPPING
+SOURCE:
+    config/scan_webhook_map.yaml
+CONSUMER:
+    StrategyLoader validation + signal processor
+STATUS:
+    FACT.
+
+ENTRY WINDOW
+SOURCE:
+    global system_config + strategy YAML
+CONSUMER:
+    market-window / strategy-entry gate
+STATUS:
+    FACT implementation; historical actual use of per-strategy window =
+    UNKNOWN.
+
+SL / TARGET / R:R
+SOURCE:
+    strategy configuration plus downstream derivation logic
+CONSUMER:
+    entry/SL/target derivation and order placement
+STATUS:
+    strategy-specific target/R:R is user-confirmed historical; exact field
+    precedence requires field-level source trace.
+
+SCORE / TIER
+SOURCE:
+    common secondary screener
+CONSUMERS:
+    candidate admission and position sizing
+STATUS:
+    FACT.
+
+POSITION LIMITS
+SOURCE:
+    global config plus StrategyConfig capability
+CONSUMER:
+    risk engine / strategy admission
+STATUS:
+    exact deployed per-strategy value/use UNKNOWN.
+
+======================================================================
+26. FINAL CLASSIFICATION
+======================================================================
+
+FACT
+----
+- Strategy YAMLs exist and are schema validated.
+- Strategy loader is load-once at startup.
+- Strategy name and direction are represented in the model.
+- LONG/SHORT are valid direction values.
+- Intraday/Delivery intent/classification exists.
+- Global trade_type and per-strategy control participate in eligibility.
+- Scanner-to-strategy mapping exists.
+- Common secondary screening follows strategy control.
+- Common screening produces score/tier.
+- Tier can affect sizing.
+- Strategy governor/circuit-breaker implementation exists.
+- Strategy schema contains strategy-level fields beyond simple name/direction.
+- Supplied Chartink source contains 16 scanner/strategy definitions.
+- Preserved locked decision record S12 lists 15 strategy YAML names.
+
+HISTORICAL
+----------
+- User previously described a 10 Intraday + 5 Delivery + 1 placeholder split.
+- The supplied Chartink inventory has 16 definitions including PB01 SHADOW.
+- The preserved locked decision record lists 15 YAML strategy names.
+- Exact historical Production YAML count remains NOT ESTABLISHED.
+- Strategies were one-sided LONG or SHORT.
+- Strategies could be independently enabled/disabled.
+- Legacy duplicate rule was one stock + one direction once per day per segment.
+- Legacy secondary filtration was common/universal score/rank based.
+- User states target/R:R was strategy-specific.
+- User states paper/live strategy configuration and decision logic were the same.
+- Production and Testing had different Chartink naming convention in the
+  documented example.
+
+UNKNOWN / NOT ESTABLISHED
+------------------------
+- Which exact 16 YAMLs were active at each historical Production date.
+- Exact scanner-map collision behavior.
+- Exact unmapped scanner runtime outcome.
+- Exact per-strategy window runtime impact in Production.
+- Actual Production activation/effect of strategy governor.
+- Exact strategy-level position-cap values and whether they were populated.
+- Exact YAML-vs-global precedence for every strategy field.
+- Exact paper-only strategy decision differences.
+- Complete historical strategy change timeline.
+
+INTERPRETATION
+--------------
+- PB01 being a shadow mechanism is supported, but its exact YAML/file status
+  is not established by the currently accessible evidence.
+- Chartink strategy diversity is not equivalent to downstream secondary-filter
+  diversity.
+
+KNOWN DEFECT / HISTORICAL FINDING
+---------------------------------
+- Late/overextended signals were reported as a major legacy problem.
+- Universal secondary score/rank filtration was a structural limitation.
+- Some strategies were reported as near-duplicates.
+- PB01 was a shadow/placeholder.
+
+OPEN QUESTION
+------------
+- Exact field-level strategy configuration and per-file Production usage must
+  remain available for deeper source tracing if later manuals require it.
+
+V2 / NEW-SYSTEM INPUT
+---------------------
+- Avoid blindly carrying the 16-strategy model.
+- Potentially reduce strategy count.
+- Strategy-specific filtering may be considered later.
+- Strategy YAML should hold strategy-specific controls.
+- Global config should remain a master/global controller.
+- Reconsider force_intraday_only redundancy.
+- Reconsider universal score/rank allocator.
+- Strategy-wise SL% is desired.
+- Uniform Chartink naming/payload semantics should replace one-off test
+  normalization.
+- One stock + one direction once per day is the current stated V2 direction,
+  irrespective of segment.
+- All such items require later V2 agenda/design review.
+
+======================================================================
+27. CROSS-TOPIC CAPTURE — RETAIN FOR FUTURE AGENDA REVIEW
+======================================================================
+
+The user explicitly requested that related points from other agendas be
+preserved here to avoid repeated questions.
+
+A. CHARTINK / SIGNAL INTEGRATION
+--------------------------------
+- Both Production and Testing consume Chartink signals.
+- Production did not embed the Zerodha client ID in strategy/scanner naming.
+- Testing did embed a client-ID marker and required a normalization adjustment.
+- Future system should use one universal naming/payload convention.
+- Never expose webhook tokens/secrets.
+
+B. A-004 INSTRUMENT / MARKET MODEL
+-----------------------------------
+- Chartink signal universe is associated with the global Zerodha instrument
+  reference in the legacy architecture.
+- Strategy-specific instrument universes were not established as separate
+  universes.
+
+C. A-005 CAPITAL / RISK
+-----------------------
+- Legacy common score/tier could affect quantity.
+- Legacy risk/capital engine remained downstream of strategy selection and
+  common screening.
+- Do not duplicate capital rules here; A-005 is authoritative for capital.
+
+D. A-006 BROKER MODEL
+---------------------
+- Strategy intent eventually reaches broker/product/order processing.
+- Exact strategy-to-order protocol selection was not frozen in A-008.
+- Broker eligibility/product decisions belong to A-006/A-007 and later order
+  manuals.
+
+E. A-007 PRODUCT TYPES
+----------------------
+- Strategy classification distinguishes Intraday vs Delivery intent.
+- Legacy product mapping was handled downstream.
+- Strategy cannot be assumed to have directly supplied the broker product code.
+- Exact ProductResolver authority/precedence remains an A-007 source question.
+
+F. TRADING HOURS
+----------------
+- Global entry_start and strategy-specific entry windows coexist.
+- Production and Testing had different global start configuration (10:00 vs
+  09:30 according to user).
+- This must be remembered during A-009/config review.
+
+G. SECONDARY FILTER / S&R
+-------------------------
+- Late entry / already-run stock is a major historical problem.
+- Universal filtering was not strategy-aware.
+- Strategy/scanner conditions themselves differ, as demonstrated by the
+  supplied Chartink file.
+- Future filtering redesign belongs to later agenda items.
+
+H. CONFIGURATION GOVERNANCE
+---------------------------
+- User wants global config to be master/global controller and strategy YAML to
+  carry strategy-specific controls.
+- User specifically wants configuration structure and contents reviewed again
+  with Claude during implementation.
+- Do not hard-code business values in Python.
+- This is a future governance input, not a legacy design freeze.
+
+I. PAPER / LIVE
+---------------
+- User reports same strategy logic/configuration for paper/live.
+- Other system components have paper/live differences; these must be separated
+  when documenting later.
+
+======================================================================
+28. FREEZE
+======================================================================
+
+A-008 = CLOSED / FROZEN.
+
+Frozen meaning:
+    The legacy Strategy Model is now documented as a factual baseline to the
+    extent supported by current evidence.
+
+It does NOT mean:
+- the legacy model is approved for V2;
+- legacy strategy logic should be retained;
+- V2 strategy count is fixed;
+- V2 filtering is fixed;
+- V2 configuration structure is fixed.
+
+Any future change belongs to the V2 design/governance phase after all agenda
+items are reviewed.
+
+END OF A-008 RECONCILIATION

@@ -1,0 +1,1829 @@
+CURRENT PRODUCTION SYSTEM — DEEP WORKING-TREE / END-TO-END FLOW
+Repository: trading-system-prod-snapshot
+Branch: main
+Production restore commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Date of review: 21-Sep-2026
+Purpose: Establish a factual baseline of HOW THE CURRENT PRODUCTION SYSTEM WORKS before a full redesign.
+
+IMPORTANT:
+- This document describes the current Production snapshot as found in the public GitHub repository.
+- It is a BASELINE / REFERENCE document, not a redesign proposal.
+- No redesign decisions are made here.
+- Existing components should not be assumed to be active merely because their code exists. Several V3/S&R/GUI components are explicitly shadow, dormant, default-OFF, or configuration-gated.
+- Where the repository itself says a component is shadow/non-gating/default-OFF, that distinction is preserved.
+- Where the source does not establish a fact, this document does not invent it.
+- Production and SBX are separate systems/references.
+
+======================================================================
+1. EXECUTIVE SYSTEM MODEL
+======================================================================
+
+The current Production system is an unattended NSE intraday trading application.
+
+The repository's own high-level description is:
+
+Chartink scanner
+    -> webhook
+    -> signals/
+    -> screening/
+    -> capital/
+    -> orders/
+    -> broker/
+    -> capital/
+    -> exit / reconciliation / reporting
+    -> EOD shutdown
+
+The repository describes the core trade path as:
+
+Chartink scanner
+    -> webhook
+signals/
+    -> receive, authenticate, queue
+screening/
+    -> secondary screener + hard gates + score
+capital/
+    -> risk gates + position sizing + RESERVE
+orders/
+    -> place entry, then SL + target legs
+broker/
+    -> Zerodha adapter + rate limits + fill monitor
+capital/
+    -> COMMIT reserved -> used, then release on exit
+
+Cross-cutting controls:
+- capital/kill_switch.py
+- core/state_store.py
+- core/config_loader.py
+- alerts/
+
+The most important architectural characteristic is that the system is NOT a single giant decision function. It is a pipeline of cooperating modules with state persisted in SQLite and broker truth reconciled independently.
+
+The signal processor is primarily an ORCHESTRATOR:
+pre-flight -> strategy lookup -> screening -> price derivation -> sizing
+-> risk approval -> capital reservation -> order placement -> status update.
+
+Business decisions are delegated to the relevant modules.
+
+======================================================================
+2. CURRENT REPOSITORY WORKING TREE
+======================================================================
+
+Top-level production structure includes:
+
+alerts/
+allocation/
+broker/
+capital/
+config/
+core/
+data/
+deploy/
+docs/
+ops/
+ops_dashboard/
+orders/
+regime/
+reports/
+screening/
+scripts/
+signals/
+sr_detector/
+strategies/
+tasks/
+tests/
+utils/
+v3_chain/
+
+Root:
+- main.py
+- README.md
+- PATHS.md
+- DEPLOYMENT.md
+- AGENTS.md
+- GEMINI.md
+- UNPUSHED_LEDGER.md
+- requirements.txt
+- requirements-dev.txt
+- run_tests.py
+- .env.example
+- .gitignore
+- .gitattributes
+
+The repository README states that:
+- main.py is the entry point.
+- main.py supports paper/live mode.
+- startup performs reconciliation and worker startup.
+- the service self-exits cleanly after the service window.
+- tests are a major safety layer.
+- YAML configuration is loaded atomically.
+- secrets live in .env and are not committed.
+- default-OFF flags are used for scaffold/shadow features.
+
+The repository contains approximately 1,537 commits in the preserved snapshot.
+
+======================================================================
+3. SYSTEM LAYERS
+======================================================================
+
+Layer 0 — External signal source
+    Chartink scanners generate alerts.
+
+Layer 1 — Signal ingress
+    signals/webhook_receiver.py
+    Receives, authenticates, validates, deduplicates and queues signals.
+
+Layer 2 — Signal orchestration
+    signals/signal_processor.py
+    Runs the ordered trading pipeline.
+
+Layer 3 — Screening / trade qualification
+    screening/
+    Secondary screening, hard gates, score/tier, market-data checks.
+
+Layer 4 — Price construction
+    signal_processor derives entry + SL + target basis.
+
+Layer 5 — Capital / risk admission
+    capital/
+    Position sizing, portfolio/risk checks, reservation.
+
+Layer 6 — Order execution
+    orders/
+    Creates trade/order records and sends entry requests.
+
+Layer 7 — Broker
+    broker/zerodha_adapter.py
+    Converts internal intent to Zerodha API orders and tracks broker state.
+
+Layer 8 — Fill / lifecycle management
+    orders/order_monitor.py
+    orders/order_manager.py
+    orders/order_reconciler.py
+    capital/fund_manager.py
+    Entry fill -> commit reservation -> trade OPEN -> exits -> close.
+
+Layer 9 — Exit / protection
+    SL, TGT, OCO/software-OCO, retries, reconciliation, emergency flatten,
+    EOD squareoff.
+
+Layer 10 — Persistence / evidence / alerts
+    SQLite WAL state store, capital ledger, signal/order/trade records,
+    Telegram/email critical alerts, audit/evidence telemetry.
+
+Layer 11 — Operations
+    systemd, cron, deployment scripts, token watcher, reports, Control Tower,
+    GUI/read-only operational dashboard.
+
+======================================================================
+4. BOOT / STARTUP FLOW
+======================================================================
+
+Entry point:
+    main.py
+
+The README says main.py:
+    - boots
+    - reconciles against broker
+    - starts workers
+    - self-exits cleanly after the service window.
+
+Startup is not simply "start Flask and wait".
+
+The code builds and wires a large dependency graph including:
+- config
+- StateStore
+- event bus
+- broker adapter
+- kill switch
+- FundManager
+- PositionSizer
+- RiskEngine
+- OrderManager
+- OrderMonitor
+- OrderPlacer
+- OrderReconciler
+- SecondaryScreener
+- SignalProcessor
+- EntryGate
+- EOD scheduler
+- live feed
+- candle store
+- alerts/notifier
+- token monitor
+- optional V3/S&R/shadow workers
+- strategy loader
+- instrument cache
+- other safety/telemetry services.
+
+Important startup principle:
+    startup reconciliation precedes signal processing.
+
+The source contains an explicit boot-order invariant:
+signal_processor.start() must not occur before synchronous startup reconcile_once(),
+because otherwise phantom capital could remain unreleased.
+
+Therefore:
+
+BOOT
+  |
+  +--> parse command line / mode
+  |
+  +--> logging / configuration
+  |
+  +--> startup checks / secrets / environment validation
+  |
+  +--> StateStore initialization
+  |
+  +--> broker adapter
+  |
+  +--> kill switch / capital subsystem
+  |
+  +--> broker reconciliation
+  |
+  +--> construct trading workers
+  |
+  +--> start monitors / reconciler / EOD / feed
+  |
+  +--> start SignalProcessor
+  |
+  +--> start EntryGate / other workers
+  |
+  +--> start webhook server
+  |
+  +--> webhook health self-check
+  |
+  +--> READY FOR SIGNALS
+
+The production webhook server uses Waitress rather than Flask's development server.
+The configured server is started with multiple threads.
+
+The repository documents an important safety decision:
+if the local webhook self-check fails at boot, the system degrades rather than shutting down the entire service.
+
+Reason:
+- no webhook means no new signals/entries;
+- but exits, reconciliation and EOD squareoff must continue protecting already-open positions.
+
+The failure therefore produces a CRITICAL alert/sentinel while the service stays alive.
+
+======================================================================
+5. EXTERNAL SIGNAL ARRIVAL — CHARTINK -> WEBHOOK
+======================================================================
+
+Primary entry endpoint:
+    POST /webhook/<scanner_name>
+
+Health endpoint:
+    GET /health
+
+The receiver is intentionally a thin HTTP gateway.
+It does NOT perform screening, strategy decisions or order placement.
+
+Webhook responsibilities:
+
+1. Receive request.
+2. Apply IP/rate controls.
+3. Authenticate.
+4. Validate scanner.
+5. Handle EOD scanner routing separately.
+6. Parse payload.
+7. Validate/cast fields.
+8. Validate trading window.
+9. Validate symbols/prices.
+10. Claim symbol in-flight.
+11. Deduplicate.
+12. Persist signal.
+13. Put signal into signal_queue.
+14. Return an HTTP result.
+15. Write webhook audit information.
+
+Authentication:
+- HMAC via X-Webhook-Signature is supported.
+- Legacy ?token= secret is accepted only when require_hmac=False.
+- With require_hmac=True, a token parameter does not bypass HMAC.
+- Production requires the webhook secret during startup.
+
+The stored webhook payload is sanitized so secrets are not persisted in plaintext.
+
+======================================================================
+6. WEBHOOK DEDUPLICATION AND BACKPRESSURE
+======================================================================
+
+The receiver has two related mechanisms:
+
+A. In-memory fast-path claims
+    (symbol, scanner)
+
+B. Persistent DB fingerprint
+    scanner + symbol + configurable time bucket -> SHA-256 fingerprint
+
+The database has the authoritative uniqueness layer for the persisted signal.
+
+Duplicate behavior:
+- duplicate signals are rejected as DUPLICATE;
+- duplicate rows are not created;
+- in-flight claims are released correctly.
+
+Queue backpressure:
+- if the signal queue is full, the signal is recorded as QUEUE_FULL;
+- HTTP 503 is returned so the sender can retry;
+- the fast dedup claim is rolled back so the retry is not incorrectly treated as a duplicate;
+- an existing QUEUE_FULL DB row can be requeued.
+
+Store failure:
+- claims are rolled back;
+- the result is STORE_ERROR;
+- the sender receives retryable behavior.
+
+This is important for redesign because signal reception and signal processing are intentionally decoupled.
+
+======================================================================
+7. EOD / DAILY SCANNER ROUTING
+======================================================================
+
+The receiver has structural routing for scanners declared as scanner_type="eod".
+
+An EOD scanner:
+- does NOT enter the normal intraday signal queue;
+- does NOT pass through the normal intraday entry window;
+- is captured into the watchlist/EOD path.
+
+This is deliberately designed so an EOD/Daily signal cannot accidentally become an intraday order simply because it arrived after market hours.
+
+This distinction matters for future redesign:
+    "daily context/watchlist"
+and
+    "intraday actionable signal"
+are already separate concepts in the current system.
+
+======================================================================
+8. SIGNAL QUEUE -> SIGNAL PROCESSOR
+======================================================================
+
+signals/signal_processor.py is the central orchestration layer.
+
+Architecture:
+- one dispatcher thread
+- ThreadPoolExecutor worker pool
+- multiple signals can be processed concurrently
+- the dispatcher itself does not execute the business pipeline
+- each signal is sent to a worker
+
+Default constructor supports a worker count, with production configuration supplying the actual value.
+
+The processor:
+- marks signal PROCESSING;
+- performs ordered checks;
+- short-circuits on first rejection;
+- updates persistent signal status;
+- catches worker exceptions;
+- releases in-flight state in finally blocks.
+
+This is an important design property:
+    a rejection at one stage prevents later stages from running.
+
+======================================================================
+9. SIGNAL PROCESSOR — STEP 1: PRE-FLIGHT
+======================================================================
+
+Before screening:
+
+1. Kill-switch entry check.
+2. Global market entry-window check.
+3. Signal-age / expiry check.
+4. Shadow-inning/re-entry guard.
+5. Additional in-flight/concurrency protections.
+
+If the signal is stale:
+    REJECTED_EXPIRED
+
+If outside the entry window:
+    REJECTED_OUTSIDE_ENTRY_WINDOW
+
+If entry kill is active:
+    REJECTED_KILL_SWITCH
+
+This is defense-in-depth:
+the receiver also has time/validation checks, but the processor checks again immediately before expensive processing.
+
+======================================================================
+10. STRATEGY RESOLUTION
+======================================================================
+
+The webhook supplies scanner identity.
+
+The processor resolves:
+    scanner_name
+        -> scan_webhook_map
+        -> strategy_name
+        -> loaded StrategyConfig
+
+If the scanner is unknown or has no strategy mapping:
+    UNKNOWN_STRATEGY
+
+The strategy object then provides important downstream semantics including:
+- direction
+- intent/product
+- lot size
+- strategy-specific entry window
+- SL/target configuration
+- pullback/retest behavior
+- strategy control state.
+
+The strategy is therefore not just a label.
+It is an input to the actual trading decision.
+
+======================================================================
+11. STRATEGY CONTROL GATES
+======================================================================
+
+Before secondary screening, the processor checks strategy control.
+
+The resolver considers:
+- master trade_type
+- force_intraday_only
+- per-strategy enable/disable state.
+
+A strategy that is disabled or incompatible with the active trade type is rejected before:
+- sizing
+- capital reservation
+- order placement.
+
+There is also a strategy governor/circuit-breaker hook where enabled.
+
+Then the strategy-specific entry window is checked.
+
+So there are at least two time layers:
+    GLOBAL entry window
+    +
+    STRATEGY-SPECIFIC entry window
+
+======================================================================
+12. SECONDARY SCREENING — MAIN QUALIFICATION ENGINE
+======================================================================
+
+screening/secondary_screener.py is the current second-stage qualification engine.
+
+Its documented pipeline is:
+    fetch data
+    -> run screening steps
+    -> check errors
+    -> score
+    -> apply minimum-score override
+    -> final status
+
+The screener can perform an initial MIS learned-blocklist check.
+
+If enabled and a symbol has recently been broker-MIS-blocked:
+    REJECTED_NOT_MIS_TRADABLE
+
+It can also operate in shadow mode for that learned blocklist, where the would-reject is observed/logged without actually rejecting.
+
+======================================================================
+13. SECONDARY SCREENING — MARKET DATA
+======================================================================
+
+If market data is not already supplied:
+- quote is requested for the symbol;
+- quote is converted into the screener's market-data structure.
+
+If no quote exists:
+    SKIPPED_QUOTE_UNAVAILABLE
+
+A missing quote is treated as an expected skip rather than an application crash.
+
+A genuine quote/broker/network failure is logged separately.
+
+The screening result stores a market-data snapshot for the signal.
+
+======================================================================
+14. HARD GATE
+======================================================================
+
+screening/hard_gate.py provides explicit non-score hard admission rules.
+
+Current documented hard gate checks include:
+
+1. At-circuit rejection.
+2. Circuit-proximity rejection.
+3. Signal freshness.
+4. Liquidity is currently a NO-OP at this gate; spread remains part of the scored screening steps.
+
+The gate returns a verdict rather than raising.
+
+This distinction is important:
+    hard gates are permission checks;
+    score is qualification/quality information.
+
+======================================================================
+15. SCORING / SCREENING RESULT
+======================================================================
+
+The screener produces:
+- passed / rejected
+- status
+- score
+- tier
+- rejected step
+- step results
+- step statuses
+- errors
+- latency
+- market-data snapshot.
+
+A passed screen moves forward.
+
+A rejected screen stops the signal.
+
+The processor deliberately does NOT double-write screening statuses:
+the screener owns PASSED / REJECTED_* status persistence.
+
+Therefore the screening stage is the principal current boundary between:
+    "scanner signal received"
+and
+    "candidate is qualified enough to consider entry."
+
+======================================================================
+16. ENTRY + SL PRICE DERIVATION
+======================================================================
+
+After screening passes:
+
+The processor derives:
+    entry_price
+    sl_price
+
+The source describes:
+- entry offset
+- SL derivation
+- bounds enforcement.
+
+Direction is converted:
+    LONG -> BUY
+    SHORT -> SELL
+
+The system can also re-anchor the candidate using a fresh live quote for non-pullback-wait signals.
+
+If a fresh quote is available:
+    entry + SL + target + sizing + reservation
+are re-derived from the fresh price.
+
+This is important:
+the webhook trigger price is not necessarily the final execution basis.
+
+If the fresh quote is unavailable:
+the code logs the condition and can continue using the existing webhook price.
+
+======================================================================
+17. POSITION SIZING
+======================================================================
+
+capital/position_sizer.py calculates quantity.
+
+The current documented formula is risk-based:
+
+    risk_per_trade_rs
+        = total_capital × effective_risk_pct
+
+    sl_distance
+        = abs(entry_price - sl_price)
+
+    qty_by_risk
+        = floor(risk_per_trade_rs / sl_distance)
+
+    effective_entry_price
+        = entry_price × (1 + entry_offset_pct)
+
+    margin_per_share
+        = effective_entry_price / leverage
+
+    qty_by_capital
+        = floor(available_bucket / margin_per_share)
+
+    qty_by_concentration
+        = floor((total_capital × effective_concentration_pct)
+                / entry_price)
+
+    raw_qty
+        = min(qty_by_risk, qty_by_capital, qty_by_concentration)
+
+    tiered_qty
+        = floor(raw_qty × tier_multiplier)
+
+    final_qty
+        = floor-to-lot-size(tiered_qty)
+
+The sizer also supports:
+- lot size
+- strategy score tier
+- performance weighting
+- intraday vs delivery-specific settings
+- position-value caps.
+
+A critical architecture point:
+the system keeps "risk", "exposure/notional", and "margin" conceptually distinct.
+
+======================================================================
+18. CAPITAL / RISK ADMISSION
+======================================================================
+
+After sizing, admission and reservation happen in a protected portfolio critical section.
+
+The current flow is:
+
+    increment processor in-flight count
+        |
+        v
+    portfolio lock
+        |
+        +--> per-strategy position cap
+        |
+        +--> one-trade-per-symbol-direction rule
+        |
+        +--> RiskEngine.approve()
+        |
+        +--> FundManager.reserve()
+        |
+        v
+    signal status = RESERVED
+
+The RiskEngine uses a snapshot of:
+- FundManager capital state
+- existing positions/exposure
+- configured risk constraints
+- processor in-flight count.
+
+The RiskEngine short-circuits on the first failed risk check.
+
+This atomic region exists specifically to prevent concurrent Chartink bursts from both passing stale exposure checks and then over-consuming capital.
+
+======================================================================
+19. FUND MANAGER — CAPITAL STATE MACHINE
+======================================================================
+
+capital/fund_manager.py is the capital ledger authority.
+
+The core invariant is:
+
+    available + reserved + used == total
+
+The repository describes two independent capital buckets:
+- intraday
+- positional
+
+Cross-bucket borrowing is forbidden.
+
+Margin is:
+    qty × price / leverage
+
+not notional.
+
+Every capital mutation writes to fm_ledger.
+
+The ledger uses write-ahead behavior:
+    write ledger row first
+    -> apply in-memory mutation
+    -> check invariant
+
+This allows restart recovery by replaying the ledger.
+
+======================================================================
+20. CAPITAL RESERVATION
+======================================================================
+
+FundManager.reserve():
+
+1. Determines the bucket from intent.
+2. Calculates required margin.
+3. Adds the configured SL-M buffer where applicable.
+4. Checks bucket availability.
+5. Writes RESERVE ledger row.
+6. Applies reservation.
+7. Checks capital invariant.
+8. Returns reservation_id.
+
+The reservation exists BEFORE broker order placement.
+
+Therefore:
+
+    SCREEN PASS
+        -> RISK PASS
+        -> CAPITAL RESERVATION
+        -> ONLY THEN ORDER PLACEMENT
+
+This is one of the system's most important safety boundaries.
+
+======================================================================
+21. ORDER PLACEMENT
+======================================================================
+
+orders/order_placer.py is the execution orchestration layer.
+
+OrderPlacer.place() receives:
+- symbol
+- side
+- qty
+- entry price
+- SL
+- intent
+- signal ID
+- reservation ID
+- strategy
+- target
+- optional release LTP
+- sizing breakdown
+- R:R
+- entry order type.
+
+It:
+- applies last-mile slippage protection when released from EntryGate;
+- validates effective R:R;
+- prepares the entry;
+- resolves product;
+- calls broker adapter;
+- creates/updates DB records;
+- registers fill tracking.
+
+Tick snapping is centralized at the broker adapter rather than being independently repeated by every caller.
+
+======================================================================
+22. LAST-MILE KILL SWITCH CHECK
+======================================================================
+
+Immediately before actual placement, the processor performs another kill-switch check.
+
+This protects against a race:
+
+    signal passes screening
+    -> passes risk
+    -> reservation succeeds
+    -> kill switch activates
+    -> system must NOT open a new position.
+
+This second check is deliberately close to placement.
+
+Shutdown state is also checked before placement.
+
+======================================================================
+23. BROKER ADAPTER — ZERODHA
+======================================================================
+
+broker/zerodha_adapter.py is the broker boundary.
+
+The adapter:
+- validates order inputs
+- resolves product code
+- acquires rate-limit tokens
+- creates internal order state
+- calls Zerodha
+- transitions internal order state
+- translates broker exceptions
+- returns a normalized PlacedOrder.
+
+Live path:
+    OrderPlacer
+        -> ZerodhaAdapter.place_order()
+        -> rate limiter
+        -> Kite API
+        -> broker order ID
+        -> SUBMITTED
+
+Paper mode uses the same conceptual adapter boundary but simulates broker behavior.
+
+This is important for redesign:
+broker-specific details are intended to remain behind the broker adapter.
+
+======================================================================
+24. ENTRY FILL
+======================================================================
+
+After entry submission, order monitoring watches for broker state/fill changes.
+
+On an ENTRY fill:
+
+    broker fill event
+        |
+        v
+    OrderPlacer._handle_entry_fill()
+        |
+        +--> FundManager.commit_to_used()
+        |
+        +--> OrderManager.record_entry_fill()
+        |
+        +--> trade becomes OPEN
+        |
+        +--> place SL/TGT
+        |
+        +--> register exit tracking
+
+Capital transition:
+
+    RESERVED
+       |
+       | actual fill
+       v
+    USED
+
+The actual fill quantity and actual fill price are used for the commit.
+
+Partial fills are explicitly handled.
+
+======================================================================
+25. ENTRY FILL -> SL/TGT PROTECTION
+======================================================================
+
+For LIMIT_TRIPLE style execution, the source explicitly documents:
+
+    fill
+      -> commit capital
+      -> record entry
+      -> place exits
+
+This ordering is deliberate.
+
+The exits are based on ACTUAL filled quantity, not requested quantity.
+
+That prevents a partial fill from accidentally creating SL/TGT for a larger quantity.
+
+For example:
+requested 1000
+filled 100
+    -> exits are for 100.
+
+SL is placed first.
+
+If SL placement fails, TGT is not allowed to create a naked/unprotected inverse exposure.
+
+If SL succeeds but TGT fails:
+- the trade can remain SL-protected;
+- a dedicated TGT retry manager can later retry the target.
+
+======================================================================
+26. EXIT PROTECTION
+======================================================================
+
+The current system has multiple protection layers:
+
+1. Normal SL.
+2. Normal TGT.
+3. Software OCO / sibling cancellation.
+4. Order monitor.
+5. Order reconciler.
+6. TGT retry manager.
+7. Emergency/HARD_KILL flatten.
+8. EOD squareoff.
+9. Broker-side CNC GTT for supported overnight delivery protection.
+
+The repository documents that terminal exit fills ultimately call:
+    close_trade()
+
+which persists:
+- exit time
+- exit price
+- exit reason
+- gross PnL
+- charges
+- net PnL
+- CLOSED state.
+
+======================================================================
+27. TARGET RETRY
+======================================================================
+
+TGTRetryManager exists specifically for the state:
+
+    SL standing
+    TGT missing
+
+Before retrying TGT:
+- trade must still be OPEN/PARTIAL;
+- quantity must be positive;
+- SL must still exist;
+- no active TGT may already exist;
+- target must be recomputable;
+- placeability checks must pass.
+
+A target is never intentionally retried into a naked position.
+
+On successful TGT placement:
+- DB order row is persisted;
+- fill tracking is registered;
+- software OCO behavior is restored.
+
+======================================================================
+28. ORDER RECONCILER — INDEPENDENT SAFETY NET
+======================================================================
+
+The order reconciler is not simply a duplicate of OrderPlacer.
+
+It continuously compares system state with broker state.
+
+It exists because:
+    DB state can lag broker truth.
+
+The repository specifically states:
+    NEVER flatten a position from DB state.
+    Read broker positions first.
+
+Reconciliation protects against:
+- missing exits
+- duplicate exits
+- orphan orders
+- oversell/system-overtrade conditions
+- capital/accounting drift
+- broker/API inconsistencies
+- process restart recovery.
+
+The reconciler can activate kill behavior when dangerous inconsistencies are detected.
+
+======================================================================
+29. KILL SWITCH
+======================================================================
+
+capital/kill_switch.py is cross-cutting.
+
+Conceptually:
+
+SOFT_KILL
+    -> blocks NEW ENTRIES
+    -> permits normal exits
+
+HARD_KILL
+    -> blocks normal order activity
+    -> triggers emergency flatten
+    -> owns the emergency close path.
+
+The repository documents that HARD_KILL does not simply abandon open trades.
+
+It:
+- cancels resting orders where required;
+- flattens open/partial/pending positions;
+- retries;
+- escalates alerts;
+- has a maximum recovery window.
+
+This is a separate emergency path from normal SL/TGT exit.
+
+======================================================================
+30. CAPITAL RELEASE AFTER EXIT
+======================================================================
+
+After an exit closes a trade:
+
+    USED
+      |
+      v
+    RELEASE_USED
+      |
+      +--> realized PnL applied
+      +--> capital available increases/decreases
+      +--> daily realized PnL updated
+      +--> total capital updated
+      +--> invariant checked
+
+The FundManager therefore represents a lifecycle:
+
+    AVAILABLE
+        |
+        | reserve
+        v
+    RESERVED
+        |
+        | fill commit
+        v
+      USED
+        |
+        | exit
+        v
+    AVAILABLE + realized PnL effect
+
+A rejected/cancelled pre-fill reservation instead follows:
+
+    RESERVED -> AVAILABLE
+
+======================================================================
+31. DATABASE / STATE STORE
+======================================================================
+
+core/state_store.py is the persistent DB authority.
+
+The repository identifies SQLite with WAL as the single DB source of truth.
+
+Important state domains include:
+- signals
+- trades
+- orders
+- capital ledger
+- reservations
+- reconciliation data
+- gate state
+- audit/evidence data
+- operational state.
+
+The system does not rely only on in-memory variables.
+
+This is particularly important during restart:
+- capital can be rehydrated;
+- EntryGate can rehydrate watchlist state;
+- open trades can be reconstructed;
+- broker reconciliation can repair differences.
+
+======================================================================
+32. MID-SESSION RESTART / REHYDRATION
+======================================================================
+
+The architecture explicitly anticipates restart during a trading session.
+
+Examples:
+
+EntryGate:
+    reads persisted gate_state
+    -> rebuilds watchlist
+    -> resumes price watching.
+
+FundManager:
+    rehydrates capital state from ledger/open trades.
+
+Order reconciliation:
+    compares broker truth to persisted state.
+
+Therefore a restart is not intended to behave like a completely fresh day.
+
+======================================================================
+33. ENTRY GATE / WATCHLIST PATH
+======================================================================
+
+EntryGate is a separate asynchronous mechanism.
+
+It maintains a watchlist of candidates that are waiting for a price condition.
+
+It:
+- persists gate state;
+- rehydrates on restart;
+- polls quotes;
+- can release a candidate back to the processor.
+
+The release path re-checks:
+- kill switch
+- market window
+- strategy control
+- strategy governor
+- other last-mile controls.
+
+The gate-release path can use a fresh LTP and apply slippage protection.
+
+IMPORTANT:
+EntryGate is not simply another copy of the normal webhook path.
+It is a resume path for candidates that were deliberately parked.
+
+======================================================================
+34. WAIT-FOR-RETEST / STRUCTURE PATH
+======================================================================
+
+The current code also contains a retest/reclaim path.
+
+For a parked candidate confirmed by RetestMonitor:
+- kill switch and market window are rechecked;
+- strategy control is rechecked;
+- structure-based SL is constructed around the confirmed zone;
+- entry estimate is derived from the reclaimed/broken level;
+- sizing occurs;
+- reservation occurs for the first time;
+- a MARKET entry can be placed;
+- target is R:R-based.
+
+This path therefore has a different entry mechanism from the ordinary webhook path.
+
+The existence of this path is important for redesign because the future design should decide whether it remains a first-class entry mode or is simplified.
+
+======================================================================
+35. S&R / V3 / SHADOW COMPONENTS
+======================================================================
+
+The repository contains:
+- sr_detector/
+- regime/
+- v3_chain/
+- allocation/
+- other V3 engines.
+
+The README describes these as:
+    V3 engines — shadow/default-OFF.
+
+The signal processor explicitly treats v3_chain as non-interfering when enabled in shadow:
+- observe only;
+- fire-and-forget;
+- must never reject;
+- must never delay;
+- must never alter;
+- must never block a live signal/order.
+
+The S&R detector is also documented as an asynchronous, non-gating observer.
+
+Therefore:
+    presence of S&R/V3 code != proof that the component currently controls live entry.
+
+For the redesign baseline, active vs shadow vs dormant must be established from configuration and runtime evidence, not from directory existence.
+
+======================================================================
+36. MARKET DATA
+======================================================================
+
+data/ contains live feed and candle storage components.
+
+The live feed is used for:
+- quote refresh
+- execution-side price validation
+- screening data
+- fresh LTP
+- exit validation.
+
+The system also has candle-related infrastructure.
+
+A feed disconnect is not necessarily a total-service failure:
+the health model explicitly treats live_feed connectivity differently from critical daemon liveness because reconnect behavior exists.
+
+======================================================================
+37. ALERTING
+======================================================================
+
+alerts/ provides:
+- Telegram
+- email
+- critical sentinels/fallback mechanisms.
+
+The README states:
+    a CRITICAL always has a fallback path.
+
+Examples of critical conditions:
+- webhook degraded
+- capital invariant violation
+- unprotected position
+- reconciliation danger
+- emergency exit problems.
+
+Alerting is therefore part of the control system, not merely reporting.
+
+======================================================================
+38. CRON / SCHEDULED OPERATIONS
+======================================================================
+
+The repository's SYSTEM_MAP states:
+- config/cron_registry.yaml is the cron source of truth.
+- the current documented cron set contains 44 command lines.
+
+Scheduled operations include categories such as:
+- morning/token handling
+- reconciliation
+- reporting
+- EOD tasks
+- S&R-related jobs
+- Control Tower
+- evidence/telemetry
+- database/analytics/report jobs.
+
+The exact active timing must be taken from the current registry/config and VM crontab when runtime verification is required.
+
+Do not treat historical SYSTEM_MAP timestamps as automatically current if they conflict with the live VM.
+
+======================================================================
+39. SYSTEMD / SERVICE LIFECYCLE
+======================================================================
+
+The production trading service is managed as a systemd service.
+
+Important documented principle:
+    deploy != restart.
+
+A code push/update does not itself guarantee that the running process has loaded the new code.
+
+The service lifecycle is roughly:
+
+    systemd start
+        |
+        v
+    main.py boot
+        |
+        v
+    startup checks + reconciliation
+        |
+        v
+    workers
+        |
+        v
+    active trading window
+        |
+        v
+    EOD squareoff / service window
+        |
+        v
+    clean self-exit
+
+The repository distinguishes:
+- clean nightly exit
+- failed/HALT states
+- restart/recovery handling.
+
+======================================================================
+40. EOD / DAILY SHUTDOWN
+======================================================================
+
+The system does NOT blindly terminate at a clock time.
+
+The EOD self-exit logic checks active positions.
+
+If:
+    past configured service window
+    AND no active positions
+then:
+    clean shutdown.
+
+If positions remain:
+    service stays alive to manage them.
+
+If a HARD_KILL flatten is in progress:
+    service stays alive until the flatten completes.
+
+The code explicitly avoids abandoning an in-flight emergency exit merely because the clock crossed the normal service boundary.
+
+This is a major lifecycle rule.
+
+======================================================================
+41. NORMAL EXIT VS EOD EXIT VS EMERGENCY EXIT
+======================================================================
+
+There are three distinct concepts:
+
+A. Normal trade exit
+    SL/TGT/manual approved exit
+    -> fill
+    -> close_trade
+    -> release capital
+
+B. Scheduled EOD squareoff
+    -> normal intraday positions are flattened around the configured EOD process
+    -> delivery/CNC protection rules are handled separately.
+
+C. Emergency HARD_KILL flatten
+    -> triggered by serious system/risk condition
+    -> cancels/restores as necessary
+    -> aggressively flattens
+    -> reconciles
+    -> alerts.
+
+These must not be collapsed into one generic "exit" mechanism during redesign.
+
+======================================================================
+42. REPORTING / AUDIT / TELEMETRY
+======================================================================
+
+The repository has:
+- reports/
+- docs/audit/
+- effect telemetry
+- signal/order/trade latency fields
+- evidence capture
+- operational dashboard.
+
+The system records:
+- signal received / processed
+- screening result
+- sizing
+- reservation
+- order placement
+- fill
+- entry latency
+- exit
+- PnL
+- charges
+- reconciliation events
+- capital ledger
+- operational events.
+
+This means the current system is not purely execution-oriented; it also has an extensive forensic/evidence layer.
+
+======================================================================
+43. CURRENT TRADE LIFECYCLE — SINGLE-SIGNAL VIEW
+======================================================================
+
+A typical normal signal can be represented as:
+
+CHARTINK
+  |
+  | webhook POST
+  v
+WEBHOOK RECEIVER
+  |
+  +-- authenticate
+  +-- validate
+  +-- scanner lookup
+  +-- symbol/in-flight claim
+  +-- dedup
+  +-- DB INSERT signal=QUEUED
+  +-- queue.put
+  v
+SIGNAL PROCESSOR
+  |
+  +-- PROCESSING
+  |
+  +-- kill switch?
+  +-- entry window?
+  +-- signal fresh?
+  +-- shadow-inning guard?
+  |
+  +-- scanner -> strategy
+  |
+  +-- strategy control
+  +-- strategy entry window
+  +-- strategy governor
+  |
+  v
+SECONDARY SCREENER
+  |
+  +-- MIS learned blocklist
+  +-- quote
+  +-- hard gates
+  +-- screening steps
+  +-- score
+  +-- min score / final verdict
+  |
+  +---- REJECT -> terminal signal status
+  |
+  v
+PRICE DERIVATION
+  |
+  +-- entry
+  +-- SL
+  +-- direction -> BUY/SELL
+  +-- possible fresh-LTP re-anchor
+  |
+  v
+POSITION SIZER
+  |
+  +-- risk quantity
+  +-- capital quantity
+  +-- concentration quantity
+  +-- tier multiplier
+  +-- lot-size floor
+  |
+  +---- REJECT -> terminal signal status
+  |
+  v
+RISK ENGINE
+  |
+  +-- portfolio checks
+  +-- open position limits
+  +-- exposure
+  +-- daily risk
+  +-- concurrency-aware checks
+  |
+  +---- REJECT -> terminal signal status
+  |
+  v
+FUND MANAGER
+  |
+  +-- determine capital bucket
+  +-- required margin
+  +-- reserve
+  +-- write ledger
+  +-- invariant check
+  |
+  v
+ORDER PLACER
+  |
+  +-- target
+  +-- R:R check
+  +-- final kill-switch check
+  +-- entry order
+  |
+  v
+ZERODHA ADAPTER
+  |
+  +-- rate limit
+  +-- product
+  +-- API call
+  +-- broker order ID
+  v
+ORDER MONITOR
+  |
+  +-- submitted
+  +-- fills
+  |
+  v
+ENTRY FILL
+  |
+  +-- reservation -> USED
+  +-- trade OPEN
+  +-- SL
+  +-- TGT
+  v
+OPEN TRADE
+  |
+  +-- SL/TGT monitoring
+  +-- reconciler
+  +-- target retry if needed
+  +-- kill switch if required
+  |
+  v
+EXIT FILL
+  |
+  +-- close_trade
+  +-- PnL
+  +-- charges
+  +-- USED -> released
+  v
+CLOSED TRADE
+
+======================================================================
+44. REJECTION / SHORT-CIRCUIT MODEL
+======================================================================
+
+The current architecture intentionally rejects as early as possible.
+
+Representative sequence:
+
+Webhook rejection
+    -> never reaches queue
+
+Queue/backpressure rejection
+    -> never reaches processing
+
+Pre-flight rejection
+    -> no screening
+
+Strategy rejection
+    -> no screening/sizing
+
+Screening rejection
+    -> no sizing
+
+Sizing rejection
+    -> no risk approval
+
+Risk rejection
+    -> no capital reservation
+
+Reserve rejection
+    -> no order placement
+
+Broker/order placement failure
+    -> reservation cleanup/recovery path
+
+Post-fill protection failure
+    -> reconciler / retry / hard-kill safety path
+
+This "fail early, protect late" pattern is a major characteristic of the current architecture.
+
+======================================================================
+45. PARALLEL / ASYNCHRONOUS PATHS
+======================================================================
+
+The system is not a single serial pipeline.
+
+Parallel workers/threads include categories such as:
+- webhook server
+- signal processor dispatcher + workers
+- order monitor
+- order reconciler
+- live feed
+- candle/data workers
+- EOD scheduler
+- EntryGate poller
+- TGT retry manager
+- S&R detector
+- ZoneWarmer
+- RetestMonitor
+- optional V3 shadow components
+- token monitor
+- reporting/cron jobs
+- GUI/Control Tower processes.
+
+This means redesign must distinguish:
+
+A. DECISION PATH
+    components allowed to alter admission/execution
+
+B. PROTECTION PATH
+    components allowed to protect/repair an open position
+
+C. OBSERVATION PATH
+    components that measure/log/shadow but cannot change decisions
+
+D. OPERATIONS PATH
+    components that start/stop/monitor/report.
+
+This separation is already partly present in the current system.
+
+======================================================================
+46. CROSS-CUTTING SAFETY PRINCIPLES CURRENTLY PRESENT
+======================================================================
+
+1. Broker truth over stale DB for manual position intervention.
+2. Capital invariant.
+3. Write-ahead capital ledger.
+4. Atomic risk + reservation region.
+5. In-flight concurrency control.
+6. Last-mile kill-switch check.
+7. Signal expiry.
+8. Scanner/strategy mapping.
+9. Duplicate protection.
+10. Queue backpressure.
+11. Entry fill -> commit -> exit protection ordering.
+12. Actual-fill quantity for exits.
+13. SL-first protection.
+14. TGT retry only while SL remains.
+15. Reconciler as independent safety net.
+16. Emergency flatten path.
+17. EOD position-aware shutdown.
+18. Critical alerts with fallback.
+19. Configuration schema validation.
+20. Secrets excluded from repository.
+21. Shadow components designed to be non-gating.
+22. Restart rehydration.
+
+======================================================================
+47. WHAT THE CURRENT SYSTEM IS REALLY OPTIMIZED AROUND
+======================================================================
+
+From the code structure, the current system is strongly optimized around:
+
+- safely processing asynchronous scanner signals;
+- avoiding duplicate/concurrent entries;
+- filtering signals through multiple gates;
+- risk-based quantity calculation;
+- reserving capital before placing orders;
+- reconciling internal state with broker state;
+- maintaining protective exits;
+- recovering from partial failures;
+- recording evidence/telemetry;
+- unattended operation on a VM.
+
+The system is therefore much more than:
+    scanner -> order.
+
+It is:
+    signal ingestion
+    + qualification
+    + risk admission
+    + capital accounting
+    + broker execution
+    + position protection
+    + reconciliation
+    + operational lifecycle
+    + evidence.
+
+======================================================================
+48. IMPORTANT BASELINE FOR THE REDESIGN
+======================================================================
+
+Before redesigning anything, preserve this current flow as the "OLD SYSTEM / REFERENCE SYSTEM".
+
+The redesign should explicitly classify every existing mechanism into:
+
+KEEP
+    existing behavior that is still required.
+
+CHANGE
+    existing behavior whose decision logic should be redesigned.
+
+REMOVE
+    duplicate/dead/obsolete mechanisms.
+
+MERGE
+    multiple mechanisms that solve the same problem.
+
+SHADOW
+    mechanisms worth measuring before activation.
+
+REPLACE
+    mechanisms whose architecture should be rebuilt.
+
+The current code should NOT be treated as automatically correct simply because it is Production.
+It should also NOT be treated as disposable simply because the redesign is starting.
+
+The correct approach is:
+    understand exactly what it currently does
+    -> preserve useful behavior
+    -> identify actual decision points
+    -> identify duplicate gates
+    -> identify hidden coupling
+    -> redesign deliberately.
+
+======================================================================
+49. MOST IMPORTANT CURRENT FLOW BOUNDARIES TO AUDIT NEXT
+======================================================================
+
+For the full redesign, the following boundaries deserve explicit tracing:
+
+A. Chartink signal definition
+   -> what the scanner actually detects.
+
+B. Webhook payload
+   -> what information reaches the system.
+
+C. Scanner -> strategy mapping
+   -> whether strategy identity is correct.
+
+D. Secondary screener
+   -> every one of its steps, data source, threshold and reject reason.
+
+E. Score
+   -> exact calculation and how it changes admission.
+
+F. Entry price
+   -> trigger price vs live price vs re-anchor.
+
+G. SL
+   -> exact source, formula, strategy dependency and S&R interaction.
+
+H. Target
+   -> exact formula, R:R, ATR/fallback, fill-time adjustment.
+
+I. Position sizing
+   -> exact capital basis, leverage, risk %, concentration, lot size.
+
+J. Risk Engine
+   -> every gate and its true purpose.
+
+K. Fund Manager
+   -> reservation, commit, release, broker reconciliation.
+
+L. Order placement
+   -> entry type, slippage protection, tick snapping, broker constraints.
+
+M. Entry fill
+   -> actual fill quantity and price.
+
+N. Exit protection
+   -> SL/TGT/OCO/retry/reconciler.
+
+O. S&R
+   -> exactly where it is active, shadow, or dormant.
+
+P. EOD
+   -> exact squareoff and carry behavior.
+
+Q. Restart
+   -> what is rehydrated and what is recomputed.
+
+R. Alerts
+   -> which failures are visible to a human and which are only logged.
+
+S. Reports/evidence
+   -> whether evidence represents decision truth or merely operational events.
+
+======================================================================
+50. REDESIGN STARTING POINT
+======================================================================
+
+Do NOT start by rewriting code.
+
+First establish the authoritative current-system model:
+
+    EXTERNAL SIGNAL
+        |
+        v
+    INGEST
+        |
+        v
+    IDENTIFY STRATEGY
+        |
+        v
+    FILTER / SCREEN
+        |
+        v
+    PRICE / SL / TGT
+        |
+        v
+    SIZE
+        |
+        v
+    RISK DECISION
+        |
+        v
+    CAPITAL RESERVE
+        |
+        v
+    ENTRY
+        |
+        v
+    FILL
+        |
+        v
+    PROTECT
+        |
+        v
+    MANAGE
+        |
+        v
+    EXIT
+        |
+        v
+    RELEASE CAPITAL
+        |
+        v
+    EOD / REPORT / AUDIT
+
+Then split every stage into:
+    INPUT
+    DECISION
+    OUTPUT
+    STATE WRITTEN
+    FAILURE/REJECT REASON
+    NEXT HANDOFF
+    OWNER MODULE
+    ACTIVE/SHADOW/DORMANT STATUS.
+
+Only after that should the redesign architecture be drawn.
+
+======================================================================
+51. SOURCE FILES USED FOR THIS BASELINE
+======================================================================
+
+Primary:
+- README.md
+- docs/SYSTEM_MAP.md
+- PATHS.md
+- DEPLOYMENT.md
+- main.py
+
+Trading-path code:
+- signals/webhook_receiver.py
+- signals/signal_processor.py
+- screening/secondary_screener.py
+- screening/hard_gate.py
+- screening/entry_gate.py
+- capital/position_sizer.py
+- capital/risk_engine.py
+- capital/fund_manager.py
+- orders/order_placer.py
+- orders/order_manager.py
+- broker/zerodha_adapter.py
+
+Supporting areas identified from the repository tree:
+- core/
+- data/
+- alerts/
+- strategies/
+- sr_detector/
+- regime/
+- v3_chain/
+- allocation/
+- reports/
+- tasks/
+- deploy/
+- tests/
+- ops/
+- ops_dashboard/
+
+Repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+======================================================================
+52. FINAL BASELINE STATEMENT
+======================================================================
+
+The current Production system is a layered, stateful, asynchronous trading engine.
+
+The core live decision path is:
+
+    Chartink
+      -> authenticated webhook
+      -> validation/dedup/queue
+      -> SignalProcessor
+      -> pre-flight
+      -> scanner->strategy resolution
+      -> strategy controls
+      -> secondary screening / hard gates / score
+      -> entry + SL derivation
+      -> position sizing
+      -> risk approval
+      -> atomic capital reservation
+      -> last-mile kill check
+      -> order placement
+      -> Zerodha
+      -> fill monitoring
+      -> capital commit
+      -> trade OPEN
+      -> SL/TGT protection
+      -> reconciliation / retries
+      -> exit
+      -> trade CLOSED
+      -> capital release + PnL
+      -> EOD lifecycle / reports.
+
+Around that path are independent protection and observation mechanisms:
+- kill switch
+- broker reconciliation
+- capital invariant
+- StateStore
+- alerts
+- EOD scheduler
+- S&R/V3 shadow observers
+- telemetry/evidence
+- operational monitoring.
+
+THIS DOCUMENT IS THE CURRENT-SYSTEM BASELINE.
+It should be preserved before the redesign begins.
+
+END OF DOCUMENT

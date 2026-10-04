@@ -1,0 +1,237 @@
+================================================================================
+WHERE EVERYTHING IS STORED — TRADING SYSTEM
+As of 18-Sep-2026 IST · compiled from the 17-Sep record
+⛔ No secret VALUES appear in this document — locations and classes only.
+================================================================================
+
+
+================================================================================
+1 · MACHINES
+================================================================================
+| # | Machine        | Address           | Project path                          | Code state                | Read today? |
+|---|----------------|-------------------|---------------------------------------|---------------------------|-------------|
+| 1 | PC (Windows)   | local             | D:\Projects\trading-system            | main worktree + 7 others  | yes         |
+| 2 | PRODUCTION VM  | 161.118.187.249   | /home/ubuntu/systems/trading-system/  | commit 970aabf            | ⛔ NEVER READ |
+| 3 | TESTING VM     | 130.210.13.114    | (twin of production)                  | e7bf477 + force_qty       | read-only   |
+
+PC SUB-LOCATIONS
+| Path                                   | What it holds                                        |
+|----------------------------------------|------------------------------------------------------|
+| D:\Projects\trading-system             | main worktree — ⚠️ holds the LFL836 key in docs/       |
+| D:\Projects\wt-sr-shadow-15sep         | the worktree = e7bf477 + the force_qty change set     |
+| D:\Projects\_preservation              | frozen evidence, scan tools, captures, manifests      |
+| C:\Users\rama\Downloads                | where instruction cards land before being pasted      |
+| 7 worktrees (total)                    | ⚠️ each carries an identical copy of the key-bearing docs |
+
+⚠️ THE DEPLOYED TREES ON BOTH VMs HAVE NO `.git`. They are file copies, ⛔ not
+   repositories. Any "what commit is this" question about a VM is answered by
+   hashing files against blobs, ⛔ never by asking git on the VM.
+
+
+================================================================================
+2 · GIT — THE REAL REPOSITORY
+================================================================================
+| Remote / repo                        | Location                        | State    | Note |
+|--------------------------------------|---------------------------------|----------|------|
+| `origin`                             | trading-vm:~/trading-system.git | 20061b6  | ⚠️ the BARE REPO LIVES ON THE PRODUCTION VM |
+| testing VM bare repo                 | on the testing VM               | —        | its post-receive hook REWRITES THE CRONTAB on push |
+| deployed tree, production            | 970aabf                         | files    | no .git |
+| deployed tree, testing               | e7bf477 + force_qty             | files    | no .git |
+
+⛔ THE BARE REPO AT 20061b6 DOES NOT MATCH WHAT IS RUNNING on either machine.
+⚠️ THE LFL836 API KEY IS COMMITTED IN THIS HISTORY — commits bcf03b5 (17-Apr)
+   and 37f6ba5 (18-Apr), reachable from 119 BRANCHES INCLUDING origin/main.
+   ⇒ Rotation is the only remedy; deleting files does nothing. ⏸ Rama's call.
+
+
+================================================================================
+3 · GITHUB — github.com/ramakrishnan031-ctrl · ⭐ ALL THREE PRIVATE
+================================================================================
+| Repo                          | Commit  | Files | Size    | Contents |
+|-------------------------------|---------|------:|---------|----------|
+| trading-system-sbx-snapshot   | ade89ff | 1,418 | 24.5 MB | the testing VM's deployed FILES, code + all config + strategies + hooks + instruments.csv + 23 reference CSVs |
+| trading-system-records        | b67e5d7 | 1,353 | 29.5 MB | SYSTEM_MAP · PATHS · MEMORY_RULES · ledger · all preserved manifests · docs/audit · _preservation · 786 memory files |
+| trading-system-prod-snapshot  | —       |     0 | —       | ⛔ EMPTY — production never read |
+
+⚠️ These are SNAPSHOTS OF FILES IN FRESH HISTORIES. ⛔ No git history was pushed,
+   so the committed key is NOT in them (measured: 0 commits contain it).
+⚠️ `trading-system-records` needs `core.longpaths=true` to clone on Windows —
+   3 paths are otherwise too long.
+⚠️ Its SNAPSHOT_MANIFEST.md currently EXCLUDES `docs/` outside `docs/audit/` —
+   must be amended when the legacy manual's first chapters are pushed.
+
+EXCLUDED FROM THE SNAPSHOTS, each named by name in SNAPSHOT_MANIFEST.md
+| Repo    | Exclusions | What                                                        |
+|---------|-----------:|-------------------------------------------------------------|
+| sbx     |      3,916 | .env and variants · tokens/session files · databases · backups · logs · venv · __pycache__ · 34 screenshots · 4 git bundles · generated reports · broker-book JSON · 12 credential-bearing files |
+| records |         57 | raw DB-query outputs · transcript excerpts · shadow-DB copies · log-heavy text · git bundles · 12 credential-bearing files |
+
+
+================================================================================
+4 · RECORD AND MEMORY FILES — ⭐ THE "WHY" OF THE SYSTEM
+================================================================================
+| File                                  | Where            | Scale / note |
+|---------------------------------------|------------------|--------------|
+| docs/SYSTEM_MAP.md                    | PC → records repo| 80 sections — the main narrative record |
+| PATHS.md                              | PC → records repo| the pointer index for every artifact |
+| MEMORY.md                             | PC → records repo| ⭐ loaded FIRST every session; carries the "do not push the real repo before rotation" banner |
+| MEMORY_RULES.md                       | PC → records repo| 9,375 B; lines 48–54 added 17-Sep; 450-byte per-line guard |
+| MEMORY_BOARD.md                       | PC → records repo| redacted copy in the repo |
+| MEMORY_HAZARDS.md                     | PC → records repo| 94 bullets |
+| MEMORY_ARCHIVE_2026H1.md              | PC → records repo| redacted copy in the repo |
+| UNPUSHED_PENDING_DEPLOY_LEDGER        | PC → records repo| the deploy/obligation ledger; resume pointer lives here |
+| docs/audit/                           | PC → records repo| 441 files |
+| _preservation/                        | PC → records repo| frozen captures, scan tools, evidence |
+| SR_SHADOW_V1_3_DEPLOY_MANIFEST_…      | PC → records repo| the rolling manifest; latest …preserved_2026-09-17T2152IST.md |
+| docs/legacy_system_manual/            | PC → records repo| ⭐ NEW — the 25-chapter booklet; only the INDEX exists so far |
+| ⚠️ docs/web_claude/                    | PC + testing VM  | ⛔ 3 files here hold the LFL836 API key in plaintext |
+
+⚠️ `mempalace` was RETIRED on 09-Sep. Its four items migrated to SYSTEM_MAP and
+   the ledger. ⛔ It is no longer a memory location, despite appearing in the
+   older standing protocols.
+
+
+================================================================================
+5 · CONFIGURATION
+================================================================================
+| File                                        | Scale                    | Note |
+|---------------------------------------------|--------------------------|------|
+| config/system_config.yaml                   | 31 keys changed today    | ⚠️ VM-LOCAL on the testing VM — differs from the repo |
+| config/cron_registry.yaml                   | 27,116 B · 768 lines     | references 38 .py; VM-local diff = account tag LFL836→VBB097 |
+| config/strategies/                          | 16 strategy YAMLs        | one per strategy |
+| config/instruments.csv                      | 2,228 rows               | all NSE, ⭐ ALL lot size 1 |
+| config/broker_limits.yaml                   | —                        | orders 8/s · quotes 3/s · historical 2/s |
+| ops_dashboard/backend/config/gui_config.local.yaml | —                 | ⚠️ holds a password hash + TOTP secret; gitignored, never committed |
+| config/ total                               | 52 files · 31 YAML       | 29 of 31 match the repo byte-for-byte |
+
+⛔ ONLY 2 OF 31 CONFIG FILES DIVERGE on the testing VM: system_config.yaml and
+   cron_registry.yaml. Everything else is byte-identical to e7bf477.
+
+
+================================================================================
+6 · LOGS — TESTING VM
+================================================================================
+| Log                                | Written by                  | Note |
+|------------------------------------|-----------------------------|------|
+| logs/system_2026-09-17.log         | the main application        | ⭐ THE app log — E4.8/E4.10 populations come from here |
+| logs/cron-drift-check.log          | the 18:00 drift check       | ⛔ SEPARATE PROCESS — never reaches the app log |
+| logs/cron-sr-shadow-evaluate.log   | the 16:05 evaluator         | ⛔ also separate; E-6 lives here |
+| logs/cron-officer.log              | cron_officer (09:20 / 18:50)| own population |
+
+⭐ THREE COUNTED POPULATIONS, ⛔ never summed: the application log · the 18:00
+  drift block · the evaluator's cron log. Telegram is a SINK, ⛔ not a population.
+
+
+================================================================================
+7 · FROZEN EVIDENCE — ⛔ READ-ONLY, ⛔ NEVER EDITED
+================================================================================
+| Artifact                                              | Size / hash                          | Taken |
+|-------------------------------------------------------|--------------------------------------|-------|
+| CRON_DRIFT_1800_PREDICTION_…T1003IST.md               | 12,662 B · 184 lines · md5 b31802e4… | 17-Sep 10:03:19 |
+| CRON_DRIFT_CHECK_LOG pre-1800 prefix                  | 12,347 B · 248 lines · md5 a35fd44b… | 17-Sep 10:00 |
+| Evaluator cron-log FLOOR                              | file ABSENT — that IS the record     | 17-Sep 11:14:22 |
+| BIRTHTIME_FIELD_VALIDATION capture                    | ext4 %w confirmed working            | 17-Sep 11:48:57 |
+| CRONTAB_INVOKERS scan1 / scan2 / scan3 outputs        | —                                    | 17-Sep 09:17–09:19 |
+| GATE78 per-event extractor output                     | —                                    | 17-Sep 08:16 |
+| TESTING_VM_PARAMETER_SURVEY_17-Sep-2026.md            | 16,988 B · md5 eaf04a98…             | 17-Sep 12:40 |
+
+⭐ All live in `_preservation/` on the PC and are committed to the records repo.
+
+
+================================================================================
+8 · CODE CHANGED 17-Sep (testing VM only, unpushed)
+================================================================================
+| File                      | Delivered digest | Change |
+|---------------------------|------------------|--------|
+| core/config_loader.py     | 2030714e…        | added `force_qty: int \| None` to the sizing model |
+| capital/position_sizer.py | b2b27684…        | the force_qty override, after the SL validity check |
+| main.py                   | 277b0702…        | passes force_qty into the PositionSizer |
+| config/system_config.yaml | 12d79b2a…        | force_qty 1 · entry_start 09:30 · both value caps 0.50 |
+
+⚠️ UNCOMMITTED AND UNPUSHED, on the TWIN ONLY, ⛔ NEVER VERIFIED LIVE — the
+   system was declared dead before the 18-Sep boot. `main.py` and
+   `config_loader.py` are 2 of the 4 FROZEN WIRING FILES, so their Gate 4/5
+   digests were superseded and re-recorded.
+
+
+================================================================================
+9 · CREDENTIAL LOCATIONS — ⛔ WHERE AND WHAT CLASS ONLY
+================================================================================
+| Class                        | Where it lives                                   | State |
+|------------------------------|--------------------------------------------------|-------|
+| Zerodha API key/secret (LFL836) | .env on both VMs and the PC                   | live |
+| ⚠️ the same key, in plaintext  | 3 files in docs/web_claude/ · on the testing VM AND the PC in 8 copies | ⛔ ALSO COMMITTED in bcf03b5 / 37f6ba5, 119 branches |
+| GUI password hash + TOTP secret | ops_dashboard/backend/config/gui_config.local.yaml, VM + PC | gitignored, never committed |
+| Telegram bot token / channel IDs | .env; channel IDs also appeared in SYSTEM_MAP, PATHS, the ledger, MEMORY_BOARD, MEMORY_ARCHIVE and audit docs | redacted in the repo copies only — ⭐ the redaction is COSMETIC |
+| SMTP credentials             | .env                                             | excluded from every repo |
+| GitHub PAT                    | ⭐ Windows Credential Manager only — ⛔ never in a file or a session | correct |
+
+⛔ 12 FILES WERE EXCLUDED FROM THE REPOS FOR CREDENTIAL CONTENT. ⚠️ Exclusion is
+   ⛔ NOT remediation — every one of those values still sits on the machines.
+
+
+================================================================================
+10 · SCALE
+================================================================================
+| Population                                  | Count |
+|---------------------------------------------|------:|
+| testing VM tree                             | 18.2 GB · 5,322 files (card) / 5,334 (measured) |
+| worktree files (excl. .git/.venv/caches)    | 1,465 |
+| Python files · Python lines                 | 757 · 289,044 |
+| non-test Python files                       | 344 |
+| ⭐ RUNTIME SET (reachable from main + the 38 cron scripts) | 200 modules · 92,168 lines |
+| reachable from main alone                   | 142 |
+| outside the runtime set                     | 557 (413 tests · 144 non-test) |
+| ops_dashboard/                              | 183 files — ⭐ gets its own chapter 25 |
+| tests                                       | 451 files (unit 363 · integration 17) |
+| scripts/ · deploy/                          | 90 · 29 |
+| dynamic-import sites (to resolve by hand)   | 5, in 3 files — `exec(`/`eval(` = 0 |
+
+
+================================================================================
+11 · KNOWN GAPS AND DISCREPANCIES — ⛔ RECORDED, ⛔ NOT SMOOTHED
+================================================================================
+| # | Item | State |
+|---|------|-------|
+| 1 | ⛔ PRODUCTION HAS NEVER BEEN READ | every production statement is RECORD-DERIVED (from git at 970aabf) or NOT ESTABLISHED. ⏸ Rama's yes still outstanding |
+| 2 | file-count discrepancy: card 5,322/3,939 vs measured 5,334/3,916 | resolved in chapter 02 |
+| 3 | 23 CRLF files on the testing VM | ⛔ CAUSE UNRESOLVED. My git-archive explanation was refuted. ⚠️ \r is inert in .py, significant in .sh / crontab / .env |
+| 4 | `scripts/copy_token_to_vm.bat` retargeted to the testing VM's IP | ⭐ almost certainly deliberate, ⛔ no record exists |
+| 5 | 10 files in commit e7bf477 but NOT on the VM — the S&R shadow's tests and tools | the deploy sent 17 files; ⇒ the twin runs sr_shadow with no tests present |
+| 6 | 14 files only on the VM | mostly unexplained |
+| 7 | the LFL836 key in git history | ⏸ ROTATION RECOMMENDED — Rama's decision |
+| 8 | 4 git bundles in _preservation | ⛔ never scanned — they may carry old credentials |
+| 9 | 34 screenshots in docs/audit | ⛔ unscannable, excluded by name |
+| 10 | 5 standing gemini_* CRON INTEGRITY CRITICALs on the testing VM | pre-existing, fate undecided |
+
+
+================================================================================
+12 · ADDITIONAL — THINGS EASY TO GET WRONG LATER
+================================================================================
+⭐ 12.1  THE BARE REPO IS ON THE PRODUCTION VM. Pushing to `origin` touches
+        production. The GitHub remote is deliberately named `github`, ⛔ never
+        `origin`, and a push to the testing VM's bare repo rewrites its crontab.
+
+⭐ 12.2  A DEPLOYED TREE HAS NO `.git`. Every "which version is this?" question
+        about a VM is answered by hashing files against blobs.
+
+⭐ 12.3  THE REDACTIONS IN THE RECORDS REPO ARE COSMETIC. The values still exist
+        on the machines. ⛔ Never read a redacted repo copy as remediation.
+
+⭐ 12.4  THREE LOG POPULATIONS, ⛔ NEVER SUMMED — and Telegram is a sink, not a
+        population. Two different alert channels exist and behave differently:
+        cron/drift CRITICALs reach a sentinel + email + Telegram (proven); the
+        position-sizer's CRITICALs have no forwarding found (within the examined
+        scope).
+
+⭐ 12.5  THE FORCE_QTY CHANGE IS DELIVERED BUT NEVER BEHAVIOURALLY VERIFIED. It
+        sits on the twin, uncommitted and unpushed. ⛔ The ledger says exactly
+        that — ⛔ it must never be read as "deployed and verified."
+
+⭐ 12.6  FOUR DIFFERENT POPULATIONS FLOAT THROUGH THE SLIPPAGE RECORD — 784 entry
+        rows · 940 trades · 550 trades (six strategies) · 69 measured entries.
+        ⛔ Any number quoted without its denominator is unusable.
+
+================================================================================
+END
+================================================================================

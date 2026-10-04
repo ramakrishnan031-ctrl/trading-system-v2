@@ -1,0 +1,115 @@
+A-003 — TRADING HOURS
+LEGACY SYSTEM TECHNICAL MANUAL
+Phase 1 — Dead / Reference-Only System
+Frozen: 23-Sep-2026
+
+1. PURPOSE
+Document the historical trading-hours contract without redesigning it.
+
+2. PRODUCTION TIME CONTRACT
+
+| Function | Production value | Meaning |
+|---|---:|---|
+| Market open | 09:15 IST | NSE regular-session open |
+| Entry start | 10:00 IST | Global entry floor |
+| Entry end | 15:00 IST | Global strategy-entry backstop |
+| EOD entry cutoff | 15:15 IST | Absolute last order-placement deadline |
+| MIS square-off cutoff | 15:09 IST | Primary protective MIS deadline |
+| EOD square-off/backstop | 15:17 IST | EOD accounting/emergency backstop |
+| Market close | 15:30 IST | NSE regular-session close |
+| Service window end | 17:35 IST | Configured service-window boundary |
+
+3. ENTRY WINDOW
+Production config states entry_start=10:00 is a global floor over
+per-strategy windows. Both the global window and the strategy's own window
+must permit an entry.
+
+entry_end=15:00 and eod_entry_cutoff=15:15 are distinct. The former governs
+strategy-entry eligibility; the latter is the absolute last order-placement
+deadline.
+
+4. MIS / EOD
+mis_squareoff_cutoff=15:09 is the Production protective MIS deadline.
+Configured pre-cutoff checks are 6 minutes and 3 minutes before it
+(15:03 and 15:06).
+
+eod_squareoff_time=15:17 is the EOD accounting/emergency backstop, not the
+primary MIS square-off.
+
+main.py contains a 15:15 force-close callback. Its documented path cancels
+pending entry orders; EOD square-off closes INTRADAY (MIS/CO) positions at
+15:17 while DELIVERY (CNC) positions are carried.
+
+main.py also contains a 14:45 EOD pre-alert. This is an alert mechanism and
+must not be confused with entry_end.
+
+5. SERVICE WINDOW
+Production config sets service_window_end=17:35. Its comments associate this
+with the 17:00 PB-01 EOD scanner and a 35-minute buffer. This is distinct
+from market_close=15:30.
+
+6. SIGNAL QUEUE / OUT-OF-WINDOW SIGNALS
+Production config contains a signal queue with intraday expiry_sec=600.
+This establishes queue/expiry infrastructure but does not, by itself,
+establish whether every out-of-window signal is immediately dropped,
+retained until expiry, or rejected at another processing gate. That detail
+remains for the signal-processing chapter.
+
+7. CLOCK / TIMEZONE
+Production config explicitly states HH:MM values are interpreted as IST.
+Production main.py uses the IST time authority in timing-sensitive code.
+Production config also contains broker clock-skew thresholds and periodic
+server-time probing.
+
+8. HOLIDAYS / CRON
+Trading-day/holiday handling exists. The complete job-by-job cron schedule,
+holiday guards, and cron-vs-in-process authority belong to the scheduler and
+operations chapters and are not invented here.
+
+9. TIME ORDERING
+09:15 <= 10:00 < 15:00 <= 15:15 <= 15:17 <= 15:30 <= 17:35
+
+The exact validator implementation and failure behavior for an invalid
+ordering remain a later configuration/runtime evidence item.
+
+10. SOURCE → INPUT → LOGIC → GUARD → OUTPUT → HANDOFF
+config/system_config.yaml
+  → HH:MM values interpreted as IST
+  → configuration/schema validation
+  → time-window and EOD consumers
+  → entry eligibility / order deadline / MIS protection / EOD backstop /
+    service-window termination
+  → order-management, scheduler, reporting and operational consumers
+
+Exact function-by-function consumers are intentionally deferred to their
+respective chapters rather than inferred.
+
+11. HISTORICAL CONFLICTS
+The discussion record contained:
+14:45 instead of 15:00 for entry_end;
+14:45 instead of 15:15 for eod_entry_cutoff;
+15:15 instead of 15:09 for MIS cutoff;
+15:15 instead of 15:17 for EOD square-off;
+18:30 instead of 17:35 for service end;
+and Testing VM 09:30 instead of Production 10:00 for entry_start.
+
+These are retained as historical conflicts. Production source values are
+used for the frozen Production baseline.
+
+12. UNKNOWN / NOT ESTABLISHED
+- Exact systemd boot boundary.
+- Complete cron registry authority map.
+- Exact fate of every out-of-window signal.
+- Complete EOD retry/promotion/sweep behavior.
+- Database timestamp timezone semantics.
+- Complete validator function and invalid-config failure path.
+
+13. GOVERNANCE STATUS
+A-003 = CLOSED / FROZEN on 23-Sep-2026.
+
+This is a legacy factual baseline only. It does not prescribe V2 trading
+hours or any future redesign.
+
+** Additional request from user/rama: In new system new entry cut-off or Soft-kill must be applied only on Intraday segment, Not to be applied on Delivery Segment;
+
+END OF A-003 MANUAL

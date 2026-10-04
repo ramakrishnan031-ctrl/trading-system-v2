@@ -1,0 +1,626 @@
+A-008 — BROKER MODEL
+DISCUSSION CHECKLIST — SECOND-PASS SOURCE REVIEW
+27-SEP-2026
+
+PURPOSE
+-------
+This is a source-review / clarification checklist for the Broker Model topic.
+
+IMPORTANT AGENDA-ID NOTE
+------------------------
+The current MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt labels:
+    A-006 = Broker model
+    A-007 = Product types
+    A-008 = Strategy model
+
+The user has now requested:
+    "A-008 Broker model"
+
+Therefore this file treats "Broker Model" as the requested working topic, but
+does NOT silently alter or freeze the Master Agenda numbering. The final
+agenda ID/status should be reconciled before the permanent decision register
+is updated.
+
+GOVERNANCE
+----------
+- Legacy system is DEAD / REFERENCE ONLY.
+- Production is the primary legacy baseline.
+- Testing/Sandbox is comparison evidence only.
+- Do not repair, tune, redesign or revive legacy behavior.
+- Do not infer live usage merely from code/configuration presence.
+- Do not ask Rama to guess where repository evidence can establish the fact.
+- Distinguish:
+    FACT
+    HISTORICAL
+    UNKNOWN / NOT ESTABLISHED
+    INTERPRETATION
+    KNOWN DEFECT
+    OPEN QUESTION
+    V2 / NEW-SYSTEM INPUT
+- New-system preferences recorded below are inputs only; they are NOT frozen
+  implementation decisions unless explicitly decided later.
+
+SOURCE BASIS
+------------
+PRIMARY:
+1. Production GitHub:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+2. Testing / Sandbox GitHub:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+
+3. Records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+PRESERVED PROJECT EVIDENCE USED FOR THIS CHECKLIST
+---------------------------------------------------
+- CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 01_SYSTEM_OVERVIEW.md
+- A-004 source reconciliation/manual
+- A-005 source reconciliation/manual
+- A-006 Broker Model discussion/reconciliation/manual
+- A-007 Product Types discussion/reconciliation/manual
+
+REPOSITORY REVIEW — CURRENT SOURCE OBSERVATIONS
+------------------------------------------------
+
+1. BROKER BOUNDARY
+------------------
+Production source identifies:
+
+    broker/zerodha_adapter.py
+
+as the principal broker adapter/boundary.
+
+Documented responsibilities include:
+- broker input validation
+- product resolution
+- rate-limit acquisition
+- internal order-state creation/transition
+- Kite API calls
+- broker order ID handling
+- broker exception translation
+- normalized order result
+- orders / trades / positions
+- margins
+- GTT
+- cancellation / modification
+- broker-state retrieval
+
+Classification:
+    FACT — implementation exists.
+    HISTORICAL LIVE USAGE — broker was actually used for trading based on
+    established project evidence/user confirmation.
+    Exact runtime behavior must still be tied to Production evidence where
+    needed.
+
+2. LEGACY BROKER CONFIGURATION
+------------------------------
+Production configuration historically contains:
+- primary broker: Zerodha
+- fallback broker: Angel One
+- fallback_enabled: false
+
+Classification:
+    FACT — configuration exists.
+    HISTORICAL ACTUAL ANGEL ONE TRADING — NOT ESTABLISHED.
+    User has stated Angel One was initially planned and later dropped.
+
+3. BROKER-SIDE STATE / AUTHORITY
+--------------------------------
+Current source/reconciliation material shows broker truth being used for:
+- positions
+- order status
+- fills
+- average fill price
+- broker order IDs
+- funds/margins
+- reconciliation
+- manual-position safety paths
+
+The deep working tree documents broker truth over stale local DB in
+important safety paths.
+
+Classification:
+    FACT — broker-authoritative reads exist in the legacy implementation.
+    Exact universal "broker is authoritative for every field in every path"
+    should NOT be assumed without path-level evidence.
+
+4. BROKER API SURFACE
+---------------------
+The preserved source map documents ZerodhaAdapter methods covering areas
+including:
+- place_order
+- GTT placement/retrieval
+- order cancellation
+- order modification
+- positions
+- holdings
+- margins
+- all-orders retrieval
+- broker order/trade information
+
+Classification:
+    FACT — implemented API surface.
+    Actual historical invocation frequency/use of every endpoint:
+    UNKNOWN / NOT ESTABLISHED unless separately evidenced.
+
+5. RATE LIMITING
+----------------
+The broker adapter contains rate-limit handling and broker 429 handling.
+
+Classification:
+    FACT — implementation exists.
+    Exact historical production limits / actual 429 events:
+    UNKNOWN unless separately evidenced.
+
+6. PAPER VS LIVE
+----------------
+The legacy broker adapter contains both paper and live paths.
+
+Preserved source evidence states:
+- live builds/uses a real Kite client and token/account configuration.
+- paper uses an in-memory broker simulation.
+- paper and live semantics are NOT identical.
+- paper margin behavior is simplified and does not represent broker-equivalent
+  live margin.
+
+Classification:
+    FACT.
+    KNOWN DEFECT / LIMITATION:
+    paper cannot be treated as proof of live broker behavior.
+    Do NOT silently reuse paper behavior as a V2 broker contract.
+
+7. BROKER RECONCILIATION
+------------------------
+orders/order_reconciler.py exists as an independent broker/local-state
+reconciliation mechanism.
+
+The documented architecture includes:
+    local state
+        <-> broker state
+        -> discrepancy detection / repair / capital reconciliation
+
+Classification:
+    FACT — reconciliation mechanism exists.
+    Exact historical production actions for every discrepancy:
+    UNKNOWN / NOT ESTABLISHED unless source evidence establishes them.
+
+8. PRODUCT TRANSLATION
+----------------------
+broker/product_resolver.py exists.
+
+Known mappings in legacy source:
+    MIS -> INTRADAY
+    CO  -> COVER_ORDER
+    CNC -> DELIVERY
+    NRML -> DELIVERY
+
+Production configuration also contains:
+    INTRADAY -> MIS
+    DELIVERY -> CNC
+    COVER_ORDER -> CO
+    BRACKET_ORDER -> unsupported/empty
+
+Classification:
+    FACT — product translation/configuration exists.
+    Product eligibility and actual historical use were handled separately in
+    A-007 and must not be inferred solely from mapping presence.
+
+9. BROKER-SIDE DELIVERY PROTECTION
+----------------------------------
+Legacy source contains:
+    orders/cnc_gtt_monitor.py
+
+and a ZerodhaAdapter GTT path.
+
+Preserved source evidence shows Delivery/CNC trades using broker-side OCO GTT
+for overnight protection.
+
+Classification:
+    FACT — implementation exists.
+    HISTORICAL actual use — supported by prior user evidence and source
+    evidence for Delivery/CNC/GTT.
+    Exact percentage of Delivery trades protected this way:
+    UNKNOWN.
+
+10. INTRADAY PROTECTION / FLATTENING
+------------------------------------
+Legacy source contains:
+    orders/mis_autosquareoff.py
+
+and shared flatten/safety helpers.
+
+The documented architecture includes:
+- MIS safety orchestration
+- cancellation of resting MIS protective orders
+- broker confirmation/recheck
+- protected market exit before the broker/RMS cutoff
+- emergency/hard-kill paths
+
+Classification:
+    FACT — mechanisms exist.
+    Exact historical invocation frequency:
+    UNKNOWN.
+
+11. BROKER COST MODEL
+---------------------
+broker/cost_calculator.py exists and computes itemized Zerodha transaction
+cost components, including brokerage, STT, exchange transaction charges, GST,
+SEBI charges and stamp duty.
+
+It is consumed by broker/order/reconciliation components.
+
+Classification:
+    FACT — cost calculator exists.
+    Exact historical use in Production for every trade path:
+    verify where necessary.
+
+12. BROKER ERROR MODEL
+----------------------
+core.exceptions contains broker-related exception classes, including:
+- BrokerError
+- BrokerAuthError
+- BrokerTimeoutError
+- OrderRejectedError
+- ProductNotSupportedError
+- BrokerRateLimitError
+- BrokerRateLimit429Error
+
+Classification:
+    FACT — exception taxonomy exists.
+    Exact runtime handling of every class:
+    UNKNOWN unless caller/path evidence establishes it.
+
+13. BROKER AUTHENTICATION / TOKEN
+---------------------------------
+The legacy system has Zerodha token/session handling and account/API-key
+configuration.
+
+Classification:
+    FACT — authentication/token machinery exists.
+    Exact historical manual-vs-automated token workflow and every production
+    operational step must be taken from the startup/token evidence, not
+    inferred.
+
+14. BROKER SOURCE OF TRUTH VS LOCAL DB
+--------------------------------------
+Current source clearly contains both:
+- local persistent state
+- broker state retrieval/reconciliation
+
+Broker truth is explicitly preferred in several safety paths.
+
+However, the exact authority matrix is NOT universal from the currently
+reviewed evidence.
+
+OPEN:
+    Which source is authoritative for each field/state?
+    Example categories:
+      account opening cash
+      current available funds
+      reserved capital
+      order status
+      filled quantity
+      average fill
+      position quantity
+      position product
+      P&L
+      GTT state
+      local strategy/signal state
+
+Do NOT assume one universal answer without path evidence.
+
+15. BROKER FAILURE / AUTH FAILURE
+---------------------------------
+Existing source contains broker errors, retries/reconciliation and protective
+paths.
+
+Historical exact behavior under:
+- authentication failure
+- API outage
+- timeout
+- rate limit
+- order rejection
+- stale broker state
+- partial broker response
+- broker/local disagreement
+
+must be classified from source/runtime evidence.
+
+Do not promote the V2 answers from the earlier A-006 checklist into legacy
+facts.
+
+16. ORDER DUPLICATION / IDEMPOTENCY
+-----------------------------------
+The legacy architecture has internal IDs/tags, order state tracking and
+reconciliation/recovery.
+
+Question:
+What exact mechanism prevented a duplicate broker order after:
+- timeout
+- acknowledgement loss
+- process restart
+- retry
+- reconciliation race?
+
+Classification:
+    OPEN / SOURCE-TRACE REQUIRED.
+
+17. PARTIAL FILL
+----------------
+Legacy source explicitly handles partial fills and uses actual filled
+quantity for downstream protection in documented entry/protection paths.
+
+Classification:
+    FACT — partial-fill handling exists.
+    Exact broker-side and local-state sequence:
+    SOURCE-TRACE REQUIRED if needed for the final broker manual.
+
+18. BROKER MANUAL INTERVENTION
+-----------------------------
+Existing architecture contains broker-state reconciliation and safety paths.
+
+Question:
+What exactly happened when a human manually changed/cancelled/exited an
+order or position at Zerodha?
+
+Classification:
+    Detection/reconciliation capability exists.
+    Complete historical operational behavior:
+    UNKNOWN / NOT ESTABLISHED unless source evidence establishes it.
+
+19. INSTRUMENT / CONTRACT DATA
+-----------------------------
+The legacy system refreshes instrument data and uses instrument cache/lookup
+components.
+
+Question:
+Which broker-supplied fields are authoritative for:
+- instrument token
+- trading symbol
+- exchange
+- product eligibility
+- tick size
+- lot size
+- freeze quantity
+- other order constraints?
+
+Classification:
+    Source review required where the broker contract is not already
+    established by A-004/A-007.
+
+20. TESTING VM COMPARISON
+-------------------------
+Production remains the primary legacy baseline.
+
+Testing/Sandbox is comparison evidence only.
+
+Any difference between the two must be recorded as:
+    Production fact
+    Sandbox fact
+    Difference
+    Historical significance UNKNOWN unless evidence exists
+
+Do NOT use Sandbox behavior to overwrite Production.
+
+======================================================================
+RAMA REVIEW / CLARIFICATION
+======================================================================
+
+Please answer only where you know the historical fact or where you want to
+provide a NEW-SYSTEM input. If unknown, write UNKNOWN.
+
+Q1. BROKER IDENTITY — LEGACY
+-----------------------------
+Production used Zerodha for real trading: YES / NO / UNKNOWN
+
+Answer:
+____________________________________________________________
+
+Q2. ANGEL ONE
+-------------
+Angel One was only an initial plan/configuration and was NOT actually used
+for live trading: YES / NO / UNKNOWN
+
+Answer:
+____________________________________________________________
+
+Q3. BROKER AUTHORITY
+--------------------
+For the legacy system, should we document "broker truth over local DB" as:
+- universal rule
+- safety/reconciliation rule only
+- path-specific rule
+- UNKNOWN
+
+Answer:
+____________________________________________________________
+
+Q4. PAPER MODE
+---------------
+Was paper mode ever used as an operational decision/testing mode by the
+historical system, or was it mainly development/testing code?
+
+Answer:
+____________________________________________________________
+
+Q5. AUTH / TOKEN WORKFLOW
+-------------------------
+What do you remember about the actual historical Zerodha login/token process?
+If unsure, write UNKNOWN. Do not guess.
+
+Answer:
+____________________________________________________________
+
+Q6. BROKER API FAILURES
+-----------------------
+Any known historical Production incidents involving:
+- auth/token failure
+- timeout
+- 429/rate limit
+- rejected order
+- stale broker response
+- broker/local mismatch
+
+Answer:
+____________________________________________________________
+
+Q7. DUPLICATE ORDER INCIDENTS
+-----------------------------
+Any known historical duplicate-order incident or retry-related issue?
+
+Answer:
+____________________________________________________________
+
+Q8. PARTIAL FILLS
+-----------------
+Were partial fills actually encountered in Production, or only handled by
+code?
+
+Answer:
+____________________________________________________________
+
+Q9. MANUAL BROKER INTERVENTION
+------------------------------
+Did manual Zerodha-side order/position intervention occur historically?
+
+Answer:
+____________________________________________________________
+
+Q10. BROKER PRODUCT REJECTION
+-----------------------------
+Do you remember any order being rejected because of product eligibility
+(MIS/CO/CNC/NRML/etc.)?
+
+Answer:
+____________________________________________________________
+
+Q11. CONTRACT NOTES / BROKER EVIDENCE
+-------------------------------------
+Are contract notes available for later reconciliation of actual product,
+quantity, average fill and charges?
+
+Answer:
+____________________________________________________________
+
+Q12. TESTING VM DIFFERENCES
+---------------------------
+Do you know of any broker-model difference between Production and Testing
+VM beyond already documented configuration/S&R differences?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+NEW-SYSTEM INPUTS ALREADY RECORDED — DO NOT REANSWER UNLESS CHANGED
+======================================================================
+
+The following were already supplied during the earlier Broker Model review
+and are retained here only so they are not lost:
+
+1. NEW SYSTEM broker preference:
+       Zerodha only.
+   Angel One should not be carried forward merely because it exists in legacy.
+
+2. Broker authority preference:
+       Broker should be authoritative for live broker facts such as funds,
+       orders, fills, positions, average price, P&L, margin/eligibility and
+       broker IDs, subject to a final field-by-field authority matrix.
+
+3. Authentication preference:
+       Headless/no-manual workflow is preferred if technically possible
+       under current Zerodha requirements.
+
+4. Authentication failure preference:
+       Reject new entries; continue protection/reconciliation of existing
+       positions where broker access permits; alert Telegram + Email.
+
+5. Alert convention:
+       Where an alert is required, Telegram + Email.
+
+6. Intraday:
+       Retain intraday trading; exact current Zerodha-supported execution/
+       protection mechanism must be verified before implementation.
+
+7. Delivery:
+       Retain Delivery/GTT; prefer broker-managed future-day TGT/SL where
+       supported rather than unnecessary long-running application-side
+       Delivery exit logic.
+
+8. Margin:
+       Do not use invented universal leverage.
+       Use broker/product/stock-specific current margin/eligibility evidence.
+
+9. Order-time margin:
+       Morning/reference margin is not silently rebased during the day.
+       Order-time broker margin/API is the final live validation input.
+
+10. No margin data:
+       Previously recorded preference was to treat the requirement as
+       100% cash requirement and alert, subject to final implementation
+       discussion.
+
+11. Broker evidence:
+       Preserve broker order ID, exchange order ID where available,
+       submission/acknowledgement, status/fill history, margin response,
+       broker position/funds snapshots, rejection/error evidence and
+       reconciliation timestamps.
+
+12. Partial fill:
+       Manage filled quantity; cancel/release unfilled remainder when the
+       relevant exit/protection condition requires it; alert the partial-fill
+       state.
+
+13. Timeout:
+       Reconcile before treating a broker timeout as a failed order, because
+       the broker may have accepted the order.
+
+14. Retry:
+       Any retry must avoid duplicate broker orders and retain explicit
+       attempt identity/linkage.
+
+15. Live-only:
+       NEW SYSTEM is intended to be LIVE ONLY; paper mode is not required as
+       a production operating mode.
+
+These are NEW-SYSTEM inputs, NOT legacy facts and NOT frozen implementation
+decisions unless separately approved.
+
+======================================================================
+CROSS-TOPIC CAPTURE — RETAIN FOR LATER AGENDA REVIEW
+======================================================================
+
+The following points were previously supplied by Rama and may belong to later
+agenda topics. They are preserved here so they are not lost:
+
+- All business values should be configuration-driven, not hard-coded in
+  Python.
+- Telegram + Email is the global alert pair.
+- Broker is the live source of truth for broker-side facts.
+- Daily capital basis should not be silently rebased during the trading day.
+- Margin snapshots should be dated/auditable.
+- Eligibility and margin are separate concepts.
+- Filled quantity/price must be distinguished from intended quantity/price.
+- Product semantics must be explicit.
+- Do not guess technical answers; use repository/API evidence and discussion.
+- Delivery future-day exits should preferably use broker-managed GTT where
+  compatible.
+- Central/global score/rank allocation needs separate reconsideration.
+- Do not implement any of these merely because they appear in this checklist.
+
+======================================================================
+REQUIRED REVIEW DISCIPLINE
+======================================================================
+
+Before final reconciliation/manual:
+1. Re-check Production source as primary.
+2. Compare Testing/Sandbox only for differences.
+3. Separate configuration presence from actual usage.
+4. Preserve unknowns.
+5. Record known defects only when evidenced.
+6. Keep NEW-SYSTEM decisions separate from legacy documentation.
+7. Do not expose credentials/secrets/tokens in the manual.
+
+END OF DISCUSSION CHECKLIST

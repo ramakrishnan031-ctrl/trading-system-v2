@@ -1,0 +1,139 @@
+# A-010 — FINAL SOURCE RECONCILIATION AND FREEZE
+## SECRETS / ENVIRONMENT — 30-SEP-2026
+
+STATUS: CLOSED / FROZEN AS LEGACY DOCUMENTATION
+Scope: DEAD legacy system only. No V2 implementation/design decision is frozen here.
+
+## 1. EVIDENCE BASIS
+Production GitHub repository = primary legacy baseline.
+Sandbox/Testing = comparison evidence.
+Records = historical evidence.
+User-reviewed A-010 checklist = supplementary user historical evidence.
+
+## 2. FINAL RECONCILIATION
+
+### Secret/configuration boundary — FACT
+- YAML/configuration files contain business/system settings and credential references.
+- Actual credentials/tokens/passwords were maintained outside tracked configuration, primarily through the VM environment/.env.
+- `accounts.csv` contains broker-account metadata and environment-variable references, not the actual secret values in the reviewed repository.
+- `.gitignore` excludes `.env` and credential artifacts.
+- `core/config_loader.py` explicitly does NOT read `.env` and does not perform environment-variable interpolation; individual consumer modules read environment variables.
+
+### Credential categories — FACT + USER CONFIRMATION
+The user confirms the .env contained operational credentials including Zerodha API/authentication material, Telegram, email/SMTP, Chartink/webhook-related credentials and other operational secrets. Actual values are intentionally omitted.
+
+### Account model — FACT + USER CONFIRMATION
+Multiple Zerodha account metadata/credential-reference records existed. The user confirms only the active trading account was populated/used through the VM environment for actual trading. Inactive metadata was not recalled as being used for real trading.
+
+### Environment loading — FACT / UNKNOWN
+FACT:
+- `core/config_loader.py` does not load `.env`.
+- Telegram and SMTP consumers use environment-backed credentials.
+- Security monitoring also uses environment-backed alert credentials.
+
+UNKNOWN:
+- Exact VM mechanism that injected `.env` values into the service process environment. User recollection points toward service/environment handling but is explicitly uncertain.
+
+### Zerodha authentication — FACT / HISTORICAL / UNKNOWN
+- Headless Zerodha authentication/token creation existed.
+- A manual token creation/upload fallback existed.
+- User recalls automatic cleanup of old tokens and creation of a new token during the next boot cycle; exact times are approximate and are not frozen.
+- Exact authentication-failure recovery sequence is UNKNOWN.
+- Exact effect of invalid authentication on existing-position management/reconciliation is UNKNOWN.
+
+### Secret rotation / temporary files — HISTORICAL
+User reports temporary plaintext files outside the repository were used to provide credential values to VS Code Claude for storage into `.env`, followed by deletion. Similar procedure was used for credential rotation. This is historical operator practice, not proof of secure governance.
+
+### Direct .env editing — HISTORICAL / UNKNOWN
+User reports occasional direct VM editing of `.env` through VS Code Claude. Exact restart/reload/rebaseline behavior is UNKNOWN.
+
+### Git protection — FACT / UNKNOWN
+- `.gitignore` excludes `.env` and credential artifacts.
+- Repository documentation describes a pre-commit secret scanner.
+- User does not know whether that scanner was consistently active historically.
+- No secret values are reproduced.
+
+### Historical exposure — USER-REPORTED
+User reports no known credential leak was found, while accidental exposure/commit and credential rotation occurred historically. Exact incident evidence/timeline was not supplied, so this remains user-reported historical information.
+
+### Security monitor — FACT
+`scripts/security_monitor.py` watches sensitive security state including `.env`-related file hashes, SSH/authentication activity and copy-protection state. It can alert through Telegram and critical email/sentinel paths. It is an alert-oriented monitor, not an established pre-authorization gate.
+
+### Copy protection — FACT / HISTORICAL
+Repository security controls include VM↔PC copy-protection/audit mechanisms. User reports using the protected workflow. Complete historical enforcement for every transfer is NOT ESTABLISHED.
+
+### Backup/retention — USER HISTORICAL
+User reports no intentional independent backup store of .env/credential material. This was not independently verified.
+
+### VS Code / Claude handling — USER HISTORICAL
+Actual secret values were sometimes supplied through temporary files outside the repository so Claude could place them into `.env`; the temporary files were then deleted. This is documented as historical practice, not a security guarantee.
+
+### Failure behavior — UNKNOWN except where directly confirmed
+- Telegram unavailable: user reports fallback worked.
+- Email failure: no observed incident; exact fallback UNKNOWN.
+- Broker credential failure: no observed incident; exact behavior UNKNOWN.
+- Missing environment variable at startup: exact behavior UNKNOWN.
+
+## 3. LEGACY CLASSIFICATION TABLE
+
+| Subject | Classification |
+|---|---|
+| .env used for actual credentials | FACT + USER CONFIRMATION |
+| config_loader directly loads .env | FALSE / NOT ITS ROLE |
+| Consumers read environment variables | FACT |
+| accounts.csv stores broker metadata/env references | FACT |
+| .gitignore excludes .env/credential artifacts | FACT |
+| Pre-commit secret scanner documented | FACT |
+| Scanner consistently active historically | UNKNOWN |
+| Headless Zerodha authentication | FACT / USER CONFIRMATION |
+| Manual token-upload fallback | FACT / USER CONFIRMATION |
+| Exact auth-failure recovery | UNKNOWN |
+| security_monitor watches .env | FACT |
+| Security monitor is alert-oriented | FACT |
+| User received security alerts | USER HISTORICAL |
+| Exact .env loading mechanism | UNKNOWN |
+| Exact Production/Sandbox secret-value equality | NOT ESTABLISHED |
+| Email-failure fallback | UNKNOWN |
+| Broker-auth failure effect on existing positions | UNKNOWN |
+
+## 4. CROSS-TOPIC ITEMS PRESERVED FOR FUTURE PRODUCTION / DESIGN
+
+These are deliberately retained so they are not lost. They are NOT A-010 legacy decisions.
+
+### Future secret-management questions
+- secret manager/vault versus routine `.env`;
+- least-privilege access;
+- audited secret rotation;
+- rotation without plaintext temporary files;
+- authorization before sensitive changes;
+- startup-time secret validation;
+- secret reload/restart procedure;
+- redaction in logs/prompts/reports/diagnostics;
+- auditable configuration/security changes.
+
+### User-requested future change-control point
+User specifically asked whether security-sensitive changes should require prior authorization rather than merely generate an alert. Record as OPEN V2 design input.
+
+### Cross-reference
+Future system direction from A-006: Zerodha-only and Live-only. This is not an A-010 legacy conclusion.
+
+### Chartink naming
+Production and Testing historically differed in scanner naming, including a Testing-side broker-ID marker. Exact normalization location is not established here. Never record webhook tokens.
+
+### Configuration boundary
+A-009 remains authoritative for the legacy configuration architecture. A-010 only records the security/configuration boundary.
+
+## 5. OPEN QUESTIONS CARRIED FORWARD
+1. Exact Production `.env` loading/injection mechanism.
+2. Exact Zerodha authentication-failure state machine.
+3. Exact existing-position behavior during broker-auth failure.
+4. Exact email fallback behavior.
+5. Historical activation/coverage of pre-commit secret scanning.
+6. Exact Production/Sandbox secret-value separation.
+7. Exact reload/restart/rebaseline procedure after `.env` edits.
+8. Exact copy-protection enforcement path.
+
+## 6. FREEZE STATEMENT
+> The legacy system separated business configuration from actual credentials, with credentials maintained outside Git and consumed through environment variables/.env by individual modules. Zerodha authentication was intended to operate headlessly, with a manual token-upload fallback; security monitoring and copy-protection mechanisms existed. Detailed failure, reload and authorization behavior that could not be established from evidence remains UNKNOWN.
+
+No V2 security architecture is frozen by A-010.

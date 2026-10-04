@@ -1,0 +1,171 @@
+A-006 — BROKER MODEL
+FINAL SOURCE RECONCILIATION / GOVERNANCE RECORD
+25-SEP-2026
+
+STATUS
+A-006 documentation record CLOSED/FROZEN. The user's returned answers are explicitly USER SUGGESTIONS / DESIGN INPUTS, NOT immutable implementation decisions. Items for which the user declined to guess remain OPEN for later design/implementation discussion with Claude and verification against current broker behaviour.
+
+1. EVIDENCE BASIS
+Primary legacy baseline:
+- Production: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Testing/Sandbox: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+- Records: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Reviewed project evidence:
+- CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- system_config.yaml
+- A-004 and A-005 records
+- completed A-006 checklist
+
+Current external broker verification was also performed:
+- Zerodha currently states Bracket Order/BO is no longer supported.
+- Zerodha currently documents GTT for CNC, NRML and MTF, including OCO target+stoploss.
+- Kite Connect exposes margins, orders/order history, positions and order modification/cancellation.
+These are CURRENT broker facts, not historical legacy runtime evidence.
+
+2. LEGACY BROKER FACTS
+- Production configured Zerodha as primary broker.
+- Angel One appeared as a disabled fallback configuration entry; actual historical Angel One trading is NOT ESTABLISHED.
+- Main adapter: broker/zerodha_adapter.py.
+- Broker-connected modules include capital/position_sizer.py, capital/fund_manager.py, orders/order_placer.py, order_manager.py, order_monitor.py and order_reconciler.py.
+- Legacy product map: INTRADAY->MIS, DELIVERY->CNC, COVER_ORDER->CO, BRACKET_ORDER empty/unsupported.
+- Configuration proves capability/handling, not actual historical use.
+- Legacy paper/live implementation exists.
+- Legacy broker reconciliation/fill monitoring/rate-limit handling exists.
+
+3. NEW-SYSTEM BROKER DIRECTION — USER SUGGESTIONS
+3.1 Broker: Zerodha only. Angel One was initially planned but dropped.
+3.2 Broker is authoritative for live broker state: funds, opening balance, orders, statuses, fills, positions, average price, P&L, margin/required funds, eligibility and broker IDs.
+3.3 Local DB authority was NOT decided. User said choose best fit during implementation with Claude. OPEN.
+3.4 Token/session: retain Zerodha workflow subject to current API requirements; user prefers a redesigned headless/no-manual workflow if possible.
+3.5 Authentication failure: reject new entries; continue protection/reconciliation of existing positions where broker access permits; immediately alert Telegram + Email.
+3.6 Global alert suggestion: wherever an alert is required, use BOTH Telegram and Email.
+
+4. PRODUCTS / GTT
+- User intends Intraday + Delivery.
+- Suggested Intraday product: MIS.
+- Suggested Delivery model: CNC/GTT.
+- CO may be considered, subject to current eligibility and implementation fitment.
+- BO should NOT be assumed; current Zerodha verification says BO is no longer supported.
+- Delivery/GTT compatibility must be explicitly verified before implementation.
+- User's reason for GTT: broker-managed future-day target/SL can avoid unnecessary long-running application-side delivery-exit logic.
+- Current Zerodha evidence supports GTT for CNC and OCO target+SL, but exact intended workflow still requires implementation verification.
+
+5. ENTRY / EXIT ORDER DESIGN
+- User intentionally did NOT choose a fixed entry order type.
+- User wants broader/best-fit options, avoiding unsafe guessing, with Claude discussion during implementation.
+- Suggested new flow:
+  Chartink -> strategy-specific adapter/processor -> strategy filtering -> entry validation/reject -> config.yaml/strategy YAML -> position sizing -> suitable window -> broker order.
+- User noted the existing central/global score/rank allocator concept needs reconsideration. This is future architecture input, not A-006 freeze.
+- Intraday target: strategy-dependent, based on strategy YAML R:R.
+- Delivery target/SL: GTT.
+- Protective SL: broker-side whenever broker/product rules permit.
+- SL failure: retry + bounded escalation; exact escalation OPEN.
+- EOD square-off: system-controlled before broker cutoff, with suggested two checks: square-off -> first confirmation -> wait about 1–2 minutes -> second confirmation. This is a suggestion, not a frozen timing value.
+
+6. A-005 BROKER/CAPITAL HANDOFF
+Carry-forward:
+- one real-cash capital basis;
+- 09:15 broker opening balance authoritative for that day;
+- configured Intraday/Delivery buckets;
+- daily capital lock;
+- broker-specific margin, no invented universal leverage;
+- daily margin reference authoritative for sizing basis;
+- order-time broker margin/API final safety validation;
+- eligibility and margin calculation are separate;
+- no usable margin data -> 100% cash requirement + Telegram/Email alert;
+- entry broker margin is primary sizing basis;
+- no separate SL/Target capital allocation unless broker behaviour requires it;
+- dated margin/eligibility snapshots;
+- no business values hardcoded in Python;
+- reconciliation may report drift but must not silently rebase today's locked capital;
+- next day's broker opening balance becomes next day's basis.
+
+User's additional broker-margin suggestion:
+If morning margin differs from order-time broker margin, reduce/adjust quantity within all existing constraints.
+
+7. FUNDS / CHARGES / EVIDENCE
+- Opening cash: trading basis.
+- Available cash: capital-drift comparison and alerts.
+- Store order-specific broker margin response with date.
+- Charges/fees: user selected contract/settlement reports; next morning opening balance is already expected to reflect prior broker adjustments. No separate intraday charge-sizing rule was frozen.
+
+8. ORDER / FILL
+- Broker fill data authoritative for filled quantity, average fill price, partial fills, order status and broker order ID.
+- User intentionally did NOT decide whether "submitted" means only after a broker ID; queued/cancelled/rejected state semantics require careful design.
+- Partial fill suggestion: continue waiting for remaining quantity; if SL/TGT hits for already-filled quantity, immediately cancel unfilled remainder; alert partial-fill status.
+- Timeout suggestion: reconcile first, then alert, because orders may remain queued at broker.
+- Legacy 60-second timeout is NOT a V2 decision.
+
+9. RATE LIMIT / API FAILURE / RETRY
+User intentionally did not decide centralized vs endpoint-specific rate limiting, endpoint-specific failure handling, or retry architecture. These remain OPEN implementation decisions and must use current broker/API behaviour. Do not copy legacy numbers blindly.
+
+10. RECONCILIATION / POSITION
+- Reconciliation frequency: OPEN.
+- Detailed conflict-resolution algorithm: OPEN, while broker remains authoritative for live broker facts.
+- Automatic reconciliation actions: OPEN; do not silently promote legacy actions.
+- Position source: broker + local state, broker authoritative.
+- Position identity suggestion: symbol + product (MIS/GTT) + direction (Long/Short).
+- Manual broker intervention: detect + reconcile + alert.
+
+11. ELIGIBILITY / INSTRUMENTS
+- Exact pre-order eligibility matrix: OPEN; establish using current broker/API rules.
+- Instrument metadata: daily refresh before market opening, following the existing cron principle where appropriate; failure -> Telegram + Email alert.
+- Exact V2 refresh time/mechanism remains subject to implementation/scheduling review.
+
+12. LIVE ONLY
+CONFIRMED:
+NEW SYSTEM = LIVE ONLY.
+Paper mode is NOT required.
+Historical paper mode remains documentation evidence only.
+
+13. TESTING / SANDBOX
+User did not make a final testing-method decision; "all applicable" was explicitly only a random answer. OPEN. Do not assume Zerodha provides an equivalent live-order sandbox.
+
+14. ERROR / AUDIT EVIDENCE
+User wants, where available:
+broker error code; error message/category; symbol; strategy; intended order; quantity; price; product; margin/eligibility context; timestamp; broker order ID; system decision/recovery action.
+Never fabricate unavailable fields.
+User confirmed each retry should have a new explicit attempt identity while preserving original order/trade linkage.
+User wants available broker order/exchange IDs, submission/acknowledgement, order history, fill history, margin response, broker position/funds snapshots, rejection/error, reconciliation result and timestamps retained under the long-term audit/retention policy.
+
+15. PRODUCTION VS TESTING
+Production remains primary legacy baseline. Testing/Sandbox is comparison evidence only. The user's belief that both are broadly similar does not prove identity. No Sandbox behaviour overrides Production baseline.
+
+16. CLASSIFICATION
+FACT/HISTORICAL:
+Zerodha primary; disabled Angel One fallback entry; Zerodha adapter; legacy MIS/CNC/CO/unsupported BO configuration; broker reconciliation/fill monitoring; paper/live implementation.
+
+CURRENT EXTERNAL BROKER FACT:
+BO is currently unsupported; GTT currently supports CNC/NRML/MTF and OCO target+SL.
+
+V2 DESIGN INPUTS:
+Zerodha only; broker authoritative; global Telegram+Email; headless token workflow preferred; Intraday+Delivery/GTT; possible CO; daily/order-time margin validation; margin discrepancy quantity adjustment; dated margin evidence; broker fill authority; partial-fill handling; reconcile-before-alert timeout; broker+local state with broker authority; symbol+product+direction identity; manual intervention reconciliation; broker-side SL; strategy R:R MIS target; Delivery GTT; bounded SL retry; system EOD square-off/two-check suggestion; daily instrument refresh; live-only; available broker evidence; explicit retry identity.
+
+UNKNOWN / OPEN:
+local DB authority; exact token automation; exact MIS/CO eligibility; entry order type; exit architecture; rate limits; endpoint failure actions; retry policy; reconciliation frequency/actions/state machine; exact eligibility matrix; testing method; GTT implementation details; SL-failure escalation; order acknowledgement/state semantics.
+
+17. CROSS-TOPIC / FUTURE AGENDA INPUTS — DO NOT LOSE
+- All user/business-controlled values must be configuration-driven, not hardcoded in Python.
+- Telegram + Email is the intended global alert pair wherever alerts are required.
+- Broker is source of truth for live broker state.
+- Daily capital basis is locked and must not be silently rebased.
+- Margin snapshots are dated/auditable.
+- Eligibility and margin calculation are separate.
+- Actual filled quantity/price must be distinguished from intended values.
+- Product semantics must be explicit.
+- User does not want to guess technical answers merely to complete a checklist; use repository/API evidence and Claude discussion.
+- Delivery future-day exits should use broker-managed GTT where compatible.
+- A-005 carry-forward: one trade per symbol once a day; available + realised-loss effect for running capital flow; prior expenses/profit reflected by next broker opening balance; quantity based on expected SL loss/risk-distance rather than permitted-notional/entry-price; maximum capital per trade remains the capital-flow constraint; live-only.
+- Existing central/global score/rank allocator is to be reconsidered in future strategy/filtering architecture, not frozen by A-006.
+- Do not turn suggestions into code until the relevant agenda topic is discussed/frozen.
+
+18. FINAL STATEMENT
+A-006 records the DEAD legacy broker model and the user's current NEW-SYSTEM broker intentions. Several technical details remain deliberately open because the user refused to guess. They must be resolved later using repository evidence, current Zerodha documentation/API behaviour, Claude/user discussion and testing evidence.
+
+A-006 DOCUMENTATION RECORD = CLOSED/FROZEN.
+NEW-SYSTEM TECHNICAL IMPLEMENTATION DETAILS = PARTLY OPEN.
+
+END.

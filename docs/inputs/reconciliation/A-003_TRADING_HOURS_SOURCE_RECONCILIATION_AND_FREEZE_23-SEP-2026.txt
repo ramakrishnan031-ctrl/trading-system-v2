@@ -1,0 +1,76 @@
+A-003 — TRADING HOURS
+SOURCE RECONCILIATION & FREEZE RECORD
+Legacy System Documentation — Phase 1
+Date: 23-Sep-2026
+
+STATUS
+CLOSED / FROZEN AS A HISTORICAL LEGACY BASELINE.
+
+PRIMARY SOURCE
+Production repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+FROZEN PRODUCTION TIME CONTRACT
+- market_open: 09:15 IST
+- entry_start: 10:00 IST
+- entry_end: 15:00 IST
+- eod_entry_cutoff: 15:15 IST
+- mis_squareoff_cutoff: 15:09 IST
+- eod_squareoff_time: 15:17 IST
+- market_close: 15:30 IST
+- service_window_end: 17:35 IST
+
+SOURCE RECONCILIATION
+1. Production config explicitly states HH:MM values are interpreted as IST.
+2. Production config distinguishes entry_end (15:00) from eod_entry_cutoff
+   (15:15); they are separate mechanisms.
+3. Production config identifies 15:09 as the primary MIS protective deadline.
+4. Production config identifies 15:17 as the EOD accounting/emergency
+   backstop, not the primary MIS square-off.
+5. Production config identifies 17:35 as service_window_end.
+6. Production main.py contains a 15:15 force-close callback and states that
+   pending entry orders are cancelled; its notification states EOD square-off
+   closes INTRADAY positions at 15:17 while DELIVERY is carried.
+7. Production main.py contains a 14:45 EOD pre-alert; this is an alert time,
+   not evidence that entry_end or eod_entry_cutoff equals 14:45.
+8. Production config states entry_start=10:00 is a global floor over
+   per-strategy windows.
+9. Production config contains signal_queue expiry_sec=600, but this alone
+   does not prove the exact fate of every out-of-window signal.
+10. Production config contains IST clock/skew controls; main.py uses the
+    IST time authority in timing-sensitive code.
+
+HISTORICAL CONFLICTS — NOT SILENTLY RESOLVED
+- User discussion: 14:45 entry cutoff vs Production entry_end=15:00.
+- User discussion: 14:45 EOD cutoff vs Production eod_entry_cutoff=15:15.
+- User discussion: 15:15 MIS cutoff vs Production mis_squareoff_cutoff=15:09.
+- User discussion: 15:15 EOD square-off vs Production eod_squareoff_time=15:17.
+- User discussion: 18:30 service end vs Production service_window_end=17:35.
+- Testing VM evidence: entry_start=09:30 vs Production=10:00.
+
+The Production repository/config values are the frozen Production baseline.
+The conflicting recollections remain historical conflict notes.
+
+CLASSIFICATION
+FACT: Production configured times above.
+HISTORICAL: alternative values recorded in prior discussion/runtime
+evidence.
+UNKNOWN / NOT ESTABLISHED: exact systemd start boundary; complete cron
+authority map; exact fate of every out-of-window signal; full EOD retry/
+promotion/sweep sequence; database timestamp semantics; complete validator
+failure path.
+KNOWN DEFECT: the historical record contained conflation between entry_end,
+EOD entry cutoff, MIS square-off and EOD backstop. This is documented as an
+evidence/documentation issue, not repaired here.
+
+FROZEN TIME ORDER
+09:15 <= 10:00 < 15:00 <= 15:15 <= 15:17 <= 15:30 <= 17:35
+
+FREEZE DECISION
+A-003 = CLOSED / FROZEN on 23-Sep-2026.
+
+This freeze establishes the legacy time contract only. It does not design or
+approve V2 behavior. Later runtime chapters may add implementation evidence
+or reopen a specific fact only if direct source evidence requires it.
+
+END

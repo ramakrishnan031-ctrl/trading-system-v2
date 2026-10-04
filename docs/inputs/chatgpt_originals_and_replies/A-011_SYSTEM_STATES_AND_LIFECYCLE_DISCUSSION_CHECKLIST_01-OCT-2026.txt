@@ -1,0 +1,386 @@
+# A-011 — SYSTEM STATES AND LIFECYCLE
+## DISCUSSION & CLARIFICATION CHECKLIST — 01-OCT-2026
+
+STATUS: OPEN — USER REVIEW REQUIRED
+SCOPE: DEAD LEGACY SYSTEM ONLY
+PRIMARY: Production repository
+COMPARISON: Sandbox/Testing
+HISTORICAL: Records repository
+
+IMPORTANT: Answer from recollection only where known. Use UNKNOWN / NOT ESTABLISHED where uncertain. Do not provide secrets. This checklist documents the legacy system only; it does not design V2.
+
+## 1. LIFECYCLE STATES
+
+Repository evidence shows startup/boot, normal runtime, shutdown, HALT scenarios, soft-kill/hard-kill, broker-auth failure, startup-check failure, holiday/weekend non-start and service-window expiry.
+
+Q1. Did the legacy system have formal named overall states such as STARTING, READY, RUNNING, PAUSED, HALTED, STOPPING, ERROR?
+Answer: I guess not all the labels as you mentioned instead it has only 2 lables: STARTING & STOPPING
+
+Q2. What was the normal trading state called?
+Answer: STARTING (while booting at 08:15am) and STOPPING (while shutdown at 17:30), in between no state is used/called
+
+Q3. Was there a distinct READY state after startup checks but before accepting signals?
+Answer: NO [I think & guess so]
+
+Q4. Could the process remain alive while new entries were intentionally blocked?
+Answer: YES, System is alive till 17:30 even new entries were intentionally blocked
+
+Q5. Could existing positions continue to be managed while new entries were blocked?
+Answer: YES, Same behaviour 'existing positions continued to be managed while new entries were blocked'
+
+## 2. STARTUP / BOOT
+
+Production main.py contains startup guards, config loading/validation, account/environment checks, instance locking, database/state initialization, startup checks, strategy loading, broker/token initialization and component construction.
+
+Q6. Did Production normally start automatically after VM reboot?
+Answer: YES, Production (Booting (08:15) > Zerodha token refresh > Zerodha instrument download > Pre-flight check (system health) > Pre-market briefing > Other operational and trade functions > Awaits for Market starting time (as per config.yaml) > Starts to trades > Once market closed > Performs post-closure system & operational activities (Cron jobs) > Shuts down at 17:30 > Continues other system & operational activities (Cron jobs) [Refer: Cron_registry for list]
+
+Q7. Was systemd normally used to start it?
+Answer: YES [I think & guess so]
+
+Q8. Was manual `python main.py` startup ever used in Production?
+Answer: UNKNOWN, Need to review in GitHub repo
+
+Q9. Did a blocking startup-check failure prevent the system from entering runtime?
+Answer: UNKNOWN, Need to review in GitHub repo
+
+Q10. What was the actual recovery after startup failure: fix+restart, automatic restart, manual restart, next scheduled attempt, or other?
+Answer: UNKNOWN, Need to review in GitHub repo
+
+Q11. Did systemd automatically restart the process after abnormal exit?
+Answer: YES [I think & guess so, Why> Once system is shutdown at 17:30 then next morning automatically boots at 08:15, But at the same time important note: system won't shutdown (refuses to stop/shutdown) at 17:30, In case any 'Open position' in Delivery Qty trade exists (not applicable for Intraday, Since it is auto-squared of by system else broker does mandatorily) due to reconciliation failure Buy Qty=Sell Qty or vice-versa which is one of the post-market cron job before shutdown, So what to do in that situation? user manually execute the command "ssh trading-vm sudo systemctl stop trading-system" to stop then next trading day morning system boots as usual (headless)
+
+Q12. Was clean shutdown operationally different from crash/exception?
+Answer: YES [I think & guess so]
+
+## 3. HALT / RESUME
+
+Production exposes `--resume`, documented as clearing HARD_KILL/SOFT_KILL and allowing startup from a HALT scenario. Kill-switch state is persisted.
+
+Q13. Was `--resume` actually used in Production?
+Answer:  YES [I think & guess so]
+
+Q14. What normally caused HALT?
+Answer: To halt the system & Stop/shutdown same one manual command "ssh trading-vm sudo systemctl stop trading-system"
+
+Q15. Did HALT survive process restart?
+Answer: YES [I think & guess so]
+
+Q16. Could the system restart from HALT without explicit resume/clear?
+Answer: YES, If I do halt the system (For not to trade & as per Q11 delivery qty reconciliation failure) then next trading day system automatedly boots itself
+
+Q17. Did you ever intentionally leave it HALTED overnight?
+Answer: YES, Refer Q11 When? System failures for post market reconciliation (Delivery Qty) then system won't stops at 17:30 instead continuously runs, So in order to stop I'll manually execute "ssh trading-vm sudo systemctl stop trading-system" then system stops [I Guess Stop/shutdown = HALT]
+
+## 4. KILL SWITCH / ENTRY BLOCKING
+
+Repository evidence: SOFT_KILL blocks new entries; HARD_KILL flattens and halts; state persists; capital-invariant failure can trigger hard kill; critical clock skew can trigger soft kill.
+
+Q18. Did Production actually use SOFT_KILL?
+Answer: YES [Where? To cut-off new entries at 14:45 roughly] 
+
+Q19. Did Production actually use HARD_KILL?
+Answer: YES [But I Guess I have never ever tried Or No full & detailed idea]
+
+Q20. What events do you remember triggering a kill?
+Answer: The scenarios I Knew only (as below)
+1. When orphan entries not cancelled properly [ie, Once entry order is executed then system passes simultaneous TGT & SL orders and In case open position is exited (either TGT/SL hits) then another orphan (remaining TGT/SL) needs to be cancelled, But in case any such orphan is cancelled then soft-kill activated which blocks new entries]
+2. At 14:45 (Not sure about this time), But around this time soft-kill triggered to block new entries
+3. But this one not sure about this: In case capital drift (system capital vs broker capital deviates so much beyond fixed limit) then soft kill triggered to block new entries Or Just sends alerts (Telegram & Email), But I'm sure that I'm receiving alerts as of now
+4. Then rest of the scenarios (If any) that needs to be checked in GitHub repo
+
+Q21. After SOFT_KILL, were existing positions still monitored/protected?
+Answer: YES, Soft-kill blocks new entries only, The existing open positions are safe along with already passed TGT & SL entries for each stocks
+
+Q22. After HARD_KILL, were positions automatically flattened?
+Answer: UNKNOWN, Why? not 100% sure, but supposed to be
+
+Q23. Did hard kill require manual intervention before trading resumed?
+Answer: YES, Need to manually command in terminal to resume the system [Additional note: Only Soft-kill is automatedly resumed in next trading day]
+
+Q24. Were kill-switch alerts sent through Telegram + Email?
+Answer: YES, Soft-Kill alerts getting received in Telegram + Email, But Hard-Kill no idea since I haven't received as of now or I may not sure [Sorry unable to recall]
+
+## 5. TRADING / SERVICE WINDOWS
+
+Evidence establishes service-window guard, global entry_start, entry_end, EOD entry cutoff, MIS square-off cutoff, EOD square-off time, market close and service_window_end.
+
+Q25. Outside the entry window, did the process remain alive while rejecting new entries?
+Answer: YES, Assume entry time is 10:00-15:30 then system starts to process entries from 10:00 to 14:45 > At 14:45 system triggers soft-kill which blocks new entries & existing open positions are protected along with it's respective TGT & SL orders > At 15:00-15:10 system closes open positions (auto-square off) > After 15:30-17:30 system executes all cron jobs for operational and system maintenance > At 17:30 system stops/Shuts down > After 17:30-Till next day booting continued to executing all cron jobs for operational & system things
+But In case Delivery Qty found then system won't stops or refuses to stop at 17:30 due to reconciliation failure (Buy Qty=Sell Qty or vice-versa), In that case I have to manually execute command to stop (soft-kill) then next day resumes
+
+Q26. At service-window end, did it normally exit cleanly?
+Answer: YES, 2 things are here, First: If no open delivery positions (Since Intraday automatedly squared-off by system & Broker) then reconciliation fails (Buy Qty = Sell Qty issue as referred in Q25) then I have to manually execute the command to stop the system, Second: If no open delivery qty found then reconciliation passes (Buy Qty = Sell Qty) then system automatedly/safely stops at service end time or at 17:30
+
+Q27. Did shutdown wait when positions still required the service?
+Answer: YES (as per Q25 & Q26), Open Delivery position/Qty then system refuses to stop and continues to run till next day, Then during next day booting time collides for already running system then Chartink signals wont be processed [No trading will be executed unless this issues will be cleared
+
+Q28. Did the same process remain alive after market close for reconciliation/EOD work?
+Answer: YES, refer above answers importantly Q25-Q27
+
+## 6. SIGNAL / QUEUE LIFECYCLE
+
+Q29. Could webhook reception continue while other subsystems were degraded?
+Answer: UNKNOWN, Need to investigate/review GitHub repo
+
+Q30. Was there a system-wide state that stopped webhook acceptance?
+Answer: UNKNOWN, But from my knowledge only soft or hard-kill stops processing new entries (including flatten existing positions), But there is no new mechanism to stop webhook signals  [Good catch - Appreciated, take a note into manual for implementation the same]
+
+Q31. What happened to queued signals on soft kill, service stop, hard kill or entry-window close?
+Answer: UNKNOWN, But I guess all the queued signals were killed (ie, cancelled or let it dropped) since I found no more new entries executed, But need to investigate/review repo [Good catch, take a note into manual]
+
+Q32. Did queued signals survive process restart?
+Answer: UNKNOWN, But I guess all the signals dropped
+
+## 7. BROKER AUTHENTICATION FAILURE
+
+Production code detects broker auth failure and contains token invalidation intended to prevent restart loops; invalid token is renamed and a later non-interactive live start fails fast until token refresh.
+
+Q33. Did Production experience broker-token/authentication failures?
+Answer: NO such experience existed as of now, meaning during all trading days system successfully processed Zerodha tokens headless mode successfully
+
+Q34. Did auth failure stop new entries?
+Answer: YES, I Guess so, Why? If broker auth or token not refreshed for the day then 'No orders' can be processed without tokens [API Won't works]
+
+Q35. Could existing positions still be managed/reconciled during auth failure?
+Answer: NOPE, Even first order can't be placed without broker auth/token, So managing/reconciling is not required [No token/auth = No Trades allowed]
+
+Q36. Was token refresh automatic or manual after failure?
+Answer: Existing legacy system has 2 things both: Headless & Manual (ie, create token locally then upload using .bat file command], Since headless doing without any issues we will follow the same in new system also [Manual not required in new system]
+
+Q37. After token refresh, what was the actual restart/resume procedure?
+Answer: Booting (08:15) > Performs all cron jobs refer cron_registry file in GitHub production repo [\trading-system\config\cron_registry.yaml]
+
+## 8. DATABASE / PERSISTENT STATE
+
+SQLite operational state includes orders, trades, signals, capital ledger, session/system events, kill-switch state and reconciliation state.
+
+Q38. Was the database the persistent source for state across process restarts?
+Answer: UNKNOWN
+
+Q39. Which states did you remember surviving restart?
+Answer: UNKNOWN, Sorry can't able to re-call & Need to investigate/review 
+
+Q40. Did restart ever create duplicate orders/signals?
+Answer: UNKNOWN, I Guess nope, but not sure about it
+
+Q41. Did recovery/reconciliation occur before new entries after restart?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo [Good catch, Keep a careful note into Manual for new system implementation design]
+
+## 9. ORDER / POSITION STATES
+
+Q42. Did the system distinguish signal received, accepted, order submitted, acknowledged/queued, partial fill, filled, cancelled, rejected, exited and reconciled?
+Answer: YES, But I Guess partially doing it [meaning not all as mentioned: signal received, accepted, order submitted, acknowledged/queued, partial fill, filled, cancelled, rejected, exited and reconciled]
+
+Q43. Which order states could remain pending while the process continued?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo [Good catch, take a careful note into manual]
+
+Q44. After restart, were pending orders reconstructed from the broker?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo [Good catch, take a careful note into manual]
+
+Q45. After restart, were open positions reconstructed from the broker?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo [Good catch, take a careful note into manual]
+
+Q46. If local state disagreed with broker state, which was authoritative?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo [Good catch, take a careful note into manual]
+
+## 10. INTRADAY / DELIVERY LIFECYCLE
+
+Q47. Was Intraday lifecycle actually Signal → Entry → SL/Target → same-day square-off?
+Answer: YES, I Guess so, But not sure/confirmed about it
+
+Q48. Was Delivery lifecycle actually Signal → Entry → broker-side GTT → overnight holding → GTT/manual exit/reconciliation?
+Answer: YES, I Guess so, But not sure/confirmed about it
+
+Q49. Could Delivery positions remain open across process restart/reboot?
+Answer: YES, Why? Once GTT order window is used then broker will takes the responsibility of TGT, SL, Over-night holding etc [Like wise if system unable to auto-square off Intraday positions, then Zerodha will do universally same principle applied on GTT order's window]
+
+Q50. Did Delivery require the application to remain alive because GTT was broker-managed?
+Answer: Not required, Once Delivery order executed (ie, position created) thru 'GTT order window' then everything shifted to Broker's responsibility (TGT, SL, Over-night holding) even system may or may not alive/not [Good feature know!]
+
+## 11. EOD / SQUARE-OFF
+
+Repository evidence: MIS safety square-off exists; EOD square-off is a backstop; EOD logic blocks/soft-kills, cancels and exits; Delivery is excluded from normal EOD square-off.
+
+Q51. Did Production enter a distinct EOD/square-off state?
+Answer: UNKNOWN, But all intraday orders will be squared of at cut-off time as per config.yaml, But not Delivery orders (GTT orders)
+
+Q52. During MIS square-off, were new entries blocked?
+Answer: YES, As per system's design first soft-kill (new order blocking) executed at 14:45 (roughly) then auto-square of applied in between 15:00 to 15:10, So no more new orders while performing auto-square off process
+
+Q53. Did the system wait for broker confirmation after square-off?
+Answer: YES, I Guess so, But not sure/confirmed about it
+
+Q54. If an MIS exit remained uncertain, did the process stay alive for further handling?
+Answer: NO, I Guess once system processed auto-square off then makes another check within 1-3minutes (not sure about the duration) that's it, Meaning just makes second check only but nothing is handled [Good catch - Note it in Manual]
+
+Q55. After square-off, were daily counters/P&L reset and EOD reporting performed?
+Answer: YES, I Guess so
+
+## 12. RECONCILIATION / RECOVERY
+
+Q56. Did broker reconciliation run continuously, periodically, mainly EOD, or a combination?
+Answer: I think periodically only, But no sure/confirmed about it
+
+Q57. Could reconciliation automatically repair local order/position state?
+Answer: NOPE, I guess only sends alert [Not 100% sure about it what's happening]
+
+Q58. Could reconciliation release/reserve capital during repair?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q59. Could a serious reconciliation conflict block new entries?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q60. Did reconciliation failures generate Telegram + Email alerts?
+Answer: YES, When? Capital drift (ie, system capital vs broker's capital) then Qty reconciliation (Buy Qty = Sell Qty or vice-versa)
+
+## 13. CRASH / EXCEPTION RECOVERY
+
+Q61. What did you normally do after an unexpected process crash?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q62. Did systemd restart it automatically?
+Answer: YES, I Guess so [every booting at 08:15am]
+
+Q63. After restart, was broker reconciliation required before trading resumed?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q64. Were duplicate-order safeguards expected to prevent repeated entry after restart?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q65. Any known historical restart/recovery incident involving incorrect/duplicate order, stale state or capital mismatch?
+Answer: UNKNOWN? Why? No such restarts happened as much as possible in same day, meaning if restart required usually I'll do it with next day  booting [Good catch, So take careful note into Manual]
+
+## 14. CLEAN SHUTDOWN
+
+Q66. What was the normal manual shutdown method?
+Answer: System shutdown at 17:30 as fixed time when books are flatten [Meaning Intraday already has no choice of non-flatten: System & Zerodha will does, But If Delivery open position exists? then system won't stops/shutdown at 17:30 instead continues to run unless otherwise I'll manually execute command to stop]
+
+Q67. Did normal shutdown stop entries, finish/cancel relevant work, preserve state, reconcile, release locks and exit?
+Answer: YES, System shutdown at 17:30, But new entries will stops at around 14:45, auto-squared off at 15:00 to 15:10, then all other system maintenance + operation cron jobs continues to run after market Example:'reconciliation' of Qty Buy=Sell etc till 17:30, even after many cron jobs runs till next day booting [Refer Cron_registry task]
+
+Q68. Did SIGTERM/systemd stop follow the same path?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q69. Was shutdown while a position was open considered safe/normal?
+Answer: NOPE, Since Intraday segment will be flatten by system & Zerodha mandatorily, But If Delivery has open quantities then system refuses to shutdown (continuously runs without stopping), Need to stop it manually then only next day boots > Trading happens
+
+## 15. HOLIDAY / WEEKEND
+
+Repository evidence shows holiday/weekend guards can exit 0 before full configuration loading.
+
+Q70. Did the service normally start/exit on weekends or NSE holidays?
+Answer: YES, Service normally starts & stops on all trading days, Meaning system won't runs on NSE Holidays & Weekends
+
+Q71. Was there a distinction between non-trading-day exit, startup failure and intentional shutdown?
+Answer: NO, During non-trading day system won't do anything, Meaning system has no more start & stop functions
+
+Q72. Did scheduled background jobs continue independently when the trading service did not start?
+Answer: YES, Even on Holidays/Weekends/System stopped/shutdown days, So scheduled background cron jobs are independently working
+
+## 16. PAPER VS LIVE
+
+Repository evidence contains separate paper/live behavior; service unit starts live while CLI default is paper.
+
+Q73. Was paper mode actually used for operational testing?
+Answer: YES
+
+Q74. Did paper and live have the same lifecycle states?
+Answer: YES
+
+Q75. Were there known paper/live lifecycle differences or bugs?
+Answer: YES, Lot of things, Example: (In paper mode) Prices-  No clear broker prices (entry/sl/tgt); Timing-Time of orders (entry, SL, TGT etc); Capital flow issues etc
+
+Q76. Was Production strictly live during actual trading?
+Answer: YES
+
+## 17. TESTING VS PRODUCTION
+
+Q77. Was Testing intended to mirror Production lifecycle?
+Answer: YES
+
+Q78. Any intentional lifecycle differences?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+Q79. Did Testing use different startup/configuration times but the same state model?
+Answer: NO, Production system = Testing system (except S&R Configuration, Config.yaml settings and some bugs had been fixed in Testing system)
+
+Q80. Could S&R shadow/evaluation components affect lifecycle/trading state?
+Answer: YES, I Guess so, But not sure/confirmed about it
+
+## 18. OPERATOR / MANUAL INTERVENTION
+
+Q81. Which lifecycle situations required manual operator action?
+Answer: 2 things only can able to re-call: To removal of Hard-Kill scenarios & Executing manual command for system stopping/Shutdown at 17:30 when delivery segment has open position
+
+Q82. Which situations recovered automatically?
+Answer: If I do execute manual command for system stopping/shutdown which will be automatically recovered/resumed in next day morning while booting
+
+Q83. Did you ever manually restart service, clear kill switch, refresh token, reconcile broker state, cancel orders, flatten positions or edit state/config?
+Answer: YES, What I did? manually restart service, clear kill switch, refresh token, cancel orders, flatten positions or edit state/config [So missing things is: 'reconcile broker state'] 
+
+Q84. Were manual broker interventions detected/reconciled automatically?
+Answer: UNKNOWN, Need to review/investigate into GitHub repo
+
+## 19. KNOWN DEFECTS / EVENTS
+
+Q85. Any known lifecycle defect involving startup, restart, shutdown, kill switch, token failure, reconciliation, duplicate processing, stale state, square-off, Delivery/GTT or capital state?
+Answer: UNKNOWN, Unable to recall if there is anything or nothings exists, So need to review/investigate into GitHub repo
+
+Q86. Any incident where the system appeared RUNNING but could not trade/manage correctly?
+Answer: NO, I Guess no such incidents, But not 100% sure/confirm about it
+
+Q87. Any incident where the system appeared stopped but background jobs continued?
+Answer: NO, I Guess no such incidents, But not 100% sure/confirm about it [At the same time note that, The background cron jobs continues to run even system is shutdown/holiday/weekend etc]
+
+## 20. YOUR ACTUAL LEGACY STATE MODEL
+
+Describe the lifecycle in your own words. Example only — do not assume it is correct:
+
+BOOT → STARTUP CHECKS → READY/RUNNING → ENTRY WINDOW → POSITION MANAGEMENT → EOD/SQUARE-OFF → RECONCILIATION → SHUTDOWN
+
+Answer: YES, Correct behaviour
+
+## 21. CROSS-TOPIC MEMORY PRESERVATION — NOT A-011 DECISIONS
+
+### Broker/authentication
+- Exact auth-failure state machine.
+- New-entry behavior vs existing-position protection during auth outage.
+- Token refresh/restart sequence.
+- Broker-authoritative vs local persistent state.
+
+### Kill switch
+- Exact SOFT_KILL vs HARD_KILL semantics.
+- Manual resume authorization.
+- Persistence across restart.
+- Alert/escalation behavior.
+
+### Restart/recovery
+- Reconciliation-before-entry rule.
+- Duplicate-order prevention.
+- Capital-state recovery.
+- Pending-order recovery.
+- Position reconstruction.
+- Crash-recovery evidence.
+
+### EOD
+- Exact square-off state transitions.
+- Confirmation/retry behavior.
+- Broker-acknowledgement failure handling.
+- Delivery/GTT handoff.
+
+### Operational governance
+- Which transitions require human authorization.
+- Which transitions may occur automatically.
+- What must be auditable.
+- What must alert Telegram + Email.
+- What blocks entries versus stops the service.
+
+Do not make V2 decisions here unless explicitly requested.
+
+## 22. FINAL STATUS: CLOSED / FROZEN — ready for reconciliation + permanent manual
+
+[ ] OPEN — more clarification needed
+[ ] CLOSED / FROZEN — ready for reconciliation + permanent manual
+
+Specific item(s) that should remain OPEN:

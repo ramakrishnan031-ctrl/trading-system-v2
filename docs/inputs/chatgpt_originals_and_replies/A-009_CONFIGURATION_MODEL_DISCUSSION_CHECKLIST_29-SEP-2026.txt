@@ -1,0 +1,791 @@
+A-009 — CONFIGURATION MODEL
+DISCUSSION / RECONCILIATION CHECKLIST
+LEGACY SYSTEM DOCUMENTATION / PHASE 1
+29-SEP-2026
+
+PURPOSE
+Establish the factual historical Configuration Model of the DEAD legacy
+system before preparing the permanent A-009 manual.
+
+This is discussion/review only. Do NOT redesign V2, repair legacy behavior,
+assume declared configuration was active, or expose credentials/secrets.
+
+Classify every answer:
+FACT / HISTORICAL / UNKNOWN / NOT ESTABLISHED / INTERPRETATION /
+KNOWN DEFECT / OPEN QUESTION / V2 / NEW-SYSTEM INPUT
+
+======================================================================
+SOURCE BASIS
+======================================================================
+
+PRIMARY:
+1. Production / Trading VM:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+2. Testing / Sandbox VM:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+3. Records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Production = primary legacy baseline.
+Testing/Sandbox = comparison evidence only.
+Records = historical evidence where applicable.
+
+REVIEW LIMIT:
+The direct web retrieval retry did not expose the three repositories through
+the available search path. Therefore this checklist is based on the preserved
+repository maps, working-tree records and configuration evidence already
+available in the project. No unverified GitHub content is substituted.
+
+A GitHub connection is available if direct repository inspection is needed.
+
+PRESERVED EVIDENCE ALREADY AVAILABLE:
+- 01_SYSTEM_OVERVIEW.md
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+- system_config.yaml
+- MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt
+- A-001 through A-008 records
+
+======================================================================
+PART 1 — CONFIGURATION ARCHITECTURE
+======================================================================
+
+Preserved Production evidence identifies a two-layer configuration model:
+
+A. Eight non-strategy YAML files loaded by core.config_loader:
+   1. system_config.yaml
+   2. broker_costs.yaml
+   3. broker_limits.yaml
+   4. slippage_model.yaml
+   5. scoring_weights.yaml
+   6. scan_webhook_map.yaml
+   7. chartink_scanners.yaml
+   8. nse_holidays_<year>.yaml
+
+B. Strategy YAMLs under:
+   config/strategies/*.yaml
+
+Strategy YAMLs are loaded separately from the fixed eight-file registry.
+
+Q1. Is this the correct historical configuration architecture?
+
+Answer: YES, each of above 1-8 .yaml files (PART-1 A) are relating to universal/system functions & each strategy.yaml files responsible for strategy/signal related functions
+____________________________________________________________
+
+Q2. Was there any other configuration source that you personally changed
+or maintained but which is not represented above?
+
+Examples: VM-local files, database settings, CLI options, environment
+variables, broker-side settings, Chartink settings, systemd/cron settings,
+generated files.
+
+Answer: No these were the .yaml files [above 1-8 files and strategy.yaml files]
+____________________________________________________________
+
+Q3. If yes, identify the source and what it controlled.
+
+Answer: NO other .yaml files [Not Applicable]
+____________________________________________________________
+
+======================================================================
+PART 2 — FILE INVENTORY / PURPOSE
+======================================================================
+
+Confirm the historical purpose of each:
+
+system_config.yaml: Global or System's control panel functions  or settings
+____________________________________________________________
+
+broker_costs.yaml: Broker and NSE costs (Fees & Charges) for Intraday & Delivery trades [Equity, F&O, Options]
+____________________________________________________________
+
+broker_limits.yaml: Client side tokens and other bucket criteria's
+____________________________________________________________
+
+slippage_model.yaml: Allowed slippage or cushion for system ordered price to broker filled price (ie, system price + maximum cushion value : Any prices beyond this amount will the order cancelled/rejected) - Note this as 'incomplete' settings, meaning need to reviewed fully and then new system will be designed
+____________________________________________________________
+
+scoring_weights.yaml: Conditions or Criteria's for secondary filtering mechanism works? meaning based on which criteria's the system makes secondary filteration
+____________________________________________________________
+
+scan_webhook_map.yaml: Scanners or strategies url and names
+____________________________________________________________
+
+chartink_scanners.yaml: URL of chartink scanners
+____________________________________________________________
+
+nse_holidays_<year>.yaml: NSE Holiday list for 2026
+____________________________________________________________
+
+config/strategies/*.yaml: Each strategy wise conditions and informations (ie, Metadata of each strategy)
+____________________________________________________________
+
+Q4. Were ALL these files actually used by Production?: YES [But Guessing basis only]
+
+[ ] YES  [ ] NO  [ ] PARTLY  [ ] UNKNOWN
+
+Which were dormant/shadow/historical?: NO [But Guessing basis only]
+____________________________________________________________
+
+Q5. Were any Production configuration files present but NOT loaded by
+core.config_loader?
+
+Answer: UNKNOWN [Since no clear idea, need to review GitHub repo]
+____________________________________________________________
+
+======================================================================
+PART 3 — LOADING / STARTUP
+======================================================================
+
+Preserved evidence says:
+- main.py uses --config or relative "config".
+- core.config_loader.load_all() processes the fixed eight files.
+- Loading sequence: exist → hash → parse → validate.
+- YAML uses yaml.safe_load.
+- raw bytes receive SHA-256 before parsing.
+- Pydantic validation is applied.
+- failures do not return a partial AppConfig.
+- strategy YAMLs load separately during startup.
+
+Q6. Was Production normally started with the default config directory or
+with --config?
+
+Answer: UNKNOWN
+____________________________________________________________
+
+Q7. How were configuration changes normally applied?
+[ ] YAML edit
+[ ] restart service
+[ ] VM restart
+[ ] deployment
+[ ] script
+[ ] database change
+[ ] other
+
+Details: UNKNOWN
+____________________________________________________________
+
+Q8. Did legacy Production support hot/reloadable configuration?
+
+[ ] YES  [ ] NO  [ ] UNKNOWN
+
+Evidence: UNKNOWN
+____________________________________________________________
+
+Q9. What happened historically when a required configuration file was
+missing or invalid?
+
+Answer: 
+____________________________________________________________
+
+======================================================================
+PART 4 — SCHEMA / VALIDATION
+======================================================================
+
+Preserved evidence shows strict Pydantic configuration schemas and a
+Config Sanity Auditor. StrategyConfig also rejects unknown YAML keys
+(extra='forbid') and validates fields/cross-fields.
+
+Q10. Were configuration validation errors startup-blocking?
+
+Answer:
+____________________________________________________________
+
+Q11. Were warnings allowed while the service still started?
+
+Answer:
+____________________________________________________________
+
+Q12. Did you ever observe invalid configuration being rejected?
+
+Answer / example:
+____________________________________________________________
+
+Q13. Any known historical configuration-validation defects?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 5 — GLOBAL CONFIG VS STRATEGY YAML
+======================================================================
+
+A-008 established:
+- global configuration controls system-wide behavior;
+- strategy YAMLs contain strategy-specific configuration;
+- StrategyConfig contains identity, direction, intent, order protocol,
+  pipeline/horizon, enabled, entry/SL/target/trailing/pullback,
+  screening, position-cap-related fields and entry windows.
+
+Q14. Was the historical ownership approximately:
+
+config.yaml/system configuration = global controls
+strategy.yaml = strategy-specific controls
+
+[ ] YES  [ ] NO  [ ] PARTLY  [ ] UNKNOWN
+
+Q15. Did the SAME business setting ever exist both globally and inside a
+strategy YAML?
+
+Answer:
+____________________________________________________________
+
+Q16. If both existed, which value won at runtime?
+
+Answer:
+____________________________________________________________
+
+Q17. Did global configuration impose a hard ceiling/floor over strategy
+configuration?
+
+Answer:
+____________________________________________________________
+
+IMPORTANT: answer historical behavior, not future V2 preference.
+
+======================================================================
+PART 6 — TRADE TYPE / ENABLEMENT / GLOBAL SWITCHES
+======================================================================
+
+A-008 recorded the historical model:
+- global trade_type = INTRADAY / DELIVERY / BOTH;
+- individual strategy enabled/disabled;
+- force_intraday_only existed;
+- exact necessity/effect of force_intraday_only requires confirmation.
+
+Q18. If global trade_type=BOTH, could individual strategies be independently
+enabled/disabled?
+
+Answer:
+____________________________________________________________
+
+Q19. If global trade_type=INTRADAY, were Delivery strategies blocked?
+
+Answer:
+____________________________________________________________
+
+Q20. Was force_intraday_only actually active/required in Production?
+
+[ ] YES  [ ] NO  [ ] UNKNOWN
+
+Evidence:
+____________________________________________________________
+
+Q21. Any other global switch that could suppress a whole segment/class?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 7 — CONFIGURATION PRECEDENCE
+======================================================================
+
+Important A-009 question:
+
+Where a value could originate from multiple places, what was the actual
+legacy precedence?
+
+Potential sources:
+Global YAML
+→ Strategy YAML
+→ Runtime-derived value
+→ Broker/API
+→ Database/state
+→ hard-coded fallback
+
+Q22. Did runtime code replace YAML values with broker/API responses,
+database state, market data, CLI values, environment variables or
+hard-coded values?
+
+Answer:
+____________________________________________________________
+
+Q23. What happened when two configuration sources disagreed?
+
+Answer:
+____________________________________________________________
+
+Q24. Were there YAML values that existed but were later overridden in code?
+
+Answer:
+____________________________________________________________
+
+Q25. Were there hard-coded business values in Python that effectively
+overrode configuration?
+
+Answer / examples:
+____________________________________________________________
+
+======================================================================
+PART 8 — DEFAULTS / FALLBACKS
+======================================================================
+
+Q26. Did the system commonly rely on schema defaults?
+
+Answer:
+____________________________________________________________
+
+Q27. Were defaults business rules, safety fallbacks, or schema-only values?
+
+Answer:
+____________________________________________________________
+
+Q28. Did API/data/config failure cause fallback to a static configured value?
+
+Answer:
+____________________________________________________________
+
+Q29. Identify any fallback that materially affected trading.
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 9 — CONFIG HASH / SNAPSHOT / AUDIT
+======================================================================
+
+Preserved evidence includes core.config_snapshotter:
+- resolves runtime configuration;
+- creates canonical JSON;
+- SHA-256 hashes it;
+- writes config_snapshots rows keyed by date/hash;
+- allows later evidence of which config was live.
+
+Q30. Did you use configuration snapshots/reports to identify the config
+active on a trading day?
+
+Answer:
+____________________________________________________________
+
+Q31. Could multiple configuration hashes exist for the same day?
+
+Answer:
+____________________________________________________________
+
+Q32. Was snapshot evidence considered actual runtime configuration or merely
+a copy of YAML?
+
+Answer:
+____________________________________________________________
+
+Q33. Any known mismatch between YAML on disk and configuration actually
+loaded by the process?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 10 — PAPER VS LIVE CONFIGURATION
+======================================================================
+
+Legacy system supported paper/live modes, but parity must not be assumed.
+
+Q34. Same YAML files for paper and live?
+
+Answer:
+____________________________________________________________
+
+Q35. Separate paper/live configuration values?
+
+Answer:
+____________________________________________________________
+
+Q36. Any config key behaving differently in paper vs live?
+
+Answer:
+____________________________________________________________
+
+Q37. Were simulated fills/paper behavior controlled by configuration?
+
+Answer:
+____________________________________________________________
+
+Q38. Known paper/live configuration mismatch?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 11 — PRODUCTION VS TESTING / SANDBOX
+======================================================================
+
+Earlier agenda work established that Production and Testing were believed
+similar, but exact equality was not proven.
+
+Known areas of possible difference include:
+- trading-hour/config settings;
+- Chartink naming/payload conventions;
+- S&R/shadow settings;
+- testing-specific controls.
+
+Q39. Was Testing intentionally a copy of Production configuration?
+
+[ ] YES  [ ] NO  [ ] PARTLY  [ ] UNKNOWN
+
+Q40. What configuration differences were intentionally maintained?
+
+Answer:
+____________________________________________________________
+
+Q41. Did any difference affect trading decisions rather than infrastructure?
+
+Answer:
+____________________________________________________________
+
+Q42. Did Testing contain configuration not present in Production?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 12 — CONFIGURATION CATEGORY MATRIX
+======================================================================
+
+Mark YES / NO / UNKNOWN and add notes.
+
+Trading hours:                 __________
+Market/segment enablement:     __________
+Strategy enablement:           __________
+Strategy direction:            __________
+Product type:                  __________
+Entry windows:                 __________
+Stop-loss:                     __________
+Target / R:R:                  __________
+Capital buckets:               __________
+Position sizing:               __________
+Risk limits:                   __________
+Position limits:               __________
+Daily trade limits:            __________
+Concentration:                 __________
+Broker product mapping:        __________
+Margin/leverage:               __________
+Slippage:                      __________
+Broker costs:                  __________
+Alerts:                        __________
+Signal queue:                  __________
+Scanner mapping:               __________
+Chartink scanner metadata:     __________
+Holidays:                      __________
+S&R/shadow controls:           __________
+Kill switch/safety controls:  __________
+Logging/reporting:             __________
+Other:                         __________
+
+======================================================================
+PART 13 — CONFIG → CONSUMER TRACE
+======================================================================
+
+For each important configuration source, identify known consumers.
+
+SOURCE
+→ INPUT
+→ VALIDATION
+→ CONSUMER
+→ OUTPUT/EFFECT
+→ STORAGE/EVIDENCE
+
+system_config.yaml:
+____________________________________________________________
+
+broker_costs.yaml:
+____________________________________________________________
+
+broker_limits.yaml:
+____________________________________________________________
+
+slippage_model.yaml:
+____________________________________________________________
+
+scoring_weights.yaml:
+____________________________________________________________
+
+scan_webhook_map.yaml:
+____________________________________________________________
+
+chartink_scanners.yaml:
+____________________________________________________________
+
+nse_holidays_<year>.yaml:
+____________________________________________________________
+
+config/strategies/*.yaml:
+____________________________________________________________
+
+======================================================================
+PART 14 — KNOWN CONFIGURATION DEFECTS / LIMITATIONS
+======================================================================
+
+Only evidence-backed defects should be recorded.
+
+Potential investigation areas:
+- declared but not consumed settings;
+- duplicated controls;
+- conflicting global/strategy settings;
+- hidden hard-coded overrides;
+- stale configuration;
+- Production/Testing divergence;
+- paper/live divergence;
+- unsafe/incorrect defaults;
+- holiday-year/config selection;
+- shadow/default-OFF confusion;
+- snapshot mismatch;
+- unrecorded manual changes.
+
+Q43. Which configuration defects do you personally remember?
+
+Answer:
+____________________________________________________________
+
+Q44. Any settings that appeared active in YAML but were actually inert?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 15 — CONFIGURATION CHANGE HISTORY
+======================================================================
+
+Q45. Did you manually change Production YAML on the Trading VM?
+
+Answer:
+____________________________________________________________
+
+Q46. Were changes committed to Git before deployment?
+
+Answer:
+____________________________________________________________
+
+Q47. Were there manual/uncommitted Production config changes?
+
+Answer:
+____________________________________________________________
+
+Q48. Did a config change require service restart / VM restart / deployment?
+
+Answer:
+____________________________________________________________
+
+Q49. Was there a formal change register or record?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 16 — SECURITY BOUNDARY
+======================================================================
+
+A-010 will separately document Secrets / Environment.
+
+For A-009 only identify REFERENCES, never secret values.
+
+Q50. Which configuration files referenced secrets/environment variables?
+
+Answer:
+____________________________________________________________
+
+Q51. Did configuration contain references to:
+environment-variable names / secret file paths / broker account identifiers /
+webhook identifiers / notification settings?
+
+Answer:
+____________________________________________________________
+
+DO NOT WRITE ANY PASSWORD, API SECRET, TOKEN, WEBHOOK SECRET OR TOTP SECRET.
+
+======================================================================
+PART 17 — CONFIGURATION FAILURE BEHAVIOR
+======================================================================
+
+Historical behavior for each:
+
+Missing config file:
+____________________________________________________________
+
+Invalid YAML:
+____________________________________________________________
+
+Schema validation failure:
+____________________________________________________________
+
+Unknown YAML key:
+____________________________________________________________
+
+Invalid numeric range:
+____________________________________________________________
+
+Invalid time window:
+____________________________________________________________
+
+Cross-field conflict:
+____________________________________________________________
+
+Missing strategy YAML:
+____________________________________________________________
+
+Invalid strategy YAML:
+____________________________________________________________
+
+Missing scanner mapping:
+____________________________________________________________
+
+Invalid scanner mapping:
+____________________________________________________________
+
+Missing holiday config:
+____________________________________________________________
+
+Config changed while running:
+____________________________________________________________
+
+Config hash changed:
+____________________________________________________________
+
+Q52. Which definitely blocked startup?
+
+Answer:
+____________________________________________________________
+
+Q53. Which generated warning only?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 18 — CONFIGURATION VS RUNTIME STATE
+======================================================================
+
+Do not document runtime state as configuration.
+
+Q54. Which values were dynamically calculated rather than read from YAML?
+
+Answer:
+____________________________________________________________
+
+Q55. Which values were stored in SQLite after being derived from config?
+
+Answer:
+____________________________________________________________
+
+Q56. Which broker/API values replaced configured assumptions at runtime?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 19 — CONFIGURATION GOVERNANCE
+======================================================================
+
+Q57. Who historically had authority to change Production configuration?
+
+Answer:
+____________________________________________________________
+
+Q58. Was approval/review required before a Production config change?
+
+Answer:
+____________________________________________________________
+
+Q59. Were changes tested in Sandbox first?
+
+Answer:
+____________________________________________________________
+
+Q60. Were configuration files treated as version-controlled artifacts?
+
+Answer:
+____________________________________________________________
+
+======================================================================
+PART 20 — CROSS-TOPIC / FUTURE INPUTS
+======================================================================
+
+These are NOT automatically legacy facts.
+
+1. V2 should avoid unnecessary duplicated controls such as the questioned
+   trade_type + force_intraday_only combination.
+   STATUS: V2 / NEW-SYSTEM INPUT.
+
+2. Future V2 may use global/master configuration plus strategy-specific YAML.
+   STATUS: V2 / NEW-SYSTEM INPUT.
+
+3. Business/decision values should be configuration-driven rather than
+   hard-coded in Python.
+   STATUS: CROSS-TOPIC V2 GOVERNANCE INPUT.
+
+4. Strategy-specific SL/target/R:R may belong in strategy configuration.
+   STATUS: V2 INPUT / subject to later agenda.
+
+5. Broker margin should be broker/API/data driven rather than invented from
+   universal leverage.
+   STATUS: A-005/A-006 V2 INPUT.
+
+6. Telegram + Email is the desired NEW SYSTEM alert pair.
+   STATUS: V2 / NEW-SYSTEM INPUT.
+
+7. Production is the primary legacy baseline; Testing/Sandbox is comparison.
+   STATUS: GOVERNANCE RULE.
+
+8. Configuration presence does not prove historical runtime use.
+   STATUS: DOCUMENTATION RULE.
+
+======================================================================
+PART 21 — REQUIRED FINAL CLASSIFICATION
+======================================================================
+
+FACT:
+____________________________________________________________
+
+HISTORICAL:
+____________________________________________________________
+
+UNKNOWN / NOT ESTABLISHED:
+____________________________________________________________
+
+INTERPRETATION:
+____________________________________________________________
+
+KNOWN DEFECT:
+____________________________________________________________
+
+OPEN QUESTION:
+____________________________________________________________
+
+V2 / NEW-SYSTEM INPUT:
+____________________________________________________________
+
+======================================================================
+PART 22 — FREEZE DECISION
+======================================================================
+
+A-009 Configuration Model status:
+
+[ ] OPEN — clarification/repository review still required
+[ ] CLOSED / FROZEN — ready for permanent manual
+
+If OPEN, unresolved dependencies:
+____________________________________________________________
+
+If CLOSED, frozen summary:
+____________________________________________________________
+
+======================================================================
+REVIEW RULE
+======================================================================
+
+Before permanent A-009 reconciliation + manual:
+
+1. Re-check Production configuration files and config_loader.
+2. Re-check Production configuration consumers.
+3. Re-check strategy YAML loading separately.
+4. Re-check scanner mapping and Chartink configuration.
+5. Re-check config snapshot/audit behavior.
+6. Compare Testing/Sandbox only for differences.
+7. Use Records for historical configuration evidence.
+8. Separate configuration from runtime state.
+9. Separate declared settings from consumed settings.
+10. Preserve every unknown.
+11. Never expose secrets.
+12. Do not make V2 design decisions in A-009.
+
+END OF A-009 DISCUSSION CHECKLIST

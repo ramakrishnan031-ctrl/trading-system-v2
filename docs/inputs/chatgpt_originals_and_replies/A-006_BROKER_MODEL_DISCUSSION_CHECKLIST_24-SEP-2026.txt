@@ -1,0 +1,898 @@
+A-006 — BROKER MODEL
+DISCUSSION CHECKLIST — LEGACY REVIEW → NEW SYSTEM DECISION INPUT
+24-SEP-2026
+
+PURPOSE
+-------
+This file is the discussion/checklist for A-006 — Broker Model.
+
+The objective is to understand the broker model actually present in the
+Production and Testing/Sandbox repositories, then obtain Rama's decisions
+where a NEW SYSTEM broker rule is required.
+
+IMPORTANT GOVERNANCE
+--------------------
+- The legacy system is DEAD / REFERENCE ONLY.
+- Production is the primary legacy baseline.
+- Testing/Sandbox is comparison evidence only.
+- Do NOT silently repair or redesign legacy behaviour.
+- Do NOT assume code presence means live usage.
+- Distinguish:
+    FACT
+    HISTORICAL
+    UNKNOWN / NOT ESTABLISHED
+    INTERPRETATION
+    KNOWN DEFECT
+    V2 / NEW-SYSTEM DECISION
+    OPEN QUESTION
+- This checklist does NOT freeze any new-system implementation.
+- Where the repository can establish the answer, Rama should NOT be asked
+  to guess; ChatGPT will establish it from source evidence during reconciliation.
+
+SOURCE BASIS
+------------
+PRIMARY REPOSITORIES
+1. Production:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+2. Testing / Sandbox:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+
+3. Records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Preserved project evidence also includes:
+- CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- A-004 reconciliation/checklist
+- A-005 reconciliation/checklists
+
+REVIEW STATUS
+-------------
+The preserved Production baseline identifies:
+- broker/zerodha_adapter.py as the main Zerodha broker adapter;
+- capital/position_sizer.py with optional live broker margin lookup;
+- capital/fund_manager.py as capital-ledger/reservation authority;
+- orders/order_placer.py / order_manager.py / order_monitor.py;
+- orders/order_reconciler.py as an independent broker/local-state reconciliation
+  mechanism;
+- delivery/CNC and intraday/MIS product mapping in Production configuration;
+- CO configured in the legacy product map;
+- BRACKET_ORDER present as an unsupported/empty product mapping;
+- broker rate limiting, fill monitoring and broker-state reconciliation;
+- broker truth used in several safety/reconciliation paths.
+
+These observations are source-derived and are NOT yet the final A-006 freeze.
+
+======================================================================
+1. BROKER IDENTITY AND AUTHORITY
+======================================================================
+
+SOURCE OBSERVATION
+------------------
+Production configuration identifies Zerodha as the primary broker.
+The preserved configuration also contains an Angel One fallback entry with
+fallback disabled.
+
+Q1. NEW SYSTEM BROKER
+---------------------
+Should the NEW SYSTEM be designed for:
+
+[ ] Zerodha only
+[ ] Zerodha primary + another broker fallback
+[ ] Multiple brokers from the beginning
+[ ] Other: _______________________________________________
+
+Please answer:
+
+Answer: Zerodha only [Why Angelone showing? initially planned then dropped, So new system with only Zerodha]
+_________________________________________________________
+_________________________________________________________
+
+Q2. BROKER AS SOURCE OF TRUTH
+-----------------------------
+For live account state, should the broker be authoritative for:
+
+- available cash/funds
+- opening balance
+- orders
+- order status
+- fills
+- positions
+- average price
+- realised/unrealised P&L
+- margin/required funds
+- product/eligibility
+- broker order IDs
+
+[ ] YES — broker is authoritative for live broker state.
+[ ] NO — modify:
+
+Answer: YES — broker is authoritative for live broker state. [Why? that's the final authority at EOD]
+_________________________________________________________
+
+Q3. LOCAL DATABASE VS BROKER
+----------------------------
+Should the new system treat the local DB as:
+
+[ ] System audit/state record, while broker remains authoritative for live
+    broker state.
+[ ] Co-equal source of truth.
+[ ] Other:
+
+Answer: No idea now, But do it with best fitment by discussing with Claude during implementation - Now carefully note it in manual file without fail
+_________________________________________________________
+
+======================================================================
+2. AUTHENTICATION / SESSION / TOKEN
+======================================================================
+
+Repository evidence indicates Zerodha authentication/token handling exists,
+including token monitoring/update mechanisms.
+
+Q4. NEW SYSTEM TOKEN MODEL
+--------------------------
+Should the new system:
+
+[ ] retain Zerodha token/session workflow, subject to current API requirements
+[ ] redesign token/session handling
+[ ] other:
+
+Answer: retain Zerodha token/session workflow, subject to current API requirements [headless + manual creation and upload using bash commands], But in new system I'm ok with headless (no manual required) and If possible make redesign also
+_________________________________________________________
+
+Q5. TOKEN FAILURE
+-----------------
+If broker authentication/session is unavailable:
+
+[ ] Do not accept/place new entries.
+[ ] Continue protection/reconciliation of already-open positions where broker
+    access permits.
+[ ] Other:
+
+Answer: Do not accept/place new entries + Continue protection/reconciliation of already-open positions where broker access permits and Send me Telegram and Email alerts immediately
+_________________________________________________________
+
+What alerts are mandatory?
+
+[ ] Telegram
+[ ] Email
+[ ] Both
+[ ] Other:
+
+Answer: Both [Consider it as Global rule in all places Alert=Both alerts of Telegram and Email]
+_________________________________________________________
+
+======================================================================
+3. BROKER PRODUCT / TRADE TYPE
+======================================================================
+
+Legacy Production configuration contains:
+- INTRADAY -> MIS
+- DELIVERY -> CNC
+- COVER_ORDER -> CO
+- BRACKET_ORDER -> empty/unsupported
+
+This proves configured capability/handling, not necessarily actual historical use.
+
+Q6. NEW SYSTEM PRODUCT SCOPE
+----------------------------
+Which broker products should NEW SYSTEM support?
+
+[ ] MIS
+[ ] CNC
+[ ] CO
+[ ] BO / Bracket
+[ ] Other:
+
+Answer: No idea [my intention is: Intraday and Delivery accordingly built it with suitable options], But I would say now: MIS, CNC/GTT, CO why? I Guess BO not supported by Zerodha in all days/without errors - Check internet about it
+_________________________________________________________
+
+Q7. INTRADAY
+------------
+Should all intraday trades use the broker's current MIS product/eligibility
+rules?
+
+[ ] YES
+[ ] NO — explain:
+
+Answer: NO - Explain [Why? I'm unaware fully, so safer option, Explain fully then decide]
+_________________________________________________________
+
+Q8. DELIVERY / GTT
+------------------
+A-004/A-005 evidence indicates Delivery/CNC and GTT were historically relevant.
+
+For NEW SYSTEM:
+
+[ ] Delivery/CNC remains supported.
+[ ] Delivery/GTT remains supported.
+[ ] Delivery is removed.
+[ ] Other:
+
+Answer: Delivery/GTT remains supported. [Why? GTT orders more safe than CNC for better execution of TGT/SL in next trading days as automatedly taken care by broker/zerodha itself - Check internet about it
+_________________________________________________________
+
+If Delivery/GTT is retained, should broker-specific GTT rules be separately
+documented and validated before implementation?
+
+[ ] YES
+[ ] NO
+
+Answer: YES [Mandatory to check the compatibility of Zerodha Vs System
+
+======================================================================
+4. ORDER TYPES
+======================================================================
+
+The legacy order layer contains multiple order protocols and broker order
+placement paths.
+
+Q9. NEW SYSTEM ENTRY ORDER TYPES
+--------------------------------
+Which entry order types should be allowed?
+
+[ ] MARKET
+[ ] LIMIT
+[ ] SL-LIMIT
+[ ] SL-MARKET
+[ ] Other:
+
+Answer: No idea, So consider broader and system best fitment options why? I don't want to risks of giving wrong/unsuitable answers [But current legacy system is seems to be ok too]- Take careful note in manual & Discuss with Claude for perfect implementation
+_________________________________________________________
+
+Q10. ENTRY ORDER TYPE SELECTION
+-------------------------------
+Should the entry order type be:
+
+[ ] globally configured
+[ ] strategy-specific
+[ ] determined by a common execution rule
+[ ] other:
+
+Answer: Entry order design (suggestion) would be: Chartink fires signals > then keep each strategies has it's own adapter or signal processor or something who filters signals then validates for Entry/Reject [existing system has central/global score/rank allocator design needs to be modified] >  then apply config.yaml and/or relevant signal.yaml file's settings > Position Size (already discussed capital flow + Qty determination) > Make entry Order with suitable window for Intraday? and Delivery (must be in GTT)
+_________________________________________________________
+
+Q11. EXIT ORDER TYPES
+---------------------
+Which exit mechanisms should be supported?
+
+[ ] broker-side SL
+[ ] broker-side target/limit
+[ ] software-managed exit
+[ ] GTT
+[ ] emergency MARKET exit
+[ ] other:
+
+Answer: No idea, So consider broader and system best fitment options why? I don't want to risks of giving wrong/unsuitable answers [But current legacy system is seems to be ok too]- Take careful note in manual & Discuss with Claude for perfect implementation [But for Delivery orders should be in GTT window, why? Once trading day is over from next trading day(s) onwards zerodha/broker will take cares TGT/SL execution automatedly, instead of making complicated system codes for delivery execution from next trading day(s)]
+_________________________________________________________
+
+Do not assume the legacy combination is required.
+
+Answer:
+_________________________________________________________
+
+======================================================================
+5. MARGIN / BROKER CAPITAL MODEL
+======================================================================
+
+A-005 already established the following NEW-SYSTEM direction:
+
+- one real-cash capital basis;
+- 09:15 broker opening balance as the day's authoritative basis;
+- configured Intraday/Delivery cash buckets;
+- daily capital lock;
+- broker-specific margin rather than invented universal leverage;
+- daily margin reference + order-time broker API validation;
+- no usable margin data => 100% cash requirement, with mandatory alert;
+- entry broker margin is the primary sizing basis;
+- SL/Target do not receive separate capital allocation unless broker behaviour
+  requires it;
+- dated margin/eligibility snapshots;
+- no business values hardcoded in Python.
+
+Q12. BROKER MARGIN AUTHORITY
+----------------------------
+Confirm the A-005 boundary for A-006:
+
+Daily margin reference:
+    authoritative for the day's sizing basis
+
+Order-time broker margin/API:
+    final execution safety/validation check and may reject/adjust
+
+[ ] CONFIRMED
+[ ] MODIFY:
+
+Answer:  CONFIRMED
+_________________________________________________________
+
+Q13. MARGIN ELIGIBILITY
+-----------------------
+Should NEW SYSTEM separately validate:
+
+    broker/product eligibility
+             AND
+    order-specific margin requirement
+
+rather than assuming that a margin calculation alone proves eligibility?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES
+_________________________________________________________
+
+Q14. MARGIN DATA UNAVAILABLE
+----------------------------
+A-005 currently says:
+"No usable margin data -> assume 100% cash requirement -> proceed + mandatory
+Telegram/email incident alert."
+
+Confirm:
+
+[ ] CONFIRMED
+[ ] MODIFY:
+
+Answer: CONFIRMED
+_________________________________________________________
+
+Q15. MARGIN CHANGE AT ORDER TIME
+--------------------------------
+If morning margin data differs from the order-time broker calculation:
+
+[ ] reject the order
+[ ] reduce/adjust quantity within all existing constraints
+[ ] accept only if broker API permits the exact order
+[ ] other:
+
+Answer: reduce/adjust quantity within all existing constraints
+_________________________________________________________
+
+This is a NEW-SYSTEM decision; do not infer it from legacy behaviour.
+
+======================================================================
+6. FUNDS / CASH / MARGIN RESPONSE
+======================================================================
+
+Q16. FUNDS DATA
+---------------
+Which broker funds values should NEW SYSTEM read/store?
+
+[ ] opening cash
+[ ] available cash
+[ ] used margin
+[ ] utilised funds
+[ ] available margin
+[ ] collateral
+[ ] other:
+
+Answer: opening cash for trading [available cash for capital drift (capital as per system vs broker) for sending alerts purpose]
+_________________________________________________________
+
+Q17. ORDER-MARGIN RESPONSE
+--------------------------
+Should the order-specific broker margin response be stored with the trade/order
+evidence so that later we can explain why a quantity was permitted?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES [Store with date, why? Since Broker margin might be changed each trading day]
+_________________________________________________________
+
+Q18. BROKER CHARGES
+-------------------
+A-005 records that broker trading expenses/charges affect the next day's broker
+opening state and that the broker is the next-day source of truth.
+
+For NEW SYSTEM, should broker-provided charges/fees be:
+
+[ ] captured per order/trade when available
+[ ] captured from contract/settlement reports
+[ ] both
+[ ] other:
+
+Answer: captured from contract/settlement reports [But one clarification why do we requires that? Since each day morning system pulls and updates 'Opening Balance' which is already broker adjusted balance after expense/charges]
+_________________________________________________________
+
+======================================================================
+7. ORDER SUBMISSION / ACKNOWLEDGEMENT / FILL
+======================================================================
+
+The legacy flow distinguishes:
+signal -> validation -> reservation -> order placement -> broker order ID
+-> monitoring -> fill -> reservation commit.
+
+Q19. BROKER ACKNOWLEDGEMENT
+---------------------------
+Should an order be considered submitted only after a valid broker order ID /
+acknowledgement is received?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing [If Order submitted means only 'Valid broker ID' then status and treatment of 'Queued/Cancelled/Rejected Orders' handling? Even such orders will have broker ID, Exchange ID etc, So be cautious]
+_________________________________________________________
+
+Q20. FILL AUTHORITY
+-------------------
+Should actual broker fill data be authoritative for:
+
+- filled quantity
+- average fill price
+- partial fills
+- order status
+- broker order ID
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES
+_________________________________________________________
+
+Q21. PARTIAL FILL
+-----------------
+How should NEW SYSTEM handle partial fills?
+
+[ ] manage the actual filled quantity only
+[ ] cancel remaining quantity after partial fill
+[ ] continue waiting for remaining quantity
+[ ] strategy/order-specific
+[ ] other:
+
+Answer: continue waiting for remaining quantity [But at the same of waiting: If already hits SL/TGT of previously filled quantities, in such cases immediately cancel the existing unfilled quantities], Also send alerts for partially filled quantities with status
+_________________________________________________________
+
+Q22. ORDER TIMEOUT
+------------------
+What should happen when broker acknowledgement/fill does not arrive within
+the configured timeout?
+
+[ ] cancel
+[ ] reconcile first
+[ ] retry
+[ ] alert + reconcile
+[ ] other:
+
+Answer: reconcile first then alert [Why? some orders will be in queued with broker till intent order price is reaching]
+_________________________________________________________
+
+Do not assume the legacy 60-second value is a NEW-SYSTEM decision.
+
+======================================================================
+8. BROKER RATE LIMITS / API FAILURE
+======================================================================
+
+The legacy repository contains broker rate-limiting and API failure handling.
+
+Q23. RATE LIMIT POLICY
+----------------------
+For NEW SYSTEM:
+
+[ ] one centralized broker rate limiter
+[ ] per-endpoint limits
+[ ] broker-reported limits/configuration
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+Q24. API FAILURE
+----------------
+For each failure category, should the new system:
+
+Authentication:
+_________________________________________________________
+
+Funds/margin:
+_________________________________________________________
+
+Order placement:
+_________________________________________________________
+
+Order status:
+_________________________________________________________
+
+Position:
+_________________________________________________________
+
+Market data:
+_________________________________________________________
+
+Q25. RETRY POLICY
+-----------------
+Should retries be:
+
+[ ] centrally controlled and bounded
+[ ] endpoint-specific
+[ ] no automatic retry for order placement
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+======================================================================
+9. BROKER RECONCILIATION
+======================================================================
+
+Legacy evidence establishes an independent OrderReconciler which compares local
+state with Zerodha broker state and can repair state/capital paths.
+
+Q26. NEW SYSTEM RECONCILIATION FREQUENCY
+-----------------------------------------
+Should reconciliation be:
+
+[ ] continuous/polling
+[ ] event-driven where possible + periodic full reconciliation
+[ ] periodic only
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+Q27. RECONCILIATION AUTHORITY
+-----------------------------
+When broker and local state differ:
+
+[ ] broker state wins for live broker facts
+[ ] local state wins
+[ ] case-by-case
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+Q28. RECONCILIATION ACTIONS
+---------------------------
+Which may the reconciler perform automatically?
+
+[ ] update local order status
+[ ] update fill data
+[ ] update position state
+[ ] release/reserve system capital
+[ ] adopt an unknown broker position
+[ ] close an orphan local record
+[ ] cancel broker orders
+[ ] place protective orders
+[ ] emergency exit
+[ ] alert only
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+Do not assume every legacy action should survive.
+
+======================================================================
+10. POSITION STATE
+======================================================================
+
+Q29. POSITION SOURCE
+--------------------
+Should NEW SYSTEM derive live position truth primarily from:
+
+[ ] broker positions
+[ ] local trade/order state
+[ ] broker + local state with broker authoritative
+[ ] other:
+
+Answer: broker + local state with broker authoritative
+_________________________________________________________
+
+Q30. PRODUCT-SENSITIVE POSITIONING
+----------------------------------
+Should position identity include at least:
+
+    symbol + product
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: symbol + product (MIS/GTT) + Direction (Long/Short)
+_________________________________________________________
+
+Q31. MANUAL BROKER INTERVENTION
+-------------------------------
+If a human manually changes/cancels/closes an order or position at the broker:
+
+[ ] detect and reconcile
+[ ] alert only
+[ ] adopt and continue management
+[ ] stop management / require operator decision
+[ ] other:
+
+Answer: detect and reconcile + Send alert
+_________________________________________________________
+
+======================================================================
+11. EXIT / PROTECTION BROKER INTERACTION
+======================================================================
+
+A-005 established that entry margin is the primary capital-sizing basis and that
+SL/Target do not receive separate capital allocation unless broker behaviour
+requires it.
+
+Q32. PROTECTIVE SL
+------------------
+Should NEW SYSTEM require a protective SL to be broker-side whenever the broker
+product/order rules permit?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES
+_________________________________________________________
+
+Q33. TARGET
+-----------
+Should target be:
+
+[ ] broker-side
+[ ] software-managed
+[ ] GTT
+[ ] strategy-dependent
+[ ] other:
+
+Answer: For Intraday/MIS orders: strategy-dependent (ie, R:R of strategy.yaml) and For Delivery: GTT orders in which broker can handle it automatedly once entry order filled
+_________________________________________________________
+
+Q34. SL FAILURE
+---------------
+If entry fills but protective SL placement fails:
+
+[ ] retry
+[ ] emergency exit
+[ ] retry + bounded escalation
+[ ] other:
+
+Answer: retry + bounded escalation
+_________________________________________________________
+
+Q35. EOD SQUARE-OFF
+--------------------
+Should broker EOD square-off be:
+
+[ ] system-controlled before broker cutoff
+[ ] broker cutoff treated as emergency backstop only
+[ ] other:
+
+Answer: system-controlled before broker cutoff [Design like 2 times must be checked before broker cut-off example: square-off then 1st confirmation check > wait for 1-2mins > make second check before broker's square-off]
+_________________________________________________________
+
+======================================================================
+12. BROKER ELIGIBILITY / INSTRUMENT VALIDATION
+======================================================================
+
+A-004 established the importance of separating:
+broker/API capability
+vs system configuration
+vs code capability
+vs strategy request
+vs actual trading.
+
+Q36. PRE-ORDER ELIGIBILITY
+--------------------------
+Should NEW SYSTEM validate broker eligibility before order submission for:
+
+[ ] symbol
+[ ] exchange/segment
+[ ] product
+[ ] quantity
+[ ] price/tick
+[ ] order type
+[ ] MIS/Delivery eligibility
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing 
+_________________________________________________________
+
+Q37. INSTRUMENT MASTER
+----------------------
+Should broker instrument metadata be refreshed and treated as a prerequisite
+for order placement?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: Yes, Make daily refresh before market opening [Refer existing cron job which refers at specified time after booting], Follow same principle + Send alert if refresh fails
+_________________________________________________________
+
+======================================================================
+13. LIVE-ONLY EXECUTION
+======================================================================
+
+A-005 final change already established:
+
+    NEW SYSTEM = LIVE ONLY
+    PAPER MODE = NOT REQUIRED
+
+Q38. CONFIRM BROKER MODEL
+-------------------------
+Should A-006 therefore define ONLY live broker behaviour and omit a paper/live
+parity design?
+
+[ ] CONFIRMED
+[ ] MODIFY:
+
+Answer: CONFIRMED [NEW SYSTEM = LIVE ONLY]
+_________________________________________________________
+
+Historical paper-mode code may still be documented as a legacy FACT where
+relevant; it must not be mistaken for a NEW-SYSTEM requirement.
+
+======================================================================
+14. PRODUCTION VS TESTING / SANDBOX
+======================================================================
+
+Q39. BROKER DIFFERENCES
+-----------------------
+If Production and Sandbox contain different broker configuration/code:
+
+Record the observed difference after repository review:
+
+_________________________________________________________
+_________________________________________________________
+
+Q40. TESTING PURPOSE
+--------------------
+For NEW SYSTEM testing, should the broker integration be tested against:
+
+[ ] broker API mocks
+[ ] recorded broker responses
+[ ] dedicated broker test/sandbox capability if available
+[ ] controlled live account tests
+[ ] all applicable
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing [But random answer: all applicable]
+_________________________________________________________
+
+Do NOT assume Zerodha offers a separate equivalent live-order sandbox unless
+verified.
+
+======================================================================
+15. ERROR / REJECTION TAXONOMY
+======================================================================
+
+Q41. BROKER REJECTIONS
+----------------------
+Should every broker rejection be recorded with:
+
+- broker error code
+- broker error message/category
+- symbol
+- strategy
+- intended order
+- quantity
+- price
+- product
+- margin/eligibility context
+- timestamp
+- broker order ID if available
+- system decision/recovery action
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES [But I'm unsure that all the above available or fully ready [So carefully take note in manual then discuss with Claude while implementing]
+_________________________________________________________
+
+Q42. RETRY VS NEW ORDER
+-----------------------
+Should every retry have a new explicit attempt identity while preserving the
+original order/trade linkage?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES
+_________________________________________________________
+
+======================================================================
+16. BROKER DATA / AUDIT EVIDENCE
+======================================================================
+
+Q43. WHAT MUST BE RETAINED
+--------------------------
+For each live order/trade, should evidence retain:
+
+[ ] broker order ID
+[ ] exchange order ID if available
+[ ] submission request
+[ ] broker acknowledgement
+[ ] order status history
+[ ] fill history
+[ ] margin response
+[ ] broker position snapshot
+[ ] funds snapshot
+[ ] broker rejection/error
+[ ] reconciliation result
+[ ] timestamps
+[ ] other:
+
+Answer: No idea, Why? I Don't want to take risk of wrong/unsuitable answering it - So carefully take note in manual then discuss with Claude while implementing [But random answer: all applicable, if all are available]
+_________________________________________________________
+
+Q44. RETENTION
+--------------
+Should broker evidence follow the same long-term audit/retention policy as the
+rest of the NEW SYSTEM?
+
+[ ] YES
+[ ] NO
+[ ] Other:
+
+Answer: YES
+_________________________________________________________
+
+======================================================================
+17. IMPORTANT CROSS-TOPIC POINTS — PLEASE DO NOT LOSE
+======================================================================
+
+These are not all A-006 decisions, but they should remain visible for later
+agendas where relevant:
+
+1. All user/business/system decision values should be configuration-driven;
+   do not hardcode them in Python.
+
+2. Broker is the source of truth for live broker state.
+
+3. Daily capital basis is locked; reconciliation must not silently rebase it.
+
+4. Margin data should be dated/auditable.
+
+5. Margin refresh success and failure should generate appropriate alerts.
+
+6. No silent repeated broker/API failures.
+
+7. Broker eligibility and broker margin calculation are separate concepts.
+
+8. Actual filled quantity/price must be distinguished from intended order values.
+
+9. Product semantics must be explicit (MIS/CNC/etc.).
+
+10. Legacy paper-mode code is historical evidence only; NEW SYSTEM is live-only.
+
+11. Do not assume legacy CO/BO/BRACKET configuration means actual historical use.
+
+12. Do not assume Testing/Sandbox is identical to Production without evidence.
+
+13. Any broker-specific rule should be confirmed against current broker
+    documentation/API behaviour before implementation.
+
+======================================================================
+18. FINAL USER DECISION / REVIEW
+======================================================================
+
+Please answer only the questions where a NEW SYSTEM decision is required.
+Where you are unsure about a legacy fact, write:
+
+    UNKNOWN / PLEASE CHECK REPOSITORY
+
+Do not guess historical implementation details.
+
+A-006 overall status:
+
+[ ] PENDING MY ANSWERS
+[ ] READY FOR CHATGPT RECONCILIATION
+[ ] OTHER:
+_________________________________________________________
+
+Any additional A-006 point you want preserved:
+
+* The above response I given, treat all of them are 'Suggestions' only [Not fixed decisions], Why? While implementing need to discuss with Claude & Further any other issues/bugs arises accordingly we need to review again
+* Don't miss anything into manual: If points/discussions relevant to 'A-006' then keep it inside 'A-006' and Any other points/dicussions/points not relevant to 'A-006' then create a suitable headings/area inside same 'A-006' file then retain those informations too
+
+
+END OF A-006 DISCUSSION CHECKLIST

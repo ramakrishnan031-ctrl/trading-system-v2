@@ -1,0 +1,597 @@
+A-011 — SYSTEM STATES AND LIFECYCLE
+
+FINAL SOURCE RECONCILIATION + FREEZE
+
+Date: 03-Oct-2026 Scope: DEAD LEGACY SYSTEM ONLY Primary: Production
+GitHub Comparison: Sandbox/Testing GitHub Historical/reference: Records
+repository + completed A-011 checklist Supplemental: 01-Oct-2026 Cron
+Daily PDF
+
+STATUS
+
+CLOSED / FROZEN as a documentation topic. This does not mean every
+historical behavior is proven. Unsupported recollections remain UNKNOWN
+/ NOT ESTABLISHED or HISTORICAL.
+
+1. Evidence set
+
+-   User-completed
+    A-011_SYSTEM_STATES_AND_LIFECYCLE_DISCUSSION_CHECKLIST_01-OCT-2026(1).txt.
+-   Production: ramakrishnan031-ctrl/trading-system-prod-snapshot, main.
+-   Sandbox/Testing: ramakrishnan031-ctrl/trading-system-sbx-snapshot,
+    main.
+-   Records: ramakrishnan031-ctrl/trading-system-records.
+-   A-011_Gmail - [LFL836] - CRITICAL - Cron Daily.pdf, 01-Oct-2026,
+    Live mode.
+-   No credentials, tokens, secrets or webhook secret values reproduced.
+
+2. Core reconciliation
+
+The user’s lifecycle summary is broadly supported:
+
+BOOT → STARTUP CHECKS → RUNTIME/ENTRY WINDOW → POSITION MANAGEMENT → EOD/SQUARE-OFF → RECONCILIATION → SHUTDOWN
+
+However, the repository contains a richer internal lifecycle than the
+remembered operator labels STARTING and STOPPING. Production explicitly
+implements startup scenarios COLD, WARM, CRASH, HALT, persistent kill
+states INACTIVE, SOFT_KILL, HARD_KILL, persistent operational state,
+startup reconciliation and clean-shutdown evidence.
+
+Therefore “only STARTING and STOPPING” is retained as HISTORICAL
+operator-visible labeling, not as the complete internal state model.
+
+3. Lifecycle state reconciliation
+
+Operator-visible state
+
+-   STARTING during boot.
+-   No remembered named READY/RUNNING state during normal operation.
+-   STOPPING during shutdown.
+-   Classification: HISTORICAL USER RECOLLECTION.
+
+Internal startup scenarios — FACT
+
+utils/startup_checks.py implements:
+
+-   COLD: no session row / previous session is an earlier day.
+-   WARM: same-day SHUTDOWN evidence, or completed EOD square-off can
+    qualify a missing SHUTDOWN marker as a clean stop.
+-   CRASH: same-day session with no SHUTDOWN marker and no qualifying
+    completed EOD square-off.
+-   HALT: active HARD_KILL, or same-day SOFT_KILL still active.
+
+Source: utils/startup_checks.py, detect_startup_scenario() (around lines
+192-360).
+
+Kill states — FACT
+
+-   INACTIVE: normal.
+-   SOFT_KILL: blocks new entries; exits/monitoring continue; state is
+    persisted first.
+-   HARD_KILL: blocks orders and launches cancellation/flatten behavior;
+    state persists.
+-   resume(): explicit operator action, persisted/audited.
+
+Source: capital/kill_switch.py, soft_kill(), hard_kill(), resume().
+
+Critical distinction: SOFT_KILL is a trading-state transition, not
+process shutdown.
+
+4. Startup / boot
+
+Production main.py contains, in order, the major boot stages:
+
+1.  CLI parse.
+2.  Weekend/holiday guard.
+3.  Service START-window guard.
+4.  Logging/config/environment initialization.
+5.  State/database initialization.
+6.  KillSwitch load and stale/scheduled-kill handling.
+7.  Startup scenario detection.
+8.  Configuration/startup checks.
+9.  Broker/token/instrument preparation.
+10. Startup reconciliation.
+11. Component construction/start.
+12. Webhook server and health checks.
+13. Startup completion event/session write.
+14. Runtime loop.
+
+Production startup checks collect blocking failures rather than silently
+continuing. HALT is a blocking condition unless --resume is supplied.
+
+Source: main.py; utils/startup_checks.py.
+
+systemd — FACT
+
+deploy/systemd/trading-system.service:
+
+-   ExecStart=...main.py --mode live.
+-   StandardInput=null.
+-   KillSignal=SIGINT.
+-   Restart=on-failure.
+-   exit 0 does not restart.
+-   exit 3/4/5 are prevented from restart.
+-   exit 1/2 restart after 10 seconds.
+
+Thus automatic Production service startup is established. Whether direct
+python main.py was routinely used in Production remains UNKNOWN.
+
+5. Startup reconciliation
+
+Production explicitly runs reconciliation before SignalProcessor is
+started and contains an assertion protecting this order.
+
+orders/order_reconciler.py also performs a startup reconciliation before
+launching its periodic poll thread.
+
+This resolves A-011 questions about “reconciliation before new entries”:
+FACT — startup reconciliation is part of the boot ordering.
+
+6. Service window and shutdown
+
+Production has two separate concepts:
+
+-   START guard: [08:00, 18:15) IST in main.py.
+-   STOP: configured trading_hours.service_window_end; current
+    Production snapshot is 17:35.
+
+The EOD self-exit does not terminate merely because the clock passed the
+stop time; it also checks that positions do not still require the
+service and avoids exiting while a HARD_KILL flatten is active.
+
+This is separate from cron.
+
+Important supplemental evidence
+
+The 01-Oct-2026 Cron Daily report (Live mode) shows independent jobs
+after the trading-service stop boundary, including:
+
+-   15:45 reconcile_positions
+-   15:58 eod_broker_reconcile
+-   16:07 daily_trade_review
+-   17:05 control_tower
+-   18:15 forward_shadow_record
+-   18:45 system_manager_eod
+-   18:50 cron_officer_eod
+-   recurring capture/disk/liveness monitoring
+
+The report states 46 total jobs, 39 done, 1 failed and 2 missed;
+security watcher and alert path were alive.
+
+Therefore TRADING SERVICE LIFECYCLE != CRON LIFECYCLE. Later cron
+activity does not prove the trading service itself remained alive.
+
+The user’s historical recollection that Delivery/reconciliation problems
+could prevent normal service shutdown is retained as HISTORICAL. Current
+source establishes the broader position-aware EOD self-exit gate, but
+not that every historical delay was caused by the remembered Buy
+Qty/Sell Qty mismatch.
+
+7. HALT / RESUME
+
+Production startup scenario detection makes active same-day kill
+conditions a HALT. Without --resume, main exits with code 4. With
+--resume, it calls KillSwitch.resume(... resumed_by="operator").
+
+systemd deliberately does not restart exit code 4.
+
+Prior-day stale/scheduled kill clearing also exists, so “next day
+automatically resumes” is conditionally true, not universal for every
+emergency same-day kill.
+
+8. Kill-switch triggers
+
+FACTS from source include SOFT_KILL paths for: - critical clock skew; -
+transient API-failure auto-trip; - daily-loss/EOD paths; - scheduled
+force-close/EOD behavior; - other safety callbacks.
+
+HARD_KILL exists and has broker flatten/cancel behavior; current
+Production includes a circuit-breaker HARD_KILL path after configured
+consecutive broker API failures.
+
+The user’s remembered 14:45 SOFT_KILL is NOT frozen as the exact source
+timing. Current Production source/config shows: - MIS protective cutoff:
+15:09; - PASS_1 approximately 15:03; - PASS_2 approximately 15:06; - a
+separate 15:15 force-close SOFT_KILL path.
+
+Therefore the remembered 14:45 value remains HISTORICAL/UNCERTAIN.
+
+9. Signal / queue lifecycle
+
+signals/webhook_receiver.py establishes:
+
+HTTP request → authentication → validation → KillSwitch check → queue capacity → expiry → SQLite signal row → in-memory queue
+
+When KillSwitch is active, the webhook request is rejected. Thus there
+is no need to invent a separate “webhook service stopped” state to
+explain entry blocking.
+
+signals/signal_processor.py uses a dispatcher + worker pool. On clean
+stop it drains remaining in-memory queue items into the executor and
+waits for workers.
+
+UNKNOWN: what survives an abrupt crash that prevents clean queue
+draining. The user’s guess that all queued signals were dropped is not
+frozen as fact.
+
+10. Broker authentication failure
+
+Production has an explicit BrokerAuthError path:
+
+BrokerAuthError → mark auth failure → invalidate/rename real token → prevent restart loop → later non-interactive live start fails until token refresh
+
+The actual token value is not documented.
+
+The user reports no actual failed headless-auth trading day. That is
+HISTORICAL USER RECOLLECTION; the code path is independently
+established.
+
+Important: BrokerAuthError is explicitly excluded from the transient
+API-failure counter. It is treated as an auth/configuration issue rather
+than a transient connectivity outage.
+
+Exact behavior for already-open positions during a broker-auth outage
+remains UNKNOWN / NOT ESTABLISHED.
+
+11. Database / persistent state
+
+SQLite persists operational state including sessions, system events,
+signals, orders, trades, capital ledger, kill-switch state and
+reconciliation information.
+
+Startup scenario detection reads persistent state. Clean shutdown writes
+a SHUTDOWN event. OrderMonitor and OrderPlacer rehydrate relevant state.
+Reconciliation runs before the signal pipeline.
+
+Therefore persistent DB state is a FACT, but there is no single proven
+statement that every state is reconstructed identically after every
+possible restart mode.
+
+12. Order / position states
+
+The repository uses multiple persisted statuses, including:
+
+PENDING_FILL, OPEN, PARTIAL, EXITING, CLOSED, CLOSED_MANUAL
+
+and terminal order states such as:
+
+CANCELLED, FAILED, EXPIRED, COMPLETE.
+
+HARD_KILL treats OPEN/PARTIAL/PENDING_FILL as live exposure.
+
+The user’s “all listed states existed” answer is therefore directionally
+correct, but the implementation is a collection of related state
+machines rather than one universal finite-state enum.
+
+13. Intraday / Delivery lifecycle
+
+Intraday — FACT
+
+Signal → entry → live position → SL/target management → MIS/CO same-day
+square-off.
+
+Delivery — FACT
+
+Signal → Delivery/CNC position → broker-side GTT handling/overnight
+holding → GTT/manual exit → reconciliation.
+
+orders/eod_squareoff.py explicitly excludes Delivery/CNC from normal EOD
+square-off.
+
+Delivery can therefore survive application process termination when
+broker-managed GTT responsibility has been established, subject to the
+remaining broker/reconciliation dependencies.
+
+The user’s statement that the application does not necessarily need to
+remain alive after GTT is broadly consistent with the architecture, but
+universal historical dependency is not separately proven.
+
+14. EOD / MIS square-off
+
+orders/eod_squareoff.py sequence:
+
+1.  SOFT_KILL to block new entries.
+2.  Cancel pending intraday entries.
+3.  Cancel pending intraday SL/TGT legs.
+4.  Exit intraday positions.
+5.  Verification/recovery.
+6.  Preserve Delivery/CNC.
+
+orders/mis_autosquareoff.py has the two-pass protective protocol:
+
+-   PASS_1 around 15:03.
+-   PASS_2 around 15:06.
+-   protective cutoff 15:09.
+
+A later 15:15 circuit-breaker force-close path also SOFT_KILLs and
+delegates actual intraday closing to EOD square-off.
+
+The user’s remembered 14:45/15:00-15:10 sequence is retained as
+historical recollection, not exact frozen timing.
+
+15. Reconciliation / recovery
+
+orders/order_reconciler.py is a 15-second daemon and also performs
+startup reconciliation.
+
+Documented functions include: - local-vs-broker order/trade/position
+comparison; - reconciliation action persistence; - capital-drift
+checking; - crash-recovery/orphan handling; - CNC/GTT reconciliation; -
+repeated auth-error handling.
+
+The source does not support the user’s recollection that reconciliation
+was “only alerting”; it contains actual repair/state-management paths.
+Exact historical operator-visible behavior remains partly UNKNOWN.
+
+Capital drift itself is not frozen as an automatic SOFT_KILL trigger
+merely because a drift alert exists; the source contains separate
+informational drift handling and separate kill-switch paths.
+
+16. Crash / exception recovery
+
+Production distinguishes CRASH from WARM using persistent
+session/SHUTDOWN/EOD evidence.
+
+systemd restarts exit 1/2 and does not restart exit 0/3/4/5.
+
+Startup reconciliation precedes new signal processing.
+
+Historical same-day crash/duplicate-order incidents were not recalled
+with sufficient confidence, so those are UNKNOWN.
+
+17. Clean shutdown
+
+SIGINT/SIGTERM handlers set the shutdown event.
+
+The _shutdown() path: - sets shutdown event; - drains active HARD_KILL
+flatten worker within bounded external-stop grace; - stops signal
+processing and other managers; - cancels pending ENTRY orders; -
+disconnects live feed; - sends shutdown notification; - writes SHUTDOWN
+event; - checkpoints WAL; - closes StateStore.
+
+systemd deliberately sends SIGINT to select this clean path.
+
+Therefore clean shutdown is demonstrably different from crash/exception
+termination.
+
+18. Weekend / holiday
+
+The trading service performs a holiday/weekend guard before normal
+startup and returns 0 without starting the trading runtime.
+
+The cron subsystem is independent and each job has its own
+scheduling/market_day_only behavior. The user’s blanket claim that all
+background cron jobs always run on all weekends/holidays is therefore
+NOT ESTABLISHED universally.
+
+19. Paper vs Live
+
+Paper mode was historically used for operational testing according to
+the user. Production systemd explicitly starts Live.
+
+The user reported practical differences in price sourcing, entry/SL/TGT
+timing and capital flow. Those differences are retained as HISTORICAL
+observations.
+
+Complete lifecycle parity between paper and live is NOT ESTABLISHED.
+
+20. Testing vs Production
+
+Sandbox has the same major lifecycle machinery, but it is not
+configuration-identical.
+
+Verified example: - Production entry_start = 10:00. - Sandbox
+entry_start = 09:30.
+
+Thus “Testing mirrors Production” is an architectural
+intent/description, not proof of identical runtime behavior.
+
+S&R shadow/evaluation components should only be treated as lifecycle
+gates where source evidence proves they gate lifecycle. Current source
+comments identify several shadow components as non-gating.
+
+21. Operator/manual intervention
+
+Confirmed mechanisms include: - systemd stop; - --resume; -
+interactive/manual token login tooling; - operational
+cancellation/flattening/configuration maintenance.
+
+The user’s specific historical frequency of each action is not fully
+recoverable.
+
+Important distinction: systemctl stop trading-system is a service
+lifecycle action; it is not equivalent to application SOFT_KILL.
+
+22. Known lifecycle findings
+
+Historical source findings relevant to A-011 include:
+
+1.  Token invalidation/restart-loop prevention.
+2.  Separation of service START cutoff from service STOP time.
+3.  Webhook self-check degradation rather than total service shutdown,
+    preserving exits/reconciliation/EOD.
+4.  Asynchronous HARD_KILL flattening with shutdown drain.
+5.  Startup reconciliation ordering before new entries.
+6.  Reconciler/orphan/crash-recovery handling.
+7.  Delivery/CNC exclusion from normal EOD square-off.
+
+These are documentation findings, not V2 recommendations.
+
+23. Question-by-question closure
+
+Q1-Q5: Operator labels STARTING/STOPPING are historical; internal state
+model is richer; alive-with-entry-blocking and existing-position
+management are confirmed.
+
+Q6-Q12: systemd auto-start confirmed; direct Python production use
+unknown; blocking startup checks confirmed; restart policy confirmed;
+clean shutdown confirmed; Delivery-related historical delayed shutdown
+retained as historical.
+
+Q13-Q17: –resume/manual HALT handling confirmed; prior-day
+stale/scheduled clear exists; exact historical use frequency unknown.
+
+Q18-Q24: SOFT_KILL/HARD_KILL confirmed; exact 14:45 historical trigger
+not established; existing positions continue under SOFT_KILL; emergency
+HARD_KILL resume is manual; alert path exists but exact historical
+receipt is not proven.
+
+Q25-Q28: service remains alive during relevant management windows;
+service and cron lifecycles are separate; Delivery-specific delayed
+shutdown is historical.
+
+Q29-Q32: webhook/kill behavior confirmed; clean-stop queue drain
+confirmed; crash/restart queue survival unknown.
+
+Q33-Q37: auth-failure code path confirmed; actual failed trading day not
+recalled; open-position behavior during auth outage unknown.
+
+Q38-Q46: persistent state/startup reconciliation/order rehydration
+confirmed; complete universal reconstruction semantics not established.
+
+Q47-Q50: Intraday and Delivery lifecycle architecture confirmed;
+Delivery excluded from normal EOD; application-alive dependency after
+GTT not universalized.
+
+Q51-Q55: EOD state behavior confirmed; exact historical
+broker-confirmation timing and 1-3 minute second-check recollection not
+established.
+
+Q56-Q60: periodic reconciler confirmed; actual repair paths exist; exact
+historical operator-visible behavior partly unknown.
+
+Q61-Q65: crash detection and systemd restart confirmed;
+reconciliation-before-entry confirmed; historical duplicate/recovery
+incidents unknown.
+
+Q66-Q69: clean shutdown and SIGINT systemd path confirmed;
+position-aware EOD self-exit confirmed; exact historical 17:30 behavior
+remains historical/config-snapshot evidence.
+
+Q70-Q72: trading service does not start on weekend/holiday; cron
+behavior is task-specific.
+
+Q73-Q76: paper testing and live Production confirmed; paper/live
+differences are historical observations.
+
+Q77-Q80: Sandbox/Production architecture broadly parallel but
+configuration differs; exact lifecycle equivalence and historical S&R
+lifecycle effects remain open evidence items.
+
+Q81-Q84: manual intervention mechanisms exist; exact frequency and
+automatic broker-intervention reconciliation remain partly unknown.
+
+Q85-Q87: no specific additional lifecycle incident recalled; cron can
+continue independently after trading service lifecycle ends and that is
+architectural separation, not by itself a defect.
+
+24. Frozen statement
+
+The legacy system did not rely on one visible RUNNING/STOPPED state.
+Operationally the user remembered STARTING and STOPPING, while
+implementation contained COLD/WARM/CRASH/HALT startup scenarios,
+INACTIVE/SOFT_KILL/HARD_KILL kill states, persistent operational state,
+startup reconciliation, EOD square-off, broker-managed Delivery/GTT
+handling, clean shutdown and systemd recovery controls.
+
+The trading-service lifecycle and independent cron lifecycle are
+separate mechanisms.
+
+Unsupported recollections remain explicitly classified rather than
+silently converted into facts.
+
+A-011 documentation is CLOSED / FROZEN.
+
+25. NON-A-011 CROSS-TOPIC MEMORY PRESERVATION
+
+These are deliberately retained for later production/V2 governance so
+they do not need to be retyped.
+
+25.1 Broker/authentication
+
+-   Zerodha-primary context already established.
+-   Headless authentication is the desired operational context.
+-   Auth-failure state machine remains a future governance input.
+-   New-entry vs existing-position behavior during auth outage remains a
+    future governance input.
+-   Broker-authoritative vs local DB authority remains a governance
+    question.
+-   Token refresh/restart sequence must stay explicit.
+
+25.2 Kill-switch / governance
+
+-   SOFT_KILL blocks new entries; it is not process shutdown.
+-   HARD_KILL is distinct from normal shutdown.
+-   Manual resume authorization must be explicit.
+-   Persistence and alert/escalation must be auditable.
+-   Distinguish scheduled kill, emergency kill and systemd stop.
+-   Distinguish entry blocking from service stopping.
+
+25.3 Restart / recovery
+
+-   Preserve reconciliation-before-entry.
+-   Preserve duplicate-order prevention as a separately evidenced
+    requirement.
+-   Preserve capital-state recovery questions.
+-   Preserve pending-order recovery and position reconstruction
+    questions.
+-   Preserve crash evidence and startup scenario classification.
+
+25.4 EOD
+
+-   Preserve exact square-off sequence/timing.
+-   Preserve broker acknowledgement/retry questions.
+-   Preserve Delivery/GTT handoff separately from MIS square-off.
+-   Do not infer historical timing from operator recollection when
+    config/code differs.
+
+25.5 Configuration / timing
+
+-   Production and Sandbox are not configuration-identical.
+-   Production entry_start=10:00; Sandbox entry_start=09:30.
+-   Production service stop configuration is 17:35; independent cron
+    jobs continue later.
+-   Recalled 14:45 is historical unless independently evidenced.
+
+25.6 Signals / strategy / filtering / S&R
+
+-   Do not silently carry legacy queue, expiry, strategy, S&R, R:R,
+    secondary-filter or entry-price behavior into V2.
+-   A-008 strategy-count verification remains OPEN.
+-   Lifecycle documentation is not a V2 design decision.
+
+25.7 Capital / sizing / risk
+
+-   A-005 frozen historical capital model remains authoritative for the
+    legacy baseline.
+-   Preserve its explicit ambiguities; do not normalize them.
+-   Do not infer a lifecycle kill rule from a capital-drift alert
+    without source evidence.
+
+25.8 Products / order management
+
+-   A-007 remains authoritative for product facts/unknowns.
+-   Intraday and Delivery are distinct lifecycle paths.
+-   GTT/broker-managed Delivery must not be conflated with application
+    lifetime.
+
+25.9 Alerts / reports / evidence
+
+-   Telegram/email paths are operational evidence, not proof every alert
+    was received.
+-   Cron Officer, reconciliation and EOD reports should be retained as
+    evidence.
+-   Keep source code, runtime evidence, operator recollection and
+    interpretation separate.
+
+25.10 Security
+
+-   Never expose passwords, API keys/secrets, access tokens, TOTP
+    secrets or webhook secrets.
+-   Document only category/location/role.
+
+26. Governance note
+
+A-011 is closed as a documentation topic. The preserved OPEN/UNKNOWN
+items are evidence gaps and future governance inputs, not silently
+decided V2 behavior.

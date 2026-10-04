@@ -1,0 +1,384 @@
+A-005 CAPITAL MODEL — VALUE-ADDED REVIEW OF PROPOSED V2 MARGIN MODEL
+23-SEP-2026
+
+STATUS
+This review is a V2 design input only. It does NOT modify or reinterpret the DEAD legacy system.
+The legacy A-005 manual should continue to document the historical system as actually implemented.
+
+1. EXECUTIVE FEEDBACK
+
+The proposed change is directionally strong: V2 should not assume universal 5x intraday leverage for every NSE equity.
+
+IMPORTANT MATHEMATICAL CORRECTION:
+Zerodha's "Margin %" is the cash/margin REQUIRED, not the leverage multiplier.
+
+The supplied screenshot shows:
+Price = Rs 270.15
+Required = Rs 54.03
+54.03 / 270.15 = 20%
+Therefore:
+- Required margin = 20% of position/notional
+- Equivalent leverage = 1 / 0.20 = 5x
+
+So if Rs 700 is the real-cash allocation for one intraday trade and the stock requires 20% margin:
+
+CORRECT:
+Maximum notional = Rs 700 / 20% = Rs 3,500
+
+NOT:
+Rs 700 x 20% = Rs 140
+
+2. PROPOSED V2 CAPITAL MODEL
+
+Assume:
+Total real cash = Rs 10,000
+Intraday = 70% = Rs 7,000
+Delivery = 30% = Rs 3,000
+Intraday allocation divisor = 10
+
+Intraday cash allocation per trade = Rs 7,000 / 10 = Rs 700.
+
+For a stock with broker required margin M:
+Maximum notional supported = per-trade cash budget / M.
+
+Examples:
+20% -> Rs 3,500 notional
+25% -> Rs 2,800
+50% -> Rs 1,400
+100% -> Rs 700
+
+Equivalent leverage = 1 / required_margin_pct.
+
+3. TERMINOLOGY
+
+Use:
+broker_required_margin_pct
+or
+required_margin_pct
+
+Separately:
+effective_leverage = 1 / required_margin_pct
+
+Avoid calling the broker's 20% figure "margin facility %"; this creates ambiguity.
+
+4. UNLISTED STOCK RULE
+
+If an equity is not present in Zerodha's MIS/CO eligible-margin list:
+- do not assume 5x
+- do not invent a margin percentage
+- treat it as NOT ELIGIBLE for leveraged intraday trading unless broker data independently confirms eligibility.
+
+Do NOT store "0% required margin". A 0% required margin mathematically means infinite leverage.
+
+Prefer:
+margin_status = NOT_ELIGIBLE
+required_margin_pct = NULL
+effective_leverage = 0x
+MIS eligibility = false
+
+5. ZERODHA WEB-PAGE REVIEW
+
+Zerodha's official Equity Margin Calculator publishes scrip-specific MIS/CO margin percentages and leverage, and the values are not universally 20%/5x. The current page contains examples including 20%/5x, roughly 22%/4.5x, 25%+/roughly 4x, 50%/2x and 100%/1x.
+
+Source:
+https://zerodha.com/margin-calculator/Equity/
+
+These values are dynamic broker data, not permanent system constants.
+
+6. DAILY 09:00 REFRESH
+
+A daily refresh around 09:00 IST is reasonable for a V2 broker-margin reference dataset.
+
+However, do not make public-web scraping the preferred machine-to-machine dependency if an official broker/API source can provide the required information.
+
+Use the webpage primarily for human verification, audit/reference and fallback evidence.
+
+7. ZERODHA ORDER-MARGIN API — IMPORTANT
+
+Kite Connect provides an official order-margin calculation API:
+POST /margins/orders
+
+It accepts the actual proposed order characteristics, including exchange, trading symbol, BUY/SELL, variety, product, order type, quantity, price and trigger price.
+
+The response includes margin information including leverage and total margin.
+
+This means V2 can ask Zerodha:
+"For THIS exact order, how much margin will be required?"
+
+That is stronger than relying only on a copied daily percentage.
+
+Source:
+https://kite.trade/docs/connect/v3/margins/
+
+8. RECOMMENDED TWO-LAYER MODEL
+
+LAYER 1 — DAILY REFERENCE
+Around 09:00 IST:
+- obtain/update Zerodha MIS/CO eligibility and margin reference
+- store a dated snapshot
+- record source timestamp/update date
+- detect additions/removals/percentage changes
+- keep the dataset auditable
+
+LAYER 2 — ORDER-TIME AUTHORITY
+Immediately before order submission:
+- construct the intended order
+- request Zerodha order-margin calculation
+- use returned margin/leverage as the broker-side execution check
+- reject or resize if required margin exceeds the allocated real-cash budget
+- then submit the order
+
+This gives:
+reference data for sizing/scanning
++
+actual broker-side validation before execution.
+
+9. CAPITAL-DRIFT BENEFIT
+
+The proposed model should materially simplify the capital model.
+
+Instead of:
+REAL CASH
++
+SEGMENT CAPITAL
++
+synthetic 5x planning capital
+
+V2 can maintain one authoritative capital basis:
+TOTAL REAL CASH
+
+Then:
+Intraday cash bucket = total cash x intraday %
+Delivery cash bucket = total cash x delivery %
+
+For each order:
+cash budget -> broker-required margin -> permitted notional/quantity.
+
+This is conceptually cleaner than maintaining Rs 35,000 as a second capital pool.
+
+10. RECONCILIATION MUST REMAIN
+
+The new model should reduce capital drift risk; it should not eliminate reconciliation.
+
+V2 should still reconcile:
+system available real cash
+vs broker available funds/margin
+vs system reservations
+vs broker order/position utilisation.
+
+Goal:
+one capital basis + explicit reservations + broker-authoritative margin validation.
+
+11. RESERVATION MODEL
+
+The Rs 700 per-trade amount should be treated as a cash budget/reservation limit, not automatically as the final broker margin.
+
+Example:
+Trade budget = Rs 700
+Margin = 20%
+Maximum notional = Rs 3,500
+
+If the intended order requires Rs 620 broker margin, reserve approximately Rs 620 (plus any separately approved buffer/charges policy).
+
+If it requires Rs 740, it should not pass the Rs 700 budget unless a separately approved rule permits it.
+
+12. "10 TRADES" MUST BE DEFINED
+
+"Rs 7,000 / 10 trades = Rs 700" is valid only after V2 freezes what "10 trades" means.
+
+It could mean:
+A. maximum daily trade count
+B. maximum simultaneous positions
+C. allocation divisor
+D. planned trade opportunities
+E. a combination
+
+These are not equivalent.
+
+The legacy system had separate daily-trade/open-position concepts and a sizing divisor. V2 should define this explicitly rather than inherit ambiguity.
+
+13. SEQUENTIAL VS SIMULTANEOUS TRADES
+
+If trades are sequential and capital is released after exit, the cash budget can be reused.
+
+If multiple positions are simultaneously open, total reserved broker margin must remain within the intraday cash bucket.
+
+Core guard:
+SUM(all open/reserved intraday broker margin) <= available intraday real-cash budget.
+
+14. NO STRATEGY-SPECIFIC MAX-CAPITAL CONSTRAINT
+
+If V2 intentionally has no strategy-specific maximum capital constraint, the global capital engine still needs to enforce:
+- intraday bucket
+- per-trade budget
+- broker-required margin
+- aggregate reservations
+- quantity/lot rules
+- available broker funds
+- any separately approved risk/position controls.
+
+"No strategy cap" must not mean "no capital guard".
+
+15. DAILY WEB UPDATE SAFETY
+
+If the webpage is used, the updater should:
+- retain raw snapshot/hash/evidence
+- record retrieval time
+- record Zerodha's displayed update date
+- validate schema and row count
+- reject empty/malformed data
+- preserve previous known-good snapshot
+- produce change report
+- flag material changes
+- expose freshness to sizing
+- never silently fall back to 5x after a failed update.
+
+16. MARGIN DATA SHOULD BE VERSIONED
+
+Do not treat:
+stock -> permanent margin percentage
+
+as a permanent property.
+
+Store at minimum:
+symbol
+exchange
+product eligibility
+required margin %
+effective leverage
+source
+source timestamp
+broker update date where available
+snapshot date
+status
+
+Historical snapshots help explain later why a quantity was calculated on a particular date.
+
+17. ORDER-MARGIN API LIMITATION
+
+The official Kite Connect documentation confirms /margins/orders and order-specific margin output.
+
+Whether it should be the mandatory final V2 sizing authority must be tested in the real production API environment with the user's account and intended MIS order forms.
+
+Do not assume every edge case from documentation alone.
+
+Also note: Zerodha's documented Kite Connect Sandbox does NOT support margin calculation APIs. Real production-API validation is therefore required for final implementation decisions.
+
+18. RECOMMENDED V2 CALCULATION CONTRACT
+
+INPUT
+- total real cash
+- intraday allocation %
+- approved per-trade allocation divisor/budget
+- symbol
+- entry price
+- intended product/order
+- broker margin reference
+- actual broker order-margin response where available
+
+CALCULATION
+intraday_cash_bucket = total_real_cash x intraday_pct
+per_trade_cash_budget = intraday_cash_bucket / approved_allocation_divisor
+
+required_margin = broker-calculated margin for intended order
+OR
+notional x broker_required_margin_pct
+
+maximum_permitted_notional = per_trade_cash_budget / required_margin_pct
+
+quantity = floor(maximum_permitted_notional / entry_price)
+then apply instrument lot/tick/quantity rules.
+
+VALIDATION
+- symbol eligible for intended product
+- margin data fresh
+- required margin known
+- required margin <= cash budget
+- aggregate reservations <= intraday bucket
+- broker available funds sufficient
+- final broker margin check passes
+
+OUTPUT
+- quantity
+- notional
+- broker required margin
+- effective leverage
+- cash budget consumed
+- reservation ID
+- margin-data source/version
+
+19. WHAT THIS CHANGES FROM LEGACY
+
+LEGACY:
+- configured 5x leverage/planning basis
+- separate segment-capital concept
+- capital sizing based on synthetic leveraged basis
+- static leverage map
+- reconciliation around that model
+
+PROPOSED V2:
+- one real-cash capital basis
+- bucket percentages derive cash budgets
+- broker-specific per-symbol margin
+- no assumed leverage when broker data is absent
+- broker order-margin calculation as possible order-time validation
+- explicit cash reservation
+- broker reconciliation remains authoritative
+
+Record this as:
+V2 DESIGN INPUT / REDESIGN CANDIDATE
+
+Do NOT write it into the legacy manual as historical behavior.
+
+20. FINAL ASSESSMENT
+
+The core idea is sound:
+replace the universal 5x assumption with broker-specific margin requirements and a single real-cash capital basis.
+
+The most important correction is:
+DO NOT calculate "Rs 700 x margin %".
+Calculate:
+"maximum notional = Rs 700 / required margin %".
+
+Strong V2 direction:
+DAILY BROKER MARGIN REFERENCE
++
+ORDER-TIME ZERODHA MARGIN VALIDATION
++
+ONE REAL-CASH CAPITAL LEDGER
++
+EXPLICIT INTRADAY/DELIVERY CASH BUCKETS
++
+NO SYNTHETIC 5x CAPITAL.
+
+21. OPEN QUESTIONS TO FREEZE LATER
+
+1. Is V2 total real cash exactly Rs 10,000?
+2. Are 70%/30% bucket percentages final?
+3. Is allocation divisor exactly 10?
+4. Does "10 trades" mean daily trades, simultaneous positions, or only a sizing divisor?
+5. Is per-trade budget a hard reservation ceiling or sizing target?
+6. Should order-margin API be mandatory before every order?
+7. What fallback is allowed if broker margin API is unavailable?
+8. What freshness age is acceptable for daily margin data?
+9. Should an unlisted stock be rejected outright for MIS?
+10. How should intraday margin changes be handled?
+11. Should the system resize when live broker margin differs from daily reference?
+12. How should charges/slippage/buffer enter cash reservation?
+13. What exact Zerodha API/account permissions and production tests are available?
+
+SOURCE REFERENCES
+- Zerodha Equity Margin Calculator: https://zerodha.com/margin-calculator/Equity/
+- Kite Connect Margin Calculation API: https://kite.trade/docs/connect/v3/margins/
+- Kite Connect Instruments API: https://kite.trade/docs/connect/v3/market-data-and-instruments/
+- Kite Connect User Margins API: https://kite.trade/docs/connect/v3/user/
+- Kite Connect Sandbox limitations: https://kite.trade/docs/connect/v3/sandbox/
+
+CLASSIFICATION
+FACT: Zerodha publishes scrip-specific Equity MIS/CO margin and leverage data.
+FACT: Zerodha provides an official order-margin calculation API.
+FACT: The supplied screenshot demonstrates 20% required margin / 5x leverage for ITC at the shown moment.
+V2 DESIGN INPUT: single real-cash basis with broker-specific required margin.
+V2 DESIGN INPUT: daily margin reference + order-time margin validation.
+OPEN QUESTION: exact V2 divisor, bucket percentages, reservation semantics and API fallback.
+UNKNOWN / NOT ESTABLISHED: final V2 implementation behavior until governance freezes these points.

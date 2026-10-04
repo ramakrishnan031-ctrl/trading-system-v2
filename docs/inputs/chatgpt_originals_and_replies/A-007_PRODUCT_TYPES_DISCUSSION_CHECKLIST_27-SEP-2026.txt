@@ -1,0 +1,623 @@
+A-007 — PRODUCT TYPES
+DISCUSSION / CLARIFICATION CHECKLIST
+Date: 27-Sep-2026
+Project: Trading System — Legacy Manual & V2 Redesign
+STATUS: USER REVIEW REQUIRED
+
+======================================================================
+1. PURPOSE
+======================================================================
+
+Document the PRODUCT TYPES actually present in the DEAD legacy system and
+their historical/configured behavior.
+
+This is documentation only:
+- Legacy system is DEAD / REFERENCE ONLY.
+- Do not design V2 here.
+- Do not silently retain/remove/repair legacy behavior.
+- If evidence is insufficient, use UNKNOWN / NOT ESTABLISHED.
+
+Repository basis reviewed:
+1. Production:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+2. Testing/Sandbox:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+3. Preserved project-side repository/deep-working-tree evidence:
+   01_SYSTEM_OVERVIEW.md
+   02_REPOSITORY_AND_FILE_MAP.md
+   CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+   system_config.yaml evidence
+   prior A-004/A-006 reconciliations.
+
+NOTE:
+Live GitHub page retrieval was not independently available in this session.
+Therefore this checklist uses the repository-derived evidence already
+preserved in the project and does not claim fresh host/runtime facts.
+
+======================================================================
+2. INITIAL REPOSITORY FINDINGS
+======================================================================
+
+The preserved Production evidence shows a semantic product layer.
+
+Internal product intents:
+    INTRADAY
+    DELIVERY
+    COVER_ORDER
+    BRACKET_ORDER
+
+Evidence:
+    broker/product_resolver.py
+
+Preserved PRODUCT_TO_INTENT mapping:
+    MIS -> INTRADAY
+    CO  -> COVER_ORDER
+    CNC -> DELIVERY
+    NRML -> DELIVERY
+
+Preserved Production configuration:
+    INTRADAY      -> MIS
+    DELIVERY      -> CNC
+    COVER_ORDER   -> CO
+    BRACKET_ORDER -> empty / unsupported
+
+Therefore the manual must distinguish:
+    INTERNAL SEMANTIC INTENT
+versus
+    BROKER PRODUCT CODE
+
+----------------------------------------------------------------------
+IMPORTANT: BRACKET_ORDER
+----------------------------------------------------------------------
+FACT:
+    BRACKET_ORDER exists in the internal intent domain and legacy leverage
+    configuration.
+
+FACT:
+    Its configured broker mapping is empty/unsupported.
+
+UNKNOWN:
+    Whether a live BRACKET_ORDER was ever actually submitted.
+
+Do not call BO an actively traded product without evidence.
+
+----------------------------------------------------------------------
+IMPORTANT: COVER_ORDER / CO
+----------------------------------------------------------------------
+FACT:
+    CO implementation exists.
+    Dedicated CO cancellation/square-off/protocol handling exists.
+
+UNKNOWN:
+    Exact historical production usage unless order/history evidence proves it.
+
+----------------------------------------------------------------------
+IMPORTANT: CNC / DELIVERY
+----------------------------------------------------------------------
+FACT:
+    CNC maps to DELIVERY.
+    CNC is treated separately from MIS.
+    Preserved code has CNC/GTT protection and overnight holding paths.
+    Preserved A-006 user evidence states Delivery/CNC was historically used.
+
+----------------------------------------------------------------------
+IMPORTANT: MIS / INTRADAY
+----------------------------------------------------------------------
+FACT:
+    MIS maps to INTRADAY.
+    MIS is part of intraday capital treatment.
+    MIS/CO are the products targeted by emergency/EOD flattening.
+    MIS has dedicated intraday lifecycle handling.
+
+----------------------------------------------------------------------
+IMPORTANT: NRML
+----------------------------------------------------------------------
+FACT:
+    NRML is recognised by PRODUCT_TO_INTENT as DELIVERY.
+
+UNKNOWN:
+    Whether NRML was ever actually submitted/held in Production.
+
+Do not equate code recognition with historical trading.
+
+======================================================================
+3. PRODUCT INVENTORY — PLEASE CONFIRM
+======================================================================
+
+# | Product / intent       | Repository evidence                  | USER ANSWER
+--|------------------------|--------------------------------------|------------
+1 | INTRADAY / MIS         | Implemented                          | YES & ACTUALLY TRADED
+2 | DELIVERY / CNC         | Implemented; historical use stated   | YES & ACTUALLY TRADED
+3 | COVER_ORDER / CO       | Implemented                          | UNKNOWN [Safer Option, Since Intraday trade exist, But thru which window? BO/CO unsure about it?]
+4 | BRACKET_ORDER / BO     | Intent exists; mapping unsupported   | UNKNOWN [Safer Option, Since Intraday trade exist, But thru which window? BO/CO unsure about it?]
+5 | DELIVERY / NRML        | Reverse mapping exists               | UNKNOWN [Sure, Delivery orders processed thru GTT window only, Not NRML]
+6 | Other product          | Not established                      | GTT ORDER EXISTS FOR DELIVERY
+
+For each product, please state:
+ACTUALLY TRADED? YES / NO / UNKNOWN
+
+If YES, add any known:
+period / strategy / entry / exit / same-day vs overnight / evidence.
+
+======================================================================
+4. PRODUCT INTENT VS BROKER PRODUCT CODE
+======================================================================
+
+The legacy path appears to be:
+
+    INTERNAL INTENT
+          |
+          v
+    ProductResolver
+          |
+          v
+    ZERODHA PRODUCT CODE
+
+Examples:
+    INTRADAY -> MIS
+    DELIVERY -> CNC
+    COVER_ORDER -> CO
+    DELIVERY -> NRML (reverse mapping recognised)
+
+Please answer:
+
+Was this semantic-vs-broker distinction intentional? - Answer: UNKNOWN [Safer option to avoid wrong/unsuitability]
+    YES / NO / UNKNOWN
+
+Was ProductResolver intended as the single translation point?  - Answer: UNKNOWN [Safer option to avoid wrong/unsuitability]
+    YES / NO / UNKNOWN
+
+Did any module directly supply MIS/CNC/CO/NRML instead? - Answer: UNKNOWN [Safer option to avoid wrong/unsuitability]
+    YES / NO / UNKNOWN
+
+If YES, where/how?
+    __________________________________________
+
+======================================================================
+5. PRODUCT SELECTION
+======================================================================
+
+Possible repository inputs include:
+    strategy intent
+    configuration
+    trade type
+    order protocol
+    force_intraday_only
+    delivery_enabled
+    strategy YAML
+
+Do not assume the answer from this list.
+
+Authoritative source for product selection:
+    __________________________________________
+
+Was selection global, strategy-specific, signal-specific, or intent-derived?
+    __________________________________________
+
+Could one strategy trade both MIS and CNC? - Answer: NO each strategy has 2 Classifications: Product Type (INTRADAY or DELIVERY/Position) and Direction (LONG/SHORT), Refer each strategies .yaml files [GitHub: trading-system\config\strategies\<.yaml files>]
+    YES / NO / UNKNOWN
+
+Could one signal change product during processing?  - Answer: UNKNOWN [Safer option to avoid wrong/unsuitability]
+    YES / NO / UNKNOWN
+
+======================================================================
+6. INTRADAY / MIS
+======================================================================
+
+Please confirm:
+
+1. MIS intended to close same trading day: YES [Otherwise Zerodha/Broker will mandatorily close all intraday open positions in same trading day at around 15:20]
+   YES / NO / UNKNOWN
+
+2. MIS included in EOD square-off: YES [Otherwise Zerodha/Broker will mandatorily close all intraday open positions in same trading day at around 15:20]
+   YES / NO / UNKNOWN
+
+3. MIS included in emergency/kill flatten: YES [Otherwise Zerodha/Broker will mandatorily close all intraday open positions in same trading day at around 15:20]
+   YES / NO / UNKNOWN
+
+4. MIS used broker margin/leverage: YES [All intraday or MIS Orders uses different margin facilities for different stock category]
+   YES / NO / UNKNOWN
+
+5. MIS and DELIVERY had separate capital treatment: YES [Intraday has margin facility & Delivery has no/zero margin facility as provided by Zerodha]
+   YES / NO / UNKNOWN
+
+Additional historical notes:
+    __________________________________________
+
+======================================================================
+7. DELIVERY / CNC
+======================================================================
+
+Please confirm:
+
+1. CNC could remain overnight: YES [All GTT orders automatically carries the position >1day (ie, >same trading day)]
+   YES / NO / UNKNOWN
+
+2. CNC historically used: YES [Worked correctly]
+   YES / NO / UNKNOWN
+
+3. CNC target/SL used broker-managed GTT: YES [System has no role, when same trading day ends & From next day onwards managed by Zerodha for TGT/SL thru GTT window]
+   YES / NO / UNKNOWN
+
+4. CNC could be manually exited: YES [I did it earlier, what happened? when I exit manually then system sends confirmation alert in telegram/email within 10-15 mins [Module: cnc_gtt_monitor]
+   YES / NO / UNKNOWN
+
+5. CNC excluded from normal EOD square-off: YES that's the behaviour [So for safer option use 'GTT' window for all Delivery orders]
+   YES / NO / UNKNOWN
+
+Additional notes:
+    __________________________________________
+
+======================================================================
+8. COVER ORDER / CO
+======================================================================
+
+Repository evidence includes:
+    CO mapping
+    CO-specific protocol
+    cancel_order(variety="co")
+    CO-specific square-off
+    CO included in emergency flatten set
+
+Please confirm:
+
+1. CO actually used in Production:  UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system] - So Carefully take note of it Manual
+   YES / NO / UNKNOWN
+
+2. CO intended intraday only: YES [Except Delivery orders which was processed thru 'GTT', remaining all Intraday orders were processed thru CO/BO which I can't able to re-call] - So Carefully take note of it Manual
+   YES / NO / UNKNOWN
+
+3. CO had broker-managed protective SL: YES [I Guess]
+   YES / NO / UNKNOWN
+
+4. CO required parent/bracket-aware cancellation/square-off: YES [I Guess]
+   YES / NO / UNKNOWN
+
+5. CO participated in EOD square-off: YES [Why? All Intraday orders irrespective of BO/CO mandatorily need to auto-squared off by Zerodha & GTT orders auto-square off not applicable]
+   YES / NO / UNKNOWN
+
+Additional notes:
+    ** Process all delivery orders thru GTT (which has automated TGT/SL hit as managed by broker till it's intended lifecycle and has no auto-square off count) and All Intraday orders thru CO/BO after checking existing system behaviour in GitHub repo and must have these functions: Once entry order is processed then simultaneous TGT & SL orders must be created + Must have auto-square off before broker does
+
+======================================================================
+9. BRACKET ORDER / BO
+======================================================================
+
+Repository evidence:
+    internal BRACKET_ORDER intent exists
+    leverage_map contains BRACKET_ORDER
+    broker mapping is empty/unsupported
+
+Please confirm:
+
+1. BO ever actually traded?: UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system] - So Carefully take note of it Manual
+   YES / NO / UNKNOWN
+
+2. BO only compatibility/old configuration?: UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system] - So Carefully take note of it Manual
+   YES / NO / UNKNOWN
+
+3. BO ever enabled in Production?: UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system] - So Carefully take note of it Manual
+   YES / NO / UNKNOWN
+
+4. Why do you remember BO existing?: UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system] - So Carefully take note of it Manual
+   __________________________________________
+
+======================================================================
+10. NRML
+======================================================================
+
+Repository evidence:
+    NRML -> DELIVERY in PRODUCT_TO_INTENT.
+
+Please confirm:
+
+1. NRML ever submitted?: UNKNOWN [Why? Unable to re-call Intraday orders processed using which window? *BO/CO, But when entry order is made then 'TGT' & 'SL' automatedly created by system], But Probably I can say 'Nope, NRML Orders has never been submitted, Why? since as of now Once entry order processed then automated TGT & SL order legs created simultaneously, I guess that facility not available in 'NRML' orders & Only BO/CO orders has it
+   YES / NO / UNKNOWN
+
+2. NRML only present because broker positions/orders could return it?: UNKNOWN
+   YES / NO / UNKNOWN
+
+3. NRML intended for F&O/other compatibility?: I Guess both NRML (No automated TGT & SL creation facility) & F&O Orders (Out of scope of system, Since No Chartink fires F&O) available/traded
+   YES / NO / UNKNOWN
+
+4. Other reason:
+   __________________________________________
+
+======================================================================
+11. PRODUCT VS ENTRY ORDER TYPE
+======================================================================
+
+Product type is distinct from:
+    MARKET / LIMIT / SL / SL-M
+    order variety
+    exit protocol
+
+Repository order path accepts intent and entry_order_type separately.
+
+Did the legacy system allow multiple entry order types within one product?: UNKNOWN
+    YES / NO / UNKNOWN
+
+Known combinations:
+
+MIS:
+CNC:
+CO:
+NRML:
+BO:
+
+======================================================================
+12. PRODUCT VS ORDER VARIETY
+======================================================================
+
+Evidence includes:
+    CO cancellation with variety="co"
+    regular order modification with variety="regular"
+
+Was order variety part of product handling?: UNKNOWN
+    YES / NO / UNKNOWN
+
+Were these distinct concepts?: UNKNOWN
+    PRODUCT
+    ORDER VARIETY
+    ORDER TYPE
+    EXIT PROTOCOL
+
+    YES / NO / UNKNOWN
+
+Historical explanation:
+    __________________________________________
+
+======================================================================
+13. PRODUCT VS CAPITAL
+======================================================================
+
+Preserved legacy configuration contains:
+
+    INTRADAY     leverage 5.0
+    COVER_ORDER  leverage 6.0
+    DELIVERY     leverage 1.0
+    BRACKET_ORDER leverage 5.0
+
+A-005 established that these are legacy behavior and must not silently
+become V2 rules.
+
+Were these intended as actual product-specific capital assumptions?: NO, As per earlier revised discussion (Intraday has different margin facilities, Not Standard/Fixed 5x which needs to be modified) & Delivery orders (GTT has 1x only)
+    YES / NO / UNKNOWN
+
+Were product-specific margin differences expected?: YES (Intraday product has margins as discussed earlier 2x-5x daily differs | Delivery/GTT has No margins facility)
+    YES / NO / UNKNOWN
+
+======================================================================
+14. PRODUCT VS EXIT / PROTECTION
+======================================================================
+
+Repository evidence indicates:
+
+MIS:
+    intraday square-off
+    emergency flatten eligible
+
+CO:
+    special cancel/square-off handling
+    emergency flatten eligible
+
+CNC:
+    survives MIS/EOD flatten
+    GTT protection path
+    overnight lifecycle
+
+BO:
+    unsupported/empty broker mapping
+
+NRML:
+    recognised as DELIVERY by reverse mapping
+
+Does this match your historical understanding?: YES, I Guess that too [But ensure that I new system: For Intraday: Applicable margin applied + Auto-Square off + Suitable CO/BO window for entry + simultaneous TGT & SL Orders & For Delivery: No margins + No auto-square off + Only GTT window will be used]
+    YES / NO / PARTIALLY
+
+Corrections:
+    __________________________________________
+
+======================================================================
+15. PRODUCT VS POSITION IDENTITY
+======================================================================
+
+Did legacy treat:
+    same symbol + different product
+as distinct positions/books?: YES, Why? Old legacy system followed "One Symbol, One Segment (Intraday/GTT) One direction" So same symbol has been traded twice in Intraday & Delivery possible [But in new system it should be "One Symbol per Day only" meaning no more second trading of same symbol again at any cost]
+
+    YES / NO / UNKNOWN
+
+Could these coexist independently?: YES [refer above explanation with future system modification to 'One Symbol once per day only']
+    Example: RELIANCE + MIS and RELIANCE + CNC
+
+    YES / NO / UNKNOWN
+
+======================================================================
+16. PAPER VS LIVE
+======================================================================
+
+The broker adapter contains both live Kite calls and an in-memory paper
+simulator.
+
+Was paper product behavior intended to mirror live semantics?: NO [Actually there is lot of bugs/issue in Paper Vs Live semantics relating to Prices+Time etc], So all those irrelevant in new system which uses only 'Live' Mode [No Paper]
+    YES / NO / UNKNOWN
+
+Did paper reproduce broker-specific product restrictions?: NO [Probably I Guess incorrect only]
+    YES / NO / UNKNOWN
+
+If unknown, answer UNKNOWN.
+
+======================================================================
+17. PRODUCT VALIDATION / ELIGIBILITY
+======================================================================
+
+Possible legacy sequence:
+
+signal
+  -> intent/product
+  -> product resolution
+  -> product eligibility
+  -> sizing/capital
+  -> broker order
+
+Exact ordering must be source-established.
+
+Was product eligibility checked before capital reservation?: UNKNOWN
+    YES / NO / UNKNOWN
+
+Was it checked immediately before broker submission?: UNKNOWN
+    YES / NO / UNKNOWN
+
+Could configured-valid product still be broker-rejected?: UNKNOWN
+    YES / NO / UNKNOWN
+
+How was that handled?
+    __________________________________________
+
+======================================================================
+18. CONFIGURATION
+======================================================================
+
+Please classify these as business controls:
+
+trade_type: YES
+    YES / NO / UNKNOWN
+
+delivery_enabled: YES
+    YES / NO / UNKNOWN
+
+force_intraday_only: YES
+    YES / NO / UNKNOWN
+
+product_map: YES
+    YES / NO / UNKNOWN
+
+leverage_map: YES [Note that existing mapping shows standard/fixed: '5x' this should be modified in new system based on stock wise eligible margins ranging from '2x-5x' as per Zerodha daily change which already discussed]
+    YES / NO / UNKNOWN
+
+strategy-level product/intent: YES
+    YES / NO / UNKNOWN
+
+======================================================================
+19. HISTORICAL CHANGES
+======================================================================
+
+Did supported product types change over time?: UNKNOWN
+    YES / NO / UNKNOWN
+
+If YES:
+Product added:
+Product removed:
+Product disabled:
+Reason:
+Approximate date:
+Evidence:
+
+    __________________________________________
+
+Were CO/BO ever temporarily enabled/disabled?: UNKNOWN
+    YES / NO / UNKNOWN
+
+At the end of the legacy system, were MIS/CNC the only products intended
+for normal business trading?: UNKNOWN
+    YES / NO / UNKNOWN
+
+======================================================================
+20. POTENTIAL AMBIGUITIES TO VERIFY
+======================================================================
+
+Please do not answer from memory where repository evidence can establish it.
+
+1. BO exists internally but has no broker mapping. - Answer: YES, I Guess
+2. NRML is recognised as DELIVERY but actual use is unknown. - Answer: YES, I Guess
+3. CO has dedicated implementation but actual historical use needs evidence.
+4. ProductResolver appears to be the translation boundary; direct product
+   literals elsewhere must be traced before calling it universal.
+5. force_intraday_only can alter product behavior.
+6. delivery_enabled affects CNC/GTT paths.
+7. Product type changes square-off/kill behavior.
+8. Paper/live product parity must not be assumed.
+9. Legacy leverage values are product-specific legacy behavior only.
+
+Other defects/ambiguities:
+   ** Answer: For all above questions the answer is 'YES, I Guess' & For new system design should be as below:
+   1. For Delivery use only 'GTT window'
+   2. For Intraday use either 'BO/CO' order window which one is supports automated or simultaneously processing TGT & SL leg orders [Check Zerodha website/Internet] then lock that window only to avoid complications
+   3. Place 'Trade_Type (Intraday/Delivery/Both)' in  Config.yaml which acts as master key then each strategy.yaml files place 'Strategy: ON/OFF, Strategy classification: INTRADAY/DELIVERY, Direction : LONG/SHORT' settings, Why? Accordingly if we turn on/off config.yam>Strategy.yaml works [Example: If number of strategies classified in Intrady/Delivery can be simply turn-off in whole segment via config.yaml and In case of few strategies of Same segment can be done via strategy.yaml by keeping 'BOTH' segments in config.yaml]
+   4. Keep only 'Live' mode and remove 'Paper' mode in new system
+  ** Carefully note down above point in 'Manual' without missing anything & under appropriate headings/area of manual file
+
+======================================================================
+21. EVIDENCE YOU MAY KNOW ABOUT
+======================================================================
+
+Production order/contract-note evidence: YES, Contract notes available
+    __________________________________________
+
+Historical CO evidence: I Couldn't recall which window is used in legacy system for Intraday order processing whether CO/BO? [Need to Check, Why? Which one is supporting simultaneous/automated TGT & SL order processing once entry is executed]
+    __________________________________________
+
+Historical NRML evidence: I Guess 'NRML' orders never been used
+    __________________________________________
+
+Historical BO evidence: I Couldn't recall which window is used in legacy system for Intraday order processing whether CO/BO? [Need to Check, Why? Which one is supporting simultaneous/automated TGT & SL order processing once entry is executed]
+    __________________________________________
+
+Historical CNC/GTT evidence: 'GTT' orders worked correctly
+    __________________________________________
+
+Strategy YAML product definitions: YES available in both Config.yaml and each strategy.yaml files [So need to carefully design in new system without collision in between them, accordingly note it in Manual file]
+    __________________________________________
+
+Screenshots/logs showing product values: NO, Not available
+    __________________________________________
+
+======================================================================
+22. NON-A-007 NOTES
+======================================================================
+
+Please record ANY other point that comes to mind while answering, even if it
+belongs to another agenda item. It will be preserved for later review and
+will not automatically become an A-007 decision.
+
+Answer: YES, As from above summary:
+1. For Intraday/MIS choose best ordering window either BO/CO who supports automated TGT & SL Orders simultaneously once entry order is executed [Search zerodha/website to pick correct choice of window, ignore complicated and unnecessarily incorporating other window]
+2. For Intraday orders (be it in any window, all orders must be auto-squared off by system before zerodha officially does) I Guess zerodha has stock classification wise auto-squared off process (Not universal time of 15:20 for all stocks), Check the website internet at which time zerodha executes first square off, Before that 'First' cut-off time our system must square off then makes first confirmation then after 1-2 minutes another second confirmation too [Refer legacy system's behaviour)
+3. For Delivery/Position orders use universally 'GTT' window (ignore incorporating other windows) Why? not auto-squared off + Zerodha managed TGT & SL Process
+4. Basically we are going to use only 2 windows (Intraday: BO/CO & Delivery: GTT) ignore incorporating other windows like NRML, SL, SL-M etc [No complications]
+5. Config.yaml which is the 'Master' Settings and Strategy.yaml acts as 'Secondary' Settings
+6. Existing legacy system correctly working for Intraday and Delivery [Meaning passing TGT & SL orders simultaneously, Auto-Square off process, Cancelling other orphan order legs TGT/SL when first leg is hits (TGT/SL) Example: If TGT hits then SL and Vice-Versa automatedly cancelled, So review existing system behaviour in GitHub repo]
+7. Wherever 'UNKNOWN' is marked in above means that 'To avoid' wrong or unsuitable answering mentioned that So that while implementing we need to discuss with Claude + existing system behaviour
+
+======================================================================
+23. RESPONSE DISCIPLINE
+======================================================================
+
+Use: UNKNOWN
+    YES / NO / UNKNOWN
+
+The subsequent reconciliation will classify evidence as:
+    FACT
+    HISTORICAL USER EVIDENCE
+    UNKNOWN / NOT ESTABLISHED
+    KNOWN DEFECT
+    OPEN QUESTION
+
+No silent correction will be made.
+
+======================================================================
+24. NEXT STEP AFTER USER REPLY
+======================================================================
+
+1. Reconcile every answer against Production repository evidence.
+2. Compare Testing/Sandbox evidence.
+3. Classify facts, unknowns, historical evidence, defects and open questions.
+4. Ask another clarification file only if a genuine user decision remains.
+5. Otherwise prepare:
+      A-007 FINAL SOURCE RECONCILIATION + FREEZE
+      A-007 PRODUCT TYPES LEGACY MANUAL
+6. Preserve non-A-007 notes under a suitable future-agenda heading.
+7. Mark A-007 CLOSED/FROZEN only after reconciliation.
+
+END OF A-007 DISCUSSION CHECKLIST

@@ -1,0 +1,1010 @@
+A-008 — STRATEGY MODEL
+DISCUSSION CHECKLIST
+LEGACY SYSTEM DOCUMENTATION / PHASE 1
+27-SEP-2026
+
+======================================================================
+PURPOSE
+======================================================================
+
+Establish the factual historical Strategy Model of the DEAD legacy system
+before preparing the permanent A-008 manual.
+
+This is a discussion/review document only.
+
+DO NOT:
+- redesign the legacy strategy model;
+- decide the V2 strategy architecture here;
+- repair legacy strategy logic;
+- assume every strategy-related module/code path was active in Production;
+- treat a strategy YAML as proof that its strategy actually traded;
+- silently reconcile conflicting evidence;
+- turn a future V2 preference into a legacy fact.
+
+For every point classify:
+    FACT
+    HISTORICAL
+    UNKNOWN / NOT ESTABLISHED
+    INTERPRETATION
+    KNOWN DEFECT
+    OPEN QUESTION
+    V2 / NEW-SYSTEM INPUT
+
+======================================================================
+AGENDA CONFIRMATION
+======================================================================
+
+MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt establishes:
+
+A-001  System purpose
+A-002  Trading objectives
+A-003  Trading hours
+A-004  Instruments / market segments
+A-005  Capital model
+A-006  Broker model
+A-007  Product types
+A-008  Strategy model
+A-009  Configuration model
+A-010  Secrets / environment
+A-011  System states and lifecycle
+
+Therefore this document is correctly A-008 — Strategy Model.
+
+======================================================================
+SOURCE BASIS
+======================================================================
+
+PRIMARY:
+1. Production:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+2. Testing / Sandbox:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+
+3. Records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+RULE:
+Production = primary legacy baseline.
+Testing/Sandbox = comparison evidence only.
+
+Preserved source material reviewed for this checklist:
+- MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt
+- CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt
+- 01_SYSTEM_OVERVIEW.md
+- 02_REPOSITORY_AND_FILE_MAP.md
+- system_config.yaml
+- A-002 Trading Objectives discussion
+- A-004 Instruments / Market Segments discussion
+- A-005 Capital Model discussion
+- A-006 Broker Model discussion
+- A-007 Product Types discussion
+
+======================================================================
+PART 1 — CURRENT REPOSITORY STRATEGY MODEL OBSERVATIONS
+======================================================================
+
+1. STRATEGY CONFIGURATION LOCATION
+----------------------------------
+
+The Production repository contains:
+
+    config/strategies/*.yaml
+
+The preserved startup documentation states that the strategy YAMLs are loaded
+separately from the fixed eight-file global configuration registry.
+
+Relevant source references:
+    main.py
+    strategies/
+    config/strategies/*.yaml
+    strategies.schema
+    strategies.loader / StrategyLoader
+    signal processor / strategy control paths
+
+CLASSIFICATION:
+    FACT — strategy YAML configuration exists and is consumed by the system.
+
+EXACT Production strategy-file inventory:
+    SOURCE REVIEW REQUIRED / CONFIRM BEFORE FREEZE
+
+IMPORTANT:
+Earlier A-004 user evidence referred to 16 strategy YAML files:
+    10 Intraday
+    5 Delivery
+    1 placeholder
+
+However, the preserved 21-Sep deep working-tree documentation contains
+references to 15 active strategies in some contexts.
+
+Therefore:
+    EXACT CURRENT PRODUCTION COUNT = OPEN / MUST VERIFY FROM REPOSITORY
+    Do not silently use 15 or 16 as the final historical count.
+
+2. STRATEGY LOADING
+-------------------
+
+The preserved source map establishes that strategy files are validated through
+the strategy schema and loaded from config/strategies/.
+
+The direction registry also builds a map by validating every
+config/strategies/*.yaml.
+
+Known mechanism:
+    config/strategies/*.yaml
+        |
+        v
+    strategy schema validation
+        |
+        v
+    StrategyConfig / loaded strategy definition
+        |
+        +--> strategy control
+        +--> direction handling
+        +--> strategy status/reporting
+        +--> signal processing
+
+CLASSIFICATION:
+    FACT — validation/loading mechanism exists.
+
+Exact:
+    validation failure behavior
+    duplicate strategy-name behavior
+    missing strategy behavior
+    runtime reload behavior
+    startup failure vs skip behavior
+
+remain SOURCE-TRACE items where not already established.
+
+3. STRATEGY NAME / IDENTITY
+---------------------------
+
+The source map establishes that strategy configuration has a strategy name and
+that strategy YAML files are independently validated.
+
+The strategy direction registry builds:
+
+    {strategy_name: LONG | SHORT}
+
+from validated strategy YAMLs.
+
+CLASSIFICATION:
+    FACT — strategy name and direction are represented in the model.
+
+OPEN:
+- exact uniqueness rule;
+- whether filename must equal strategy name;
+- whether scanner name, YAML name and DB strategy field must all match;
+- behavior when they do not match.
+
+4. STRATEGY DIRECTION
+---------------------
+
+The repository contains explicit direction handling.
+
+Known valid direction values:
+    LONG
+    SHORT
+
+The direction registry validates each strategy YAML and creates a canonical
+direction map.
+
+Earlier A-004/A-007 user evidence:
+    each legacy strategy was intended to generate one side only:
+    LONG or SHORT.
+
+CLASSIFICATION:
+    FACT — LONG/SHORT are explicit strategy-model values.
+    HISTORICAL — user states each of the legacy strategies was one-sided.
+    EXACT PER-STRATEGY MAPPING — verify from repository before final manual.
+
+5. STRATEGY PRODUCT / CLASSIFICATION
+-------------------------------------
+
+Earlier A-004/A-007 evidence established that strategies carry a classification
+associated with Intraday/Delivery intent.
+
+User stated:
+    each strategy has:
+        Product Type / Classification
+            INTRADAY or DELIVERY / Position
+        Direction
+            LONG or SHORT
+
+Repository evidence also shows strategy control is evaluated against:
+    global trade_type
+    force_intraday_only
+    per-strategy enable/disable state.
+
+CLASSIFICATION:
+    FACT — strategy classification/product intent exists.
+    HISTORICAL — user states one strategy does not trade both MIS and CNC.
+    EXACT precedence between YAML classification, global trade_type,
+    force_intraday_only and other controls = SOURCE-TRACE REQUIRED.
+
+6. STRATEGY ENABLE / DISABLE
+----------------------------
+
+The preserved deep working tree states that before secondary screening the
+processor evaluates strategy control.
+
+The resolver considers:
+- master trade_type
+- force_intraday_only
+- per-strategy enable/disable state.
+
+A disabled or incompatible strategy is rejected before:
+- sizing
+- capital reservation
+- order placement.
+
+CLASSIFICATION:
+    FACT — this control layer exists.
+
+OPEN:
+    exact source function/class responsible;
+    exact precedence;
+    exact rejection status;
+    whether disabled strategies are still visible in reports;
+    whether disabled state is YAML-only or also represented elsewhere.
+
+7. STRATEGY ENTRY WINDOW
+------------------------
+
+The current architecture has at least two time layers:
+
+    GLOBAL ENTRY WINDOW
+            +
+    STRATEGY-SPECIFIC ENTRY WINDOW
+
+The strategy configuration contains per-strategy entry-window values.
+
+The preserved system_config.yaml evidence explicitly states that the global
+entry_start acts as a floor over per-strategy windows.
+
+Example documented behavior:
+    global entry_start = 10:00
+    strategy may declare 09:25
+    strategy's 09:25 does not override the global 10:00 floor.
+
+CLASSIFICATION:
+    FACT — two-level entry-window mechanism exists.
+    Historical values should be documented from the Production snapshot,
+    not generalized into V2 rules.
+
+OPEN:
+- exact strategy window fields;
+- exact inclusive/exclusive boundaries;
+- behavior outside window;
+- strategy-specific entry_end interaction with eod_entry_cutoff;
+- whether Delivery strategy windows differ systematically from Intraday.
+
+8. STRATEGY GOVERNOR / CIRCUIT BREAKER
+--------------------------------------
+
+The preserved deep working tree states that a strategy governor/circuit-breaker
+hook exists where enabled.
+
+system_config.yaml also contains a strategy circuit breaker section.
+
+Known documented configuration includes:
+    strategy_circuit_breaker:
+        enabled
+        loss_multiplier
+        cutoff_time
+        lookback_days
+
+CLASSIFICATION:
+    FACT — implementation/configuration exists.
+    ACTUAL HISTORICAL ACTIVATION/IMPACT — NOT ESTABLISHED.
+
+Do not assume the circuit breaker actually paused a Production strategy merely
+because the code/configuration exists.
+
+9. STRATEGY → SCANNER MAPPING
+-----------------------------
+
+The signal processor performs:
+    scanner -> strategy lookup
+
+The repository contains:
+    config/scan_webhook_map.yaml
+
+The deep working tree states that the scanner-to-strategy lookup occurs before
+strategy control.
+
+Conceptual path:
+    Chartink webhook
+        |
+        v
+    scanner identification
+        |
+        v
+    scan_webhook_map
+        |
+        v
+    strategy
+        |
+        v
+    strategy control
+        |
+        v
+    secondary screening
+
+CLASSIFICATION:
+    FACT — scanner-to-strategy mapping exists.
+
+OPEN:
+- exact mapping key;
+- unknown scanner behavior;
+- one scanner → one strategy vs one scanner → multiple strategies;
+- duplicate mapping;
+- mapping change/reload behavior;
+- EOD/Daily scanner routing;
+- historical mapping inventory.
+
+10. STRATEGY → SCREENING RELATIONSHIP
+-------------------------------------
+
+The current system has a common secondary screener after strategy control.
+
+The deep working tree describes:
+
+    strategy lookup
+        ->
+    strategy control
+        ->
+    strategy-specific entry window
+        ->
+    secondary screener
+        ->
+    price derivation
+        ->
+    sizing
+        ->
+    risk
+        ->
+    reservation
+        ->
+    order
+
+The screener itself has hard gates, screening steps, score/tier and final
+verdict.
+
+CLASSIFICATION:
+    FACT — strategy selection precedes secondary screening in the normal
+    documented path.
+
+OPEN:
+    Which screening rules are globally shared versus strategy-specific?
+    Which strategy parameters are consumed by each screening step?
+    Whether the strategy YAML directly controls screening conditions or merely
+    identifies the strategy.
+
+11. STRATEGY SCORE / TIER
+-------------------------
+
+The current screening result contains:
+- passed/rejected
+- status
+- score
+- tier
+- rejected step
+- step results
+- errors
+- latency
+- market-data snapshot.
+
+The position-sizing path also uses tier/performance multipliers in the legacy
+model.
+
+IMPORTANT:
+Score/tier in the current system must NOT automatically be described as the
+strategy definition itself.
+
+Classification:
+    FACT — score/tier is part of the downstream qualification/sizing path.
+    EXACT STRATEGY-LEVEL ROLE — OPEN / SOURCE-TRACE REQUIRED.
+
+12. STRATEGY GOVERNANCE / PERFORMANCE
+--------------------------------------
+
+The repository contains:
+- strategy governor
+- strategy metrics
+- strategy health/reporting
+- circuit-breaker mechanisms
+- strategy registry/direction registry components.
+
+These establish that strategy-level governance exists in code.
+
+They do NOT establish:
+- that every mechanism was active in Production;
+- that every metric affected live decisions;
+- that every strategy had enough history to trigger governance.
+
+Classification:
+    FACT — mechanisms exist.
+    ACTUAL LIVE EFFECT — UNKNOWN unless evidence establishes it.
+
+======================================================================
+PART 2 — STRATEGY MODEL: REQUIRED SOURCE → CONSUMER TRACE
+======================================================================
+
+For each important strategy field, the permanent manual should eventually
+trace:
+
+SOURCE
+  ↓
+INPUT
+  ↓
+VALIDATION
+  ↓
+TRANSFORMATION
+  ↓
+DECISION
+  ↓
+OUTPUT
+  ↓
+STORAGE / HANDOFF
+  ↓
+NEXT CONSUMER
+
+Required fields include:
+
+- strategy name
+- strategy enabled/disabled
+- strategy classification
+- direction
+- scanner mapping
+- entry window
+- SL parameters
+- target / R:R parameters
+- screening parameters
+- score/tier parameters
+- capital/sizing constraints
+- position constraints
+- strategy governor parameters
+- circuit-breaker parameters
+- any strategy-specific S&R/technical parameters
+- any strategy-specific market-data requirements
+
+Do NOT answer these from memory if repository evidence can establish them.
+
+======================================================================
+PART 3 — STRATEGY YAML CONTENT
+======================================================================
+
+Please confirm from the actual Production repository rather than guessing.
+
+For each strategy YAML determine whether it contains:
+
+[ ] name
+[ ] enabled / status
+[ ] classification / product intent
+[ ] direction
+[ ] scanner identity
+[ ] entry window
+[ ] SL %
+[ ] target
+[ ] R:R
+[ ] screening conditions
+[ ] candle / pattern conditions
+[ ] timeframe
+[ ] S&R parameters
+[ ] quantity limits
+[ ] capital limits
+[ ] position limits
+[ ] score thresholds
+[ ] tier
+[ ] strategy-specific filters
+[ ] strategy-specific market-data requirements
+[ ] other
+
+Classification:
+    repository evidence required.
+
+======================================================================
+PART 4 — HISTORICAL STRATEGY INVENTORY
+======================================================================
+
+Please review/confirm only what you know.
+
+Q1. NUMBER OF STRATEGIES
+------------------------
+Earlier answer:
+    16 YAMLs
+    10 Intraday
+    5 Delivery
+    1 placeholder
+
+Current preserved repository documentation contains a possible count mismatch.
+
+Please do NOT guess.
+
+Answer: 16 YAML's = 16 Strategies [10+5+1]
+____________________________________________________________
+
+Q2. ACTIVE VS PLACEHOLDER
+-------------------------
+Which strategy files were actually active in Production?
+
+Answer: No idea [Safe approach]
+____________________________________________________________
+
+Q3. INTRADAY / DELIVERY COUNT
+-----------------------------
+Was the earlier:
+    10 Intraday
+    5 Delivery
+    1 placeholder
+classification correct for the historical Production state?
+
+Answer: YES (Intraday=10, Delivery=5, Placeholder(Intraday)=1
+____________________________________________________________
+
+Q4. ONE-SIDED DIRECTION
+-----------------------
+Was every Production strategy intentionally LONG-only or SHORT-only?
+
+Answer: YES [But it is not labelled/mentioned in .yaml files, but those strategies sends either Long/Short signals only]
+____________________________________________________________
+
+Q5. STRATEGY CHANGES
+---------------------
+Were strategies added, removed, renamed, enabled/disabled, or materially
+changed during the historical Production period?
+
+Answer: Strategies added only tried, None others tried like renaming, enabled/disables or material changes and also one more important note (refer attached screenshots):
+ * There is 2 vm's (production + testing), each consumes Chartink signals only
+ * While creating strategies for original production system not used 'Zerodha Client ID' (LFL836) not used/mentioned anywhere in Chartink strategy name/url/scanner name etc for Production system
+ * But while creating strategies for testing vm used to zerodha client id (VBB097) in strategy name/scanner name which automatically picks client id too in Chartink payload
+ * Since testing system is replica of production system, We manually adjusted something in testing system about not to consider vbb097 (client id) while receiving payload from Chartink
+ * So in new system need uniformity (either create strategies with client id or without client id and adjust somewhere is system or any other simplified but universally to be followed semantics/common approach [meaning no more one time adjustments like this as done in testing vm (refer testing vm repo in GitHub)
+ * So carefully take this note into manual with suitable headings/area if it's relevant or not relevant to topic A-008
+____________________________________________________________
+
+======================================================================
+PART 5 — STRATEGY CONTROL
+======================================================================
+
+Q6. GLOBAL TRADE TYPE
+---------------------
+Was global config trade_type intended to control whether Intraday, Delivery,
+or BOTH strategy classes were allowed to proceed?
+
+Answer: YES [Config.yaml is global/universal controller and Strategy.yaml are sub or secondary controllers [Assume: In config.yaml: BOTH (Intraday and Delivery) is enabled then and Delivery has 5 strategies, But if want to trade only 3 straegies, simply I'll turn/enable on those  3 strategies only & At the same time if I want to block full delivery trades then 'Config.yaml=INTRADAY']
+____________________________________________________________
+
+Q7. FORCE INTRADAY ONLY
+-----------------------
+Was force_intraday_only a global override over Delivery strategies?
+
+Answer: YES, I Guess so, But in new system remove these kind of complications why? If Config.yaml=INTRADAY means it's already overridden condition, So again adding force_intraday_only has no meaning, So Config.yaml=INTRADAY/DELIVERY?BOTH then each strategy.yaml=enabled/disabled is sufficient & Take a careful note in manual "While implementing Config.yaml and strategy.yaml files and it's contents needs to discuss/review again carefully with Claude
+____________________________________________________________
+
+Q8. STRATEGY ENABLE/DISABLE
+---------------------------
+Was each strategy independently enabled/disabled during Production?
+
+Answer: YES
+____________________________________________________________
+
+Q9. STRATEGY ENTRY WINDOW
+-------------------------
+Did the per-strategy entry window materially control when that strategy could
+enter?
+
+Answer: UNKNOWN
+____________________________________________________________
+
+Q10. STRATEGY GOVERNOR
+----------------------
+Was the strategy governor/circuit breaker actually active in Production, or
+was it mainly code/configuration?
+
+Answer: UNKNOWN
+____________________________________________________________
+
+======================================================================
+PART 6 — STRATEGY → CHARTINK MAPPING
+======================================================================
+
+Q11. SCANNER OWNERSHIP
+----------------------
+Did every Chartink scanner map to exactly one strategy?
+
+Answer: YES
+____________________________________________________________
+
+Q12. STRATEGY OWNERSHIP
+-----------------------
+Could one strategy receive signals from multiple Chartink scanners?
+
+Answer: NO, One Strategy can receive multiple signals of same strategy & All strategies received their own multiple signals [Not Cross-wise]
+____________________________________________________________
+
+Q13. UNKNOWN SCANNER
+--------------------
+What happened historically if a webhook scanner was not present in the
+mapping?
+
+Answer: UNKNOWN, No such incident tested/tried
+____________________________________________________________
+
+Q14. DUPLICATE MAPPING
+----------------------
+Any known historical scanner-to-strategy mapping collision?
+
+Answer: UNKNOWN
+____________________________________________________________
+
+======================================================================
+PART 7 — STRATEGY-SPECIFIC FILTERING
+======================================================================
+
+The earlier A-002 discussion recorded an important user objective:
+
+    each strategy should have its own YAML and its own secondary filtration
+    mechanism.
+
+The current legacy source, however, also contains a common screening pipeline.
+
+This must be separated carefully:
+
+A. FACTUAL LEGACY ARCHITECTURE
+B. USER'S HISTORICAL INTENT
+C. FUTURE V2 PREFERENCE
+
+Q15. LEGACY SCREENING
+---------------------
+Did each legacy strategy actually have materially different screening/filter
+conditions?
+
+Answer: NO, In existing legacy/old system all strategies has one score/rank based universal/common filtration method
+____________________________________________________________
+
+Q16. PLACEHOLDER CONDITIONS
+---------------------------
+Were some strategy screening criteria placeholders/incomplete historically?
+
+Answer: YES, Strategy PB01 BREAKOUT + RETEST (SHADOW) held as placeholder as of now
+____________________________________________________________
+
+Q17. LATE ENTRY / OVEREXTENDED STOCKS
+--------------------------------------
+Were these strategy-selection concerns historically recognized problems?
+
+Answer: YES, Late entry signals, meaning a stock which already ran-out for the day received as entry signal that leads to SL hitting [No room for further stock run] 
+____________________________________________________________
+
+Q18. STRATEGY-SPECIFIC MARKET CONTEXT
+--------------------------------------
+Did different strategies use different:
+- candle timeframes
+- patterns/formations
+- volume rules
+- S&R rules
+- trend rules
+- price rules
+- entry timing rules?
+
+Answer: YES, I Guess but refer the attached file 'Chartink_scanners.v2.txt'
+____________________________________________________________
+
+======================================================================
+PART 8 — STRATEGY RISK / EXIT PARAMETERS
+======================================================================
+
+Earlier project evidence states:
+    SL % should be strategy-wise rather than one global value.
+
+Do NOT freeze this as a legacy implementation fact until source confirms it.
+
+Q19. STRATEGY-SPECIFIC SL
+-------------------------
+Did the legacy strategy YAML actually contain/drive strategy-specific SL
+parameters?
+
+Answer: YES [I Guess either config.yaml or strategy.yaml has this SL %), But ensure in new system each strategy wise .yaml file(s) has this settings
+____________________________________________________________
+
+Q20. STRATEGY-SPECIFIC TARGET / R:R
+------------------------------------
+Did each strategy define its own target/R:R behavior?
+
+Answer: YES [For confirmations refer in GitHub production system "\trading-system\config\strategies\*yaml files"] even for other further full informations
+____________________________________________________________
+
+Q21. TARGET CALCULATION
+-----------------------
+Was target derived from:
+- strategy YAML
+- global config
+- calculated R:R
+- another module
+- combination
+- UNKNOWN
+
+Answer: YES, Target (R:R) derived from each Strategy.yaml
+____________________________________________________________
+
+Q22. STRATEGY → ORDER PARAMETERS
+--------------------------------
+Did strategy configuration directly determine any broker/order parameters,
+or did it only provide trade intent to downstream modules?
+
+Answer: UNKNOWN
+____________________________________________________________
+
+======================================================================
+PART 9 — STRATEGY + CAPITAL / POSITION SIZING
+======================================================================
+
+Do not repeat A-005 decisions here.
+
+The purpose is only to identify the historical strategy-model dependency.
+
+Q23. STRATEGY-SPECIFIC CAPITAL
+------------------------------
+Did strategy YAMLs contain maximum/minimum:
+- capital
+- quantity
+- position value
+- positions
+- risk
+- other sizing limits?
+
+Answer: NO [In legacy/old system it is in config.yaml, meaning a global control instead strategy wise placement] refer GitHub "\trading-system\config\system_config.yaml"
+____________________________________________________________
+
+Q24. GLOBAL VS STRATEGY LIMIT
+-----------------------------
+Where both existed, which legacy value actually bound the trade?
+
+Answer: In legacy system major controls existed in config.yaml as global controls like max/min/time etc & each strategy.yaml contains only strategy specific R:R, strategy classification (Intra/Delivery) and other things
+____________________________________________________________
+
+Q25. STRATEGY SCORE / TIER → SIZE
+----------------------------------
+Did score/tier materially alter final quantity in Production?
+
+Answer: YES, Score/ranking which restricts the entry candidates/signals (if score is high then many stocks below this score will get rejected) and Tier multiplier which restricts the position size based on some criteria's 
+____________________________________________________________
+
+======================================================================
+PART 10 — STRATEGY DUPLICATE / CONCURRENCY
+======================================================================
+
+Current deep working tree documents:
+- per-strategy position cap
+- one-trade-per-symbol-direction
+- portfolio/risk checks
+- concurrency-aware checks.
+
+Earlier user evidence:
+    legacy one stock + one direction once a day;
+    future preference: one stock once a day regardless of direction.
+
+Q26. HISTORICAL DUPLICATE RULE
+------------------------------
+What was the actual legacy rule?
+
+Answer: (as below)
+1. legacy one stock + one direction once a day per segment (meaning Intraday & Delivery has 2 independent pipelines) Vs new system legacy one stock + one direction once a day (irrespective of intraday or Delivery pipeline)
+2. each strategy.yaml should have all caps on it's own (instead of config.yaml which will have only global settings like alerts (on/off), master start & end time etc)
+____________________________________________________________
+
+Q27. STRATEGY-SPECIFIC POSITION CAP
+-----------------------------------
+Did each strategy have its own position limit?
+
+Answer: NO [Legacy/Old system don't have this settings]
+____________________________________________________________
+
+Q28. MULTIPLE STRATEGIES SAME SYMBOL
+-------------------------------------
+Could two different strategies attempt the same symbol on the same day?
+
+Answer: Rule applied or to be remembered here is "one stock + one direction once a day per segment (meaning Intraday & Delivery has 2 independent pipelines)" & Future system should be "one stock + one direction once a day"
+____________________________________________________________
+
+======================================================================
+PART 11 — PAPER VS LIVE STRATEGY BEHAVIOR
+======================================================================
+
+The legacy system had paper and live modes.
+
+Q29. STRATEGY PARITY
+--------------------
+Did paper and live use exactly the same strategy configuration and decision
+logic?
+
+Answer: YES
+____________________________________________________________
+
+Q30. PAPER-ONLY DIFFERENCES
+----------------------------
+Were any strategy decisions, scoring, filtering or entry timing materially
+different in paper?
+
+Answer: UNKNWON
+____________________________________________________________
+
+======================================================================
+PART 12 — TESTING VM COMPARISON
+======================================================================
+
+Production is authoritative.
+
+Compare Testing/Sandbox only for strategy-model differences:
+
+- strategy YAML count
+- strategy names
+- strategy classification
+- direction
+- enabled/disabled
+- scanner mapping
+- entry windows
+- strategy parameters
+- screening parameters
+- strategy governor
+- score/tier
+- strategy registry
+- any shadow/V3 strategy.
+
+Q31. KNOWN TESTING DIFFERENCES
+------------------------------
+Do you know of any strategy-model difference between Production and Testing
+VM beyond already documented S&R/config differences?
+
+Answer: NO difference, Except marker start time as per production system is 10:00am, But Testing/Sandbox system is 09:30am [refer config.yaml]
+____________________________________________________________
+
+======================================================================
+PART 13 — KNOWN DEFECTS / LIMITATIONS
+======================================================================
+
+Only evidence-backed defects should be recorded.
+
+Potential investigation areas:
+- strategy YAML/schema mismatch
+- scanner mapping mismatch
+- disabled strategy still receiving signals
+- wrong strategy selected
+- direction conflict
+- classification conflict
+- strategy window/global window conflict
+- placeholder screening conditions
+- score/tier misuse
+- strategy governor not connected
+- strategy parameters not consumed
+- paper/live divergence
+- Production/Sandbox divergence
+- stale strategy registry
+- strategy count mismatch
+- incomplete end-to-end signal outcome.
+
+Q32. KNOWN HISTORICAL STRATEGY DEFECTS
+--------------------------------------
+What strategy-related defects do you remember?
+
+Answer: (as below)
+1. Higher importance issue: Strategies has conditions which sends signals/stocks which already ran for the day (that causes all hits SL, So success ration is around <10% only)
+2. Global Secondary filtration irrespective of strategy/segment (Intraday/Delivery);
+3. Almost duplicate of some strategies with different names (refer chartink_scanners.v2.txt), meaning no distinct unique strategy;
+____________________________________________________________
+
+======================================================================
+PART 14 — IMPORTANT CROSS-TOPIC INPUTS ALREADY RECORDED
+======================================================================
+
+These are preserved so they are not lost. They are NOT automatically A-008
+legacy facts.
+
+1. Future V2 may use a maximum of approximately six strategies.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT — NOT A LEGACY FACT.
+
+2. Each strategy may have its own secondary filtration mechanism.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT; legacy implementation must be separately
+       documented.
+
+3. Quality of trade over quantity was an intended objective.
+   STATUS:
+       HISTORICAL OBJECTIVE already recorded under A-002.
+
+4. Avoid late entry, unsuitable R:R and stocks that have already run over.
+   STATUS:
+       HISTORICAL OBJECTIVE / USER-IDENTIFIED CONCERN already recorded.
+       Detailed mechanics belong to later strategy/filtering/entry agendas.
+
+5. User wants strategy-wise SL %.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT until A-008/relevant source evidence confirms
+       historical behavior.
+
+6. User wants strategy YAML to hold strategy-specific controls while global
+   config provides global bounds/standards.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT, not yet frozen.
+
+7. Global trade_type should act as a master segment control and strategy YAML
+   should carry strategy classification/direction.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT.
+
+8. Central/global score/rank allocator needs reconsideration.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT; do not redesign here.
+
+9. Future V2 should not blindly carry the legacy 16-strategy model.
+   STATUS:
+       V2 / NEW-SYSTEM INPUT.
+
+10. All business/decision values should be YAML-driven rather than hard-coded
+    in Python.
+    STATUS:
+       CROSS-TOPIC V2 GOVERNANCE INPUT.
+
+======================================================================
+PART 15 — REQUIRED FINAL CLASSIFICATION
+======================================================================
+
+After Rama replies and source reconciliation, classify:
+
+FACT:
+____________________________________________________________
+
+HISTORICAL:
+____________________________________________________________
+
+UNKNOWN / NOT ESTABLISHED:
+____________________________________________________________
+
+INTERPRETATION:
+____________________________________________________________
+
+KNOWN DEFECT:
+____________________________________________________________
+
+OPEN QUESTION:
+____________________________________________________________
+
+V2 / NEW-SYSTEM INPUT:
+____________________________________________________________
+
+======================================================================
+PART 16 — FREEZE DECISION
+======================================================================
+
+A-008 Strategy Model status:
+
+[ ] OPEN — clarification/repository review still required
+[ ] CLOSED / FROZEN — ready for permanent manual
+
+If OPEN, unresolved dependencies:
+____________________________________________________________
+
+If CLOSED, frozen summary:
+____________________________________________________________
+
+======================================================================
+REVIEW RULE
+======================================================================
+
+Before the permanent A-008 reconciliation + manual:
+
+1. Re-check Production strategy YAMLs and strategy modules.
+2. Re-check scanner → strategy mapping.
+3. Re-check Testing/Sandbox only for comparison.
+4. Resolve the 15-vs-16 strategy count discrepancy from source.
+5. Trace important strategy fields to their consumers.
+6. Separate code/configuration presence from actual historical use.
+7. Preserve all unknowns.
+8. Keep V2 ideas separate from legacy facts.
+9. Preserve cross-topic answers for later agenda items.
+10. Never expose credentials or secrets.
+
+END OF A-008 DISCUSSION CHECKLIST

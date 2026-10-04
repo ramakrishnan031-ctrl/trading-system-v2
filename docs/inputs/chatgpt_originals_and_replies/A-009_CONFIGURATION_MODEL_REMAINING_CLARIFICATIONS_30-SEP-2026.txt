@@ -1,0 +1,290 @@
+A-009 — configURATION MODEL
+REMAINING CLARIFICATIONS — GITHUB/YAML REVIEWED
+30-SEP-2026
+
+Purpose: Only the points still requiring Rama's clarification are listed below.
+Production is the primary legacy baseline; Sandbox/Testing is comparison evidence; Records is historical evidence.
+Repository evidence has been checked against the filled checklist and available YAML/configuration material.
+
+IMPORTANT:
+- Do not answer questions already established by repository evidence unless you disagree with the evidence.
+- If you do not know, write UNKNOWN / NOT ESTABLISHED.
+- These questions concern historical legacy behaviour unless explicitly marked V2.
+- Do not provide secrets, tokens, passwords, TOTP values or webhook secrets.
+
+============================================================
+1. FILES / RUNTIME USAGE
+============================================================
+
+Q1. The original checklist asked whether ALL eight core YAML files were actually used by Production.
+Repository evidence confirms they were part of the application configuration model, but "present/loaded" is not identical to "materially consumed in live trading".
+Please confirm your historical knowledge only:
+Answer: YES, These 8 core YAML files supposed to be used by production theoretically, But I can't confirm, why? Bugs/Inconsistency/Missing during production exists.
+
+Q2. Were any of these configuration files known by you to be dormant, shadow-only, historical, or effectively unused in Production?
+Answer: Nope, unless there is Bugs/Inconsistency/Missing during production exists.
+
+Q3. Production repository contains additional configuration/config-like files outside the eight Appconfig YAMLs, including:
+- accounts.csv
+- index_universe.yaml
+- strategy_direction_registry.yaml
+- symbol_aliases.yaml
+- cron_registry.yaml
+- expected_managers.yaml
+- preflight.yaml
+- security.yaml
+These are confirmed repository facts, and some are explicitly loaded/used by separate processes.
+Your earlier answer "no other YAML" therefore needs clarification:
+Did you mean "no other YAML that I personally maintained/considered part of the trading configuration", or do you want the manual to classify these additional files as configuration sources?
+
+Answer: YES, It's completely my mistake only those files exists for different purposes and part of the production system [accounts.csv-List of Zerodha client credentials, index_universe.yaml-Nifty Index names, strategy_direction_registry.yaml-Each strategy wise direction details, URL, scanner name etc, symbol_aliases.yaml-Some symbols name changes details preserved (not required in new system), cron_registry.yaml-Each cron jobs details and metadata, expected_managers.yaml-system manager's informations and Metadata, preflight.yaml-pre-flight or what are the things to perform once system is booted functions list, security.yaml-system security details like fingerprint, ssh keys, whitelist commands, threshold etc
+
+============================================================
+2. STARTUP / config CHANGE
+============================================================
+
+Q4. Was Production normally started with the default config directory ("config"), or was --config normally supplied?
+Repository confirms main.py defaults to Path("config").
+Answer: UNKNOWN [Need to review during system implementation by discussion with Claude]
+
+Q5. How were Production configuration changes normally applied?
+Select all historically used:
+[ ] Edit YAML on VM
+[ ] Edit locally + Git commit
+[ ] Git deployment/pull
+[ ] Service restart
+[ ] VM restart
+[ ] Script-generated configuration
+[ ] Database/state change
+[ ] Other
+Details: By all of the above methods [Good catch: Need to fix it in new system: By incorporating new standard method, instead of doing above all methods]
+
+Q6. Hot reload:
+Repository code explicitly says both system configuration and strategy YAMLs are load-once at startup / no hot reload.
+Unless you remember a contrary operational mechanism, this can be recorded as FACT.
+Confirm:
+Answer: YES, If config.yaml and strategy.yaml is loaded during booting process, Can't be changed unless otherwise system is completely re-started again
+
+============================================================
+3. configURATION FAILURE BEHAVIOUR
+============================================================
+
+Q7. When a required one of the eight Appconfig files was missing, malformed, or failed schema validation, did Production fail startup rather than continue with a partial configuration?
+Repository evidence says YES: atomic load, no partial Appconfig; configMissingError / configSchemaError; main startup exit path exists.
+Confirm:
+Answer: Good Catch, No such incidents/tried with those scenarios, So in new system make sure everything correct then only system boots, else no booting instead trigger alerts in Telegram and Email simultaneously with remarks/caution
+
+Q8. Were warnings from the config Sanity Auditor allowed while startup continued?
+Repository evidence indicates BLOCK findings fail startup while WARN findings are logged.
+Confirm:
+Answer: UNKNOWN, But intended new system function would be: Once everything is ok then only allow 'booting' else stop booting then send me alerts what are all the issues, caution etc in alerts (Telegram and Email)
+
+Q9. Did you personally observe any invalid configuration being rejected by the system?
+If no memory, write UNKNOWN.
+Answer: NO, Why? No such incidents happened or I'm unable to recall those incidents
+
+Q10. Any historical configuration-validation defect you personally remember?
+Answer: UNKNOWN
+
+============================================================
+4. GLOBAL VS STRATEGY PRECEDENCE
+============================================================
+
+Q11. Repository confirms strategy YAML has its own settings and global system_config has global settings.
+Where the same business concept existed in both, do you remember which value actually won?
+If unknown, say UNKNOWN.
+Answer: config.yaml functions as global or universal settings [Example: Max capital/Qty/Value (mirror to MIN), number of trades/open positions, Alerts, Timing etc], Each strategy.yaml has settings like signals/strategy related things like R:R, trade time, etc (basically trade related metadata/settings, Not any system controlled settings/functions)
+
+Q12. Repository confirms at least one concrete global-over-strategy relationship:
+global trading_hours.entry_start=10:00 acted as a floor over strategy entry windows.
+Were there any other global ceilings/floors/overrides you remember?
+Answer: config.yaml is the "Master Control Panel" of the system and strategy.yaml is the secondary settings (can be overridden with config.yaml), Why? Assume if trade_type: enabled with 'BOTH' (Intraday and Delivery), If yes then assume if number of Intraday strategies has 6 numbers then If I do prefer to trade only 4 then simply turn on those 4 strategies in their respective strategy.yaml & If I don't want to trade any intraday strategies then I'll simply enable trade_type: Delivery only [No need to turn off each intraday strategy in their respective strategy.yaml) Like wise Trade timings: config.yaml is global switch and each strategy.yaml has its own secondary switch
+
+Q13. Did runtime broker/API or market data replace configured assumptions during execution?
+The repository shows broker-derived/runtime-derived values in several areas.
+The question is specifically whether you remember any case where runtime data overrode a YAML business setting.
+Answer: Actually these configured runtime broker/API has details set after searching official Zerodha website only (Not set random numbers), So I guess the numbers are remains same as of now, So during implementation follow same process like Search Zerodha Broker>Set numbers for system [Not random, Not by assumption] - take a note of it in 'Manual' carefully
+
+Q14. Did any Python hard-coded business value override or effectively bypass YAML?
+If known, give the setting/example; otherwise UNKNOWN.
+Answer: I Guess No & ensure the same in new system (No Hardcodes anywhere) - take a note of it in 'Manual' carefully
+
+============================================================
+5. DEFAULTS / FALLBACKS
+============================================================
+
+Q15. Repository evidence says core.config_loader does NOT fill missing required config keys with defaults, but individual schema fields can have defaults.
+Do you remember relying on any such schema default in Production?
+Answer: UNKNOWN
+
+Q16. Do you remember any fallback that materially affected an actual Production trade/decision?
+Answer: UNKNOWN
+
+============================================================
+6. config SNAPSHOT / AUDIT
+============================================================
+
+Q17. Repository confirms resolved Appconfig was persisted into config_snapshots as canonical JSON + SHA-256 hash.
+Did you historically use those snapshots/reports to determine "what configuration was live on a particular trading day"?
+Answer: UNKNOWN (unable to re-call)
+
+Q18. Repository confirms multiple hashes can exist for the same date when the resolved config changes.
+Did you know/observe same-day configuration changes producing multiple snapshots?
+Answer: UNKNOWN (unable to re-call)
+
+Q19. Did you ever find a mismatch between YAML on disk and the configuration actually loaded by the running process?
+Answer: YES Why? The possible scenarios are either modified files not pushed to VM Or Directly changed in VM, but not reverse push to local system not happened or something like this changed at either local pc or vm, Not uniformity maintained
+
+============================================================
+7. PAPER VS LIVE
+============================================================
+
+Q20. The repository confirms paper/live runtime differences, including quote provider, capital seed, slippage wiring and broker handling.
+Were the SAME YAML files normally used for both modes?
+Answer: YES, Same system with same files applied for both "Paper & Live", But Bugs or Issues of system is unable to read cross-function files like Paper>Live or Live>Paper switching
+
+Q21. Were there separate paper/live configuration values/files that you intentionally maintained?
+Answer: NO, all the .yaml files are same for both Live & Paper
+
+Q22. Did any specific configuration key intentionally behave differently in paper vs live?
+Answer: UNKNOWN [But I can guess that no such incidents, why? since all .yaml files are same, Unless otherwise bugs/issues exists], Good catch & take a caution note in manual file
+
+Q23. Any known paper/live configuration mismatch that materially affected results?
+Answer: YES, Lot of things (Example: Broker filled prices correctly picked in Live & not in Paper; Like wise all order filling timings, P&L results due to non-availability of prices etc), But note that 'No Paper mode' in new system
+
+============================================================
+8. PRODUCTION VS TESTING
+============================================================
+
+Q24. Are you confirming Testing/Sandbox was intentionally maintained as a copy of Production configuration?: YES, Same as production system but with some changes like S&R, config.yaml settings etc
+[ ] YES
+[ ] NO
+[ ] PARTLY
+[ ] UNKNOWN
+
+Q25. Which differences were intentionally maintained between Production and Testing?
+Known historical areas include trading-hour/config changes, Chartink naming/payload differences and S&R/shadow work.
+Answer: YES, I can remember that S&R functionality, config.yaml settings, Some other bugs fixed in testing vm & not in production VM
+
+Q26. Did any Production-vs-Testing configuration difference change an actual trade decision, or were differences primarily testing/infrastructure/shadow related?
+Answer: YES, Config.yaml settings (market start time), S&R (For placing TGT and SL with applicable S&R timeframes), Some bugs fixed (their function/impact) are those things currently I'm able to remember
+
+Q27. Did Testing contain configuration files/settings that Production did not?
+Answer: NO, Why? Files are remaining same for both systems, But their edits (ie, changes/modifications) differs one system to another
+
+============================================================
+9. configURATION CHANGE GOVERNANCE
+============================================================
+
+Q28. Did you manually edit Production YAML/configuration directly on the Trading VM?
+Answer: YES, Had done those changes thru VS Code Claude (MCP) mode in some times
+
+Q29. Were Production config changes always committed to Git before deployment?
+Answer: YES, I Guess so
+
+Q30. Were there manual/uncommitted Production configuration changes?
+Answer: YES, Had such some incidents
+
+Q31. Did configuration changes normally require a service restart?
+Repository indicates load-on-startup; confirm operational practice.
+Answer: YES, Each .yaml edits (ie, changes) requires service restart for implemented impacted to be effected
+
+Q32. Was there a formal configuration-change register/approval process, or was Git/audit history the practical record?
+Answer: NO, I Guess so there is no such things exists
+
+============================================================
+10. configURATION VS RUNTIME STATE
+============================================================
+
+Q33. Which important values were dynamically calculated rather than directly read from YAML?
+Please mention only what you remember; repository reconciliation will fill the technical list.
+Answer: UNKNOWN [But I Guess: Capital flow, Order Position, TGT & SL management, etc]
+
+Q34. Which derived/config-related values were stored in SQLite?
+Answer: UNKNOWN, I Guess nothing is stored in SQLite
+
+Q35. Which broker/API values were authoritative at runtime even when YAML contained a related configured value?
+Answer: UNKNOWN
+
+============================================================
+11. CROSS-TOPIC ITEMS THAT SHOULD NOT BE LOST
+============================================================
+
+Q36. Any A-010 Secrets/Environment point from the configuration review that must be preserved?
+Answer: NO, Maintain all 'Master system control panel' settings with config.yaml and strategy/trade/signal's metadata in each strategy.yaml, But maintain all system/broker/other secrets in .evn files only [No cross-function placement or Collision etc]
+
+Q37. Any A-011 System State/Lifecycle point from configuration that must be preserved?
+Answer: UNKNOWN, Since I need to review the A-011 file for answering, So I'll answer in that file/topic
+
+Q38. Any Signals / Chartink / scanner configuration point not yet captured?
+Answer: YES, Chartink Payload contains 'Scanner name' which was created with broker id for testing vm and without in production vm, So need a uniformity whether create chartink scanners with/without broker id or any other changes inside the system so that uniformity or 'same as it is' is maintained 
+
+Q39. Any S&R / filtering / shadow configuration point not yet captured?
+Answer: In S&R requires further discuss on revising existing functionality, Filtering requiring requires 2 things: Each filtration/adapter for each strategy against current global/single mechanism then filtering condition modification or suitable filtering mechanism to be implemented from score/rank based to something else, shadow configuration also requires discussion on existing mechanism to revised one while implementing the same
+
+Q40. Any Capital / sizing / risk configuration point not yet captured?
+Answer: As discussed already: Capital requires revised capital computation along with applicable 2x-5x margin, Instead of existing standard/fixed 5x margin application, If failure of calculation or confirmation requires alerts, Pre-market opening requires collecting each stock wise margin facility from zerodha website/API mode etc...The Sizing includes application of suitable capital along with applicable margin ranging from 2x-5x, Multiplier effects on capital sizing etc...Then Risk configuration includes application of 'Tier-Multiplier' in capital/sizing etc
+
+Q41. Any Broker / Orders / Product / GTT configuration point not yet captured?
+Answer: I guess existing configuration settings needs to be reviewed to avoid duplicate, irrelevant, unused settings while implementing in new system (ie, Avoid just placeholder/duplicate settings), like wise on product type, applicable order window etc [Sorry, unable to call for new points]
+
+Q42. Any Alerts / Reports / Evidence configuration point not yet captured?
+Answer: For Alerts-Nothing is new, For Reports-Existing .csv reports generator to future Gui based report downloading, Evidence-Keep a file that notes every changes into all .yaml files and other vital information/settings changes captured
+
+Q43. Other important historical configuration point?
+Answer: Unable to call new things for configuration, But One most important requirement is "Keep the configuration file" without duplicate + irrelevant + unused/placeholder settings then secondly maintain all settings under per segment wise (ie, Settings for Intraday as below: **** & Settings for Delivery as below: ****) with clear space/area distinction instead of clumsy or consolidated things under single umbrella
+
+Additional Note: Answers mentioned for Q36-Q43 may be seems to be irrelevant wherever appears, But the core expectation is all those functions whatever requires configuration settings that should be maintained in suitable respective .yaml files by segregating into Settings for Intraday as below: **** & Settings for Delivery as below: **** [yaml files with clean & required settings for entire system functions without complicated/irrelevant/just placeholder things & suitably segregated into Intraday settings/things and Delivery settings/things etc
+
+============================================================
+12. FINAL A-009 STATUS
+============================================================
+
+Q44. After answering the above, do you want A-009:
+[ ] OPEN — more clarification needed
+[ ] CLOSED / FROZEN — ready for reconciliation + permanent manual
+
+Any specific item that must remain OPEN:
+Answer: CLOSED / FROZEN — ready for reconciliation + permanent manual
+
+============================================================
+IMPORTANT REPOSITORY FINDINGS ALREADY ESTABLISHED
+============================================================
+
+1. core/config_loader.py is the authoritative loader for the eight non-strategy
+Appconfig YAML files; it hashes raw bytes, parses with yaml.safe_load and
+validates strict Pydantic schemas. It is load-once; no hot reload.
+
+2. Strategy YAMLs are loaded separately by strategies/loader.py; invalid strategy
+YAML causes fail-fast/no partial strategy set; no hot reload.
+
+3. preflight.yaml and security.yaml are NOT part of Appconfig. They are consumed
+by separate processes. They therefore must NOT be described as two of the
+eight core application config files.
+
+4. system_config.yaml contains many global controls, including trading hours,
+broker/product mapping, capital/risk/sizing, queue, clock, kill/safety and
+delivery controls.
+
+5. scan_webhook_map.yaml maps Chartink scanner names to strategy names and is
+startup-validated against strategy YAMLs.
+
+6. scoring_weights.yaml contains secondary-screening weights and score thresholds.
+Its old tier-multiplier block is documented as deleted/dead config; the active
+position-size tier multipliers live elsewhere.
+
+7. strategy_direction_registry.yaml mirrors strategy direction/health and does
+NOT override Strategyconfig.direction.
+
+8. config_snapshotter persists the resolved runtime Appconfig, not merely raw YAML,
+as canonical JSON + SHA-256 into config_snapshots; identical date/hash is
+deduplicated, while a different hash on the same date creates another row.
+
+9. A config hash can change because raw config-file bytes changed even when values
+did not; the preserved implementation specifically notes comment-only edits
+can change file_hashes and therefore the resolved config hash.
+
+10. Production is the primary historical baseline. Sandbox/Testing remains
+comparison evidence only.
+
+END — A-009 REMAINING CLARIFICATIONS

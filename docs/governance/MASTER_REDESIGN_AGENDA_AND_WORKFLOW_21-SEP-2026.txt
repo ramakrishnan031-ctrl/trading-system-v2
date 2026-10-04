@@ -1,0 +1,754 @@
+FULL SYSTEM REDESIGN WORKFLOW + MASTER REDESIGN AGENDA
+Project: Trading System Redesign
+Production reference: trading-system-prod-snapshot
+Production baseline commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Date: 21-Sep-2026
+
+======================================================================
+PART 1 — AGREED REDESIGN METHODOLOGY
+======================================================================
+
+OBJECTIVE
+
+Before redesigning or implementing anything, completely understand the
+current Production system again and settle every important system decision
+in an orderly manner.
+
+We will NOT make random discussions by jumping between modules, files,
+functions, S&R, entry logic, capital, orders, etc.
+
+The agreed process is:
+
+CURRENT SYSTEM
+     ↓
+MASTER REDESIGN AGENDA
+     ↓
+TOPIC 1
+  Understand current behavior
+  ↓
+  Discuss KEEP / MODIFY / CHANGE / REMOVE / MERGE / SHADOW / REPLACE
+  ↓
+  Final decision
+  ↓
+  Record decision
+  ↓
+  Topic CLOSED / FROZEN
+     ↓
+TOPIC 2
+     ↓
+     ...
+     ↓
+LAST TOPIC
+     ↓
+COMPLETE DECISION SET
+     ↓
+NEW ARCHITECTURE
+     ↓
+DETAILED DESIGN
+     ↓
+IMPLEMENTATION
+     ↓
+TESTING
+     ↓
+VALIDATION
+     ↓
+DEPLOYMENT
+
+IMPORTANT:
+
+The redesign does NOT start until the complete agenda has been discussed
+and all required decisions have been settled.
+
+======================================================================
+PART 2 — HOW WE WILL STUDY THE CURRENT SYSTEM
+======================================================================
+
+The agenda should NOT be purely module-wise.
+
+It should also NOT be purely function-wise.
+
+The primary structure will be:
+
+    SYSTEM LIFECYCLE + DECISION DOMAIN
+
+with module/class/function mapping underneath each topic.
+
+Reason:
+
+A purely function-by-function review can understand code very deeply but
+can lose the business/system flow.
+
+A purely module-by-module review can understand components but can miss
+how a complete trade actually moves through the system.
+
+Therefore every agenda topic will connect:
+
+    SYSTEM RESPONSIBILITY
+        ↓
+    MODULE
+        ↓
+    CLASS
+        ↓
+    FUNCTION
+        ↓
+    INPUT
+        ↓
+    DECISION
+        ↓
+    OUTPUT
+        ↓
+    STATE CHANGE
+        ↓
+    DEPENDENCIES
+        ↓
+    FAILURE / REJECTION
+        ↓
+    FUTURE DECISION
+
+This gives both complete system understanding and code-level coverage.
+
+======================================================================
+PART 3 — STANDARD DISCUSSION TEMPLATE FOR EVERY TOPIC
+======================================================================
+
+Every agenda topic should be handled using the same structure.
+
+TOPIC: <topic name>
+
+1. CURRENT SYSTEM
+   What does Production currently do?
+
+2. CODE / MODULES
+   Which files/classes/functions implement it?
+
+3. INPUTS
+   What information enters this stage?
+
+4. PROCESS
+   What exactly happens, step by step?
+
+5. OUTPUT
+   What does the stage produce?
+
+6. STATE CHANGE
+   What is persisted or changed?
+
+7. DEPENDENCIES
+   Which other components does it depend upon?
+
+8. PROBLEMS / LIMITATIONS
+   What known problems, duplication, coupling, ambiguity or risk exist?
+
+9. REDESIGN OPTIONS
+   What could be retained, modified, replaced, merged, removed or shadowed?
+
+10. DISCUSSION
+    Discuss the alternatives and consequences.
+
+11. FINAL DECISION
+    One of:
+      KEEP
+      MODIFY
+      CHANGE
+      REMOVE
+      MERGE
+      SHADOW
+      REPLACE
+
+12. GOVERNANCE
+    Record the decision in the project-side decision register.
+
+13. STATUS
+    CLOSED / FROZEN
+
+A closed topic should not be casually reopened.
+
+If a later dependency genuinely requires reopening:
+
+    REOPENED
+    Reason:
+    Impact:
+    New decision:
+    Approval/status:
+
+======================================================================
+PART 4 — THREE CONTROL DOCUMENTS / REGISTERS
+======================================================================
+
+The redesign process should maintain three separate control records.
+
+1. MASTER REDESIGN AGENDA
+
+Purpose:
+    Defines everything that must be studied and settled.
+
+It prevents random discussion and missed topics.
+
+2. DECISION REGISTER
+
+Purpose:
+    Records final decisions permanently.
+
+Example:
+
+    A-047 — Entry Price
+    Status: CLOSED
+    Decision: <final decision>
+    Reason: <reason>
+    Affected modules: <modules>
+    Dependencies: <dependencies>
+
+3. OPEN QUESTIONS / DEPENDENCIES REGISTER
+
+Purpose:
+    Records questions that cannot yet be decided because another topic
+    must be settled first.
+
+Example:
+
+    Topic A-020
+        ↓
+    Depends on A-080
+        ↓
+    Mark BLOCKED
+        ↓
+    Continue A-021
+        ↓
+    Return to A-020 after A-080 is settled
+
+This prevents one unresolved dependency from derailing the entire agenda.
+
+======================================================================
+PART 5 — MASTER REDESIGN AGENDA
+======================================================================
+
+The following is the proposed complete agenda.
+
+--------------------------------------------------
+A. FOUNDATION / SYSTEM CONTRACT
+--------------------------------------------------
+
+A-001  System purpose
+A-002  Trading objectives
+A-003  Trading hours
+A-004  Instruments / market segments
+A-005  Capital model
+A-006  Broker model
+A-007  Product types
+A-008  Strategy model
+A-009  Configuration model
+A-010  Secrets / environment
+A-011  System states and lifecycle
+
+Goal:
+    Establish exactly what the system is supposed to do before examining
+    how individual components implement it.
+
+--------------------------------------------------
+B. COMPLETE OPERATING LIFECYCLE
+--------------------------------------------------
+
+B-001  VM / service startup
+B-002  Configuration loading
+B-003  Database / state initialization
+B-004  Broker connection
+B-005  Startup reconciliation
+B-006  Worker initialization
+B-007  Readiness / health
+B-008  Market-open operation
+B-009  Intraday operation
+B-010  EOD operation
+B-011  Shutdown
+B-012  Restart / recovery
+
+Goal:
+    Understand the complete system lifecycle from process start to
+    process termination/recovery.
+
+--------------------------------------------------
+C. SIGNAL LIFECYCLE
+--------------------------------------------------
+
+C-001  Chartink strategy / scanner
+C-002  Scanner → webhook
+C-003  Authentication
+C-004  Validation
+C-005  Deduplication
+C-006  Queue
+C-007  Signal persistence
+C-008  Signal processing
+C-009  Signal expiry
+C-010  Scanner → strategy mapping
+C-011  EOD / Daily signal routing
+
+Goal:
+    Establish exactly how an external signal becomes an internal
+    trading candidate.
+
+--------------------------------------------------
+D. TRADE DECISION ENGINE
+--------------------------------------------------
+
+D-001  Pre-filter
+D-002  Hard rejection gates
+D-003  Secondary screening
+D-004  Market-data requirements
+D-005  Candle analysis
+D-006  Formation / pattern analysis
+D-007  Timeframe analysis
+D-008  Trend / market context
+D-009  Support & Resistance
+D-010  S&R zones
+D-011  S&R strength
+D-012  S&R freshness
+D-013  Entry zone
+D-014  Breakout / breakdown conditions
+D-015  Retest / reclaim
+D-016  Entry timing
+D-017  Score / ranking
+D-018  Final Trade / Reject decision
+
+Goal:
+    Completely revisit the question:
+        "Should this signal become a trade?"
+
+This section is especially important for the known redesign concerns:
+late entry, unsuitable filtration, incorrect S&R range, and trading near
+high-of-day without adequate S&R context.
+
+--------------------------------------------------
+E. PRICE CONSTRUCTION
+--------------------------------------------------
+
+E-001  Planned Entry
+E-002  Actual Entry trigger
+E-003  Entry Buffer
+E-004  Entry Offset
+E-005  SL determination
+E-006  S&R-based SL
+E-007  Target determination
+E-008  R:R
+E-009  Price revalidation
+E-010  Fresh LTP
+E-011  Slippage handling
+E-012  Tick-size handling
+
+Goal:
+    Separate:
+        "Should we trade?"
+    from:
+        "At what price should we trade?"
+
+--------------------------------------------------
+F. CAPITAL / RISK
+--------------------------------------------------
+
+F-001  Capital definition
+F-002  Effective buying power
+F-003  Strategy risk
+F-004  Position sizing
+F-005  Lot size
+F-006  Exposure limits
+F-007  Concentration
+F-008  Portfolio limits
+F-009  Daily loss / risk
+F-010  Concurrent trades
+F-011  Capital reservation
+F-012  Capital commit
+F-013  Capital release
+F-014  Capital reconciliation
+
+Important project capital baseline:
+    Real cash capital = ₹7,000
+    Broker MIS margin facility = 5×
+    Effective intraday/MIS buying-power basis = ₹35,000
+
+This must remain explicit during redesign and must not be silently
+reinterpreted.
+
+--------------------------------------------------
+G. ORDER EXECUTION
+--------------------------------------------------
+
+G-001  Entry order type
+G-002  Broker order construction
+G-003  Order submission
+G-004  Order acknowledgement
+G-005  Partial fill
+G-006  Full fill
+G-007  Order rejection
+G-008  Timeout
+G-009  Retry
+G-010  SL placement
+G-011  Target placement
+G-012  OCO
+G-013  Order modification
+G-014  Cancellation
+G-015  Broker reconciliation
+
+Goal:
+    Define exactly how an approved trade becomes an actual broker order.
+
+--------------------------------------------------
+H. OPEN-POSITION MANAGEMENT
+--------------------------------------------------
+
+H-001  Position state machine
+H-002  SL monitoring
+H-003  Target monitoring
+H-004  Partial exits
+H-005  Manual intervention
+H-006  Broker-side changes
+H-007  Missing orders
+H-008  Orphan positions
+H-009  Emergency handling
+H-010  HARD_KILL
+H-011  EOD squareoff
+
+Goal:
+    Define what happens after entry until the position is completely
+    closed and reconciled.
+
+--------------------------------------------------
+I. SAFETY / RECOVERY
+--------------------------------------------------
+
+I-001  SOFT_KILL
+I-002  HARD_KILL
+I-003  Capital invariant
+I-004  Broker/system divergence
+I-005  Database failure
+I-006  API failure
+I-007  Market-data failure
+I-008  Webhook failure
+I-009  Process crash
+I-010  VM restart
+I-011  Network interruption
+I-012  Restart reconciliation
+I-013  Emergency recovery
+
+Goal:
+    Define how the system behaves when things go wrong.
+
+--------------------------------------------------
+J. S&R / ADVANCED ENGINES
+--------------------------------------------------
+
+J-001  Existing S&R detector
+J-002  S&R calculation
+J-003  S&R zones
+J-004  S&R strength
+J-005  S&R freshness
+J-006  S&R use in screening
+J-007  S&R use in entry
+J-008  S&R use in SL
+J-009  S&R shadow
+J-010  V3 chain
+J-011  Regime
+J-012  Allocation
+J-013  Retest / structure engines
+
+For each advanced mechanism explicitly decide:
+
+    KEEP
+    MODIFY
+    REPLACE
+    REMOVE
+    SHADOW
+
+Presence of code does not automatically mean the mechanism belongs in
+the new live decision path.
+
+--------------------------------------------------
+K. DATA / STATE / PERSISTENCE
+--------------------------------------------------
+
+K-001  Database architecture
+K-002  StateStore
+K-003  Signal state
+K-004  Order state
+K-005  Trade state
+K-006  Capital state
+K-007  Reservation state
+K-008  Audit state
+K-009  Market data
+K-010  Candle data
+K-011  Retention
+K-012  Recovery from DB
+K-013  Data consistency
+
+Goal:
+    Define what the system must remember and what constitutes the
+    authoritative state.
+
+--------------------------------------------------
+L. ALERTS / OBSERVABILITY
+--------------------------------------------------
+
+L-001  Telegram
+L-002  Email
+L-003  Critical alerts
+L-004  Warning alerts
+L-005  Operator visibility
+L-006  Logs
+L-007  Metrics
+L-008  Evidence
+L-009  Audit trail
+L-010  Dashboard
+L-011  Reports
+
+Goal:
+    Decide what operators must know immediately and what must be
+    permanently recorded for forensic analysis.
+
+--------------------------------------------------
+M. OPERATIONS
+--------------------------------------------------
+
+M-001  systemd
+M-002  cron
+M-003  deployment
+M-004  startup scripts
+M-005  token management
+M-006  health checks
+M-007  VM operation
+M-008  backup
+M-009  restore
+M-010  operational runbooks
+
+Goal:
+    Define the operational environment independently of trading logic.
+
+--------------------------------------------------
+N. TESTING / GOVERNANCE
+--------------------------------------------------
+
+N-001  Unit testing
+N-002  Integration testing
+N-003  Broker simulation
+N-004  Paper trading
+N-005  Failure testing
+N-006  Capital tests
+N-007  Order tests
+N-008  Reconciliation tests
+N-009  E2E tests
+N-010  Evidence requirements
+N-011  Go / No-Go criteria
+
+Goal:
+    Define how every redesigned component will be proven safe before
+    production.
+
+--------------------------------------------------
+O. FINAL REDESIGN
+--------------------------------------------------
+
+O-001  New architecture
+O-002  Component boundaries
+O-003  Data flow
+O-004  State machine
+O-005  Decision engine
+O-006  S&R architecture
+O-007  Capital architecture
+O-008  Order architecture
+O-009  Recovery architecture
+O-010  Deployment architecture
+O-011  Implementation sequence
+O-012  Testing sequence
+O-013  Migration strategy
+O-014  Production rollout
+
+IMPORTANT:
+    Section O is NOT discussed in detail until Sections A-N have been
+    sufficiently settled.
+
+======================================================================
+PART 6 — HOW MODULES / FUNCTIONS WILL BE HANDLED
+======================================================================
+
+Modules and functions are NOT ignored.
+
+They are mapped underneath the lifecycle agenda.
+
+For each topic we will inspect:
+
+    Repository location
+        ↓
+    File
+        ↓
+    Class
+        ↓
+    Function
+        ↓
+    Caller
+        ↓
+    Callee
+        ↓
+    Input
+        ↓
+    Decision
+        ↓
+    State mutation
+        ↓
+    Output
+        ↓
+    Error/rejection
+        ↓
+    Operational consequence
+
+This prevents us from missing important functions while avoiding a
+random file-by-file discussion.
+
+======================================================================
+PART 7 — DECISION DISCIPLINE
+======================================================================
+
+Every discussion must end with one of these outcomes:
+
+KEEP
+    Existing behavior remains substantially unchanged.
+
+MODIFY
+    Existing behavior remains but implementation/parameters/logic change.
+
+CHANGE
+    The existing business rule changes.
+
+REMOVE
+    Existing behavior is no longer required.
+
+MERGE
+    Multiple existing mechanisms become one controlled mechanism.
+
+SHADOW
+    Mechanism remains observational and does not control live decisions.
+
+REPLACE
+    Existing mechanism is replaced by a new design.
+
+DEFER
+    Decision cannot yet be made because a dependency remains unresolved.
+
+A topic marked CLOSED is considered frozen for the redesign unless
+explicitly reopened.
+
+======================================================================
+PART 8 — REQUIRED DECISION RECORD
+======================================================================
+
+For every final decision record:
+
+Agenda ID:
+Topic:
+Current Production behavior:
+Relevant modules/files:
+Current problem:
+Discussion:
+Options considered:
+Final decision:
+Reason:
+Dependencies:
+Affected components:
+Migration impact:
+Testing requirement:
+Status:
+Date:
+Approval/reference:
+
+This becomes the authoritative redesign governance record.
+
+======================================================================
+PART 9 — OVERALL REDESIGN ORDER
+======================================================================
+
+The complete project should proceed in this order:
+
+PHASE 1
+    Preserve current Production baseline.
+
+PHASE 2
+    Prepare and agree Master Redesign Agenda.
+
+PHASE 3
+    Walk through current Production system topic-by-topic.
+
+PHASE 4
+    For each topic:
+        understand
+        inspect code
+        identify problem
+        discuss alternatives
+        decide
+        record
+        freeze.
+
+PHASE 5
+    Resolve all blocked/dependent topics.
+
+PHASE 6
+    Complete final decision review.
+
+PHASE 7
+    Design NEW architecture.
+
+PHASE 8
+    Convert architecture into detailed technical design.
+
+PHASE 9
+    Define implementation sequence.
+
+PHASE 10
+    Implement.
+
+PHASE 11
+    Test unit/integration/E2E/failure/recovery behavior.
+
+PHASE 12
+    Validate against the approved decision register.
+
+PHASE 13
+    Controlled production migration/deployment.
+
+======================================================================
+PART 10 — KEY PRINCIPLE
+======================================================================
+
+The redesign should NOT be:
+
+    "Look at old code -> immediately rewrite it."
+
+It should be:
+
+    "Understand old system completely
+     -> identify what it actually does
+     -> identify what should remain
+     -> identify what must change
+     -> settle every decision
+     -> design the new system
+     -> implement only the approved design."
+
+Therefore the answer to the central planning question is:
+
+YES — the entire existing system should be covered again before the
+whole redesign is planned.
+
+But the coverage should be structured through the Master Redesign
+Agenda, not through random module/function discussions.
+
+The final objective is:
+
+    CURRENT SYSTEM FULLY UNDERSTOOD
+              +
+    ALL REDESIGN DECISIONS SETTLED
+              ↓
+       NEW ARCHITECTURE
+              ↓
+        IMPLEMENTATION
+              ↓
+           TESTING
+              ↓
+         VALIDATION
+              ↓
+         PRODUCTION
+
+END OF MASTER REDESIGN AGENDA

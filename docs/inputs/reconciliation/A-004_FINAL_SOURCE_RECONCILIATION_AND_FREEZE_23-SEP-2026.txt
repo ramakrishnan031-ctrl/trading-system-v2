@@ -1,0 +1,491 @@
+A-004 — INSTRUMENTS / MARKET SEGMENTS
+FINAL SOURCE RECONCILIATION, CLASSIFICATION & FREEZE
+Date: 23-Sep-2026
+Phase: Legacy Documentation / Phase 1
+Status: READY TO FREEZE WITH EXPLICIT UNKNOWNs
+
+PURPOSE
+This file performs the A-004 reconciliation without requiring the user to
+make technical judgments from repository evidence. User answers were treated
+as historical recollection/evidence where appropriate; repository evidence
+was used as the authoritative technical source for Production behavior.
+
+SOURCE PRIORITY
+1. Production repository = primary legacy baseline.
+2. Testing/Sandbox repository = comparison evidence only.
+3. Existing project working-tree/manual records = supporting evidence.
+4. User recollection = historical evidence, not a substitute for source code.
+
+IMPORTANT GOVERNANCE
+- The legacy system is DEAD / REFERENCE ONLY.
+- No V2 redesign is performed in this file.
+- "Remove blacklist/exclusions in the new system" is recorded only as a
+  future redesign input. It does NOT alter the legacy historical record.
+- No unsupported statement is promoted to FACT.
+
+============================================================
+1. FINAL A-004 CONCLUSION
+============================================================
+
+FROZEN LEGACY SCOPE:
+
+The legacy trading system's documented trading baseline was NSE equity
+trading through externally generated Chartink signals, using Zerodha as the
+execution broker. Both Intraday/MIS and Delivery/CNC behavior were configured,
+and Delivery/CNC was historically active according to the user's direct
+contract-note evidence.
+
+The repository evidence establishes that the instrument-reference pipeline
+was NOT simply "all Zerodha instruments". Production builds
+config/instruments.csv from an NSE security master restricted to equity
+series, sector/index reference data, F&O-symbol reference data, and the
+Zerodha Kite instrument dump. The resulting file is loaded at startup and
+used by downstream components.
+
+Therefore the previous user answer "all Zerodha NSE equity instruments" is
+NOT retained as an exact technical fact. The safer historical classification
+is:
+
+"Production used a centrally built NSE-equity-oriented instrument reference
+file; the exact historically eligible trading universe is not established
+as literally every Zerodha NSE equity instrument."
+
+A Production-level excluded_symbols list existed and was rejected at the
+webhook edge. This directly contradicts the original answer "No blacklist".
+The correct legacy record is that explicit symbol exclusions existed.
+
+The requested future V2 preference to remove this type of static blacklist
+is recorded separately and does not change the legacy manual.
+
+============================================================
+2. BLACKLIST / EXCLUSION — FINAL RECONCILIATION
+============================================================
+
+USER ANSWER:
+"Nope."
+
+PRODUCTION EVIDENCE:
+system_config.yaml contains:
+
+excluded_symbols:
+  E2E
+  GVPIL
+  BIRLACABLE
+  SHANKARA
+  MCLEODRUSS
+
+The configuration comment identifies this as a symbol exclusion list and
+states that excluded symbols are rejected at the webhook edge.
+
+FINAL CLASSIFICATION:
+FACT:
+A Production symbol exclusion mechanism existed.
+
+FACT:
+The five symbols above were present in the reviewed Production configuration.
+
+FACT:
+The exclusion was applied at webhook edge according to the configuration
+comment.
+
+UNKNOWN / NOT ESTABLISHED:
+The exact historical start date, original reason for each symbol, and whether
+the list was unchanged throughout the entire legacy lifetime are not fully
+established by the evidence reviewed here.
+
+KNOWN HISTORICAL CHARACTER:
+This was a static symbol-exclusion mechanism. It must not be described as
+"no blacklist".
+
+V2 INPUT ONLY:
+User explicitly states that the new system should remove this kind of
+static blacklist. This is NOT a legacy behavior decision and is not applied
+to the legacy manual.
+
+============================================================
+3. EXCHANGE SCOPE
+============================================================
+
+USER ANSWER:
+NSE.
+
+REPOSITORY EVIDENCE:
+Production system overview describes NSE trading and the external signal path
+is Chartink -> webhook. Zerodha instrument refresh builds an NSE-equity
+reference set and the Kite lookup is explicitly restricted to NSE / NSE-EQ.
+
+FINAL CLASSIFICATION:
+FACT:
+NSE is the documented Production market/exchange baseline.
+
+HISTORICAL:
+User states the system actually traded NSE only.
+
+UNKNOWN / NOT ESTABLISHED:
+A complete historical proof covering every past commit and every possible
+broker/API-recognized exchange is not established.
+
+No evidence reviewed establishes historical BSE, CDS, BFO, MCX or other
+exchange trading.
+
+============================================================
+4. INSTRUMENT TYPE / MARKET SEGMENT
+============================================================
+
+USER ANSWER:
+NSE cash equity only; F&O not traded.
+
+REPOSITORY EVIDENCE:
+Production instrument builder:
+- loads NSE security master rows whose series is in {eq, be, n, bt, il}
+- builds sector metadata
+- loads fno_symbols.csv as reference data
+- indexes the Kite dump while keeping segment NSE / NSE-EQ
+- writes config/instruments.csv
+
+The system overview separately records an NSE F&O ban-list fetch, but this
+does NOT prove F&O trading.
+
+FINAL CLASSIFICATION:
+
+NSE equity:
+HISTORICAL / FACTUAL BASELINE — supported by the Production architecture and
+user's historical statement.
+
+NSE index:
+NOT ESTABLISHED AS TRADED.
+Production contains an index-level regime component, including NIFTY 50
+metadata, but this is not proof that the index itself was traded.
+
+NSE futures:
+NOT ESTABLISHED AS TRADED.
+Reference data and F&O ban handling exist; these do not prove orders.
+
+NSE stock/index options:
+NOT ESTABLISHED AS TRADED.
+
+BSE:
+NOT ESTABLISHED AS TRADED.
+
+Currency derivatives:
+NOT ESTABLISHED AS TRADED.
+
+Commodity futures/options:
+NOT ESTABLISHED AS TRADED.
+
+IMPORTANT:
+The user's statement "No F&O trade/code exists" is too strong and is NOT
+retained. Repository evidence contains F&O-related reference/configuration
+components. The correct statement is:
+"F&O trading is not established; F&O-related reference/configuration code
+exists."
+
+============================================================
+5. EQUITY UNIVERSE
+============================================================
+
+USER ANSWER:
+"All Zerodha NSE equity instruments."
+
+REPOSITORY EVIDENCE:
+scripts.refresh_instruments builds config/instruments.csv by merging:
+1. NSE security master — equity series only
+2. sector/index reference data
+3. fno_symbols.csv reference data
+4. Zerodha Kite instrument dump restricted to NSE / NSE-EQ
+
+Missing Kite matches receive token=0, lot_size=1 and tick_size=0.05 and are
+reported as missing during the build.
+
+FINAL CLASSIFICATION:
+FACT:
+A centrally built instrument reference file existed:
+config/instruments.csv.
+
+FACT:
+It was not simply an unfiltered copy of the complete Zerodha instrument
+dump.
+
+UNKNOWN / NOT ESTABLISHED:
+The exact set of rows historically eligible for actual entry across every
+strategy and date.
+
+UNKNOWN / NOT ESTABLISHED:
+Whether every row in the generated file was eligible for both MIS and CNC
+without additional downstream restrictions.
+
+Therefore the phrase "all Zerodha NSE equity instruments" is replaced in the
+legacy manual with the more precise statement above.
+
+============================================================
+6. WHITELIST / BLACKLIST
+============================================================
+
+WHITELIST:
+No separate positive whitelist was established from the reviewed evidence.
+
+BLACKLIST / EXCLUSION:
+A symbol exclusion list definitely existed in Production.
+
+This is a direct correction to the submitted answer.
+
+============================================================
+7. F&O / DERIVATIVES
+============================================================
+
+USER ANSWER:
+No F&O trading.
+
+FINAL CLASSIFICATION:
+HISTORICAL USER STATEMENT:
+User states no F&O orders were traded.
+
+REPOSITORY FACT:
+F&O-related reference/configuration exists, including fno_symbols reference
+data and an NSE F&O ban-list fetch.
+
+NOT ESTABLISHED:
+Actual historical F&O order execution is not proven by the reviewed
+repository evidence.
+
+Therefore:
+"F&O trading: NOT ESTABLISHED AS ACTUAL TRADING; no evidence reviewed here
+proves historical F&O order execution."
+
+Do not write "no F&O code exists."
+
+============================================================
+8. DELIVERY / CNC
+============================================================
+
+PRODUCTION CONFIG:
+trade_type = BOTH
+force_intraday_only = false
+delivery_enabled = true
+Zerodha DELIVERY -> CNC
+
+USER HISTORICAL EVIDENCE:
+User personally observed Zerodha contract-note confirmations for Delivery
+trades.
+
+FINAL CLASSIFICATION:
+FACT/CONFIGURED:
+Delivery/CNC was configured in Production.
+
+HISTORICAL:
+Delivery/CNC was actually used, based on user's direct contract-note
+observation.
+
+UNKNOWN:
+Exact complete historical Delivery universe and whether every instrument in
+the common reference file was eligible for Delivery.
+
+The user's statement that Intraday and Delivery used one common instrument
+file is consistent with the centralized Production instrument file, but the
+exact downstream eligibility path remains a source-code topic for the order
+and broker chapters.
+
+============================================================
+9. COVER ORDER / BRACKET ORDER
+============================================================
+
+Production product map:
+INTRADAY -> MIS
+DELIVERY -> CNC
+COVER_ORDER -> CO
+BRACKET_ORDER -> empty / unsupported
+
+FINAL CLASSIFICATION:
+CO actual historical use: UNKNOWN / NOT ESTABLISHED.
+BO actual historical use: UNKNOWN / NOT ESTABLISHED.
+BRACKET_ORDER actual historical use: NOT SUPPORTED BY CURRENT CONFIGURATION.
+
+Do not infer CO/BO trading merely from broker-side pending SL/TGT appearance.
+
+============================================================
+10. INSTRUMENT MASTER LIFECYCLE
+============================================================
+
+SOURCE:
+Zerodha Kite instrument dump + NSE/reference data.
+
+FETCH / BUILD:
+scripts/refresh_instruments.py
+
+SCHEDULE:
+09:00 IST weekday refresh.
+
+OUTPUT:
+config/instruments.csv
+
+BUILD LOGIC ESTABLISHED:
+- NSE security master filtered to equity series
+- sector/index reference mapping
+- F&O symbol reference set
+- Kite dump restricted to NSE / NSE-EQ
+- merge
+- missing-token detection
+- atomic CSV replacement
+- post-write freshness assertion
+
+STARTUP:
+main.py pre-loads config/instruments.csv during startup.
+
+UNKNOWN / NOT ESTABLISHED:
+Exact signal-to-instrument lookup function/key and complete invalid-symbol
+rejection path remain to be documented in the detailed signal/order
+chapters.
+
+============================================================
+11. STRATEGY RELATIONSHIP
+============================================================
+
+USER ANSWER:
+16 strategies: 10 intraday, 5 delivery, 1 placeholder; one side per
+strategy.
+
+FINAL CLASSIFICATION:
+The user-provided strategy count is retained as HISTORICAL USER/RECORD
+INFORMATION pending exact enumeration in the strategy chapter.
+
+The existence of separate strategy intent and delivery/intraday configuration
+is supported by Production config and repository architecture.
+
+Do not infer a unique instrument universe per strategy without inspecting
+each strategy YAML.
+
+============================================================
+12. PRODUCTION VS TESTING
+============================================================
+
+USER ANSWER:
+Mostly same, with S&R and config differences.
+
+REPOSITORY FACT:
+Production and Sandbox are separate repository snapshots with materially
+different repository histories and contents.
+
+FINAL CLASSIFICATION:
+UNKNOWN / NOT ESTABLISHED:
+A complete A-004-only equivalence/difference matrix between Production and
+Sandbox has not been established.
+
+Production remains the baseline.
+
+No Sandbox difference is allowed to overwrite Production history.
+
+============================================================
+13. HISTORICAL CHANGES
+============================================================
+
+The submitted answers about "exchange fixed", "segment/delivery changed",
+and "instrument lookup unchanged" are NOT accepted as proven historical
+change records because DATE / COMMIT / BEFORE / AFTER evidence was not
+provided.
+
+FINAL CLASSIFICATION:
+OPEN QUESTION:
+Exact historical change timeline for exchange, segment, Delivery enablement,
+F&O handling, product behavior, universe and lookup.
+
+This will be captured as historical unknown rather than guessed.
+
+============================================================
+14. KNOWN DEFECTS
+============================================================
+
+No additional A-004 defect is declared solely from the user's answers.
+
+The existence of exclusions is not itself classified here as a defect.
+
+Potential instrument/lookup defects remain:
+UNKNOWN / NOT ESTABLISHED.
+
+============================================================
+15. FINAL FACT / UNKNOWN / INTERPRETATION TABLE
+============================================================
+
+FACT
+- Production baseline is NSE-oriented.
+- External Chartink webhook is the signal ingress.
+- Zerodha is the execution broker.
+- Production has a centralized config/instruments.csv reference file.
+- refresh_instruments.py builds that file.
+- Production Kite lookup is restricted to NSE / NSE-EQ.
+- Production contains explicit excluded_symbols.
+- Delivery/CNC is configured.
+- Production contains F&O-related reference/configuration components.
+- BRACKET_ORDER is empty/unsupported in current Production config.
+
+HISTORICAL
+- User reports actual NSE equity trading.
+- User reports actual Delivery/CNC trading based on Zerodha contract notes.
+- User reports no actual F&O trading.
+- User reports 16 strategies with the stated intent split.
+
+UNKNOWN / NOT ESTABLISHED
+- Every individual instrument actually traded historically.
+- Exact strategy-to-instrument restrictions.
+- Exact signal-to-token lookup key/path.
+- Exact invalid-symbol rejection behavior.
+- Actual historical CO use.
+- Actual historical BO use.
+- Exact historical F&O order absence across all history.
+- Complete Production-vs-Sandbox A-004 difference matrix.
+- Exact historical change timeline.
+
+INTERPRETATION
+- The centralized instrument file appears to be a shared reference layer;
+  this is an architectural interpretation, not proof of unrestricted
+  trade eligibility.
+
+KNOWN DEFECT
+- No new A-004 defect is declared without evidence.
+
+OPEN QUESTION
+- Historical evolution of the instrument universe and exclusion list.
+
+============================================================
+16. A-004 FREEZE DECISION
+============================================================
+
+DECISION:
+READY TO FREEZE WITH EXPLICIT UNKNOWNs.
+
+Reason:
+The major historical scope can now be recorded without relying on guesses.
+Remaining unknowns are explicitly bounded and will not be silently converted
+into facts.
+
+The permanent manual may therefore state the established legacy baseline and
+carry unresolved items into the appropriate later chapters/registers.
+
+============================================================
+17. V2 INPUT — RECORDED BUT NOT DESIGNED HERE
+============================================================
+
+User instruction:
+"The new system should remove this kind of blacklist."
+
+Classification:
+FUTURE / V2 DESIGN INPUT ONLY.
+
+No V2 mechanism, replacement rule, filtering design or architecture is
+specified here.
+
+============================================================
+18. SOURCE REFERENCES
+============================================================
+
+Primary / reviewed evidence:
+- Production GitHub repository:
+  trading-system-prod-snapshot
+- Testing/Sandbox GitHub repository:
+  trading-system-sbx-snapshot
+- Production config/system_config.yaml
+- 01_SYSTEM_OVERVIEW.md
+- 02_REPOSITORY_AND_FILE_MAP.md
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- A-004 completed discussion checklist
+
+END OF A-004 RECONCILIATION

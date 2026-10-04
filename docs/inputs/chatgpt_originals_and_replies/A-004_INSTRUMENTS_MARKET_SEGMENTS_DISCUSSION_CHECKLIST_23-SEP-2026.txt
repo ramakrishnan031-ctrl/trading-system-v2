@@ -1,0 +1,505 @@
+A-004 — INSTRUMENTS / MARKET SEGMENTS
+DISCUSSION CHECKLIST — LEGACY SYSTEM DOCUMENTATION / PHASE 1
+Date: 23-Sep-2026
+
+OBJECTIVE
+Establish, discuss and freeze the factual historical instrument universe and
+market-segment scope of the DEAD legacy system.
+
+GOVERNANCE
+This is a discussion document only.
+Do NOT redesign the instrument model.
+Do NOT decide what V2 should trade.
+Do NOT assume broker capabilities equal actual legacy usage.
+Do NOT treat code presence as proof of live usage.
+For every answer distinguish:
+FACT / HISTORICAL / UNKNOWN / NOT ESTABLISHED / INTERPRETATION /
+KNOWN DEFECT / OPEN QUESTION.
+
+SOURCE BASIS
+PRIMARY:
+1. Production GitHub:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+2. Testing/Sandbox GitHub:
+https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+
+RULE:
+Production is the primary legacy baseline.
+Testing/Sandbox is comparison evidence only.
+A Sandbox difference must NOT overwrite the Production baseline.
+
+CURRENT SOURCE OBSERVATIONS — DO NOT TREAT AS FINAL UNTIL YOU REPLY
+
+The Production README describes the system as an NSE intraday trading system
+and the repository architecture includes broker, data, strategies, capital,
+orders and screening components.
+
+Production config currently contains:
+- broker.primary = zerodha
+- broker.fallback = angelone
+- fallback_enabled = false
+- trade_type = BOTH
+- force_intraday_only = false
+- delivery_enabled = true
+- Zerodha product map:
+    INTRADAY -> MIS
+    DELIVERY -> CNC
+    COVER_ORDER -> CO
+    BRACKET_ORDER -> unsupported/empty
+- capital leverage map includes INTRADAY 5.0, COVER_ORDER 6.0,
+  DELIVERY 1.0 and BRACKET_ORDER 5.0.
+
+IMPORTANT:
+These configuration entries prove configured capability/configuration.
+They do NOT by themselves prove which instrument universe or segment was
+actually traded historically.
+
+A-004 QUESTIONS
+
+======================================================================
+1. MARKET / EXCHANGE SCOPE
+======================================================================
+
+Q1. What exchanges did the legacy system actually support?
+
+Please classify separately:
+- NSE
+- BSE
+- NFO
+- CDS
+- BFO
+- MCX
+- any other
+
+Answer: NSE
+
+Q2. What exchanges were actually traded, versus merely recognized by
+Zerodha/API code?
+
+Answer:
+
+Q3. Was the historical trading universe:
+- NSE cash equity only?
+- NSE equity + derivatives?
+- Multiple exchanges?
+- Something else?
+
+Answer: NSE cash equity only
+
+======================================================================
+2. INSTRUMENT TYPE SCOPE
+======================================================================
+
+For each, determine whether it was:
+
+A. ACTUALLY TRADED
+B. SUPPORTED BUT NOT ESTABLISHED AS TRADED
+C. CODE/CONFIG ONLY
+D. EXPLICITLY EXCLUDED
+E. UNKNOWN
+
+| Instrument | Classification | Evidence / explanation |
+|-----------|----------------|------------------------|
+| NSE equity / EQ | | |
+| NSE index | | |
+| NSE futures | | |
+| NSE stock options | | |
+| NSE index options | | |
+| BSE equity | | |
+| Currency derivatives | | |
+| Commodity futures | | |
+| Commodity options | | |
+| Any other | | |
+
+Answer: UNKNOWN [But I Guess NSE Equity only, Why? chartink website supports to fire 'NSE - Equity signals' only]
+
+======================================================================
+3. EQUITY SEGMENT
+======================================================================
+
+Q1. If NSE equity was the actual legacy universe, what exactly was included?
+
+Examples requiring source verification:
+- EQ instruments
+- SME instruments
+- ETFs
+- indices
+- special series
+- suspended/excluded symbols
+- other instrument types
+
+Do NOT infer from general NSE knowledge.
+
+Answer: Zerodha instrument contains with EQ+SME+ETF [Better search internet for full informations], But I can say there is no indices traded as of now, Maybe Chartink won't supports Indices [Since System 100% relied or consumer of Chartink signals only, No internal signal generation mechanism exits]
+
+Q2. Was the universe "all Zerodha NSE equity instruments" or a filtered/
+curated subset?
+
+Answer: all Zerodha NSE equity instruments, Sure? Yes: since system design is Once chartink fires signals>validated>analysed>before initiating traded checked with zerodha instruments, So Zerodha instrument exists only to check the symbol & other metadata relevant for initiating entry order
+
+Q3. Was there a system-level whitelist/universe?
+
+Answer: Nope
+
+Q4. Was there a blacklist/exclusion list?
+
+Production config currently shows an excluded_symbols list. Determine:
+- source
+- consumer
+- whether it applies at webhook edge or later
+- whether it is historical/live behavior or configuration only.
+
+Answer: Nope
+
+======================================================================
+4. F&O / DERIVATIVES
+======================================================================
+
+The project records contain references to F&O elsewhere, but A-004 must
+establish what THIS legacy system actually traded.
+
+Q1. Did the legacy production system actually place NSE F&O orders?
+
+Answer: No, Why? chartink website supports to fire 'NSE - Equity signals' only
+
+Q2. If yes:
+- Futures?
+- Index options?
+- Stock options?
+- Which product?
+- MIS / NRML / other?
+- Which strategies?
+
+Answer: Not Applicable, Why? NSE-Equity only traded as of now
+
+Q3. If F&O existed only in code/config/documentation, classify it explicitly
+as NOT ESTABLISHED rather than assuming it was traded.
+
+Answer: No F&O trade/Code exists, Sure? yes with 2 things System is 100% consumer of chartink website which supports only NSE-Equity & There is no Code exits for expiry/Greek calculations (ie, 100% chartink dependant+No Greek or Internal candle database exits)
+
+======================================================================
+5. DELIVERY / CNC
+======================================================================
+
+Production config currently shows:
+- trade_type = BOTH
+- delivery_enabled = true
+- force_intraday_only = false
+- DELIVERY -> CNC
+
+Q1. Does this establish that CNC/Delivery was historically active in
+Production?
+
+Answer: Yes, Both Intraday and Delivery actively traded
+
+Q2. What evidence proves actual Delivery/CNC orders or positions?
+
+Answer: I myself personally confirming it without any confusion, why? I had seen the confirmations from every contract notes of Zerodha
+
+Q3. Were Delivery instruments the same NSE equity universe as MIS, or was
+there a separate universe/filter?
+
+Answer: There is no classification/segregation about universe, Only one single instrument file which is used for Intraday and Delivery simultaneously
+
+Q4. Did Delivery support overnight positions?
+
+Answer: Yes, Once Delivery order passed thru 'GTT Window' then Zerodha takes care of remaining things like SL/TGT, Only thing is DDPI activation mandatory for automated next day selling of holdings
+
+======================================================================
+6. COVER ORDER / OTHER PRODUCTS
+======================================================================
+
+Production product_map contains:
+- COVER_ORDER -> CO
+- BRACKET_ORDER -> empty / unsupported.
+
+Q1. Did the legacy system actually use CO?
+
+Answer: I Guess yes, why? I can able to see that 'Once position' is appears in broker's books then relevant TGT & SL orders also appears in 'Pending Orders' as a part of 'Open Position Order's extended leg' [Mark it as UNKNOWN/Check Required]
+
+Q2. Did it actually use BO?
+
+Answer: I guess yes, but mark it as 'UNKNOWN/Check Required'
+
+Q3. Was BRACKET_ORDER merely retained as a broker/API compatibility field?
+
+Answer: I guess yes, but mark it as 'UNKNOWN/Check Required'
+
+======================================================================
+7. INSTRUMENT MASTER
+======================================================================
+
+Trace the actual instrument-master lifecycle.
+
+SOURCE
+→ API/source
+→ download/fetch
+→ file/database/cache
+→ normalization
+→ lookup
+→ validation
+→ consumer
+
+Q1. Which Zerodha instrument endpoint/source was used?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q2. When was the instrument master refreshed?
+
+Answer: At 09:00am IST [Module: cron: refresh_instruments]
+
+Q3. Where was it stored?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q4. Which fields were used by the system?
+
+At minimum investigate:
+- instrument_token
+- exchange_token
+- tradingsymbol
+- name
+- expiry
+- strike
+- tick_size
+- lot_size
+- instrument_type
+- segment
+- exchange
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q5. What key was used to identify an instrument?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q6. What happened when a signal referenced an unknown/invalid symbol?
+
+Answer: I Guess, Order won't be processed [but mark it as 'UNKNOWN/Check Required']
+
+======================================================================
+8. SIGNAL → INSTRUMENT RESOLUTION
+======================================================================
+
+Trace:
+
+Chartink signal
+→ symbol received
+→ symbol normalization
+→ instrument lookup
+→ exchange/segment validation
+→ tradability validation
+→ downstream screening/order path
+
+Q1. What exact signal field represented the instrument?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q2. Was exchange supplied by Chartink or inferred by the system?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+Q3. Was instrument_token resolved before quote/order operations?
+
+Answer: Yes, Instruments getting refreshed/pulled at 09:00am [Before market opening]
+
+Q4. What happened on lookup failure?
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+======================================================================
+9. EXCHANGE / SEGMENT GUARDS
+======================================================================
+
+Identify every guard preventing an instrument from reaching trading.
+
+Examples only — do not assume:
+- exchange guard
+- instrument-type guard
+- product guard
+- symbol exclusion
+- MIS-tradability guard
+- delivery capability guard
+- strategy intent guard
+- broker rejection
+
+For each:
+
+GUARD:
+SOURCE:
+INPUT:
+LOGIC:
+OUTPUT:
+NEXT CONSUMER:
+
+Answer: Since it is automated pulling (Zerodha Instruments), I'm unaware, So mark it as 'UNKNOWN/Check Required'
+
+======================================================================
+10. STRATEGY → INSTRUMENT RELATIONSHIP
+======================================================================
+
+Q1. Did strategies declare their intended product/instrument type?
+
+Answer: Yes, But for additional informations check the all the strategies.yaml files located at 'https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/tree/main/config/strategies/<16 .yaml files exists>'
+
+Q2. Did strategy YAMLs contain:
+- instrument restrictions?
+- exchange restrictions?
+- product intent?
+- delivery/intraday intent?
+- per-strategy universe?
+
+Answer: For full informations check at 'https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/tree/main/config/strategies/<16 .yaml files exists>'
+
+Q3. Could one strategy trade both MIS and Delivery?
+
+Answer: Nope, There are 16 strategies out of which 10 strategies relating to 'Intraday' and 5 relating to Delivery and another 1 is placeholder, but mentioned as Intraday, Again all these trades/generates only one side signal either 'Long or Short' in each of 16 strategies
+
+Q4. Was the instrument universe global or strategy-specific?
+
+Answer: Zerodha Instrument is Global (ie, Only one signal files used by all the strategies/Signals for placing order)
+
+======================================================================
+11. BROKER CAPABILITY VS SYSTEM CAPABILITY
+======================================================================
+
+Separate these carefully:
+
+BROKER/API CAN SUPPORT
+vs
+SYSTEM CONFIGURED TO SUPPORT
+vs
+CODE CAN PROCESS
+vs
+STRATEGY CAN REQUEST
+vs
+ACTUALLY TRADED.
+
+For every non-equity segment found, classify it using these five levels.
+
+Answer: Yes, Non-Equity was already traded (Example: Silver ETF, Gold ETF etc), But F&O or Indices not traded as of now, May be Chartink won't fires those instruments or something else I'm unaware of it
+
+======================================================================
+12. PRODUCTION VS TESTING VM DIFFERENCES
+======================================================================
+
+Compare the two repositories only for A-004-relevant differences.
+
+Check:
+- exchange scope
+- instrument scope
+- product map
+- trade_type
+- delivery_enabled
+- force_intraday_only
+- symbol exclusions
+- instrument-master handling
+- broker adapter
+- strategy instrument restrictions
+- test-only instruments/config
+- any Sandbox-only segment.
+
+Answer: Both Trading and Sandbox VM is same as it is, But where is the difference? As I known things are: S&R fixation, Config.yaml settings applied on each [2 things only that too I Guess]
+
+======================================================================
+13. HISTORICAL CHANGES
+======================================================================
+
+Identify evidence-backed historical changes such as:
+- segment enabled/disabled
+- delivery enabled/disabled
+- F&O introduced/removed
+- exchange changed
+- product changed
+- universe changed
+- instrument lookup changed.
+
+For each:
+DATE / COMMIT:
+CHANGE:
+BEFORE:
+AFTER:
+EVIDENCE:
+RUNTIME IMPACT:
+
+Answer: Exchange is unchangeable (NSE is fixed), Segment and deliver changed (enabled/disabled), F&O not allowed (No chartink support & Internal signal generation/Greek Calculation not possible), Product can't be changed (Equity/SME/ETF etc), Instrument lookup as of now not yet changed, Universe no idea
+
+======================================================================
+14. KNOWN DEFECTS / LIMITATIONS
+======================================================================
+
+Only record evidence-backed defects.
+
+Potential areas:
+- wrong segment resolution
+- symbol ambiguity
+- stale instrument master
+- missing instruments
+- excluded valid symbols
+- unsupported products reaching downstream
+- delivery/intraday mismatch
+- broker capability mismatch
+- instrument-token mismatch
+- testing/production divergence.
+
+Answer: No idea, So mark it as UNKNOWN or Need to review in new system implementation
+
+======================================================================
+15. REQUIRED FINAL CLASSIFICATION
+======================================================================
+
+Please classify each major conclusion:
+
+FACT:
+HISTORICAL:
+UNKNOWN / NOT ESTABLISHED:
+INTERPRETATION:
+KNOWN DEFECT:
+OPEN QUESTION:
+
+Answer: 
+
+======================================================================
+16. A-004 FREEZE DECISION
+======================================================================
+
+Before the permanent manual is written, confirm:
+
+A. Exchange scope
+B. Market-segment scope
+C. Instrument-type scope
+D. Actual traded universe
+E. Supported-but-not-proven universe
+F. Explicit exclusions
+G. Instrument master source
+H. Instrument master storage
+I. Instrument resolution
+J. Instrument validation
+K. Strategy/instrument relationship
+L. Product/instrument relationship
+M. Production vs Testing differences
+N. Historical changes
+O. Known defects
+P. Unknowns/open questions
+
+FINAL DECISION:
+A-004 READY TO FREEZE / NOT READY TO FREEZE
+
+======================================================================
+IMPORTANT GOVERNANCE
+======================================================================
+
+- Do NOT design V2 here.
+- Do NOT propose a new instrument universe.
+- Do NOT say what SHOULD be traded.
+- Do NOT assume F&O because F&O code/config exists.
+- Do NOT assume Delivery was active merely because delivery_enabled=true.
+- Do NOT assume Zerodha's full instrument list equals the system's actual
+  trading universe.
+- Do NOT silently reconcile Production and Testing differences.
+- Production is the legacy baseline; Testing is comparison evidence.
+- If source evidence cannot establish actual historical trading, write
+  UNKNOWN / NOT ESTABLISHED.
+
+END OF A-004 DISCUSSION CHECKLIST

@@ -1,0 +1,202 @@
+A-007 — PRODUCT TYPES
+FINAL SOURCE RECONCILIATION & FREEZE
+Date: 27-Sep-2026
+Status: CLOSED / FROZEN — LEGACY DOCUMENTATION RECORD
+
+1. SCOPE
+This record documents the DEAD legacy product-type model. It does not design V2.
+Evidence is classified as FACT, HISTORICAL USER EVIDENCE, UNKNOWN / NOT ESTABLISHED,
+KNOWN LIMITATION, CURRENT EXTERNAL BROKER FACT, or FUTURE V2 INPUT.
+
+2. EVIDENCE BASIS
+Primary: preserved Production repository/deep-working-tree evidence.
+Comparison: preserved Testing/Sandbox evidence.
+Key evidence: broker/product_resolver.py, broker/zerodha_adapter.py,
+orders/full_entry_engine.py, orders/order_protocol_co.py, orders/eod_squareoff.py,
+orders/mis_autosquareoff.py, orders/cnc_gtt.py, orders/cnc_gtt_monitor.py,
+core/constants.py, capital/position_sizer.py, config/strategies/*.yaml and
+system configuration.
+User historical evidence: MIS and CNC actually traded; GTT worked correctly;
+contract notes available; CO/BO historical intraday mechanism not recalled;
+NRML believed never used; paper/live semantics were not reliable.
+
+3. FROZEN PRODUCT INVENTORY
+INTRADAY/MIS: IMPLEMENTED and ACTUALLY TRADED (historical user evidence).
+DELIVERY/CNC: IMPLEMENTED and ACTUALLY TRADED (historical user evidence).
+COVER_ORDER/CO: IMPLEMENTED; actual Production use UNKNOWN.
+BRACKET_ORDER/BO: internal intent exists; configured broker mapping empty/
+unsupported; actual Production use UNKNOWN.
+NRML/DELIVERY: recognised by reverse mapping; actual use UNKNOWN.
+GTT: broker-side Delivery protection mechanism, not treated as a product code;
+user confirms GTT worked correctly.
+
+4. SEMANTIC INTENT VS BROKER PRODUCT
+Preserved PRODUCT_TO_INTENT:
+MIS -> INTRADAY; CO -> COVER_ORDER; CNC -> DELIVERY; NRML -> DELIVERY.
+Preserved configured mapping:
+INTRADAY -> MIS; DELIVERY -> CNC; COVER_ORDER -> CO; BRACKET_ORDER -> empty/unsupported.
+FACT: a semantic translation layer exists.
+UNKNOWN: whether ProductResolver was universally the sole translation point or
+whether every historical caller avoided direct broker product literals.
+
+5. STRATEGY PRODUCT CLASSIFICATION
+User states each strategy has Product Type = INTRADAY or DELIVERY/Position and
+Direction = LONG or SHORT, with one product classification per strategy.
+Strategy YAMLs exist under config/strategies/*.yaml.
+FACT: strategy configuration contains product classification/direction.
+UNKNOWN: whether any runtime exception could override classification.
+
+6. MIS / INTRADAY
+FACT: MIS maps to INTRADAY; intraday capital treatment exists; MIS is eligible
+for emergency/EOD flatten; dedicated MIS auto-squareoff/EOD handling exists.
+HISTORICAL USER EVIDENCE: MIS actually traded and was intended to close same day.
+HISTORICAL USER EVIDENCE: intraday margin differed by stock/category.
+Legacy leverage_map value 5.0 is documented as legacy implementation behavior,
+not a universal V2 margin rule.
+
+7. CNC / DELIVERY / GTT
+FACT: CNC maps to DELIVERY; CNC is deliberately absent from the emergency
+flatten set; EOD intraday squareoff does not flatten CNC; Delivery has a
+broker-side GTT path; CncGttMonitor reconciles broker GTT state.
+HISTORICAL USER EVIDENCE: CNC/Delivery actually traded; GTT worked correctly;
+Delivery could remain overnight; manual exits were possible; manual exits were
+later detected/reconciled by cnc_gtt_monitor.
+
+8. CO / COVER ORDER
+FACT: CO maps to COVER_ORDER; dedicated CO protocol exists; CO uses broker
+variety "co"; CO has dedicated cancellation/squareoff handling and is in the
+emergency flatten set.
+HISTORICAL USER EVIDENCE: user remembers automated intraday TGT/SL behavior but
+cannot recall whether the actual legacy entry mechanism was CO or BO.
+FINAL CLASSIFICATION: actual historical CO use UNKNOWN / NOT ESTABLISHED.
+
+9. BO / BRACKET ORDER
+FACT: BRACKET_ORDER exists internally; legacy leverage-map entry exists;
+configured broker mapping is empty/unsupported.
+FINAL CLASSIFICATION: actual historical BO use UNKNOWN / NOT ESTABLISHED.
+Do not infer historical use from code presence.
+
+10. NRML
+FACT: NRML -> DELIVERY is recognised by PRODUCT_TO_INTENT.
+HISTORICAL USER EVIDENCE: user believes NRML was never submitted and associates
+Delivery with GTT.
+FINAL CLASSIFICATION: actual NRML use UNKNOWN / NOT ESTABLISHED.
+
+11. PRODUCT VS ORDER TYPE / VARIETY
+Product is distinct from MARKET/LIMIT/SL/SL-M. Repository order paths carry
+intent and entry_order_type. CO handling uses variety="co" while regular
+modification uses variety="regular". Exact historical compatibility matrix
+and universal enforcement are UNKNOWN and are carried to Order Processing.
+
+12. PRODUCT VS CAPITAL
+Legacy configuration contains INTRADAY 5.0, CO 6.0, DELIVERY 1.0,
+BRACKET_ORDER 5.0. These are legacy configuration values only. A-005's
+broker-margin V2 model remains authoritative for future design.
+
+13. PRODUCT VS EXIT/PROTECTION
+MIS: intraday, EOD/squareoff eligible, emergency flatten eligible.
+CO: intraday, dedicated handling, emergency flatten eligible.
+CNC: Delivery, excluded from intraday emergency/EOD flatten, GTT protection,
+overnight lifecycle.
+BO: internal intent, unsupported configured broker mapping, use unknown.
+NRML: recognised as Delivery, use unknown.
+
+14. POSITION IDENTITY
+HISTORICAL USER EVIDENCE: legacy followed "One Symbol, One Segment
+(Intraday/GTT), One Direction"; same symbol could therefore exist separately
+in Intraday and Delivery.
+FUTURE V2 INPUT only: "One Symbol once per day only." This is NOT legacy fact.
+
+15. PAPER VS LIVE
+FACT: broker adapter contains live and paper paths.
+HISTORICAL USER EVIDENCE: paper/live product behavior had price/time and other
+issues. Therefore legacy paper fidelity is NOT established and must not be
+used as proof of live behavior. User wants V2 LIVE-only.
+
+16. PRODUCT VALIDATION / ELIGIBILITY
+Repository suggests intent -> product resolution -> validation -> sizing/capital
+-> broker placement, but exact historical ordering was not established by A-007.
+Product eligibility before reservation: UNKNOWN.
+Immediate pre-submit product eligibility: UNKNOWN.
+Broker rejection after configured-valid product: possible, exact historical
+handling UNKNOWN. Carry to Order Processing/Broker Model.
+
+17. CONFIGURATION
+Historical user classification: trade_type, delivery_enabled,
+force_intraday_only, product_map, leverage_map, and strategy product/intent
+are business controls. This describes legacy significance only; it does not
+freeze a V2 schema.
+
+18. HISTORICAL CHANGES
+Complete product-set change history: UNKNOWN.
+CO/BO temporary enable/disable history: UNKNOWN.
+Whether MIS/CNC were the only intended final products: UNKNOWN.
+No timeline invented.
+
+19. CURRENT ZERODHA CROSS-CHECK — NOT LEGACY EVIDENCE
+Current official Zerodha material says CO is intraday-only and BO was disabled
+in March 2020; current GTT supports CNC, NRML and MTF, including OCO target/SL;
+current intraday squareoff timings are category-dependent and can change.
+These current facts are preserved only as V2 inputs and are NOT retroactively
+used to classify the legacy system.
+
+20. FINAL LEGACY STATEMENT
+The legacy system supported a semantic product model separating INTRADAY,
+DELIVERY, COVER_ORDER and BRACKET_ORDER intents from broker product codes.
+MIS represented INTRADAY, CNC represented DELIVERY, CO represented COVER_ORDER,
+and NRML was recognised as DELIVERY. MIS and CNC were actually traded according
+to user historical evidence; Delivery/CNC used a broker-side GTT protection
+path and was excluded from intraday/EOD flattening; MIS had intraday squareoff
+handling. CO and BO implementation existed, but actual historical Production
+use of either could not be established, and NRML use also remains unestablished.
+
+21. FUTURE V2 INPUTS PRESERVED
+- Delivery: use GTT as intended broker-managed protection/exit mechanism.
+- Intraday: select one suitable current Zerodha-supported mechanism; do not
+  blindly carry BO/CO from legacy.
+- Config.yaml proposed as master segment control: INTRADAY/DELIVERY/BOTH.
+- Strategy YAML proposed as secondary control: ON/OFF, classification,
+  LONG/SHORT; avoid global/strategy collisions.
+- V2 LIVE-only.
+- Intraday margin must use current broker/product/stock eligibility and
+  actual margin data, not fixed legacy leverage.
+- System should square off intraday before broker/RMS cutoff and verify;
+  exact timing/state machine remains open.
+- Delivery should not be treated as intraday auto-squareoff.
+- Proposed V2 rule: one symbol once per day only.
+- Protective-leg lifecycle, cancellation and partial-fill handling require
+  explicit state-machine design.
+
+22. CROSS-TOPIC CAPTURE FOR LATER AGENDAS
+ORDER MANAGEMENT: entry/protective TGT/SL state machine; opposite-leg
+cancellation; partial fills; orphan-leg handling.
+TRADING HOURS: system squareoff before broker/RMS cutoff; first confirmation
+and second confirmation after short delay; exact delay open.
+CAPITAL: intraday margin is stock/product dependent; Delivery separate;
+A-005 broker-margin model remains future architecture input.
+CONFIGURATION: Config.yaml master + Strategy YAML secondary; master segment OFF
+must safely suppress relevant strategies.
+BROKER: current Zerodha eligibility must be checked before selecting the V2
+mechanism; legacy BO/CO code presence is not enough.
+EVIDENCE: contract notes are available; screenshots/logs showing product values
+were not available; contract notes may help resolve CO/BO/NRML history.
+
+23. OPEN QUESTIONS
+1. Exact historical Production use of CO.
+2. Exact historical Production use of BO.
+3. Whether NRML ever appeared only as broker-returned state.
+4. Exact product-selection precedence.
+5. Exact product-eligibility ordering.
+6. Exact product/order-type compatibility matrix.
+7. Historical product enable/disable timeline.
+8. Whether contract notes conclusively identify CO/BO.
+9. Final V2 intraday mechanism.
+10. Final V2 squareoff timing/state machine.
+11. Final Config.yaml vs Strategy YAML precedence.
+
+24. GOVERNANCE
+Agenda: A-007
+Topic: Product Types
+Legacy status: CLOSED / FROZEN
+V2 status: FUTURE INPUTS + OPEN QUESTIONS ONLY
+Date: 27-Sep-2026

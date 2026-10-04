@@ -1,0 +1,567 @@
+A-005 CAPITAL MODEL — FINAL PENDING QUESTIONS / USER REVIEW CHECKLIST
+23-SEP-2026
+
+PURPOSE
+This file is the final clarification stage for A-005.
+
+Workflow:
+1. Rama answers only the questions that require a business/governance decision.
+2. ChatGPT independently reconciles those answers against the legacy Production/Test repositories.
+3. ChatGPT prepares the A-005 reconciliation.
+4. ChatGPT prepares the permanent A-005 legacy manual.
+5. A-005 is then marked CLOSED/FROZEN.
+
+IMPORTANT
+- The legacy system remains DEAD / REFERENCE ONLY.
+- The proposed broker-specific margin model is a V2 redesign input.
+- Do NOT modify the legacy manual to make it look like the proposed V2 model existed historically.
+- The example numbers previously discussed (e.g. Rs 10,000, 30%, 70%, 10 trades, Rs 700) are EXAMPLES ONLY.
+- NO USER-SPECIFIC CAPITAL NUMBER, PERCENTAGE, TRADE COUNT OR OTHER VALUE is to be hardcoded into Python or other source code. [Config.yaml and/or strategy.yaml driven]
+- V2 values must be configuration-driven through the appropriate YAML/configuration layer, while live broker/account values should come from the broker where applicable.
+
+============================================================
+PART 1 — WHAT THE REPOSITORY ALREADY ESTABLISHES
+============================================================
+
+The preserved Production repository establishes that the legacy system currently has:
+
+1. config/system_config.yaml
+   - capital.intraday_bucket_pct
+   - capital.positional_bucket_pct
+   - leverage_map
+   - position_sizing controls
+   - risk controls
+   - delivery-specific sizing controls.
+
+2. capital/fund_manager.py
+   - total capital
+   - intraday and positional buckets
+   - available/reserved/used states
+   - capital invariant:
+       available + reserved + used == total
+   - write-ahead fm_ledger
+   - reservation before order placement
+   - broker synchronization / capital-drift handling.
+
+3. capital/position_sizer.py
+   - risk-based sizing
+   - capital-based sizing
+   - concentration-based sizing
+   - tier/performance multipliers
+   - lot-size rounding
+   - optional live broker margin lookup
+   - static leverage fallback.
+
+4. Existing legacy capital calculation uses:
+       margin = qty × price / leverage
+
+   and Production configuration contains a static:
+       INTRADAY leverage_map entry.
+
+5. Production currently treats intraday and delivery as separate buckets and does not permit cross-bucket borrowing.
+
+These are legacy facts and will be documented as such.
+
+============================================================
+PART 2 — V2 CHANGE NOW UNDER CONSIDERATION
+============================================================
+
+The proposed V2 model is substantially different:
+
+    ONE REAL-CASH CAPITAL BASIS
+             |
+             +--> configured Intraday cash bucket
+             |
+             +--> configured Delivery cash bucket
+                         |
+                         v
+               per-trade cash allocation
+                         |
+                         v
+             broker-specific margin requirement
+                         |
+                         v
+                 permitted notional
+                         |
+                         v
+                    quantity
+
+The key mathematical rule is:
+
+    required_margin_pct
+        = broker-required cash / order notional
+
+    maximum_notional
+        = cash_budget / required_margin_pct
+
+NOT:
+
+    cash_budget × required_margin_pct
+
+Example values are intentionally NOT frozen here.
+
+============================================================
+PART 3 — BROKER MARGIN FINDING
+============================================================
+
+The Zerodha Equity Margin Calculator provides scrip-specific MIS/CO margin information.
+
+More importantly, Zerodha's Kite Connect margin-calculation API can calculate margin for a specific proposed order.
+
+However, an important broker-side limitation must be preserved:
+
+The margin-calculation API does NOT by itself guarantee that a particular equity is eligible for MIS. Zerodha's own developer discussion explains that scrip-level RMS blocks are separate and that the client must check the MIS-eligible list before relying on margin calculation.
+
+Therefore:
+
+    MIS eligibility check
+            +
+    order-specific margin calculation
+
+are separate controls.
+
+This directly answers the earlier question about using the order window / broker calculation for a stock not present in the normal margin-eligible list:
+
+    The order-margin calculation can be used as a broker-side
+    margin calculation/validation mechanism, BUT it must not
+    be used alone to infer MIS eligibility.
+
+Sources:
+- Zerodha Equity Margin Calculator:
+  https://zerodha.com/margin-calculator/Equity/
+- Kite Connect margin API:
+  https://kite.trade/docs/connect/v3/margins/
+- Zerodha developer discussion on MIS eligibility vs margin API:
+  https://kite.trade/forum/discussion/8400/kite-connect-api-update
+
+============================================================
+PART 4 — QUESTIONS THAT DO NOT NEED RAMA'S ANSWER
+============================================================
+
+The following will be established by repository/API evidence during reconciliation rather than asking Rama to guess:
+
+A. Exact legacy leverage-map values.
+B. Existing legacy bucket configuration.
+C. Existing legacy position-sizer formula.
+D. Existing FundManager state machine.
+E. Existing reservation/ledger mechanism.
+F. Existing broker reconciliation mechanism.
+G. Existing paper/live implementation differences.
+H. Existing Testing/Sandbox differences.
+I. Existing configuration locations.
+J. Existing module/function ownership.
+
+Do NOT answer these from memory unless a question below explicitly asks for a V2 business decision.
+
+============================================================
+PART 5 — QUESTIONS REQUIRING RAMA'S V2 DECISION
+============================================================
+
+Q1. CAPITAL BASIS
+
+For V2, should the authoritative capital basis be:
+
+    BROKER-REPORTED REAL CASH / AVAILABLE CASH
+
+with no separately maintained synthetic "5x capital" or "segment capital"?
+
+Answer: BROKER-REPORTED REAL CASH at morning (or opening) market at 09:15am IST, then this amount only splited as config.yaml settings (example: 30% vs 70%) then lock the capital for Intraday? & Delivery capital? why? broker has some expenses or charges adjustment post-market closing or midnight by issuing contract notes, So next morning capital differs from system made capital workings & Broker is the source of truth in market
+[ ]
+
+Recommended terminology if YES:
+    total_real_cash
+    intraday_cash_bucket
+    delivery_cash_bucket
+
+Do NOT hardcode an amount in Python.
+
+------------------------------------------------------------
+
+Q2. CAPITAL BUCKET PERCENTAGES
+
+Should the Intraday/Delivery split be configuration-driven in YAML?
+
+Example only:
+    capital:
+      intraday_bucket_pct: <configured value>
+      delivery_bucket_pct: <configured value>
+
+Answer: Yes, config.yaml driven & Additional note that don't hard code this capital % only, Instead every user's input for market/system/decision driven things, Make it Config.yaml or strategy.yaml driven basis to avoid repeated code changing works [Have a note of it, refer config.yaml and strategy.yaml in GitHub as reference]
+[ ]
+
+If YES, no percentage should be embedded in .py code.
+
+------------------------------------------------------------
+
+Q3. PER-TRADE ALLOCATION DIVISOR
+
+Should the number used to divide the Intraday cash bucket into a nominal per-trade cash budget be a YAML configuration value?
+
+Example only:
+    intraday:
+      allocation_divisor: <configured value>
+
+Answer: Yes, Not only config.yaml driven but also strategy.yaml driven, why? simple config.yaml driven givens 'maximum amount per trade', but incase if I want control strategy wise capital i'll put maximum amount in strategy.yaml that would be final amount to be used as maximum capital per trade [An Dam water > Bridge Control], Example: If Rs 50k is the maximum capital per trade (config.yaml formula: Capital/number of trades=capital per trade?) then if I set with Rs 25k in any strategy.yaml then that strategy signals maximum capital is Rs 25k only, In case I set with Rs 75k then maximum capital is Rs 50k only (ie, Maximum capital per trade=Whichever is level of config.yaml & strategy.yaml) - Note it carefully in manual 
+[ ]
+
+IMPORTANT:
+This is a sizing/allocation parameter.
+It must NOT automatically be interpreted as:
+- maximum daily trades
+- maximum simultaneous positions
+unless separately configured and explicitly decided.
+
+------------------------------------------------------------
+
+Q4. WHAT DOES THE ALLOCATION DIVISOR MEAN?
+
+Choose the intended V2 meaning:
+
+[ ] A. Pure sizing divisor only
+[ ] B. Maximum simultaneous positions
+[ ] C. Maximum daily trades
+[ ] D. Separate configuration for sizing divisor + separate trade/position limits
+[ ] E. Other: ______________________________
+
+If D, this is preferable from a terminology/control perspective because the three concepts are different.
+
+Answer: E. Other: Capital>Segment capital (intraday & Delivery)>Maximum trades of that respective segment as divisior>Capital per trade>But this Capital per trade should be locked by checking other config.yaml & Strategy.yaml settings maximum/minimum capital. why? Incase my capital is Rs 10k Vs Rs 10 Million this maximum capital per trade amount gets limited by other config.yaml and/or strategy.yaml settings [Refer: GitHub production system's logic, .yaml files for clean reference] - Note it carefully in manual 
+[ ]
+
+------------------------------------------------------------
+
+Q5. DELIVERY ALLOCATION
+
+Should Delivery/CNC have its own independent allocation divisor?
+
+Answer: Same as Q4 answer [Refer GitHub production system's logic & .yaml files settings why such settings exists] - Note it carefully in manual 
+[ ] Yes
+[ ] No
+[ ] Other: ______________________________
+
+If Yes, it should be a separate YAML configuration key and must not inherit an Intraday divisor accidentally.
+
+------------------------------------------------------------
+
+Q6. BROKER MARGIN SOURCE — DAILY REFERENCE
+
+Should V2 maintain a daily Zerodha margin/eligibility snapshot around the configured morning refresh time?
+
+Answer: Yes, refresh at 09:00am then update each trading day before trade begins, [Refer cron registry & cron office modules in GitHub]
+[ ] Yes
+[ ] No
+[ ] Other: ______________________________
+
+The refresh time itself should be configuration-driven rather than hardcoded in Python.
+
+------------------------------------------------------------
+
+Q7. BROKER MARGIN SOURCE — ORDER-TIME VALIDATION
+
+Should V2 call Zerodha's order-margin calculation API for the intended order before actual placement?
+
+Answer: Used as a secondary validation when available [In case of conflict then API has final authority, Since this is the exclusive correct checker before placing the orders]
+[ ] Mandatory for every applicable order
+[ ] Used as a secondary validation when available
+[ ] Not required
+[ ] Other: ______________________________
+
+This is separate from MIS eligibility.
+
+------------------------------------------------------------
+
+Q8. IF DAILY MARGIN DATA AND ORDER-TIME MARGIN DIFFER
+
+Choose the V2 rule: 
+
+[ ] A. Order-time broker calculation is authoritative.
+[ ] B. Daily reference is authoritative.
+[ ] C. Reject if they differ beyond a configured tolerance.
+[ ] D. Other: ______________________________
+
+Answer: Daily reference is authoritative, Why? when each previous orders existed (SL/TGT hit) then capital will be released that leads to higher capital while system sync's, this will conflicts 'Maximum Capital per trade' calculation logic., So always morning capital > Intraday capital? and Delivery Capital? must be locked through-out the day, this should be used to calculate maximum capital per trade? and other calculations - Note it carefully in manual 
+
+My review recommendation is to treat live broker/order-specific information as the stronger execution-time check, but the final governance choice belongs to Rama.
+
+------------------------------------------------------------
+
+Q9. STOCK NOT PRESENT IN MIS ELIGIBILITY LIST
+
+If a stock is not present in the broker's current MIS eligibility dataset, should V2:
+
+[ ] Reject MIS trade
+[ ] Permit only if order-margin API explicitly succeeds
+[ ] Permit only after an additional broker confirmation
+[ ] Other: ______________________________
+
+Answer: If not found in database > then Check at API calculator as above while placing the order, If still not found then assume there is no margin facility available for the stock, So full amount to be used (100% of maximum capital per trade as determined)
+
+IMPORTANT:
+A successful margin calculation alone should not automatically be treated as proof of MIS eligibility.
+
+------------------------------------------------------------
+
+Q10. FAILED / STALE MARGIN DATA
+
+If the daily margin dataset is unavailable, empty, malformed or stale, should V2:
+
+[ ] Reject new Intraday orders
+[ ] Continue only when order-margin API independently validates the order
+[ ] Use a configured fallback margin rule
+[ ] Other: ______________________________
+
+Answer: Better update it daily morning at 08:30am IST (after system booting), by verifying duplicate or better replace full database in daily (why? duplicate checking avoided easily), If any issues then send me telegram/email immediately, Still not solved after alert then check the margin amount while placing order (API margin while placing order) if available suitably incorporate the margin then place the trade, Still API has no data then reject the trade, but immediately send telegram/email alert about this incident...why? otherwise silent dropping happens and user unaware about that how many trades/stocks of each day fails and this issue continues unnoticed - Note it carefully in manual 
+
+IMPORTANT:
+No fallback should silently become universal 5x.
+
+------------------------------------------------------------
+
+Q11. MARGIN API UNAVAILABLE AT ORDER TIME
+
+If the order-margin API cannot be reached immediately before an order:
+
+[ ] Reject the order
+[ ] Use the validated daily margin snapshot
+[ ] Use another explicitly configured fallback
+[ ] Other: ______________________________
+
+Answer: First check at database (updated in every morning), Not found > Second check at API margin before placing order window > Still not available treat no margin available > Place order > Report this incident in Telegram/Email in each stock/trade wise such incidents...why? user verifies then confirms and if any other bug/issue that too rectified instead of repeated silent occurrences - Note it carefully in manual 
+
+If fallback is allowed, it must be configuration-driven and explicitly governed.
+
+------------------------------------------------------------
+
+Q12. CAPITAL BUDGET VS ACTUAL MARGIN
+
+If a per-trade cash budget is configured, should it represent:
+
+[ ] A hard maximum broker-margin reservation
+[ ] A sizing target, with actual broker margin determining the reservation
+[ ] Other: ______________________________
+
+Answer: A sizing target, with actual broker margin determining the reservation [Example: Rs 10k splited into Rs 7k (Intraday) and Rs 3k (Delivery) then intraday maximum trades is 10 then Maximum capital per trade is Rs 700 (Intraday) then this Rs 700 should be applied for each trade by adjusting margins, Assume 5x margin for ITC then Maximum capital per trade is Rs 700*5x (or Rs 700/20%) = Rs 3500 is the capital or trade value for ITC, Accordingly 5x replaced with respective stock's margin % ? - Note it carefully in manual
+
+This distinction affects reservation, quantity and concurrent-position behaviour.
+
+------------------------------------------------------------
+
+Q13. SIMULTANEOUS OPEN POSITIONS
+
+Should V2 enforce:
+
+    SUM(open/reserved broker margin)
+    <= available Intraday cash bucket
+
+Answer: Refer bottom core design principle, Still unclear asks me in next chat message
+[ ] Yes
+[ ] No
+[ ] Other: ______________________________
+
+This should remain true regardless of how many sequential trades are made during the day unless another explicit rule is approved.
+
+------------------------------------------------------------
+
+Q14. POSITION SIZER — LEGACY RISK LOGIC
+
+The legacy PositionSizer currently combines:
+- risk-based quantity
+- capital-based quantity
+- concentration-based quantity
+- tier/performance multipliers
+- position-value controls.
+
+For V2, should the new broker-margin capital model replace ONLY the legacy capital/leverage component, while the other sizing/risk mechanisms are decided separately under the relevant agenda items?
+
+Answer: Yes, Refer Q12 answer, If Rs 700 (before margin adjustment) is the ITC's determined capital per trade then this amount should be adjusted with risk based metrics like tier-multiplier or something suitable/improved version from existing old system > that adjusted capital / Margin % ? used to place order [Good Catch appreciated]
+
+[ ] Yes
+[ ] No — replace more: ______________________________
+[ ] No — remove more: ______________________________
+[ ] Defer to later sizing agenda
+
+IMPORTANT:
+This question is deliberately NOT assuming that the whole legacy PositionSizer should be retained.
+
+------------------------------------------------------------
+
+Q15. STRATEGY YAML CAPITAL LIMIT
+
+You stated that strategy.yaml should not impose a maximum-capital-per-trade constraint for this model.
+
+Confirm:
+
+[ ] No strategy-specific maximum capital constraint.
+    Global capital engine remains authoritative.
+
+[ ] Strategy-specific capital limits may exist.
+    Details: ______________________________
+
+Answer: In current system (Config.yaml) has some other contraints (ie, Maximum position value, Maximum capital per trade, Maximum Qty etc & same mirrored with 'minimum'), I planned to move these current global parameters to each strategy wise .yaml why? Config.yaml says what is my maximum & minimum capital/qty/other things as global or standard parameter, then again these standard parameters compared with strategy wise .yaml and to be taken as whichever is maximum or minimum (mirrored value)...Why> It helps when my capital is Rs 10k or Rs 10 Million restriction matters over standard formula based derivations
+
+Any permitted strategy-specific values should remain YAML-driven.
+
+------------------------------------------------------------
+
+Q16. OTHER LEGACY CAPITAL CONTROLS
+
+For controls such as:
+- concentration cap
+- position-value cap
+- score/tier multiplier
+- performance multiplier
+- daily loss limit
+- consecutive-loss limit
+- open-position limit
+
+Should these be:
+
+[ ] Retained temporarily for separate agenda-by-agenda review
+[ ] Removed as part of the capital redesign
+[ ] Some retained / some removed
+
+Do NOT specify detailed percentages here unless you want them frozen now.
+
+Answer: Some removed [Concentration cap] - Better take a note in manual as "Before designing ask the user what are to be removed/added/modified" [Helps as second confirmation before production code written] 
+[ ]
+
+------------------------------------------------------------
+
+Q17. CAPITAL RECONCILIATION
+
+Confirm V2 principle:
+
+    One real-cash capital basis
+    +
+    explicit system reservations
+    +
+    broker-side reconciliation
+
+rather than removing reconciliation entirely.
+
+Answer: CONFIRMED
+[ ] Confirm
+[ ] Modify: ______________________________
+
+------------------------------------------------------------
+
+Q18. MARGIN DATA HISTORY / AUDIT
+
+Should V2 retain dated margin/eligibility snapshots so that the system can later explain:
+
+    "Why was this quantity/margin calculated on that date?"
+
+Answer: Yes
+[ ] Yes
+[ ] No
+[ ] Other: ______________________________
+
+------------------------------------------------------------
+
+Q19. CONFIGURATION LOCATION
+
+Confirm that all user/business-controlled values must be configuration-driven and NOT hardcoded in Python.
+
+This includes, where applicable:
+- bucket percentages
+- allocation divisors
+- refresh schedule
+- freshness limits
+- tolerances
+- fallback policy
+- buffers
+- limits
+- eligibility policy.
+
+Answer: CONFIRMED [100% mandatory requirement]
+[ ] Confirm
+[ ] Modify: ______________________________
+
+------------------------------------------------------------
+
+Q20. FINAL V2 CAPITAL MODEL PRINCIPLE
+
+Please confirm or modify this statement:
+
+"V2 will use one real-cash capital basis. Intraday and Delivery cash budgets are derived from configuration. Intraday quantity is constrained using current broker eligibility and broker-specific required margin rather than a universal leverage assumption. Broker order-margin information may provide order-time validation. No broker margin data means no invented leverage. All configurable business values remain YAML/configuration-driven."
+
+Answer: CONFIRMED
+[ ] CONFIRM
+[ ] MODIFY:
+____________________________________________________
+____________________________________________________
+
+============================================================
+PART 6 — WHAT CHATGPT WILL DO AFTER RAMA ANSWERS
+============================================================
+
+1. Re-read the Production repository evidence.
+2. Re-check Testing/Sandbox repository evidence.
+3. Reconcile every answer against actual code/config.
+4. Separate:
+   FACT
+   UNKNOWN / NOT ESTABLISHED
+   HISTORICAL
+   KNOWN DEFECT
+   V2 DESIGN INPUT
+   OPEN QUESTION
+5. Record the exact legacy capital architecture and formulas.
+6. Record the exact proposed V2 change without rewriting history.
+7. Identify any remaining contradictions.
+8. Prepare:
+   - A-005 final reconciliation/freeze file
+   - A-005 permanent legacy manual
+9. Mark A-005 CLOSED/FROZEN if no unresolved governance question remains.
+
+============================================================
+A-005 STATUS
+============================================================
+
+Current status:
+    PENDING RAMA ANSWERS
+
+After answers + reconciliation:
+    A-005 CLOSED/FROZEN
+
+The examples used in this document are illustrative only.
+No example capital amount, percentage or trade count is a frozen user setting.
+
+------------
+
+** Additional Note/Design flow:
+
+Step:1 - After System booting > after some cron jobs like zerodha token updation, Zerodha instruments updation etc > Update Margin % for each stocks from zerodha website or thru via API by creating database [Note: each trading date replace all the contents of database why? To avoid stale/duplicate issues & Do all theses before market opens at 09:15am > Send Telegram & Email alerts regarding successful completion or Any issues that also send alerts [So alert at both sides: success/failure]
+
+Step:2 - Each trading day morning at 09:15 system pulls/sync opening balance from Zerodha/Broker and lock it as opening balance [Assume Rs 10k];
+
+Step:3 - Once Opening balance pulled, then check the Config.yaml which tells how much % appropriated to Intraday segment & Delivery Capital [Assume: 30% for Delivery & 70% for Intraday] & Additional Information current legacy system has Config.yaml settings as centralised one, But in new system need to segregate each strategy/trade specific parameters like Maximum capital/qty/positions (also mirror for *Minimum) into each strategy.yaml files and keep global settings like alerts (on/off), maximum  number of trades (MIS/GTT) in config.yaml itself [Take a careful note in manual, while production time we need to deep review of config.yaml and strategy.yaml]
+
+Step:4 - Once Segment Capital amount calculated for Intraday (Rs 10k*70% = Rs 7k) and Delivery (Rs 10k*30% = Rs 3k), Lock this capital amount for through-out the day
+
+Step:5 - Then check maximum number of trades for Intraday and Delivery [Assume: Intraday=10 & Delivery=2]
+
+Step:6 - Then Calculate the 'Maximum Capital per Trade'? [Intraday capital = Rs 7k/10 = Rs 700 and Delivery capital = Rs 3k/2 = Rs 500] Additional note that these are real cash capitals splited as it is, No Margin is applied anywhere
+
+Step:7 - Once market is opened [Assume trading time as per config.yaml is 10:00] then if ITC signal arrives > Make all validations > Then now in position sizing should be calculated: Maximum capital per trade computed is Rs 700 does this amount has any further restrictions/constraints > check ITC Stock's respective signal name.yaml file does it mention any maximum capital/qty/position etc? Assume maximum capital per trade is Rs 500, Maximum Qty:1?
+
+Step:8 - While position sizing: Compare the maximum capital per trade [Config=Rs 700 & Strategy=Rs 500, ignore maximum qty now, I have mentioned below], so consider 'Whichever is low' Rs 500 (strategy.yaml has lower value) to be applied
+
+Step:9 - So Maximum capital to be applied is Rs 500, now need to adjust the margin > Refer morning created database > If available pick the Margin %, Else check via API in order time window > Assume 3x allowed or 33.33% then> Rs 500/33.33% = Rs 1500.15 [Global Rule: Always round-down the rupees & Qty to '1' (integer value), So Rs 1500.15=Rs 1500]
+
+Step:10 - Now coming to zerodha capital consumption (search internet), In case Zerodha consumes capital only for entry order (not separate capital consumption for SL/TGT) then Ordering Qty = Rs 1500/ Stock's price per Qty (assume Rs.100) = 15 qty with entry qty, 15 qty SL, 15 qty TGT (since no separate capital consumed on TGT & SL), But If all orders consumes separate capitals (entry+sl+tgt=3 orders) then Rs 1500/3 orders = Rs 500 per order then Rs 500/Rs 100= 5Qty Entry, 5 Qty SL, 5 Qty TGT;
+
+Step:10 - For capital drift (ie, system capital vs broker capital reconciliation) send me telegram & email alerts at periodic time in a trading day by syncing broker capital vs system capital comparison
+
+Step:11 - Don't use the sync'ed capital for 'Maximum capital per trade' calculation, why? Since few previous orders exited > Capital released so capital value is higher for further trades than intended 'Maximum Capital per trade' calculations as made above [So sync'ed capital only used for reconciliation and sending capital drift alerts]
+
+Step:12 - In above calculations the last 10th order's actual available capital may be lesser due to loss adjustments or some others, But let's ignore it, why? Since capital will be released when previous orders exited (SL/TGT) which will matches loss trades capital loss in SL
+
+Step:13 - As said 'Price' of Stocks price may be differs due to 5min candle validation time or some other timing issues that we will discuss in relevant topics, But time being this is the capital flow logic and intended/suggested design
+
+Step:14 - Again Margin % not available stocks either in margin database as created every morning or API call > Treat as no margin, So 100% of capital to be applied as it is
+
+Step:15 - In step:7 If maximum qty is mentioned as '1' then maximum ordering qty is '1' only [No capital calculations with margin facility], Basically always 'Whichever is lesser' when ambiguity arises: Maximum capital as per congig.yam vs strategy.yaml
+
+Step:16 - Maximum number of trades = Broker filled trades only [meaning Queued/cancelled/rejected trades won't be counted] for processing subsequent orders
+
+Step:17 - For Delivery/GTT order trades there is 'Nil' margin meaning 100% of capital should be applied
