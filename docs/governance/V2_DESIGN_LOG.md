@@ -11,6 +11,8 @@ Security: no credential values in this file.
 | 2026-10-04 | The first .gitignore had a *secret* pattern that would have ignored the a-010_secrets-environment folder. The browser also stripped the leading dot from the downloaded file name, so the committed file (gitignore) was inert until renamed. | Test ignore patterns against the real folder tree (including core.ignorecase=true on Windows) before shipping. After downloading any dotfile, confirm its name and run git check-ignore -v. |
 | 2026-10-05 | A legacy repo was described as built to exclude credentials, based on an older record. The live repo had since gained full history and a docs/web_claude folder. | Verify a source's current state (fetch or scan) before labelling it clean or pointing Claude Code at it. |
 | 2026-10-05 | Both legacy VMs were terminated and deleted without backing up the DB, logs or crontab. Legacy runtime evidence cannot be recovered. | V2 must define backup and restore (M-008/M-009) before any teardown: no machine is deleted without a verified backup. |
+| 2026-10-05 | In A-001, Rama's description of how holdings work (no auto square-off) was filed as a defect. A-002 shows it was by design. | Before classifying a statement as a defect, check that it contradicts a stated objective; by-design behaviour is not a defect. |
+| 2026-10-05 | In the A-002 review, "16 strategies, each with its own YAML" was labelled production FACT, though it came from Rama's recollection and a testing-VM record (ChatGPT A-002 review point 1). | Counts and inventories are FACT only when read from the production baseline; otherwise name the source and mark the claim UNKNOWN or HISTORICAL. |
 | 2026-10-05 | The first A-001 review notes mixed legacy fact with V2 proposals (ChatGPT review point 1). | Keep two layers apart: the topic manual records legacy fact only; V2 directions stay PROPOSED in section 3 below until decided into the register. |
 
 ## 2. OPEN QUESTIONS (not decisions)
@@ -30,6 +32,9 @@ Security: no credential values in this file.
 | Q-11 | A-010 | The legacy Kite API secret appears in the public legacy repos (2 files in docs/web_claude matched a heuristic scan, 2026-10-05). Regenerate it before V2 uses any Kite credentials. | 2026-10-05 | OPEN |
 | Q-12 | Document sharing | The V2 repo is private, so neither Web Claude nor ChatGPT can read it directly. Decide: manual upload per topic, or ChatGPT's GitHub connector (private-repo reliability not verified). | 2026-10-05 | OPEN |
 | Q-13 | Claude Code setup | Add the clean reference clone (LEGACY_REFERENCE.md, L2) as an additional directory and set deny rules for credential-bearing paths in .claude/settings.json. Syntax to be verified in the first session. | 2026-10-05 | OPEN |
+| Q-15 | E-007 / H | Did the legacy have a "smart target manager" that adjusted target ranges (Rama's mention in A-002)? Verify from the repo. | 2026-10-05 | OPEN |
+| Q-16 | A-005 | Legacy sizing conflict: Rama recalls capital per trade = capital incl. margin / max trades per day, capped by a strategy limit; the production baseline shows risk-based sizing (min of risk, capital, concentration quantities, times a tier multiplier). Resolve with code evidence. | 2026-10-05 | OPEN |
+| Q-17 | A-008 | Production strategy-YAML count and membership: evidence shows 16 historical Chartink scanner definitions (PB01 marked SHADOW), a locked-decision record of 15 YAML filenames, and 16 YAMLs in the testing-VM storage record. Establish from the production snapshot. | 2026-10-05 | OPEN |
 | Q-14 | A-001 evidence | Exact first and last commit dates of the prod snapshot and the exact VM termination date are not known. Not blocking. Optional: read the oldest and newest commit dates on GitHub. | 2026-10-05 | OPEN (non-blocking) |
 
 ## 3. V2 PROPOSALS (PROPOSED, not decided; each becomes a register row only when decided)
@@ -39,22 +44,35 @@ Security: no credential values in this file.
 | VP-01 | V2 purpose: "An automated, headless, live-only trading system for NSE equities via Zerodha that consumes Chartink scanner signals and, through its configured controls and decision logic, validates, decides, executes, manages, reconciles and reports intraday and positional trades." | A-001 | End of Section A (after A-007 and A-008) |
 | VP-02 | V2 scope: NSE equity only; Zerodha only; Chartink sole signal source; intraday and positional, with product types finalised at A-007. | A-001 | End of Section A |
 | VP-03 | Per-signal-type processors replace the centralised secondary score (intraday and positional use different timeframes and evaluation methods). Existing calculation bases must be reviewed in detail first. | A-001 | A-008 and D-017 |
-| VP-04 | Operator boundary: routine operation is fully automated; the only manual actions are kill-switch release and operator interrupt. This also clarifies the "zero manual intervention" wording in the project instructions (5.5), which targets routine moves, renames and triggers. | A-001 | A-011 (states) and I (safety) |
+| VP-04 | Operator boundary: routine operation is fully automated; the only manual actions are kill-switch release and operator interrupt, including a simple halt command instead of stopping the VM from the cloud console (A-002). This also clarifies the "zero manual intervention" wording in the project instructions (5.5), which targets routine moves, renames and triggers. | A-001 | A-011 (states) and I (safety) |
 | VP-05 | Environments: development and debugging on Windows 11, production on an Ubuntu VM on Oracle (new instance), no hardcoded paths. | A-001 | Section M and Q-05 |
-| VP-06 | Parked requirements: per-holding Telegram status summary (purchase date, quantity, entry, SL, target) at L-001/L-005; reports delivered by GUI download (DR-009) at L-011; start/stop driven by config with NSE trading days at A-003 and B; headless daily Zerodha token at A-010 and M-005. | A-001 | As listed |
+| VP-06 | Parked requirements: per-holding Telegram/email status summary (purchase date, quantity, entry, SL, target), sent each morning, consolidated or per stock; GUI only after the system is stable (A-002) at L-001/L-005; reports delivered by GUI download (DR-009) at L-011; start/stop driven by config with NSE trading days at A-003 and B; headless daily Zerodha token at A-010 and M-005. | A-001 | As listed |
 | VP-07 | Backup and restore design, including a rule that no machine is torn down without a verified backup. | A-001 | M-008, M-009 |
+| VP-08 | Strategy model: at most 6 strategies (legacy had 16); each has its own YAML and its own secondary filtration; the filtration method (score, ranking or other) is chosen per strategy after its conditions are fixed; S&R logic is set after strategies and processors, and R:R honours S&R. | A-002 | A-008, D-009 to D-017, J |
+| VP-09 | Controlled entry: for intraday, wait for the 5-minute candle to complete, but enter early if price crosses the intended entry plus or minus slippage inside that candle; slippage slabs by LTP band; release-price rule (long: release at intended minus slippage; short: as stated by Rama, intended plus slippage); entry timeout exactly 10 minutes in the broker book, enforced by a watcher (never earlier, never later). | A-002 | D-016, E-002, E-003, E-011, G-008 |
+| VP-10 | Named price and time types used consistently in every module: payload price, signal-received price, calculated price, locked entry price, candle price, release price, fill price (and matching times). | A-002 | E-009, E-010, K; links Q-03 |
+| VP-11 | Every received signal reaches a recorded terminal outcome (ordered, rejected with reason, cancelled, duplicate, expired), confirmed end to end. | A-002 | C-008, L-009 |
+| VP-12 | One trade per stock per day in any direction (legacy: per stock and direction); no sector or concentration caps. Consideration: without sector caps, a market-wide move can fill several slots with one sector. | A-002 | C-005, F-007 |
+| VP-13 | Sizing and capital: capital per trade = the lower of (bucket capital incl. margin, 5x intraday or 1x delivery, divided by max trades per day from config.yaml) and the strategy.yaml per-trade cap; margin accounting matches the broker's (margin = notional / leverage); broker capital is the source of truth. Consideration: capital-based sizing makes the rupee loss per trade vary with SL distance; legacy used risk-based sizing (Q-16). | A-002 | A-005, F-002, F-004 |
+| VP-14 | EOD "analyse today, trade tomorrow": capture Chartink signals after 17:00, store them, confirm next day, then trade. | A-002 | C-011 |
+| VP-15 | Configuration: one central config.yaml plus one YAML per strategy; no hardcoded values; values may change during the trading day and the system follows them. Consideration: legacy loaded config once at start-up; define which keys may change intraday and how a change is applied safely. | A-002 | A-009 |
+| VP-16 | Trading calendar and day lifecycle: maintained NSE holiday/weekend list for 2026 and 2027; auto-start only on valid trading days; fresh-entry cut-off per config; intraday auto square-off at 15:10 (review legacy behaviour, then keep). | A-002 | A-003, B |
+| VP-17 | Metrics to research before deciding: expectancy, execution latency (Zerodha + VM + infrastructure), rejected-signal rate, fill rate. | A-002 | L-007, N |
+| VP-18 | Process: after all agenda topics, run a full legacy audit, file each issue under its topic, then plan, design, architect and build. | A-002 | DECIDED (DR-016) |
 
 ## 4. AGENDA STATUS
 
 | Topic | Legacy manual | V2 decisions |
 |---|---|---|
-| A-001 | FROZEN 2026-10-05 (A-001_manual.md, DR-013) | DEFERRED to VP-01, VP-02 (end of Section A) |
-| A-002 to A-011 | Not yet reviewed with Claude | Not started |
+| A-001 | FROZEN 2026-10-05 (A-001_manual.md, DR-013); erratum DR-015 | DEFERRED to VP-01, VP-02 (end of Section A) |
+| A-002 | FROZEN 2026-10-05 (A-002_manual.md revision 2, DR-014) | V2 ideas in VP-08 to VP-17; VP-18 decided (DR-016) |
+| A-003 to A-011 | Not yet reviewed with Claude | Not started |
 
 ## 5. WORKING RULES
 
 - W-1 Two layers. A topic manual records legacy fact only. V2 directions are PROPOSED in section 3 and become DR rows when decided. (ChatGPT's governing rule for A-001, adopted 2026-10-05.)
 - W-2 File-save rule (permanent, set by Rama 2026-10-05). Every reply that involves a file ends with a SAVE list: each file, its folder, and whether it is new or replaces an existing one.
+- W-4 Approval rule (permanent, set by Rama 2026-10-05, DR-017). Once ChatGPT has reviewed a topic and its points are applied, Claude prepares the final storage-ready files (FROZEN status, register rows, commit/push commands) without a separate approval step. Exception proposed by Claude: if ChatGPT's review leaves a question for Rama or disagrees with Claude, Claude asks Rama first.
 - W-3 Where files go:
 
 | What | Folder |
@@ -82,3 +100,6 @@ Security: no credential values in this file.
 - D:\Projects\_restore scanned: no .env, token/session JSON or gui_config.local.yaml by file name; docs/web_claude present in both subfolders.
 - docs/web_claude found at HEAD of the public prod snapshot. DR-011 and DR-012 recorded. Q-11 to Q-13 opened.
 - A-001: Claude review notes, then ChatGPT value-added review. Adopted ChatGPT's two-layer rule; V2 items moved to section 3. Rama: both VMs deleted about 1-2 weeks earlier, no backups taken. Legacy manual draft prepared. Rama approved it: A-001 legacy manual FROZEN (DR-013). Next: A-002.
+- A-002: review notes and revised legacy manual drafted; V2 ideas added as VP-08 to VP-18; A-001 erratum proposed (holdings line misclassified as a defect).
+- A-002: ChatGPT value-added review received; all 12 points applied (revision 2). Q-17 opened (strategy-YAML count, A-008).
+- Rama approved: A-002 FROZEN (DR-014), A-001 erratum (DR-015), post-agenda audit (DR-016), approval rule W-4 (DR-017). Next: A-003.

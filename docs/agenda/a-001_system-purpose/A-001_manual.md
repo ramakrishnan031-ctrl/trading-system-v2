@@ -1,6 +1,6 @@
 # A-001 SYSTEM PURPOSE: LEGACY MANUAL (REVISED)
 
-Status: FROZEN. Approved by Rama on 2026-10-05 (after the ChatGPT value-added review). Recorded as DR-013.
+Status: FROZEN. Approved by Rama on 2026-10-05 (after the ChatGPT value-added review). Recorded as DR-013. Erratum 2026-10-05 recorded as DR-015 (see end).
 Date: 2026-10-05
 Layer: LEGACY ONLY. It describes what the legacy system was and was intended to be. V2 proposals live in docs/governance/V2_DESIGN_LOG.md (section 3) and decisions in V2_DECISION_REGISTER.md. Nothing here is a V2 decision.
 Working copy of: docs/inputs/manuals/A-001_SYSTEM_PURPOSE_FROZEN_MANUAL.md (original untouched; this copy removes 9 hidden citation markers and a formatting fault).
@@ -54,7 +54,7 @@ Signal ingress, pre-flight, scanner-to-strategy resolution, strategy controls, s
 ## 8. Historical scope: intraday core, with delivery/positional handling
 - FACT: the repository README describes the system as an automated NSE intraday trading system, and the production baseline repeats this.
 - FACT / HISTORICAL: delivery/positional handling existed: separate intraday and positional capital buckets with no cross-bucket borrowing, broker-side CNC protection for supported overnight delivery positions, and end-of-day scanners routed to a watchlist.
-- KNOWN DEFECT (USER-REPORTED): Rama considers the holdings handling unsatisfactory: holdings had no auto square-off, and there was no per-holding Telegram status (purchase date, quantity, entry, SL, target).
+- ~~KNOWN DEFECT (USER-REPORTED): Rama considers the holdings handling unsatisfactory: holdings had no auto square-off, and there was no per-holding Telegram status (purchase date, quantity, entry, SL, target).~~ (superseded by the Erratum, DR-015)
 - Detailed capital, product and lifecycle mechanics: A-005, A-007 and later topics.
 
 ## 9. Known purpose-relevant defects (user-reported; mechanics deferred to section D and later)
@@ -65,7 +65,7 @@ Signal ingress, pre-flight, scanner-to-strategy resolution, strategy controls, s
 - Price ambiguity: Chartink price, system price, live price, submitted price and actual fill are confused.
 - Slippage/cushion prices not honoured.
 - Entry timeout: a fixed 10-minute entry timeout was intended, but orders were cancelled within about 2 minutes, with no reliable watcher.
-- Holdings handling (section 8).
+- ~~Holdings handling (section 8).~~ (removed by the Erratum, DR-015)
 
 ## 10. Evidence status and period
 - Repository: trading-system-prod-snapshot, branch main, 1,537 commits. Baseline commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb (HEAD verified 2026-10-05).
@@ -94,3 +94,8 @@ A-002 (objectives), A-003 (hours), A-004 (instruments), A-005 (capital), A-006 (
 - SCOPE: NSE equity; Zerodha; Chartink signals; automated lifecycle from signal to reconciliation and reporting; intraday core with delivery/positional handling.
 - NON-SCOPE: the system did not originate Chartink scanner signals; it is not established as a general-purpose portfolio-management platform.
 - GOVERNANCE: no V2 architecture, redesign, fix, tuning or replacement behaviour is included in A-001.
+
+## Erratum 2026-10-05 (DR-015)
+Source: A-002 review (Rama's A-002 replies), agreed by ChatGPT, approved by Rama. The struck lines above stay visible as history.
+- Section 8, corrected line: Rama considers the holdings handling unsatisfactory in visibility: there was no per-holding status alert (purchase date, quantity, entry, SL, target). Per A-002 this alert is a later request, not a legacy objective. Delivery positions carrying overnight without auto square-off was by design, not a defect.
+- Section 9: the bullet "Holdings handling (section 8)" is removed from the known-defect list.
