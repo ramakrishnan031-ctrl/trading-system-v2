@@ -35,6 +35,8 @@ Security: no credential values in this file.
 | Q-15 | E-007 / H | Did the legacy have a "smart target manager" that adjusted target ranges (Rama's mention in A-002)? Verify from the repo. | 2026-10-05 | OPEN |
 | Q-16 | A-005 | Legacy sizing conflict: Rama recalls capital per trade = capital incl. margin / max trades per day, capped by a strategy limit; the production baseline shows risk-based sizing (min of risk, capital, concentration quantities, times a tier multiplier). Resolve with code evidence. | 2026-10-05 | OPEN |
 | Q-17 | A-008 | Production strategy-YAML count and membership: evidence shows 16 historical Chartink scanner definitions (PB01 marked SHADOW), a locked-decision record of 15 YAML filenames, and 16 YAMLs in the testing-VM storage record. Establish from the production snapshot. | 2026-10-05 | OPEN |
+| Q-18 | A-003 / VP-21 | Zerodha's current equity MIS auto square-off time: Zerodha support pages say 3:20 PM (fresh MIS blocked after it); a Zerodha forum announcement says 3:25 PM. Check the Zerodha bulletin before V2 sets its square-off times; keep the broker time in config. | 2026-10-05 | OPEN |
+| Q-19 | A-003 / B-001 | Verify in source the file-map claims: service start permitted only 08:00-18:15 (main.py exits 0 before loading config) and the validation bound service_window_end < 18:15. | 2026-10-05 | OPEN |
 | Q-14 | A-001 evidence | Exact first and last commit dates of the prod snapshot and the exact VM termination date are not known. Not blocking. Optional: read the oldest and newest commit dates on GitHub. | 2026-10-05 | OPEN (non-blocking) |
 
 ## 3. V2 PROPOSALS (PROPOSED, not decided; each becomes a register row only when decided)
@@ -56,8 +58,16 @@ Security: no credential values in this file.
 | VP-13 | Sizing and capital: capital per trade = the lower of (bucket capital incl. margin, 5x intraday or 1x delivery, divided by max trades per day from config.yaml) and the strategy.yaml per-trade cap; margin accounting matches the broker's (margin = notional / leverage); broker capital is the source of truth. Consideration: capital-based sizing makes the rupee loss per trade vary with SL distance; legacy used risk-based sizing (Q-16). | A-002 | A-005, F-002, F-004 |
 | VP-14 | EOD "analyse today, trade tomorrow": capture Chartink signals after 17:00, store them, confirm next day, then trade. | A-002 | C-011 |
 | VP-15 | Configuration: one central config.yaml plus one YAML per strategy; no hardcoded values; values may change during the trading day and the system follows them. Consideration: legacy loaded config once at start-up; define which keys may change intraday and how a change is applied safely. | A-002 | A-009 |
-| VP-16 | Trading calendar and day lifecycle: maintained NSE holiday/weekend list for 2026 and 2027; auto-start only on valid trading days; fresh-entry cut-off per config; intraday auto square-off at 15:10 (review legacy behaviour, then keep). | A-002 | A-003, B |
+| VP-16 | Trading calendar and day lifecycle: maintained NSE holiday/weekend list for 2026 and 2027, failing safe when the current year's file is missing (A-003: legacy had only 2026); auto-start only on valid trading days; fresh-entry cut-off per config; intraday auto square-off at 15:10 (review legacy behaviour, then keep). | A-002 | A-003, B |
 | VP-17 | Metrics to research before deciding: expectancy, execution latency (Zerodha + VM + infrastructure), rejected-signal rate, fill rate. | A-002 | L-007, N |
+| VP-19 | Entry cut-off applies to intraday only; delivery may enter until 15:30 (BTST) if its strategy window allows. Consideration: keep the intraday entry cut-off a separate, named control from the SOFT_KILL kill-switch state (legacy conflated them). Zerodha blocks fresh MIS after its auto square-off time anyway. | A-003 | A-003 follow-up in B-008 / B-009, A-011 |
+| VP-20 | At the intraday entry cut-off, a watcher cancels every still-pending intraday entry order at the broker and confirms the cancellation, so square-off does not have to. | A-003 | G-014, B-009 |
+| VP-21 | Intraday square-off runs well before the broker's auto square-off, then two verification checks confirm the books are flat; Telegram and email alert on failure. Broker time comes from config (Q-18). | A-003 | H-011, B-010 |
+| VP-22 | Clean shutdown with carried delivery holdings: the service shuts down normally when only CNC holdings remain (protected at the broker by GTT), and the next-day boot handles carried holdings without failing. Fixes the A-003 defect that stopped a trading day. | A-003 | B-010 to B-012, A-011 |
+| VP-23 | Time discipline: IST everywhere including VM and cron; timezone-aware timestamps; a defined DB timestamp timezone; broker clock-skew check. | A-003 | K, I-010; links VP-10 |
+| VP-24 | Signals outside the global or strategy entry window are rejected immediately with a recorded reason, not queued (Rama: a pattern seen before the window gives no assurance later). | A-003 | C-009, C-008; links VP-11 |
+| VP-25 | Cron review: review cron_officer (about 45 jobs) and cron_registry; classify each job (trading lifecycle, operations, maintenance, reporting, data); keep only what V2 needs; set the service window by V2's needs (post-market only if VP-14 is adopted). | A-003 | M-002, B |
+| VP-26 | AI briefings (pre-market briefing, weekend pattern analysis) move from Gemini to ChatGPT. | A-003 | L, M |
 | VP-18 | Process: after all agenda topics, run a full legacy audit, file each issue under its topic, then plan, design, architect and build. | A-002 | DECIDED (DR-016) |
 
 ## 4. AGENDA STATUS
@@ -66,7 +76,8 @@ Security: no credential values in this file.
 |---|---|---|
 | A-001 | FROZEN 2026-10-05 (A-001_manual.md, DR-013); erratum DR-015 | DEFERRED to VP-01, VP-02 (end of Section A) |
 | A-002 | FROZEN 2026-10-05 (A-002_manual.md revision 2, DR-014) | V2 ideas in VP-08 to VP-17; VP-18 decided (DR-016) |
-| A-003 to A-011 | Not yet reviewed with Claude | Not started |
+| A-003 | FROZEN 2026-10-06 (A-003_manual.md revision 2, DR-018) | V2 ideas in VP-19 to VP-26; VP-16 extended |
+| A-004 to A-011 | Not yet reviewed with Claude | Not started |
 
 ## 5. WORKING RULES
 
@@ -103,3 +114,7 @@ Security: no credential values in this file.
 - A-002: review notes and revised legacy manual drafted; V2 ideas added as VP-08 to VP-18; A-001 erratum proposed (holdings line misclassified as a defect).
 - A-002: ChatGPT value-added review received; all 12 points applied (revision 2). Q-17 opened (strategy-YAML count, A-008).
 - Rama approved: A-002 FROZEN (DR-014), A-001 erratum (DR-015), post-agenda audit (DR-016), approval rule W-4 (DR-017). Next: A-003.
+- A-003: review notes and revised legacy manual drafted; V2 request removed from the legacy manual (VP-19); VP-19 to VP-26 added; Q-18, Q-19 opened.
+
+### 2026-10-06
+- A-003: ChatGPT value-added review applied (revision 2, all 16 points). A-003 FROZEN under DR-017, recorded as DR-018. No item needed Rama's adjudication. Next: A-004.
