@@ -1,0 +1,267 @@
+A-005 — VALUE-ADDED REVIEW / FINAL CLARIFICATION TO CLAUDE
+Date: 06-Oct-2026
+Purpose: Final ChatGPT review of Claude’s A-005 review/manual package and Rama’s answers to Q-22/Q-24.
+
+STATUS
+-------
+I reviewed the revised A-005 legacy manual, review notes, V2 design-inputs material, and the source-verification findings.
+
+Overall: the two-layer separation is correct and the legacy manual is now materially stronger. The remaining clarification is V2-only. Do NOT put Rama’s new capital/order rules back into the legacy manual.
+
+IMPORTANT GOVERNANCE RULE
+------------------------
+A-005 legacy manual = historical legacy facts only.
+A-005_v2_design_inputs.md = proposed V2 inputs/clarifications.
+V2_DESIGN_LOG / V2_DECISION_REGISTER = governance record only after the appropriate approval/decision process.
+
+Do not freeze V2 rules merely because Rama has clarified them in this discussion unless the governance process explicitly records them as a decision.
+
+1. Q-22 — V2 CAPITAL / QUANTITY RULE
+------------------------------------
+Rama has now clarified the intended V2 flow.
+
+Interpret the intended V2 sequence as:
+
+1) TOTAL OPENING CASH CAPITAL
+   ↓
+2) SPLIT INTO INTRADAY / DELIVERY SEGMENT CASH
+   according to config.yaml
+   ↓
+3) DETERMINE THE SEGMENT'S MAXIMUM FILLED-TRADE LIMIT
+   from config.yaml
+   ↓
+4) BASE MAXIMUM CASH CAPITAL PER TRADE
+      = locked segment cash capital
+        / configured maximum filled-trade limit
+   ↓
+5) APPLY THE RELEVANT STRATEGY YAML CAPITAL CAP
+   The effective cash-cap for the trade is the LOWER of:
+      - global/config-derived maximum cash per trade
+      - strategy.yaml maximum cash allocation/cap
+      - current available segment cash
+   The units MUST be the same before MIN() is applied.
+   Do not compare cash with notional without explicitly converting units.
+   ↓
+6) APPLY BROKER MARGIN
+      permitted notional
+        = effective cash allocation / required margin %
+   Example only; values are not frozen.
+   If broker margin is 20%, ₹X cash permits ₹X/0.20 notional.
+   If broker margin is 50%, ₹X cash permits ₹X/0.50 notional.
+   If broker margin data is unavailable under the already-discussed V2 rule,
+   use 100% cash / no invented leverage, with alert.
+   ↓
+7) CALCULATE ORDER QUANTITY USING STRATEGY RISK / SL
+   Risk-per-trade percentage comes from the relevant strategy.yaml.
+   Risk/SL-based quantity is the primary quantity calculation.
+   The capital-derived permitted notional is a CEILING on that quantity.
+
+   Conceptually:
+      risk_qty = risk budget / expected SL distance
+      capital_qty = floor(permitted notional / intended entry price)
+      final_qty = lower permitted quantity, after approved instrument/
+                  lot/tick/other guards.
+
+   Do not revert to the old spreadsheet-only
+      cash / margin / price
+   formula as the primary quantity rule.
+   That earlier notional-only formula was superseded by the strict-scope
+   clarification.
+
+2. IMPORTANT UNIT / GOVERNANCE POINT
+-------------------------------------
+Make the V2 document explicit about three different quantities:
+
+A. CASH ALLOCATION
+   Real broker cash allocated/reserved for the trade.
+
+B. PERMITTED NOTIONAL
+   Derived from cash allocation and broker-required margin percentage.
+
+C. ORDER QUANTITY
+   Derived primarily from risk/SL and capped by permitted notional.
+
+This prevents the previous terminology problem around “capital available after
+margin”.
+
+Also keep “maximum capital per trade” clearly defined as a CASH amount unless
+and until A-009/F-004 explicitly decides that a strategy YAML cap is expressed
+as notional. If a YAML cap is allowed in another unit, define normalization
+before comparison.
+
+3. DYNAMIC / LATER-TRADE CAPITAL
+-------------------------------
+The base per-trade amount is the configured maximum allocation, but the actual
+allocation for a later trade is:
+
+    actual_cash_allocation
+      = MIN(
+          global/config maximum cash per trade,
+          strategy maximum cash cap,
+          current available segment cash
+        )
+
+Therefore earlier losses can reduce the cash available for later trades.
+Earlier profits/losses affect the CURRENT AVAILABLE segment balance according
+to the final V2 capital-accounting rule.
+
+Do not describe the original base allocation as permanently available for every
+trade regardless of previous results.
+
+4. Q-24 — DAILY TRADE LIMIT
+---------------------------
+Rama has clarified the key part:
+
+MAXIMUM DAILY TRADE COUNT = FILLED TRADES.
+
+Therefore:
+- filled = consumes one daily trade slot
+- queued/pending = does NOT consume a filled-trade slot
+- cancelled = does NOT consume a filled-trade slot
+- rejected = does NOT consume a filled-trade slot
+
+However, this must NOT be interpreted as “pending orders consume no capital”.
+Pending orders may still require capital reservation / broker capacity.
+That question is separate from the FILLED-trade counter.
+
+5. PENDING-ORDER / FILLED-LIMIT BEHAVIOUR
+------------------------------------------
+Configured maximum filled trades = 10.
+
+If 9 trades have already FILLED:
+- the system may submit the next eligible entry (10th slot).
+- If that entry remains pending, the filled count is still 9.
+- A later eligible entry may therefore be submitted, subject to all other
+  capital, risk, duplicate, position, broker, and pending-order constraints.
+- If that later order FILLS, the filled count becomes 10.
+- Once the count reaches 10, block further new entries for that segment/day.
+
+There is one important race condition:
+
+If an earlier entry is still pending while a later entry fills, initiate
+cancellation of the still-pending earlier entry.
+
+If the earlier order FILLS before its cancellation is confirmed, accept the
+broker’s actual fill. Do NOT pretend the fill did not happen.
+
+In that bounded race case:
+- the system may end up with 11 filled trades against a configured limit of 10;
+- immediately block all further new entries;
+- reconcile broker/local state;
+- record the over-limit fill as a bounded execution race / exception;
+- alert and preserve evidence;
+- do not cancel/reverse a genuine fill merely to make the counter equal 10.
+
+This is an execution-race exception, not normal permission to exceed the limit.
+
+6. IMPORTANT WORDING
+--------------------
+Do not write:
+
+“After 9 trades, submit unlimited additional orders until one fills.”
+
+That would be unsafe and is NOT what Rama said.
+
+Use:
+
+“Pending entries do not consume FILLED trade slots, but every additional
+submission remains subject to capital availability, pending-order controls,
+strategy/risk limits, duplicate rules, position limits, broker constraints,
+and any configured maximum outstanding/pending-order policy.”
+
+If V2 has not yet defined a maximum number of simultaneous pending entry orders,
+mark that control OPEN rather than inventing one.
+
+7. CAPITAL RESERVATION — KEEP SEPARATE FROM TRADE COUNT
+--------------------------------------------------------
+Q-24 is answered for the DAILY FILLED-TRADE COUNT.
+
+A separate design question remains unless already decided:
+
+“When an entry order is pending at the broker, how much capital is reserved
+against it, for how long, and how does that reservation reduce the capital
+available to subsequent pending/filled entries?”
+
+Thus:
+- FILLED count rule = clarified.
+- Pending capital reservation rule = separate design item.
+
+8. LEGACY MANUAL REVIEW — AGREED
+--------------------------------
+Claude’s corrections to the legacy manual are appropriate:
+
+- Do not call the legacy sizing model a synthetic ₹35,000 leveraged capital
+  pool merely from the ₹7,000 / 5x project recollection.
+- Keep the Master Agenda ₹7,000 / 5x / ₹35,000 statement as RECORD-DERIVED,
+  not source-verified legacy code.
+- Keep production code evidence as the authority for legacy sizing.
+- Keep the legacy one_trade_per_symbol_direction_per_day rule distinct from
+  V2’s proposed one-trade-per-symbol-per-day rule.
+- Keep max_daily_trades-as-sizing-divisor and inert risk_per_trade_pct as
+  UNVERIFIED because Claude could not verify them in the production baseline.
+- Keep same-day P&L credit versus broker T+1 as an audit lead, not a declared
+  defect.
+- Keep screenshot account/system origin UNKNOWN.
+- Keep production versus sandbox differences separate.
+
+These corrections should remain in the legacy manual.
+
+9. SOURCE DISCIPLINE
+---------------------
+For every load-bearing legacy claim, continue using this priority:
+
+Production baseline source code/config
+    >
+Production records/manuals
+    >
+Sandbox/testing evidence
+    >
+User recollection
+    >
+Interpretation
+
+User recollection can establish historical context but must not overwrite
+source-verified production behavior.
+
+10. FINAL REVIEW RESULT
+-----------------------
+I agree with Claude’s overall A-005 reconciliation direction.
+
+For the V2 side, Rama’s answers resolve the main questions as follows:
+
+Q-22:
+YES — V2 quantity is risk/SL-based, with the capital-derived permitted
+notional acting as a ceiling.
+
+The cash-cap calculation is:
+segment cash / configured maximum FILLED trades,
+then bounded by strategy cap and current available segment cash,
+before broker-margin conversion.
+
+Q-24:
+YES — the DAILY TRADE LIMIT counts FILLED trades only.
+Pending/cancelled/rejected orders do not consume the filled-trade count.
+
+BUT:
+Pending-order capital reservation and the maximum simultaneous pending-entry
+policy remain separate design items unless already frozen elsewhere.
+
+11. REQUEST TO CLAUDE BEFORE FREEZE
+-----------------------------------
+Please update the V2 design-inputs file with the above clarifications, keeping
+them PROPOSED unless governance explicitly freezes them.
+
+Please do NOT:
+- modify the legacy manual with these V2 rules;
+- convert examples into fixed business values;
+- silently decide pending-order reservation;
+- silently decide the maximum number of simultaneous pending entries;
+- treat an 11th fill caused by a cancellation/fill race as normal capacity;
+- erase the evidence of the race if it occurs.
+
+Once these clarifications are incorporated, I have no further material objection
+to freezing the A-005 LEGACY manual itself, provided the final file retains the
+FACT / UNKNOWN / HISTORICAL / INTERPRETATION / KNOWN DEFECT distinctions and
+the V2 material remains in its separate proposed layer.
+
+END
