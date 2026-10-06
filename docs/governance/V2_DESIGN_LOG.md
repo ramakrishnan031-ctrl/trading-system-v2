@@ -13,6 +13,8 @@ Security: no credential values in this file.
 | 2026-10-05 | Both legacy VMs were terminated and deleted without backing up the DB, logs or crontab. Legacy runtime evidence cannot be recovered. | V2 must define backup and restore (M-008/M-009) before any teardown: no machine is deleted without a verified backup. |
 | 2026-10-05 | In A-001, Rama's description of how holdings work (no auto square-off) was filed as a defect. A-002 shows it was by design. | Before classifying a statement as a defect, check that it contradicts a stated objective; by-design behaviour is not a defect. |
 | 2026-10-05 | In the A-002 review, "16 strategies, each with its own YAML" was labelled production FACT, though it came from Rama's recollection and a testing-VM record (ChatGPT A-002 review point 1). | Counts and inventories are FACT only when read from the production baseline; otherwise name the source and mark the claim UNKNOWN or HISTORICAL. |
+| 2026-10-06 | In A-004 Claude wrote that SME was "likely excluded" from an observation about the series filter (ChatGPT A-004 review point 4). | An observation about a filter or code path is an audit lead, not evidence of what was traded; label it INTERPRETATION / AUDIT LEAD and keep the claim UNKNOWN. |
+| 2026-10-06 | Claude dated NSE's 1-paisa tick change to June 2025 from a search snippet that showed no year; the change took effect 10-Jun-2024. ChatGPT's review also mis-dated the change as after the legacy period. | Confirm the date of any external fact from a dated source (exchange circular, broker bulletin, dated news) before writing it. |
 | 2026-10-05 | The first A-001 review notes mixed legacy fact with V2 proposals (ChatGPT review point 1). | Keep two layers apart: the topic manual records legacy fact only; V2 directions stay PROPOSED in section 3 below until decided into the register. |
 
 ## 2. OPEN QUESTIONS (not decisions)
@@ -37,6 +39,8 @@ Security: no credential values in this file.
 | Q-17 | A-008 | Production strategy-YAML count and membership: evidence shows 16 historical Chartink scanner definitions (PB01 marked SHADOW), a locked-decision record of 15 YAML filenames, and 16 YAMLs in the testing-VM storage record. Establish from the production snapshot. | 2026-10-05 | OPEN |
 | Q-18 | A-003 / VP-21 | Zerodha's current equity MIS auto square-off time: Zerodha support pages say 3:20 PM (fresh MIS blocked after it); a Zerodha forum announcement says 3:25 PM. Check the Zerodha bulletin before V2 sets its square-off times; keep the broker time in config. | 2026-10-05 | OPEN |
 | Q-19 | A-003 / B-001 | Verify in source the file-map claims: service start permitted only 08:00-18:15 (main.py exits 0 before loading config) and the validation bound service_window_end < 18:15. | 2026-10-05 | OPEN |
+| Q-20 | A-004 / C | Exact signal-to-instrument lookup key and path, whether exchange came from Chartink or was inferred, and what happened to an unknown symbol. Verify in source. | 2026-10-06 | OPEN |
+| Q-21 | A-004 / audit | ETF and SME treatment: the production series filter is {eq, be, n, bt, il}; Rama reports Silver/Gold ETFs traded and believes the universe included SME. Can a historical production instruments.csv, trade/order record or broker instrument snapshot establish actual SME inclusion and the ETF path? (Commonly used SME series codes not appearing in the filter is an audit lead only.) | 2026-10-06 | OPEN |
 | Q-14 | A-001 evidence | Exact first and last commit dates of the prod snapshot and the exact VM termination date are not known. Not blocking. Optional: read the oldest and newest commit dates on GitHub. | 2026-10-05 | OPEN (non-blocking) |
 
 ## 3. V2 PROPOSALS (PROPOSED, not decided; each becomes a register row only when decided)
@@ -44,7 +48,7 @@ Security: no credential values in this file.
 | # | Proposal | Raised in | Ratify at |
 |---|---|---|---|
 | VP-01 | V2 purpose: "An automated, headless, live-only trading system for NSE equities via Zerodha that consumes Chartink scanner signals and, through its configured controls and decision logic, validates, decides, executes, manages, reconciles and reports intraday and positional trades." | A-001 | End of Section A (after A-007 and A-008) |
-| VP-02 | V2 scope: NSE equity only; Zerodha only; Chartink sole signal source; intraday and positional, with product types finalised at A-007. | A-001 | End of Section A |
+| VP-02 | V2 scope: NSE equity only; Zerodha only; Chartink sole signal source; intraday and positional, with product types finalised at A-007. Decide whether ETFs (traded in legacy) and SME are in scope (A-004). | A-001 | End of Section A |
 | VP-03 | Per-signal-type processors replace the centralised secondary score (intraday and positional use different timeframes and evaluation methods). Existing calculation bases must be reviewed in detail first. | A-001 | A-008 and D-017 |
 | VP-04 | Operator boundary: routine operation is fully automated; the only manual actions are kill-switch release and operator interrupt, including a simple halt command instead of stopping the VM from the cloud console (A-002). This also clarifies the "zero manual intervention" wording in the project instructions (5.5), which targets routine moves, renames and triggers. | A-001 | A-011 (states) and I (safety) |
 | VP-05 | Environments: development and debugging on Windows 11, production on an Ubuntu VM on Oracle (new instance), no hardcoded paths. | A-001 | Section M and Q-05 |
@@ -68,6 +72,8 @@ Security: no credential values in this file.
 | VP-24 | Signals outside the global or strategy entry window are rejected immediately with a recorded reason, not queued (Rama: a pattern seen before the window gives no assurance later). | A-003 | C-009, C-008; links VP-11 |
 | VP-25 | Cron review: review cron_officer (about 45 jobs) and cron_registry; classify each job (trading lifecycle, operations, maintenance, reporting, data); keep only what V2 needs; set the service window by V2's needs (post-market only if VP-14 is adopted). | A-003 | M-002, B |
 | VP-26 | AI briefings (pre-market briefing, weekend pattern analysis) move from Gemini to ChatGPT. | A-003 | L, M |
+| VP-27 | Remove the legacy static symbol blacklist (excluded_symbols). This does NOT mean V2 has no instrument-eligibility controls: legacy also had a separate learned MIS blocklist in screening, and V2 decides separately whether and how eligibility controls exist (for example suspended symbols, surveillance stages, broker MIS-blocked symbols). | A-004 | D-002, C-004 |
+| VP-28 | Instrument master: built from the broker dump with explicit series rules; a symbol with no broker match is rejected, never given default token, lot or tick; tick and lot size always come from the broker (exchange ticks vary: 0.01 below Rs 250 since 10-Jun-2024; price-band ticks since 15-Apr-2025). (Raised by Claude from A-004 data risks; PROPOSED only.) | A-004 | E-012, K-009 |
 | VP-18 | Process: after all agenda topics, run a full legacy audit, file each issue under its topic, then plan, design, architect and build. | A-002 | DECIDED (DR-016) |
 
 ## 4. AGENDA STATUS
@@ -77,7 +83,8 @@ Security: no credential values in this file.
 | A-001 | FROZEN 2026-10-05 (A-001_manual.md, DR-013); erratum DR-015 | DEFERRED to VP-01, VP-02 (end of Section A) |
 | A-002 | FROZEN 2026-10-05 (A-002_manual.md revision 2, DR-014) | V2 ideas in VP-08 to VP-17; VP-18 decided (DR-016) |
 | A-003 | FROZEN 2026-10-06 (A-003_manual.md revision 2, DR-018) | V2 ideas in VP-19 to VP-26; VP-16 extended |
-| A-004 to A-011 | Not yet reviewed with Claude | Not started |
+| A-004 | FROZEN 2026-10-06 (A-004_manual.md revision 2, DR-019) | V2 ideas in VP-27, VP-28; VP-02 extended |
+| A-005 to A-011 | Not yet reviewed with Claude | Not started |
 
 ## 5. WORKING RULES
 
@@ -118,3 +125,5 @@ Security: no credential values in this file.
 
 ### 2026-10-06
 - A-003: ChatGPT value-added review applied (revision 2, all 16 points). A-003 FROZEN under DR-017, recorded as DR-018. No item needed Rama's adjudication. Next: A-004.
+- A-004: review notes and revised legacy manual drafted; V2 blacklist input moved out of the manual (VP-27); VP-28 added; Q-20, Q-21 opened.
+- A-004: ChatGPT value-added review (R1) applied (revision 2, all points). SME reclassified UNKNOWN; tick-change dates verified (10-Jun-2024, 15-Apr-2025) and Claude's earlier June-2025 date corrected. A-004 FROZEN under DR-017, recorded as DR-019. No item needed Rama's adjudication. Next: A-005.
