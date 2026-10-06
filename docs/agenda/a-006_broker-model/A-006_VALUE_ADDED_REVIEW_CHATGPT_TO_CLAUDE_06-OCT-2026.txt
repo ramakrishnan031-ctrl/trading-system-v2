@@ -1,0 +1,343 @@
+A-006 — VALUE-ADDED REVIEW / CHATGPT → CLAUDE 06-OCT-2026
+
+PURPOSE
+
+This is the final ChatGPT review of Claude’s A-006 Broker Model review
+package, including: - A-006_BROKER_MODEL_LEGACY_MANUAL_25-SEP-2026.md -
+A-006_FINAL_SOURCE_RECONCILIATION_AND_FREEZE_25-SEP-2026.txt -
+A-006_BROKER_MODEL_DISCUSSION_CHECKLIST_24-SEP-2026.txt - Claude’s
+revised A-006 review/manual/V2-input responses - Rama’s additional
+answers to Q-27 and Q-28.
+
+GOVERNANCE
+
+1.  Legacy system remains DEAD / REFERENCE ONLY.
+2.  Legacy manual documents what existed, not what should have existed.
+3.  V2 inputs remain PROPOSED only. They are NOT frozen implementation
+    decisions.
+4.  Do not silently repair legacy behavior.
+5.  Preserve FACT / HISTORICAL / UNKNOWN / KNOWN DEFECT / OPEN QUESTION
+    / V2 PROPOSAL labels.
+6.  Current Zerodha behavior is external/current evidence, NOT legacy
+    evidence.
+
+====================================================================== 1.
+OVERALL ASSESSMENT
+======================================================================
+
+I agree with Claude’s A-006 review direction and the separation
+between: - legacy facts in the manual; - reconciliation/evidence; -
+proposed V2 inputs.
+
+The revised structure is appropriate.
+
+I do NOT see a reason to reopen the A-006 legacy manual merely because
+V2 questions remain unresolved. Keep unresolved V2 matters in
+A-006_v2_design_inputs.md and later agenda topics.
+
+Important governance improvement: Whenever a current Zerodha rule is
+cited, label it: CURRENT EXTERNAL BROKER FACT — checked 06-Oct-2026 and
+never present it as evidence of legacy behavior.
+
+======================================================================
+2. Q-27 — SHOULD EVERY INTRADAY TRADE USE MIS?
+======================================================================
+
+RAMA’S ANSWER: A — MIS for every intraday trade; if the instrument is
+blocked for MIS, reject the intraday signal/order.
+
+CHATGPT REVIEW: AGREED AS A V2 PROPOSAL.
+
+This is clean and internally consistent.
+
+Important distinction:
+
+    "Every intraday strategy requests MIS"
+
+does NOT mean “Every instrument is guaranteed to be eligible for MIS.”
+
+Conceptual flow:
+
+    INTRADAY STRATEGY
+          ↓
+    PRODUCT REQUEST = MIS
+          ↓
+    BROKER / INSTRUMENT ELIGIBILITY CHECK
+          ↓
+    MIS ELIGIBLE?
+       YES → continue
+       NO  → reject / do not submit as CNC automatically
+
+Do NOT silently convert an intraday signal into CNC merely because MIS
+is blocked. That changes the business meaning of the strategy.
+
+Recommended V2 wording:
+
+    "All V2 intraday strategies request MIS. If Zerodha does not permit MIS
+     for the selected instrument at order time, the intraday trade is
+     rejected rather than converted to CNC."
+
+The exact pre-check mechanism remains OPEN for the later broker/order
+design. Broker eligibility and product configuration are separate
+concerns.
+
+STATUS: PROPOSED V2 INPUT — accepted for now, not a final implementation
+decision.
+
+======================================================================
+3. Q-28 — “DELIVERY MUST BE IN GTT” — WHAT DOES THAT MEAN?
+======================================================================
+
+RAMA’S PREFERRED ANSWER: A — normal CNC buy, then OCO GTT for stop-loss
+and target after entry.
+
+CHATGPT REVIEW: AGREED. OPTION A IS THE CORRECT INTERPRETATION FOR THE
+INTENDED MODEL.
+
+Recommended wording:
+
+    "Delivery entry is a normal CNC buy. After the delivery position is
+     confirmed as filled, the system creates/maintains a broker-side OCO GTT
+     containing the delivery stop-loss and target."
+
+Sequence:
+
+    approved DELIVERY signal
+          ↓
+    CNC entry order
+          ↓
+    fill confirmation
+          ↓
+    verify actual filled quantity / average price
+          ↓
+    create OCO GTT for actual position
+          ↓
+    monitor/reconcile GTT state
+          ↓
+    target OR SL triggers
+          ↓
+    other OCO leg is cancelled by broker
+          ↓
+    reconcile final position
+
+Do not create a GTT against an assumed quantity if the CNC entry was
+partially filled.
+
+Also preserve: - manual broker-side changes must be
+detected/reconciled; - GTT creation failure after a delivery fill is a
+protection failure requiring bounded retry/escalation; - exact GTT
+construction remains a later G/order-design decision.
+
+STATUS: PROPOSED V2 INPUT — accepted for now, not a final implementation
+decision.
+
+======================================================================
+4. CHARGES — DO BROKER CHARGES MATTER FOR SIZING?
+======================================================================
+
+CHATGPT ANSWER:
+
+Charges should NOT normally be an additional sizing deduction if sizing
+is explicitly based on available cash / configured capital allocation
+and broker-required margin.
+
+Therefore I agree with Claude’s distinction:
+
+    SIZING
+       → use the defined capital/margin model
+       → do not invent an estimated "charges reserve" unless later governance
+         explicitly requires it.
+
+    REALISED NET P&L / PERFORMANCE
+       → actual broker charges matter.
+
+    DAILY LOSS LIMIT / RISK REPORTING
+       → define whether loss is gross or net of actual charges. If a control
+         is defined as net loss, actual charges should be included.
+
+    AUDIT / REPORTING
+       → retain actual broker/order/trade charge evidence where available.
+
+Do not use an estimated brokerage/charge amount as a hidden sizing
+factor.
+
+Recommended V2 wording:
+
+    "Broker charges are not a separate capital-sizing input unless explicitly
+     configured later. Actual charges are retained for post-trade net P&L,
+     performance reporting and any loss-limit calculation whose definition
+     is net of charges."
+
+Exact API/source/timing for final charges should remain OPEN until the
+order/reporting agenda is reviewed.
+
+STATUS: PROPOSED PRINCIPLE — not a final implementation decision.
+
+======================================================================
+5. A-010 / AUTHENTICATION QUESTION
+======================================================================
+
+CLAUDE’S QUESTION: Current Zerodha/Kite Connect guidance indicates a
+daily authentication constraint, while Rama prefers a fully headless
+workflow. Should this be decided now?
+
+CHATGPT ANSWER: NO — do not force a V2 authentication decision inside
+A-006.
+
+Correct classification:
+
+    LEGACY:
+        Headless operation plus manual token creation/upload fallback existed
+        as documented.
+
+    CURRENT EXTERNAL FACT:
+        Current Kite Connect guidance indicates that access tokens are
+        short-lived/daily and the supported login flow has a daily
+        authentication constraint.
+
+    V2 PREFERENCE:
+        Rama prefers a fully headless/no-manual-step workflow.
+
+    V2 DECISION:
+        OPEN — settle under A-010 / M-005 token management using current
+        official broker rules and supported API behavior.
+
+Do NOT promise that fully automatic login can be implemented merely
+because the legacy system attempted a headless workflow.
+
+Do not automate around a broker/regulatory authentication restriction.
+
+STATUS: OPEN / DEFERRED.
+
+======================================================================
+6. REVIEW OF OTHER A-006 OPEN ITEMS
+======================================================================
+
+Q3 Local DB vs broker: Keep OPEN. Broker is authoritative for live
+broker facts, but conflict handling for local/audit state still needs a
+controlled decision.
+
+Q23 Rate-limit policy: Keep OPEN. Do not choose a central/per-endpoint
+scheme without reviewing actual broker limits, SDK behavior, endpoint
+usage and latency needs.
+
+Q24 API failure policy: Keep OPEN by failure category. Authentication,
+funds/margin, order placement, order status, position and market-data
+failures have different safety consequences.
+
+Q25 Retry policy: Keep OPEN. Especially do not blindly retry order
+placement because an order may have been accepted while the caller did
+not receive the result.
+
+Q26 Reconciliation frequency: Keep OPEN until order/position state and
+broker event/polling capabilities are reviewed.
+
+Q27/Q28 reconciliation authority/actions: Keep OPEN at design level,
+while preserving the already stated principle: broker is authoritative
+for live broker facts. Exact automatic repair actions require design.
+
+Q36 Pre-order eligibility: Keep OPEN at implementation level. Broker
+eligibility, system configuration, strategy request and actual broker
+acceptance are distinct.
+
+Q37 Instrument master: Treat broker instrument metadata as an important
+dependency for order construction, but exact refresh timing/validation
+remains open until the relevant agenda topics.
+
+Q41/Q43 Evidence: “all applicable” is reasonable as a proposal. Exact
+mandatory evidence schema and retention period belong to later
+evidence/governance work.
+
+======================================================================
+7. IMPORTANT BROKER / PRODUCT BOUNDARY
+======================================================================
+
+A-006 should NOT silently absorb A-007 decisions.
+
+A-006 establishes: - intended V2 broker; - broker authority for live
+broker facts; - respect for broker capability/eligibility; - broker-side
+protection where appropriate; - current broker constraints must be
+verified.
+
+A-007 establishes: - MIS/CNC/CO/other product semantics; - which product
+belongs to which strategy class; - delivery/intraday product rules.
+
+G/H establishes: - exact order construction; - partial-fill handling; -
+timeout; - retry; - SL/target; - cancellation; - reconciliation actions.
+
+A-010/M establishes: - authentication/token lifecycle.
+
+This separation should remain.
+
+======================================================================
+8. LEGACY MANUAL — NO CHANGE REQUIRED FROM THESE V2 ANSWERS
+======================================================================
+
+The following MUST remain outside historical legacy conclusions unless
+legacy evidence actually proves them:
+
+-   “All intraday used MIS.”
+-   “All delivery used CNC + GTT.”
+-   “Zerodha blocked-stock handling was exactly X.”
+-   “Legacy always rejected blocked MIS rather than another path.”
+-   “Legacy had the current daily-login policy.”
+-   “Legacy used current Zerodha GTT rules.”
+-   “Legacy sizing excluded/included charges in a specific way.”
+
+These are V2 proposals or current external facts unless legacy evidence
+proves otherwise.
+
+The legacy manual should continue to report actual Production evidence,
+including CO/BO ambiguity and paper/live differences.
+
+======================================================================
+9. SECURITY / EVIDENCE
+======================================================================
+
+Do not put credentials, access tokens, TOTP secrets, API secrets or
+authentication values into A-006 documents.
+
+Current broker links and external references are useful evidence, but
+must be clearly separated from legacy repository evidence.
+
+======================================================================
+10. RECOMMENDED FINAL STATUS FOR A-006
+======================================================================
+
+A-006 legacy manual: FROZEN / CLOSED (unless new legacy evidence
+directly contradicts it)
+
+A-006 reconciliation: FROZEN / CLOSED
+
+A-006 V2 design inputs: PROPOSED / OPEN with dependencies carried
+forward to A-007, A-010/M-005, F/G/H/I/K/L/N as appropriate.
+
+Do NOT turn Q-27, Q-28, authentication preference, charges handling,
+retry policy, reconciliation policy, rate-limit policy, or eligibility
+implementation into frozen V2 decisions merely because ChatGPT reviewed
+them.
+
+======================================================================
+11. FINAL INSTRUCTION TO CLAUDE
+======================================================================
+
+Please apply this review as follows:
+
+1.  Keep the A-006 legacy manual factual and frozen.
+2.  Keep all V2 material in A-006_v2_design_inputs.md as PROPOSED/OPEN.
+3.  Record Q-27: MIS for every intraday strategy; reject if MIS
+    unavailable; no automatic conversion to CNC.
+4.  Record Q-28: Delivery = CNC entry followed by broker-side OCO GTT
+    after confirmed fill.
+5.  Record charges as: not a separate sizing deduction by default;
+    actual charges relevant to net P&L / reporting / any net loss limit.
+6.  Keep authentication/headless login OPEN under A-010/M-005.
+7.  Keep broker eligibility, retry, reconciliation, rate-limit and exact
+    evidence implementation OPEN until their proper agenda topics.
+8.  Do not modify legacy facts to fit these V2 proposals.
+9.  Do not add a V2 decision-register row unless the governance process
+    explicitly declares the proposal a decision.
+10. If no contradictory legacy evidence has emerged, A-006 may proceed
+    to finalization.
+
+END OF A-006 CHATGPT REVIEW
