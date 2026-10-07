@@ -1,0 +1,185 @@
+A-008 STRATEGY MODEL — CHATGPT VALUE-ADDED REVIEW / REPLY TO CLAUDE
+Date: 07-Oct-2026
+Status: REVIEW COMPLETE — APPLY CONSISTENCY CORRECTIONS BEFORE FREEZE
+
+OVERALL
+The A-008 package is strong and materially improves the earlier R1 baseline.
+I agree with the source-verified strategy inventory, direction handling,
+scanner mapping, windows, per-strategy controls, common screener findings,
+same-symbol history, circuit-breaker evidence, PB01 treatment, scanner
+overlaps, and BK-1 performance evidence.
+
+I do NOT recommend reopening the established legacy facts. Before freezing,
+apply the wording/consistency corrections below. No new Rama question is
+required now.
+
+1. IMPORTANT: DO NOT OVERSTATE THE "LATE SIGNAL" MECHANISM
+The current wording that today's volume > 1.5x average volume and the other
+daily conditions "can only become true after much of the day's move" or that
+the volume condition is "only true late in the day" is too strong.
+
+Use this classification:
+FACT:
+- scanners used the forming current-day daily values;
+- conditions became true when those values crossed their thresholds;
+- the system also had a global 10:00 entry floor and downstream processing
+  delays.
+
+INTERPRETATION / AUDIT LEAD:
+- the conditions CAN produce late/extended signals;
+- their combination may delay some signals;
+- the volume threshold may be reached later depending on the stock's
+  intraday volume curve.
+
+UNKNOWN:
+- every signal was late;
+- the volume condition could only become true late;
+- the exact delay attributable to the scanner;
+- how much of poor performance came from scanner timing versus screening,
+  price construction, entry timing or market regime.
+
+Recommended wording:
+"The scanners used the forming daily candle. Their conditions could become
+true only after the current-day values crossed the specified thresholds and
+therefore could produce signals after a substantial part of the move. This
+is a credible mechanism for late signals, but the legacy evidence does not
+establish that every signal was late or quantify the delay."
+
+2. KEEP "98% SL" AS HISTORICAL, NOT AS A SYSTEM KPI
+Do not state "the strategies have a 98% SL rate" or "98% of signals hit SL"
+as fact.
+
+Use:
+"Rama reported approximately 98% SL outcomes for an unspecified period;
+measurement population/date range was not supplied."
+
+BK-1 remains the identified measured dataset with explicit period/sample
+details. Do not merge the two datasets.
+
+3. CURRENT CHARTINK DOCUMENTATION IS NOT LEGACY ALERT EVIDENCE
+The Chartink pages are correctly useful as CURRENT EXTERNAL FACTS:
+- intraday scan timeframes exist;
+- alerts can run at configurable frequencies;
+- Duplicate can repeat;
+- Unique can limit a stock to one alert per day;
+- webhooks exist.
+
+Keep UNKNOWN:
+- legacy Chartink plan;
+- actual legacy alert frequency;
+- Unique versus Duplicate setting;
+- historical scanner changes;
+- whether stored legacy URLs matched the actual live screeners.
+
+Do not retroactively infer legacy settings from today's Chartink documentation.
+
+4. RANGE-BREAKOUT "NEVER FIRES" MUST REMAIN AN AUDIT LEAD
+Keep:
+"The range-breakout conditions may be self-defeating if the 15-day
+maximum/minimum includes the current day."
+
+Do not state that the range scanners never fired unless direct Chartink
+execution evidence proves it. BK-1 having zero closed trades supports the
+suspicion but does not prove scanner non-generation. The StockCharts
+discussion is contextual, not proof of Chartink's exact implementation.
+
+5. SEPARATE SCANNER DUPLICATE FROM STRATEGY DUPLICATE
+Use:
+- "scanner-condition duplicate" for identical supplied conditions;
+- "scanner subset/overlap" for containment;
+- "strategy duplication" only when downstream strategy behaviour is also
+  proven equivalent.
+
+I and XV are identical in the supplied scanner conditions, but they have
+different legacy intents/products, so do not call them identical strategies.
+
+6. BE PRECISE ABOUT "15 TRADING DEFINITIONS"
+Keep the three levels separate:
+- 16 Chartink definitions;
+- 15 normal trading definitions;
+- PB01 is the 16th shadow/non-trading definition;
+- the 15 normal definitions can be grouped into approximately five
+  condition families.
+
+7. FIELD-CONSUMER TABLE: USE EVIDENCE-BOUND WORDING
+Where complete call-path evidence proves a field is ignored, "inert at
+baseline" is fine.
+
+Otherwise prefer:
+"No Production consumer identified in the inspected path"
+or
+"No effect identified in the inspected Production path."
+
+Apply this especially to order_protocol, pipeline, horizon, ATR fields,
+gap buffer, smart-target and trailing fields where the full caller graph was
+not inspected.
+
+8. DO NOT TURN A-008 INTO V2 DESIGN
+Keep these PROPOSED/OPEN and defer to their owning topics:
+- final V2 strategy count;
+- scanner conditions;
+- secondary filtering;
+- score/ranking;
+- risk/SL semantics;
+- strategy/account cap precedence;
+- circuit breaker;
+- same-symbol opposite-direction rule;
+- Chartink alert mode;
+- config/strategy precedence.
+
+A-008 should preserve legacy facts and identify defects/future inputs, not
+freeze V2 architecture.
+
+9. Q-33 — DO NOT ASK RAMA AGAIN YET
+Claude correctly identified the apparent difference between:
+"One Symbol per Day only ... at any cost"
+and
+"one stock + one direction once a day."
+
+First check Rama's later A-009 to A-011 answers. If those settle it, use them.
+Only if they do not settle it should Q-33 be reopened.
+
+10. A-007 ERRATUM E-1 / DR-023
+Accepted. Keep the original stale statement visible/struck through, keep the
+corrected implementation separately documented, and record DR-023 at the
+A-008 freeze. The Production baseline outcome remains unchanged because the
+flag was false.
+
+11. V2 INPUT DISPOSITION
+I agree these remain PROPOSED/OPEN:
+- VP-44: redesign the current scanners / earlier-signal objective.
+- VP-45: uniform Chartink identity/naming.
+- VP-08: do not blindly carry the 16-strategy model.
+- per-strategy filtration: later D.
+- score/ranking: later D/F.
+- strategy count: designated Section A decision point.
+- risk/SL: E/F.
+- same-symbol rule: later after the later agenda answers are checked.
+- config/strategy boundary: A-009.
+
+No V2 decision-register row should be created merely because a consideration
+looks sensible.
+
+FINAL DISPOSITION
+A-008 source reconciliation: ACCEPT
+A-008 legacy findings: ACCEPT
+Strategy count: RESOLVED
+A-007 E-1 correction: ACCEPT
+V2 boundary: ACCEPT
+New question to Rama: NONE at present
+
+Required before freeze:
+1. Correct the over-strong late-signal wording.
+2. Keep 98% as attributed historical evidence, not a measured KPI.
+3. Separate current Chartink facts from legacy alert settings.
+4. Keep range-breakout non-firing as an audit lead.
+5. Use precise duplicate/subset/family terminology.
+6. Use evidence-bounded wording for "inert/no effect".
+
+After those edits:
+A-008 LEGACY MANUAL -> FROZEN
+A-008 REVIEW NOTES -> CLOSED
+A-008 V2 DESIGN INPUTS -> PROPOSED / OPEN
+DR-023 -> record A-008 freeze + A-007 E-1
+
+No new V2 decision should be entered solely from this review.

@@ -1,7 +1,7 @@
 # A-007 PRODUCT TYPES: REVIEW NOTES
 
 Date: 2026-10-06
-Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 9). Legacy manual frozen under DR-017, recorded as DR-022 together with the A-006 erratum E-1; V2 inputs remain PROPOSED / OPEN. Q-32 closed from Rama's 06-Oct Q-27 answer.
+Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 9). Legacy manual frozen under DR-017, recorded as DR-022 together with the A-006 erratum E-1; V2 inputs remain PROPOSED / OPEN. Q-32 closed from Rama's 06-Oct Q-27 answer. Two section 4 rows corrected on 2026-10-07 for the A-007 erratum E-1 found during A-008 (originals struck through; see the Erratum section of A-007_manual.md; recorded in DR-023).
 Place at: docs/agenda/a-007_product-types/A-007_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-007_manual.md; V2 inputs in A-007_v2_design_inputs.md and V2_DESIGN_LOG. Current broker rules labelled per W-5.
 Security: no credential values. Source was read from raw files and a blob-less sparse clone that fetched only the needed paths (config/strategies, orders, core, signals, broker modules named in the manual); docs/web_claude, .env files and other credential-bearing paths were not fetched or opened. The files read contain no credential literals (checked).
@@ -49,8 +49,8 @@ ChatGPT's set separates product intent from broker code correctly, keeps GTT apa
 | 4 Semantic vs broker distinction intentional | UNKNOWN | Yes: locked design PR1-PR10 (3) |
 | 4 ProductResolver single translation point | UNKNOWN | For placement yes; not for reverse maps and filters (3) |
 | 4 Any module supplied codes directly | UNKNOWN | Yes: constants, order_placer, mis_autosquareoff (3) |
-| 5 Authoritative source / how selected | (blank) | Strategy intent, gated by trade_type; force_intraday_only could rewrite at load (4) |
-| 5 Product change during processing | UNKNOWN | Only force_intraday_only at load; none per signal found (4) |
+| 5 Authoritative source / how selected | (blank) | Strategy intent, gated by trade_type; ~~force_intraday_only could rewrite at load~~ force_intraday_only made delivery strategies dormant (no load-time rewrite since 10-Jul-2026; erratum E-1) (4) |
+| 5 Product change during processing | UNKNOWN | ~~Only force_intraday_only at load;~~ None at the baseline except the adapter's coercion to MIS when force_intraday_only is true (erratum E-1); none per signal found (4) |
 | 8 CO intraday-only, broker SL, bracket-aware exit, EOD | YES (guess) | Code agrees (CO SL built in; cancel variety co; EOD exits CO) but CO never ran (8) |
 | 11 Several entry types in one product | UNKNOWN | Yes for MIS: LIMIT, MARKET for the retest entry (11) |
 | 12 Variety part of product handling; distinct concepts | UNKNOWN | Distinct; variety co only for CO, regular otherwise (11) |
