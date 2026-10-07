@@ -1,0 +1,125 @@
+A-007 VALUE-ADDED REVIEW — CHATGPT → CLAUDE
+Date: 07-Oct-2026 IST
+Topic: A-007 Product Types
+
+OVERALL CONCLUSION
+The A-007 source reconciliation is strong. I do NOT recommend changing the established legacy facts. I recommend only the following final consistency/quality edits before freeze.
+
+1. LEGACY MANUAL — APPROVE WITH SMALL CLEANUPS
+- Keep the distinction between SOURCE-VERIFIED code-path conclusions and RECORD-DERIVED measurements.
+- MIS and CNC were actually used; CO was not selected by the production OrderPlacer; BO and NRML were not placeable by the baseline system.
+- Keep the 16 production YAML inventory: 13 intraday (12 enabled; PB01 disabled/fail-closed) and 3 delivery.
+- Keep the important finding that 13 YAMLs declared CO_PLUS_TGT but the runtime OrderPlacer always used LIMIT_TRIPLE.
+- Keep ProductResolver as the intent-to-code translator, but not the only location where product codes existed.
+- Keep the product-not-persisted finding and label any actual delivery-exit-through-order-placer conclusion as AUDIT LEAD / NOT ESTABLISHED.
+- For delivery, prefer evidence-disciplined wording such as: "the legacy delivery execution path used CNC and, after the entry fill, constructed one broker-side OCO GTT for the delivery position." Do not imply that every historical GTT placement was independently proven from the deleted DB.
+
+2. FREEZE STATUS
+The manual currently says DRAFT/awaiting ChatGPT review. After applying this review, change the final copy to:
+"Status: FROZEN 2026-10-07 (DR-0xx)."
+Also make A-007_review_notes CLOSED/FINAL.
+
+3. Q-32 — CLOSE, BUT KEEP THE V2 RESULT PROPOSED
+Q-32 asks Rama to confirm the V2 intraday reading. Rama already answered this in the later 06-Oct Q-27 answer:
+"Every intraday trade uses MIS; if the stock is not eligible for MIS, reject the signal rather than silently changing the product."
+
+Therefore do NOT ask Rama the same question again.
+
+Recommended:
+- Q-32 = CLOSED 2026-10-07.
+- Source = Rama's later 06-Oct Q-27 answer.
+- Keep VP-41 PROPOSED, not a decision.
+- Exact SL order type, protective-leg state machine, retry/escalation and timing remain OPEN for G/H.
+
+Suggested wording:
+"Q-32 closed from Rama's later 06-Oct Q-27 answer. The V2 intraday product intent is PROPOSED as MIS-only; MIS-ineligible symbols are rejected rather than converted. Exact protective-leg mechanics remain open for G/H."
+
+4. MIS ELIGIBILITY — KEEP THREE LEVELS SEPARATE
+Do not write "all intraday stocks are MIS eligible."
+The proposed rule is:
+A. Strategy product intent = MIS.
+B. Instrument eligibility = current broker/instrument eligibility check.
+C. Order-time broker acceptance = final authority.
+If MIS is unavailable, reject rather than silently convert to CNC.
+This remains PROPOSED until Section A is ratified.
+
+5. CURRENT EXTERNAL BROKER FACTS
+Keep every current Zerodha statement visibly labelled:
+CURRENT EXTERNAL BROKER FACT — CHECKED 2026-10-06
+Never use current broker rules as evidence of legacy behaviour.
+
+References in the package are appropriate:
+https://support.zerodha.com/category/trading-and-markets/trading-faqs/articles/why-bo-stopped
+https://support.zerodha.com/category/trading-and-markets/product-and-order-types/order/articles/what-are-cover-orders-and-how-to-use-them
+https://zerodha.com/z-connect/?p=454739
+
+6. CAS / SQUARE-OFF
+Keep the A-006 E-1 distinction:
+- CAS began with 3:10 PM for CAS stocks.
+- Zerodha revised it to 3:12 PM in the 10-Aug-2026 update.
+- Current support value is 3:12 PM for CAS stocks and 3:25 PM for others.
+Keep this as CURRENT EXTERNAL BROKER FACT.
+Separately document the legacy 15:17 → 15:03/15:06/15:09 evolution.
+
+7. CO / BO / NRML
+Keep:
+- CO: supported by code/config but never selected by the actual production placement path.
+- BO: mapping unsupported/empty and therefore not placeable.
+- NRML: not a placement product in the legacy system, although reverse mapping/latent handling existed.
+Keep the latent NRML handling inconsistency as a legacy ambiguity.
+
+8. SMART TARGET
+Keep "probably never engaged" / AUDIT LEAD.
+Evidence strongly suggests an inert path:
+smart_tgt_enabled in intraday YAMLs + SmartTgtManager registered only for CO_PLUS_TGT + runtime LIMIT_TRIPLE.
+Do not claim "never executed in production" unless direct runtime evidence proves it.
+
+9. SL-M FINDING
+Keep the early SL-M issue as AUDIT LEAD / NOT ESTABLISHED.
+Legacy comments said SL-M was rejected; later/current broker evidence shows SL-M can be accepted with non-zero market protection in applicable NSE equity conditions; legacy market protection was introduced later. Do not retroactively correct the legacy conclusion.
+
+10. V2 DESIGN BOUNDARY
+A-007_v2_design_inputs.md must remain PROPOSED/OPEN.
+Do not turn these into decisions here:
+- MIS-only intraday
+- CNC + OCO GTT delivery
+- one-symbol-per-day
+- config master / strategy secondary
+- per-category square-off timing
+- product data-integrity rules
+- protective-leg state machine
+- live-only
+- capital/margin proposals
+These remain governed for later agenda/design stages.
+
+11. V2_DESIGN_LOG CONSISTENCY
+If Q-32 is closed:
+- mark Q-32 CLOSED in the open-question table;
+- keep VP-41 PROPOSED;
+- do not create a decision-register row merely because Q-32 is closed;
+- keep A-007 as the topic whose legacy manual is now frozen.
+Also keep A-008 separate: Q-17 strategy count is answered by A-007 evidence, while A-008 content/strategy-model review remains its own topic.
+
+12. A-006 ERRATUM
+Keep E-1 as a visible historical erratum. Do not silently rewrite old evidence. A-007 may cross-reference it.
+
+FINAL RECOMMENDATION
+After these small edits:
+- A-007 legacy manual = FROZEN.
+- A-007 review notes = CLOSED.
+- A-007 V2 inputs = PROPOSED / OPEN.
+- V2_DESIGN_LOG = synchronized.
+- No new V2 decision is required from this review.
+- Q-32 = CLOSED from the 06-Oct Q-27 answer; VP-41 remains PROPOSED.
+
+No further substantive legacy-system changes are required.
+
+SAVE / REPLACE
+1. docs/agenda/a-007_product-types/A-007_manual.md — REPLACE
+2. docs/agenda/a-007_product-types/A-007_review_notes.md — REPLACE
+3. docs/agenda/a-007_product-types/A-007_v2_design_inputs.md — REPLACE
+4. docs/governance/V2_DESIGN_LOG.md — REPLACE
+5. docs/governance/V2_DECISION_REGISTER.md — NO NEW DECISION REQUIRED
+
+FINAL CHATGPT POSITION
+Proceed to A-007 freeze after these small consistency edits. No further Rama clarification is required for Q-32 because the later 06-Oct Q-27 answer already supplies the required answer.
