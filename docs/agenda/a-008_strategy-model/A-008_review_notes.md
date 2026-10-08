@@ -1,7 +1,7 @@
 # A-008 STRATEGY MODEL: REVIEW NOTES
 
 Date: 2026-10-07
-Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 12). Legacy manual frozen under DR-017, recorded as DR-023 together with the A-007 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for his A-009 to A-011 answers).
+Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 12). Legacy manual frozen under DR-017, recorded as DR-023 together with the A-007 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for his A-009 to A-011 answers). Erratum E-1 to the A-008 manual added 2026-10-08 during A-009 (F-5 and the Q14 row below, struck through; section 13), accepted by ChatGPT on 08-Oct-2026 and recorded in DR-024 (2026-10-08).
 Place at: docs/agenda/a-008_strategy-model/A-008_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-008_manual.md; V2 inputs in A-008_v2_design_inputs.md and V2_DESIGN_LOG. External facts labelled per W-5.
 Security: no credential values. Source was read from raw files and a blob-less sparse clone that fetched only the needed paths (config/strategies, strategies, signals, screening, capital, core and config files named in the manual); docs/web_claude, .env files, accounts.csv and other credential-bearing paths were not fetched or opened. The Chartink screenshots contain webhook material; only the alert names are used.
@@ -26,7 +26,7 @@ ChatGPT's R1 set has the right structure: Chartink signal generation is strategy
 | F-2 | Direction is a required field declared in all 16 YAMLs; the webhook carries no side; the order side is computed from the YAML; the registry only mirrors it. R1 said the manual "must not claim" a direction label. | schema.py, signal_processor.py, strategy_direction.py, 17-Jul investigation | Manual 5 |
 | F-3 | Control order: enabled, then force_intraday_only (delivery dormant), then trade_type; labels REJECTED_STRATEGY_CONTROL / REJECTED_TRADE_TYPE. Since 10-Jul-2026 force_intraday_only no longer rewrites intent (loader "Option A"); the adapter coerces to MIS under the flag. | control.py, loader.py | Manual 6; A-007 erratum E-1 |
 | F-4 | Per-strategy windows: the 09:25 start never bound (global 10:00, testing 09:30); the 15:00 end equals the global end since 29-Jun-2026. R1 left the effect UNKNOWN. | config, signal_processor.py | Manual 7 |
-| F-5 | An unmapped scanner gets HTTP 404 before any processing; a duplicate scanner name fails start-up; the processor has an UNKNOWN_STRATEGY backstop. R1 left both UNKNOWN. | webhook_receiver.py WR4, scan_webhook_map.yaml | Manual 8 |
+| F-5 | An unmapped scanner gets HTTP 404 before any processing; ~~a duplicate scanner name fails start-up;~~ (superseded by erratum E-1: a duplicate scanner key is not rejected; the pinned parser keeps the last occurrence; no start-up check) the processor has an UNKNOWN_STRATEGY backstop. R1 left both UNKNOWN. | webhook_receiver.py WR4, scan_webhook_map.yaml | Manual 8 |
 | F-6 | The testing alert-name prefix ("VBB097-...") is stripped by shared code (WR4b, 09-Sep-2026), not a testing-only manual change; before it, every testing signal was rejected (400). | webhook_receiver.py | Manual 9 |
 | F-7 | Per-strategy parameters: fixed stop 0.8% to 2%, R:R 1.5 in all 16, entry offset 0.1% / 0.2%, pullback wait on 6 YAMLs; locked S6 / S13 values differ from the deployed YAMLs. R1 left field values UNKNOWN. | YAMLs, locked_decisions.yaml | Manual 10 |
 | F-8 | Risk % was global (1%); stop % per strategy; per-strategy max_risk_pct deleted 24-Jun-2026. | schema.py, config | Manual 10-11 |
@@ -57,7 +57,7 @@ ChatGPT's R1 set has the right structure: Chartink signal generation is strategy
 | 11 One scanner, one strategy | YES | Consistent (8) |
 | 12 One strategy, several scanners | NO | Consistent (8) |
 | 13 Unknown scanner | UNKNOWN | HTTP 404 before processing (8) |
-| 14 Mapping collision | UNKNOWN | Start-up failure (8) |
+| 14 Mapping collision | UNKNOWN | ~~Start-up failure (8)~~ (superseded by erratum E-1) A duplicate scanner key is not rejected: the pinned parser keeps the last occurrence; no start-up check (8) |
 | 15 Strategy-specific screening | NO, one common filter | Consistent; three per-strategy thresholds only (12) |
 | 16 Placeholders | PB01 | Consistent (16) |
 | 17 Late entry | YES | HISTORICAL defect; mechanism INTERPRETATION (18) |
@@ -134,3 +134,6 @@ ChatGPT's review (docs/agenda/a-008_strategy-model/A-008_VALUE_ADDED_REVIEW_CHAT
 | 11. V2 input disposition | VP-44, VP-45, VP-08 and the other inputs stay PROPOSED / OPEN. VP-03's ratification point moved from "A-008 and D-017" to D-003 and D-017 (ranking with F), since A-008 decides nothing for V2. No V2 register row. |
 
 Result: A-008 legacy manual FROZEN (revision 1, DR-023); these notes CLOSED; A-008_v2_design_inputs.md PROPOSED / OPEN. Register: one row, DR-023, records the freeze of the legacy record under DR-017 together with the A-007 erratum E-1. No V2 decision is entered.
+
+## 13. Erratum E-1 to the A-008 manual (2026-10-08, found during A-009)
+F-5 and the Q14 row above said a duplicate scanner name failed start-up, and the manual said the scanner map was cross-validated at load (S10). Reading the callers for A-009 showed that S10 runs only when the loader is given the map path, which none of the boot or pre-flight callers read passes, and that the pinned parser (PyYAML 6.0.3) keeps the last of two identical keys without error, although YAML 1.2.2 requires unique keys. No legacy outcome changes: at the baseline the 16 scanner keys are unique and every mapped strategy has a YAML. The original text stays visible, struck through; details in A-008_manual.md (Erratum), A-009_manual.md section 5 and A-009_review_notes.md section 6. Accepted by ChatGPT on 08-Oct-2026 (A-009 review, accepted point 9) and recorded in DR-024 (2026-10-08).

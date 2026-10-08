@@ -1,0 +1,515 @@
+A-009 CONFIGURATION MODEL
+CHATGPT VALUE-ADDED REVIEW / REPLY TO CLAUDE
+Date: 08-Oct-2026
+Status: REVIEW COMPLETED — APPLY CORRECTIONS BEFORE A-009 FREEZE
+
+======================================================================
+1. OVERALL DISPOSITION
+======================================================================
+
+I completed the deep review of the full A-009 package:
+
+SOURCE / INPUTS
+- A-009_CONFIGURATION_MODEL_DISCUSSION_CHECKLIST_29-SEP-2026.txt
+- A-009_CONFIGURATION_MODEL_REMAINING_CLARIFICATIONS_30-SEP-2026.txt
+- A-009_FINAL_SOURCE_RECONCILIATION_AND_FREEZE_30-SEP-2026.txt
+- A-009_CONFIGURATION_MODEL_LEGACY_MANUAL_30-SEP-2026.md
+
+CLAUDE OUTPUT
+- A-009_manual.md
+- A-009_review_notes.md
+- A-009_v2_design_inputs.md
+- V2_DESIGN_LOG.md
+- A-008_manual.md / A-008_review_notes.md replacements associated with
+  the A-009 scanner-map erratum
+
+I also considered the screenshots supplied with the review package, including
+the proposed save/replace list and Claude's stated findings/process note.
+
+Conclusion:
+
+A-009 is substantially correct and is ready for FREEZE after the corrections
+below.
+
+There is NO new question for Rama.
+
+Q-33 (same-symbol rule) must remain OPEN/DEFERRED. A-009 does not settle it,
+and the established rule is to check A-010 and A-011 answers before asking
+Rama again.
+
+Do NOT introduce any new V2 decision from this review.
+
+======================================================================
+2. WHAT IS ACCEPTED
+======================================================================
+
+The following Claude findings are accepted as evidence-disciplined and should
+remain in the A-009 manual:
+
+1. Eight AppConfig YAML files are the core loader registry, with strategy YAMLs
+   loaded separately.
+
+2. Additional configuration/config-like sources exist outside those eight:
+   accounts.csv, index_universe.yaml, strategy_direction_registry.yaml,
+   symbol_aliases.yaml, cron_registry.yaml, expected_managers.yaml,
+   preflight.yaml, security.yaml, instruments.csv, CLI, environment,
+   systemd and database state.
+
+3. Production is the primary historical baseline. Testing/Sandbox is comparison
+   evidence only.
+
+4. Production's repository systemd unit uses:
+      main.py --mode live
+   and does not supply --config; therefore the repository unit resolves the
+   default config/ relative to its WorkingDirectory.
+   The actual installed VM unit remains UNKNOWN because the VMs are gone.
+
+5. AppConfig loading is atomic; YAML is parsed with yaml.safe_load; Pydantic
+   validation is strict; raw-file hashes are captured; there is no hot reload.
+
+6. Strategy YAML loading is separate and fail-fast.
+
+7. The current-year holiday filename behavior is correctly documented as an
+   audit lead. Do not convert the hypothetical 2027 failure into a historical
+   observed incident.
+
+8. Configuration errors, startup checks, auditor behavior and systemd restart
+   behavior are correctly separated.
+
+9. The scanner-map validation correction is important and correctly belongs in
+   A-008 as Erratum E-1:
+   - the loader contains S10 logic;
+   - the inspected production callers did not pass the scanner-map path;
+   - therefore the claimed boot-time cross-check was not established;
+   - duplicate scanner keys were tested with the pinned PyYAML 6.0.3 behavior
+     and collapsed to the last key without an error;
+   - baseline scanner keys were unique, so no historical outcome change is
+     claimed.
+
+10. The distinction between:
+      YAML specification uniqueness
+   and:
+      actual PyYAML 6.0.3 loader behavior
+   is correct and should remain explicit.
+   YAML 1.2.2 defines mapping keys as unique; the legacy observed behavior is
+   an implementation behavior of the actual parser used by the legacy system,
+   not a statement that duplicate YAML keys are valid business configuration.
+
+11. The 23 SystemConfig schema defaults and 15 scanner_type defaults are
+   correctly treated as actual baseline defaults, while their effect on
+   production trading remains UNKNOWN.
+
+12. Usage tracking is correctly described as warn-only in the inspected boot
+   path and as not covering strategy YAMLs.
+
+13. CONFIG_DIFF coverage is correctly limited to the eight AppConfig files, and
+   the session-hash update-before-startup-check issue is correctly labelled
+   as an audit lead rather than an observed production incident.
+
+14. config_snapshots are correctly described as resolved AppConfig snapshots,
+   not simply raw YAML copies. Comment-only raw-file changes can change the
+   hash even if resolved values remain unchanged.
+
+15. Values held in Python code are correctly documented as a legacy defect /
+   governance problem rather than silently normalized.
+
+16. Paper/live behavior is correctly separated. Same YAML files did NOT imply
+   identical runtime behavior.
+
+17. Production/testing comparison is useful and evidence-bounded:
+   18 system_config.yaml differences were found in the compared snapshot;
+   force_qty and the 0.50 value-cap testing change never governed a trade
+   according to the preserved 18-Sep record.
+
+18. Change governance/drift findings are important:
+   multiple historical change routes existed, no single formal configuration
+   change register was established, and the 18-Sep record shows repository/
+   deployed-tree divergence.
+
+19. The three Rama-requested "Manual" notes are correctly split:
+   legacy facts remain in A-009_manual.md and new-system requirements remain
+   PROPOSED in A-009_v2_design_inputs.md.
+
+======================================================================
+3. REQUIRED CORRECTION #1 — DR NUMBER / FREEZE STATUS
+======================================================================
+
+This is the most important documentation/governance correction.
+
+A-009_review_notes.md section 5 currently says, in effect, that Rama's
+30-Sep Q44 marked A-009 CLOSED/FROZEN and refers to DR-017.
+
+That is NOT the correct A-009 freeze record.
+
+DR-017 is already the project-wide approval/process decision from the earlier
+agenda work. A-009 is currently intended to freeze under DR-024, as stated
+elsewhere in Claude's own A-009 files.
+
+Therefore:
+
+CHANGE A-009_review_notes.md section 5:
+
+WRONG:
+    "ChatGPT and Rama (Q44) marked A-009 CLOSED / FROZEN on 30-Sep; ...
+     working copy is DRAFT until then (DR-017)."
+
+REPLACE WITH:
+    "Rama marked A-009 CLOSED / FROZEN in Q44 on 30-Sep. This was his
+     questionnaire disposition, not the final documentation freeze record.
+     The permanent A-009 freeze occurs after Claude applies ChatGPT's review,
+     under DR-024."
+
+Also ensure the A-009 status/agenda row in V2_DESIGN_LOG consistently says:
+    A-009 = FROZEN under DR-024
+only AFTER this review is applied.
+
+Do not alter historical Q44.
+
+======================================================================
+4. REQUIRED CORRECTION #2 — "18 DIFFERENCES" WORDING
+======================================================================
+
+The comparison is correct, but keep the scope explicit everywhere.
+
+Use:
+    "18 differing leaf settings in system_config.yaml"
+
+rather than wording that could be read as:
+    "18 files differed."
+
+The compared set contained several files that were byte-identical.
+
+The 18 count is:
+- entry_start: 1
+- force_qty: 1
+- two position-value caps: 2
+- sr_shadow settings: 11
+- SMTP settings: 3
+= 18
+
+The VM-local/testing repository differences are a separate evidence layer and
+must remain separate from the 18-leaf comparison.
+
+======================================================================
+5. REQUIRED CORRECTION #3 — CONFIGURATION "SOURCE" VS "CONSUMER"
+======================================================================
+
+The manual is mostly careful here, but keep the wording strict.
+
+For any file where the complete consumer graph was not inspected, use:
+
+    "reader identified"
+    "consumer identified in inspected path"
+    "no reader identified in inspected path"
+    "effect not established"
+
+Do NOT use blanket wording such as:
+    "unused"
+    "inert"
+    "has no effect"
+
+unless the complete relevant path was established.
+
+This is especially important for:
+- symbol_aliases.yaml
+- expected_managers.yaml
+- broker_costs.yaml -> broker/cost_calculator.py
+- some strategy loader/config fields
+- watcher processes that were explicitly not read.
+
+"expected_managers.yaml has no reader identified in the inspected source"
+is safer than treating the whole system as proving it was never consumed.
+
+The current wording is mostly already corrected; preserve that discipline.
+
+======================================================================
+6. REQUIRED CORRECTION #4 — BROKER CHARGES / CNC SELL WORDING
+======================================================================
+
+The current external Zerodha charges page was checked and confirms:
+- equity delivery brokerage: zero
+- equity intraday brokerage: 0.03% or Rs 20, whichever is lower
+- NSE equity transaction charge: 0.00307%
+
+The legacy file contains 0.00297% and therefore does not match the current
+NSE value.
+
+However, be careful with the sentence:
+
+    "CNC-sell brokerage comment conflicts with zero delivery brokerage"
+
+It is valid as an ambiguity in the legacy configuration/comment, but it must
+NOT be interpreted as proof that every historical CNC SELL was charged
+brokerage.
+
+Zerodha's own virtual contract-note explanation says equity charges are
+computed based on the resulting trade classification/FIFO and not simply the
+submitted product label. Therefore the safe legacy wording is:
+
+    "The legacy configuration/comment contains a CNC SELL brokerage
+     statement that does not align directly with Zerodha's current published
+     zero-brokerage equity-delivery rate. Because broker/cost_calculator.py
+     was not inspected and historical contract-note evidence is unavailable
+     here, the actual legacy treatment of CNC SELL charges is UNKNOWN."
+
+This is stronger evidence discipline.
+
+======================================================================
+7. REQUIRED CORRECTION #5 — BROKER API "AUTHORITY" LANGUAGE
+======================================================================
+
+The V2 inputs correctly point toward broker APIs for margins and charges.
+
+But keep the distinction:
+
+    /margins/orders
+        = broker-side order margin CALCULATION API
+
+    /charges/orders
+        = broker-side order charge CALCULATION API
+
+Neither should automatically be described as the complete "broker account
+truth" for all runtime state.
+
+The broker remains authoritative for actual live broker state; these APIs
+provide broker calculations for the specific requested order(s).
+
+This is especially important because /margins/orders considers existing
+positions/open orders when calculating order margin.
+
+Recommended V2 wording:
+
+    "Use broker APIs for broker-calculated order margin/charge references
+     where available; use broker state endpoints for actual live account
+     state."
+
+Keep this PROPOSED. Do not turn it into a V2 decision in A-009.
+
+======================================================================
+8. REQUIRED CORRECTION #6 — YAML DUPLICATE-KEY EXPLANATION
+======================================================================
+
+Keep the current A-008 erratum and A-009 explanation, but make the distinction
+explicit:
+
+FACT:
+    YAML 1.2.2 requires mapping keys to be unique.
+
+FACT:
+    The pinned legacy PyYAML 6.0.3 test accepted the duplicate mapping and
+    the resulting native mapping retained the last occurrence.
+
+LEGACY DEFECT:
+    The legacy configuration path did not reject duplicate scanner keys in
+    the inspected boot/pre-flight path.
+
+Do not write:
+    "YAML allows duplicate keys."
+
+It does not, as a mapping model.
+
+Do not write:
+    "PyYAML is wrong."
+
+The documentation is about observed legacy parser behavior.
+
+======================================================================
+9. REQUIRED CORRECTION #7 — CONFIG ERROR ALERTING
+======================================================================
+
+The current manual correctly distinguishes:
+- exit 5 configuration failure;
+- exit 3 startup-check failure;
+- invalid strategy YAML alert behavior;
+- pre-flight later reporting.
+
+Keep this exact distinction.
+
+Do not simplify the whole system to:
+    "configuration errors produced no alerts."
+
+More precise:
+
+    "No main.py alert was identified for the early exit-5 configuration
+     failure path because the notifier was constructed later. The identified
+     later pre-flight path reported configuration failure at its scheduled
+     time. Invalid strategy configuration had a separate startup-check alert
+     path."
+
+This avoids accidentally contradicting the documented invalid-strategy
+Telegram/email behavior.
+
+======================================================================
+10. REQUIRED CORRECTION #8 — CURRENT EXTERNAL BROKER FACTS
+======================================================================
+
+I independently checked the supplied official sources.
+
+Current Zerodha charges confirm the current NSE equity transaction charge is
+0.00307%, and equity delivery brokerage is zero.
+
+Current Kite Connect margin documentation confirms:
+- /margins/orders calculates order margins;
+- /charges/orders calculates order-wise charges;
+- the margin response includes charges and leverage fields;
+- order margin calculation considers existing positions/open orders.
+
+Zerodha's virtual contract-note material confirms order-wise charge visibility
+and explains that equity intraday/delivery classification can depend on the
+actual resulting trade/FIFO rather than merely the submitted MIS/CNC label.
+
+These are CURRENT EXTERNAL FACTS only.
+
+They do NOT prove what the legacy system actually charged.
+
+Keep them labelled with their check date and do not retroactively convert them
+into legacy behavior.
+
+======================================================================
+11. REQUIRED CORRECTION #9 — A-009 MANUAL FINAL STATUS
+======================================================================
+
+After the corrections above:
+
+A-009_manual.md:
+    FROZEN
+
+A-009_review_notes.md:
+    CLOSED
+
+A-009_v2_design_inputs.md:
+    PROPOSED / OPEN
+
+V2_DESIGN_LOG.md:
+    synchronized with A-009 freeze and DR-024
+
+A-008_manual.md:
+    replacement retained because it contains Erratum E-1 discovered during
+    A-009.
+
+A-008_review_notes.md:
+    replacement retained because it records the same correction.
+
+No V2 decision is ratified by A-009.
+
+======================================================================
+12. REQUIRED CORRECTION #10 — SAVE/REPLACE LIST
+======================================================================
+
+The screenshot save list is correct in principle.
+
+AFTER applying this review, Claude should prepare:
+
+NEW:
+- A-009_manual.md
+  docs/agenda/a-009_configuration-model/
+
+- A-009_v2_design_inputs.md
+  docs/agenda/a-009_configuration-model/
+
+- A-009_review_notes.md
+  docs/agenda/a-009_configuration-model/
+
+REPLACE:
+- A-008_manual.md
+  docs/agenda/a-008_strategy-model/
+
+- A-008_review_notes.md
+  docs/agenda/a-008_strategy-model/
+
+- V2_DESIGN_LOG.md
+  docs/governance/
+
+Also record:
+- DR-024 = A-009 legacy manual freeze + A-008 Erratum E-1
+  (using the project's established DR sequence).
+
+Do not create duplicate copies under another folder.
+
+======================================================================
+13. PROCESS INCIDENT
+======================================================================
+
+The disclosed partial-clone incident is acceptable to retain in
+A-009_review_notes.md and V2_DESIGN_LOG.md.
+
+It is important that it remains a PROCESS / TOOLING INCIDENT, not a claim
+that credentials were exposed.
+
+The current wording says:
+- some never-open paths were lazily fetched into the object store;
+- none was displayed/opened;
+- the clone was deleted;
+- a restricted sparse clone was recreated;
+- a preventive rule was added.
+
+That is appropriate.
+
+Do not add secret values or claim an exposure that the evidence does not
+establish.
+
+The new V2 lesson is useful:
+    do not use tree-wide/history Git commands on a legacy partial clone;
+    inspect only explicitly checked-out paths.
+
+======================================================================
+14. A-009 LEGACY MANUAL QUALITY CHECK
+======================================================================
+
+The manual now meets the required Phase-1 discipline substantially well:
+
+FACT:
+    Source-verified / record-derived / supplied record are distinguished.
+
+HISTORICAL:
+    Rama's recollections remain labelled.
+
+UNKNOWN:
+    Missing runtime evidence is not silently invented.
+
+INTERPRETATION / AUDIT LEAD:
+    2027 holiday failure and hash-alert loss are correctly treated as
+    inferred/code-path findings rather than observed incidents.
+
+KNOWN DEFECT / AMBIGUITY:
+    Scanner validation, defaults, hardcodes, drift, stale comments,
+    broker-value mismatch and paper/live divergence are clearly separated.
+
+V2:
+    V2 proposals are moved out of the legacy manual.
+
+This separation should be preserved during final editing.
+
+======================================================================
+15. NO NEW RAMA QUESTION
+======================================================================
+
+Claude asked no new question in this pass.
+
+Do NOT ask Rama about:
+- Q-33 now;
+- broker charges;
+- YAML duplicate behavior;
+- DR-024;
+- any of the corrections above.
+
+Q-33 remains OPEN until A-010 and A-011 answers are checked, as already
+established by the project workflow.
+
+======================================================================
+16. FINAL RECOMMENDATION
+======================================================================
+
+DISPOSITION: ACCEPT WITH REQUIRED EDITS.
+
+The A-009 technical investigation is strong and substantially complete.
+The corrections above are primarily evidence/governance precision, not a
+reversal of the core A-009 findings.
+
+After applying them, A-009 is suitable for:
+    FREEZE -> DR-024 -> final storage -> push.
+
+Do NOT start A-010 until the corrected A-009 final files are stored and the
+A-009 freeze is recorded.
+
+END OF CHATGPT A-009 VALUE-ADDED REVIEW
