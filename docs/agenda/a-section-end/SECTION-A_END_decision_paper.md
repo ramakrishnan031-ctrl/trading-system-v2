@@ -1,10 +1,10 @@
-# SECTION A END: DECISION PAPER (PROPOSED)
+# SECTION A END: DECISION PAPER (CLOSED)
 
 Status: CLOSED 2026-10-09. Rama answered on 09-Oct (section 8); his decisions are recorded in V2_DECISION_REGISTER.md as DR-027 to DR-033, and the S-1 scheduling moves with the close of Section A as DR-034. Revision 1 (after ChatGPT's value-added review of 09-Oct-2026) is the version that was put to Rama; sections 1 to 7 are kept as presented, so the options and recommendations below show what he chose from, not what was decided. Rama decided; ChatGPT's review alone decided nothing (V2_DESIGN_LOG W-6).
 Date: 2026-10-09
 Place at: docs/agenda/a-section-end/SECTION-A_END_decision_paper.md
 Why this step: DR-013 records that the V2 purpose and scope (VP-01, VP-02) "are ratified at the end of Section A". Three more proposals carry an end-of-Section-A ratification point (VP-08 count, VP-37, VP-41). With A-011 frozen as legacy only (DR-026), nine proposals still name a finished Section A topic as a ratification point. ChatGPT's A-011 review (09-Oct, section 7) asked for these to be presented "as a separate decision step", not frozen with the manual.
-Sources: V2_DESIGN_LOG.md (VP and Q rows as pushed in 5ab0034); V2_DECISION_REGISTER.md (DR-001 to DR-026); the frozen A-001 to A-011 manuals and their V2 inputs; Rama's checklist answers in docs/inputs; broker and exchange pages accessed on 2026-10-09 (section 6).
+Sources: V2_DESIGN_LOG.md (VP and Q rows in the pre-decision baseline pushed in 5ab0034; the decisions themselves were pushed later, in 7b6e6de); V2_DECISION_REGISTER.md (DR-001 to DR-026, the same baseline); the frozen A-001 to A-011 manuals and their V2 inputs; Rama's checklist answers in docs/inputs; broker and exchange pages accessed on 2026-10-09 (section 6).
 Labels: FACT; HISTORICAL (Rama); UNKNOWN / NOT ESTABLISHED; CURRENT EXTERNAL FACT (with the date accessed); INTERPRETATION / DESIGN RATIONALE (Claude's reasoning for a recommendation, not measured); PROPOSED (a policy for Rama to choose).
 Security: no credential values, account IDs, mailbox addresses or host addresses.
 
@@ -150,7 +150,7 @@ ETF and SME inclusion are V2 scope choices. Broker mechanics inform them but do 
 - Proposed register text (option A): "Operator boundary: routine operation is automated end to end; manual actions are limited to a named list, each with a supported, authenticated and audited mechanism and each reported on Telegram and email (notification only: authorisation, acknowledgement, timeouts and channel failure are designed at I and M; channel delivery is never the security control); no VM console stops and no direct database edits; the list and its mechanisms are set at I-001, I-002, I-013 and M-010."
 
 ## 4. S-1 Scheduling changes (ownership and scheduling only)
-These rows change ownership or the ratification point, never proposal content. Each was checked against V2_DESIGN_LOG and V2_DECISION_REGISTER as pushed in 5ab0034. None is a Section A system-contract item: each is owned by the topic it moves to, so no substantive decision is being postponed only because A-011 was named. VP-37 and VP-41 are decided only through D-4; their technical details stay with G/H, D-002 and their other named owners.
+These rows change ownership or the ratification point, never proposal content. Each was checked against V2_DESIGN_LOG and V2_DECISION_REGISTER as pushed in 5ab0034 (the pre-decision baseline). None is a Section A system-contract item: each is owned by the topic it moves to, so no substantive decision is being postponed only because A-011 was named. VP-37 and VP-41 are decided only through D-4; their technical details stay with G/H, D-002 and their other named owners.
 
 | VP | Ratification point now | Proposed | Why |
 |---|---|---|---|
@@ -191,7 +191,7 @@ These rows change ownership or the ratification point, never proposal content. E
 5. The paper, the register, the design log and the agenda references are checked against each other, then scanned for identifiers, addresses and secrets before the files are sent.
 6. No frozen legacy manual changes.
 
-Status and boundary: everything here is PROPOSED until Rama answers. Open questions not settled here include Q-01 (pre-live validation), Q-05 (environments), Q-11 (fresh credentials), Q-21 (legacy ETF and SME path) and the Section B to O items carried in V2_DESIGN_LOG.
+Status and boundary: the Section A decisions are CLOSED and recorded in DR-027 to DR-034. Proposals not explicitly decided here remain PROPOSED or OPEN in V2_DESIGN_LOG.md and with their owning topics. These decisions do not authorise implementation; the post-agenda legacy audit (DR-016) and the remaining governance and design steps still apply. These questions remain open: Q-01 (pre-live validation), Q-05 (environments), Q-11 (fresh credentials), Q-21 (the legacy ETF and SME path; the V2 scope itself is decided in DR-029 and DR-030) and the Section B to O items carried in V2_DESIGN_LOG.
 
 ## 8. Rama's answers (09-Oct-2026) and the register rows
 
@@ -221,3 +221,6 @@ V2_DESIGN_LOG marks VP-01, VP-02, VP-04 (in principle), VP-08 (count only), VP-3
 - D-5: "confirmed" replaced by "reported (notification only)", with authorisation, acknowledgement, timeouts and channel failure left to I and M (point 5).
 - S-1: re-checked against the pushed design log and register. The ownership-only nature is stated, and VP-04 is handled for each D-5 answer (point 6).
 - Sources: each external page is dated by access, with the limits of what it supports (point 7). The answer-sheet labels match section 3 (point 8).
+
+## Changes after closure (09-Oct-2026, ChatGPT's final QA note; documentation only)
+- Title marked CLOSED; the pre-answer "Status and boundary" paragraph replaced, with the open questions kept and marked as still open; the 5ab0034 references labelled as the pre-decision baseline. No decision, register row or frozen manual changed.
