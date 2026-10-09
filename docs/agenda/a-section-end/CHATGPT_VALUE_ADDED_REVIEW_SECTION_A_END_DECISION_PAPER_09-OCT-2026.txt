@@ -1,0 +1,91 @@
+VALUE-ADDED REVIEW — SECTION A END DECISION PAPER
+To: Web Claude / Claude Code
+Date: 09-Oct-2026
+Source reviewed: SECTION-A_END_decision_paper.md (first pass, proposed)
+
+OVERALL ASSESSMENT
+The paper is well structured and correctly separates frozen legacy manuals from proposed V2 decisions. Keep the five-decision structure (D-1 to D-5), the separate scheduling-only section (S-1), the answer sheet, and the rule that Rama's answer—not ChatGPT's review—creates a decision. I do not recommend restarting the paper or reopening frozen legacy manuals.
+
+Apply the targeted clarifications below before asking Rama to answer. These are review comments, not V2 decisions. Do not mark a proposal DECIDED until Rama explicitly answers and the register is updated.
+
+1. D-1 — PURPOSE: CLARIFY “LIVE-ONLY” AND “HEADLESS”
+The recommended wording is broadly sound. Clarify that “live-only” means there is no paper-trading operating mode; it does not prohibit development, replay, scenario testing, or pre-live validation. Q-01 remains open and is not resolved by this purpose statement.
+
+Keep the daily-login method explicitly owned by M-005 and subject to then-current broker/exchange rules. “Headless” must not imply permission to automate a login method that the broker/exchange does not permit.
+
+2. D-2 — SCOPE: RESOLVE ETF / “NO INDEX TRADING” WORDING
+The proposed scope says “no ... index trading” while permitting ETFs under D-2e. These are compatible only if the paper explicitly distinguishes direct index/derivatives trading from trading NSE-listed ETF units. Add that distinction so future readers do not see a contradiction.
+
+The ETF recommendation (eligible only for strategies that explicitly allow them, default not allowed) is a proposed policy, not a legacy fact. Keep its rationale labelled as design rationale: a stock-oriented scanner can produce signals on an ETF for reasons that may not fit the strategy. Do not imply every ETF is unsuitable or that the legacy ETF path is established; the historical series-filter path is correctly marked UNKNOWN.
+
+SME OUT-OF-SCOPE RATIONALE NEEDS A QUALIFIER
+Lot-size and capital-ceiling concerns are plausible engineering rationale, but do not prove every SME trade is infeasible. Preserve the distinctions:
+- FACT: SME orders must respect the applicable lot size; the cited NSE lot table says it was updated in 2023.
+- UNKNOWN: current Chartink SME coverage and whether legacy ever admitted/traded SME symbols.
+- INTERPRETATION: lot sizes may conflict with a future risk/capital ceiling.
+- DECISION: whether SME is included in V2.
+Do not present the 2023 lot table as a current exhaustive universe. SME-out-of-scope can be recommended as a scope choice, but the evidence does not prove SME cannot work. Any later change can require a new register row.
+
+D-2b says one production Zerodha account. Keep this limited to production. Do not infer that development or pre-live testing must use a live broker account; Q-01 and VP-56 remain owners of that question.
+
+3. D-3 — STRATEGY COUNT: DISTINGUISH “ABOUT SIX” FROM A HARD CAP
+Rama's recorded wording is “a maximum of approximately six” and that V2 should not blindly carry forward 16. Option A converts this into a hard maximum of six, with a seventh requiring a new register row. That may be a useful governance proposal, but make the conversion explicit; do not present it as already settled by Rama.
+
+Let Rama knowingly choose between:
+- a hard cap of six with a governance-controlled exception/change process; or
+- approximately six as a target/guideline, with the final number decided during strategy review.
+If Option A remains recommended, say it is a stricter interpretation proposed for governance, not a verbatim quote.
+
+Define what is counted: active strategy definitions/configurations, not scanner alert names or historical YAML files. Retired strategies should not remain enabled; whether they are deleted, archived, or retained as non-executable history belongs to repository/configuration governance, not the count decision. Keep duplicate/subset/near-copy admission criteria with D-003.
+
+4. D-4 — PRODUCT INTENT: KEEP THE BUSINESS RULE, AVOID GUARANTEE-LIKE WORDING
+The proposed intent correctly reflects Rama's later Q-27/Q-28 answers:
+- Intraday requests MIS; if ineligible, reject rather than convert to CNC.
+- Delivery is long-only: CNC buy followed by OCO GTT for SL and target.
+- CO, BO, NRML and MTF are not selected product paths.
+Correct VP-37 using Rama's later answer, not Claude's earlier interpretation of A-007 Q22.4.
+
+Add a sentence to avoid implying guaranteed protection: the intended delivery sequence is not proof that an OCO GTT was successfully created, accepted, or covers the filled quantity. Partial fills, GTT creation/validation, rejection, modification, cancellation, and residual exposure remain owned by G/H and must be specified and tested there before implementation. Do not expand D-4 into those mechanics now.
+
+“Broker's order-time acceptance is final” should mean the broker is authoritative on whether it accepts the actual order—not that a pre-check guarantees acceptance or that an accepted entry guarantees a protective order. Eligibility pre-check, entry-order outcome, and GTT outcome are separate events.
+
+5. D-5 — OPERATOR BOUNDARY: SEPARATE AUTHORIZATION, ACKNOWLEDGEMENT, AND ALERT DELIVERY
+The principle is sound: automate routine operation; allow only a named, authenticated, audited set of manual actions; no VM-console stop or direct database edits. But “confirmed on Telegram and email” could mean (a) notify on both channels, (b) require a human acknowledgement on both, or (c) use both channels to authenticate/authorize an action. These are materially different controls.
+
+Clarify what “confirmed” means, and leave channel-degradation, acknowledgement timeout, and authorization semantics to I/M where owned. Do not make Telegram/email delivery itself the security control or imply both channels are always available. Keep the list of allowed manual actions with I-001, I-002, I-013 and M-010 as proposed.
+
+6. S-1 — SCHEDULING CHANGES: VERIFY CROSS-REFERENCES
+The scheduling-only treatment is appropriate. Before finalizing:
+- Verify every moved proposal's old and new ratification points against the current V2_DESIGN_LOG and V2_DECISION_REGISTER.
+- Ensure VP-04 is handled conditionally on D-5 (A/C), as the table says.
+- Confirm VP-37 and VP-41 are decided only by D-4, with technical details remaining under G/H or their named owners.
+- Make the Section A closing row explicitly say S-1 changes ownership/scheduling only, not proposal content.
+Do not move a substantive decision merely because its old ratification point named A-011.
+
+7. EVIDENCE AND SOURCE DISCIPLINE
+Preserve source dates and limits:
+- The cited NSE SME lot table is marked updated 03-Jan-2023; do not call its exact bands a verified 2026 complete current list.
+- Zerodha support pages without an update date support the stated text as accessed on 09-Oct-2026; avoid claims beyond the pages.
+- “No official Chartink statement found” means not established from the sources checked, not proof Chartink does not support SME.
+- “No SME trade was reported” is not proof the legacy universe excluded SME.
+- ETF and SME inclusion are V2 scope decisions, not conclusions dictated by broker mechanics alone.
+Label “a scanner written for stocks can fire on an ETF for unrelated reasons” and “a risk-based quantity would often fall below one lot” as INTERPRETATION/design rationale unless measured evidence supports them.
+
+8. ANSWER SHEET AND REGISTER HYGIENE
+The answer sheet is concise and usable. Keep ETF and SME separately answerable. For D-1 and D-3, ensure option labels in the summary and answer sheet match the full options exactly.
+
+After Rama responds:
+1. Record his answer faithfully, including qualifications.
+2. Create one register row per distinct decision; do not hide different outcomes in one broad Section A row.
+3. Mark only corresponding proposal(s) DECIDED; leave unresolved parts PROPOSED/OPEN.
+4. Apply S-1 separately as scheduling/ownership changes.
+5. Check consistency across V2_DESIGN_LOG, V2_DECISION_REGISTER, the decision paper, and agenda references.
+6. Do not change frozen legacy manuals as part of this V2 decision step.
+
+9. SECURITY / REPOSITORY CHECKS
+The screenshot says all 16 checks passed and commit 5ab0034 is on main; treat that as supplied evidence, not independent verification by ChatGPT. Before the next push, retain filename/status checks and secret scanning. Scan the decision paper and resulting register/log edits for account identifiers, addresses, tokens, and other sensitive values. Do not print matched secret lines into logs or chat.
+
+FINAL RECOMMENDATION
+Apply the wording clarifications in sections 1–6, then present the decision paper to Rama. Do not decide on his behalf. In particular, do not silently turn “approximately six” into a hard cap, do not leave “no index trading” ambiguous alongside ETF inclusion, and do not let “confirmed on Telegram and email” blur alert delivery with authorization.
+
+No change to frozen A-001–A-011 legacy manuals is recommended by this review. The paper remains PROPOSED until Rama answers. Once answers and register updates are complete, Section A can close and the workflow can move to the next agenda section without beginning V2 implementation.
