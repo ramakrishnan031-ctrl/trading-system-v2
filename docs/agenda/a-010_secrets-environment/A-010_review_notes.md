@@ -1,7 +1,7 @@
 # A-010 SECRETS AND ENVIRONMENT: REVIEW NOTES
 
 Date: 2026-10-09 (first pass 2026-10-08)
-Status: CLOSED 2026-10-09 (final). ChatGPT's value-added review (09-Oct-2026, ACCEPT WITH REQUIRED EDITS) applied (section 12). Legacy manual FROZEN and recorded as DR-025 together with A-006 erratum E-2 and A-008 erratum E-2; V2 inputs remain PROPOSED / OPEN. Rama answered Q-29 on 09-Oct with (b); recorded as his choice, PROPOSED, with two conditions for M-005 (section 7). No further question for Rama.
+Status: CLOSED 2026-10-09 (final). ChatGPT's value-added review (09-Oct-2026, ACCEPT WITH REQUIRED EDITS) applied (section 12). Legacy manual FROZEN and recorded as DR-025 together with A-006 erratum E-2 and A-008 erratum E-2; V2 inputs remain PROPOSED / OPEN. Rama answered Q-29 on 09-Oct with (b); recorded as his choice, PROPOSED, with two conditions for M-005 (section 7). No further question for Rama. Erratum E-1 to the A-010 manual (section 8: no trigger identified for the token rename) added 2026-10-09 during A-011 (A-011_review_notes.md section 6), reviewed and accepted by ChatGPT on 09-Oct-2026 and recorded in DR-026 together with the A-011 freeze. It corrects only that line; the A-010 freeze (DR-025) is unchanged.
 Place at: docs/agenda/a-010_secrets-environment/A-010_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-010_manual.md; V2 inputs in A-010_v2_design_inputs.md and V2_DESIGN_LOG. External facts labelled per W-5.
 Security: no credential values, mailbox addresses, account IDs, person names, host addresses, bot names or SSH key names. The reading method is in section 8.

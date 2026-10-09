@@ -1,0 +1,225 @@
+A-011 VALUE-ADDED REVIEW — CHATGPT TO CLAUDE
+Date: 09-Oct-2026
+Project: Trading System — Legacy Manual & V2 Redesign
+Scope: First-pass review of A-011 legacy manual, V2 design inputs, review notes, and proposed cross-manual errata.
+Decision: APPROVE THE SUBSTANCE WITH REQUIRED CLARIFICATIONS. DO NOT FREEZE OR COMMIT YET.
+
+============================================================
+1. EXECUTIVE REVIEW
+============================================================
+
+The A-011 first pass is materially stronger than the 03-Oct draft. It reads the production lifecycle paths, separates service lifecycle from cron, identifies five state layers, corrects the startup/restart model, records the actual webhook gate order, distinguishes clean stop from crash, and keeps V2 proposals outside the legacy manual.
+
+The central legacy findings are supported by the evidence described in the package. The draft is suitable to progress after targeted clarifications. Do not redesign or revive the dead system.
+
+Required before freeze:
+1. Resolve Q-33 with Rama; do not present a potentially unresolved governance question inaccurately.
+2. Clarify that HARD_KILL blocks ordinary order/entry processing but dispatches a separate emergency-flatten path that submits exits.
+3. Tighten the final statement about stop/crash/HALT and broker-side protection so it does not imply every surviving position is necessarily protected.
+4. Verify the five proposed errata are inserted exactly once into the named frozen manuals, with original text retained visibly, and DR-026 records only accepted corrections.
+5. Keep A-011 DRAFT and V2 inputs OPEN until Q-33 and final checks are complete.
+
+============================================================
+2. REVIEW OF THE THREE A-011 SOURCE INPUTS
+============================================================
+
+A. Discussion checklist (01-Oct-2026)
+- Rama’s answers are recollections and guesses where marked. They should not override source evidence.
+- UNKNOWN responses for startup failure, persisted state, duplicate orders, reconciliation and pending-state questions are properly preserved until source review.
+- Q-30, Q-31, Q-41, Q-43 to Q-46, Q-54 and Q-65 request notes for future-system discussion. Correct treatment: document legacy facts in A-011 and carry design considerations separately into A-011_v2_design_inputs.md / V2_DESIGN_LOG.
+- Q-23 and Q-86 conflict with source: every prior-day kill (including HARD_KILL) was cleared at next start, and a running-but-unable-to-trade state existed. The review appropriately preserves Rama’s contrary recollection as historical recollection.
+
+B. 03-Oct reconciliation/freeze file
+- Use it as the earlier ChatGPT baseline, not source authority where the new source read contradicts it.
+- The review notes identify important corrections: kill clearing, systemd exit codes, watcher restart of exit 5, webhook gate order, drained-signal outcomes, fund-manager drift escalation, and the post-25-Aug shutdown predicate.
+- Maintain the distinction between executable code, dated code comments/records, and historical operator recollection.
+- Do not claim the old VM database/logs can now be re-queried. Runtime occurrence/frequency remains UNKNOWN where only source or old comments survive.
+
+C. 03-Oct legacy manual
+- The new draft is an appropriate source-reconciled revision rather than a silent overwrite.
+- Keep the original untouched and preserve revision history.
+- The scope boundary and cross-references to A-003 through A-010 are appropriate.
+- Where evidence proves only a code path, do not imply that every branch was observed in live operation.
+
+============================================================
+3. A-011 LEGACY MANUAL — REQUIRED WORDING / AUDIT CLARIFICATIONS
+============================================================
+
+3.1 Section 3 / Section 8.1 — HARD_KILL semantics
+Current summary says HARD_KILL “blocks all orders and dispatches the flatten worker.” This can be read as contradictory because the flatten worker must submit exit orders.
+
+Suggested clarification:
+“Under HARD_KILL, ordinary order/entry processing is blocked and the asynchronous emergency-flatten worker is dispatched. The worker has its own emergency exit path. This does not establish that every flatten order succeeds; broker access, rejection, missing price data and the recorded market-protection defect can prevent or delay flattening.”
+
+Use more exact wording if the inspected call path supports it. Do not imply HARD_KILL guarantees a flat book.
+
+3.2 Section 8.2 and final statement — CNC / broker protection qualification
+The draft correctly identifies the same-symbol mixed-book defect: the flatten can act on broker net quantity by symbol and sell part of CNC quantity even though CNC is normally spared.
+
+The final statement currently says: “A stop, a crash or a HALT ended position management in the process; positions then rested on orders at the broker.”
+This is too broad if read as a guarantee that all positions were protected. A process stop ends in-process management, but whether broker-side protective orders existed, remained valid, matched actual quantity, or were sufficient is position-specific and may be UNKNOWN. The manual records the 03-Sep naked-position incident and a market-protection failure.
+
+Suggested replacement:
+“A stop, crash or HALT ended in-process management. Any protection then depended on the broker-side orders that actually remained active; the source does not establish that every residual position was protected, and the 03-Sep incident demonstrates a path where protection was lost and the emergency exit was rejected.”
+
+3.3 Section 6 — startup clears and HALT
+The distinction is sound:
+- every prior-calendar-day kill is cleared at startup, including HARD_KILL;
+- same-day scheduled SOFT_KILL can be cleared only under the stated reason/flat-book condition;
+- same-day HARD_KILL and other same-day emergency kills can leave the system in HALT;
+- a prior-day exit 4 can be attempted again by the watcher, and startup clearing can then allow the next start.
+
+Retain the source-reported 20-Jun decision and do not present Rama’s Q-23 recollection as the actual source rule. This is legacy fact only; the V2 policy remains open.
+
+3.4 Section 7 — systemd restart-rate interpretation
+The table is useful. The statement that exit 1/2/6/9 “would restart about every 10 seconds all day” is an interpretation of the repository unit plus systemd defaults, not a verified installed-VM runtime result. The draft labels it as an audit lead and notes installed overrides are unknown. Keep that evidence boundary prominent; do not promote this to an observed incident without a record.
+
+3.5 Section 8.3 — kill trigger inventory
+This is a valuable improvement. Preserve the separation between:
+- fund-manager drift thresholds that escalate to SOFT_KILL/HARD_KILL;
+- reconciler G3 capital-drift alerts that do not escalate;
+- inert live-feed direct kill calls in the inspected construction;
+- cross-process database writes that do not alter the running process’s memory-authoritative kill state.
+
+Do not shorten this inventory in a way that reintroduces the old generalisation that capital drift only alerted or that every caller was effective.
+
+3.6 Section 10 / A-003 erratum E-1 — service self-exit
+The post-25-Aug predicate is described with the necessary identity qualifications: cleanly identified CNC carry does not keep the service alive; unresolved/conflicting identities and fallback behavior can. The pre-25-Aug defect is supported by dated records.
+
+Keep the exact temporal boundary. Do not say the delivery-carry defect persisted at the baseline. Do not infer how often it happened; logs do not survive.
+
+3.7 Section 12 — webhook gate and signal outcomes
+Retain three separate outcomes:
+- webhook-door refusal: no signal row; webhook audit/request counters only;
+- clean stop / kill / expiry: a signal can receive a terminal rejection status;
+- crash: in-memory queue lost while database rows can remain non-terminal.
+
+Do not summarise all three as “signals were dropped.” Do not imply every refused request has a per-signal record.
+
+3.8 Section 13 — authentication failure
+The source supports the different responses of token monitor, order monitor and reconciler. The “token rename” flag having no identified caller is correctly labelled as a cross-topic defect/erratum rather than a functioning control.
+
+Do not say valid authentication is unnecessary for position management. The accurate legacy statement is that broker calls require valid authentication; already-resting broker orders may continue to exist, but local monitoring/reconciliation or replacement orders cannot be assumed to work without broker access.
+
+3.9 Section 14 — startup reconciliation and duplicate prevention
+The description of broker-tag recovery, capital release/adoption and no signal requeue is appropriately source-specific. “Whether a restart ever produced a duplicate: UNKNOWN” must remain, even though safeguards exist.
+
+For uncertain in-flight entries, do not imply successful flattening; describe only that the code path invokes the emergency handling documented elsewhere.
+
+3.10 Section 15 — status sets
+Keep statuses grouped by entity (signal, trade, order), as the draft does. Do not present the signals list as a strict exhaustive enum because the manual says the set is open by design and includes status families/prefixes.
+
+3.11 Section 17 — uncertain exits
+The 03-Sep incident is important evidence and must not be diluted. The sequence—protection cancelled, no exit submitted in the first pass, recovery SL, second cancellation, emergency MARKET rejections for missing market protection, human close—supports the conclusion that the process remained active but did not guarantee safe completion.
+
+The statement that the scheduled EOD fire does not repeat the same day after partial failure should remain scoped to the inspected path, with restart-recovery/fire_now exceptions retained.
+
+3.12 Section 19 — cron counts and supplied report
+The arithmetic is internally consistent: 47 configured jobs, 46 enabled; 31 market-day-only plus 15 not limited to market days equals 46 enabled. The supplied 01-Oct report’s count matches, but Claude saw it only through ChatGPT’s reconciliation. Label it as an indirect/supplied record, not a directly inspected report.
+
+The date inconsistency against the estimated VM deletion date remains UNKNOWN. Do not infer the exact VM termination date from the report alone.
+
+3.13 Section 21 — production/testing comparison
+“41 of 46 lifecycle files identical by object” is scoped to the 46 lifecycle files selected for comparison, not the entire repository. Keep that scope explicit. The 18 config differences are leaf settings, not 18 files. Do not re-open settled A-009 wording without new contradictory evidence.
+
+3.14 Security/process note
+The disclosure that a masked-output process slip occurred is appropriately transparent. Do not repeat the account-shaped value or the file name containing it. Preserve value-blind reporting and do not copy sensitive strings into this reply, the manual, or governance records.
+
+============================================================
+4. REVIEW OF A-011 V2 DESIGN INPUTS
+============================================================
+
+The V2 file follows the required separation: legacy facts are cited for context; Claude’s ideas are considerations; unresolved choices remain OPEN; nothing becomes a decision merely because it appears sensible.
+
+Approve the structure and transfer of VP-57 to VP-65, subject to these cautions:
+
+- VP-57 (state model): illustrative state names remain examples, not an adopted state machine. Later design must define allowed transitions, guards, ownership and persistence.
+- VP-58 (block new entries): distinguish webhook acceptance from trade admission and process liveness. Decide separately whether pending broker entry orders are cancelled or left pending.
+- VP-59 (signals): distinguish refusal at webhook, accepted signal with terminal outcome, and crash recovery. “Every received signal gets an outcome” is a proposal, not legacy fact.
+- VP-60 (startup reconcile): a candidate invariant, but discrepancy severity, broker timeout, degraded mode and in-flight entry outcomes remain open design questions.
+- VP-61 (kill policy): do not carry forward the legacy “clean slate next day” rule automatically. V2 needs explicit policy by kill reason/type and position state.
+- VP-62 (session boundary): sound design consideration; one long-lived process versus per-session process remains open.
+- VP-63 (EOD): keep the incident as evidence, not proof that every emergency exit path fails. Requiring acknowledged replacement protection before cancelling existing protection is a design proposal, not yet a V2 decision.
+- VP-64 (supervision): systemd start-limit interpretation applies to documented defaults; installed overrides and actual occurrence remain unknown.
+- VP-65 (evidence): retaining lifecycle evidence outside the trading database is a future design input, not a legacy feature.
+
+Authentication: A-010 Q-29 preference (scripted login) and A-011 Q-36 (“manual not required”) are user preferences, not a compliance finding. Keep M-005 as the owner of the eventual decision. Do not convert legacy scripted login into an approved V2 requirement. This review does not authorise implementation.
+
+Cross-topic wording: Section 14 says the A-008 strategy count “remains OPEN” in the earlier ChatGPT text, then says the count is settled at 16 YAMLs / Q-17 closed in A-007. Make clear that the quoted OPEN wording is superseded. Legacy production baseline: 16 strategy YAMLs, as supported by the frozen A-008 evidence. The eventual V2 strategy count remains a separate end-of-Section-A decision.
+
+============================================================
+5. Q-33 — SAME-SYMBOL RULE (QUESTION FOR RAMA; DO NOT GUESS)
+============================================================
+
+Claude is right that the record contains conflicting explicit statements:
+- A-002 / A-005 / A-007: one trade per stock per day in any direction; no same-day reversal.
+- A-008 Q26/Q28: one stock + one direction once per day, which can permit a long followed by a short on the same stock that day.
+- A-009, A-010 and A-011 answers do not settle that conflict.
+
+The V2_DESIGN_LOG row for Q-33 is still OPEN. VP-12’s earlier proposal and its listed C-005 / F-007 ratification points do not by themselves prove that the conflicting statement has been reconciled and the final decision entered in the decision register. Do not close Q-33 merely from a previous preference or from the phrase “ratified at C-005 / F-007” if the register still marks Q-33 OPEN.
+
+Ask Rama directly:
+(a) One trade per stock per day in any direction; once traded, no same-day opposite-direction reversal, across intraday and delivery.
+(b) One trade per stock and direction per day; a long and then a short in the same stock on the same day can both be allowed, across intraday and delivery.
+
+Until Rama answers, keep Q-33 OPEN and do not freeze a V2 rule from it. This does not block the factual legacy content by itself, but the proposed workflow says Rama’s answer is to be returned before final A-011 freeze/DR-026, so follow that sequence.
+
+============================================================
+6. REVIEW OF THE FIVE PROPOSED ERRATA
+============================================================
+
+Recommendation: ACCEPT all five in substance, subject to exact insertion and reference checks.
+
+A-003 E-1 — ACCEPT.
+The service self-exit predicate changed on 25-Aug-2026. Before that date, all open positions, including carried delivery, counted. At the baseline, a cleanly identified CNC carry does not count; unresolved/conflicting identity or fallback behavior can still count. Keep the defect dated to the earlier period and frequency UNKNOWN.
+
+A-006 E-3 — ACCEPT.
+The “three consecutive cycles” rule applies only to the Rs 250 to Rs 1,000 drift band. Rs 1,000 SOFT_KILL and Rs 2,500 HARD_KILL thresholds act on one event. Only fund-manager drift sources escalate; reconciler G3 alerts without a kill. Preserve the old text struck through and the precise replacement.
+
+A-007 E-2 — ACCEPT.
+CNC normally sits outside the emergency-flatten product set, but the same-symbol mixed MIS/CNC net-quantity path is a documented latent defect. Do not claim CNC always survives HARD_KILL. Ensure sections 7, 12 and 17 use compatible wording and point to A-011 section 8.2.
+
+A-009 E-1 — ACCEPT.
+“Exit 5 is not restarted” is true of the repository systemd unit, but not of the token watcher, which retries exit 5 up to three times per rolling hour and then warns once per day. Do not describe this as observed production frequency; it is the source-defined restart policy.
+
+A-010 E-1 — ACCEPT.
+No inspected call path triggers the token rename flag: its only setter is reached through the live-feed critical-failure callback, whose reasons do not contain BrokerAuthError; the order monitor’s auth path uses a different callback. Phrase as “no trigger identified in the inspected baseline path,” not proof that no external/uninspected path could ever set the flag.
+
+Record accepted errata in DR-026 with source, affected section and review date. Preserve old wording visibly as required. Do not change unrelated facts in the five manuals.
+
+============================================================
+7. REVIEW NOTES / GOVERNANCE / FREEZE SEQUENCE
+============================================================
+
+Before freezing:
+- Obtain Rama’s Q-33 answer, or leave it explicitly OPEN if he defers. Do not answer on his behalf.
+- Make the wording clarifications in A-011 sections 8.1 and 26 described above.
+- Verify the A-003, A-006, A-007, A-009 and A-010 errata are actually inserted into their manuals, not merely listed in A-011_review_notes.md.
+- Verify each original sentence remains struck through and the replacement appears once, without duplicate errata or inconsistent cross-references.
+- Change A-011 status from DRAFT to FROZEN only after Rama’s answer and final checks; V2 inputs remain PROPOSED / OPEN.
+- Record DR-026 and update governance registers/logs only after acceptance. Do not commit/push before approval.
+- At the end of Section A, present the listed V2 ratification items as a separate decision step; do not silently freeze them while freezing the legacy manual.
+
+The “Final A-011 statement” must summarise legacy facts only. Keep V2 ideas in the separate design-input file and V2_DESIGN_LOG.
+
+============================================================
+8. CLAUDE’S OPEN QUESTIONS / ANSWERS
+============================================================
+
+Q-33: NOT ANSWERABLE FROM THE CONFLICTING RECORD. Ask Rama to choose (a) or (b) in section 5. Keep OPEN until answered.
+
+Q23 (legacy hard-kill resume): No new question is needed. Source evidence supports the documented legacy rule: every prior-day kill, HARD_KILL included, was cleared on the next start under the recorded 20-Jun decision. Rama’s contrary answer remains historical recollection. V2 policy is a separate open decision.
+
+Q36 / scripted login: No decision in this A-011 review. Carry to M-005. Legacy behavior is documented; current permission/compliance must be established separately before any V2 implementation. Do not implement scripted login merely because legacy used it.
+
+Q37 / VM deletion date: Keep UNKNOWN. The 01-Oct Cron Daily report is known to Claude indirectly through the reconciliation; it does not prove the report’s run date or exact VM termination date.
+
+Q-37 audit leads: Keep open and map each to its owning topic. Do not let audit leads silently expand A-011 beyond lifecycle or change frozen legacy facts.
+
+============================================================
+9. FINAL RECOMMENDATION
+============================================================
+
+A-011 is APPROVED IN SUBSTANCE, NOT YET FROZEN.
+
+The factual structure and main source-based corrections are strong. Apply the targeted wording changes, accept and insert the five errata, ask Rama Q-33, then perform the final consistency pass. Only after that should A-011 be marked FROZEN and DR-026 recorded. No V2 architecture or implementation decision is authorised by this review.

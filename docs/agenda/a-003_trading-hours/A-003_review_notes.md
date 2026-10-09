@@ -1,7 +1,7 @@
 # A-003 TRADING HOURS: REVIEW NOTES
 
 Date: 2026-10-05
-Status: CLOSED 2026-10-06. ChatGPT's value-added review (06-Oct-2026) applied in revision 2 (section 7). A-003 frozen under DR-017, recorded as DR-018.
+Status: CLOSED 2026-10-06. ChatGPT's value-added review (06-Oct-2026) applied in revision 2 (section 7). A-003 frozen under DR-017, recorded as DR-018. Erratum E-1 to the A-003 manual (section 6: the self-exit predicate, now dated before and after the 25-Aug-2026 change) added 2026-10-09 during A-011 (A-011_review_notes.md section 6), reviewed and accepted by ChatGPT on 09-Oct-2026 and recorded in DR-026 together with the A-011 freeze. It corrects only those lines; the A-003 freeze (DR-018) is unchanged.
 Place at: docs/agenda/a-003_trading-hours/A-003_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in the manual; V2 ideas in V2_DESIGN_LOG section 3.
 Security: no credential values.

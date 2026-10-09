@@ -1,7 +1,7 @@
 # A-009 CONFIGURATION MODEL: REVIEW NOTES
 
 Date: 2026-10-08
-Status: CLOSED 2026-10-08 (final). ChatGPT's value-added review applied (section 12). Legacy manual FROZEN and recorded as DR-024 together with the A-008 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for the A-010 and A-011 answers).
+Status: CLOSED 2026-10-08 (final). ChatGPT's value-added review applied (section 12). Legacy manual FROZEN and recorded as DR-024 together with the A-008 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for the A-010 and A-011 answers). Erratum E-1 to the A-009 manual (sections 5 and 21: exit 5 restarted by the token watcher's policy) added 2026-10-09 during A-011 (A-011_review_notes.md section 6), reviewed and accepted by ChatGPT on 09-Oct-2026 and recorded in DR-026 together with the A-011 freeze. It corrects only those lines; the A-009 freeze (DR-024) is unchanged.
 Place at: docs/agenda/a-009_configuration-model/A-009_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-009_manual.md; V2 inputs in A-009_v2_design_inputs.md and V2_DESIGN_LOG. External facts labelled per W-5.
 Security: no credential values, mailbox addresses, account IDs, host addresses or key names. Source was read from raw files and a blob-less sparse clone of explicitly listed paths; .env files, accounts.csv, accounts_multi_example.csv, security.yaml, reference_data, docs/web_claude, databases and logs were not opened. A process incident with the first clone is disclosed in section 8.

@@ -1,6 +1,6 @@
 # A-003 TRADING HOURS: LEGACY MANUAL (REVISED)
 
-Status: FROZEN 2026-10-06 (revision 2, after the ChatGPT value-added review of 06-Oct-2026). Recorded as DR-018.
+Status: FROZEN 2026-10-06 (revision 2, after the ChatGPT value-added review of 06-Oct-2026). Recorded as DR-018. Erratum E-1 added 2026-10-09 during A-011 (section 6), reviewed and accepted by ChatGPT on 09-Oct-2026 and recorded in DR-026 (2026-10-09) together with the A-011 freeze.
 Date: 2026-10-05, frozen 2026-10-06
 Layer: LEGACY ONLY. The historical time model, not V2 hours. V2 ideas are PROPOSED in docs/governance/V2_DESIGN_LOG.md section 3.
 Working copy of: docs/inputs/manuals/A-003_TRADING_HOURS_LEGACY_MANUAL_23-SEP-2026.txt (frozen 23-Sep-2026 in the ChatGPT phase; original untouched). Changes are listed at the end.
@@ -45,11 +45,14 @@ Document the historical trading-hours contract without redesigning it.
 - Three different end-of-day values exist and are recorded separately, not merged: 17:35 (production config service_window_end, FACT); 18:15 (upper bound of the start-up guard and validator per the file map, RECORD-DERIVED; it is not service_window_end); 18:30 (Rama's recollection of the system stop, HISTORICAL).
 
 ## 6. Shutdown and open positions
-- FACT per the production baseline document (repository-derived; not re-verified here): the service self-exits after the service window only when no active positions remain; if positions remain, or a HARD_KILL flatten is running, it stays alive.
+- ~~FACT per the production baseline document (repository-derived; not re-verified here): the service self-exits after the service window only when no active positions remain; if positions remain, or a HARD_KILL flatten is running, it stays alive.~~ (superseded by erratum E-1)
+- FACT (SOURCE-VERIFIED in A-011, main.py at the baseline; erratum E-1): after the configured service_window_end the service self-exits (exit 0) only when no HARD_KILL flatten is running and no open position requires the service. Since 25-Aug-2026 a cleanly identified CNC delivery position, protected at the broker by its OCO GTT, does not count; an intraday position still open, a delivery position on another product, and a position with a conflicting or unresolved identity do. Before 25-Aug-2026 every open position counted (A-011_manual.md section 10).
 - FACT (A-002): delivery holdings were intended to carry overnight.
-- KNOWN DEFECT (USER-REPORTED): carried delivery holdings could therefore prevent the self-exit. Rama reports stopping the service manually (systemctl stop); if it was not stopped, the next-day start-up could fail and that trading day could be lost.
+- ~~KNOWN DEFECT (USER-REPORTED): carried delivery holdings could therefore prevent the self-exit. Rama reports stopping the service manually (systemctl stop); if it was not stopped, the next-day start-up could fail and that trading day could be lost.~~ (superseded by erratum E-1)
+- KNOWN DEFECT (USER-REPORTED; RECORD-DERIVED for the period before 25-Aug-2026; erratum E-1): carried delivery holdings prevented the self-exit until the 25-Aug-2026 change. Rama reports stopping the service manually (systemctl stop); the 05-Aug and 06-Aug-2026 records show such stops; a 25-Aug-2026 code comment records that without a stop no start happened at 08:15, the 15:15 SOFT_KILL stayed active and the next day took no entries (A-011_manual.md section 10).
 - UNKNOWN: how often this happened (no logs survive). It did not necessarily happen every day.
-- INTERPRETATION: the self-exit check treated carried delivery holdings as active positions.
+- ~~INTERPRETATION: the self-exit check treated carried delivery holdings as active positions.~~ (superseded by erratum E-1)
+- FACT (SOURCE-VERIFIED with the 25-Aug-2026 code comment; erratum E-1): before 25-Aug-2026 the self-exit check counted carried delivery holdings as active positions (a product-blind count). Since then it does so only in its logged fallback, when the pipeline-aware read fails.
 
 ## 7. Signal queue / out-of-window signals
 - FACT: production config has a signal queue with intraday expiry_sec=600. This alone does not establish the fate of every out-of-window signal.
@@ -117,3 +120,6 @@ Legacy factual baseline only. It does not prescribe V2 trading hours. The origin
 ## Changes from the original (23-Sep-2026)
 Revision 2 (after ChatGPT review): scope statement; soft-kill conflation kept as a historical observation; end-of-day values labelled by evidence class; shutdown predicate re-labelled and defect frequency UNKNOWN; holiday and PB-01 claims split by evidence class; cron counts flagged as possibly different units; external broker timings excluded; earlier-value dates UNKNOWN; unknown list extended.
 Revision 1 removed: the V2 request line (now VP-19). Added: per-strategy window example and both-books cut-off (3); post-execution checks and early square-off rationale (4); service-start window, 08:15 boot and the three end-of-day values (5); shutdown defect with delivery holdings (6); Rama's out-of-window signal account (7); UTC-to-IST cron conversion (8); holiday file detail and 2027 gap (9); pre/post-market schedule and cron counts (10); PB-01 placeholder (11); file-map validation chain (12); new conflicts (14); new unknowns (15).
+
+## Erratum (2026-10-09, found during A-011)
+- E-1 (section 6, shutdown and open positions): the first bullet repeated the production baseline document's predicate ("only when no active positions remain") without re-verifying it, and the interpretation read carried delivery holdings as active positions. main.py at the baseline (read in A-011) shows the predicate changed on 25-Aug-2026 ("Option A, Rama 25-Aug-2026"): a cleanly identified CNC delivery position no longer holds the service; an intraday survivor, a delivery position on another product and a position with an unresolved identity still do, and a logged fallback counts every position. So the interpretation and the user-reported defect hold for the period before 25-Aug-2026, which the 05-Aug and 06-Aug-2026 records and the 25-Aug code comment confirm. The original lines stay visible, struck through. No other legacy fact in this manual changes. Found during A-011 (A-011_manual.md section 10); reviewed and accepted by ChatGPT on 09-Oct-2026 (A-011 review, section 6) and recorded in DR-026 (2026-10-09).
