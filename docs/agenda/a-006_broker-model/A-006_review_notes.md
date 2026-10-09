@@ -1,7 +1,7 @@
 # A-006 BROKER MODEL: REVIEW NOTES
 
 Date: 2026-10-06
-Status: CLOSED 2026-10-06. ChatGPT's value-added review and Rama's answers to Q-27 and Q-28 applied (section 9). Legacy manual frozen under DR-017, recorded as DR-021; V2 inputs remain PROPOSED / OPEN.
+Status: CLOSED 2026-10-06. ChatGPT's value-added review and Rama's answers to Q-27 and Q-28 applied (section 9). Legacy manual frozen under DR-017, recorded as DR-021; V2 inputs remain PROPOSED / OPEN. Erratum E-2 to the A-006 manual (section 9: "never committed" and the token-monitor trigger) added 2026-10-08 during A-010 (A-010_review_notes.md section 6), reviewed and accepted by ChatGPT on 09-Oct-2026 and recorded in DR-025 together with the A-010 freeze. It corrects only those two lines; the A-006 freeze (DR-021) and erratum E-1 (DR-022) are unchanged.
 Place at: docs/agenda/a-006_broker-model/A-006_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-006_manual.md; V2 inputs in A-006_v2_design_inputs.md and V2_DESIGN_LOG.
 Security: no credential values. The legacy files read contain no credential patterns (checked); the token script was read for its header and flow only; docs/web_claude was not touched.

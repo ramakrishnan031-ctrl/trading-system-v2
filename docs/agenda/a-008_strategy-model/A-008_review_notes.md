@@ -1,7 +1,7 @@
 # A-008 STRATEGY MODEL: REVIEW NOTES
 
 Date: 2026-10-07
-Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 12). Legacy manual frozen under DR-017, recorded as DR-023 together with the A-007 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for his A-009 to A-011 answers). Erratum E-1 to the A-008 manual added 2026-10-08 during A-009 (F-5 and the Q14 row below, struck through; section 13), accepted by ChatGPT on 08-Oct-2026 and recorded in DR-024 (2026-10-08).
+Status: CLOSED 2026-10-07 (final). ChatGPT's value-added review applied (section 12). Legacy manual frozen under DR-017, recorded as DR-023 together with the A-007 erratum E-1; V2 inputs remain PROPOSED / OPEN. No question for Rama (Q-33 waits for his A-009 to A-011 answers). Erratum E-1 to the A-008 manual added 2026-10-08 during A-009 (F-5 and the Q14 row below, struck through; section 13), accepted by ChatGPT on 08-Oct-2026 and recorded in DR-024 (2026-10-08). Redaction E-2 applied 2026-10-08 during A-010: the testing account's client ID in rows F-6 and "5 Changes; naming note" replaced by a placeholder (A-008_manual.md erratum E-2); accepted by ChatGPT on 09-Oct-2026 and recorded in DR-025. A documentation redaction only: the value remains in the repository history and the immutable input files.
 Place at: docs/agenda/a-008_strategy-model/A-008_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-008_manual.md; V2 inputs in A-008_v2_design_inputs.md and V2_DESIGN_LOG. External facts labelled per W-5.
 Security: no credential values. Source was read from raw files and a blob-less sparse clone that fetched only the needed paths (config/strategies, strategies, signals, screening, capital, core and config files named in the manual); docs/web_claude, .env files, accounts.csv and other credential-bearing paths were not fetched or opened. The Chartink screenshots contain webhook material; only the alert names are used.
@@ -27,7 +27,7 @@ ChatGPT's R1 set has the right structure: Chartink signal generation is strategy
 | F-3 | Control order: enabled, then force_intraday_only (delivery dormant), then trade_type; labels REJECTED_STRATEGY_CONTROL / REJECTED_TRADE_TYPE. Since 10-Jul-2026 force_intraday_only no longer rewrites intent (loader "Option A"); the adapter coerces to MIS under the flag. | control.py, loader.py | Manual 6; A-007 erratum E-1 |
 | F-4 | Per-strategy windows: the 09:25 start never bound (global 10:00, testing 09:30); the 15:00 end equals the global end since 29-Jun-2026. R1 left the effect UNKNOWN. | config, signal_processor.py | Manual 7 |
 | F-5 | An unmapped scanner gets HTTP 404 before any processing; ~~a duplicate scanner name fails start-up;~~ (superseded by erratum E-1: a duplicate scanner key is not rejected; the pinned parser keeps the last occurrence; no start-up check) the processor has an UNKNOWN_STRATEGY backstop. R1 left both UNKNOWN. | webhook_receiver.py WR4, scan_webhook_map.yaml | Manual 8 |
-| F-6 | The testing alert-name prefix ("VBB097-...") is stripped by shared code (WR4b, 09-Sep-2026), not a testing-only manual change; before it, every testing signal was rejected (400). | webhook_receiver.py | Manual 9 |
+| F-6 | The testing alert-name prefix ("[testing client ID]-...") is stripped by shared code (WR4b, 09-Sep-2026), not a testing-only manual change; before it, every testing signal was rejected (400). | webhook_receiver.py | Manual 9 |
 | F-7 | Per-strategy parameters: fixed stop 0.8% to 2%, R:R 1.5 in all 16, entry offset 0.1% / 0.2%, pullback wait on 6 YAMLs; locked S6 / S13 values differ from the deployed YAMLs. R1 left field values UNKNOWN. | YAMLs, locked_decisions.yaml | Manual 10 |
 | F-8 | Risk % was global (1%); stop % per strategy; per-strategy max_risk_pct deleted 24-Jun-2026. | schema.py, config | Manual 10-11 |
 | F-9 | One common 10-step screener (weights in scoring_weights.yaml); pass 60 for all (min_score 0); only three per-strategy thresholds; a code record says the score could not exceed 65, so HIGH (80) was unreachable and passing trades were sized at 50% or 70%. | secondary_screener.py, quality_scorer.py, scoring_weights.yaml | Manual 12 |
@@ -48,7 +48,7 @@ ChatGPT's R1 set has the right structure: Chartink signal generation is strategy
 | 2 Active vs placeholder | No idea | Baseline: 15 enabled, PB01 disabled; history UNKNOWN (3) |
 | 3 Split | 10 / 5 / 1 | 12 / 3 / 1 (3) |
 | 4 One-sided; not labelled in YAMLs | YES; not labelled | One-sided YES; direction is declared in every YAML (5) |
-| 5 Changes; naming note | Only added; VBB097 note | Consistent; the fix is shared code WR4b (3, 9) |
+| 5 Changes; naming note | Only added; testing client-ID note | Consistent; the fix is shared code WR4b (3, 9) |
 | 6 Global trade_type | YES | Consistent (6) |
 | 7 force_intraday_only | YES (guess) | Global breaker: delivery dormant, no rewrite since 10-Jul-2026 (6) |
 | 8 Enable/disable | YES | Consistent (6) |
