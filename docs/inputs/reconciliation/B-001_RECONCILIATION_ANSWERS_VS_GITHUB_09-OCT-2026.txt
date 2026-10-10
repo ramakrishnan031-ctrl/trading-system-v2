@@ -1,0 +1,480 @@
+B-001 — VM / SERVICE STARTUP
+ANSWER-TO-SOURCE RECONCILIATION
+Trading System — Legacy Baseline / Redesign Governance
+Review date: 09-Oct-2026
+Status: OPEN — DISCUSSION INPUT ONLY; NOT FROZEN
+Scope: B-001 only
+
+======================================================================
+1. PURPOSE AND REVIEW BOUNDARY
+======================================================================
+
+This file reconciles Rama's completed B-001 answers against accessible
+repository evidence and the supporting project records.
+
+Repositories referenced:
+1. Production code reference:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+2. Sandbox/testing snapshot and captured machine records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+3. Supporting records:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Important evidence boundary:
+- SOURCE-DEFINED means the committed repository defines the behavior.
+- RECORD-DERIVED means a preserved capture records a host state at a
+  particular time.
+- USER HISTORICAL RECOLLECTION means Rama remembers something happened,
+  with the stated confidence level.
+- INTERPRETATION means a cautious reading of source evidence.
+- UNKNOWN / NOT ESTABLISHED means accessible evidence does not prove it.
+
+The production repository is a code reference, not proof of what was
+installed, enabled, running, or executed on the historical production VM.
+The supporting startup manual explicitly states that production was not
+directly read. Do not turn repository configuration into a claim about
+historical host execution.
+
+This is not a V2 architecture decision, implementation instruction, or
+permission to run or alter the retired system.
+
+======================================================================
+2. EXECUTIVE RECONCILIATION
+======================================================================
+
+Overall finding:
+Rama's answers provide useful preferences and governance principles, but
+they are not all approved requirements. B-001 should remain OPEN. Some
+topics belong to B-002 through B-012 and M/I/L rather than being silently
+resolved within the startup discussion.
+
+Most important reconciliations:
+1. Host uptime and trading-process uptime are different questions.
+2. The source contains two different start-window definitions:
+   main.py: 08:00–18:15 IST; token_watcher.sh: 08:00–16:00 IST.
+3. The source defines systemd and token-watcher as separate supervision
+   layers. Their actual historical enabled/running states are unproven.
+4. No inspected canonical cron entry directly starts trading-system.service.
+   The token watcher can request a start after its own checks.
+5. A process start request or systemd "active" state does not prove that
+   configuration, broker connection, reconciliation, workers, or readiness
+   completed.
+6. The unit's `--mode live` text does not prove that the sandbox actually
+   traded live or placed orders.
+7. Historical automatic start at VM boot remains USER RECOLLECTION with
+   explicitly less than full confidence; GitHub cannot settle whether the
+   relevant unit was enabled and running at that time.
+8. The daily process model is explicitly deferred.
+9. Host-level security/monitoring ideas are raw governance input, not
+   approved controls or designed enforcement.
+10. No implementation, host inspection, deployment, or live operation is
+    authorized.
+
+======================================================================
+3. SOURCE FINDINGS RELEVANT TO B-001
+======================================================================
+
+3.1 Main service unit
+Source: `deploy/systemd/trading-system.service`
+
+The repository unit declares:
+- `Type=simple`
+- `User=ubuntu`, `Group=ubuntu`
+- `WorkingDirectory=/home/ubuntu/systems/trading-system`
+- `EnvironmentFile=/home/ubuntu/systems/trading-system/.env`
+- `ExecStart` invokes the virtual-environment Python interpreter and
+  `main.py --mode live`
+- `StandardInput=null`
+- `KillSignal=SIGINT`
+- `TimeoutStopSec=30`
+- `Restart=on-failure`
+- `RestartSec=10`
+- `RestartPreventExitStatus=3 4 5`
+- `WantedBy=multi-user.target`
+
+Interpretation limits:
+- `WantedBy=multi-user.target` makes the unit eligible for boot activation
+  when enabled; it does not prove that it was enabled on the historical VM.
+- `Restart=on-failure` is the systemd-layer rule, not the complete restart
+  policy once the token watcher is considered.
+- `StandardInput=null` indicates headless service operation.
+- The `--mode live` argument is source text, not proof of actual execution
+  or broker activity.
+
+3.2 Token watcher
+Sources:
+- `deploy/systemd/token-watcher.service`
+- `deploy/token_watcher.sh`
+
+The watcher unit declares `Restart=always` and runs the shell watcher.
+The script polls the main service and considers service state, last exit
+status/date, token freshness, service time window, and crash restart count.
+It may issue `systemctl start trading-system.service` if its conditions pass.
+
+The source script describes a watcher window of 08:00–16:00 IST, requires
+a fresh token for start attempts, and defaults to a maximum of three crash
+restarts per hour. It treats today's clean exit, today's HALT, and today's
+startup-check failure differently from prior-day exits.
+
+These are source-defined rules. Actual enablement, running status, event
+history, and historical start causality on production are NOT ESTABLISHED.
+
+3.3 Start-window discrepancy
+Sources:
+- `main.py`, `_within_service_window` and the `main()` start guard
+- `deploy/token_watcher.sh`, `within_service_window()`
+
+The production code reference defines the main start window as
+[08:00, 18:15) IST. The token watcher checks [08:00, 16:00) IST.
+Do not merge these into one claimed legacy window. Record the discrepancy
+and defer operational interpretation to the relevant lifecycle/operations
+topics.
+
+3.4 Cron
+Source: `deploy/cron/trading-system.cron`
+
+The canonical file includes:
+- token cleanup at 05:00 daily
+- token refresh at 08:15 Monday–Friday
+- preflight jobs at 08:30, 09:14 and 09:15 Monday–Friday
+- other independent monitoring, backup, EOD, retention, and reporting jobs
+
+No inspected canonical cron line directly runs `systemctl start
+trading-system.service`. The watcher is the source-defined component that
+can request a service start based on token/window/state conditions.
+Detailed scheduler reconciliation belongs to M-002 and the scheduler
+manual, not a redesign decision in B-001.
+
+3.5 Guarded clean exits
+Source: `main.py`, `main()`.
+
+The source checks the holiday/weekend guard and then the start-window guard
+before ordinary logging and validated configuration loading. The guarded
+holiday/out-of-window paths return exit code 0. Therefore, exit 0 or a
+completed start command does not by itself mean the service initialized or
+became ready to accept trading signals.
+
+Detailed configuration, state, broker, reconciliation, workers, and readiness
+remain owned by B-002 through B-007.
+
+======================================================================
+4. QUESTION-BY-QUESTION RECONCILIATION
+======================================================================
+
+Q-B001-01 — TARGET HOST / VM MODEL
+Rama's answer:
+A dedicated Oracle cloud VM with Ubuntu, intended for 24×7 uninterrupted
+automation; the Windows PC may be on or off.
+
+Classification:
+USER PREFERENCE / RAW INPUT.
+
+Reconciliation:
+Capture the desired availability of the host. Do not infer that the main
+trading process must run continuously for 24 hours. Host uptime and trading
+process uptime are separate. Daily process lifecycle remains open under
+Q-B001-05 and B-008/B-011/B-012.
+
+Status: CAPTURED; NOT FROZEN.
+
+Q-B001-02 — ENVIRONMENT SEPARATION
+Rama's answer:
+One production VM; development remains on the Windows PC; no separate
+validation VM. Legacy production, bug fixes and tests were performed within
+the project root, including `/tests`, to avoid complications.
+
+Classification:
+USER PREFERENCE plus USER HISTORICAL RECOLLECTION.
+
+Reconciliation:
+Preserve the recollection as recollection, not as verified repository/host
+fact. One-VM topology is a preference, not yet an implementation mandate.
+The fact that code and tests share a project root raises a separation and
+validation question, but this review does not prescribe a second VM or
+approve a new workflow. Current legacy remains documentation-only.
+
+Status: CAPTURED; DISCUSSION INPUT.
+
+Q-B001-03 — EVENTS ALLOWED TO INITIATE START
+Rama's answer:
+B, C, D, E; avoid A (VM boot as direct trigger), because an unexpected
+overnight reboot could initialize trading before the calendar or broker is
+ready.
+
+Classification:
+USER PRINCIPLE / RAW INPUT.
+
+Reconciliation:
+Keep the distinction between:
+- host/infrastructure boot;
+- a scheduled daily start request;
+- a token-refresh or token-ready event;
+- a restart controller retry;
+- an authenticated operator request.
+
+These are not equivalent to permission to trade. A start request must still
+pass prerequisite and readiness gates. The repository's unit is boot-eligible
+if enabled, and the watcher can also request starts; the source alone cannot
+establish which mechanism actually initiated historical production starts.
+
+Status: CAPTURED; NEEDS BOUNDARY CLARIFICATION.
+
+Q-B001-04 — STARTUP PREREQUISITES
+Rama's answer:
+Mark all listed prerequisites REQUIRED. Defer classification of failure and
+recovery for each prerequisite to its owning module/developer.
+
+Classification:
+USER SAFETY PRINCIPLE / RAW INPUT.
+
+Reconciliation:
+Preserve “required” as a high-level principle, but do not collapse all
+checks into a single pre-process-start gate. Some checks may only be
+possible after config, state, or broker initialization. Ownership mapping:
+- calendar and service-window semantics: B-008 and related operations;
+- config: B-002;
+- database/prior state: B-003;
+- broker/token: B-004 and M-005;
+- startup reconciliation: B-005;
+- workers/readiness: B-006/B-007;
+- restart/recovery: B-012 and M-001.
+
+Specific retry, halt, alert, and recovery actions remain deferred.
+
+Status: CAPTURED; FAILURE HANDLING DEFERRED.
+
+Q-B001-05 — DAILY START MODEL
+Rama's answer:
+Not decided; decide after B-008/B-011/B-012 evidence and discussion.
+
+Classification:
+EXPLICITLY DEFERRED.
+
+Reconciliation:
+Do not choose a fresh daily process versus a long-lived process here.
+The trade-off must consider process-local state, persisted state, broker state,
+delivery/GTT positions, reconciliation, missed alerts, and shutdown/restart
+behavior. Neither model is established as safer from current B-001 evidence.
+
+Status: OPEN / DEFERRED.
+
+Q-B001-06 — SERVICE SUPERVISION
+Rama's answer:
+Prefer a supervisor that starts the main process and restarts it for specified
+failure classes; asks reviewer to use best judgement rather than adding
+unnecessary complexity.
+
+Classification:
+USER PREFERENCE / RAW INPUT.
+
+Reconciliation:
+The source already has two layers: systemd's `Restart=on-failure`,
+`RestartSec=10`, `RestartPreventExitStatus=3 4 5`; and token-watcher logic
+with state/exit-date/token/window checks and a separate crash limit/backoff.
+Do not assume these layers are redundant or fully coordinated. The exact
+restart contract belongs to B-012/M-001 and remains undecided.
+
+Status: CAPTURED; DETAILS DEFERRED.
+
+Q-B001-07 — MAIN SERVICE / WATCHER RELATIONSHIP
+Rama's answer:
+Different lifecycle rules depending on purpose.
+
+Classification:
+USER PRINCIPLE / RAW INPUT.
+
+Reconciliation:
+This is consistent with the distinct source definitions for the main unit
+and token-watcher unit, but it is not yet a complete policy. The actual
+historical enabled/running state of each unit is NOT ESTABLISHED.
+
+Status: CAPTURED; HISTORICAL ENABLEMENT UNKNOWN.
+
+Q-B001-08 — START REQUEST OUTSIDE ALLOWED WINDOW
+Rama's answer:
+Refuse the start and exit cleanly with a recorded reason.
+
+Classification:
+USER PREFERENCE / RAW INPUT.
+
+Reconciliation:
+The source's `main.py` returns exit 0 for the out-of-window guard and prints
+a reason before normal logger setup. The token watcher separately avoids
+issuing starts outside its own 08:00–16:00 window. These windows differ
+from the main.py 08:00–18:15 window. “Recorded reason” should not be claimed
+to mean durable application logging for the main guard: that path runs
+before ordinary logging setup. Keep exact recording/alert policy open.
+
+Status: PARTIALLY SOURCE-CORROBORATED; WINDOW/RECORDING DETAIL OPEN.
+
+Q-B001-09 — HISTORICAL PRODUCTION STARTUP EXPERIENCE
+Rama's answer:
+It started automatically when the VM booted, but he is not 100% sure and
+suggests checking GitHub.
+
+Classification:
+USER HISTORICAL RECOLLECTION — LOW CONFIDENCE.
+
+Reconciliation:
+GitHub shows a boot-eligible systemd unit (`WantedBy=multi-user.target`)
+and a token watcher that can request starts. This cannot prove the unit was
+enabled, that the watcher was running, or that a particular historical start
+was caused by VM boot. The answer must remain uncertain unless contemporaneous
+host records establish the event.
+
+Status: UNKNOWN / NOT ESTABLISHED AS A VERIFIED HISTORICAL FACT.
+
+Q-B001-10 — SANDBOX LIVE-MODE UNIT CAPTURE
+Rama's answer:
+Does not know; leave NOT ESTABLISHED.
+
+Classification:
+USER-DECLARED UNKNOWN.
+
+Reconciliation:
+Preserve exactly. A unit file's `--mode live` argument proves only what the
+captured file declares. It does not prove the service ran, connected to the
+broker, or placed live orders.
+
+Status: UNKNOWN / NOT ESTABLISHED.
+
+Q-B001-11 — STARTUP FAILURE POSTURE
+Rama's answer:
+Do not begin trading initialization; retain the failure reason and report it
+through the approved alerts/evidence path.
+
+Classification:
+USER SAFETY PRINCIPLE / RAW INPUT.
+
+Reconciliation:
+Separate process start, initialization, and readiness. A process may start
+and then fail a prerequisite. The source has startup-check failure exit code
+3 and other early exits; it also has guarded clean exits before normal logger
+setup. Do not claim all failure reasons are durably recorded or alerted
+uniformly without tracing the owning paths. Detailed behavior belongs to
+B-002–B-007/B-012 and alerts/evidence topics.
+
+Status: CAPTURED; IMPLEMENTATION MAPPING DEFERRED.
+
+Q-B001-12 — HISTORICAL DIFFERENCES / INCIDENTS
+Rama's answer:
+Historical/unknown as indicated in the answer sheet; no fully evidenced
+incident timeline was supplied.
+
+Classification:
+HISTORICAL / UNKNOWN.
+
+Reconciliation:
+Do not invent incident dates, restart events, VM reboot events, or causes.
+Add only incidents supported by dated records and preserve uncertainty labels.
+
+Status: OPEN FOR EVIDENCE; NO EVENT CLAIM ADDED.
+
+Q-B001-13 — HOST-LEVEL CONSTRAINTS
+Rama's answer:
+Consider new restrictions/alerts for sensitive access or actions, including
+`.env` changes, copying system code (excluding system-generated CSV reports),
+simultaneous access limits configured in YAML, and VM-to-PC synchronization
+restrictions/approval. Purpose: prevent unauthorized access or unauthorized
+duplication/use of the system.
+
+Classification:
+USER SECURITY / GOVERNANCE RAW INPUT.
+
+Reconciliation:
+Capture these as candidate controls, not approved requirements or implemented
+features. For each, future governance must decide: event to detect, actor,
+permitted/prohibited action, alert-only versus prevention, exception/approval
+path, evidence retention, recipient/severity, and false-positive handling.
+An alert alone does not prevent copying. Do not design or implement controls
+in B-001. Detailed ownership is across M/I/L and security governance.
+
+Status: CAPTURED; APPROVAL AND SCOPE OPEN.
+
+Q-B001-14 — B-001 COMPLETENESS
+Rama's answer:
+“I guess none, but if there is once welcomes” (no further topic identified).
+
+Classification:
+USER INPUT; COMPLETENESS NOT CONFIRMED.
+
+Reconciliation:
+Do not require Rama to invent missing topics. Reviewer cross-checks the
+agenda and dependencies. B-001 remains open until the captured principles,
+source discrepancies, and open questions are reviewed and the required
+decision record is completed.
+
+Status: OPEN.
+
+======================================================================
+5. OPEN QUESTIONS / DEPENDENCIES
+======================================================================
+
+1. Was `trading-system.service` enabled on the historical production host,
+   and during which dates?
+2. Was `token-watcher.service` enabled and running on that host?
+3. Did a historical start originate from systemd boot activation, token watcher,
+   manual operator action, or another mechanism?
+4. Which deployed versions of main.py, unit files and watcher script were
+   installed at each relevant historical time?
+5. How did the 08:00–18:15 main guard and 08:00–16:00 watcher guard interact
+   on the actual host?
+6. Did any start occur before the daily token refresh? Source does not prove
+   historical sequence.
+7. What does “no trading day = no system booting/starting” mean: no VM boot,
+   no main process start, or no trading initialization?
+8. What restart classes, limits, and manual-resume rules should be retained
+   or changed? Defer to B-012/M-001.
+9. Does the proposed security scope require alerting, access prevention, or
+   both? Defer to the relevant governance topics.
+10. What is the exact evidence path for reasons emitted before normal logging
+    setup? Keep open until the relevant startup/logging topic is reviewed.
+
+======================================================================
+6. RECOMMENDED B-001 STATUS
+======================================================================
+
+B-001: OPEN — NOT CLOSED / NOT FROZEN.
+
+Captured:
+- desired dedicated Oracle Ubuntu VM / availability preference;
+- one-VM plus Windows-PC development preference;
+- permitted start-event principle;
+- prerequisite-required safety principle;
+- preference for defined failure-class supervision;
+- distinct lifecycle rules for main service and watcher;
+- outside-window refusal preference;
+- startup-failure fail-closed principle;
+- proposed host security controls.
+
+Deferred:
+- daily process lifecycle;
+- exact restart contract and manual resume;
+- ownership-specific prerequisite failure behavior;
+- exact security implementation and alert/prevention scope.
+
+Unknown / not established:
+- historical production service enablement and actual boot-start causality;
+- actual token-watcher enablement/running state;
+- actual sandbox live trading behavior;
+- production runtime configuration and event history;
+- historical interaction of the two source-defined time windows.
+
+Closure criterion:
+Rama and reviewers must agree the principle-level outcome, document
+dependencies and source discrepancies, and record the status in the project
+decision register. Do not close B-001 by treating every questionnaire answer
+as an approved decision.
+
+======================================================================
+7. REVIEWER'S INSTRUCTION TO CLAUDE
+======================================================================
+
+Reconcile the answers without overwriting Rama's wording or confidence labels.
+Keep facts, source-defined behavior, record-derived evidence, historical
+recollection, interpretation, known discrepancy, and unknowns separate.
+Do not implement anything, run the retired system, inspect/start/stop VMs,
+deploy, alter configuration, or begin V2 design. Keep B-002–B-012 and M/I/L
+ownership boundaries intact.
+
+END OF RECONCILIATION

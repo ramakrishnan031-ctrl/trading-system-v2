@@ -1,0 +1,252 @@
+B-001 — VALUE-ADDED REVIEW AND FINALISATION INSTRUCTIONS FOR CLAUDE
+Date: 10-Oct-2026 (IST)
+Scope: Review of the B-001 legacy manual, V2 design inputs, review notes, prior reconciliation, and cited production/testing/records evidence.
+Status: REVIEW INSTRUCTIONS ONLY. No repository changes, commits, pushes, host operations, or V2 decisions are authorised by this file.
+
+0. EXECUTIVE CONCLUSION
+=======================
+
+Claude's first pass is substantially stronger than the earlier B-001 draft: it separates the legacy manual from proposed V2 inputs, records a concrete legacy startup chain, identifies the latent lost-trading-day path, and carries open questions into owning agenda topics.
+
+Do NOT freeze the package unchanged yet. Correct the issues below, clarify Rama's ambiguous historical answer, and make the five files consistent.
+
+Most important findings:
+1. The new evidence changes the earlier ChatGPT reconciliation. Dated records support that the main service was enabled for boot on 19-Jul and that the token watcher started the service after the 08:15 token refresh on several dates. The earlier blanket wording that GitHub cannot establish any historical boot-start facts is too broad. Tie each claim to its dated record and distinguish host reboot from the project's colloquial “daily boot.”
+2. The pre-08:00 trading-day reboot path is a serious source-derived latent defect, but it is a conditional code-path conclusion, not an observed incident.
+3. The main.py start window `[08:00, 18:15)` and token-watcher effective window 08:00–15:59 are distinct source facts. Do not merge them.
+4. The proposed A-011 erratum E-1 must not silently change the frozen A-011 manual. Keep the correction proposed and obtain approval through the established governance process.
+5. The “one fresh process per trading session” recommendation is a Claude consideration, not a decision. Keep it in the V2 design-input file and defer it until B-008/B-011/B-012 and M-001/O-010 are discussed.
+6. Q-B001-12 item 7 (“clean EOD or holiday exit followed by another start”) is ambiguous. Rama must clarify what his “YES” meant. Do not infer an answer.
+7. Security and infrastructure suggestions remain options, not approved architecture. Do not turn dedicated service users, private SSH, hardware keys, static IP, or deployment rules into B-001 decisions.
+8. Explicitly distinguish production source, dated production records, testing-VM captures, supplied records, user recollection, interpretation, and unknowns.
+
+1. EVIDENCE BOUNDARY AND LABELS
+===============================
+
+Use these labels consistently:
+- SOURCE-VERIFIED: code/config exists at the named repository baseline.
+- RECORD-DERIVED: a dated audit/operational record reports a state or event.
+- TESTING CAPTURE: machine capture from the testing VM only.
+- SUPPLIED RECORD: external/supplied record with its own date and provenance.
+- HISTORICAL (Rama): user recollection, retaining the stated confidence.
+- INTERPRETATION / AUDIT LEAD: reasoned conclusion, not directly observed.
+- UNKNOWN / NOT ESTABLISHED: evidence does not prove the claim.
+- V2 PROPOSAL / CLAUDE CONSIDERATION: discussion input only, not a decision.
+
+The revised legacy manual cites production baseline commit
+970aabf3c78d777d9d34549e021f7c8e756c7bdb (stated as 11-Sep-2026), dated repository records, and testing-VM captures from 17-Sep. It also says the production VM is deleted and its final installed units/crontab/journal are unavailable. Preserve this limit.
+
+A public production repository does not make every source declaration a fact about what was installed or running at every historical time. A testing capture must never be described as production state.
+
+2. REQUIRED CORRECTIONS — LEGACY MANUAL
+=======================================
+
+2.1 Add a short scope warning near the title:
+- working copy, not frozen;
+- legacy facts only;
+- proposed A-011 erratum is pending approval;
+- legacy facts do not automatically become V2 requirements;
+- no VM/service operation is authorised by this documentation task.
+
+2.2 Standardise terminology:
+- HOST BOOT / REBOOT = operating-system/VM boot event.
+- SERVICE START = main process launched by systemd, watcher, or operator.
+- DAILY START = service start after the morning token refresh.
+- APPLICATION INITIALISATION = main.py passes its early guards and proceeds.
+- READINESS = the later defined point at which required checks/reconciliation/components pass.
+Avoid using “boot” alone where it could mean either host boot or daily service start.
+
+2.3 Separate repository declaration from observed host state. Where practical, show separate columns for:
+`Repository declaration | dated production record | testing capture | final production state`.
+The 19-Jul “enabled/loaded” record does not prove the unit remained enabled when the VM was terminated.
+
+2.4 Start initiators and watchman:
+- Keep repository source, testing capture, dated production records, and inference separate.
+- Any statement that `BindsTo=` caused watchman to start the trading service must be conditioned on the applicable installed dependency/drop-in and enablement.
+- Production watchman enablement is explicitly NOT ESTABLISHED. Do not present it as a confirmed production start path for every date.
+
+2.5 Cron nuance:
+- No canonical crontab line directly starts `trading-system.service`.
+- The 08:30 pre-flight auto-fix can start support units, including `token-watcher.service`.
+- Cron can therefore indirectly enable a later watcher-driven service start, but is not a direct main-service starter.
+Avoid the over-shortened claim “cron never starts anything relevant.”
+
+2.6 Lost-day defect:
+State all conditions:
+- trading day;
+- main service unit enabled at host boot;
+- host boot before 08:00 IST;
+- main.py refuses outside its start window with exit 0;
+- watcher interprets same-day exit 0 as completed session;
+- no later watcher start occurs that day under that branch.
+Classify as:
+`KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND`.
+Do not describe a real lost trading day unless a dated event record establishes one.
+
+2.7 Exact time windows:
+- main.py baseline guard: `[08:00, 18:15)` IST.
+- watcher effective start window: hour 08 through 15, i.e. 08:00–15:59:59.
+- main start cutoff changed to 18:15 on 25-Jul; watcher retained its 08:00–16:00 effective window.
+- the watcher comment claiming it mirrors main.py is stale.
+Avoid wording that suggests 16:00 is inclusive for the watcher.
+
+2.8 Keep the three levels separate:
+systemd accepting a start request ≠ main.py passing early guards ≠ broker reconciliation/readiness complete. Cross-reference A-011 and B-002–B-007 rather than redefining readiness inside B-001.
+
+2.9 Proposed A-011 E-1:
+- Correct only the statement that the unit's comment block lists exit 5 as “no restart.” The comment block explains exits 0–4; exit 5 appears in `RestartPreventExitStatus=3 4 5`.
+- Do not imply legacy runtime behavior changed.
+- Repository baseline says `3 4 5`; dated production records show `3 4` earlier. The final production installed list is NOT ESTABLISHED.
+- Keep the erratum separate and pending approval. Do not silently overwrite a frozen A-011 manual. Use the established reopen/erratum procedure with reason, impact, approval and status.
+
+2.10 PrivateTmp / instance lock:
+The conclusion that `PrivateTmp=true` isolates the service's `/tmp` lock file from a standalone process is labelled INTERPRETATION / AUDIT LEAD, not tested fact. Preserve the conflicting 17-Jul record that says standalone execution was refused by both layers. Do not upgrade the inference without evidence.
+
+2.11 Historical answers:
+- Q-B001-09: separate Rama's recollection from the 19-Jul enablement record and 03-Jul reboot drill. Recorded daily starts after 08:15 occurred with the VM already running.
+- Q-B001-10: testing capture shows `--mode live` and a service run on 17-Sep; whether it reached a broker account or placed orders remains NOT ESTABLISHED.
+- Q-B001-12: reconcile each answer to its exact question. Do not convert UNKNOWN to NO merely because no record was found.
+- Q-B001-12 item 7 stays open pending Rama's clarification (section 5).
+
+2.12 Evidence and security:
+Keep the never-open list. Never reproduce credential values, account identifiers, tokens, IPs, hostnames, SSH key names, mailbox addresses, or secrets. “Scans clean” must state the exact file/output scope and rules scanned; it is not universal proof of all possible leakage.
+
+3. REVIEW — V2 DESIGN INPUTS
+============================
+
+Keep `B-001_v2_design_inputs.md` PROPOSED / OPEN and separate from the legacy manual. Preserve its useful separation of Rama's raw input, Claude considerations, owning agenda topics, and decision-register references.
+
+3.1 Daily process model (Q-B001-05)
+Claude's preference for a fresh main process per trading session under an always-on supervisor is a reasonable candidate, not a decision. Improve the comparison:
+- A fresh process resets process memory but does not guarantee clean persisted DB state.
+- A long-lived process need not treat in-memory state as authoritative; persisted state can still be reconciled.
+- Broker-side GTT protection is not guaranteed merely by choosing a process model. Actual protective orders and status must be verified per position.
+- Include measured startup/reconciliation duration, intraday reboot with open positions, broker/API availability, duplicate-start fencing, restart recovery, alert delivery, and session-boundary tests.
+- Keep DEFERRED until B-008, B-011, B-012, M-001 and O-010 have been discussed.
+
+3.2 Host/environment preference
+“One production VM + Windows development PC” is Rama's preference/raw input, not yet an approved architecture. Keep separate questions open:
+- acceptability of having no separate validation VM;
+- PC pre-live validation method;
+- whether tests may run on production;
+- deployment/rollback controls;
+- static IP/provider/region;
+- OS/runtime pinning.
+Do not imply “the first live run of every change happens on production” has been approved.
+
+3.3 Boot boundary
+“VM boot alone never begins trading initialization” is a proposed policy, not a legacy fact or final design. Distinguish host boot from starting an always-on supervisor. A supervisor/scheduler may still need to start on host boot so it can evaluate time, token, prerequisites and recovery. Unexpected intraday reboot risks leaving open positions unmanaged until the recovery path runs. Keep the trade-off open.
+
+3.4 Prerequisites
+Separate candidate checks into:
+- hard gate;
+- restricted recovery gate (manage existing positions, block new entries);
+- advisory health check;
+- post-start readiness gate.
+These are design discussion categories for B-002–B-007, B-012, M-006, I-010 and L-003. Do not retroactively claim the legacy system implemented them this way.
+
+3.5 Security controls
+For every proposed control, later specify protected asset/action, threat/actor, prevention versus detection, enforcement point, exception/approval, evidence retention, alert recipient/severity, and false-positive/recovery behavior. A YAML value does not enforce a concurrent-access limit unless a real component or OS control reads and applies it. Copy alerts are not copy prevention. Do not approve or implement these controls in B-001.
+
+3.6 Register references
+Check every VP/DR reference against `V2_DESIGN_LOG.md` and the decision register. Preserve settled decisions; label carried items as carried, not newly ratified by B-001. Do not add decisions by implication.
+
+4. REVIEW NOTES / PACKAGE CONSISTENCY
+=====================================
+
+Claude's screenshot records two process slips:
+1. a sensitive-file check missed root `.env.example`; no secrets were fetched and a corrected check was used;
+2. working output briefly showed host and SSH key names before masking; nothing was written to a file.
+
+Keep these notes transparent without reproducing masked values. State precisely which files and outputs the corrective scan covered. Confirm final deliverables contain no credential values, account IDs, mailbox addresses, host addresses/names, or SSH key names.
+
+Cross-check the five files for consistent:
+- topic ID and dates;
+- baseline commit;
+- evidence labels and provenance;
+- definition of “boot”;
+- time-window semantics;
+- Q-B001-12 item-7 status;
+- E-1 approval status;
+- B-001 OPEN/DRAFT status;
+- VP/DR references.
+
+Do not call the revised legacy manual “FINAL” while it is marked DRAFT and awaiting review. Keep the original ChatGPT artifacts; do not overwrite them silently. Issue a corrected reconciliation or a clearly versioned addendum because the earlier reconciliation predates the expanded historical records.
+
+5. REQUIRED CLARIFICATION FROM RAMA
+===================================
+
+Claude's question is valid:
+Q-B001-12 item 7: “clean EOD or holiday exit followed by another start” — what did Rama's “YES” mean?
+
+Ask Rama to clarify without leading him:
+A. The system behaved as intended: it did not start on a non-trading day and did not restart after a clean EOD exit.
+B. Rama actually observed a restart after clean EOD or holiday exit. If so, ask approximate date/time and whether it was a host reboot, daily token-watcher start, or service restart.
+C. He meant something else; record his exact explanation.
+
+Do not assume A. Source suggests the watcher did not restart after same-day exit 0 and that holidays/weekends lacked a fresh token, but the user's answer remains ambiguous. If unavailable before finalisation, mark `USER ANSWER AMBIGUOUS — CLARIFICATION PENDING`.
+
+6. SOURCE-SUPPORTED FINDINGS TO RETAIN
+======================================
+
+Retain with the evidence labels and conditions below:
+
+1. Installer source enabled the main unit for boot; a dated 19-Jul record says enabled/loaded. This does not prove final enablement at VM termination.
+2. A 03-Jul host reboot drill showed units returned and the trading service stayed inactive at 22:20, consistent with window/token gates. It is one recorded test, not proof for every reboot.
+3. Records show the watcher starting the service after the 08:15 refresh on 17-Jul, 05-Aug and 26-Aug with the VM already running.
+4. On 18-Jun at 23:22 the watcher started on a leftover evening token and the service ran overnight with false CRITICAL alerts; start-window protection was added 19-Jun. This is a recorded incident.
+5. A trading-day host boot before 08:00, with the main unit enabled, can take the exit-0 / completed-session path and lose the day. No observed occurrence found; label as conditional latent defect.
+6. The main and watcher start windows differ after 25-Jul.
+7. Exit 0 had multiple legacy meanings: holiday/non-trading day, outside start window, clean EOD, and additional CLI paths.
+8. systemd and watcher had independent restart policies; installed units drifted from repository. Final production prevent-list state is unknown.
+9. Testing VM capture showed `--mode live` and a service run on 17-Sep, but actual broker account reach/order placement is NOT ESTABLISHED.
+10. On 17-Jul a post-start webhook self-check received HTTP 401 and the service exited 0 with no trades that day; monitoring remained green until investigated. Preserve the event's exact scope.
+11. The production VM is deleted; final installed unit state, crontab, journal retention, and some host configuration cannot now be checked directly.
+
+These are legacy baseline facts/records, not V2 requirements.
+
+7. PACKAGE RECONCILIATION CHECKLIST
+===================================
+
+Issue | Legacy manual | V2 design inputs | Required action
+- A-011 E-1 | proposed erratum | no design decision | keep pending approval
+- pre-08:00 reboot path | conditional latent defect | discuss start-gate policy later | retain conditionality/no occurrence
+- boot vocabulary | define host/service/daily start | proposed boot boundary | standardise terms
+- start windows | 08:00–18:15 vs watcher 08:00–15:59 | discuss unified policy later | never merge legacy facts
+- Q-B001-12 item 7 | ambiguous | no inference | ask Rama / keep open
+- fresh-per-session process | legacy behavior only | Claude consideration | DEFER to B-008/B-011/B-012/M-001/O-010
+- service enabled state | dated record plus unknown final state | not a V2 decision | correct earlier reconciliation wording
+- testing live mode | testing capture only | no conclusion about V2 | broker/order activity remains unknown
+- host security | historical controls and defects | candidate controls | defer to owning topics
+- package status | draft | proposed/open | no freeze until Rama approves
+
+8. FINALISATION SEQUENCE
+========================
+
+1. Cross-check all five files and cited A-009/A-010/A-011 records. Do not open secrets/forbidden files merely to validate the package.
+2. Verify every date, event, commit, unit directive, exit code and time window against its exact source/record path.
+3. Apply the corrections above.
+4. Ask Rama Q-B001-12 item-7 clarification; if unanswered, preserve the ambiguity.
+5. Keep A-011 E-1 separate and pending approval; do not silently change A-011.
+6. Correct or supersede the earlier ChatGPT reconciliation, preserving the original.
+7. Keep the legacy manual strictly legacy-only; put design options only in the V2 design-input file.
+8. Verify VP/DR references and status in `V2_DESIGN_LOG.md` and the decision register.
+9. Update review notes with resolved issues, remaining unknowns and scan scope.
+10. Return a file list, SHA-256 hashes, and a concise change log. Do not commit or push yet.
+11. Keep B-001 OPEN until Rama reviews the reconciliation, clarifies item 7 or accepts it as unresolved, and explicitly approves freeze.
+12. No implementation, VM commands, service operation, deployment, code modification, or V2 build work is authorised.
+
+EXPECTED DELIVERABLES
+=====================
+
+A. `B-001_manual.md` — legacy-only, evidence-backed, DRAFT pending freeze.
+B. `B-001_v2_design_inputs.md` — Rama answers and Claude considerations remain proposed/open.
+C. `B-001_review_notes.md` — discrepancies, scan scope and finalisation checklist.
+D. Corrected reconciliation `.txt` reflecting dated records and unknowns.
+E. Proposed A-011 erratum text separately, pending approval.
+F. Cross-document status/reference check (inside review notes if sufficient).
+G. SHA-256 hashes and change log.
+
+The legacy manual may be marked READY FOR RAMA REVIEW, not FROZEN, until Rama explicitly approves. The V2 design-input file remains OPEN.
+
+END OF REVIEW INSTRUCTIONS

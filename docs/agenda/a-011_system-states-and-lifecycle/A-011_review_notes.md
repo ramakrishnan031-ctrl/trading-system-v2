@@ -1,7 +1,7 @@
 # A-011 SYSTEM STATES AND LIFECYCLE: REVIEW NOTES
 
 Date: 2026-10-09
-Status: CLOSED 2026-10-09. ChatGPT's value-added review (09-Oct-2026, APPROVE THE SUBSTANCE WITH REQUIRED CLARIFICATIONS) applied (section 12). Rama answered Q-33 on 09-Oct: (a). The A-011 legacy manual is FROZEN (revision 1, DR-026) together with the five errata accepted in the same review (section 6); the V2 inputs remain PROPOSED / OPEN (A-011_v2_design_inputs.md). First pass written the same day.
+Status: CLOSED 2026-10-09. ChatGPT's value-added review (09-Oct-2026, APPROVE THE SUBSTANCE WITH REQUIRED CLARIFICATIONS) applied (section 12). Rama answered Q-33 on 09-Oct: (a). The A-011 legacy manual is FROZEN (revision 1, DR-026) together with the five errata accepted in the same review (section 6); the V2 inputs remain PROPOSED / OPEN (A-011_v2_design_inputs.md). First pass written the same day. Erratum E-1 to the A-011 manual (section 7, the exit-5 wording: exit 5 is in the unit's RestartPreventExitStatus= directive, not its comment block) added 2026-10-09 during B-001 (B-001_review_notes.md section 6), reviewed by ChatGPT on 10-Oct-2026, approved by Rama on 10-Oct-2026 and recorded in DR-035 together with the B-001 freeze. It corrects only that line; the A-011 freeze (DR-026) is unchanged.
 Place at: docs/agenda/a-011_system-states-and-lifecycle/A-011_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in A-011_manual.md; V2 inputs in A-011_v2_design_inputs.md and V2_DESIGN_LOG. External facts labelled per W-5.
 Security: no credential values, account IDs, mailbox addresses, host addresses or person names. The reading method is in section 8.
