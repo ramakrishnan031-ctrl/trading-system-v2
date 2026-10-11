@@ -1,0 +1,83 @@
+B-001 FINAL PACKAGE — VALUE-ADDED REVIEW
+Review date: 11-Oct-2026, 11:40 IST
+Decision: PROCEED TO B-002, with the non-blocking documentation follow-up below recorded for governance.
+
+SCOPE AND EVIDENCE LIMIT
+Reviewed the newly available B-001 legacy manual, V2 design-inputs file, review notes, supplied PowerShell hash/staging/commit transcript, Master Redesign Agenda, and current uploaded decision-register snapshot. The review notes and manual refer to B-001_reconciliation_addendum.md, A-011_manual.md/A-011_review_notes.md, V2_DESIGN_LOG.md and V2_DECISION_REGISTER.md. I assessed their cross-document claims where shown in the supplied material; I did not independently clone and inspect the private V2 GitHub repository from this session. The transcript reports that commit 5b3e8ff was pushed; that is treated as supplied evidence, not an independently reproduced Git operation.
+
+1. OVERALL FINDING
+
+The B-001 package is materially coherent and fit to proceed:
+- The legacy manual is frozen under DR-035; its post-freeze evidence-wording erratum is recorded under DR-036 without changing a legacy finding.
+- V2 design inputs remain PROPOSED / OPEN; the freeze and scheduling changes are not presented as V2 architecture decisions.
+- Reconciliation v1 remains preserved and v2 is an addendum, preserving audit history.
+- The historical answer to Q-B001-12 item 7 is explicitly clarified, and approval to freeze is recorded.
+- The host-boot lost-day case is labelled as a conditional/latent code path with no observed occurrence found, rather than a confirmed production incident.
+- Repository definitions, dated production records, testing-VM captures, user recollection, interpretations and unknown final host state are generally separated.
+- The production VM's final installed state is correctly left NOT ESTABLISHED after deletion.
+- The private-session-link issue was reassessed against the stated repository visibility and the new W-8 rule; future commit messages/records are to omit session links.
+- The agenda order identifies B-002 Configuration Loading as the next topic.
+
+I found no material blocker requiring B-001 to be reopened. Do not alter the frozen manual's findings or begin V2 design on the strength of the proposed inputs.
+
+2. NON-BLOCKING FOLLOW-UP — OLDER MANUALS' EVIDENCE-PRIORITY WORDING
+
+B-001's header now correctly says evidence priority is claim-specific. However, B-001_review_notes.md section 15 says a similar universal source-ranking line remains in frozen A-005 to A-011 manuals and that W-7 explains how those are to be read without errata.
+
+This leaves a possible inconsistency for future readers: B-001 explicitly supersedes the universal-ranking approach, while older chapters may still literally display it. W-7 may be sufficient as a global interpretive rule, but the older manuals should not be silently edited.
+
+Recommended action:
+- Record this as a non-blocking documentation consistency follow-up under the existing governance process.
+- Decide later whether to add narrowly scoped errata to affected frozen manuals or retain the old text with an explicit cross-reference to W-7.
+- Do not bulk-edit or reopen those manuals now unless the governance owner approves that exact scope.
+- This does not block B-002, because B-002 can use the claim-specific evidence rule from the outset.
+
+3. TECHNICAL FINDINGS — RETAIN AS WRITTEN, WITH THE EXISTING QUALIFIERS
+
+The following are well-qualified and should not be simplified:
+- The pre-08:00 lost-day path depends on all listed conditions and has no observed occurrence found.
+- The main service's start window and token watcher's narrower window are distinct; do not merge them.
+- RestartPreventExitStatus=3 4 in dated production records differs from 3 4 5 in the repository baseline; the final production installed state remains unknown.
+- The watchman's BindsTo path is conditional, with production enablement and actual triggering not established.
+- PrivateTmp versus the recorded two-layer lock behaviour is an audit lead, not a confirmed defect.
+- A --mode live unit definition does not prove broker connectivity or order placement.
+- Host health checks running beside the service are not to be described as startup gates.
+- A-011's E-1 and B-001's own evidence-wording erratum have distinct scopes; preserve their respective references and approvals.
+
+4. SECURITY AND COMMIT EVIDENCE
+
+The supplied transcript reports:
+- five file hashes matched;
+- the staged list matched the five-file SAVE list;
+- the two staged-text grep checks produced no output;
+- commit 5b3e8ff was pushed to main.
+
+Keep the claims bounded: hash checks cover only the listed files, and pattern scans only cover the patterns and staged text scanned. The session-link grep is a useful targeted check, not proof that all sensitive content is absent. The transcript shows a reasonable save operation; there is no reason to rerun or amend it solely for this review.
+
+The notes report the V2 repository is private and that earlier commit/session references remain unchanged under Rama's W-8 decision. Do not repeat session URLs in future commit messages or project records. If any session was actually shared Public/Team, handle its visibility separately; do not infer visibility merely from the existence of a URL.
+
+5. CROSS-DOCUMENT / GOVERNANCE CHECKS
+
+Retain these controls:
+- DR-035 records the B-001 freeze, accepted A-011 wording erratum and scheduling-only moves; it must not imply that proposed V2 inputs became decisions.
+- DR-036 records the B-001 evidence-wording erratum and W-7/W-8 governance follow-ups.
+- V2 inputs remain open, with VP-66 and VP-67 labelled PROPOSED and their ratification topics deferred to the owning agenda items.
+- Q-38 audit leads retain their owners; they should be handled at those topics rather than pulled into B-002 without relevance.
+- No VM operation, deployment, live trading, legacy repair, or implementation is authorised by this documentation review.
+
+6. GO-AHEAD: B-002 — CONFIGURATION LOADING
+
+Proceed to B-002. Use the agreed workflow:
+1. Start with the B-002 discussion checklist/answer sheet and define the exact source/evidence scope.
+2. Inspect the production baseline read-only, plus relevant records and the applicable A-009 material; keep testing evidence separate from production evidence.
+3. Trace configuration from source and entry point through parsing/loading, validation, defaults/overrides, consumers, failure handling, logs/alerts, and paper/live differences where evidenced.
+4. Separate FACT, RECORD-DERIVED, HISTORICAL, INTERPRETATION, KNOWN DEFECT, and UNKNOWN / NOT ESTABLISHED.
+5. Do not infer that a configuration value is effective merely because it exists in a file; establish the actual loader, precedence, consumer and guard.
+6. After Rama answers, deliver the two expected artifacts: a .txt answer-vs-source reconciliation and a detailed .md legacy manual chapter.
+7. Keep V2 ideas in a separate PROPOSED / OPEN file. Do not design or implement V2.
+8. Do not commit/push until the review, reconciliation, final manual and approval workflow is complete.
+
+FINAL RECOMMENDATION
+No blocking changes are required to B-001. Record the older-manual evidence-wording consistency point as a non-blocking governance follow-up, then proceed to B-002 Configuration Loading.
+
+END
