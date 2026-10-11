@@ -1,0 +1,107 @@
+B-001 FINAL PACKAGE — LAST REVIEW AND B-002 GO-AHEAD
+Date: 10-Oct-2026
+Purpose: Final quality review of Claude's B-001 finalised package and command transcript.
+Decision: B-001 is substantively ready to remain frozen. Two documentation/security-hygiene points should be recorded; neither requires reopening the legacy findings. B-002 may proceed after these are handled or explicitly logged as follow-up items.
+
+SCOPE REVIEWED
+- B-001_manual.md
+- B-001_v2_design_inputs.md
+- B-001_review_notes.md
+- B-001_reconciliation_addendum.md
+- A-011_manual.md and A-011_review_notes.md erratum references
+- V2_DESIGN_LOG.md and V2_DECISION_REGISTER.md references
+- supplied PowerShell hash checks, staged-file list, commit and push transcript
+- Master Redesign Agenda and its topic-boundary/governance rules
+
+IMPORTANT LIMIT
+The command transcript shows the listed hash checks passed and the commit was pushed. This review has not independently run those PowerShell commands against Rama's local working tree; the transcript is evidence of the reported run, not a separately reproduced test.
+
+1. OVERALL RESULT
+
+The final package is coherent in its main governance separation:
+- B-001_manual.md records legacy behaviour only and is marked FROZEN under DR-035.
+- B-001_v2_design_inputs.md remains PROPOSED / OPEN; Rama's answers and Claude's suggestions are not silently treated as V2 decisions.
+- B-001_reconciliation_addendum.md supersedes the earlier reconciliation where it differs, without erasing the original.
+- The Q-B001-12 item-7 ambiguity is recorded as clarified by Rama.
+- A-011 erratum E-1 is described as wording-only, with approval and governance references.
+- The conditional pre-08:00 lost-day path is identified as a latent code-path defect, not an observed production incident.
+- Production repository definitions, dated production records, testing-VM captures, user recollection, interpretation, and unknown final host state are generally distinguished.
+- The B-001 → B-002 sequence is consistent with the Master Redesign Agenda.
+
+I found no basis in the reviewed excerpts to ask Rama to reopen B-001's technical findings or to delay B-002 for a new design discussion. Do not reopen the frozen manual just to polish wording unless a material contradiction or new evidence is found.
+
+2. REQUIRED DOCUMENTATION IMPROVEMENT — EVIDENCE PRIORITY
+
+B-001_manual.md section 2 currently states a general source priority:
+“production source and configuration > production records > testing captures > supplied records > user recollection > interpretation”.
+
+That hierarchy is too broad if read literally. Evidence priority depends on the claim being tested:
+- For “what does the repository code/config define at commit 970aabf?”, the production source is primary.
+- For “what was installed/enabled/running on a particular date?”, a contemporaneous dated host record is usually stronger than a repository declaration.
+- For “what was installed on the testing VM?”, its machine capture is primary for that testing VM only.
+- For “what did Rama personally observe?”, his recollection is the primary evidence of his recollection, but may still conflict with independently dated machine records about system state.
+- For the final production VM state after its deletion, none of these sources may establish the answer; it must remain UNKNOWN / NOT ESTABLISHED.
+
+Suggested replacement wording:
+“Evidence is claim-specific, not governed by one universal ranking. Repository source establishes what the named baseline defines; dated host records establish only the states/events they record; testing captures establish testing-VM state only; supplied records and user recollection retain their own provenance and limitations. When evidence conflicts, state the conflict and assess source fitness for the specific claim. Do not use a repository declaration alone to infer historical installation or final host state.”
+
+This is a clarity improvement, not a change to B-001's findings. If B-001 is already frozen under DR-035, record it as a minor editorial follow-up or amend only through the established erratum/reopen process; do not silently alter the frozen copy.
+
+3. SECURITY / PUBLIC REPOSITORY HYGIENE — COMMIT METADATA
+
+The supplied commit transcript shows a Claude session URL was included in the commit message and the commit was pushed to the public `trading-system-v2` repository.
+
+Please:
+- Do not repeat session URLs in future public commit messages or project records.
+- Assess whether that URL is a private session-access link or merely a non-sensitive session identifier. Do not assume either way without checking the platform's actual sharing/access semantics.
+- If it grants access to private conversation/code context, revoke or restrict it if possible and follow the platform's security guidance. Do not paste the URL into further chats or reports.
+- Keep the author/co-author attribution if desired, but omit session URLs from future commit metadata.
+- Check the committed files and public commit metadata for other unintended host/key/session identifiers. Do not open or expose any credential-bearing/never-open files as part of this check.
+
+This does not imply a credential leak has occurred; it is a prudent exposure check because the repository is public.
+
+4. HASH / COMMAND CLAIMS — INTERPRET CORRECTLY
+
+The supplied transcript reports PASS and HASH-OK for the 13 listed paths, then stages `docs`, passes a staged-content secret-pattern scan with no output, commits, and pushes.
+
+Retain that evidence, but do not overstate it:
+- SHA-256 checks prove the checked local files matched the expected hashes at that time; they do not prove that every relevant file was included in the check.
+- A pattern scan with no output means no match for those patterns in the scanned staged text; it does not prove absence of every possible secret or sensitive identifier.
+- `git add docs` stages all changes under docs, so the `git status --short` list is important and should be reviewed before each commit.
+- The shown push confirms the transcript reports a push to `main`; if a future audit needs independent confirmation, verify the remote commit and tree by commit ID rather than relying only on this transcript.
+
+The recorded command sequence is reasonable as evidence of this save operation. No need to rerun or amend it solely for this review.
+
+5. OTHER CROSS-DOCUMENT CHECKS
+
+Keep the following as currently recorded:
+- B-001 legacy manual is frozen; B-001 V2 inputs remain open.
+- Q-B001-05's process-lifecycle choice remains deferred to the named topics.
+- The host-boot supervisor choice and prerequisite failure classes remain open.
+- The A-011 E-1 wording correction does not claim a runtime behaviour change.
+- Final production installed-unit state remains unknown because the VM was deleted.
+- Testing `--mode live` does not establish broker connectivity or order placement.
+- No legacy repair, V2 implementation, VM operation, deployment, or live trading is authorised.
+- The historical reconciliation v1 remains preserved and v2 is clearly identified as the addendum.
+
+One final editorial check for Claude: make sure the register row DR-035 states only the decisions actually approved (B-001 manual freeze and the approved A-011 wording erratum / administrative topic-boundary moves) and does not imply that any PROPOSED V2 input became a V2 design decision.
+
+6. GO-AHEAD FOR B-002
+
+Proceed to B-002 — Configuration Loading.
+
+Use the normal B-002 workflow:
+1. Provide the B-002 discussion checklist/answer sheet first, with source inventory and exact evidence scope.
+2. Inspect the relevant production repository baseline and records read-only; do not analyse unrelated modules.
+3. Separate source-verified behaviour, dated historical evidence, interpretation, known defects and unknowns.
+4. After Rama answers, deliver the two expected artifacts:
+   - `.txt` reconciliation of his answers against the relevant GitHub/source evidence;
+   - detailed `.md` legacy manual chapter.
+5. Keep any future configuration recommendations in separate PROPOSED design inputs; do not design V2 while documenting legacy.
+6. Do not commit or push until the review/finalisation workflow for B-002 has been completed.
+
+FINAL RECOMMENDATION
+
+B-001 is ready to serve as the frozen baseline for moving forward. Record the evidence-priority wording improvement through governance, perform the limited public commit-metadata exposure check, and proceed to B-002. Neither follow-up should be used as an excuse to reopen settled B-001 decisions without new material evidence.
+
+END
