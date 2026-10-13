@@ -3,6 +3,7 @@
 Date: 2026-10-09 (IST)
 Purpose: let a new chat in the "Trading System V2 — Design & Build" project continue with Section B (B-001 to B-012) using the same method as Section A. This note is a working aid, not a decision record: decisions live in docs/governance/V2_DECISION_REGISTER.md, and rules and lessons in docs/governance/V2_DESIGN_LOG.md.
 Security: no credential values, account IDs, mailbox addresses or host addresses.
+Revised: 2026-10-13 (DR-038). The commit-attribution lines in section 3 now follow W-8 (Co-Authored-By line only; the session link written there on 09-Oct is removed) and the section 6 template names the same line. Nothing else is changed: sections 1 and 7 still describe the state of 09-Oct.
 
 ## 1. State at handover
 - Repository trading-system-v2 (private), branch main at fa0654b (pushed 09-Oct-2026). Today's pushes: d2730d1 (A-010 frozen), 5ab0034 (A-011 frozen), 7b6e6de (Section A end decisions), fa0654b (decision-paper wording cleanup and ChatGPT's final QA note).
@@ -71,10 +72,9 @@ Folders: docs/agenda/<topic folder>/ with lowercase names. Section A used names 
   - summaries keep their qualifiers;
   - write a mechanism apart from its effect;
   - quote users rather than paraphrase.
-- Commit attribution lines (end of every commit message):
+- Commit attribution (W-8, DR-036, DR-038): end every commit message with this one line only:
   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-  Claude-Session: https://claude.ai/code/session_01WjAv4HZpAv5rsHWfyPTjQb
-  (A new chat may be given new attribution lines; use whatever its own instructions say.)
+  No Claude session link goes into a commit message or any project record, even when a chat's own default instructions add one; Rama's rule takes precedence.
 
 ## 4. Security rules (no exceptions)
 - Never reproduce passwords, API keys or secrets, access tokens, TOTP seeds, webhook secrets, account or client IDs, VM or host addresses, mailbox addresses, person names, bot or SSH key names, or the PC hostname or username. This applies in documents, chat and tool output. Use placeholders such as {account} or [testing client ID].
@@ -108,7 +108,7 @@ Sources: the production snapshot github.com/ramakrishnan031-ctrl/trading-system-
   foreach ($c in $checks) { if (Select-String -Path (Join-Path $repo $c[0]) -Pattern $c[1] -Quiet -ErrorAction SilentlyContinue) { "PASS  $($c[0])" } else { "FAIL  $($c[0])" } }
   Set-Location $repo; git add docs; git status --short
   git grep --cached -l -I -i -E "(api[_-]?key|api[_-]?secret|password|totp|access[_-]?token)\s*[:=]\s*\S{8,}"     # expect nothing
-  $msg = @"<subject line>`n`n<attribution lines>"@; git commit -m $msg; git push
+  $msg = @"<subject line>`n`n<Co-Authored-By line only>"@; git commit -m $msg; git push
   Keep check patterns ASCII; Select-String can mis-read an em dash.
 
 ## 7. Next step: B-001 (VM and service startup)
