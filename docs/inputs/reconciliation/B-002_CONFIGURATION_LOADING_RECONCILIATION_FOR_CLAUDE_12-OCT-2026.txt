@@ -1,0 +1,190 @@
+B-002 CONFIGURATION LOADING
+RECONCILIATION / VALUE-ADDED REVIEW FOR CLAUDE
+Prepared: 12-Oct-2026, 19:20 IST
+Status: DRAFT FOR CLAUDE REVIEW — NOT FROZEN
+
+GOVERNANCE
+- Legacy is DEAD / REFERENCE ONLY. No repair, tuning, revival, deployment, or VM operations.
+- Rama explicitly said the completed answer sheet contains probable/expected behaviour only, NOT necessarily correct answers. Treat it as leads, not truth.
+- Keep FACT / HISTORICAL / OPERATOR-REPORTED / INTERPRETATION / UNKNOWN / OPEN QUESTION distinct.
+- A repository file proves only what that checked-in revision contains, not what was installed or active on a VM on a historical date.
+- No V2 design decisions in B-002. The future need for a complete config inventory may be recorded as an OPEN requirement elsewhere, not designed here.
+- Never reproduce credential values.
+
+1. EXECUTIVE FINDINGS
+
+The answer sheet is a useful scope checklist, but not a verified factual account. Source tracing confirms some statements and narrows or contradicts others.
+
+Highest-priority corrections:
+1. The eight files handled by core/config_loader.py are NOT all configuration sources. The inspected config/ directory has additional YAML files, CSV files, directories and strategy YAMLs. Other code reads environment variables, .env, accounts.csv and a JSON token/session file.
+2. Strategy files are in config/strategies/*.yaml in the inspected production snapshot. main.py sets strategies_dir = config_dir / "strategies" (around line 3158). Do not call this repository-root strategies/*.yaml without qualification.
+3. The primary loader is not the first configuration read. main() parses args, resolves config_dir, then the holiday guard reads nse_holidays_<year>.yaml before logger setup, instance lock and load_all().
+4. --config PATH is a real override. If omitted, Path("config") is relative to the process current working directory.
+5. The main loader uses yaml.safe_load and Pydantic v2 model_validate. Missing file -> ConfigMissingError; YAML parse error -> ConfigSchemaError; Pydantic ValidationError -> ConfigSchemaError. Empty YAML becomes {} before schema validation.
+6. “All keys required/no defaults” is overbroad. extra="forbid" rejects unknown keys, but actual schemas include defaults and validators (for example, trading_hours.market_open, market_close, service_window_end and MIS timing defaults).
+7. Three different mechanisms must not be conflated:
+   - Raw-byte SHA-256 per file in AppConfig.file_hashes; check_config_hash compares against session.last_config_hash and logs changed files.
+   - core/config_snapshotter.py hashes canonical AppConfig JSON and stores config_snapshots; failure is explicitly non-fatal in main.py.
+   - core/config_validator.validate_all(strict=False) warns on unaccessed keys but raises on detected value drift.
+8. The config hash comparison is not shown to be a blocking gate by itself. Follow all uses of hash_result.changed before asserting otherwise.
+9. Strategy loader fails fast, but scan_strategy_errors() separately gathers all bad strategy files for an alert path. The exact invocation order and every error path still need a full main.py trace.
+10. User-reported testing-VM manual changes (market times/trade limits) remain OPERATOR-REPORTED / HISTORICAL until matched to dated host evidence.
+11. “No rollback mechanism existed” is not established merely by inspecting core/config_loader.py. Search deployment scripts, hooks, recovery scripts, runbooks and records.
+12. “Tests validated repository templates while VM values drifted” is a plausible risk hypothesis, not yet a proven misleading-PASS incident. Do not call it a KNOWN DEFECT without a specific evidence chain.
+
+2. REPOSITORY EVIDENCE INSPECTED
+
+Production snapshot:
+- README.md: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/README.md
+- main.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/main.py
+- core/config_loader.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/core/config_loader.py
+- strategies/loader.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/strategies/loader.py
+- strategies/schema.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/strategies/schema.py
+- utils/holiday_guard.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/utils/holiday_guard.py
+- utils/startup_checks.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/utils/startup_checks.py
+- core/config_auditor.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/core/config_auditor.py
+- core/config_snapshotter.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/core/config_snapshotter.py
+- core/config_validator.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/core/config_validator.py
+- core/account_registry.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/core/account_registry.py
+- scripts/zerodha_login.py: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/scripts/zerodha_login.py
+- deploy/systemd/trading-system.service: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/deploy/systemd/trading-system.service
+- .gitignore: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/.gitignore
+
+Testing/sandbox:
+https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+The README.md and core/config_loader.py blob SHAs matched production during this inspection. This proves only those exact files at the inspected refs, not whole-repository, configuration-value or deployed-host parity.
+
+Records:
+- https://github.com/ramakrishnan031-ctrl/trading-system-records
+- https://github.com/ramakrishnan031-ctrl/trading-system-records/blob/main/SNAPSHOT_MANIFEST.md
+The manifest says records were captured in passes on 17–18 Sep 2026, some files copied earlier were not refreshed later, intentional redactions/exclusions exist, and the production VM .env was not read in the recorded scan. It is a read-only records snapshot, not a deploy target. Do not infer arbitrary historical host state from it.
+
+3. VERIFIED SOURCE FACTS
+
+A. CLI and config directory
+- main.py::_parse_args (around lines 179–205) defines --mode paper|live (default paper), --config PATH (default None), --resume, --status, --dry-run, --version and --interactive.
+- main.py::main resolves config_dir = Path(args.config) if args.config else Path("config").
+- The checked-in deploy/systemd/trading-system.service sets WorkingDirectory, EnvironmentFile and ExecStart with --mode live and no explicit --config. This is repository unit content only, not proof of installed host state.
+
+B. Early holiday read
+- utils/holiday_guard.py::_load_holiday_set directly reads config_dir / f"nse_holidays_{year}.yaml", uses yaml.safe_load, parses date entries and caches by (config_dir, year).
+- main() calls is_trading_day before logging setup, instance lock and load_all().
+- main catches FileNotFoundError around the early holiday guard and proceeds. This does not mean overall startup can succeed without the holiday file: the later eight-file loader also requires nse_holidays_2026.yaml. The narrow catch does not prove malformed YAML/date handling is graceful.
+
+C. Primary loader
+- core/config_loader.py::load_all around lines 2457–2517 loops over _CONFIG_FILES; checks file existence; reads raw bytes; hashes raw bytes with SHA-256; parses with yaml.safe_load; normalises None to {}; validates with schema_cls.model_validate; returns AppConfig only after all eight files pass.
+- Missing file -> ConfigMissingError.
+- yaml.YAMLError -> ConfigSchemaError.
+- Pydantic ValidationError -> ConfigSchemaError.
+- main.py::_main_locked catches exceptions from load_all, logs CRITICAL and returns 5.
+- Eight files: system_config.yaml, broker_costs.yaml, broker_limits.yaml, slippage_model.yaml, scoring_weights.yaml, scan_webhook_map.yaml, chartink_scanners.yaml, nse_holidays_2026.yaml.
+
+D. Other checked-in config items
+The inspected config/ listing also includes accounts.csv, accounts_multi_example.csv, cron_registry.yaml, expected_managers.yaml, index_universe.yaml, preflight.yaml, reference_data/, strategies/, security.yaml, strategy_direction_registry.yaml, symbol_aliases.yaml, and the eight loader-managed YAMLs. Presence in the repository does not prove every item is loaded on every startup.
+- core/account_registry.py::AccountRegistry.load parses accounts.csv via csv.DictReader and validates columns/rows.
+- main.py loads config_dir / "strategies".
+- scripts/zerodha_login.py calls dotenv.load_dotenv() and parses a JSON token file. Thus “the main loader does not load .env” must not be generalized to the whole application.
+
+E. Strategy loader
+- main.py around line 3158 uses strategies_dir = config_dir / "strategies".
+- strategies/loader.py sorts *.yaml files; no files -> ConfigSchemaError; validates each strategy; first invalid file raises; it only assigns its strategy dictionary after the loop succeeds.
+- scan_strategy_errors() separately returns all invalid file/reason pairs. main.py contains an aggregated Telegram/email alert helper. Exact call/abort/alert ordering must be checked before finalising.
+- The loader has an optional scan_webhook_map_path cross-validation argument; the inspected main.py call does not pass it, so do not claim that optional validation runs in that call without other evidence.
+
+F. Hash, snapshot and usage tracking
+- utils/startup_checks.py::check_config_hash compares current AppConfig.file_hashes with JSON in session.last_config_hash. If no prior usable mapping exists, it returns changed=False. Otherwise it returns/logs changed filenames. Do not call it a blocking gate by itself.
+- core/config_snapshotter.py serialises canonical JSON, redacts populated string values whose keys contain password/secret/token/api_key/apikey (except keys ending _env), hashes that JSON, and writes a config_snapshots row unless same date+hash exists.
+- main.py catches snapshot exceptions and logs them as non-fatal.
+- AppConfig includes file_hashes; therefore a comment-only source-file edit can change the snapshot hash while effective setting values remain unchanged. Compare config_json for value changes, not hash alone.
+- core/config_auditor.py defines groups A–G with PASS/INFO/WARN/BLOCK findings; some BLOCK findings can block, but not all findings are hard failures.
+- main.py calls config_validator.validate_all(strict=False) near startup completion (around line 4164). Unaccessed registered keys warn in this mode; detected tracked-value drift raises ConfigValidationError.
+
+G. Mode and environment
+- Paper/live branches exist in main.py. In the inspected path, paper sets kite_client=None at an early point; live reads account registry, account-specific environment variables and token JSON before building the live client.
+- The service unit has EnvironmentFile and WorkingDirectory settings. .gitignore excludes .env and other sensitive/generated categories; this is intended repository hygiene, not proof that no sensitive value was ever committed or stored elsewhere.
+- No actual credential values are included here.
+
+4. ANSWER-BY-ANSWER STATUS
+
+B2-01 — Accept both independently, production primary. Keep testing evidence separate.
+B2-02 — UNKNOWN is appropriate. Compare exact paths/commits and host records.
+B2-03 — Accept; inspect manifest, manuals, _working evidence, preserved manifests, dated captures, deployment records and logs. Remember exclusions.
+B2-04 — Supported with nuance: each capture proves only its recorded scope/time. A redaction limits the affected value(s), not necessarily all structural evidence.
+B2-05 — Incomplete/partly contradicted. More than eight files exist under config/; strategy files are under config/strategies; environment, CLI, service and token inputs are separate sources.
+B2-06 — Accept as historical UNKNOWN. The future inventory request is an OPEN project requirement, not a B-002 V2 design decision.
+B2-07 — Mixed. Two inspected code files match; complete config and active-host values are not compared. Manual testing-host edits remain operator-reported until corroborated.
+B2-08 — Partly supported. Source shows .env/token handling. Exact manual VM edits and deployment file-copy history need dated evidence.
+B2-09 — Partly traced: args -> config_dir -> early holiday guard -> service-window guard -> logging/lock -> load_all -> StateStore/session/hash/startup checks -> account/mode paths -> snapshot -> strategy load -> remaining startup -> usage validation/startup marker. Claude must check exact branches and line refs.
+B2-10 — Confirmed: --config overrides; default Path("config") is relative to process CWD.
+B2-11 — Partly confirmed: eight main YAMLs; separate strategy loader; separate holiday read; account CSV, dotenv/environment and token JSON. Map all remaining direct readers.
+B2-12 — Partly confirmed: AppConfig is held in main and sub-configs are passed to constructors; do not generalize to every consumer. StrategyLoader stores StrategyConfig objects in its instance.
+B2-13 — Main loader uses yaml.safe_load and Pydantic v2. Other sources have separate parsers; inspect strategy schema and each direct reader.
+B2-14 — Partly confirmed. extra=forbid plus model validators, strategy validation, config auditor and config usage validator. Extract rules by schema/caller.
+B2-15 — Correct the overgeneralisation: known fields have defaults; missing file, malformed syntax, empty file and missing required fields are different paths.
+B2-16 — Partly confirmed: loader has no .env interpolation/includes, but --config, --mode, EnvironmentFile, load_dotenv and manual edits are relevant. Do not conclude no other overrides exist.
+B2-17 — OPEN. extra=forbid does not prove no coercion, defaults or fallback. Inspect field validators and downstream fallback code.
+B2-18 — Main load failure returns 5; core loader is atomic. Strategy loader fails fast. Trace the separate all-errors alert path and historical logs before claiming observed incidents.
+B2-19/20 — Mode branches confirmed in code; exact historical active mode/config values remain unknown.
+B2-21 — Two files match across repo snapshots, but full repo/host parity not established. Operator-reported test host differences need date-bounded corroboration.
+B2-22/23 — Partly confirmed. Map each key/source to consumers using direct reads, constructor injection and actual call paths.
+B2-24 — Confirmed with distinctions: raw file hashes, DB snapshot hash, config auditor and usage tracker are separate.
+B2-25 — Main loader failure logs CRITICAL and returns 5. Other exits/alerts are path-specific; trace each path.
+B2-26 — No partial AppConfig/strategy dict returned, but earlier startup reads and state writes can occur before all later stages finish. Distinguish object atomicity from process side effects.
+B2-27 — Main/strategy loaders are load-once/no hot reload. Do not claim no external watcher exists until service/watcher code is reviewed. A service restart is not hot reload.
+B2-28 — OPEN; “no rollback” and “recovery entirely manual” require deployment/record search, not only loader inspection.
+B2-29 — Describe categories/locations only. EnvironmentFile, dotenv and token JSON paths appear in code; exact historical host values remain unknown.
+B2-30 — Correct sheet: records snapshot manifest documents redactions/exclusions; config_snapshotter has separate DB snapshot redaction. Neither proves all tracked config files were always unredacted or all secrets absent from history.
+B2-31 — Host drift remains operator-reported until corroborated. “Misleading PASS” is not a proven defect yet.
+B2-32 — Accept with additions: full per-key consumers, extra config sources, historical host values, installed unit history, strategy alert sequence, hash side effects, external watchers and rollback evidence remain open.
+B2-33 — Add early holiday read, --config/CWD, account CSV, dotenv/token JSON, service unit, hash semantics, config auditor severities and usage validator behaviour.
+B2-34 — Accept: strictly factual legacy documentation.
+B2-35 — Accept and expand to all source paths listed above plus full config directory inventory.
+
+5. OPEN WORK FOR CLAUDE BEFORE FREEZE
+
+P0 — Baseline
+- Record exact production/testing refs/commit SHAs.
+- Compare all eight loader files, extra config items, config/strategies/*.yaml, accounts.csv, relevant helpers, main.py and service/deployment files.
+- Never infer VM-installed values from Git.
+
+P1 — Full startup path
+- Trace from _parse_args through holiday guard, service-window guard, load_all, StateStore/session/hash, startup checks, broker/account paths, snapshot, strategy loading, error scan/alert, validate_all(strict=False), startup marker and every return/exception.
+- Establish which paths return 5 vs 3 vs other codes, and whether state has already been written before later failures.
+
+P2 — Complete inventory
+Search for yaml.safe_load/yaml.load, json.load, csv.DictReader, load_dotenv, os.environ/getenv, Path("config"), config_dir, and all extra config filenames. For each source record:
+SOURCE -> INPUT -> PARSE/VALIDATION -> DEFAULT/OVERRIDE -> OUTPUT -> CONSUMER -> STORAGE/LOG/HANDOFF.
+
+P3 — Validation matrix
+- Extract each schema field, required/default status, validator, range/cross-field rule and exception mapping.
+- Cover empty/null/invalid-root YAML, missing files, no strategy files and strategy mapping failures.
+- Map config_auditor groups/severities and config_validator strict=False behaviour.
+
+P4 — Hash/snapshot
+- Distinguish raw-byte SHA-256 from canonical AppConfig JSON hash.
+- Follow every use of hash_result.changed.
+- Inspect StateStore schema for session.last_config_hash and config_snapshots columns.
+- Document snapshot redaction limits and non-fatal failure.
+
+P5 — Historical records
+- Record host, timestamp, capture scope and method for each evidence item.
+- Check reported testing-host edits; if no corroboration, preserve OPERATOR-REPORTED label.
+- Respect manifest limits: production .env not read, some records redacted/excluded, capture passes not fully synchronised.
+
+P6 — Rollback/defect claims
+- Search deployment scripts, hooks, service units, restore scripts, runbooks and dated incident records.
+- Do not promote a hypothetical false-PASS risk into KNOWN DEFECT without a concrete chain: specific check + input path + host state + PASS output + dated record.
+
+6. REQUIRED MANUAL TABLES
+1. Eight main-loader files: schema class, defaults/required fields, validators, output and first consumer.
+2. All other config and external sources: reader, parse/validation, consumers, mode/host differences and evidence status.
+3. Startup sequence: phase, source/function, input, side effect, output, failure behaviour, next consumer.
+4. Integrity mechanisms: raw-file hash, snapshot hash, usage tracker, auditor; comparison baseline and failure severity.
+5. Paper/live and production/testing comparison, separating code facts from host UNKNOWNs.
+6. Failure matrix: missing file, malformed/empty YAML, missing required key, unknown key, bad type/range, no strategy files, invalid strategy and mapping mismatch.
+7. Secret/redaction matrix: environment, token JSON, DB snapshot redaction, records-repo redactions/exclusions; no values.
+
+7. INTERIM STATUS
+The primary loader’s broad behaviour is established, but the answer sheet alone is not enough to freeze B-002. The complete config inventory, per-key consumer map, exact strategy failure/alert call sequence, full production/testing comparison, hash/audit side effects and historical VM values still require Claude’s review.
+
+Do not alter legacy source, operate either VM, change production/testing files, or make V2 design decisions.

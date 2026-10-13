@@ -1,0 +1,280 @@
+B-002 — CONFIGURATION LOADING
+Rama’s answer sheet / evidence-scope checklist
+Project: Trading_System-v2_redesign
+Status: B-001 completed and frozen; B-002 is the next agenda item
+Prepared: 11-Oct-2026
+
+PURPOSE
+Record how configuration was actually supplied, discovered, loaded, validated, overridden, consumed, and recorded by the DEAD legacy system. This is fact-finding only.
+
+NON-NEGOTIABLE SCOPE
+- Legacy is DEAD / REFERENCE ONLY.
+- Do not repair, tune, revive, or operationally run it.
+- Do not design or implement V2 here.
+- Do not assume production and testing behaved identically.
+- Do not treat a repository file as proof of what was installed or active on a host at a historical time.
+- Do not expose credentials, tokens, API secrets, TOTP values, passwords, private keys, or other secret values. Identify only type/location/category.
+- For anything you cannot establish, write UNKNOWN / NOT ESTABLISHED.
+- Please answer from your knowledge/records; do not edit source code to answer these questions.
+- A question may be answered “not known to me” or “please investigate from repository/records.”
+
+REPOSITORY REVIEW COMPLETED FOR THIS QUESTION SET
+1. Production snapshot:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+   Read-only inspection used the repository README, PATHS.md, core/config_loader.py, strategies/loader.py, main.py, and the config directory listing.
+2. Testing/sandbox snapshot:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+   Read-only inspection confirmed the README and core/config_loader.py content returned the same blob SHAs as production for those specific files. This does NOT establish that the entire repositories, deployed machines, or runtime states are identical.
+3. Records snapshot:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+   README and SNAPSHOT_MANIFEST.md were inspected to understand the repository’s role and its snapshot/redaction limitations. It describes itself as a read-only records snapshot, not a deploy target; it also says some captured files were not refreshed in later passes. The legacy-manual directory is present in the records repository.
+4. Access/evidence limitation:
+   Repository files were read through GitHub’s connected read-only access. This is not a live inspection of either VM and does not prove which configuration was installed, loaded, or active at a particular historical time. The records repository itself warns that its contents are snapshots taken at stated times and not every file was refreshed together.
+5. Security:
+   No secret values are reproduced in this answer sheet.
+
+PRELIMINARY REPOSITORY FACTS — PLEASE CORRECT ONLY WITH EVIDENCE
+A. Production README says configuration YAML under config/ is loaded by core/config_loader.py, described as an atomic load with strict Pydantic schemas and extra="forbid". It also describes strategies/*.yaml as handled separately by strategies/loader.py.
+B. The header of production core/config_loader.py describes load_all(config_dir=Path("config")) -> AppConfig; eight non-strategy YAML files; load-once at startup; no hot reload; no .env parsing or environment-variable interpolation by this loader; and no partial AppConfig on load failure.
+C. The eight non-strategy files named in that loader header are:
+   - system_config.yaml
+   - broker_costs.yaml
+   - broker_limits.yaml
+   - slippage_model.yaml
+   - scoring_weights.yaml
+   - scan_webhook_map.yaml
+   - chartink_scanners.yaml
+   - nse_holidays_2026.yaml
+D. The loader header says strategy YAML is separate and handled by strategies/loader.py. The strategy loader’s header describes loading all strategy YAMLs at startup, with no hot reload and fail-fast/no-partial-load behaviour.
+E. main.py imports core.config_loader.load_all, strategies.loader.StrategyLoader/scan_strategy_errors, core.config_auditor.audit, core.config_snapshotter.snapshot_config, core.config_validator.config_validator, and startup-check helpers including check_config_hash. Imports alone do not establish execution order or runtime effects; those need source-path tracing.
+F. The production and testing snapshots returned identical README and core/config_loader.py blob SHAs during this inspection. This is evidence only about those exact files at the inspected repository refs, not proof of total parity.
+G. The records repository README calls it a read-only snapshot of project records and says it is never a deploy target. Its manifest records snapshot dates, intentional redactions, and that files captured in an earlier pass were not necessarily refreshed in later passes.
+
+HOW TO ANSWER
+- Add your response directly below each question, keeping the question number.
+- Label each answer as one of:
+  FACT (based on direct personal knowledge or a specific record)
+  HISTORICAL (true only for a stated date/period)
+  UNKNOWN / NOT ESTABLISHED
+  INTERPRETATION (reasoned view, not directly proven)
+  OPEN QUESTION (needs source investigation)
+- If you have evidence, name the record/file and date. Do not paste secrets.
+- If the repository facts above appear wrong, explain which exact fact and point to the evidence you rely on.
+- Do not decide what V2 should retain or change.
+
+SECTION 1 — SCOPE AND AUTHORITY
+
+B2-01. What should be treated as the primary code baseline for documenting configuration loading: production snapshot, testing snapshot, or both independently?
+Your answer: Both independently (But consider the Production snapshot as primary baseline and testing snapshot reviewed independently for divergences or secondary choice).
+
+B2-02. Are there known dates/commits where production and testing configuration code or configuration files diverged? If yes, identify the evidence/period. If unknown, say so.
+Your answer: UNKNOWN
+
+B2-03. Which records should be examined for historical installed/active configuration (for example, dated host captures, deployment records, logs, service environment records, backups, or audit notes)? List known records or say “investigate repository/records.”
+Your answer: Investigate repository/records, specifically the trading-system-records snapshot repository (including SNAPSHOT_MANIFEST.md, any dated host capture manifests, runtime log archives, and legacy-manual materials). 
+
+B2-04. Are there any known constraints on which host records can be treated as authoritative for a particular date? Do not infer final host state from a repo snapshot.
+Your answer: Yes. Per the records repository's SNAPSHOT_MANIFEST.md, host records represent point-in-time captures taken at stated dates where not all files were refreshed simultaneously in subsequent passes. In addition, intentional redactions of sensitive values exist, meaning records cannot be assumed to reflect an unredacted or fully synchronized runtime state for any arbitrary date. Any host record is authoritative strictly for its specific capture timestamp and scope, not across historical runs.   Label: FACT (referencing SNAPSHOT_MANIFEST.md and repository review item 4)
+
+SECTION 2 — CONFIGURATION INVENTORY
+
+B2-05. Besides the eight YAML files named in core/config_loader.py, what other configuration sources did the legacy system use? Consider only as possible categories to investigate:
+- strategies/*.yaml
+- .env / environment variables
+- CLI flags and command-line config path
+- systemd Environment / EnvironmentFile
+- CSV or JSON configuration
+- database-stored settings/state
+- files under user/home directories
+- broker token/session files
+- cron or service definitions
+- hard-coded constants/defaults
+- per-host or per-mode overrides
+Your answer: UNKNOWN, Clearly But all the configuration source files are placed in  "~\trading-system\config\<files>", So refer GitHub repo to know what are those files [INPUT]
+
+B2-06. Was there a complete, authoritative inventory of configuration sources, keys, and consumers? If yes, where and for what date? If no/unknown, say so.
+Your answer: UNKNOWN, No complete, authoritative inventory of all configuration sources, keys, and downstream consumers is known to exist for the legacy system. While individual schemas (such as Pydantic models in core/config_loader.py and strategy definitions in strategies/loader.py) describe local keys, an end-to-end mapping across the entire system must be investigated and established from repository source tracing., So need one in new system take note of it
+
+B2-07. Did production and testing use the same configuration filenames and values? Separate “same filenames/schema” from “same values” and “same installed/active values.”
+Your answer: HISTORICAL, Both Production and testing using the same files, But regarding the same values: At directly on the VM level few settings has been changed/modified [Example: Market Open time, Number of trades etc]
+
+B2-08. Were any files generated, copied, edited manually, restored from backups, or populated during deployment/startup? Identify evidence if known.
+Your answer: HISTORICAL, Yes. Configuration files were subject to manual edits directly at the VM level (such as modifying market times or trade limits in test environments). In addition, daily runtime artifacts—such as broker authentication/token session files—were populated dynamically during pre-market readiness rather than being committed to Git. Whether formal deployment scripts generated or copied templates on host provisioning remains to be verified from host records.
+
+SECTION 3 — ENTRY POINT AND LOAD SEQUENCE
+
+B2-09. From process start to first consumer, what was the actual configuration-loading sequence? Please state only what you know; source tracing can establish the rest.
+Your answer: UNKNOWN & OPEN QUESTION, But At a high level, startup required loading the core system configuration (via core/config_loader.py handling the 8 non-strategy YAML files atomically) and loading strategies (via strategies/loader.py) before components like the broker connection or trading engine initialized. Preliminary repository facts show main.py imports config hashing, auditing, validation, and snapshotting modules at startup. However, the exact line-by-line call order, precedence between environment checks and file loading, and precise handoff to the first consumer must be established through source-path tracing in main.py
+
+B2-10. Was config_dir always the default "config", or could CLI arguments, working directory, service settings, or another mechanism change the path?
+Your answer: OPEN QUESTION, The default path was config (as defined in load_all(config_dir=Path("config")) in core/config_loader.py). Whether CLI arguments (e.g., via argparse), environment variables, or working directory configurations in the systemd service unit could override this default path is not fully established and must be confirmed via source tracing of main.py and the service unit definitions.
+
+B2-11. Which configurations were loaded by core/config_loader.py, and which were loaded independently by strategies/loader.py or other modules?
+Your answer: UNKNOWN, Need to review GitHub repo
+
+B2-12. Were configuration objects passed to consumers, imported as module-level globals, re-read from disk, or handled through a mixture? If unknown, leave source tracing open.
+Your answer: UNKNOWN & OPEN QUESTION, Unknown from high-level inspection. Preliminary facts establish that core/config_loader.py returned an AppConfig object and strategies/loader.py handled strategy definitions, but whether AppConfig was passed via parameters, stored as a shared module-level singleton, re-read on demand, or handled through a mixture across downstream consumers must be determined through source-path tracing.
+
+SECTION 4 — PARSING, VALIDATION, DEFAULTS, AND OVERRIDES
+
+B2-13. What parser/library was actually used for each configuration format, and what happened on malformed syntax?
+Your answer: UNKNOWN & OPEN QUESTION, For the YAML configuration files, parsing was handled via a YAML library paired with Pydantic validation models (with extra="forbid"). Per the file headers of core/config_loader.py and strategies/loader.py, loading was atomic and fail-fast: any malformed syntax or schema failure caused an immediate startup failure with no partial AppConfig or partial strategy set loaded. The exact underlying parser package (e.g., PyYAML vs. ruamel.yaml) and the exact exception handling/exit behavior must be confirmed via source-path tracing.
+
+B2-14. What validation applied: schema/type checks, required fields, unknown-key handling, ranges, cross-field validation, file-existence checks, or custom guards?
+Your answer: UNKNOWN & OPEN QUESTION, The system enforced strict Pydantic schema validation across configuration files. Based on the repository README and core/config_loader.py header, this included strict type checks, required fields, and unknown-key rejection via extra="forbid". In addition, main.py imports dedicated validation modules including core.config_validator.config_validator, core.config_auditor.audit, and check_config_hash. The presence of specific range limits, cross-field checks, custom guard rules, and individual file-existence checks across both loaders must be confirmed through source-path tracing.   
+
+B2-15. Which values had schema defaults, and which were mandatory? Did missing file, missing key, null, empty value, invalid value, or unknown key produce different outcomes?
+Your answer: UNKNOWN & OPEN QUESTION, The preliminary loader facts establish that the configuration system used strict Pydantic models with extra="forbid", meaning any unknown key caused an immediate validation error. Furthermore, core/config_loader.py and strategies/loader.py were fail-fast with no partial configuration loaded on error. However, the exact field-by-field breakdown of which schema fields had defaults versus which were mandatory, and whether missing files, missing keys, nulls, or invalid types raised distinct custom exceptions or standard Pydantic ValidationError / FileNotFoundError exceptions, must be determined by inspecting the Pydantic model definitions through source-path tracing.
+
+B2-16. Were there environment-variable expansions, includes, interpolation, command-line overrides, mode-specific overrides, or per-host overrides anywhere outside the main YAML loader?
+Your answer: UNKNOWN & OPEN QUESTION, Preliminary repository facts establish that core/config_loader.py itself did not parse .env files or perform environment-variable interpolation. In operational practice, per-host differences were handled via manual edits directly on the VM (as noted in B2-07 and B2-08) rather than an automated templating system. However, whether main.py, CLI argument parsers, or startup wrappers applied any command-line overrides, environment expansions, or mode-specific overrides after loading YAMLs must be verified through source-path tracing.
+
+B2-17. Did any configuration get silently ignored, coerced, clamped, or replaced by a fallback? Identify exact examples only if supported.
+Your answer: UNKNOWN & OPEN QUESTION, None known or documented from operational experience. Because the system utilized strict Pydantic schemas configured with extra="forbid" and operated under a fail-fast model without partial loads, unexpected keys or schema violations triggered validation errors rather than silent acceptance. Whether any internal logic downstream or custom validators coerced types, clamped numeric values, or applied fallback defaults must be determined via source-path tracing.   
+
+B2-18. What happened if one of the eight main YAML files failed to parse or validate? What happened if a strategy YAML failed? Please distinguish observed behaviour from comments/documentation.
+Your answer: FACT & OPEN QUESTION and probable answer as follows
+1. Documented / Declared Behavior:
+* Main 8 YAMLs: Per the header of core/config_loader.py and the repository README, the loader operates atomically under strict Pydantic schemas (extra="forbid") with fail-fast semantics. Any parse or validation failure in any of the 8 files fails the entire load immediately, producing no partial AppConfig.
+* Strategy YAMLs: Per the header of strategies/loader.py, strategy YAMLs are loaded at startup with no hot reload and a similar fail-fast, no-partial-load policy.
+
+2. Observed Runtime Behavior:
+* In operational practice, configuration failures resulted in startup aborts rather than degraded trading execution. However, the exact runtime exception raised, exit code returned, logging format, and whether main.py’s scan_strategy_errors caught strategy issues before or during engine boot must be verified against source-path tracing and logs.
+
+SECTION 5 — PAPER/LIVE AND HOST DIFFERENCES
+
+B2-19. Which configuration values or loading paths differed between paper and live modes, if any? Do not assume parity.
+Your answer: OPEN QUESTION, Unknown from high-level repository inspection. While the eight core YAML files in core/config_loader.py do not show obvious separate "paper" vs. "live" filename splits in the repository root, whether specific values inside system_config.yaml or broker settings toggled between modes, or whether CLI/environment switches changed the downstream consumption path, must be established through source-path tracing in main.py and downstream broker connectors.
+
+B2-20. Were mode-specific changes applied in code, CLI parsing, environment, separate files, or deployment/service configuration?
+Your answer: OPEN QUESTION, Unknown from high-level review. Because the eight primary YAML files loaded by core/config_loader.py were shared without explicit per-mode file splits, the mechanism that designated runtime mode (such as CLI arguments parsed in main.py, environment variables read outside the loader, or systemd service unit directives) must be determined through source-path tracing of main.py and service definitions.
+
+B2-21. Which differences are established for production vs testing, and which remain unknown because only repository snapshots are available?
+Your answer: HISTORICAL & answer as below
+1. Established Facts / Realities:
+* Repository-level code files (core/config_loader.py and README.md) share identical blob SHAs between production and testing snapshots.
+* File schemas and filenames across the eight core configuration files were identical.
+* Operationally, active host values diverged at the VM level (e.g., market open times and trade count limits modified directly on the test host).
+
+2. Unknown / Not Established (due to repo snapshot limits):
+* The full extent of host-level configuration differences, including specific environment variables, uncommitted local config edits, runtime secrets/token setups, systemd unit overrides, and exact historical dates when configurations differed. These cannot be established from repository snapshots alone and require inspection of dated host captures and runtime records.
+
+SECTION 6 — CONSUMERS AND EFFECTS
+
+B2-22. Which downstream modules consumed configuration, and how can each relationship be evidenced (caller, dependency injection, import, file read, etc.)?
+Your answer: OPEN QUESTION, High-level imports in main.py demonstrate that modules such as core.config_auditor, core.config_snapshotter, core.config_validator, and startup-check helpers interface directly with configuration data at startup. Beyond these entry-point utilities, functional downstream components—such as broker connectors, risk limiters, slippage models, scanner processors, and trading strategies—consumed the settings defined in the eight YAML files and strategies/*.yaml. However, establishing the exact handoff mechanism for each module (dependency injection, module-level imports, or direct disk reads) requires comprehensive source-path tracing across the consumer files
+
+B2-23. Did configuration influence startup gates, trading windows, broker setup, capital/risk, strategy selection, order behaviour, alerts, logging, or scheduler behaviour? List known areas; do not explain their trading logic here.
+Your answer: FACT & OPEN QUESTION, Answer as below
+Yes, configuration directly influenced multiple operational and execution areas:
+* Startup gates & Trading windows: Influenced via nse_holidays_2026.yaml and timing settings in system_config.yaml (e.g., startup checks, market open/close times).
+* Broker setup, limits & costs: Influenced via broker_limits.yaml and broker_costs.yaml.
+* Execution & Order behavior: Influenced via slippage_model.yaml and scoring parameters in scoring_weights.yaml
+* Strategy selection: Governed by the strategy files discovered and loaded under strategies/*.yaml
+* Scanners & Alert routing: Configured via chartink_scanners.yaml and scan_webhook_map.yaml
+* Startup integrity checks: Influenced via check_config_hash, config_validator, and audit modules imported in main.py
+The exact mappings of specific keys to scheduler intervals, logging verbosity, and capital thresholds require verification through source-path tracing.
+
+B2-24. Were there startup configuration audits, snapshots, hashes, drift checks, or change-detection records? What did they actually compare, and what was the failure response?
+Your answer: UNKNOWN, Preliminary repository facts confirm that main.py explicitly imports configuration integrity modules at startup: core.config_auditor.audit, core.config_snapshotter.snapshot_config, core.config_validator.config_validator, and the startup-check helper check_config_hash. This demonstrates that startup audits, snapshotting, and hash verification were architectural features of the legacy system. However, the exact baseline the hash was compared against (e.g., a pre-generated hash file, git commit hash, or database record), whether a drift detection mechanism existed beyond this hash check, and the exact failure behavior (e.g., immediate abort vs. logging an error) must be verified through source-path tracing in main.py and the respective utility modules.   Label: FACT (for the presence and import of auditing, snapshotting, and hash-checking utilities in main.py); baseline comparison targets and exact failure responses remain OPEN QUESTION pending source tracing. 
+
+SECTION 7 — FAILURE, LOGGING, AND RECOVERY
+
+B2-25. What logs, alerts, exit codes, or operator-visible evidence were produced for missing/invalid configuration?
+Your answer: FACT & OPEN QUESTION, Because the loader utilized strict Pydantic models with extra="forbid" and operated under a fail-fast/no-partial-load design, configuration parsing or validation errors resulted in an immediate startup failure and an aborted launch. However, the exact log format, whether external alerts (such as Telegram or webhooks) fired prior to shutdown, the specific non-zero process exit codes returned, and the exact console or file paths where these errors were written must be established through source-path tracing in core/config_loader.py and main.py.   Label: OPEN QUESTION (fail-fast termination is FACT from loader headers; specific exit codes, alert paths, and logging formats remain OPEN QUESTION pending source tracing). 
+
+B2-26. Could the system start partially with only some configuration loaded, or did a failure stop startup? State separately for main YAML and strategy YAML if evidence differs.
+Your answer: FACT & OPEN QUESTION, probable answers are as below
+* Main 8 YAMLs (core/config_loader.py): Startup was strictly atomic and fail-fast. Per the repository facts and loader header documentation, any syntax error or validation failure across any of the eight core YAML files caused the entire configuration load to fail immediately, leaving no partial AppConfig loaded.
+* Strategy YAMLs (strategies/loader.py): Per the documentation header of strategies/loader.py, strategy loading also enforced a fail-fast, no-partial-load policy at startup with no hot reload.
+* Observed / Code Path Behavior: In operational practice, any core configuration failure resulted in a complete startup stop rather than degraded operation. Whether runtime strategy loader methods (or main.py’s scan_strategy_errors) offered any fallback, partial isolation, or strategy skipping prior to engine launch must be confirmed via source-path tracing.
+
+B2-27. After a configuration change, was restart required? Was any hot reload/watch mechanism present elsewhere, even if the main loader itself did not support hot reload?
+Your answer: FACT & OPEN QUESTION, probable answers are as below
+* Main Loader & Strategies: A full process restart was required for configuration changes to take effect. Per the file headers of core/config_loader.py and strategies/loader.py, configurations were read once at startup, with explicit documentation confirming no hot-reload support.
+* Operational Practice: In operational reality, any configuration update (including manual edits on the VM or updated token generation) required restarting the service/process.
+* Potential External Watch Mechanisms: Whether any external file-watching mechanism (e.g., watchdog libraries, scheduled polling loops, or OS signal handlers like SIGHUP) existed outside the loaders in main.py or service scripts must be definitively verified through source-path tracing.
+
+B2-28. What happened after a bad configuration was deployed or changed: rollback, restore, manual correction, restart, or another recovery path? Distinguish documented procedure from observed incident.
+Your answer: HISTORICAL & OPEN QUESTION, probable answers are as below
+* Documented Procedure: There was no automated configuration rollback mechanism built into core/config_loader.py or the primary codebase. While core.config_snapshotter.snapshot_config existed to capture configuration snapshots at startup, the repository does not contain an automated auto-revert or rollback engine if a post-startup or mid-day issue arose. Formal written runbook procedures for configuration recovery must be confirmed through repository and documentation tracing.
+* Observed Incidents / Operational Practice: Recovery from a bad configuration was entirely manual. The process failed fast at startup, prompting an operator to identify the invalid entry (from console/log output), manually edit or restore the YAML file directly on the host, and execute a manual process restart (systemctl restart or relaunching the script).
+
+SECTION 8 — SECURITY AND EVIDENCE
+
+B2-29. Where were sensitive values expected to live (category/location only)? Do not include actual values, filenames containing values, or credential contents in your answer.
+Your answer: HISTORICAL & OPEN QUESTION, probable answers are as below
+* Sensitive credentials (such as broker API keys, client secrets, PINs, TOTP seeds, and session tokens) were expected to reside outside version-controlled YAML files, specifically in host-level environment variables, untracked local environment files (.env), or secure local credential storage on the deployment host. The eight core YAML configuration files loaded by core/config_loader.py were designated strictly for system, market, limit, and risk parameters. The exact mechanisms, file paths, and environment variable keys used by authentication and broker connection modules must be confirmed via source-path tracing.
+
+B2-30. Were configuration files or records intentionally redacted in any snapshot? If yes, point to the manifest/record and explain the impact on what can be established.
+Your answer: FACT & OPEN QUESTION, probable answers are as below
+* Repository configuration files themselves were committed as operational templates and structural definitions rather than scrubbed or redacted live artifacts; sensitive credentials were kept out of the version-controlled YAML files entirely (as noted in B2-29). However, whether the startup snapshot utility (core.config_snapshotter.snapshot_config), audit trails (core.config_auditor.audit), or exported logs intentionally redacted specific sensitive keys, masked account identifiers, or maintained an export manifest must be verified by examining the snapshotting and auditing code. The absence of unredacted runtime host captures limits the ability to reconstruct historical runtime values (such as live account numbers or active broker sessions) from repository snapshots alone.
+
+B2-31. Are there known configuration-related incidents, defects, mismatches, or misleading “PASS” indicators? List them only as historical findings with date/evidence where possible.
+Your answer: HISTORICAL  & OPEN QUESTION, probable answers are as below
+* Host vs. Repository Configuration Drift (Historical Finding): As established in B2-07 and B2-21, manual VM-level configuration overrides on the testing environment (specifically altering market open timings and trade count limits) created divergence between the active runtime behavior and the version-controlled YAML baselines.
+* Potential Misleading "PASS" Verification: Because code-level test suites and validation utilities evaluated the repository templates directly rather than the active, locally modified files on the host machine, automated validation checks could report a "PASS" status while active VM execution was running on uncommitted, drifted parameters.
+* Documented Production Incidents / Defects: Specific historical incident dates, ticketing logs, or execution failure records stemming from bad configuration deployments or false-positive validation passes are not preserved within the static repository snapshots and require inspection of historical incident postmortems, runtime logs, or operational runbooks.
+
+B2-32. What must remain explicitly UNKNOWN until further evidence is inspected?
+Your answer: OPEN QUESTION, probable answers are as below
+* Exact Startup Chronology & Precedence (B2-09, B2-10): The precise line-by-line initialization sequence in main.py, the exact call order between environment checks, loader calls, and connection setup, and whether CLI flags (argparse) or environment variables could override the default config directory.
+* Downstream Consumer Consumption Plumbing (B2-12, B2-22): Whether AppConfig and strategy definitions were passed via strict dependency injection, imported as module-level globals/singletons, re-read on demand from disk, or handled via a mixture across trading engines, risk managers, and broker adapters.
+* Fine-Grained Validation & Fallback Rules (B2-14, B2-15, B2-17): The field-by-field breakdown of required versus schema-default fields, specific numeric range limits, cross-field validation rules, and whether any downstream custom validators silently coerced types, clamped values, or applied fallback values.
+* Runtime Exception & Error Propagation (B2-13, B2-18, B2-25): The specific runtime exception types, process exit codes, logging outputs, and external alerting behavior (e.g., webhook notifications) triggered when a main YAML or strategy YAML failed validation.
+* Mode Divergence & External Overrides (B2-16, B2-19, B2-20): Any runtime differences, conditional switches, or command-line/environment overrides separating paper mode from live execution outside the shared YAML templates.
+* Host-Level Runtime Drift & Incident Records (B2-21, B2-28, B2-30, B2-31): The full, dated scope of historical VM-level configuration overrides, actual uncommitted .env files and secrets configurations, specific snapshot-redaction manifests, and documented incident postmortems or defect records.
+* Integrity Check Baselines & Rollback Tooling (B2-24, B2-28): The exact baseline mechanism used by check_config_hash (e.g., committed hash file vs. external state) and the implementation details of any recovery utilities inside core.config_snapshotter.
+
+SECTION 9 — COMPLETENESS CHECK
+
+B2-33. Is there any configuration source, load path, mode/host distinction, historical record, or failure case missing from this question set?
+Your answer: OPEN QUESTION, probable answers are as below (Yes. To ensure complete audit coverage across the configuration lifecycle, several operational and technical mechanisms outside the primary YAML loaders should be explicitly tracked:)
+* Broker Token & Session Lifecycle Configurations: How daily authentication tokens (e.g., TOTP seeds, access tokens, automated daily login scripts, or token cache files) were parameterized, refreshed, and expired outside core/config_loader.py.
+* OS, Service & Process-Level Configurations: The exact parameters governed by systemd service units, process wrappers, cron schedules, or environment files (such as restart limits, execution user permissions, memory limits, and process-level timeouts).
+* Market Calendar & Dynamic Date Injection: How year-over-year trading holidays are managed beyond the hard-coded nse_holidays_2026.yaml file (e.g., dynamic exchange holiday API fallbacks, half-day trading sessions, or special Muhurat trading session configurations).
+* Runtime Strategy Enabling / Disabling State: Whether active strategy selection was purely filesystem-driven (presence of .yaml in strategies/) or if an external flag, database entry, or state file could dynamically toggle individual strategies off without removing files.
+* External Scanner & Webhook Endpoint Configurations: How incoming webhook security (e.g., shared secrets, IP allowlists, signature verification) for Chartink alerts was configured and maintained in scan_webhook_map.yaml or network firewalls.
+* Disaster Recovery & Clean Startup State: How persistent operational state (e.g., order state caches, local SQLite databases, or daily trade sequence counters) interacted with configuration settings on a cold reboot versus an intraday crash recovery.
+
+B2-34. Do you agree the scope is strictly factual legacy documentation, with no V2 design decisions in B-002? If not, identify the exact boundary issue.
+Your answer: FACT, probable answers are as below
+Yes agreed, The entire scope of B-002 (B2 series) is strictly forensic and factual: it documents how the legacy system was constructed, how its configuration lifecycle operated, where tests and environments diverged, and what remains unknown pending source-path tracing. No forward-looking V2 architecture decisions, redesign proposals, enhancements, or migration strategies belong within this section. If any V2 design intent or speculative re-architecting has surfaced, it must be cleanly excised and deferred to a dedicated forward-looking design phase (e.g., V2 planning/RFC specifications).
+
+B2-35. Any other facts, dates, file paths, commit references, or records we should include before evidence tracing begins?
+Your answer: FACT & OPEN QUESTION, probable answers are as below 
+Yes. To ensure the source-path tracing phase is fully anchored, the following specific artifacts, paths, and anchors should be logged as the formal baseline:
+Primary Core Source Files:
+
+* main.py (entry point; orchestrates config hashing, auditing, snapshotting, and engine bootstrap)
+* core/config_loader.py (implements load_all(config_dir=Path("config")), loads 8 core YAMLs into AppConfig)
+* strategies/loader.py (discovers and loads strategies/*.yaml)
+* core/config_auditor.py (provides audit)
+* core/config_snapshotter.py (provides snapshot_config)
+* core/config_validator.py (provides config_validator)
+* Startup integrity helper containing check_config_hash
+
+The Eight Core YAML Configuration Paths:
+* config/system_config.yaml
+* config/broker_costs.yaml
+* config/broker_limits.yaml
+* config/slippage_model.yaml
+* config/scoring_weights.yaml
+* config/scan_webhook_map.yaml
+* config/chartink_scanners.yaml
+* config/nse_holidays_2026.yaml
+
+Strategy Configuration Directory:
+* strategies/*.yaml
+
+Repository & Host Comparison Anchors:
+* Matching blob SHAs across core/config_loader.py and README.md between test and production repository clones.
+* Testing host VM deployment artifacts: active modified local YAMLs, shell command history, and local system unit files (/etc/systemd/system/) containing the manual market timing and limit overrides.
+
+CLOSING INSTRUCTION
+Please complete this answer sheet and return it. “Unknown” is a valid answer. After your reply, the next step is to reconcile your answers against source code and historical records, marking FACT / UNKNOWN / INTERPRETATION / HISTORICAL / KNOWN DEFECT / OPEN QUESTION. Then prepare:
+1. A reconciliation/review .txt file; and
+2. A detailed factual B-002 Markdown manual chapter.
+Do not modify source code, alter the legacy system, or make V2 design decisions as part of this step.
+
+END OF B-002 ANSWER SHEET

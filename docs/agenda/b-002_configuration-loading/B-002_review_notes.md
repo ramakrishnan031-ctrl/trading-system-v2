@@ -1,0 +1,177 @@
+# B-002 CONFIGURATION LOADING: REVIEW NOTES
+
+Date: 2026-10-12 (first pass); 2026-10-13 (revision 1; closed at the freeze)
+Status: CLOSED 2026-10-13. ChatGPT's value-added review of 13-Oct-2026 ("ACCEPT WITH REQUIRED EDITS; B-002 MUST REMAIN DRAFT UNTIL FINAL CROSS-CHECK") is applied in revision 1 (section 13). ChatGPT's final acceptance check of the same day accepted the revision-1 set for storage and left the freeze to Rama (section 15); Rama approved the freeze on 13-Oct-2026. The B-002 legacy manual is FROZEN (revision 1, DR-037) together with errata E-2 to the A-009, A-010, A-011 and B-001 manuals (section 6); the V2 inputs remain PROPOSED / OPEN (B-002_v2_design_inputs.md); Q-40 stays OPEN. Rama pushes the package from his PC.
+Place at: docs/agenda/b-002_configuration-loading/B-002_review_notes.md
+Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in B-002_manual.md; V2 inputs in B-002_v2_design_inputs.md and V2_DESIGN_LOG. Evidence assessed per claim (W-7); external facts labelled per W-5. Terms as fixed in B-001 and extended in B-002_manual.md. One authoritative passage per fact: the exit codes are B-002_manual.md section 6 (rows M1 to M37), the failure timing section 7, the observing mechanisms section 8 and the production and testing comparison section 10; these notes, the four errata and the design log cite them.
+Security: no credential values, account IDs, mailbox addresses, host addresses or names, SSH key names or person names. The reading method, including one process slip in working output on 12-Oct, is in section 8; the scan scope is in section 10.
+
+## 1. Sources reviewed
+- docs/inputs/chatgpt_originals_and_replies/B-002_Configuration_Loading_Answer_Sheet_11-OCT-2026.txt (Rama's answers, B2-01 to B2-35).
+- Rama's instruction to ChatGPT of 12-Oct-2026, 19:20 IST, shared in this chat as a screenshot (not stored, DR-008), quoted: "Refer the attached answered file and consider the entire file as 'probale or expected' behaviour only, NOT correct answer...So if required cross check with GitHub repos and prepare reconciliation (.txt) file and manual (.md) file for Claude review to finalise And if required, take careful note whereever possible".
+- docs/inputs/reconciliation/B-002_CONFIGURATION_LOADING_RECONCILIATION_FOR_CLAUDE_12-OCT-2026.txt
+- docs/inputs/manuals/B-002_CONFIGURATION_LOADING_MANUAL_DRAFT_FOR_CLAUDE_12-OCT-2026.md
+- ChatGPT's value-added review of the first pass: docs/agenda/b-002_configuration-loading/B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt (stored unchanged). ChatGPT's final acceptance check of revision 1: docs/agenda/b-002_configuration-loading/B-002_FINAL_ACCEPTANCE_CHECK_13-OCT-2026.txt (stored unchanged). Rama's approval of the freeze, 13-Oct-2026, given by choosing "Approve freeze now" when asked how to proceed after the check. Rama's choice on 13-Oct-2026 (09:10 IST), asked because the review keeps B-002 DRAFT until a final cross-check: "Follow as per ChatGPT, So Option:3 Re-check first and push later".
+- ChatGPT's B-001 close-out review (B-001_CLOSEOUT_REVIEW_AND_B-002_GO_AHEAD_11-OCT-2026.txt; saved in the B-001 folder and committed with B-002): B-001 remains closed, proceed to B-002; its one optional item (a design-log note for c14bc03) is done.
+- The V2 repository's main at c14bc03 (V2_DESIGN_LOG.md, V2_DECISION_REGISTER.md, the frozen A-009, A-010, A-011 and B-001 manuals), read through a read-only clone.
+- Production source at 970aabf (commit dated 2026-09-11) and the records in the same repository (list in B-002_manual.md section 2), re-read on 13-Oct for every exit path; the testing snapshot (snapshot commit 79e274a, head ade89ff); python-dotenv 1.2.2's package source from PyPI (checked 2026-10-12).
+
+## 2. Overall
+ChatGPT's 12-Oct set did what Rama asked: it treated his answer sheet as leads, kept the evidence classes apart, and got the loader's broad behaviour right; it said itself that it was not ready to freeze. Its limits were that most of its open items were already answered in the frozen A-009 manual and that one repository fact was wrong (the loader's blob). Traced end to end, the source added the exit code of every configuration failure, a second .env route inside the service process, unwired tracker reads, a hash check that can never fire, a late configuration read after STARTUP and the side effects of a failed start; four of these findings correct frozen manuals. ChatGPT's 13-Oct review accepted that technical direction and required edits R1 to R10 before any freeze; revision 1 applies them without reversing a legacy finding. Two first-pass errors found while revising are corrected and disclosed: the A-010 and A-011 errata said the restart outcome did not change, which is wrong for a live accounts.csv failure (exit 3, not restarted by the repository unit, became exit 1, restarted after 10 seconds); and manual section 10 cited an account-tag difference, measured by the 18-Sep record between the testing VM and the testing repository, as a production-against-testing difference (the latter was checked separately on 13-Oct).
+
+## 3. Findings
+Each finding is stated in full once, in the manual section named; the source lines are at 970aabf.
+
+| # | Finding | Label | Manual section; matrix row | Source (path: lines) | Erratum |
+|---|---|---|---|---|---|
+| 1 | Live: a missing, unreadable or invalid token file ends the start with exit 2, not 6 | KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND | Section 6, M11; section 13, item 1 | main.py: 2358 to 2374, 4291 to 4293; scripts/zerodha_login.py: 49 to 57 | A-010, A-011, B-001 E-2 |
+| 2 | Live accounts.csv failure: exit 1, restarted after 10 seconds under the repository unit; paper: exit 3 | FACT (SOURCE-VERIFIED) | Section 6, M8 and M9; section 13, item 10 | main.py: 2358 to 2374, 2413 to 2423, 4288 to 4290; core/account_registry.py: 91 to 220; core/exceptions.py: 30 to 74 | A-010, A-011, B-001 E-2 |
+| 3 | python-dotenv runs inside the service process through main.py's import, keeping variables already set | FACT for the code; CURRENT EXTERNAL FACT for the package's rules; any divergence an AUDIT LEAD | Section 4; section 13, item 11 | main.py: 106; scripts/zerodha_login.py: 32, 36 | A-010 E-2 |
+| 4 | Usage tracker: five of eight files registered; read instrumentation not wired to consumers; 388 keys reported unread on 26-Aug, not a count of unused settings | FACT; RECORD-DERIVED (388); INTERPRETATION | Section 8; section 13, item 6 | core/config_validator.py: 104, 144 to 183, 221, 274; main.py: 60, 2205, 4164 | A-009 E-2 |
+| 5 | The second hash check can never report a change; the first drove 29 CONFIG_DIFF events by 26-Aug; the 23-Aug record described the second | FACT; RECORD-DERIVED; conflict per W-7 | Section 8; section 13, item 7 | main.py: 2295, 2308, 2655 to 2675; utils/startup_checks.py (check 5) | - |
+| 6 | A malformed holiday file ends every start with exit 2 before logging and before the window guard | KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND | Section 6, M3; section 7, band A; section 13, item 2 | main.py: 2101 to 2152, 4291 to 4293; utils/holiday_guard.py: 51 to 62 | - |
+| 7 | Every --interactive start that passes the checks raises NameError | KNOWN DEFECT (source-level; no incident or attempted use established) | Section 6, M27; section 13, item 3 | main.py: 2100, 2528 to 2542, 4209 | A-010, A-011 E-2 |
+| 8 | A present but unloadable instruments.csv skips check 9 and fails an assertion (exit 2) | KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND | Section 6, M18; section 13, item 4 | main.py: 2432 to 2449, 2506 | - |
+| 9 | expected_managers.yaml is first read after STARTUP; a failure there exits 2; a registry mismatch exits 2 in paper and alerts in live | KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND (M30); FACT (M31, M32) | Section 3, row 20; section 6, M30 to M32; section 7, band D; section 13, item 5 | main.py: 4166 to 4246; core/effect_telemetry.py: 129 to 216 | A-009 E-2 |
+| 10 | symbol_aliases.yaml is read by the webhook receiver and the paper quote provider through a fixed path, failing open | FACT | Section 3, row 19; section 6, M29 | signals/webhook_receiver.py: 222 to 292; main.py: 508 to 518 | A-009 E-2 |
+| 11 | Strategies: check 10 (exit 3; no alert for a missing or empty folder) apart from the Phase 0e load (exit 1); duplicate names a code-path risk, none at the baseline; *.yml ignored | FACT; INTERPRETATION for the Phase 0e window | Section 6, M19 to M23; section 13, item 9 | main.py: 2484 to 2502, 3157 to 3162; strategies/loader.py: 102 to 156 | - |
+| 12 | Failure timing in four bands; side effects from the state-store step; no CRASH_DETECTED event up to 18-Aug (bounded) | FACT; RECORD-DERIVED | Section 7 | main.py: 2218 to 2314, 4166 to 4246; the 24-Jul, 18-Aug and 26-Aug records | - |
+| 13 | Production against testing: 56 paths, 46 identical, 7 different (1 by line endings only), 3 testing-only, 0 production-only | FACT; TESTING CAPTURE | Section 10 | Trees of 970aabf and ade89ff (79e274a) | - |
+| 14 | No reload; a push replaced tracked configuration; rollback documented and manual; retry is not recovery | FACT; RECORD-DERIVED | Section 11 | main.py: 1570 to 1577; deploy/hooks/post-receive: 31; RUNBOOK.md; the 23-Aug record | - |
+| 15 | Four readers ignore --config; requirements.txt is read from the configuration directory's parent | FACT | Section 4; section 13, item 8 | main.py: 2099; core/effect_telemetry.py: 63; signals/webhook_receiver.py | - |
+| 16 | The notifier's bot-token variable is looked up without a handler (exit 2), latent while its name equals the required secret | FACT | Section 6, M37 | main.py: 2629 | - |
+
+## 4. Rama's answers against the source
+- His 12-Oct instruction is applied: every answer is labelled RAMA (EXPECTED) and quoted beside the source (B-002_manual.md section 12). B2-01 to B2-04 set the method and are applied; the tracing questions (B2-09 to B2-24, B2-32) are answered in manual sections 3 to 9.
+- B2-07 (ChatGPT's R9): his answer is kept as written, and manual section 10 shows it part by part against the 17-Sep capture: "using the same files", partly; VM-level changes to "few settings", yes for 17-Sep (18 differing leaf settings); "Market Open time", not as worded (market_open is the same; the neighbouring entry_start differs); "Number of trades", no (max_daily_trades and max_open_positions are the same; the quantity rule differs). The mismatch is recorded and blocks nothing.
+- B2-18 and B2-28 (R9): kept as expected behaviour, because no historical configuration incident is recorded and his A-009 Q7 and Q9 answers recall none. B2-28's "entirely manual" recovery agrees with the source (no automatic rollback or repair); the repository supervisors' automatic retries with the same configuration are recorded beside it as retries, not recovery (manual sections 11 and 12).
+- B2-30: "kept out of the version-controlled YAML files entirely" is supported for the tracked YAML files that were read (security.yaml was not opened), is NOT ESTABLISHED across the history, and other tracked files did hold secrets (A-010 section 11).
+- B2-06 is his one new-system request: recorded as PROPOSED (VP-68; design inputs section 2).
+
+## 5. ChatGPT's 12-Oct set: corrections and additions
+Corrections:
+1. Answer sheet item F, reconciliation section 2 and manual section 2: "README.md and core/config_loader.py blob SHAs matched". README.md matches; core/config_loader.py does not (object IDs differ at 970aabf and ade89ff; the testing loader adds the force_qty and S&R-shadow schemas; manual section 10). Lesson of 2026-10-12.
+2. Reconciliation C and manual section 3.1: the eighth file is listed as nse_holidays_2026.yaml; the loader builds the name from the current year (A-009 section 4). The reconciliation's holiday note ("the later eight-file loader also requires nse_holidays_2026.yaml") is right only for 2026.
+3. Reconciliation item 8 and manual section 9.1 ("follow all uses of hash_result.changed"): already traced in A-009 section 11: it drives the CONFIG_DIFF event and the WARN Telegram in Phase 0e. B-002 adds the second, ineffective check.
+4. Manual section 8 ("identify exact groups at each call site"): A-009 section 6 already records them: groups A, C and G at load (BLOCK: exit 5), A4 and A5 at Phase 0e (exit 3), all groups in the pre-flight. Confirmed at the baseline (core/config_auditor.py STARTUP_GROUPS = "ACG").
+5. Reconciliation item 9 and manual section 6 ("exact call/abort/alert ordering"): traced: check 10 fails first (exit 3); the alert follows only when the scan names files; an empty or missing folder sends none; the Phase 0e load has no handler.
+6. Reconciliation item 11 and manual section 12 (rollback): rollback procedures exist (finding 14); none is automatic.
+7. Manual section 8: "Main registers AppConfig values" holds for five of eight files, and the tracker's read instrumentation was not wired to consumers (finding 4).
+8. Manual section 10.1: the paper/live description is right; in live mode the pre-load's exits are 1, 6 and 2 by condition (findings 1, 2), and in paper the token file is optional.
+9. Manual section 11 (failure matrix): a missing holiday file in the guard is right; a malformed one is not "open" but exit 2 before logging (finding 6).
+10. Answer sheet B2-35 (Rama's file): the captured units hold no market-timing or limit values, and no shell history was captured (manual section 10).
+Additions: the complete source list with fixed-path readers; python-dotenv inside the service process; the exit-code matrix; the failure timing and the CRASH_DETECTED evidence; the usage tracker's unwired reads with the 26-Aug count; the CONFIG_DIFF counts; the reload search and the deploy overwrite; the classified testing comparison; four errata.
+Agreed and kept: the governance boundary; the strategy path; the early holiday read; --config and the working directory; schema defaults; the three mechanisms apart; the snapshot's redaction and non-fatal failure; object atomicity apart from side effects; the misleading-PASS claim kept a hypothesis (the pre-flight checks the VM's own files and fails on a cap mismatch, A-009 sections 6 and 9).
+
+## 6. Corrections to frozen manuals and the cross-document check
+Each erratum keeps the original text struck through, with the replacement once after it, a note on the status line, and an "## Erratum (2026-10-12, found during B-002; revised 2026-10-13)" section listing the passages changed, the passages checked and left unchanged, labels, reason, impact and approval. Status of all four: ACCEPTED. Proposed during B-002 (2026-10-12), revised 2026-10-13 after ChatGPT's review (R1), accepted in ChatGPT's final acceptance check (13-Oct-2026), approved by Rama with the B-002 freeze and recorded in DR-037 (2026-10-13). The passage lists are in B-002_manual.md section 15.
+
+| Erratum | Passages changed | Checked and not changed | Impact |
+|---|---|---|---|
+| A-009 E-2 | 6: section 3 (two reader cells), section 5 step 5, section 6 (tracker), section 17, section 18 | The rest of section 6; section 14's comparison scope; section 18's unread-key names; section 19 item 6; the final statement | Coverage and wording only |
+| A-010 E-2 | 8: section 5 (dotenv; Q13), section 6 (pre-load; restart line), section 7, section 8, section 20, section 23 | Section 3; section 5's other lines; section 6's required secrets and exit-3 warning; section 21 items 6 and 12 | Exit codes, log lines, one loading path; restart outcome changed for a live accounts.csv failure only |
+| A-011 E-2 | 7: section 5 step 10; section 7 rows 3, 6 and 7/8; a pointer added below the table; section 13 (the token gate at start); section 20 | Section 7 rows 1, 2 and 5 and the 10-second audit lead; section 22 item 4; section 23; the final statement | As A-010 |
+| B-001 E-2 | 3: section 7.4, section 10 (one row), section 13 (one row) | Section 6 item 5 (--interactive as a way to run main.py); sections 7.5 and 14 item 7 (the gate's own exit 6); the rest of the section 10 row and the lost-day analysis; section 9; the final statement | Exit code of one row; lists gain the pre-load's exits; outcome unchanged |
+
+Cross-document exit-code check (ChatGPT's R2), on the final text of all five manuals, with struck text excluded:
+
+| Condition (B-002 matrix row) | B-002 section 6 | A-010 (E-2) | A-011 (E-2) | B-001 (E-2) |
+|---|---|---|---|---|
+| Live accounts.csv failure (M8) | 1 | Section 6: 1 | Section 5 step 10: 1; section 7 row 3: 1 in live | Section 7.4: one of 1, 6 and 2 by condition |
+| Paper accounts.csv failure (M9) | 3 | Section 6: 3 | Section 7 row 3: 3 | Not stated |
+| Missing API-key variable, live (M10) | 6 | Section 6: 6 | Section 5: 6; section 7 row 6: 6 | Section 7.4 (by condition) |
+| Token file missing, unreadable or invalid, live (M11) | 2 | Section 6: 2; restart line: 2; section 8: 2 for a renamed file | Section 5: 2; section 7 row 6: 2; section 13: 2; pointer: 2 | Section 7.4 (by condition); section 10 row: 2 |
+| Token without access_token (M12) | 6 | Section 6: 6 | Section 5: 6; section 7 row 6: 6 | Section 7.4 (by condition) |
+| Token present but not valid today (M13) | 6 at the gate | Section 6: 6 | Section 5: 6; section 7 row 6: 6; section 13: 6 | Section 7.4: 6; sections 7.5 and 14 item 7: 6 |
+| --interactive (M27) | 2 | Section 7: 2 | Section 5: 2; section 7 rows 7 and 8: 2; section 20: 2 | Not stated |
+| Unloadable instruments.csv (M18) | 2 | Not stated | Section 5: 2; pointer: 2 | Not stated |
+| Malformed holiday file (M3) | 2 | Not stated | Pointer: 2 | Not stated (section 7.1 covers a missing file only) |
+| Missing holiday file, weekday (M1) | 5 | Not stated | Section 7 row 5: 5 | Section 7.1: the guard passes it (consistent) |
+| expected_managers.yaml after STARTUP (M30) | 2 | Not stated | Pointer: 2 | Not stated |
+| Strategy check 10 (M19, M20); Phase 0e load (M21) | 3; 1 | Not stated | Section 7 row 3: 3; pointer: 1 | Section 7.4: 3 |
+| Restart of exits 1, 2, 6 and 9 under the repository unit | After 10 seconds | Section 6 restart line | Section 7 table and audit lead | Section 10 row |
+
+- Result: no conflict between the five manuals. A scripted search of the four amended manuals, with struck text removed, found none of the superseded claims still standing (a missing token file exiting 6; an accounts.csv failure exiting 3 without "paper"; "main.py has no load_dotenv"; "modules record reads"; "no reader identified" for the two files); the only "exit 6" statements left describe the gate, the API-key variable or the access_token entry.
+- Each status line names E-2 once; each struck passage is followed once by its replacement; each manual has one "Erratum (2026-10-12 ...)" section.
+
+## 7. Points for Rama
+None left. Rama approved the freeze on 13-Oct-2026 with DR-037 as proposed, which includes the two scheduling proposals of revision 1: VP-47's B-002 point moved to B-007 (readiness) and the configuration design step, to meet ChatGPT's condition of an accountable point; and an agenda-status row for the configuration design step in V2_DESIGN_LOG section 4, because after the freeze it is the only ratification point of VP-15 and VP-42 (design inputs section 4). The B2-07 mismatch is recorded and blocks nothing.
+
+## 8. Reading method (process note)
+- Legacy production repository: the existing blob-less, no-cone sparse clone at 970aabf, extended on 12-Oct with explicit paths only: every Python file outside the top-level tests folder (330 paths listed from the tree with `git ls-tree -r --name-only`, which fetches no blob, docs/web_claude/ excluded), then five records (docs/CONFIG_GUIDE.md, docs/audit/f2_config_reload_investigation_24jul2026.md, docs/temp_config_tracker.md, docs/audit/service_window_configurable_25jul2026.md, docs/audit/ROLLBACK_AND_ATTENDANCE_23-Aug-2026.md) and deploy/hooks/post-receive; the 26-Aug daily-start record, RUNBOOK.md and expected_alarms.md were already in the clone. On 13-Oct one more explicit path was added, config/expected_managers.yaml, for the testing comparison. After each addition the path-anchored check (path field only, lesson of 2026-10-09) found the 102 never-open paths in the tree, the root-level .env.example among them, and 0 of their blobs in the local store.
+- Testing snapshot: the existing sparse clone (manifest, captures and the compared files), extended on 13-Oct with config/cron_registry.yaml, config/expected_managers.yaml and signals/webhook_receiver.py; the same check found its 96 never-open paths and 0 of their blobs. The 56-path comparison used object IDs from `git ls-tree -r` without blob fetches. On 13-Oct two metadata-only commands were also run on this clone: a commit list (`git log --format` over the clone's two commits) and a name-only tree comparison of 79e274a and ade89ff (`git diff --no-renames --name-status`). Neither fetches a blob, and the check afterwards still found 0 never-open blobs. The commit list departed from the handover's form for commit metadata (one named commit at a time, `git log -1`); its output went to a scratch file and was read only through the masking filter, which masked the testing VM's host name in the snapshot commit's subject, so nothing unmasked was printed. Lesson of 2026-10-13.
+- Reads: code and records through the masking filter (mask_read2.py, which adds host, SSH-alias, key-file and fingerprint masking to mask_read.py); differing files classified by counts only; configuration differences read as key names without values; the cron_registry.yaml difference classified by token shape without printing the tokens; the four settings of Rama's B2-07 examples printed by key (business values, not credentials). The strategy names were compared with file names by a script that printed counts only; the `today` check used a syntax-tree query that printed line numbers only. No legacy code was executed.
+- Process slip (disclosed 12-Oct; ChatGPT's R8 asks to keep the lesson without the name): a full masked read of the testing snapshot's SNAPSHOT_MANIFEST.md printed, in working output only, its first lines, which name the testing VM's host name and alias; the filter did not then cover a host name declared in a manifest line. Nothing was written to any file, and the name is not repeated here. The filter was extended the same session (names declared after "hostname" or "VM", with the manifest added to its token sources) and checked on the same lines with a control (both names masked). Lesson of 2026-10-12.
+- python-dotenv: the 1.2.2 wheel from PyPI, unpacked in the scratch area and read; not executed.
+- V2 repository: read-only clone at c14bc03; Claude does not commit or push (Rama pushes from his PC).
+
+## 9. Cross-topic evidence found while verifying B-002
+- Q-35 (b) partly answered (388 keys reported unread; the tracker's reads unwired); (d) partly answered (CONFIG_DIFF counts; the 23-Aug record's conflict); (f) answered (symbol_aliases.yaml readers).
+- Q-36 (d), Q-37 (c) and Q-38 (f): no CRASH_DETECTED event in production up to 18-Aug, so no restart loop after the session-row write is recorded to that date; the 08:00 to 08:15 loop's exit code is 2, not 6. Q-36 (i): .env also reached the service process through python-dotenv.
+- B-003: the state store's migration guard reads the configured market hours; a migration applied by a start that fails later stays applied.
+- B-004 and M-005: the live pre-load's exits (1, 6 and 2 by condition) come before the token gate.
+- B-006: whether the process ends after an exit late in the start (the composition check) depends on the worker threads.
+- B-007 and O-004: a configuration file is read after STARTUP; VP-47's proposed new point.
+- B-012: a failed start is retried with the same configuration under the repository unit and watcher script.
+- M-001: the python-dotenv route (Q-40 (k)).
+- M-003: the deploy hook replaces tracked configuration; VM-local edits last until the next push.
+- M-008, M-009, M-010: the RUNBOOK's configuration restore; the testing VM's June copies; the interactive path broken in a documented fallback.
+- A-004 and K-009: the instrument file's assertion path.
+- C-003: symbol aliases resolved at the webhook edge through a fixed path.
+
+## 10. Checks on these files (revision 1, 2026-10-13)
+- Files checked (the exact set returned for the final check): B-002_manual.md, B-002_v2_design_inputs.md, these notes, B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt, the four amended manuals (A-009, A-010, A-011, B-001) and V2_DESIGN_LOG.md; also the three stored B-002 inputs and the B-001 close-out review, unchanged since 12-Oct (13 files).
+- Table pipes and balanced strike-through (check_md.py), on the 8 Markdown files: all OK.
+- Value-blind identifier and secret shapes (scan_ids.py: client-ID, IPv4, mailbox, credential-assignment, bot-token, long-token and private-key shapes), on all 13 files: 46 hits, each inspected and classified value-blind as benign: the B-001 checklist's question numbers in the B-001 manual (25), the design log (16) and the B-002 manual (1); the PBKDF2 hash name in the A-010 manual (2); two YAML specification section numbers in the A-009 manual (2). No mailbox, IPv4 address, credential assignment, bot token, long token or private key. The other 8 files, these notes among them: 0 hits.
+- Host and key names (host_token_check.py), the 8 Markdown files against the records read (the system map, DEPLOYMENT.md, the testing manifest and the records of B-002_manual.md section 2), with the testing snapshot commit's subject added as a record (one named commit, written to a scratch file): 4 distinct tokens matched, all ordinary lowercase English words caught by the pattern for text after "ssh" in the records (three in the masking filter's common-word list; the fourth is "prompt"); no host, alias, key-file or fingerprint token, and no declared host name.
+- Session links (W-8), the push-time credential pattern and mailbox shapes, on all 13 files: none. A further value-blind search for name-bearing strings found only the legacy repositories' GitHub paths (owner and repository) in the three stored B-002 inputs, in the same form as the inputs committed since A-001 (docs/inputs/ is immutable), and one mention of the mail provider's name, without an address, in the frozen A-010 manual.
+- Re-run at the freeze (2026-10-13) on the 19 files of the commit (the 13 above, the A-009, A-010, A-011 and B-001 review notes, V2_DECISION_REGISTER.md and B-002_FINAL_ACCEPTANCE_CHECK_13-OCT-2026.txt): check_md.py all OK on the 13 Markdown files written by Claude; scan_ids.py 83 hits, each classified value-blind as benign (the B-001 checklist's question numbers, 73, in the B-001 manual and review notes, the design log, the register and the B-002 manual; the PBKDF2 hash name in the A-010 manual, 2; two YAML specification section numbers in the A-009 manual, 2; six standard names, such as hash and date-format names, on one line of the B-001 review notes that is unchanged since its commit, 6); host and key names: the same four ordinary words, and no host, alias, key-file or fingerprint token and no declared host name; session links, the push-time credential pattern and mailbox shapes: none; the six stored originals (three inputs, ChatGPT's two 13-Oct files and the B-001 close-out review) byte-identical to Rama's uploads.
+- A pattern scan does not prove that nothing else sensitive exists (lesson of 2026-10-10), and a passing scan does not check cross-document consistency, which section 6 does separately (ChatGPT's 13-Oct review, section 6).
+
+## 11. V2 items (in V2_DESIGN_LOG, PROPOSED)
+VP-68 (configuration inventory, Rama B2-06): revised for "read" and "consumed" and kept PROPOSED / OPEN. Annotated on 12-Oct and reworded on 13-Oct (R3, R5): VP-15, VP-46, VP-47, VP-48, VP-51, VP-54, VP-57, VP-67. Q-40 (audit leads with owners) gains (k), the python-dotenv divergence; Q-35 to Q-38 annotated. Lessons: five of 12-Oct and five of 13-Oct. The ratification-point moves and the configuration design row were applied at the freeze (DR-037); VP-68 and the other B-002 inputs stay PROPOSED / OPEN.
+
+## 12. Next step
+Done on 13-Oct-2026: ChatGPT's final acceptance check accepted revision 1, Rama approved the freeze, and DR-037 is appended to the register with the status changes of section 14. Next: Rama stores the package and pushes it from his PC in one commit (none of the B-002 files had been stored or pushed before the freeze); then Section B continues with B-003.
+
+## 13. ChatGPT's value-added review of 13-Oct-2026: disposition
+| Point | Asked | Done in revision 1 | Where |
+|---|---|---|---|
+| 2.1 Loader comparison | Accept; keep narrow; record commits, capture time, scope and method | Commits, capture time, 56-path scope, method and limits recorded | Manual section 10 |
+| 2.2 Token exit codes | Errata only after a cross-document check; never "token failure always means 2 or 6" | Separate matrix rows M10 to M13 by exact condition; errata cite them; check in section 6 | Manual section 6; errata; section 6 |
+| 2.3 accounts.csv | Live exit 1, paper exit 3; repository policy; installed unit NOT ESTABLISHED | M8 and M9; the supervisor legend; R3 wording | Manual header and section 6 |
+| 2.4 python-dotenv | Source-verified, package behaviour dated, divergence an audit lead | Labels split; audit lead; Q-40 (k) | Manual section 4; A-010 E-2; design log |
+| 2.5 Usage tracker | Contract, telemetry and consumption kept apart | Three-part passage; "not evidence of unused settings" | Manual section 8; A-009 E-2; VP-48, VP-68 |
+| 2.6 Hash mechanisms | (a), (b), (c) apart; conflict explained by check; comment-only edits | Mechanism table; the 23-Aug conflict explained by which check it traced; comment-only limit, with the snapshot's own (A-009 section 11) | Manual section 8 |
+| 2.7 Holiday and interactive | Labels; no incident claimed | M3 and M27 labelled; "no incident or attempted use established" | Manual sections 6 and 13 |
+| 2.8 Read after STARTUP | Retain; cross-reference B-007; correct A-009 only by a scoped erratum | M30; band D; A-009 E-2 passages 2 and 5 | Manual sections 6 and 7; A-009 E-2 |
+| 2.9 Side effects | Phase boundary; bounded negative evidence; cross-reference B-003 and B-012 | Four bands; the bound tied to the session-row write; cross-references | Manual section 7 |
+| 2.10 Strategies | Check 10 apart from Phase 0e; empty folder; duplicates a risk; 16 distinct names | M19 to M23 | Manual section 6 |
+| R1 | Reconcile each erratum against every affected passage | Each erratum section lists passages changed, checked and unchanged, labels and status; two impact lines corrected (accounts.csv restart outcome) | Four manuals; section 6 |
+| R2 | One cross-document exit-code matrix | M1 to M37 with mode, path, handler, exit, log and alert, supervisor and occurrence; consistency table | Manual section 6; section 6 here |
+| R3 | Repository policy apart from host state | Definition in the manual header; legend; "the repository unit specifies" in the errata | Manual; errata |
+| R4 | Reproducible comparison | Commits, capture time, method, counts, a classification table, the loader insertions; the wrong attribution corrected | Manual section 10 |
+| R5 | Tracker language | As 2.5; the 388 count RECORD-DERIVED and not reproduced | Manual section 8; A-009 E-2; design log |
+| R6 | Mechanisms apart by scope, timing, persistence and failure; none a complete inventory | Table and statement | Manual section 8 |
+| R7 | Failure timing with cross-references | Four-band table | Manual section 7 |
+| R8 | Final scans on the exact files; keep the lesson without the name | Scans in section 10; the slip kept in section 8 without the name | Sections 8 and 10 |
+| R9 | B2-07 part by part; B2-18 and B2-28 as expected behaviour; retry apart from recovery | Table; rows reworded | Manual sections 10 to 12; section 4 |
+| R10 | Governance transitions; register unchanged | Proposed DR-037 text | Section 14 |
+| Section 4 | VP-68 PROPOSED / OPEN; considerations not requirements; define and test "read" and "consumed"; scheduling moves create no decision; VP-47 accountable | Item 6; statuses; conditions; B-007 for VP-47; the configuration design row | Design inputs sections 2 to 4; VP-68 |
+| Section 5 | Link findings to sections and lines; one authoritative passage; consistent labels; exact scope; dated vendor facts | Findings table; matrix cited everywhere; label list; the 330-file and 56-path scopes; python-dotenv dated | Section 3; manual sections 2, 6 and 10 |
+| Section 6 checklist | Nine items | R1 to R10 applied (above); one matrix agrees across the four manuals (section 6); errata consistent and PROPOSED; comparison and loader correction accurate (manual section 10); scans on the exact files (section 10); the design log records outcome and status only (its 13-Oct note); the register unchanged; the freeze record drafted (section 14); no claim that ChatGPT committed or pushed anything, and Rama pushes from his PC | This file; V2_DESIGN_LOG |
+
+## 14. Freeze record (DR-037), appended to V2_DECISION_REGISTER.md on 2026-10-13
+The row as recorded is in V2_DECISION_REGISTER.md (DR-037), the authoritative copy. It is the text proposed in revision 1, accepted by ChatGPT's final acceptance check, with the dates filled (2026-10-13), the final check named in its reason, and one sentence added on where ChatGPT's two 13-Oct files are stored.
+
+Applied at the freeze, outside the row: the B-002 manual's status is "FROZEN 2026-10-13 (revision 1, DR-037)", with section 15 and the section 17 heading updated; each erratum E-2 is ACCEPTED and recorded in DR-037, on its manual's status line and in its erratum section; a status line is added to the A-009, A-010, A-011 and B-001 review notes; these notes are CLOSED; V2_DESIGN_LOG carries the moved ratification points (VP-13, VP-15, VP-32, VP-42, VP-43, VP-45, VP-46, VP-47, VP-48, VP-51, VP-54, VP-57, VP-67 and Q-25's area), the configuration design row, the agenda row FROZEN and a session note; the design inputs' section 4 records the moves as made.
+
+## 15. ChatGPT's final acceptance check of 13-Oct-2026: disposition
+| Condition | Done |
+|---|---|
+| Store the latest revision-1 files under their canonical names, not the older first-pass copies | The SAVE list names each file; the push commands check every file's SHA-256 against the delivered version before the commit |
+| Save B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt as a new file in the B-002 folder | In the SAVE list, with this check's own file beside it |
+| Keep the three original B-002 inputs in docs/inputs/ unchanged | Unchanged and byte-identical to the uploads; checked by hash at the push |
+| Do not append DR-037 or mark B-002 FROZEN before Rama approves the freeze | Rama approved on 13-Oct-2026 before any status changed |
+| After approval, apply the status changes exactly as the proposed DR-037 states, update the design log and agenda status, then give the SAVE list and push commands | Section 14; V2_DESIGN_LOG section 4 and its 13-Oct session note; the SAVE list and push commands follow in the reply |
+| Rama commits and pushes from his PC; ChatGPT committed or pushed nothing | As stated; Claude's clone stays read-only |

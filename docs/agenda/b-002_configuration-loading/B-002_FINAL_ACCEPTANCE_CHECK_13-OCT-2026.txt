@@ -1,0 +1,40 @@
+TRADING SYSTEM — V2 REDESIGN
+FINAL ACCEPTANCE CHECK: B-002 REVISION 1 PACKAGE
+Review date: 13-Oct-2026
+Scope: Claude's revised B-002 package, the four proposed E-2 errata, V2_DESIGN_LOG, and the proposed DR-037 freeze record.
+
+VERDICT
+ACCEPT THE REVISED DOCUMENT SET FOR STORAGE AS REVIEWED DRAFTS / PROPOSED ERRATA.
+B-002 is NOT FROZEN by this review. Keep B-002_manual.md as DRAFT, B-002_review_notes.md as OPEN until the actual freeze, VP-68 PROPOSED / OPEN, and all four E-2 errata PROPOSED until DR-037 is approved and recorded. Nothing here authorises legacy operations, implementation, or a V2 design decision.
+
+WHY THE PACKAGE PASSES
+1. The authoritative B-002 exit-code matrix is now in B-002_manual.md section 6, with condition-specific rows M1–M37 and supervisor/occurrence qualifiers. The four errata point back to it instead of independently re-creating the matrix.
+2. The revised exit-code distinctions are consistent in substance: live accounts.csv failure exit 1; paper accounts.csv failure exit 3; missing/unreadable/invalid live token file exit 2 at the pre-load; missing API-key variable or absent access_token key exit 6; token present but stale/invalid at the later gate exit 6.
+3. The production/testing comparison corrects the prior blob-ID error, scopes the comparison to the 56-path set, distinguishes 46 identical, 7 differing and 3 testing-only paths, and avoids claiming whole-system parity.
+4. python-dotenv loading through the imported login module, usage-tracker limitations, the three distinct configuration-observation mechanisms, late expected_managers.yaml read, and failure-side-effect boundaries are described with appropriate evidence limits.
+5. The four errata retain superseded wording, provide one replacement, identify impacts, and remain proposed. The installed VM/service state remains NOT ESTABLISHED where records do not prove it.
+6. VP-68 remains PROPOSED / OPEN; the design-input file treats proposed mechanisms as considerations, defines the need to distinguish “read” from “consumed,” and leaves form/owner/enforcement open.
+7. The proposed DR-037 record keeps the V2 decision register unchanged and identifies the errata and scheduling-only moves without treating them as design decisions.
+8. The revision-1 scan report covers the exact package set and explicitly warns that pattern scans do not prove absence of all sensitive material.
+
+STORAGE / FREEZE CONDITIONS
+- Store the latest revision-1 files, not the older duplicate first-pass files with the same base names. In the current attachment set these are B-002_manual(1).md, B-002_v2_design_inputs(1).md and B-002_review_notes(1).md; when saving to the repository, use their canonical names without “(1)”.
+- Use A-009_manual(5).md, A-010_manual(5).md, A-011_manual(5).md, B-001_manual(4).md and V2_DESIGN_LOG(20261013-054407).md as the reviewed revisions, saved under their canonical repository names.
+- Save B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt as a new file under docs/agenda/b-002_configuration-loading/.
+- Keep the three original B-002 inputs under docs/inputs/ unchanged.
+- Do not append DR-037 to V2_DECISION_REGISTER.md until Rama approves the freeze. Do not mark B-002 FROZEN or close review notes before that event.
+- After approval, apply the status transitions exactly as specified in the proposed DR-037 record, update the design log and agenda status, then produce the final SAVE list and push commands. Rama performs the commit/push from his PC; ChatGPT has not committed or pushed anything.
+
+SAVE LIST
+1. B-002_manual.md — docs/agenda/b-002_configuration-loading/ — REPLACE with B-002_manual(1).md.
+2. B-002_v2_design_inputs.md — docs/agenda/b-002_configuration-loading/ — REPLACE with B-002_v2_design_inputs(1).md.
+3. B-002_review_notes.md — docs/agenda/b-002_configuration-loading/ — REPLACE with B-002_review_notes(1).md.
+4. B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt — docs/agenda/b-002_configuration-loading/ — NEW.
+5. A-009_manual.md — docs/agenda/a-009_configuration-model/ — REPLACE with A-009_manual(5).md.
+6. A-010_manual.md — docs/agenda/a-010_secrets-environment/ — REPLACE with A-010_manual(5).md.
+7. A-011_manual.md — docs/agenda/a-011_system-states-and-lifecycle/ — REPLACE with A-011_manual(5).md.
+8. B-001_manual.md — docs/agenda/b-001_vm-service-startup/ — REPLACE with B-001_manual(4).md.
+9. V2_DESIGN_LOG.md — docs/governance/ — REPLACE with V2_DESIGN_LOG(20261013-054407).md.
+
+FINAL GOVERNANCE POSITION
+The reviewed content is acceptable for the stated pre-storage check. This is not the freeze approval itself: B-002 remains DRAFT and DR-037 remains a proposed record pending Rama's approval. No changes to V2_DECISION_REGISTER.md are authorised before that approval.
