@@ -1,0 +1,109 @@
+B-003 — DATABASE / STATE INITIALIZATION
+RECONCILIATION FOR CLAUDE
+Prepared: 13-Oct-2026
+Status: REVIEW DRAFT — NOT FROZEN; NOT A V2 DESIGN DECISION
+
+PURPOSE AND EVIDENCE LABELS
+Rama's B-003 answers are raw/probable/expected inputs, not verified truth or settled decisions.
+Use: SOURCE-VERIFIED FACT; RECORD-DERIVED FACT; RAMA (EXPECTED) / UNVERIFIED RECOLLECTION; HISTORICAL; INTERPRETATION / AUDIT LEAD; KNOWN DEFECT; UNKNOWN / NOT ESTABLISHED.
+Do not change or revive the legacy system. B-005 owns broker reconciliation algorithms; B-006 workers; B-007 health/readiness; B-011 shutdown; B-012 recovery. B-003 documents persistence mechanics and hand-offs only.
+
+REPOSITORIES
+Production: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Testing: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+Read-only records: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+This pass inspected production snapshot versions of main.py, core/state_store.py, core/schema.sql, core/migrations.py, core/db_connect.py, and core/analytics_schema.sql. Testing snapshot and records remain separate evidence sources and must be corroborated claim-by-claim. This is not a claim that every file in all repositories was exhaustively reviewed, nor does source prove deployed-host state.
+
+1. SOURCE-VERIFIED FINDINGS
+
+1.1 StateStore — core/state_store.py
+- StateStore.__init__(db_path, schema_path=DEFAULT_SCHEMA_PATH, allow_migrate=False, market_open=False) records these inputs, creates the parent directory with mkdir(parents=True, exist_ok=True), creates thread-local connection storage, then calls _initialize_schema().
+- DEFAULT_SCHEMA_PATH is the sibling core/schema.sql.
+- EXPECTED_SCHEMA_VERSION is 45 in the inspected production source.
+- _get_conn() uses threading.local() to cache one connection per calling thread.
+- _open_connection() uses sqlite3.connect(..., isolation_level=None, check_same_thread=True, timeout=30), sets sqlite3.Row, applies connection PRAGMAs, then calls db_connect.attach_analytics().
+- _CONNECTION_PRAGMAS: journal_mode=WAL; synchronous=FULL; foreign_keys=ON; temp_store=MEMORY; busy_timeout=30000.
+- close() closes the calling thread's connection only; it does not close all worker-thread connections.
+- checkpoint_wal() calls PRAGMA wal_checkpoint(PASSIVE); checkpoint() provides a separate TRUNCATE path with a ticker-thread guard.
+
+Correction: do not document synchronous=NORMAL. The inspected source specifies FULL.
+
+1.2 Migration policy — core/state_store.py and core/migrations.py
+- allow_migrate defaults to False. The StateStore comments say only main.py's boot path should pass allow_migrate=True, and that migration must be refused when market_open=True.
+- MigrationNotPermitted is defined for a pending migration the current process may not run.
+- Therefore, “all DB openers automatically migrate” is not supported. Schema evaluation occurs during initialization, but migration authority is gated by constructor arguments and caller behaviour.
+- core/migrations.py describes schema.sql as the canonical definition. Rebuild migrations create the current table definition from schema.sql, copy intersecting non-generated columns, and swap tables.
+- The migration version map describes v27→v28 as relocation of candles, system_metrics and system_metrics_daily into analytics.db; later rebuilds include trades/signals. The current source target is v45.
+- The migration header describes an atomic failure test for v44→v45 on a production copy. Treat this as source-commented test evidence for that scenario, not blanket proof for all migrations or historical production runs.
+
+UNKNOWN pending full trace: exact _initialize_schema() branches, transaction/commit boundaries for each migration, behaviour for a DB ahead of code or missing metadata, and exception/alert/exit handling.
+
+1.3 Analytics DB — core/db_connect.py and core/analytics_schema.sql
+- Analytics filename is analytics.db; analytics_path_for(main_db_path) places it beside the main DB file.
+- ANALYTICS_TABLES lists candles, system_metrics, system_metrics_daily.
+- init_analytics_schema() opens analytics.db directly, applies WAL, FULL synchronous and 30000 ms busy_timeout, executes analytics_schema.sql, and closes the connection.
+- attach_analytics() attaches the file as schema alias analytics and applies analytics.journal_mode=WAL and analytics.synchronous=FULL.
+- StateStore-managed connections call attach_analytics().
+- connect() opens the main DB, sets busy_timeout=30000, and optionally attaches analytics.
+- connect_readonly() opens the main DB with URI mode=ro and query_only=ON; it does not attach analytics.
+- analytics_schema.sql describes the three tables as relocated from schema.sql in the O6/v28 split. The migration map names relocate_analytics_tables.
+
+Correction: do not describe analytics as only an independent connection pool. The source explicitly defines both a direct connection for schema initialization and ATTACH on working connections.
+
+1.4 Schema — core/schema.sql
+- schema_meta is a key/value table with key TEXT PRIMARY KEY and value TEXT NOT NULL; comments describe it as the source of truth for schema version/migration tracking.
+- Main schema defines persistent trading entities including signals and trades.
+- analytics_schema.sql separately defines the three analytics tables above.
+- Build a complete table inventory from both schemas before making claims about every state category.
+
+1.5 Fresh file / connection facts
+- StateStore explicitly creates the parent directory before schema initialization.
+- SQLite normally creates a missing DB file when a file path is opened successfully; permissions or later initialization failures can still prevent successful startup.
+- Exact main DB paths are NOT ESTABLISHED from these modules alone: db_path is passed in by callers/configuration.
+- Exact call order for init_analytics_schema() versus first attach must be traced.
+
+2. RAW ANSWERS THAT MUST NOT BE PROMOTED TO FACT
+Not yet established by the inspected source alone:
+- Exact production/testing DB paths, DB contents, host-level sharing, copying, sanitization or restore history.
+- Complete set of persistent state categories/tables and their actual runtime use.
+- Exact startup order relative to guards, config, locks, token/broker setup, reconciliation, workers and System Active.
+- Whether --status, --dry-run, --version, holiday/weekend, invalid config or start-window paths open the DB.
+- Every module/script that directly opens SQLite; every process's read/write permissions and actual scheduler invocation.
+- Fresh-only seeds, per-start updates, kill-switch preservation, startup event/hash/session writes, or absence of destructive SQL.
+- Whether all migrations are transactional/atomic, whether downgrade exists, and exact behaviour for missing/ahead/inconsistent schema versions.
+- Historical incidents involving locks, schema mismatch, deleted sandbox DBs, manual SQL, production outages, backup restore or data loss.
+- Existing test filenames and coverage; a proposed filename is not proof a test exists.
+- Exact backup commands/schedule/success. A code comment mentioning .backup is not proof of an operational job.
+- Paper/live database paths or historical mode usage.
+
+3. TECHNICAL CORRECTIONS / AUDIT LEADS
+A. synchronous is FULL in inspected StateStore source.
+B. Analytics uses analytics.db and is attached under alias analytics on working connections; initialization also uses a direct connection.
+C. Migration authority is gated by allow_migrate and market_open; trace every constructor caller.
+D. StateStore's header is not enough to prove exclusive DB access because db_connect.py exposes raw SQLite helpers.
+E. close() closes only the current thread's connection.
+F. Both PASSIVE and TRUNCATE checkpoint methods exist; exact caller/timing must be traced.
+G. EXPECTED_SCHEMA_VERSION=45 is a source-version fact, not proof of any deployed DB's version.
+H. CREATE TABLE IF NOT EXISTS does not prove no destructive migration operations occur.
+I. v45 atomicity comment is not blanket proof for all migrations.
+J. “Not found in inspected records” is not proof an incident never happened.
+
+4. CLAUDE FOLLOW-UP CHECKLIST
+[ ] Record exact branch/ref and blob SHA for each source file in production and testing.
+[ ] Trace main.py from actual entrypoint through first StateStore construction; list all pre-DB early exits.
+[ ] Read full StateStore._initialize_schema() and migration routines; document fresh/existing/version mismatch/migration-denied/missing-schema paths.
+[ ] Trace all StateStore(...) calls and allow_migrate/market_open values.
+[ ] Search repository-wide: sqlite3.connect, ATTACH DATABASE, StateStore(, direct INSERT/UPDATE/DELETE/DDL, db_connect.connect, connect_readonly, init_analytics_schema, checkpoint_wal, checkpoint.
+[ ] Inventory all tables in both schema files, with keys/FKs/indexes and main/analytics location.
+[ ] Catalog every migration, transaction boundary, rollback behaviour, v27→v28 data relocation and downgrade/restore tooling.
+[ ] Inspect actual tests and CI; report only assertions that exist.
+[ ] Compare relevant source files against testing snapshot by SHA/content.
+[ ] Search dated records for DB files/backups/logs, migration outcomes, lock/schema errors, backup/restore and service restarts.
+[ ] Trace shutdown and every worker/thread's connection close path.
+[ ] Add precise file and line references to all final claims.
+
+5. PROVISIONAL CONCLUSION
+The inspected production source supports a SQLite StateStore with per-thread connections, explicit PRAGMAs (WAL, FULL synchronous, foreign keys, memory temp store, 30-second busy timeout), schema target 45, gated migration authority, and an attached auxiliary analytics.db containing candles, system_metrics and system_metrics_daily. It does not yet establish deployed DB paths/contents, exact startup order, all direct SQLite callers, all migration atomicity outcomes, historical migration success, incidents, paper/live DB separation or full test coverage.
+
+This is a reconciliation draft for Claude review, not a frozen manual and not a V2 design decision.

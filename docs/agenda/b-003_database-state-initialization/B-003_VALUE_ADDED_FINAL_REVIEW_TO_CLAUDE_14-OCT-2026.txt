@@ -1,0 +1,121 @@
+B-003 DATABASE / STATE INITIALIZATION
+VALUE-ADDED FINAL REVIEW FOR CLAUDE
+Date: 14-Oct-2026
+Review scope: Claude revision-1 files shown in this delivery
+- B-003_manual.md
+- B-003_review_notes.md
+- B-003_v2_design_inputs.md
+- V2_DESIGN_LOG.md
+
+REVIEW DISPOSITION
+NEAR-READY — APPLY ONE REQUIRED TECHNICAL CLARIFICATION, THEN RUN THE FINAL CROSS-DOCUMENT CHECK AND RETURN TO RAMA.
+This is not approval to freeze, commit, or push. All B-003 files remain unapproved until Rama explicitly approves the final set.
+
+1. OVERALL ASSESSMENT
+
+The revision has applied the substance of ChatGPT's 14-Oct review well. In particular:
+- The SQLite WAL / ATTACH limitation is now attributed to the official SQLite documentation.
+- The manual separates vendor/library behaviour, the source-verified code path, and the historical outcome.
+- The possible two-file relocation split is conditional; it is not presented as an observed data-loss incident.
+- The failure matrix distinguishes “no notifier alert” from logging and the refusal sentinel.
+- Restart claims are tied to the repository systemd unit, not automatically generalized to installed host state.
+- The migration test gap and the difference between per-table atomicity and whole-run atomicity are stated.
+- V2 considerations remain PROPOSED / OPEN, with no new decision or ratification point.
+- The manual remains a detailed booklet rather than being shortened.
+- The review notes preserve the evidence scope and disclose the process slip without repeating the sensitive value.
+
+I found one technical wording gap that should be corrected before final acceptance. It concerns the latent missing-version defect, not the SQLite atomicity finding.
+
+2. REQUIRED EDIT — DISTINGUISH A FRESH DATABASE FROM AN EXISTING DATABASE WITHOUT schema_meta
+
+Affected locations:
+- B-003_manual.md §4.1, step S8
+- B-003_manual.md §4.2, the first two rows of the outcome-by-version table
+- B-003_manual.md §8, row D12
+- B-003_manual.md §17, item 1 and the evidence-layer table in §17
+- B-003_review_notes.md finding 3 and, if useful, the matching explanation in §2
+- V2_DESIGN_LOG.md Q-41(a), only if needed to keep its question aligned
+
+Problem:
+The manual correctly says that `_read_existing_version` returns `None` when `schema_meta` does not exist. However, §4.2 currently groups “no database or no schema_meta table” into a row described as “a fresh build”, while the next row describes the defect for an existing database with a missing version row, a non-integer value, or an OperationalError. An EXISTING database whose `schema_meta` table itself is missing appears to fall into the same unsafe `None` path, but the defect row does not explicitly name that case. The wording could therefore be read as treating “schema_meta table absent” as safe only for a fresh database.
+
+Required change:
+State explicitly that `None` is safe only when the database is genuinely new/empty under the source's actual fresh-build path. If a database already contains legacy/application tables but has no `schema_meta` table, that is part of the same conditional latent defect: the code treats it as a fresh database, skips version checks and migration gating, and proceeds to run `schema.sql`. Keep the historical result as NOT ESTABLISHED / NO OBSERVED OCCURRENCE FOUND.
+
+Suggested replacement for the first two rows of §4.2 (adapt the wording to the existing table format):
+
+- No database exists at the target path and the open creates a genuinely fresh database: the fresh-build path runs schema.sql and stamps version 45. This is the intended fresh-build case evidenced by the source/test.
+- `None` is returned for an existing database because `schema_meta` is absent, the version row is absent, the value is not an integer, or the version read raises an `OperationalError`: the code treats the database as new, bypasses the newer-version check and migration gate, and runs schema.sql without the required rebuilds. KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND. Depending on the existing schema and statements encountered, the script may fail part-way or may stamp 45 over tables that were not rebuilt.
+
+Do not assert that every such database will be stamped successfully; retain the manual's conditional branches. Make D12 and §17 item 1 use the same complete list of conditions. Q-41(a) should ask whether any existing database had missing/unreadable version metadata, explicitly including a missing `schema_meta` table.
+
+3. SQLITE TWO-FILE ATOMICITY — ACCEPT THE REVISION'S EVIDENCE, KEEP THE LIMITATION BOUNDED
+
+The revised wording in §6.2 is directionally correct:
+- Official SQLite documentation describes transactions affecting multiple ATTACHed databases in WAL mode as atomic per individual database file, not as one atomic set.
+- The source path attaches analytics and runs one transaction that updates both files during relocation.
+- A host crash during COMMIT is therefore a documented conditional failure window for that code path.
+- The commit order and the effect of a process failure other than the documented host-crash scenario are not established.
+- The only recorded production relocation moved zero rows; no historical incident is established.
+
+Keep this finding classified as a conditional failure window on a source-verified code path, not as proof that legacy data was lost. Do not infer the production host's SQLite version from the library test environment. The SQLite forum URL supplied earlier is not needed unless Claude independently reads it and identifies a specific additional claim.
+
+4. FAILURE MATRIX AND MIGRATION ATOMICITY
+
+The revised D1–D16 matrix is materially clearer. Before delivery, perform a targeted consistency pass:
+- D12 must include the missing `schema_meta` table case as described above.
+- D10/D11 must continue distinguishing a failed per-table transaction from earlier successful tables that remain changed.
+- D13 must continue distinguishing statements already applied by the autocommit schema script from the final version stamp.
+- “No notifier alert” must not be shortened to “no alert”; retain CRITICAL logs, the refusal sentinel, and the caveat about any untraced log watcher.
+- Restart behaviour must remain qualified as the repository unit's behaviour, with installed-host state stated only where a dated record proves it.
+- Keep the repository rollback test, the source comment about the rehearsal, and historical migration records as three different evidence types. Do not describe the rehearsal comment as a test or as proof of all failure modes.
+
+5. REVIEW NOTES
+
+After the required wording change:
+- Update finding 3 to name an absent `schema_meta` table on an existing database.
+- Ensure the “overall” paragraph and the finding table still agree with the manual's exact defect scope.
+- Keep the disposition and the statement that no historical occurrence was found appropriately bounded by the documented search scope.
+- Preserve the source URLs, checked date, source-only production/testing parity caveat, and the note that the SQLite forum thread was not used.
+- The statement that there is no frozen-manual erratum may remain, provided the final cross-check still finds no actual contradiction with A-009, A-010, A-011, B-001 or B-002. Do not edit those frozen manuals silently.
+
+6. V2 DESIGN INPUTS AND DESIGN LOG
+
+The governance boundary is correctly maintained:
+- `B-003_v2_design_inputs.md` remains PROPOSED / OPEN.
+- Its atomicity item is a consideration for K-001, K-002, K-013, N-001 and N-005; it is not a design decision.
+- VP-07, VP-57 and VP-67 are annotations/tracking only; no ratification point has moved.
+- Q-41 remains OPEN. Its (h) item accurately records the SQLite limitation, conditional failure window, zero-row historical relocation, and unresolved detection/recovery question.
+- The B-003 agenda row in V2_DESIGN_LOG says revision 1 and awaiting Rama's approval, not frozen.
+- Nothing should be added to V2_DECISION_REGISTER.md as a decision merely because the review is accepted.
+
+After the required metadata wording is changed, make Q-41(a) explicitly include “missing schema_meta table on an existing database” if this is not already covered by its phrasing. Keep the question open; do not answer it from absence of a record.
+
+7. FINAL QUALITY-CONTROL CHECKLIST
+
+Please run and report the following against the exact four proposed files:
+[ ] The manual, review notes and design inputs have matching revision/date/status language.
+[ ] The missing-version defect wording is consistent across §4.1, §4.2, D12, §17, review finding 3 and Q-41(a).
+[ ] SQLite two-file atomicity remains a conditional code-path risk, not an observed incident.
+[ ] The single authoritative failure matrix remains in manual §8; other sections cross-reference it rather than contradict it.
+[ ] All source line references cited against production baseline 970aabf remain valid.
+[ ] Historical statements retain their source/date and do not imply that repository state proves installed-host state.
+[ ] V2 items remain PROPOSED / OPEN; no decision register row or ratification point was moved.
+[ ] Markdown tables/fences render correctly and the four-file cross-reference paths are correct.
+[ ] Secret/identifier and Claude-session-link scans are rerun on the exact changed files and on the intended docs/ scope; state scan scope and result, without claiming a pattern scan proves absolute absence of sensitive data.
+[ ] Confirm no legacy source, host, service, database, or deployment operation was performed; no commit or push was made.
+
+8. FINALIZATION INSTRUCTION
+
+Please make only the required documentation clarification and any strictly necessary cross-reference updates. Do not redesign the legacy system, propose an implementation fix as if approved, shorten the booklet, edit frozen manuals, or commit/push.
+
+Then return:
+1. The revised B-003_manual.md
+2. The revised B-003_review_notes.md
+3. The revised B-003_v2_design_inputs.md
+4. The revised V2_DESIGN_LOG.md
+5. A concise change summary and the final QC results
+
+Return the set to Rama for explicit approval. Until Rama approves, B-003 is NOT FROZEN and must NOT be committed or pushed.
+
+END OF REVIEW

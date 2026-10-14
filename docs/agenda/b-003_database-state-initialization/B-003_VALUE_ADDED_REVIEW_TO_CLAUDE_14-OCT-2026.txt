@@ -1,0 +1,164 @@
+B-003 — VALUE-ADDED REVIEW TO CLAUDE
+Review date: 14-Oct-2026, 10:55 IST
+Disposition: ACCEPT DIRECTION; APPLY REQUIRED CLARIFICATIONS BEFORE FINALIZATION
+Scope: Review of the three original B-003 inputs, Claude's B-003_manual.md, B-003_review_notes.md, B-003_v2_design_inputs.md, and the 14-Oct V2_DESIGN_LOG snapshot. The review treats Rama's answers as raw/probable/expected inputs, not decisions.
+
+IMPORTANT GOVERNANCE
+- Do not freeze or push the B-003 set yet.
+- Do not change the dead legacy system or run it.
+- The legacy manual must remain factual; V2 design inputs must remain PROPOSED / OPEN.
+- Do not treat this review as approval of any V2 design proposal.
+- Preserve the original three ChatGPT input files unchanged. Apply changes only to Claude's working B-003 deliverables and the relevant design-log evidence entry.
+
+OVERALL ASSESSMENT
+Claude's first pass is substantially stronger than the original ChatGPT draft. It traces the initialization path, identifies actual openers, distinguishes repository facts from dated records, documents failure exit codes, and avoids turning Rama's answers into facts. The manual is appropriately detailed and its 21-section structure is suitable for the legacy booklet. The review notes and V2 design-inputs file preserve the required separation between legacy facts and future design considerations.
+
+My recommendation is ACCEPT WITH REQUIRED EDITS, then run the final cross-document/evidence checks. The most important technical change is below: the two-database WAL transaction issue should no longer be described merely as an unverified audit lead, because the official SQLite WAL documentation is now available and explicitly addresses it.
+
+1. REQUIRED EDIT — ATTACHED-DATABASE ATOMICITY (HIGH PRIORITY)
+
+Current location:
+- B-003_manual.md §6.2, final bullet.
+- B-003_manual.md §17, item 3.
+- B-003_review_notes.md §3, finding 5 and §5/§8 where relevant.
+- B-003_v2_design_inputs.md §2, item 3, if its wording is updated to reflect the stronger evidence.
+- V2_DESIGN_LOG.md Q-41 or its equivalent evidence trail, only after the final review is agreed.
+
+Current manual wording labels the relocation transaction spanning two files as an “INTERPRETATION / AUDIT LEAD” and says the SQLite page still needs confirmation. I opened the official SQLite WAL documentation on 14-Oct-2026:
+https://www.sqlite.org/wal.html
+Section “Overview” explicitly states that transactions changing multiple ATTACHed databases are atomic for each individual database, but not atomic across all databases as a set. The same page explains that WAL uses separate per-database WAL files and that a commit is recorded in the WAL.
+
+Required action:
+- Replace the “page could not be fetched / to be confirmed” note with a direct reference to the official SQLite WAL page and the specific limitation.
+- Reclassify this as a SOURCE-VERIFIED SQLite behaviour plus a CODE-PATH / CONDITIONAL FAILURE WINDOW, not as a claim that data loss actually occurred.
+- Keep the historical qualification: the recorded production v27→v28 relocation moved zero rows, so the inspected historical event does not establish an actual lost/misplaced-row incident.
+- Explain that the migration transaction spans `main` and `analytics`; in WAL mode, SQLite does not promise atomic commit across both files as one set. A crash/failure around commit can therefore leave the files inconsistent with each other even though each individual file's transaction is atomic.
+- Do not overstate the exact direction of inconsistency (duplicate vs missing rows) without proving the commit/failure sequence from code and SQLite semantics.
+- Add a follow-up test/audit question for later governance: what recovery/integrity check would detect and resolve a partial cross-file relocation? This is an OPEN V2 consideration owned by K-001/K-002/K-013/N-005, not a design decision in B-003.
+- The SQLite forum URL supplied by Rama could not be fetched in this review. Do not attribute a claim to that forum post unless its contents are independently read. The official SQLite documentation is sufficient for the narrow WAL atomicity point.
+
+Suggested replacement paragraph for §6.2:
+“SOURCE-VERIFIED SQLITE LIMITATION / CONDITIONAL FAILURE WINDOW: `relocate_analytics_tables` operates on the main database and the attached `analytics` database in WAL mode. SQLite's official WAL documentation states that a transaction modifying multiple attached databases is atomic for each database individually, but not atomic across the set. Therefore the code's per-table transaction does not provide a cross-file all-or-nothing guarantee if a process/crash failure occurs around commit. This establishes a conditional consistency risk in the code path, not an observed production incident. The dated v27→v28 record says zero rows were relocated because the source analytics tables were empty; no historical data-loss event is established.”
+
+2. REQUIRED EDIT — SEPARATE SQLITE FACT, CODE PATH, AND HISTORICAL OUTCOME
+
+The manual is generally careful, but the cross-file atomicity finding demonstrates why three claims must remain separate:
+A. SQLite guarantee/limitation (vendor documentation).
+B. Whether this code path invokes that feature (source code and attached WAL connections).
+C. Whether it happened historically (dated records/DB evidence).
+
+Apply the same distinction wherever the manual discusses:
+- per-table migration commits versus whole migration runs;
+- `executescript()` partial effects;
+- schema version being stamped after a failed or incomplete script;
+- missing/unreadable version metadata being interpreted as a fresh DB;
+- `--dry-run` potentially leaving a session/event side effect;
+- the kill switch starting INACTIVE if persisted state cannot be read;
+- backup copies and whether a surviving backup exists.
+
+Keep the “no occurrence found” or “NOT ESTABLISHED” qualifiers exactly where evidence does not establish a real incident.
+
+3. REQUIRED EDIT — FAILURE MATRIX / STARTUP ORDER PRESENTATION
+
+The D1–D16 failure matrix is useful and should remain the authoritative B-003 failure table. Before freeze, verify every row's:
+- trigger and exact code path;
+- exception type;
+- process exit code;
+- whether a sentinel, alert, or log is actually emitted;
+- whether the systemd unit restarts that exit code;
+- which database/files/rows may already have been created or changed;
+- whether the row is source-derived or record-derived.
+
+Do not imply that “no alert exists” means no logging or sentinel exists. Use the precise formulation: “No notifier alert is emitted at this stage; the migration refusal has its CRITICAL log and best-effort sentinel,” where supported.
+
+The statement that both exit 1 and exit 2 are restarted after 10 seconds should remain explicitly tied to the repository service unit and its `RestartPreventExitStatus`; it is not proof of the final installed unit's behaviour. Continue to label host-installed state UNKNOWN unless a dated capture proves it.
+
+For `--status`, `--dry-run`, and `--interactive`, preserve the important distinction:
+- source fact: the actual branch reaches the StateStore construction and schema path;
+- source fact: `--dry-run` may write a session row / startup state;
+- interpretation: a later start may classify the prior run as CRASH;
+- historical unknown: whether an operator actually ran those modes on a production trading day.
+
+4. REQUIRED EDIT — MIGRATION ATOMICITY LANGUAGE
+
+The phrase “each table rebuild is atomic” is acceptable only when clearly bounded to the transaction in `_rebuild_table_from_schema()` and its demonstrated error handling. Avoid allowing readers to infer that:
+- an entire version migration is atomic;
+- all migration phases, including analytics relocation and final `schema.sql` execution, share one transaction;
+- all possible process/power-loss cases are covered by the first-table rollback test.
+
+Retain the fact that the test covers the first-table failure path only. Add the later-step failure gap to the open evidence/test checklist. Do not call the source comment describing the v44→v45 rehearsal an automated repository test.
+
+5. REQUIRED EDIT — EVIDENCE / CITATION FINISHING
+
+The manual has useful line references and a strong evidence-method section. Before finalization:
+- Confirm all line ranges against the exact stated baseline commit `970aabf3c78d777d9d34549e021f7c8e756c7bdb`.
+- Where claims depend on testing-tree comparison, include both relevant refs/SHAs and say whether the conclusion is source parity only, not deployed-host parity.
+- For dated historical facts, keep the exact record filename/date and the narrow thing it proves.
+- Where the record repository was searched by filenames only, do not phrase the result as a full content search.
+- Keep source-commented test claims separate from actual test functions and measured scratch-library tests.
+- Keep the production host's SQLite version, final DB contents/version, backup survival, restore drill success, and unrecorded operational incidents as UNKNOWN unless evidence is found.
+
+The official SQLite reference used for the atomicity clarification is:
+https://www.sqlite.org/wal.html
+Relevant section: “Overview,” which explicitly states the multi-ATTACH atomicity limitation in WAL mode. The separate forum page supplied by Rama returned no readable content in this review; do not rely on it.
+
+6. MANUAL QUALITY / CONTENT CHECKS
+
+Keep the manual's detailed structure and source-to-consumer orientation. The following are good and should not be removed:
+- exact DB path relative to the working directory and same path for paper/live as source-defined behaviour;
+- `schema.sql` being executed on each StateStore initialization and the version-row write;
+- `synchronous=FULL`, per-connection foreign-key behaviour and WAL settings;
+- migration guard and refusal window, with the dated July event distinguished from code behaviour;
+- missing/unreadable version row latent defect;
+- actual list of StateStore and direct SQLite openers, while keeping the scope/method limits;
+- daily online backups, retention, restore drill uncertainty and the plain-copy runbook ambiguity;
+- explicit production/testing comparison by source tree, not assumed host parity;
+- test presence and assertions distinguished from whether tests ran/passed;
+- B-005/B-007/B-011/B-012 cross-references;
+- the no-frozen-manual-erratum result, provided the final cross-document check still supports it.
+
+Do not shorten this into a summary. The detailed booklet is the required deliverable.
+
+7. REVIEW NOTES — SMALL IMPROVEMENTS
+
+`B-003_review_notes.md` is useful and should remain OPEN until the edits are complete. Update it to:
+- mark the SQLite WAL atomicity claim as confirmed from the official documentation on 14-Oct, and point to the exact URL;
+- record that this review does not establish any historical cross-file data loss;
+- state the disposition “ACCEPT WITH REQUIRED EDITS” and list the exact sections changed after Claude applies them;
+- retain the optional Rama questions as optional; they are not blockers for source documentation;
+- keep the reading-method/process-slip note factual and concise; do not repeat any sensitive value or host identifier.
+
+Do not say “no correction needed” for §6.2 / §17 item 3 after the official documentation has now been checked.
+
+8. V2 DESIGN INPUTS — GOVERNANCE CHECK
+
+`B-003_v2_design_inputs.md` is appropriately labelled PROPOSED / OPEN and says no new V2 request came from Rama. Keep that boundary.
+
+The items on explicit migration, fail-closed missing metadata, whole-step atomicity, explicit first-time DB creation, read-only diagnostics, database-stage alerts, kill-state read failure, backups/restore and retention are considerations only. They must not be written as accepted requirements or silently moved to the decision register.
+
+For the atomicity consideration, say the legacy code path has a source-backed cross-file atomicity limitation, while any V2 remedy remains undecided. Route the question to K-001/K-002/K-013/N-005. No VP ratification point should move without the normal governance decision.
+
+9. V2 DESIGN LOG / TRACEABILITY
+
+The 14-Oct log correctly says B-003 is first-pass and awaiting this review. After applying the edits:
+- update the B-003 status line to show the review disposition and exact revision, without calling it frozen;
+- add the official SQLite WAL URL as evidence for the cross-file atomicity point;
+- record that the source-backed limitation is conditional and no historical incident is established;
+- record the remaining open audit/test question under Q-41 (or the existing owner-approved question identifier), avoiding duplicate questions;
+- keep VP-07, VP-57 and VP-67 annotations as tracking only; no decision or ratification point moves;
+- do not commit or push. Rama will do that after reviewing the revised set.
+
+10. FINAL VERIFICATION CHECKLIST BEFORE RETURNING THE REVISED SET
+
+[ ] Update B-003_manual.md §6.2 and §17 item 3; check final summary §21 does not overstate cross-file atomicity.
+[ ] Update B-003_review_notes.md findings and disposition.
+[ ] Update B-003_v2_design_inputs.md only to strengthen evidence wording; retain PROPOSED / OPEN.
+[ ] Update V2_DESIGN_LOG traceability/status without changing decision state.
+[ ] Check every filename/path/reference against the actual V2 worktree.
+[ ] Run Markdown/table/code-fence checks and identifier/secret scans.
+[ ] Recheck the no-frozen-manual-erratum claim against A-009/A-010/A-011/B-001/B-002 and any relevant open errata.
+[ ] Confirm the final B-003 manual still says production/test database contents and final host state are UNKNOWN.
+[ ] Return the revised files to Rama for approval; do not push or freeze autonomously.
+
+FINAL RECOMMENDATION
+ACCEPT WITH REQUIRED EDITS. The main booklet is comprehensive and evidence-led. The most material required change is to replace the unverified SQLite cross-file atomicity note with the now-confirmed official SQLite WAL limitation, while preserving the crucial qualification that no historical data-loss incident has been established. After the above edits and a final consistency pass, return the B-003 set to Rama for approval; only then should it be considered for freeze/storage/push.

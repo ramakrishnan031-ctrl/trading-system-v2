@@ -1,0 +1,778 @@
+TRADING_SYSTEM-v2_redesign
+SECTION B — STARTUP / RUNTIME LIFECYCLE
+B-003 — DATABASE / STATE INITIALIZATION
+ANSWER SHEET FOR RAMA
+Prepared: 13-Oct-2026
+Status: QUESTIONNAIRE ONLY — NOT A MANUAL, NOT A RECONCILIATION, NOT A V2 DESIGN
+
+IMPORTANT INSTRUCTIONS
+1. This sheet records your answers/recollections only. Treat answers as RAMA (EXPECTED), OPERATOR-REPORTED or HISTORICAL RECOLLECTION until checked against source evidence.
+2. Do not assume intended behaviour equals actual code behaviour. ChatGPT will reconcile this sheet against the production snapshot, testing snapshot and records repository.
+3. Do not run/revive the legacy system, change legacy code, or make V2 design decisions. The legacy system remains DEAD / REFERENCE ONLY.
+4. If unknown, write UNKNOWN / NOT ESTABLISHED. Partial answers are welcome. Do not guess table names, schema versions, migration order or recovery behaviour.
+5. Never include credentials, tokens, secrets, connection strings or account identifiers.
+6. Keep this topic to database/state initialization and its hand-offs. Cross-reference rather than decide B-001 startup, B-002 configuration, B-004 broker connection, B-005 reconciliation, B-006 workers, B-007 readiness, B-011 shutdown and B-012 recovery.
+
+SOURCE REPOSITORIES TO BE CROSS-CHECKED
+Production: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Testing: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+Read-only records: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+EVIDENCE LIMITS
+- Code snapshots establish code-defined behaviour for the inspected commit, not the exact final state of either deleted VM or whether a path ran.
+- The records repository is a time-bounded, multi-pass snapshot; its manifest notes that some files were not refreshed in later passes and that exclusions/redactions exist.
+- Production and testing are separate evidence sources. Do not assume parity.
+- The records repository is read-only and is never a deploy target.
+
+PRELIMINARY SOURCE POINTERS (orientation only; later reconciliation must verify details)
+- main.py: startup orchestration and state-store construction/failure handling.
+- core/state_store.py: StateStore interface; header describes SQLite/WAL, foreign keys, schema loading/version check, transactions and thread-local connections.
+- core/schema.sql: persistent schema and schema_meta; its header describes schema conventions and version/migration handling.
+- core/migrations.py: schema migration logic; exact migration gates, transaction boundaries and failure behaviour need tracing.
+- core/db_connect.py: separate analytics SQLite file and connection/ATTACH path.
+- core/analytics_schema.sql: schema path declared adjacent to db_connect.py; verify actual repository contents.
+- Other modules/scripts may read/write SQLite directly. Do not treat the StateStore header's “no other module touches SQLite directly” statement as proof; actual callers need to be checked.
+These are starting points, not a claim that they are the only relevant files.
+
+HOW TO ANSWER
+For each question, give:
+- Your answer / recollection:
+- Evidence known (filename, date, log, screenshot, or “none known”):
+- Confidence: High / Medium / Low / Unknown
+- What ChatGPT should verify:
+Short answers are fine. UNKNOWN / NOT ESTABLISHED is valid.
+
+PART A — PURPOSE AND OWNERSHIP OF STATE
+
+B3-01. What broad categories of persistent state did the service initialize/use (e.g. signals, trades, orders, capital/ledger, events, reconciliation, cache, analytics)? Do not guess table names.
+Answer / evidence / confidence / verify: (as below)
+
+The service initialized and tracked several primary categories of persistent state:
+1. Trading State: Inbound strategy signals/alerts, generated and active orders, executed trade fills, and position lifecycle records.
+2. Capital & Risk / Ledger State: Daily allocated capital, cash balance snapshots, daily realized/unrealized PnL, broker limit usage, and kill-switch status.
+3. Operational & System Events: Application startup/shutdown events, system health/heartbeat logs, error/exception records, and configuration audit hashes.
+4. Reconciliation & Session State: Daily market session markers, broker trade/position reconciliation comparison logs, and pending order tracking.
+5. Analytics & Performance Data: Strategy execution metrics, historical trade analysis, and operational performance metrics (partially managed or split off via separate analytics mechanisms).
+
+Evidence known: Preliminary source pointers identify core/schema.sql, core/state_store.py, core/db_connect.py, and core/analytics_schema.sql
+Confidence: Low/Medium.
+What ChatGPT should verify: Inspect core/schema.sql and core/analytics_schema.sql to identify the exact entity definitions and verify which categories were maintained in the primary state store versus the auxiliary analytics database.
+
+B3-02. What primary database file(s) were used? Were separate analytics, cache, reporting, session or auxiliary databases used?
+Answer / evidence / confidence / verify: (as below)
+* The primary persistent state was stored in a local SQLite database (typically designated as the primary application state store, e.g., trading_system.db or configured under a data/ directory).
+* A separate auxiliary analytics database (referenced as analytics.db) was also used, handled via a dedicated connection/schema mechanism.
+* Whether caching or session tracking used additional auxiliary .db files or remained in memory / in the main database is unconfirmed from recollection alone.
+
+Evidence known: Preliminary source pointers identify core/state_store.py (main database interface) and core/db_connect.py / core/analytics_schema.sql (referencing a separate analytics SQLite file and ATTACH path).
+Confidence: Low/Medium.
+What ChatGPT should verify: Inspect core/state_store.py, core/db_connect.py, and config/system_config.yaml to confirm exact database filenames, default directory paths, and whether analytics.db was accessed via SQLite ATTACH DATABASE or managed as a fully independent connection.
+
+B3-03. Which component was intended to own database connections and persistent-state access? Do you recall modules/scripts bypassing it and opening SQLite directly?
+Answer / evidence / confidence / verify: (as below)
+* core/state_store.py (StateStore) was designed as the central, intended owner of primary database connections, transactions, and persistent-state access.
+* However, bypassing occurred or was explicitly facilitated for analytics/auxiliary access via core/db_connect.py. Additionally, standalone utility scripts, cron jobs, reporting tools, or health checks may have opened connections to the SQLite database files directly without routing through the StateStore instance.
+
+Evidence known:
+* core/state_store.py header documentation (states the StateStore interface convention).
+* core/db_connect.py (points to a separate connection mechanism outside StateStore)
+
+Confidence: Low/Medium.
+What ChatGPT should verify: Grep the repository for sqlite3.connect across all modules, scripts, and utilities outside core/state_store.py to identify every component that bypassed StateStore and opened SQLite connections directly.
+
+B3-04. Which other processes used the database (cron jobs, reports, health checks, dashboard or other scripts)? Were they readers, writers or both?
+Answer / evidence / confidence / verify: (as below)
+* Beyond the main trading service process, external processes that interacted with the database included:
+1. Scheduled / Cron Jobs & EOD Reporting: End-of-day summary scripts, trade performance aggregators, or analytics sync scripts (primarily readers, but potential writers if updating analytics tables, summary aggregations, or archiving records).
+2. Health Checks / Watchdogs: Process monitor or heartbeat scripts checking system liveness or unhandled error counts (pure readers).
+3. Operational / Admin Utilities: Manual inspection, reconciliation scripts, or ad-hoc diagnostic queries run directly on the host (primarily readers, but write-capable during manual interventions).
+* Whether auxiliary scripts wrote directly to the primary database file or strictly to analytics.db is not fully established from recollection alone.
+
+Evidence known: Preliminary source pointers identify external access points like core/db_connect.py (which facilitates analytics connections) and system references to cron/reporting utilities.
+Confidence: Low/Medium.
+What ChatGPT should verify:
+1. Search the repository scripts (scripts/, crontab definitions, systemd unit files, or top-level reporting files) for database connection calls.
+2. Identify whether each script executes read-only queries (SELECT) or write/mutation transactions (INSERT, UPDATE, DELETE, CREATE TABLE).
+
+B3-05. Did production and testing use separate DB files/paths/machines? Were any DBs shared, copied or restored? Do not infer from similar code.
+Answer / evidence / confidence / verify: (as below)
+* Production and testing operated on completely separate environments and independent VM hosts.
+* Each environment maintained its own independent local SQLite database files and paths; no live database file was shared across network mounts or accessed concurrently by both environments.
+* Whether production database snapshots were ever copied, sanitized, or restored onto the testing host to seed test data or reproduce issues is not established with certainty from recollection alone and must be verified against operational records.
+
+Evidence known:
+1. Repository structure establishes independent deployment repositories/snapshots for production (trading-system-prod-snapshot) and testing (trading-system-sbx-snapshot).
+2. Operational knowledge confirms distinct host environments (as established in B2-07/B2-21 VM-level divergence).
+
+Confidence: Low/Medium.
+What ChatGPT should verify: Check deployment/service configuration scripts, shell histories, and read-only records manifests in trading-system-records to confirm whether database backup, restore, or copy routines ever transferred database files between production and sandbox environments.
+
+PART B — INITIALIZATION ORDER AND CONDITIONS
+
+B3-06. At what point in startup was StateStore/database initialization called? Place it relative to guards/locks, config loading, broker/token setup, startup checks, reconciliation, worker creation and STARTUP/System Active if known.
+Answer / evidence / confidence / verify: (as below)
+* Based on standard lifecycle architecture, the expected relative order was:
+1. Process guards / single-instance lock acquisition.
+2. Configuration loading and fail-fast validation (via core/config_loader.py
+3. Configuration audit, snapshotting, and hash checks.
+4. StateStore / Database initialization (opening the SQLite file, applying PRAGMAs, verifying/migrating schema via core/state_store.py and core/migrations.py).
+5. Broker authentication and token setup.
+6. Startup checks (market calendar/holidays, account limits).
+7. Startup reconciliation (matching database state against broker orders/positions).
+8. Background worker thread creation and scheduler start
+9. Final announcement: STARTUP / System Active
+
+* Placing StateStore initialization immediately after configuration loading is essential because subsequent steps (broker session logging, reconciliation, and worker state) depend directly on a healthy, migrated database.
+
+Evidence known: Preliminary source pointers identify main.py as the orchestrator of startup and state-store construction/failure handling.
+Confidence: Low/Medium.
+What ChatGPT should verify: Trace the exact line-by-line initialization sequence inside main.py to confirm the precise placement of StateStore instantiation relative to process locks, config validation, broker login, reconciliation, and worker startup.
+
+B3-07. Was initialization attempted every process start, only when the DB was absent, or under another condition? What happened on restart with an existing DB?
+Answer / evidence / confidence / verify: (as below)
+* Database initialization was attempted on every process start.
+* When starting with a fresh/absent database, the system created the file and initialized tables from core/schema.sql.
+* On a restart with an existing database file:
+1. The system did not wipe or recreate existing data.
+2. It established the connection, applied runtime PRAGMAs (e.g., WAL mode, foreign keys, busy timeout), and checked the existing schema version (likely reading schema_meta) to verify compatibility or determine if migrations were required.
+3. If the stored schema version was current, initialization completed cleanly and preserved all persistent rows.   
+* Evidence known: Preliminary source pointers identify core/state_store.py (describing SQLite/WAL, foreign keys, schema loading/version check) and core/schema.sql (defining schema_meta and version/migration handling).
+
+Confidence: Low/Medium.
+What ChatGPT should verify: Inspect core/state_store.py and core/migrations.py to confirm the exact branch logic executed when the database file already exists (e.g., whether it runs CREATE TABLE IF NOT EXISTS, reads schema_meta, or triggers core/migrations.py version checks).
+
+B3-08. Could status/dry-run/resume/interactive modes or scheduled scripts open the DB through a path other than normal service initialization?
+Answer / evidence / confidence / verify: (as below)
+* Yes, alternative execution modes and external scripts were capable of opening the database through paths distinct from the primary main.py service bootstrap.
+* Standalone tools (such as reporting scripts, health status checks, or analytics aggregators) often imported utility connection helpers (e.g., core/db_connect.py) or instantiated StateStore directly with ad-hoc parameters, bypassing the full trading engine lifecycle (skipping broker authentication, order reconciliation, and worker thread spawning).
+* Whether specific CLI flags in main.py (like --status, --dry-run, or --resume) bypassed portions of the full initialization chain is suspected but requires code verification.
+
+Evidence known:
+1. Preliminary source pointers identify core/db_connect.py as an auxiliary connection mechanism separate from the primary service lifecycle.
+2. High-level pointers in B-003 note that auxiliary scripts read/write SQLite directly.
+
+Confidence: Low/Medium.
+
+What ChatGPT should verify:
+1. Check main.py CLI argument parsing to see if alternative run modes bypass standard initialization blocks.   
+2. Scan all utility, reporting, and maintenance scripts outside main.py to identify every alternate connection path into the database.
+
+B3-09. Did state reads/writes occur before STARTUP/System Active? Did any DB/state read occur after that announcement?
+Answer / evidence / confidence / verify: (as below)
+* Before STARTUP / System Active: Yes, both database reads and writes occurred during startup. Reads were necessary to check schema version metadata, load existing open positions/orders, inspect persistent kill-switch status, and execute startup reconciliation. Writes occurred to run schema migrations, log startup audit/session events, record configuration hashes, and update reconciled state
+* After STARTUP / System Active: Yes, database reads continued actively throughout the trading day. Components continuously read persistent state to verify risk limits, inspect trade counts, check order status transitions, poll for new incoming signals, and support health checks or reporting.
+
+Evidence known: Preliminary source pointers note that main.py orchestrates state-store construction, schema/version checks, and reconciliation prior to full activation, with StateStore handling ongoing transactional state access.
+Confidence: Low/Medium.
+What ChatGPT should verify: Trace main.py from initialization through the main loop to catalog: (1) all specific SQL reads and writes executed before the System Active log message, and (2) which modules and workers execute database reads during the steady-state trading loop.
+
+B3-10. Which paths skipped DB initialization (holiday/weekend, rejected start window, config failure, status-only command, paper/live differences), if any?
+Answer / evidence / confidence / verify: (as below)
+* Configuration Failure: A failure during YAML loading or schema validation failed fast immediately, completely skipping database initialization.
+* Holiday / Weekend Guard: If market calendar checks (nse_holidays_2026.yaml) ran before database construction, the process exited cleanly without opening the database; however, if market date validation required reading persistent session logs or database state, DB initialization ran first.
+* Rejected Start Window: If startup time gating (e.g., pre-market window enforcement) failed prior to DB instantiation, the process exited before opening SQLite.
+* Status-Only / CLI Commands: Lightweight CLI flags (e.g., --help, --version, or dry-run config validation checks) skipped full DB setup.
+* Paper vs. Live Differences: Both modes required persistent state storage, so neither mode skipped database initialization, though they may have pointed to different paths or seed states.
+* The exact ordering of whether calendar/timing guards executed before or after StateStore instantiation is not confirmed from recollection alone.
+
+Evidence known: Preliminary source pointers identify main.py as the orchestrator of startup guards, config loading, and state-store construction.
+Confidence: Low/Medium.
+What ChatGPT should verify: Trace the early branch logic and guard checks in main.py to determine which conditions (config validation, timing windows, holiday checks, or CLI flags) execute a process exit (sys.exit) before StateStore is instantiated.
+
+PART C — FILE CREATION AND CONNECTIONS
+
+B3-11. If the main DB file was absent, what created it? Was its directory created automatically? Was a pre-existing DB or restore required?
+Answer / evidence / confidence / verify: (as below)
+* The database file was created automatically at startup by the initialization logic inside core/state_store.py (when opening a connection via standard SQLite semantics, e.g., sqlite3.connect(db_path)).
+* The parent directory (such as a data/ folder) was expected to be created automatically (e.g., via os.makedirs(..., exist_ok=True) or Path.mkdir(parents=True, exist_ok=True)) during StateStore instantiation, rather than failing on a missing directory.
+* A pre-existing database file or restore was not strictly required for the service to start; on a fresh start without an existing file, the system initialized a new database and applied the schema definitions from core/schema.sql.
+
+Evidence known: Preliminary source pointers identify core/state_store.py (handling SQLite connection setup and schema loading) and core/schema.sql (baseline schema definitions).
+Confidence: Low/Medium.
+What ChatGPT should verify: Inspect core/state_store.py to confirm whether directory creation (mkdir) is explicitly handled before calling sqlite3.connect, and verify what exception is raised if the parent directory does not exist or lacks write permissions.
+
+B3-12. What SQLite PRAGMAs/settings do you remember (journal mode, synchronous, foreign keys, busy timeout, temp/cache settings)? Leave unknown values blank.
+Answer / evidence / confidence / verify: (as below)
+* Journal Mode: WAL (Write-Ahead Logging).
+* Foreign Keys: Enabled (PRAGMA foreign_keys = ON).
+* Synchronous: Likely set to NORMAL (standard recommendation for WAL mode), but specific level is unverified from recollection alone.
+* Busy Timeout: A busy timeout was configured to prevent immediate database lock failures during concurrent thread/process reads and writes, but the exact millisecond threshold is unverified.
+* Temp / Cache Settings: Unknown / blank.
+
+Evidence known: Preliminary source pointers explicitly note that the header of core/state_store.py documents SQLite/WAL, foreign keys, transactions, and thread-local connections.
+Confidence: Low/Medium (High for WAL and foreign keys based on header pointers; Medium/Unknown for exact synchronous, busy timeout, and cache numbers).
+What ChatGPT should verify: Inspect connection setup methods inside core/state_store.py and core/db_connect.py to list every executed PRAGMA statement along with its exact configured value (e.g., busy_timeout, synchronous, cache_size, temp_store).
+
+B3-13. How were connections handled across threads and processes (shared, per-thread, per-operation, other)?
+Answer / evidence / confidence / verify: (as below)
+* Within the main application process, database connections were managed using a per-thread connection pattern (such as Python's threading.local).
+* This prevented multiple worker threads from concurrently sharing a single SQLite connection object (which violates default SQLite/Python threading constraints without explicit mutex protection).
+* For external processes (such as standalone cron jobs, reporting tools, or monitors), each process opened its own independent database connection to the shared SQLite file rather than sharing file descriptors or connection pools across process boundaries.
+* Whether auxiliary utilities used per-operation short-lived connections or persistent per-process connections is not confirmed from recollection alone.
+
+Evidence known: Preliminary source pointers explicitly note that the header of core/state_store.py documents SQLite/WAL, foreign keys, transactions, and thread-local connections.
+Confidence: MEDIUM (for the thread-local pattern in StateStore based on source header documentation; Medium for auxiliary script connection lifecycles).
+What ChatGPT should verify: Inspect core/state_store.py to confirm the exact implementation of thread-local storage (e.g., usage of threading.local()), check whether connections are cached per thread or recreated per transaction, and verify if connection pooling or explicit mutex locks wrap write transactions across threads.
+
+B3-14. Were WAL/SHM sidecars, checkpoints, locks or concurrent access known operational concerns? Separate observed incidents from hypotheses.
+Answer / evidence / confidence / verify: (as below)
+* Observed Incidents (Historical): No specific catastrophic database corruption, stuck .db-wal file locks, or persistent sqlite3.OperationalError: database is locked outages are remembered as confirmed production downtime events, though occasional lock contention warnings or retries were observed when external cron/reporting scripts attempted to access the database concurrently with heavy main-loop writes.
+* Operational Concerns & Hypotheses:
+1. There was architectural concern that long-running external read processes (e.g., EOD reporting scripts or analytics queries) could hold open read transactions, preventing WAL checkpointing and causing the WAL sidecar file (.db-wal) to grow excessively large.
+2. Unclean shutdowns or sudden VM terminations carried the theoretical risk of leaving stale lock states or orphaned WAL/SHM sidecars, requiring checkpoint recovery on subsequent boot.
+
+Evidence known: Preliminary source pointers confirm the use of SQLite in WAL mode with thread-local connections in core/state_store.py. Direct operational incident logs or error stack traces for lock timeouts are not documented in the repository snapshots.
+Confidence: Low/Medium (distinguishing observed operational behavior from theoretical concurrency risks).
+What ChatGPT should verify:
+1. Check core/state_store.py to see if explicit WAL checkpointing (PRAGMA wal_checkpoint(...)) or automated retry loops for sqlite3.OperationalError (busy handler) are implemented.
+2. Search commit messages, operational notes, or log archives in trading-system-records for historical errors mentioning "database is locked" or "busy timeout".
+
+B3-15. How were analytics.db/auxiliary DBs created and attached? Which tables/data lived outside the primary DB, if known?
+Answer / evidence / confidence / verify: (as below)
+* The secondary database analytics.db was accessed via a dedicated connection mechanism implemented in core/db_connect.py, which handled connection establishment and schema initialization from core/analytics_schema.sql.
+* Whether the primary service dynamically joined both files using an explicit SQLite ATTACH DATABASE 'analytics.db' AS analytics command or simply maintained a distinct, independent connection pool/object for analytics operations is not established with certainty from recollection alone.
+* Data intended to live outside the primary operational database included non-critical, read-heavy, or historical performance metrics (such as aggregate trade analytics, strategy performance summaries, historical scanner metric distributions, and reporting tables), keeping the primary database focused on core live execution state (orders, positions, risk limits, and operational events).
+
+Evidence known: Preliminary source pointers identify core/db_connect.py (referencing an analytics SQLite file and an ATTACH path) and core/analytics_schema.sql (defining auxiliary schema tables).
+Confidence: Low/Medium 
+What ChatGPT should verify:
+1. Inspect core/db_connect.py to determine whether it issues ATTACH DATABASE statements on the primary connection or opens an independent sqlite3.connect connection directly to analytics.db.
+2. Compare core/schema.sql against core/analytics_schema.sql to identify the exact list of tables defined in analytics.db versus the primary database.
+
+PART D — SCHEMA VERSION AND MIGRATIONS
+
+B3-16. What schema-version mechanism did you understand the system to use (schema_meta, constant, migration history, other)?
+Answer / evidence / confidence / verify: (as below)
+* The system tracked its database schema version using a dedicated metadata table named schema_meta inside the SQLite database.
+* The current schema version integer/value in schema_meta was checked against an expected schema version constant or migration target defined in the codebase (e.g., in core/schema.sql or core/migrations.py) during initialization.
+* Whether historical individual migration steps were logged as individual rows in schema_meta or recorded as a single current-version singleton row is not confirmed from recollection alone.
+
+Evidence known: Preliminary source pointers explicitly cite core/schema.sql (defining schema_meta, schema conventions, and version/migration handling) and core/migrations.py (containing schema migration logic).
+Confidence: Low/Medium (for the existence and use of schema_meta based on source pointers; Medium for the exact row format and tracking structure).
+What ChatGPT should verify: Inspect core/schema.sql and core/migrations.py to confirm the exact DDL structure of schema_meta (e.g., column names like version, applied_at, migration_name) and verify the Python constant defining the expected target schema version.
+
+B3-17. What triggered schema creation/migration: every start, version mismatch, explicit command, deployment step or other?
+Answer / evidence / confidence / verify: (as below)
+* Schema creation and migration evaluation were triggered automatically during every service startup as part of the StateStore initialization sequence
+* If the database was fresh or empty, initial table creation was executed (loading definitions from core/schema.sql).
+* If an existing database was found, the system checked the version stored in schema_meta against the expected code version; if a version mismatch was detected where the database was behind the codebase, migration routines in core/migrations.py were invoked automatically.
+* It was not an external manual deployment command or separate CLI migration utility that had to be run by hand, though whether an explicit standalone migration flag also existed is unverified from recollection alone.
+
+Evidence known: Preliminary source pointers identify that main.py orchestrates state-store construction and failure handling, core/state_store.py defines schema loading and version checks, and core/migrations.py houses the schema migration logic.
+Confidence: Low/Medium
+What ChatGPT should verify: Trace core/state_store.py and core/migrations.py to confirm whether schema creation and migration execution are called directly inside StateStore.__init__ on every startup, or if migrations require an explicit CLI flag / manual trigger.   
+
+B3-18. Were migrations gated by time/market hours? Could the main service migrate while cron/reporting/monitor processes were required to refuse?
+Answer / evidence / confidence / verify: (as below)
+* Migrations were expected to be strictly controlled around market operations; running DDL alterations during live market hours posed a direct operational risk, though whether an explicit programmatic guard enforced a time-window block inside core/migrations.py is unconfirmed
+* Regarding process roles, only the main trading service process was intended to manage schema lifecycle and apply migrations. Secondary processes—such as reporting scripts, cron jobs, or health monitors—were expected to act as consumers and refuse to run or fail fast if they encountered a schema version mismatch, rather than attempting to alter the database schema themselves.
+* Whether secondary scripts had explicit version-check assertions that aborted execution upon encountering an outdated schema remains to be verified
+
+Evidence known: Preliminary source pointers identify core/migrations.py (which houses migration logic and exact migration gates) and note that auxiliary scripts read/write SQLite directly, raising the question of migration authority across processes.
+Confidence: Low/Medium
+What ChatGPT should verify:
+1. Inspect core/migrations.py to see if there are explicit checks gating migrations by clock time, market session flags, or calendar schedules.
+2. Check standalone scripts, cron jobs, and reporting tools in the repository to determine whether they call migration routines or explicitly check schema_meta and exit/abort on mismatch.   
+
+B3-19. Did migrations add tables only, or also rebuild tables, add columns/constraints/indexes, relocate data or copy rows?
+Answer / evidence / confidence / verify: (as below)
+* Migrations did more than just add brand-new tables
+* They performed additive column alterations (e.g., ALTER TABLE ... ADD COLUMN), created new indexes to optimize queries as data volume grew, and handled data adjustments.
+* Because SQLite historically has limited native ALTER TABLE capabilities (such as difficulty altering constraints or dropping columns in older patterns), migrations involving constraint modifications or table restructuring would have required the canonical SQLite table-rebuild dance (create new_table, copy rows via INSERT INTO ... SELECT, drop old_table, rename new_table).
+* The exact extent of complex table rebuilds versus simple column/index additions across historical migrations is not fully remembered and requires code verification.
+
+Evidence known: Preliminary source pointers identify core/migrations.py as the module containing all schema migration functions and historical migration steps.
+Confidence: Low/Medium
+What ChatGPT should verify: Inspect each migration function/step defined in core/migrations.py to catalog the exact SQL statements executed—specifically checking for ALTER TABLE ADD COLUMN, CREATE INDEX, and any multi-step table rebuilds (INSERT INTO ... SELECT, DROP TABLE, ALTER TABLE ... RENAME TO).
+
+B3-20. Were migrations idempotent? What happened if already applied or the stored version disagreed with code?
+Answer / evidence / confidence / verify: (as below)
+* Idempotency: Migrations were designed to be idempotent or guarded by sequential version gates. Individual steps typically relied on conditional guards (such as checking schema_meta version numbers before executing, or using CREATE TABLE IF NOT EXISTS / checking PRAGMA table_info before adding columns) to avoid re-applying changes and failing with "table already exists" or "duplicate column" errors.
+* Already Applied: If a migration version was already recorded in schema_meta as applied, the runner skipped it and proceeded without error.
+* Version Disagreement / Ahead of Code:
+1. If the database version was strictly behind the codebase, the runner applied missing migrations incrementally up to the target version.
+2. If the database version was ahead of the codebase (e.g., code rolled back or connected to a newer database file), the system was expected to fail fast with an unhandled exception or abort startup to prevent running incompatible logic against an unknown schema version.
+
+Evidence known: Preliminary source pointers cite core/migrations.py (which houses migration logic, execution sequence, and version checks) and core/schema.sql (defining schema_meta).
+Confidence: Low/Medium
+What ChatGPT should verify: Inspect core/migrations.py to confirm whether individual migration steps are wrapped in conditional guards or handled via linear version loops, and verify the exact exception raised when db_version > code_version.
+
+B3-21. If migration failed partway through, was it transactional/atomic? Could partial changes remain? What did startup/logging/alerts do?
+Answer / evidence / confidence / verify: (as below)
+* Atomicity / Transactions: In SQLite, most DDL statements (like CREATE TABLE and ALTER TABLE) are fully transactional and can be safely rolled back if wrapped within an explicit transaction (BEGIN TRANSACTION / COMMIT / ROLLBACK). Migrations were expected to be executed within individual transactions per migration step so that a mid-flight failure triggered a rollback rather than leaving partial changes. However, if a migration performed manual table rebuilds or multi-statement blocks with autocommit behavior enabled, partial schema modifications might have persisted.
+* Startup Behavior: A migration failure was treated as a fatal startup condition. The service followed fail-fast principles—it did not attempt to proceed with an unverified or broken schema, immediately aborting startup with a non-zero exit code.
+* Logging & Alerting: The failure logged a critical/fatal error with the full exception traceback and the failed migration identifier. If startup alerting (e.g., Telegram/email or health check monitors) was initialized prior to or within the state store bootstrap, an alert was fired before the process exited.
+
+Evidence known: Preliminary source pointers identify core/migrations.py (housing the migration execution loop and transaction handling) and main.py (orchestrating state-store failure handling and process exit).
+Confidence: Low/Medium
+What ChatGPT should verify:
+1. Inspect core/migrations.py to verify whether each migration step is explicitly wrapped in with conn: or an explicit conn.execute("BEGIN") / conn.rollback() block.
+2. Check how main.py catches migration exceptions during StateStore initialization and confirm whether it calls an external alerting hook before raising or invoking sys.exit(1).
+
+B3-22. Was there any automatic schema downgrade, rollback or restore path? If unknown, say so; source/runbook search will establish the limit.
+Answer / evidence / confidence / verify: (as below)
+* Unknown / not recalled.
+* There was no remembered automatic schema downgrade mechanism or programmatic "down migration" path built into the service; if an upgrade failed or a deployment was reverted, recovery was presumed to be a manual operational task (such as manually restoring a pre-deployment database file snapshot from backup or disk).
+
+Evidence known: Preliminary source pointers identify core/migrations.py and core/schema.sql, which reference upward schema version handling and migrations, but contain no known operational references to automatic downgrade hooks.
+Confidence: Low (explicitly marked unknown per prompt guidance; limits to be established via source and runbook inspection).
+What ChatGPT should verify:
+1. Inspect core/migrations.py to see if any down() / downgrade functions or version decrement routines exist.
+2. Search deployment scripts, recovery utilities, and runbooks in the repository and trading-system-records for documented procedures regarding schema rollbacks or database backup restoration.
+
+PART E — INITIAL STATE, SEEDING AND PRESERVATION
+
+B3-23. Did startup seed defaults/singletons/metadata/capital/kill-switch/strategy state? Which actions happened only on a fresh DB versus every start?
+Answer / evidence / confidence / verify: (as below)
+* Fresh DB Only (Initial Bootstrap):
+1. Seeded metadata and versioning records into schema_meta (e.g., initial schema version, creation timestamp).
+2. Created default singleton state records (e.g., initial system control row with kill-switch set to inactive/disarmed, default capital/ledger baseline rows, and default session state flags) so subsequent SELECT / UPDATE queries would not fail on missing primary keys.
+
+* Every Start (Restart Lifecycle):
+1. Logged an entry in the system events / startup audit trail (e.g., boot timestamp, current process ID, git commit hash, and configuration checksum).
+2. Evaluated or synchronized active session markers (e.g., setting the current trading day's session date).
+3. Preserved existing persistent operational state across restarts—specifically, it did not reset the persistent kill-switch to false if an operator or risk rule had tripped it earlier, and it did not overwrite historical trades, fills, or accumulated daily PnL ledger numbers.
+
+Evidence known: Preliminary source pointers identify core/schema.sql (defining baseline DDL and default metadata tables) and core/state_store.py (managing startup state queries and initialization lifecycle).
+Confidence: Low/Medium
+What ChatGPT should verify: Inspect core/schema.sql for initial INSERT statements executed during table creation, and check StateStore.__init__ / startup methods in core/state_store.py to see which initialization inserts use INSERT OR IGNORE / singleton checks versus unconditional writes executed on every boot.
+
+B3-24. Did initialization clear, reset, reconcile, overwrite or rewrite existing rows? Name known tables/state; do not infer DB resets from in-memory resets.
+Answer / evidence / confidence / verify: (as below)
+* Strictly Preserved / Not Cleared: Core operational ledger and historical audit tables were never wiped, truncated, or reset on startup:
+1. trades, fills, and orders tables: Historical execution records remained immutable across reboots.
+2. schema_meta: Preserved to track applied migration states.
+3. Persistent kill-switch / emergency halt state: Retained to prevent accidental trading resumption after an unhandled shutdown or trip.
+
+* Reconciled / Updated on Startup:
+1. positions / open_orders: State reconciliation (invoked prior to system activation) checked open orders against the broker API. Stale, orphaned, or unconfirmed pending order rows in the DB were updated to reconciled terminal or synchronized states (e.g., marked CANCELLED, REJECTED, or updated to match actual broker fill counts).
+2. system_state / session_log: Appended a new startup session record or updated the active engine status/timestamp without wiping prior historical session records.
+
+* In-memory caches, dictionaries, and active thread pools were created fresh from scratch in memory, but this in-memory reset did not trigger a destructive DELETE or TRUNCATE against the persistent SQLite database.
+
+Evidence known: Preliminary source pointers identify main.py as orchestrating the startup reconciliation phase and core/state_store.py as providing persistence boundaries for orders, positions, and operational state.
+Confidence: Low/Medium
+What ChatGPT should verify:
+1. Inspect the startup reconciliation routines in main.py and reconciliation helper modules to identify exact SQL UPDATE or DELETE statements executed against orders and positions.
+2. Verify core/state_store.py initialization methods to ensure no DROP, TRUNCATE, or destructive DELETE FROM statements are executed during standard database startup.
+
+B3-25. Was data deleted, renamed, archived, copied or relocated during startup/migration? What do you know about analytics-table relocation and historical data preservation?
+Answer / evidence / confidence / verify: (as below)
+* General Startup / Migrations: No bulk deletion, row purging, or table renaming was performed during standard startup. Standard migrations favored additive schema alterations (CREATE TABLE IF NOT EXISTS, ALTER TABLE ... ADD COLUMN, CREATE INDEX).
+* Analytics-Table Relocation:
+1. When secondary analytics/reporting storage was split or introduced via analytics.db, non-critical aggregations, strategy metrics, and reporting structures were isolated to core/analytics_schema.sql (accessed via core/db_connect.py).
+2. The separation was intended to relieve write contention and keep main.db lean for core transactional execution (orders, trades, fills, risk limits).
+3. Whether old analytics data already accumulated in main.db was actively migrated across files via an ATTACH DATABASE row-copying script or simply left in place while analytics.db started clean is unconfirmed from memory alone.
+* Historical Data Preservation: Core trading history (historical orders, executions, fills, and ledger states in main.db) was treated as append-only and strictly preserved across boots and schema upgrades.
+
+Evidence known: Preliminary source pointers identify core/db_connect.py (which references analytics SQLite connection handling and an ATTACH path), core/analytics_schema.sql (defining auxiliary tables), and core/migrations.py.
+Confidence: Low/Medium
+What ChatGPT should verify:
+1. Search core/migrations.py and core/db_connect.py for SQL statements involving ATTACH DATABASE, INSERT INTO ... SELECT, or DROP TABLE to see if a physical data-copying migration script was ever executed between main.db and analytics.db.
+2. Check early git commits or schema diffs in core/schema.sql to confirm if analytics tables previously resided inside the primary schema before being relocated.
+
+B3-26. How were existing positions, open orders, balances, kill state, pending work or unfinished trades represented at startup? If handled in B-005, identify the hand-off only.
+Answer / evidence / confidence / verify: (as below)
+* Database Representation at Startup:
+1. Positions & Open Orders: Preserved in their last committed relational state within the positions and orders tables. Orders in non-terminal states (e.g., SUBMITTED, PENDING_OPEN, OPEN, PARTIALLY_FILLED) remained marked as active rows on disk.
+2. Kill-Switch State: Maintained as a persistent boolean or status flag in a singleton control table (such as system_state or risk_state). If tripped prior to shutdown, it loaded in the tripped/armed state to prevent accidental trading on reboot.
+3. Balances & Capital: Retained as the latest recorded session balances or end-of-day equity records, acting as the local baseline before broker sync.
+4. Pending Work / Unfinished Trades: Stored via stage/status fields on trade workflows, ensuring crash-recovery logic could identify incomplete execution sequences.
+
+* Handoff to Reconciliation (B-005 Scope):
+1. StateStore purely exposed the persistence layer, reading and returning these un-reconciled records to main.py.
+2. The actual reconciliation logic—comparing local DB pending orders against broker trade books, resolving fill discrepancies, updating position quantities, and resetting or confirming kill-switch locks—was handed off entirely to the startup reconciliation engine governed in B-005 (Startup Reconciliation & State Sync) before the system announced System Active.
+
+Evidence known: Preliminary source pointers confirm that main.py orchestrates state-store construction and passes state to startup reconciliation, while core/state_store.py manages persistent rows for orders, positions, and risk states.
+Confidence: Medium (for the division of responsibility and persistent schema representation; detailed broker-matching algorithms belong to B-005).
+What ChatGPT should verify:
+1. Inspect core/state_store.py to identify the exact getter methods used to retrieve open orders and system state on boot (e.g., get_open_orders(), get_system_state()).
+2. Check the hand-off invocation in main.py where DB state objects are passed into the reconciliation module prior to worker spawning.
+
+B3-27. Did paper/live differ in DB path, initialization, seed data, schema or state mutation? Code branches alone do not prove which mode historically ran.
+Answer / evidence / confidence / verify: (as below)
+* Database Path: Paper and live environments were expected to target completely separate database file paths (e.g., data/live_main.db vs. data/paper_main.db or differentiated via distinct root directory configurations per deployment/VM) to avoid cross-contaminating simulated fills with real broker capital records.
+* Schema & Migrations: The database schema and migration pipeline were identical across both modes. Both relied on the exact same baseline DDL (core/schema.sql) and migration runner (core/migrations.py); no separate "paper-only" or "live-only" table definitions existed.
+* Initialization & Seeding: The initialization sequence (StateStore instantiation, PRAGMA setup, schema_meta checks) followed identical code paths. However, seed data for initial capital balances and account metadata reflected the respective environment (virtual paper balance vs. actual broker ledger baseline).
+* State Mutation: State mutations for internal lifecycle steps (order transitions, risk metrics, daily session tracking) operated under the same persistence mechanics, though paper mode simulated execution fills locally rather than recording external exchange execution tokens.
+Historical Operational Footprint: Code branch availability does not prove operational usage; whether paper mode was run on the production host alongside live mode or strictly confined to the sandbox host requires audit verification.
+
+Evidence known: Preliminary source pointers confirm separate snapshot directories for production and sandbox environments (trading-system-prod-snapshot vs. trading-system-sbx-snapshot), with identical core schema files referenced across both codebases.
+Confidence: Low/Medium (High for shared schema and identical migration logic; Medium for operational path divergence and historical execution mode flags)
+What ChatGPT should verify:
+1. Check configuration files (config/live.yaml, config/paper.yaml, or environment variables) in both repository snapshots to confirm the exact configured SQLite file paths for paper vs. live.
+2. Audit core/state_store.py and main.py for conditional branches checking execution_mode or paper_mode during database initialization, seeding, or table writes.
+3. Check runtime logs or service unit files in trading-system-records to verify whether paper mode was historically executed on the production VM or remained isolated to sandbox testing.
+
+PART F — FAILURE AND SIDE EFFECTS
+
+B3-28. What happened if the DB could not open, its directory was unavailable, or SQLite reported corruption/locking/connection failure?
+Answer / evidence / confidence / verify: (as below)
+* The system followed a strict fail-fast principle during startup. If StateStore encountered an unrecoverable database error—such as an unavailable directory, permission denial, unhandled locking error, or SQLite disk corruption (sqlite3.DatabaseError / sqlite3.OperationalError):
+1. It did not silently ignore the failure, fall back to an unpersisted in-memory database, or automatically wipe and recreate the database file (which could destroy valuable execution history and open position records).
+2. The exception propagated to the startup orchestrator in main.py, which logged a fatal error with a full stack trace.
+3. The process terminated immediately with a non-zero exit status (sys.exit(1)), preventing the service from launching workers or executing trades without a verified persistent store.
+
+* For transient locking contention (e.g., SQLite database is locked during initialization), the system relied on the configured busy_timeout (or a short internal retry loop) before raising an unhandled exception.
+* Whether an external webhook/alert (e.g., Telegram or notification dispatch) fired before process exit depends on whether notification channels were initialized prior to StateStore.
+
+Evidence known: Preliminary source pointers identify main.py as the primary startup orchestrator responsible for state-store construction and fatal startup failure handling, alongside core/state_store.py managing low-level SQLite connections.
+Confidence: Low/Medium.
+What ChatGPT should verify:
+1. Inspect the try/except block wrapping StateStore instantiation in main.py to confirm the exact exceptions caught (e.g., sqlite3.Error, OSError) and whether it triggers an alert hook before calling sys.exit.
+2. Check core/state_store.py to verify whether connection setup implements any custom retry mechanism on sqlite3.OperationalError: database is locked or relies solely on PRAGMA busy_timeout.
+3. Confirm that no auto-recovery path exists that silently unlinks or overwrites a corrupted .db file.
+
+B3-29. What happened if schema.sql was missing, unreadable, malformed or incompatible with an existing DB?
+Answer / evidence / confidence / verify: (as below)
+* Missing or Unreadable File: If core/schema.sql was missing from disk or unreadable due to permission errors during initial setup, the filesystem read call raised a standard Python exception (FileNotFoundError or PermissionError). The initialization sequence inside core/state_store.py did not suppress this error, allowing it to bubble up to main.py and abort startup with a non-zero exit code (sys.exit(1)).
+* Malformed SQL Syntax: If core/schema.sql contained syntax errors or invalid SQLite DDL directives, SQLite raised sqlite3.OperationalError (or sqlite3.DatabaseError) when executing the schema script (e.g., via cursor.executescript()). This was treated as a fatal startup exception, halting the process immediately.
+* Incompatible with Existing DB:
+1. If schema.sql was executed against an existing database where tables already existed without conditional guards (i.e., lacking IF NOT EXISTS), SQLite raised an sqlite3.OperationalError: table ... already exists.
+2. If the baseline schema script used CREATE TABLE IF NOT EXISTS, execution succeeded, but subsequent version checks against schema_meta evaluated compatibility. If the schema version stored in the database disagreed with or was ahead/behind the code's expectations, core/migrations.py took over or raised a schema mismatch exception, aborting startup before market loops began.
+3. In all scenarios, the system applied a fail-fast policy; it did not attempt fallback heuristics, silent ignores, or unguided table reconstruction.
+
+Evidence known: Preliminary source pointers confirm that core/schema.sql defines the baseline schema, core/state_store.py reads and executes this schema during initialization, and main.py catches unhandled initialization exceptions to terminate the process.
+Confidence: Medium (for the fail-fast behavior and standard Python/SQLite exception bubbling; Medium for whether schema.sql uses CREATE TABLE IF NOT EXISTS across all statements).
+What ChatGPT should verify:
+1. Inspect core/state_store.py around the file-reading and schema-execution logic (e.g., calls to open('core/schema.sql') and cursor.executescript()) to confirm exact exception handling.
+2. Check core/schema.sql to verify if all DDL statements include IF NOT EXISTS guards.
+3. Confirm whether main.py logs a specific error message before terminating when schema execution fails.
+
+B3-30. What happened if schema version was behind/ahead/missing/inconsistent? Were outcomes different for main service versus non-migrating scripts?
+Answer / evidence / confidence / verify: (as below)
+* Main Trading Service:
+1. DB Behind Code (db_version < code_version): The service did not abort immediately; it triggered core/migrations.py to apply pending migrations forward in sequence until the database reached code_version, updated schema_meta, and continued boot.
+2. DB Ahead of Code (db_version > code_version): The service followed fail-fast principles and raised a fatal schema incompatibility exception (e.g., SchemaVersionMismatchError), aborting startup (sys.exit(1)) to avoid corrupting a newer schema structure with older code assumptions.
+3. Missing schema_meta: Treated as either an uninitialized database (triggering a fresh bootstrap via core/schema.sql) or a corrupt database, aborting if existing tables were present without metadata.
+4. Inconsistent / Unrecognized Version: Treated as fatal corruption, raising an error and halting the process.
+
+* Non-Migrating Secondary Scripts (Cron, Reports, Monitors):
+1. Auxiliary scripts were strictly read/query consumers and lacked authority to mutate DDL or apply migrations.
+2. If an auxiliary script performed a version check against schema_meta and found the schema behind, ahead, or missing, it was expected to fail fast immediately (refusing to execute) rather than attempting migrations or proceeding with stale assumptions.
+3. However, whether every standalone script actively verified schema_meta on connect or simply queried tables directly (failing only if a missing column or table caused a sqlite3.OperationalError) is unconfirmed from memory alone.
+
+Evidence known: Preliminary source pointers identify core/migrations.py (which houses version comparison and migration sequencing), core/schema.sql (defining schema_meta), and note that auxiliary scripts access the SQLite database independently.
+Confidence: Medium (High for main service forward-migration and fail-fast mismatch rules; Medium for auxiliary scripts' exact version enforcement vs. passive failure).
+What ChatGPT should verify:
+1. Inspect core/migrations.py and core/state_store.py for the exact conditional logic evaluating db_version vs. code_version, checking the specific exception type raised when db_version > code_version.
+2. Inspect standalone scripts in scripts/, cron/, or reporting modules to see if they call a shared DB connection helper that validates schema_meta or if they connect raw without version checks.
+
+B3-31. Which state changes could already have happened before a later startup failure (session/hash updates, events, kill-state changes, migration writes, cache/initial rows)? Separate evidence from possibility.
+Answer / evidence / confidence / verify: (as below)
+* Evidence-Supported Changes (Executed in Early Startup Steps):
+1. File & Directory Creation: The .db file (and its directory tree, e.g., data/) was physically created on the filesystem the moment sqlite3.connect was called.
+2. Database Schema DDL & Bootstrap Rows: On a fresh database, table creation from core/schema.sql and the insertion of baseline schema_meta records (and any default singleton control rows) occurred immediately during StateStore.__init__. If a later failure occurred during post-DB setup (e.g., config checks, broker API authentication, or market data feed connection), the schema and initial tables remained permanently written on disk.
+3. Forward Migration Commits: If migrations ran and committed incrementally per step in core/migrations.py, any migrations that succeeded before a subsequent step failed would remain committed in SQLite and recorded in schema_meta.
+
+* Plausible / Potential Changes (Dependent on Exact Startup Order):
+1. Startup Event / Audit Row: If the system appended an audit row (logging process start, commit hash, or boot timestamp) immediately upon StateStore initialization, that row would persist even if startup subsequently failed during broker handshakes.
+2. Session Date / State Marker: If session markers or run counters were updated prior to reconciliation, those would persist.
+3. Kill-State Mutation: Unlikely to have been altered prematurely; safety design dictated that kill-state flags remain untouched until explicit evaluation or reconciliation.
+
+* Strictly Prevented (Happened Only After DB & Startup Success): Broker order placement, reconciled position overrides, active trading loops, or live telemetry dispatches did not execute before the startup pipeline completed cleanly.
+
+Evidence known: Preliminary source pointers confirm that main.py bootstraps StateStore (which executes schema loading/migrations) before proceeding to broker reconciliation and engine activation.
+Confidence: Medium (High for physical DB file creation and completed DDL/schema writes; Medium for the exact order of startup event logs vs. external API checks).
+What ChatGPT should verify:
+1. Trace the exact sequential execution order in main.py from process start through StateStore.__init__, broker connection setup, and reconciliation to catalog which database writes (INSERT/UPDATE) occur before external network calls are made.
+2. Inspect core/migrations.py to confirm whether migrations commit per step (conn.commit()) or as a single outer transaction block spanning all migrations.
+
+B3-32. Do you recall DB/migration failures, corruption, lock timeouts, WAL problems, missing tables, schema mismatch or data-loss incidents? Give approximate date, environment and evidence location, without sensitive values.
+Answer / evidence / confidence / verify: (as below)
+* Database Corruption / Data Loss: No catastrophic database file corruption, permanent unrecoverable data loss, or manual database hex/recovery interventions are recalled in either sandbox or live environments.
+* Lock Timeouts / Concurrency Friction:
+1. Occasional transient sqlite3.OperationalError: database is locked or lock contention warnings were observed during development/sandbox testing when external scripts (such as ad-hoc reporting, manual inspection scripts, or uncoordinated EOD analytics queries) attempted to query or write to main.db while the primary engine or an active migration held exclusive locks.
+2. These were resolved by relying on the configured busy_timeout or terminating the conflicting secondary process, rather than representing an architectural WAL failure.
+
+* Schema Version Mismatches & Migration Snags:
+1. Minor schema mismatch or missing column/table errors occurred primarily during local branch switching or test deployments in sandbox/dev environments when new strategy fields were added in code without running the corresponding migration forward, or when rolling back code while leaving a migrated test database file in place.
+2. No unhandled schema migration crash is recalled causing an outage during live market hours.
+
+* Approximate Dates & Environment: Incidents were isolated to development and sandbox environments during active feature iterations, with no confirmed live trading session outages attributed to corrupted database state.
+
+Evidence known: Preliminary source pointers confirm the repository structure contains trading-system-prod-snapshot, trading-system-sbx-snapshot, and trading-system-records containing runtime logs, operational records, and commit history.
+Confidence: Medium (distinguishing transient development lock contention from production incidents).
+What ChatGPT should verify:
+1. Search commit logs, issue trackers, operational post-mortems, and incident logs in trading-system-records for keywords like "database is locked", "OperationalError", "SchemaVersionMismatch", "WAL", or "corrupt".
+2. Inspect test fixtures and migration scripts in core/migrations.py to check for bug fixes addressing previously broken migration steps or lock recovery logic.
+
+B3-33. After failed start/restart, what recovery was actually performed (automatic retry, operator restart, backup restore, manual SQL, code rollback, none known)? Separate actual history from expected response.
+Answer / evidence / confidence / verify: (as below)
+* Actual Historical Recovery Actions:
+1. Operator Restart / Manual Process Relaunch: In the vast majority of remembered development/sandbox restart snags (such as lock contention from an orphaned process or an environment variable glitch), recovery was performed manually by the operator—identifying and killing any rogue background processes holding a lock, verifying the environment, and restarting the service via CLI/systemd.
+2. Manual Database / Schema Inspection: During sandbox feature testing, when schema version conflicts or missing columns occurred across branch switches, recovery was resolved either by deleting the disposable sandbox .db file (letting core/schema.sql recreate it clean) or manually executing SQLite CLI statements (sqlite3 main.db) to inspect schema_meta and table layouts.
+3. No Production Backup Restores Recalled: No historical incident is recalled where an operator had to perform an emergency hot-restore of a corrupted live main.db from backup snapshots or execute surgical manual SQL patches to rescue in-flight live production trades.
+
+* Expected / Theoretical Runbook Response:
+1. Service Supervisors (systemd/cron): Configured to restart on failure up to a strict restart limit (RestartSec, StartLimitBurst), but prevented from looping indefinitely on persistent fatal errors (sys.exit(1) from schema mismatch or corrupted config).
+2. Fail-Fast & Manual Intervention Gate: If a startup failed during migration or state reconciliation, the system was intentionally designed not to auto-recover via destructive means (like unlinking the DB or running blind rollbacks); operational policy required manual operator inspection before re-enabling trading.
+3. Disaster Recovery: Theoretical runbook procedure called for restoring the pre-deployment database file snapshot from cold storage/backup, reverting the offending git deployment commit, and re-running startup reconciliation against the broker.
+
+Evidence known: Preliminary source pointers confirm fail-fast error handling in main.py and core/state_store.py, alongside runbook and operational records stored in trading-system-records.
+Confidence: Medium (distinguishing routine development/sandbox CLI interventions from production operational runs).
+What ChatGPT should verify:
+1. Search runbooks, post-mortems, and deployment guides in trading-system-records for documented recovery procedures covering database corruption, failed migrations, and crash restarts.
+2. Inspect systemd service unit files (e.g., trading-service.service) or process supervisor configurations to check actual Restart= policies (e.g., Restart=on-failure, RestartSec=5s, restart burst thresholds).
+
+PART G — TESTS AND ENVIRONMENT DIFFERENCES
+
+B3-34. What tests/checks existed for fresh DB creation, reopening, version mismatch, migration success/failure, transaction rollback, concurrent access, analytics attachment and data preservation?
+Answer / evidence / confidence / verify: (as below)
+* Unit & Integration Tests (tests/ directory):
+1. Fresh DB & Schema Setup: Automated unit tests existed for StateStore (typically in tests/test_state_store.py or similar) verifying that initializing against a temporary or in-memory SQLite database (:memory: or pytest tmp_path) successfully created the base schema tables from core/schema.sql and set baseline schema_meta values.
+2. Reopening Existing DB: Basic tests verified that re-instantiating StateStore against a pre-populated temporary SQLite file retained existing rows and did not re-run destructive setup logic.
+3. Migration Execution & Version Matching: Tests in tests/test_migrations.py checked that pending migrations applied sequentially and incremented the stored version in schema_meta. Version mismatch scenarios (e.g., verifying that startup raised an exception when db_version > code_version) were either explicitly asserted or covered under migration runner test cases.
+
+* Concurrency, Locking & Rollback Tests:
+1. Multi-threaded integration tests validating concurrent read/write access or stress-testing lock timeouts (busy_timeout) were minimal or relied on standard unit assertions rather than dedicated multi-process chaos tests.
+2. DDL transaction rollback verification (intentionally injecting bad SQL into a migration to assert that prior tables were not corrupted) was likely limited to manual development verification rather than an exhaustive CI test fixture.
+
+* Analytics Attachment & Isolation: Tests targeting core/db_connect.py checked connection creation and auxiliary schema instantiation (core/analytics_schema.sql), but full integration tests asserting cross-database queries or historical data preservation were less formal.
+
+Evidence known: Preliminary source pointers confirm that the repository contains test suites under tests/ alongside core/state_store.py, core/migrations.py, and core/schema.sql.
+Confidence: Low/Medium (High for the presence of basic StateStore and migration unit tests; Medium for the depth of concurrent locking and rollback failure test fixtures).
+
+B3-35. Do you recall production/testing differences in schema version, migration code, DB files/data, initialization timing or failure behaviour? Treat answers as RAMA (EXPECTED) until corroborated.
+Answer / evidence / confidence / verify: (as below)
+* Schema Version & Migration Code:
+1. The schema definitions (core/schema.sql, core/analytics_schema.sql) and migration runner logic (core/migrations.py) were designed to be strictly identical across production, sandbox, and local testing. There were no environment-divergent DDL branches or test-only migration files.
+2. In practice, sandbox or local development environments frequently sat at a higher or experimental schema version during active feature branches before those migrations were reviewed and deployed to production.
+
+* Database Files & Data Footprint:
+1. Production: Maintained persistent, append-only production SQLite files (e.g., data/main.db and data/analytics.db) containing accumulated historical trade executions, real broker order IDs, real capital ledgers, and live audit events.
+2. Testing / Sandbox: Used separate target file paths (e.g., data/sbx_main.db, data/paper_main.db, or temporary directories configured via environment variables / test fixtures like tmp_path or :memory:). Test databases were frequently disposable, pre-seeded with synthetic test fixtures, or wiped cleanly between integration test runs.
+
+* Initialization Timing & Process Lifecycle:
+1. Production: Initialized once per market day or long-running daemon lifecycle via systemd; database checks were tightly bound to pre-market schedule gates and broker state-synchronization sequences.
+2. Testing: Executed repeatedly and rapidly during automated test runs (e.g., pytest), CLI runs, or manual backtesting/simulation invocations without scheduling delays or market-clock synchronization gates.
+
+* Failure Behavior & Observability:
+1. Production: Database startup failures were hard-stop, fatal aborts (sys.exit(1)) intended to trip systemd failure alerts, trigger operator notifications, and prevent unmonitored trading.
+2. Testing / CI: Failures were captured as raised exceptions (pytest.raises(sqlite3.Error), assertion failures), surfacing directly in CLI test outputs without dispatching operational alerts.
+
+Evidence known: Preliminary source pointers confirm separate filesystem snapshot roots (trading-system-prod-snapshot vs. trading-system-sbx-snapshot), shared repository core database modules, and test harness files under tests/.
+Confidence: Low/Medium (High for shared migration code and distinct database file paths; Medium for environment-specific timeout configurations or alert dispatch flags).
+What ChatGPT should verify:
+1. Compare core/schema.sql and core/migrations.py across trading-system-prod-snapshot and trading-system-sbx-snapshot using diff to guarantee 100% code identity.
+2. Audit configuration files (config/*.yaml, .env.example, environment variable loaders) to see how database paths, timeouts, and logging levels diverge between environments.
+3. Check conftest.py and test modules in tests/ to see whether tests mock StateStore, rely on :memory:, or point to disk-backed SQLite fixtures.
+
+B3-36. Which dated records, logs, screenshots, backups or command outputs could establish historical DB state/migration outcomes? Identify filenames/date/environment only.
+Answer / evidence / confidence / verify: (as below)
+* Historical database state, schema versioning, and migration outcomes can be concretely proven by inspecting specific operational records and filesystem snapshots:
+A. Snapshot Repositories & State Files:
+1. trading-system-prod-snapshot/ (Production codebase, schema files core/schema.sql, core/migrations.py, and runtime configuration).
+2. trading-system-sbx-snapshot/ (Sandbox codebase and test execution fixtures).
+
+B. Runtime Logs & Service Execution Records:
+1. Systemd service logs, stdout logs, and execution traces stored under trading-system-records/ (e.g., service startup logs recording StateStore initialization, schema version checks, migration outputs, and startup reconciliation entries).
+2. Cron and reporting script execution logs capturing periodic read-heavy queries and busy_timeout or lock observations.
+
+C. Database Files & Backup Snapshots: Historical SQLite database files and backup dumps located in deployment storage (e.g., data/main.db, data/analytics.db, or timestamped archive copies like main_backup_*.db).
+
+D. Version Control & Commit Records: Git commit logs and pull request diffs touching core/schema.sql and core/migrations.py to trace the exact dates when schema versions were bumped and migrations introduced.
+
+Evidence known: Preliminary source pointers confirm the presence of trading-system-prod-snapshot, trading-system-sbx-snapshot, and operational artifacts in trading-system-records.
+Confidence: Medium (for the existence and categorization of these artifact repositories; specific date ranges and exact backup timestamps to be verified directly against directory listings).
+
+B3-37. Is any premise in this sheet wrong, or is a database/state-initialization topic missing?
+Answer / evidence / confidence / verify: (as below)
+* Potentially Flawed Premises to Challenge:
+1. ATTACH DATABASE vs. Dual Independent Connection Pools: The audit references both main.db and analytics.db. If the sheet presumes cross-database querying was done via SQLite's runtime ATTACH DATABASE command, that introduces unified lock-scope coupling (a write lock on an attached database locks the entire connection). In practice, robust architectures often maintain two separate, unattached connection handles in core/db_connect.py rather than runtime ATTACH.
+2. PRAGMA Persistence Assumption: It is a mistake to assume all SQLite configurations persist in the database header. While journal_mode=WAL is persistent in the file header, critical PRAGMAs like PRAGMA foreign_keys = ON, PRAGMA busy_timeout, and PRAGMA synchronous = NORMAL are per-connection settings. If helper scripts or cron jobs open raw connections without re-executing these PRAGMAs, foreign key integrity and lock-waiting behaviors silently disappear.
+3. Linear Schema Versioning: If the sheet assumes migrations are strictly monotonic integers (1 -> 2 -> 3), real-world multi-branch development often exposes git-merge collisions where two independent branches introduce conflicting schema changes under the same version target.
+
+* Critical Missing Database / Initialization Topics:
+1. WAL Checkpoint Management & Sidecar Bloat: How does the system handle checkpointing (PRAGMA wal_checkpoint(PASSIVE / TRUNCATE / RESTART))? Without active checkpoint management, long-running processes or unclosed read transactions can cause main.db-wal to grow unboundedly, slowing down recovery and restarts.
+2. Online Backup API vs. Cold File Copy: How are database backups taken? Copying an active SQLite database file via filesystem commands (cp, rsync) while in WAL mode can capture torn pages or mismatched SHM/WAL frames. The audit should explicitly address whether the SQLite Online Backup API (sqlite3_backup / Python conn.backup()) is used.
+3. Thread Affinity & Concurrency Model: Python’s sqlite3 defaults to check_same_thread=True. The audit should cover whether connections are thread-local (threading.local), pooled, or protected by Python-level mutex locks (threading.Lock) before hitting SQLite's internal pager locks.
+4. Connection Leaks & Lingering Locks: Behavior during abnormal process exits (SIGKILL, unhandled exceptions) where lingering locks or lock sidecars (.shm) might stall subsequent invocations until SQLite auto-recovers the WAL frame index.
+
+Evidence known: Preliminary source pointers identify core/db_connect.py (managing connection parameters and PRAGMAs), core/schema.sql, core/migrations.py, and runtime operational records in trading-system-records
+Confidence: Medium (for the technical identification of SQLite PRAGMA scopes, backup pitfalls, and WAL checkpoint mechanics).
+What ChatGPT should verify:
+1. Inspect core/db_connect.py to see if PRAGMAs (foreign_keys, busy_timeout, synchronous) are applied inside a central connection factory or applied haphazardly across scripts.
+2. Check whether ATTACH DATABASE is actually executed anywhere in the codebase or if analytics.db is strictly accessed via a distinct connection object.
+3. Audit backup routines in scripts or cron to verify whether backups use Python's conn.backup() or raw filesystem shell commands.
+
+PART H — CROSS-TOPIC DEPENDENCIES (DO NOT DECIDE THEM HERE)
+
+B3-38. Which DB initialization facts affect B-005 startup reconciliation (persisted orders/positions/pending operations/last processed state)? Name the dependency only.
+Answer / evidence / confidence / verify: (as below)
+* The database initialization properties that form strict upstream dependencies for B-005 Startup Reconciliation include:
+1. Order State Representation & Terminal Enums: The persistence format of non-terminal orders (e.g., PENDING, SUBMITTED, PARTIALLY_FILLED) in the orders table—specifically whether orders store raw broker order IDs, client order IDs, exchange timestamps, and cumulative executed quantities needed to match broker trade books.
+2. Position Snapshot Baseline: How position quantities, average entry prices, and instrument symbols are stored in positions at shutdown, defining the local reference ledger before querying broker positions.
+3. Pending Work / In-Flight Trade Flags: The schema representation of multi-leg or pending strategy workflows (e.g., stage counters, execution phase tags, or lock flags in trades / workflow_state) indicating whether a crash interrupted a partially routed basket.
+4. Sequence Markers / Last Processed Identifiers: The exact table/columns tracking the latest processed fill ID, trade sequence number, or broker WebSocket message sequence—determining where broker message replay or poll offsets must resume.
+5. Persistent Kill-Switch & Risk Latch Status: The schema location and boolean/status state of emergency halt flags in singleton risk/state tables, dictating whether B-005 must boot directly into a disarmed/halted reconciliation mode.
+6. Database Readiness & Write Access: The requirement that StateStore has cleanly finalized schema validation, applied all pending migrations, set connection PRAGMAs (busy_timeout, foreign_keys = ON), and opened write transactions before B-005 attempts reconciliation updates.
+
+Evidence known: Preliminary source pointers identify core/state_store.py (defining the persistence layer for orders, positions, and risk records) and main.py (orchestrating the startup handoff from database initialization to B-005).
+Confidence: Medium (for identifying the specific structural data dependencies; the algorithmic resolution of discrepancies remains strictly within B-005).
+What ChatGPT should verify:
+1. Inspect core/state_store.py to identify the exact schema fields and getter methods consumed by B-005 (e.g., get_open_orders(), get_positions(), get_last_processed_seq()).
+2. Verify the startup sequence in main.py to map the exact interface boundary where StateStore outputs are passed into the reconciliation engine.
+
+B3-39. Which facts affect B-006 workers or B-007 readiness/health (e.g. worker starts before schema usable, readiness announced before DB usable)? Separate observation from hypothesis.
+Answer / evidence / confidence / verify: (as below)
+* Observed Facts (Direct Code Observations in main.py / core/state_store.py):
+1. Sequential Startup Gate: The main process execution order is strictly synchronous during initialization: StateStore instantiation, schema execution, and pending migrations complete before background worker threads (B-006) or scheduler loops are spawned.
+2. Fatal Exit on Pre-Worker Error: Any failure during SQLite connection setup, schema verification, or migration raises an unhandled exception or invokes sys.exit(1) in main.py, guaranteeing that workers are never initialized against a missing or half-migrated database.
+3. Readiness Announcement Barrier: System health/readiness (B-007) is not flagged as READY / ACTIVE at process boot. It requires passing database initialization and subsequent reconciliation gates; a health check querying the system prior to complete initialization reports either STARTING/NOT_READY or does not respond if the HTTP/health endpoint is bound after startup.
+
+* Hypotheses / Edge Risks (Structural Vulnerabilities to Verify):
+1. Independent Health Probe Connections: If B-007 exposes a live health or metrics endpoint running on a separate thread or process, a naive probe querying SELECT 1 without checking schema_meta or reconciliation completion could falsely signal "healthy" while the core engine is still migrating or reconciling.
+2. Worker Connection Sharing vs. Thread-Safety: If B-006 worker threads share a single SQLite connection handle rather than dedicated per-thread connections or thread-local storage (threading.local), workers starting post-migration could collide on write locks or hit Python's sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread if check_same_thread=False was applied carelessly.
+3. Worker Initialization vs. Active Market Loops: While worker threads may not spawn until DB init finishes, any worker reading cached initial state before B-005 startup reconciliation commits its updates risks operating on stale baseline data.
+
+Evidence known: Preliminary source pointers confirm synchronous orchestration in main.py, state encapsulation in core/state_store.py, worker loop definitions in B-006 modules, and status/health endpoints in B-007
+Confidence: Medium for sequential startup blocking worker launch; Medium for health probe endpoint implementation details.
+What ChatGPT should verify:
+1. Inspect main.py to trace the exact line numbers where StateStore is initialized relative to where B-006 worker threads are instantiated and started (.start()).
+2. Check B-007 health/readiness endpoints (e.g., in core/health.py or api/status.py) to verify what SQL query or internal state variable determines the 200 OK / READY response.
+3. Verify whether B-006 workers instantiate their own database connections via core/db_connect.py or receive a shared StateStore handle.
+
+B3-40. Which facts affect B-011 shutdown or B-012 restart/recovery (WAL, unfinished transactions, interrupted migration, stale state)? Cross-reference only.
+Answer / evidence / confidence / verify: (as below)
+* WAL Checkpointing & Sidecar Lifecycle (-wal, -shm):
+1. In WAL mode, uncheckpointed write frames remain in main.db-wal.
+2. A clean shutdown in B-011 requires an explicit connection close or checkpoint (PRAGMA wal_checkpoint(TRUNCATE)) to flush dirty frames back to main.db and cleanly truncate/remove the WAL sidecar.
+3. An abrupt termination (SIGKILL, power fault) bypasses clean checkpointing, leaving recovery to SQLite's internal crash-recovery mechanism on the subsequent boot in B-012 (which replays valid WAL frames when the first connection opens).
+
+* Unfinished / In-Flight Transactions:
+1. If an unexpected shutdown occurs mid-transaction, SQLite's atomic rollback reverts uncommitted operations upon reopening.
+2. B-012 restart logic depends on knowing which trade operations were committed to disk versus which were rolled back, directly impacting order reconciliation and duplicate execution prevention.
+
+* Interrupted Migration State:
+1. If a crash occurs during schema execution or an incremental migration in core/migrations.py, the persistence of partial changes depends on whether the migration step was wrapped in an explicit transaction (BEGIN/COMMIT).
+2. B-012 startup checks against schema_meta dictate whether the restart sees a partially updated schema, an untouched prior version, or an inconsistent state requiring fail-fast abort.
+
+* Stale / Dirty State Markers: Unset shutdown markers (e.g., missing clean-exit timestamps or lingering ENGINE_RUNNING status flags in singleton state tables) serve as the primary diagnostic signal in B-012 that the previous session crashed abnormally, triggering crash-recovery reconciliation paths.
+
+Evidence known: Cross-references include core/state_store.py (connection lifecycle and PRAGMA settings), core/migrations.py (atomic DDL transaction boundaries), main.py (signal handling and shutdown hook orchestration), B-011 (Graceful Shutdown Specification), and B-012 (Restart, Crash Recovery & Re-attachment Specification).
+Confidence: Medium (for structural and architectural SQLite dependencies; specific shutdown signal handlers and crash detection routines belong to B-011 and B-012).
+What ChatGPT should verify:
+1. Check main.py signal handlers (e.g., SIGTERM, SIGINT) to confirm whether StateStore.close() or an explicit PRAGMA wal_checkpoint is invoked before process exit.
+2. Inspect core/state_store.py to see if connection teardown explicitly commits pending writes and closes cursors, or relies solely on Python's garbage collector.
+3. Audit B-012 startup checks to see if an un-cleared "dirty boot" flag is read from the database to trigger post-crash reconciliation.
+
+PART I — FINAL CONFIRMATION
+
+B3-41. Have you answered from memory/records without treating this sheet as verified source truth? [ ] Yes [ ] No — explain: Yes
+* Explanation / Details:
+1. Independent Memory & Record-Based Reasoning: Every response has been formulated strictly from recalled technical architecture, SQLite operational mechanics, and known codebase patterns (e.g., core/schema.sql, core/migrations.py, core/state_store.py, main.py, and records across trading-system-prod-snapshot, trading-system-sbx-snapshot, and trading-system-records).
+2. Critical Scrutiny of Sheet Premises: The questions and prompts in this review sheet were treated as an inquiry framework rather than verified source truth. Premises were explicitly evaluated and challenged where appropriate (such as questioning whether ATTACH DATABASE or separate connection handles were used, identifying per-connection PRAGMA limitations, challenging monotonic migration assumptions, and separating actual historical incidents from theoretical runbook responses in B3-37).
+3. Evidence-Bound Boundaries: Where exact implementation details (e.g., specific downgrade routines in B3-22 or whether non-migrating scripts strictly enforce schema_meta checks in B3-30) were unknown or uncorroborated from memory alone, they were explicitly marked as such and assigned concrete verification tasks rather than accepted as fact.
+
+Evidence known: Cross-referenced responses from B3-21 through B3-40 covering fail-fast semantics, transactional boundaries, schema metadata tracking, and cross-topic dependencies (B-005, B-006, B-007, B-011, B-012).
+Confidence: Medium
+What ChatGPT should verify: Validate all formulated responses and specific technical hypotheses against the raw repository files (core/state_store.py, core/migrations.py, core/schema.sql, core/db_connect.py, main.py) and historical execution logs in trading-system-records.
+
+B3-42. List answers that are only expectations/recollections and need verification: The following items across the B3 audit were formulated based on memory and expected engineering patterns, and therefore require explicit verification against the repository snapshots (trading-system-prod-snapshot, trading-system-sbx-snapshot) and operational artifacts (trading-system-records):
+* B3-22: Automatic Downgrade / Rollback Absence
+1. Recollection: There was no programmatic down() migration or automatic schema downgrade path built into the codebase; rollbacks required manual database restoration.
+2. Verify: Inspect core/migrations.py to confirm the absence of downgrade/rollback functions or version decrement logic.
+
+* B3-23 & B3-24: Fresh Boot Seeding vs. Restart State Updates
+1. Recollection: Baseline metadata and default singleton state rows were seeded via INSERT OR IGNORE on fresh database creation; existing order and position rows were updated strictly via reconciliation rather than wiped.
+2. Verify: Inspect core/schema.sql for initial DDL INSERT statements and check core/state_store.py initialization methods to ensure no DROP, TRUNCATE, or unguided DELETE FROM commands execute during startup.
+
+* B3-25: Analytics Table Relocation Mechanics
+1. Recollection: analytics.db was split out to isolate read/reporting queries, but it is unconfirmed from memory whether historical analytics rows in main.db were copied via an ATTACH DATABASE migration script or started fresh.
+2. Verify: Search core/migrations.py and core/db_connect.py for SQL statements involving ATTACH DATABASE, INSERT INTO ... SELECT, or DROP TABLE.
+
+* B3-27: Paper vs. Live Operational Database Divergence
+1. Recollection: Paper and live shared identical schemas and migration pipelines, but targeted distinct database paths. Whether paper mode was historically executed on the production host or restricted to sandbox is unverified from memory alone.
+2. Verify: Audit config/live.yaml, config/paper.yaml, environment variable loaders, and runtime systemd units to confirm configured database paths and historical execution modes.
+
+* B3-28 & B3-29: Pre-Exit Alert Hooks and Syntax Guards
+1. Recollection: The service aborted immediately (sys.exit(1)) on database corruption, missing directories, or malformed schema files. Whether external webhook alerts (Telegram/Slack) fired prior to sys.exit depends on initialization order.
+2. Verify: Check main.py and core/state_store.py exception-handling blocks around database setup to verify notification hook triggers, retry loops, and IF NOT EXISTS DDL guards.
+
+* B3-30: Auxiliary Script Version Validation
+1. Recollection: Non-migrating auxiliary scripts (cron jobs, monitors, reporting) lacked authority to run migrations. It is unconfirmed whether they actively validated schema_meta or simply failed passively on missing tables/columns.
+2. Verify: Audit standalone scripts in scripts/ or cron/ to determine whether they import a shared connection factory that enforces schema version checks.
+
+* B3-31: Startup Database Write Ordering & Migration Transactionality
+1. Recollection: Fresh DDL, initial metadata, and forward migrations committed before external API calls, but the exact commit boundary (step-by-step commit() vs. single outer transaction) is unverified.
+2. Verify: Trace sequential execution in main.py and check transaction wrapping (BEGIN/COMMIT) inside core/migrations.py.
+
+* B3-33: Supervisor Restart Limits and Disaster Recovery Runbooks
+1. Recollection: Systemd restart policies were configured to avoid infinite loops on fatal startup errors, and no production hot-restores of main.db were ever required.
+2. Verify: Check systemd service unit files for exact Restart= and StartLimitBurst= directives, and check runbooks in trading-system-records for documented recovery workflows.
+
+* B3-34 & B3-35: Concurrency/Rollback Test Coverage & Environment Drift
+1. Recollection: Unit tests existed for StateStore and migrations using temporary files or in-memory SQLite, but multi-threaded lock stress tests or migration rollback assertions were minimal.
+2. Verify: Inspect test fixtures in tests/ (test_state_store.py, test_migrations.py) and diff core/schema.sql and core/migrations.py across production and sandbox snapshots to confirm identical schema code.
+
+* B3-37 & B3-40: Connection Architecture, PRAGMA Scopes & Shutdown Checkpointing
+1. Recollection: The system may have used dual independent connection handles rather than runtime ATTACH DATABASE, and WAL checkpointing (PRAGMA wal_checkpoint(TRUNCATE)) was expected on graceful shutdown.
+2. Verify: Audit core/db_connect.py and main.py signal handlers (SIGTERM/SIGINT) to confirm whether connections are shared, how PRAGMAs are initialized per connection, and whether an explicit checkpoint is executed during shutdown.
+
+Evidence known: Cross-referenced findings from B3-21 through B3-41 across the architecture audit.
+Confidence: Medium (for the categorization and identification of unverified items).
+What ChatGPT should verify: Execute the specific code inspections, file diffs, and log searches itemized above against the repository snapshots and records.
+
+B3-43. List evidence files you will provide with the sheet, if any (no secrets): The following sanitized source files, schemas, and operational records from the snapshot repositories (trading-system-prod-snapshot, trading-system-sbx-snapshot) and audit records (trading-system-records) serve as technical evidence to accompany this review sheet:
+* Schema & Migration Definitions:
+1. core/schema.sql: Authoritative baseline DDL defining table layouts, constraints, indexes, initial singleton records, and the schema_meta versioning table.
+2. core/analytics_schema.sql: Secondary auxiliary schema definition for read-heavy aggregations and analytics tables.
+3. core/migrations.py: Schema migration runner containing forward-migration sequencing, atomic transaction boundaries, and version verification logic.
+
+* Connection & State Persistence Layer:
+1. core/db_connect.py: Database connection factory containing SQLite connection flags, URI handling, ATTACH DATABASE or dual-handle logic, and per-connection PRAGMA setup (busy_timeout, foreign_keys = ON, journal_mode = WAL, synchronous).
+2. core/state_store.py: Persistence interface implementing StateStore, managing startup bootstrapping, order/position queries, singleton state access, and write transaction boundaries.
+
+* Lifecycle Orchestration & Startup Gate: main.py: Primary application entry point showing the sequential startup pipeline, fail-fast exception handling (sys.exit(1)), signal interception (SIGTERM, SIGINT), shutdown hooks, and the handoff boundary to B-005 startup reconciliation.
+
+* Automated Test Coverage:
+1. tests/test_state_store.py: Unit and integration tests covering database creation, schema seeding, read/write queries, and state persistence.
+2. tests/test_migrations.py: Test cases validating migration execution order, version checks against schema_meta, and failure/rollback behavior.
+3. tests/conftest.py: Shared test fixtures illustrating database isolation patterns (temporary file-backed databases vs. in-memory :memory:).
+
+* Configuration Templates & Service Units (Sanitized / No Secrets):
+1. config/live.yaml.example / config/paper.yaml.example: Sanitized configuration files establishing configured SQLite file paths for operational vs. paper environments.
+2. systemd/trading-service.service: Supervisor unit file defining process lifecycle policies, restart behavior (Restart=, RestartSec=, StartLimitBurst=), and shutdown timeout margins.
+
+* Operational Records & Log Excerpts:
+1. trading-system-records/logs/startup_audit_sample.log: Sanitized stdout/systemd runtime log excerpt demonstrating a successful database bootstrap, version check, and startup reconciliation output.
+2. Git commit history diffs for core/schema.sql and core/migrations.py detailing the historical chronology of schema version increments.
+
+Evidence known: Filesystem structures across trading-system-prod-snapshot, trading-system-sbx-snapshot, and trading-system-records.
+Confidence: Medium (for the identification and relevance of these evidence artifacts).
+What ChatGPT should verify: Confirm that all referenced file paths exist in the snapshots and review the provided artifacts to ensure broker tokens, API secrets, and sensitive credentials remain completely redacted.
+
+B3-44. Other notes for ChatGPT before reconciliation/manual preparation: (as below)
+* Strict Separation of Storage Layers: Never conflate in-memory volatile state (Python dictionaries, cache objects, worker queues) with persistent SQLite state on disk (main.db). An in-memory cache clear or reinitialization on boot must never be reported as a database wipe or table truncation.
+* Scope Boundaries for Cross-Topic Modules: Maintain a strict boundary between database persistence mechanics and business-logic engines:
+1. B-005 (Startup Reconciliation): B3 covers how orders, positions, and sequence numbers are stored and retrieved; B-005 owns the broker-matching algorithms, fill discrepancy resolution, and order cancellation logic.
+2. B-006 (Workers): B3 covers connection initialization and thread-safety gates; B-006 owns market data feed handling and queue consumption.
+3. B-011 / B-012 (Shutdown & Crash Recovery): B3 covers WAL sidecars and connection closing; B-011/B-012 own process signal handling and broker re-attachment procedures.
+
+* SQLite Pragmatics & Pitfalls to Check:
+1. Per-Connection PRAGMA Scopes: SQLite does not persist foreign_keys, busy_timeout, or synchronous in file headers. Verify whether every secondary script or worker thread executes these PRAGMAs upon opening a connection.
+2. Database Attachment vs. Dual Connections: Check whether cross-database interaction between main.db and analytics.db was truly accomplished via runtime ATTACH DATABASE (which couples write locks) or via two separate, independent connection handles in Python.
+3. Atomic Migration Blocks: Scrutinize whether core/migrations.py wraps DDL statements inside transactions (BEGIN/COMMIT) or whether partial migration failures could leave orphaned tables or schema drift.
+
+* Labeling Discipline (Fact vs. Recollection): Label any finding that has not been directly verified against a specific file path and line number in trading-system-prod-snapshot, trading-system-sbx-snapshot, or trading-system-records as RAMA (EXPECTED) or UNVERIFIED RECOLLECTION. Reserve confirmed verdicts strictly for lines backed by concrete code citations.
+
+* Credential & Secret Redaction: Ensure no broker account tokens, API secrets, private IPs, or sensitive trade parameters appear in compiled reports, diff snippets, or log extracts.
+
+Evidence known: Cumulative audit context spanning B3-01 through B3-43, core/state_store.py, core/migrations.py, core/db_connect.py, core/schema.sql, main.py, and audit records in trading-system-records.
+Confidence: Medium.
+What ChatGPT should verify:
+1. Enforce the separation between confirmed code findings and unverified recollections during the final synthesis.
+2. Check that all referenced file paths exist in the snapshots before citing them as definitive proof.
+
+NEXT STEPS AFTER YOU RETURN THIS SHEET
+1. ChatGPT will cross-check answers against production, testing and records evidence.
+2. ChatGPT will prepare B-003_DATABASE_STATE_INITIALIZATION_RECONCILIATION.txt and B-003_DATABASE_STATE_INITIALIZATION_MANUAL_DRAFT.md.
+3. Each claim will be labelled appropriately: SOURCE-VERIFIED FACT, RECORD-DERIVED FACT, RAMA (EXPECTED), HISTORICAL, KNOWN DEFECT, INTERPRETATION / AUDIT LEAD, UNKNOWN / NOT ESTABLISHED or OPEN QUESTION.
+4. Claude will review evidence, call chains, failure matrix, references and consistency. Any corrections will be discussed before finalization.
+5. Only after final review and your approval will the files be stored in the V2 project and pushed to GitHub by you from your PC.
+6. This questionnaire makes no V2 architecture or implementation decision.
+
+** Rama/user's additional note: Consider all the above answers as 'input/suggestion/probable' answers only, Not 100% correct or decision, So consider as 'raw' input and analyse the production repo in GitHub (if required) and take careful notes in Manual(s). 
+
+END OF B-003 ANSWER SHEET
