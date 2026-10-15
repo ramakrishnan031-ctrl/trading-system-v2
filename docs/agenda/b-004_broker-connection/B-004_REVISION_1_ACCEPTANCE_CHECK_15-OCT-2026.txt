@@ -1,0 +1,98 @@
+B-004 BROKER CONNECTION AND AUTHENTICATION
+REVISION 1 — VALUE-ADDED ACCEPTANCE CHECK
+Date: 15-Oct-2026
+Status: ACCEPT REVISION 1 FOR RAMA'S FINAL APPROVAL; NOT A FREEZE AUTHORIZATION
+
+1. VERDICT
+
+ACCEPT REVISION 1 AS DOCUMENTATION-READY, subject to the final safeguards in section 6 below.
+
+Claude's revision 1 addresses the required R1-R8 review points in a traceable way. The review notes map each point to the affected manual passages, design inputs, errata and design-log annotations. The source findings remain properly separated from records, library behaviour, current external broker rules, interpretation and unknowns.
+
+This is an acceptance check of the supplied revision-1 package and Claude's recorded checks. It is not an independent execution of Claude's local scripts and does not verify the current Git working tree, actual commit contents, or a deleted production host. Do not describe it as host verification.
+
+Nothing is frozen, committed or pushed by this acceptance check. Rama must explicitly approve the freeze and make the final repository changes from his PC.
+
+2. ACCEPTED CORE FINDINGS
+
+A. Broker-path inventory
+Accept BP1-BP10 as the authoritative inventory. The manual no longer treats the adapter as the exclusive route to Zerodha. It distinguishes adapter calls, calls using the same client outside adapter methods, direct REST clients, the paper quote provider, KiteTicker/WebSocket and external scripts. It also avoids claiming these paths share the adapter's validation, rate limiting, exception translation or retry policy.
+
+B. Exact live-start sequence
+Accept the sequence and the authoritative BC1-BC13 matrix:
+- Constructing the Kite client sends no request.
+- Start-up check 4 / the clock check sends the first authenticated quote request.
+- A failure at that check ends that start through exit 3, before the later token gate.
+- Exit 6 belongs to the narrower local token-metadata gate reached after the earlier broker request succeeded.
+- The capital-seed margins read is the next broker contact, and its failure follows the documented exit-1 path.
+- A successful read does not prove that order placement is permitted.
+
+The lost-day statement is now correctly a repository-supervisor code-path conclusion, with no observed occurrence and installed host state unknown. The CRASH_DETECTED record is used narrowly: it excludes a same-day restart after the relevant exit through the recorded date, not every possible lost day.
+
+C. Transport-exception mismatch
+Accept the finding as:
+“KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND.”
+
+The documented chain distinguishes the library's actual transport exceptions from the exception class the legacy order path expected. It states the possible local/broker divergence conditionally and does not claim an actual lost order, naked position or loss. The localhost library test is not presented as proof of historical production occurrence.
+
+D. Timeout, paper mode and broker error classification
+Accept the separation of configured and inferred effective timeout: connect_sec is configured as 5 seconds, read_sec as 10 seconds, main.py passes read_sec as the single client timeout, and the effective 10-second connect/read behaviour is labelled as an inference dependent on library behaviour. Repository pins are not treated as proof of historical installed package state.
+
+Accept the paper-mode description as a code-path finding: the adapter simulates its calls while the injected paper quote provider can make real quote requests. Production use remains NOT ESTABLISHED.
+
+Accept the PermissionException warning as a classifier ambiguity, not proof that every such exception was caused by IP allowlisting.
+
+E. Historical and external evidence
+The revision consistently distinguishes source-defined behaviour, dated records, selected testing-tree comparisons, local library tests, current external broker rules, recollection and unknowns. The 18-Jun IP-allowlist incident remains record-derived and is not generalized to undocumented later events. Selected-file equality is not described as whole-tree or host parity.
+
+3. REVIEW OF THE THREE B-004 FILES
+
+B-004_manual.md — ACCEPT REVISION 1
+The manual is detailed, internally structured around the authoritative BP and BC tables, and maintains the legacy-only boundary. Its open questions remain explicit. The final statement is now qualified and does not overstate what the service supervisors, token monitor, WebSocket or successful broker reads establish.
+
+B-004_v2_design_inputs.md — ACCEPT AS PROPOSED / OPEN
+The file carries considerations to their owning agenda topics without approving a V2 architecture. In particular, a single broker gateway, readiness test, retry policy, token hand-off, state model and paper/live architecture remain proposals, not requirements or decisions. No new VP or decision-register row is required by this review.
+
+B-004_review_notes.md — ACCEPT REVISION 1
+The notes preserve the process disclosure and lessons, map R1-R8 to changes, report the validation checks, retain the proposed freeze record and inventory, and record Rama's choice to omit the HTML. The historical questions remain optional and non-blocking; any answer without a dated record must remain HISTORICAL (Rama).
+
+4. FOUR PROPOSED ERRATA — ACCEPT THE TECHNICAL BASIS, PENDING RAMA'S FREEZE APPROVAL
+
+The following errata are technically supported by the B-004 revision-1 findings and may be accepted together with the B-004 freeze:
+
+1. A-006 E-4 — broker paths outside the adapter, configured/effective timeouts, paper quote behaviour and the final “mainly through” wording.
+2. A-010 E-3 — exit 6 is the local token-gate path after the clock-check broker request succeeds; a broker-rejected token at the clock check follows exit 3.
+3. A-011 E-3 — the same exit-3 versus exit-6 distinction in the authentication-failure description.
+4. B-002 E-1 — narrow the M13/final wording to the actual token-gate path, rather than implying every stale or invalid token reaches exit 6.
+
+The review notes report that the erratum convention check passed against HEAD 0709504: originals remain struck through, replacements immediately follow, and non-erratum lines are unchanged. This acceptance relies on that reported check; it does not independently inspect the actual local diffs. Keep all four errata PROPOSED until Rama approves the complete freeze package. Do not edit the append-only decision register or dated session notes to make historical wording appear as if it was never written.
+
+5. VALIDATION / PACKAGE CHECKS
+
+Claude's revision-1 notes report:
+- Markdown table/strike-through checks passed on the eight changed Markdown files.
+- Value-blind identifier scan, credential/session-link patterns, host/IP searches and path/reference checks were run.
+- Legacy citation ranges were checked against baseline 970aabf.
+- Four errata passed the established erratum convention check against HEAD 0709504.
+- The original answer sheet, reconciliation, manual draft, HTML source record and ChatGPT review were checked against recorded SHA-256 values; the answer sheet was not edited.
+- The HTML illustration is excluded from the package by Rama's choice.
+- The legacy clones' object counts and never-open-path checks reportedly remained unchanged.
+
+These are recorded as Claude's validation results, not as checks independently rerun by ChatGPT. The review notes correctly warn that pattern scans do not prove absence of every possible sensitive value.
+
+6. REMAINING SAFEGUARDS BEFORE FREEZE
+
+These are process safeguards, not reasons to reopen the technical findings:
+
+1. Rama should inspect the actual final diff and file list on his PC before approving the freeze, particularly the four frozen-manual errata and the V2_DESIGN_LOG changes.
+2. Confirm that the actual files match the revision-1 candidates and recorded hashes. The ChatGPT review file is to remain unchanged.
+3. Ensure the final inventory omits the B4-29 HTML file itself; its hash/description can remain in the review notes.
+4. Keep all B-004 V2 inputs PROPOSED / OPEN. No V2 decision is authorized by this review.
+5. Only after Rama explicitly approves should the proposed DR-040 be entered, the B-004 manual marked FROZEN, the four errata marked ACCEPTED, review-note statuses closed, and the approved scheduling-only changes applied. Ensure the final DR-040 text exactly matches what is actually changed.
+6. Rama stores, commits and pushes the approved package from his PC. Until then, the working tree remains unchanged by this acceptance check.
+
+7. FINAL ACCEPTANCE STATEMENT
+
+I ACCEPT B-004 revision 1 as documentation-ready for Rama's final approval. The R1-R8 clarifications are addressed in the supplied revision and the reported consistency checks are documented. I also accept the technical basis of A-006 E-4, A-010 E-3, A-011 E-3 and B-002 E-1, to be approved with the complete B-004 freeze.
+
+This is NOT the freeze itself. The B-004 manual remains DRAFT until Rama explicitly approves it and the approved DR-040 and package changes are applied. No commit, push, deployment, host operation or V2 decision is authorized by this acceptance check.

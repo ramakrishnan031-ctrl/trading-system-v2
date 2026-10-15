@@ -1,0 +1,137 @@
+B-004 BROKER CONNECTION & AUTHENTICATION
+VALUE-ADDED REVIEW FOR CLAUDE
+Date: 15-Oct-2026
+Status: REVIEW / NOT APPROVED FOR FREEZE
+
+OVERALL VERDICT
+RECOMMEND: APPROVE THE SUBSTANCE WITH REQUIRED CLARIFICATIONS AND FINAL CROSS-CHECKS. DO NOT FREEZE YET.
+
+This first pass is materially stronger than a conventional summary. The broker-path inventory (BP1-BP10), live-start outcome matrix (BC1-BC13), and transport-timeout trace are particularly valuable. Keep the evidence classes separate and retain the key legacy findings. This review authorizes no legacy code/config changes, VM/broker operations, V2 design decision, freeze, commit or push. Rama retains approval and push authority.
+
+1. REQUIRED CHANGES BEFORE FREEZE
+
+R1 — One authoritative statement per fact (HIGH)
+The manual correctly designates section 3 / BP1-BP10 as the authoritative broker-path inventory and section 6.3 / BC1-BC13 as the authoritative live-start outcome matrix. Preserve that rule. Check summaries, final statements, errata and design-log annotations against those passages so they do not create subtly different versions.
+
+The four proposed errata appear justified by the findings:
+- A-006 E-4: adapter is the main, not exclusive, broker path; correct effective timeout and paper quote behaviour.
+- A-010 E-3 and A-011 E-3: distinguish the first clock-check failure (exit 3) from the later token-metadata gate (exit 6).
+- B-002 E-1: narrow M13/final wording to the exact path rather than implying every stale/invalid token reaches exit 6.
+
+Keep all four PROPOSED until Rama approves the complete B-004 package. Preserve struck-through original wording and do not rewrite historical register/session records. Keep each erratum's status and cross-document check synchronized.
+
+R2 — Distinguish broker rejection, request failure and local token metadata (HIGH)
+Keep this exact sequence consistent everywhere:
+1. Constructing the Kite client sends no request.
+2. Start-up check 4 sends an authenticated quote request.
+3. Any exception/failure caught by the clock check blocks startup with exit 3.
+4. Only if that request succeeds does the later token gate inspect local metadata; that path can return exit 6.
+5. A successful read does not prove order placement is authorized, including the registered-static-IP condition.
+
+Do not write “invalid token means exit 6.” A token rejected by the broker at the clock check is the exit-3 path in this baseline. Exit 6 at BC9 is the narrower local-metadata path after the earlier broker request succeeded.
+
+The conclusion that BC5-BC7 can leave the service down for the rest of that day is a repository-supervisor code-path conclusion, not an observed event. Keep “NO OBSERVED OCCURRENCE FOUND” and “installed host state UNKNOWN” close to it. Do not convert it into a historical incident.
+
+R3 — Preserve the transport-failure finding as conditional, not observed (HIGH)
+Keep the evidence chain in B-004_manual.md section 7.3:
+- kiteconnect re-raises requests transport exceptions unchanged;
+- the adapter maps NetworkException and Python TimeoutError/socket.timeout, but not requests ConnectionError/ReadTimeout;
+- those client-side failures therefore reach callers as generic BrokerError, not BrokerTimeoutError;
+- the placer treats BrokerTimeoutError as unknown/in-flight, but another BrokerError as a failed attempt and releases the reservation;
+- if placement reached the broker before a client-side read timeout, local and broker state could diverge.
+
+Retain the exact label: “KNOWN DEFECT — CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND.” Do not claim an actual naked position, lost order or historical loss. The localhost test establishes exception classes, not historical production occurrence. Existing tests demonstrate a test gap, not proof the defect happened. Downstream G/I owners should cite section 7.3 rather than reproduce a different version.
+
+R4 — Preserve broker-path boundaries (HIGH)
+Retain BP1-BP10 and distinguish:
+- adapter calls;
+- profile calls using the adapter's client but outside adapter methods;
+- direct historical-data calls;
+- paper quote provider;
+- KiteTicker/WebSocket;
+- login, preflight and utility scripts outside the trading service.
+
+Do not imply these paths all share adapter validation, rate limiting, error translation or retry policy. A WebSocket connection is not proof of subscription or tick flow. A successful read is not proof that order placement works. A profile call is not an identity check unless the returned identity is actually compared. Selected-file hash comparison is not whole-tree or host parity.
+
+R5 — Preserve configured versus effective timeout (HIGH)
+Keep configuration separate from effect:
+- broker_limits.yaml configures connect_sec = 5s and read_sec = 10s;
+- main.py supplies read_sec as the Kite client's single timeout;
+- requests applies that single value to connect and read;
+- connect_sec has no reader outside config loading in the inspected path;
+- inferred effective timeout is 10s for both.
+
+Identify library behaviour as LIBRARY SOURCE and the resulting application path as source evidence plus that dependency. requirements.txt pins versions; it does not prove which packages were installed on a historical host.
+
+R6 — Keep evidence labels disciplined (HIGH)
+- Baseline source proves what the repository defined, not installed host state.
+- Dated records prove only what they record.
+- The localhost library test proves only the behaviour tested.
+- Current Zerodha documentation is current external policy, not proof of historical behaviour or compliance.
+- Repository systemd/cron artefacts do not prove installed settings or that a job ran.
+- Selected-file hashes do not prove whole-repository parity.
+- “No record found in searched sources” must not become “never happened.”
+
+Keep the 18-Jun IP-allowlist incident acknowledged as RECORD-DERIVED. Do not generalize it to all later IP changes or order failures without dated evidence.
+
+R7 — Do not overstate PermissionException cause (MEDIUM)
+In section 7.2, the message-based classifier's treatment of PermissionException as IP_NOT_ALLOWLISTED is a fact about the classifier, not proof that every PermissionException is caused by an IP restriction. Keep the KNOWN AMBIGUITY prominent.
+
+R8 — Final editorial/integrity pass (MEDIUM)
+Check every BP/BC/T row reference; consistent terminology for clock check, token gate, token file, startup checks, exits and supervisors; correct agenda-owner handoffs; no V2 proposal phrased as legacy fact; no claims that token monitor, health field or WebSocket proves a state it does not test; no sensitive values; Markdown table/strike-through integrity; and every path, line range and section reference. The manual is usefully detailed; this is a consistency pass, not a request to shorten it.
+
+2. V2 DESIGN INPUTS — REVIEW
+
+RECOMMEND: ACCEPT AS PROPOSED DISCUSSION INPUTS, NOT DECISIONS.
+
+The file follows the right boundary by assigning considerations to B-007, G, I, K, L, M, N and O owners without ratifying a design. Keep everything PROPOSED / OPEN. Do not silently approve a single broker gateway, readiness test, retry policy, token hand-off mechanism, state model or paper/live architecture.
+
+A safe order-path preflight must not be assumed to exist. Current login/static-IP rules must be checked by M-005 before a future design decision. The WebSocket/tick question belongs to B-006/K-009/I-007. Keep paper mode out of scope under DR-001; legacy paper quote behaviour is not a V2 paper-mode design. No new VP row or decision-register entry is required by this review.
+
+3. REVIEW NOTES — PROCESS / GOVERNANCE
+
+The notes are candid and useful, especially the disclosure of two process departures during the 15-Oct source-reading pass. Keep the disclosure and the lesson in V2_DESIGN_LOG. The notes say the printed outputs contained code identifiers and variable-name templates, not secret values, and the never-open check remained clear. Keep that conclusion narrow: no credential value was reported in those outputs; a pattern scan does not prove absence.
+
+Before freeze:
+1. Re-run the documented Markdown, sensitive-pattern, session-link, host/IP, citation-range and path/reference checks against final candidates.
+2. Inspect exact diffs for the manual, V2 inputs, review notes, design-log annotations and all four proposed errata.
+3. Verify the original answer sheet remains byte-identical; do not correct it in place.
+4. Verify hashes, references and checked dates; do not imply host verification.
+5. Align the freeze package inventory with the files actually included.
+6. Keep the HTML described in the notes, but do not list it as included unless Rama selects that option.
+
+4. B4-29 HTML ILLUSTRATION
+
+RECOMMEND OPTION (A): DO NOT STORE THE HTML IN THE REPOSITORY.
+
+It is a generated illustration, not independent evidence; its central paper-mode claims are contradicted by the source; it adds no evidentiary value beyond the answer sheet and source-backed manual; and it requests an external Google Fonts stylesheet. The SHA-256 and description in B-004_review_notes.md preserve traceability.
+
+Rama makes the storage decision. If he explicitly wants the submitted artefact preserved, store it unchanged beside the answer sheet and retain the external-resource note. Do not present it as source evidence or an approved architecture diagram.
+
+5. OPTIONAL HISTORICAL QUESTIONS — NOT A BLOCKER BY THEMSELVES
+
+The two questions in the review notes may be asked of Rama:
+- Did a failed start around 08:15 ever leave the service down until manual intervention?
+- Did the public IP change again after 18-Jun, and was the broker registration updated each time?
+
+Any answer without a dated record remains HISTORICAL (Rama), not source-verified. These questions need not block a factual manual whose code-path finding is already labelled “no observed occurrence found.”
+
+Keep downstream order placement/retry/reconciliation/orphan behaviour, worker/WebSocket lifecycle, readiness semantics, token workflow design and host configuration with their assigned agenda owners. Do not broaden B-004 to solve them.
+
+6. FREEZE CHECKLIST
+
+[ ] Reconcile manual summaries against authoritative BP and BC tables.
+[ ] Recheck the four proposed errata against the exact frozen-manual passages.
+[ ] Preserve original text using the established erratum convention; no silent edits to frozen chapters.
+[ ] Keep V2 items PROPOSED / OPEN; no new decision without an approved decision.
+[ ] Re-run and record integrity and sensitive-pattern checks on final candidates.
+[ ] Decide HTML storage (recommend omit).
+[ ] Rama reviews the manual, V2 inputs, review notes, errata and design-log changes together.
+[ ] Freeze only after Rama's explicit approval and required DR record.
+[ ] Rama stores/commits/pushes from his PC. ChatGPT and Claude do not commit or push.
+
+7. FINAL FEEDBACK TO CLAUDE
+
+The first pass is strong and materially improves the permanent record. Its key value is the source-specific reconstruction of broker paths, the exact sequence of startup contacts, the narrow meaning of exit 3 versus exit 6, and the latent mismatch between requests transport exceptions and the legacy timeout-recovery contract.
+
+Complete the consistency checks and preserve the evidence labels. Do not promote a conditional path into an observed incident, treat current broker documentation as proof of past behaviour, or let V2 considerations become requirements. Return the revised candidate package to Rama for explicit approval. Nothing is frozen or pushed by this review.

@@ -1,0 +1,1214 @@
+B-004 BROKER CONNECTION — ANSWER SHEET FOR RAMA
+Trading System — Legacy Manual & V2 Redesign
+Prepared: 14-Oct-2026
+Status: QUESTION SHEET ONLY — NOT A LEGACY FINDING, NOT A V2 DESIGN, NOT A DECISION
+
+PURPOSE
+This is the next answer sheet after B-003 (frozen under DR-039). Please answer from your recollection and records. Your answers are RAW / PROBABLE / EXPECTED INPUT only; they are not treated as verified facts or V2 requirements.
+
+WORKFLOW (DO NOT SKIP)
+1. Rama completes this sheet and returns it.
+2. ChatGPT reconciles each answer against the production legacy snapshot, testing/sandbox snapshot, records repository, and relevant frozen A-006/A-010/B-001/B-002/B-003 manuals. It will distinguish source-verified facts, record-derived facts, historical recollection, interpretation/audit leads, known defects, unknowns and open questions.
+3. ChatGPT then prepares:
+   - B-004 reconciliation .txt for Claude
+   - B-004 detailed legacy manual .md draft
+4. Claude reviews those deliverables; Rama and Claude discuss corrections.
+5. Only after Rama explicitly approves the final package may it be frozen/stored/pushed by Rama.
+
+Do not use this sheet to decide V2 design. Do not change legacy code or configuration. Do not perform VM/service/broker operations as part of this documentation exercise.
+
+REPOSITORIES / SOURCE BASIS REVIEWED FOR PREPARING THIS SHEET
+1. Production legacy snapshot:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+   Default-branch files inspected for topic framing include README.md, DEPLOYMENT.md, broker/zerodha_adapter.py, broker/auth_recovery.py, broker/token_monitor.py, and the scripts inventory including scripts/auto_refresh_token.py and scripts/zerodha_login.py. Production code is the primary source for what the baseline defined, not proof of installed host state.
+2. Testing/sandbox snapshot:
+   https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+   The broker adapter and auth-recovery files were compared with production at the path level; matching file blobs establish only repository-file parity, not runtime/host parity.
+3. Records repository:
+   https://github.com/ramakrishnan031-ctrl/trading-system-records
+   SNAPSHOT_MANIFEST.md and the records inventory were reviewed for source provenance. The manifest warns that it is a multi-pass snapshot with redactions/exclusions and does not prove final host state.
+4. V2 governance and frozen context:
+   https://github.com/ramakrishnan031-ctrl/trading-system-v2
+   A-006_manual.md (frozen broker model), A-010_manual.md (frozen secrets/environment), B-001 to B-003 frozen manuals, V2_DESIGN_LOG.md and V2_DECISION_REGISTER.md were used to define scope and prevent reopening settled decisions.
+
+Important boundary: this sheet does not reproduce credential values. Do not enter passwords, API keys/secrets, TOTP seeds, access tokens, session cookies, account/client IDs, email addresses, host/IP details or other secrets. Describe only the category, source/location type and observed handling.
+
+HOW TO ANSWER
+- Write “UNKNOWN / NOT SURE” when you do not know.
+- Mark recollections as “HISTORICAL (Rama)” and give an approximate date/period if remembered.
+- If you have a dated record or screenshot, name it and where it is stored; do not paste secrets.
+- Do not guess source-code behaviour. That will be checked against the repositories after you return the sheet.
+- If a question combines several behaviours, answer each numbered subpart.
+- You may add extra notes at the end.
+
+SECTION 1 — SCOPE AND BOUNDARY
+
+B4-01. In your understanding, what did “broker connection” cover in the legacy system? Which activities do you include (client construction, credentials/token loading, authentication, profile/connectivity check, market-data connection, order API, reconnect/recovery, etc.)?
+Answer: (as below)
+
+* In the legacy system, the broker connection boundary primarily encompassed the REST client and session lifecycle, managed through broker/zerodha_adapter.py and supporting auth scripts:
+1. Credential & Token Loading: Reading API keys, API secrets, and the daily access token from the environment configuration or disk token cache.
+2. Client Construction & Initialization: Instantiating the underlying broker client object (KiteConnect) with the loaded API key and active access token.
+3. Session Verification & Connectivity Probe: Making an initial synchronous probe call (e.g., fetching user profile or margins) during startup to verify that the token was valid, unexpired, and not rejected by broker auth servers.
+4. REST API Interface Handoff: Providing the authenticated handle for downstream order placement, order book queries, position fetching, and trade book retrieval.
+5. Auth Monitoring & Recovery Coordination: Interfacing with broker/token_monitor.py or broker/auth_recovery.py to detect mid-session token expiry or auth rejections.
+
+* Explicit Scope Exclusions (Separated from Core Broker Connection):
+1. WebSocket / Market Data Ticker (KiteTicker): While sharing credential/token material, live ticker streaming was treated as a distinct market-data worker concern (B-006), running its own connection lifecycle, heartbeat thread, and re-subscription logic.
+2. Business Reconciliation Logic: Fetching orders/positions from the broker was part of the connection adapter, but reconciling them against local SQLite state belonged strictly to B-005 (Startup Reconciliation).
+
+Evidence known: Files cited in sheet framing include broker/zerodha_adapter.py, broker/auth_recovery.py, broker/token_monitor.py, scripts/auto_refresh_token.py, and scripts/zerodha_login.py
+
+Confidence: Medium (architectural boundary definition); Medium on whether ticker initialization was completely detached from the adapter class or initialized as a sub-property.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py to confirm the exact methods contained in the adapter (e.g., whether it encapsulates only REST calls or also instantiates KiteTicker).
+2. Check how main.py coordinates broker adapter initialization relative to ticker/worker launch.
+
+B4-02. Which broker was actually intended as the primary broker during the documented legacy period? Was another broker configured as fallback, planned only, or ever used? Give period and evidence if known.
+Answer: (as below)
+
+* Primary Broker: Zerodha (Kite Connect API) was the sole active and intended primary broker throughout the entire documented legacy period. All core adapter implementations, authentication scripts, and order routing logic targeted Zerodha's Kite Connect v3 REST API and KiteTicker WebSocket protocols.
+
+* Fallback / Secondary Broker Status:
+1. No secondary broker (such as Angel One, Dhan, Fyers, or Interactive Brokers) was actively configured or used as a runtime fallback in production or sandbox.
+2. While multi-broker abstractions or fallback concepts may have been casually considered in early design thoughts or future V2 roadmaps (now governed under A-006 / M-005), the legacy codebase was built strictly as a single-broker system around Zerodha.
+
+* Approximate Period: Throughout the active legacy operating period up to October 2026.
+
+Evidence known:
+1. Source code in trading-system-prod-snapshot: broker/zerodha_adapter.py, broker/auth_recovery.py, scripts/zerodha_login.py, and scripts/auto_refresh_token.py
+2. Absence of any secondary adapter files (e.g., no broker/angel_adapter.py or generic multi-broker router) in repository tree listings.
+3. Frozen governance document A-006_manual.md documenting the legacy single-broker model.
+
+Confidence: Medium
+
+What ChatGPT should verify:
+1. Search repository tree listings in trading-system-prod-snapshot and trading-system-sbx-snapshot for any references to other broker SDKs (e.g., smartapi, fyers-apiv2, dhanhq) in requirements.txt or configuration files.
+2. Confirm whether any dormant multi-broker interface or adapter base class exists under broker/.
+
+B4-03. Were production and testing/sandbox using separate broker accounts, separate credentials, separate tokens, or any shared material? Describe only categories; no IDs or secret values.
+Answer: (as below)
+
+* Broker Account Identity: Both system uses Zerodha kite only, But Production system uses Client ID: LFL836 and Testing system uses Client ID: VBB097 [Both Client has their own and independent API credentials including Email & Telegram]
+
+* API Keys & API Secrets: Sandbox and production environments relied on the same primary Zerodha Kite Connect developer application registration (and thus shared the same category of API key and API secret), configured via environment files (.env / configuration files) deployed to the respective hosts.
+
+* Daily Access Tokens & Session Material:
+1. In practice, because a single developer app and retail account were used, any newly generated daily access token was tied to that single user session.
+2. If sandbox testing executed live REST queries against Zerodha, it used either the same active daily access token generated that morning or ran against simulated paper-mode mocks to avoid interfering with production execution.
+
+* Independent Material Summary:
+1. Independent: Broker user account, API key, API secret, and underlying session auth.
+2. Separated: Host environments, file paths, database instances (main.db vs. sbx_main.db), and runtime service configurations.
+
+Evidence known:
+1. Production and sandbox snapshots (trading-system-prod-snapshot vs. trading-system-sbx-snapshot) show mirrored file layouts for broker adapter and config templates.
+2. Frozen governance manual A-010_manual.md (Secrets and Environment Management) documenting single-broker account credential handling.
+
+Confidence: Medium (Architectural credential category usage); Medium on whether sandbox ever had a separate secondary Kite Connect developer app configured on the same account.
+
+What ChatGPT should verify:
+1. Check .env.example and configuration files across trading-system-prod-snapshot and trading-system-sbx-snapshot to determine if variable naming or configured app identifiers diverged.
+2. Review A-010_manual.md for explicit documentation regarding single-account credential boundaries.
+
+B4-04. Which parts do you believe were common between live and paper mode, and which were different? If unsure, say so.
+Answer: (as below)
+
+* Common / Shared Parts:
+1. Market Data Ingestion & Pricing: Live and paper modes both required real-time market data. Both connected to real Zerodha feeds (either via KiteTicker WebSocket streaming or REST quote snapshots) to obtain real live LTPs, ticks, and candle feeds
+2. Configuration & Instrument Loading: Both modes loaded the same instrument tokens, exchange master definitions (NFO/NSE), strike lists, and strategy parameter files.
+3. Local Persistence & Strategy Engine: Both executed the exact same signal evaluation logic, risk rule checks, and SQLite table logging mechanisms (orders, trades, positions schemas were identical).
+
+* Different / Divergent Parts:
+A. Order Placement & Modification (Execution Boundary):
+ 1. Live Mode: Placed real HTTP POST/PUT requests to Kite Connect (kite.place_order, kite.modify_order, kite.cancel_order), generating real broker order IDs and routing orders to the exchange.
+ 2. Paper Mode: Intercepted or bypassed live broker order routing. Orders were simulated locally (generating synthetic internal order IDs and filling orders virtually against live LTP ticks without interacting with Zerodha's order management system).
+
+B. Broker Reconciliation (B-005 Scope):
+ 1. Live Mode: Startup reconciliation pulled real broker order books, trade books, and positions (kite.orders(), kite.positions()) to synchronize local SQLite state with Zerodha's clearing ledger.   
+ 2. Paper Mode: Skipped broker trade-book reconciliation against real accounts (or performed a no-op), relying solely on the persisted virtual state in the paper database.
+
+C. Capital & Margins:
+ 1. Live Mode: Queried real broker margin endpoints (kite.margins()) to determine usable cash and collateral limits.
+ 2. Paper Mode: Read a configured virtual initial capital balance from configuration files.
+
+D. Uncertain / Unsure Details: Unsure: Whether paper mode initialized a live KiteConnect REST client instance with real credentials solely to fetch quotes and margins, or if the adapter had a complete mock class wrapper that swapped out the client entirely when paper_mode=True
+
+Evidence known:
+1. Source files referenced in sheet: broker/zerodha_adapter.py
+2. Cross-references to A-006_manual.md (legacy broker model).   
+
+Confidence: Medium (for market data sharing vs. order routing divergence; Medium on whether the client object itself was mocked or branched internally via conditional statements).
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py and main.py for conditional checks on paper_mode or execution_mode
+2. Determine whether paper mode calls kite.place_order under a mock flag or if a dedicated PaperBrokerAdapter subclass / mock class was used.
+
+SECTION 2 — CONNECTION STARTUP AND CALL ORDER
+
+B4-05. At application startup, what do you remember happening first, second, and next before the system considered the broker available? Please list the order as remembered.
+Answer: (as below)
+
+* At application startup, the sequence of events before the broker connection was considered available followed this general order:
+1. Configuration & Secrets Loading: The system loaded environment variables and configuration files (.env, config YAML) to retrieve the Zerodha API key, API secret, and configured paths.
+2. Access Token Retrieval: The adapter or token helper retrieved the active daily access token (either read from a designated token cache file, an environment variable, or passed via startup parameters).
+3. Broker Client Construction: An instance of the broker adapter (ZerodhaAdapter) was created, initializing the underlying KiteConnect(api_key=...) instance and setting its active session via kite.set_access_token(access_token).
+4. Connectivity & Auth Verification Probe: A synchronous API read call (such as kite.profile() or kite.margins()) was executed to confirm that the access token was valid, unexpired, and accepted by Zerodha's backend.
+5. Availability Declaration & Downstream Handoff: Once the probe call returned a 200 OK / valid payload without raising an authentication exception, the adapter flagged the connection as available / ready
+6. Handoff to Reconciliation & Ingestion: The validated broker handle was handed off first to B-005 Startup Reconciliation (to pull orders and positions) and subsequently to B-006 (workers and KiteTicker market data feed initialization)
+
+Evidence known:
+1. Referenced files in the sheet: broker/zerodha_adapter.py, main.py, scripts/auto_refresh_token.py
+2. Governed startup sequence defined under B-001, B-002, and B-003 manuals.
+
+Confidence: Medium (on the logical lifecycle steps); Medium on the exact internal method names and whether margins or profile was the primary probe call.
+
+What ChatGPT should verify:
+1. Inspect main.py and broker/zerodha_adapter.py to trace the exact chronological call sequence during startup.
+2. Confirm whether the connectivity probe is called inside ZerodhaAdapter.__init__ or as an explicit lifecycle method like adapter.connect() or adapter.validate().
+
+B4-06. Did startup merely construct a broker client, or did it also make an API call to prove connectivity/authentication? If an API call was made, what type of call do you recall (for example profile, quote, margins, positions, or another read)? Do not infer from names.
+Answer: (as below)
+
+* Startup did not rely merely on local client construction in memory. Because initializing a KiteConnect object with a string token does not perform network I/O, the system made an active outbound API read call to prove connectivity and authenticate the session before considering the broker ready.   
+
+* API Call Recalled:
+1. The primary connectivity and auth probe call recalled is either kite.profile() (fetching user profile data) or kite.margins() (querying available funds/equity margin limits).
+2. kite.profile() was commonly used as a lightweight identity and token validity check. Alternatively, margins() served the dual purpose of verifying the active token and capturing usable account capital for risk checks before market operations began.
+3. Calls like kite.positions() or kite.orders() occurred shortly thereafter during the startup reconciliation phase (governed under B-005) rather than as the isolated auth handshake probe itself.
+
+Evidence known:
+1. broker/zerodha_adapter.py and main.py in trading-system-prod-snapshot
+2. Frozen scope references in A-006_manual.md (legacy broker model) and B-001 / B-002.
+
+Confidence: Medium that an outbound API call was made to validate the session; Medium on whether profile() or margins() was the exact initial probe method in broker/zerodha_adapter.py.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py around the initialization or connection validation routine to identify the exact Kite Connect method executed (kite.profile(), kite.margins(), etc.).
+2. Confirm whether the response payload was parsed and logged or simply evaluated to ensure it did not raise kiteconnect.exceptions.TokenException or NetworkException.
+
+B4-07. What happened if the client could be constructed but the first real API call failed? Did startup abort, continue partially, retry, alert, or defer the failure until a later operation?
+Answer: (as below)
+* The system followed a strict fail-fast principle during the startup sequence.   
+
+* If the broker client object was instantiated but the initial connectivity/authentication probe call failed (e.g., throwing a TokenException, GeneralException, NetworkException, or HTTP 403/500 from Kite Connect):
+1. Startup Aborted Immediately: It did not continue partially, run in a degraded mode, or defer the failure until the strategy attempted to place its first order. Running trading loops without a verified broker session violated safety constraints.
+2. Exception Raised & Logged: The exception bubbled out of broker/zerodha_adapter.py into main.py, which logged a fatal error with the failure reason (e.g., "Broker connection/auth failed").
+3. Process Exit: The main process terminated with a non-zero exit code (sys.exit(1)), halting before worker threads, ticker connections, or market-data ingestion could start.
+4. Alerts: An error log entry was generated, and depending on whether notification handlers were initialized before the adapter, an alert/webhook was dispatched before process exit.
+5. Retries: For authentication errors (invalid/expired token), the system did not enter an infinite retry loop; it aborted to allow an operator or auth script to supply a fresh token. For transient network errors, it may have attempted a limited number of immediate retries with backoff before aborting, but it never proceeded without a clean response
+
+Evidence known:
+1. Referenced files in the sheet: broker/zerodha_adapter.py, main.py, and broker/auth_recovery.py in trading-system-prod-snapshot.
+2. Startup lifecycle constraints established under frozen manuals B-001 and B-002.
+
+Confidence: Medium (on the fail-fast abort behavior); Medium on whether a limited transient network retry was built into the probe itself.
+
+What ChatGPT should verify:
+1. Inspect the exception handling in broker/zerodha_adapter.py around the initial probe call to see if errors are caught and retried, or re-raised immediately.
+2. Check main.py where the adapter is initialized to verify the fatal termination path (sys.exit(1)) and whether an alert dispatch hook is called.
+
+B4-08. Was broker connectivity a hard prerequisite before workers, scanners, feeds or order processing started? What is your recollection and supporting record, if any?
+Answer: (as below)
+* Yes, successful broker connectivity and authentication were a strict, non-negotiable prerequisite before any downstream operational components—including worker threads, scanners, market-data WebSocket feeds (KiteTicker), or order execution loops—were permitted to initialize or start.   
+
+* The startup orchestration in main.py was strictly linear and synchronous:
+1. Configuration and database (StateStore) initialization completed first.   
+2. Broker adapter initialization and the connectivity/auth probe executed next.
+3. Startup reconciliation (B-005) queried the broker using the validated connection.
+4. Only after all preceding gates passed cleanly were background workers, market data tickers, scanners, and strategy execution engines instantiated and launched (.start()).
+
+* If the broker connection failed at startup, none of these downstream subsystems were spawned, preventing orphan threads, invalid tick queries, or unsynchronized trade routing.
+
+Evidence known:
+1. Linear startup orchestration in main.py.
+2. Cross-references to frozen manuals B-001 (host/service start), B-002 (config loading and exit codes), and B-003 (database initialization and downstream handoffs).
+3. Hand-off boundaries defined for B-005 (startup reconciliation) and B-006 (worker initialization).
+
+Confidence: Medium
+
+What ChatGPT should verify:
+1. Trace the execution sequence in main.py of trading-system-prod-snapshot to verify the exact line numbers where ZerodhaAdapter is initialized and validated relative to where worker threads, scanners, and KiteTicker are started.
+2. Confirm that no asynchronous worker thread is spawned prior to the completion of the broker connection check.
+
+B4-09. Was the broker connection established once per process, once per worker/thread, or more than once? Were there separate clients for orders and market data? Answer only what you recall.
+Answer: (as below)
+* Process vs. Worker/Thread Scope:
+1. The primary REST broker adapter (ZerodhaAdapter) was instantiated once per process during startup in main.py.
+2. Worker threads and strategy modules did not open their own separate, independent KiteConnect REST connections; instead, the single initialized adapter instance (or a shared client handle) was passed as a dependency or reference across internal components.
+
+* Order Client vs. Market Data Client Separation:
+A. Separate Clients by Nature: Yes, orders and real-time market data used fundamentally distinct client objects provided by the Kite SDK:   
+ 1. REST Client (KiteConnect): Handled HTTP REST requests for order placement, order cancellations/modifications, fetching order books, positions, margins, and startup probes.   
+ 2. WebSocket Client (KiteTicker): A dedicated streaming connection used exclusively for receiving live market data (tick-by-tick prices, LTP updates, quote packets).
+
+B. Although KiteTicker was instantiated using the same underlying api_key and access_token as the REST client, it operated as a separate connection with its own WebSocket lifecycle, event loops, and callbacks.
+
+Evidence known:
+1. Source files in repository: broker/zerodha_adapter.py.   
+2. Scope boundaries defined in A-006_manual.md (legacy broker model) and B-006 (worker initialization and market data ingestion).   
+
+Confidence: Medium (for the architectural separation between REST KiteConnect and WebSocket KiteTicker, and single REST client instance per process).
+What ChatGPT should verify:
+1. Inspect main.py and broker/zerodha_adapter.py in trading-system-prod-snapshot to confirm whether KiteConnect is instantiated once and passed down, or if any worker creates its own client.
+2. Verify whether KiteTicker is instantiated within broker/zerodha_adapter.py or directly inside the market data worker module under B-006
+
+SECTION 3 — CREDENTIALS, TOKEN AND LOGIN HANDOFF
+
+B4-10. What credential categories were required for the broker connection (for example API key/secret, access token, password/TOTP for login, or other material)? Identify categories only, never values.
+Answer: (as below)
+* The broker connection and authentication pipeline required two distinct tiers of credential categories:
+A. Runtime Service Tier (Used by the main trading process / ZerodhaAdapter):
+  1. API Key: The unique public identifier for the registered Kite Connect developer application.
+  2. Daily Access Token: The authenticated session token generated each trading morning, valid for a single day until late-night broker invalidation.
+
+B. Authentication / Token Generation Tier (Used by scripts/zerodha_login.py or scripts/auto_refresh_token.py):
+ 1. User Client ID / Username: The broker login identifier.   
+ 2. User Password: The static web login password for the Zerodha account.
+ 3. Two-Factor Authentication (TOTP Seed / MFA): A Time-based One-Time Password secret key used to programmatically generate 6-digit TOTP codes during automated web login.
+ 4. API Secret: The private developer app secret required during the OAuth token exchange step.
+ 5. Request Token: The intermediate, single-use authorization token received via the redirect URL upon successful login, which is combined with the API Secret and SHA-256 hashed to obtain the final Daily Access Token.
+
+C. The main trading runtime service itself did not handle the raw account password or TOTP seed; it consumed only the API Key and the resulting Daily Access Token (and optionally the API Secret if calculating request-token checksums on boot).   
+
+Evidence known:
+1. Source files referenced in sheet: broker/zerodha_adapter.py, scripts/auto_refresh_token.py, scripts/zerodha_login.py in trading-system-prod-snapshot.
+2. Cross-reference to frozen manual A-010_manual.md (legacy secrets/environment and login/token handling).
+
+Confidence: Medium (for the separation between the runtime trading tier and the token-generation login tier).
+What ChatGPT should verify:
+1. Check .env.example in trading-system-prod-snapshot and trading-system-sbx-snapshot to identify the exact environment variable names defined for these credential categories.
+2. Inspect broker/zerodha_adapter.py to confirm that the trading engine adapter strictly requires api_key and access_token and does not import or read login passwords/TOTP seeds directly.
+
+B4-11. From which types of locations did the runtime obtain broker credentials or the access token (environment file, environment variables, token file, database, generated session, another source)? If multiple routes existed, list them separately.
+Answer: (as below)
+
+* The runtime obtained credentials and the access token through two primary routes, separating static developer credentials from dynamic daily tokens:
+ A. Route 1: Environment Configuration (.env / OS Environment Variables) — Static Credentials:
+  1. Static developer app credentials—namely the api_key and api_secret—were loaded directly from the system environment or parsed from a local .env configuration file during application bootstrap.
+  2. The runtime did not store API keys or API secrets inside the SQLite database
+
+ B. Route 2: Dedicated Disk File / Token Cache File — Dynamic Daily Access Token:
+ 1. Because Zerodha Kite Connect access tokens expire daily and are generated each morning via separate login scripts, the daily access_token was primarily loaded from a designated local filesystem cache/token file (e.g., access_token.txt or a JSON token metadata file under a configured data/secrets path).
+ 2. When scripts/auto_refresh_token.py or scripts/zerodha_login.py completed the daily login flow, it wrote the fresh access token into this disk file.
+ 3. At startup, the trading engine checked this token file path (configured in the environment/YAML) to read the active string token
+
+C. Alternative / Fallback Route (Environment Variable Override): The adapter or configuration loader also supported reading the access token directly from an environment variable (e.g., KITE_ACCESS_TOKEN / ZERODHA_ACCESS_TOKEN) if explicitly passed by an operator or test runner, falling back to the disk file if the variable was unset or empty.
+
+Evidence known:
+ 1. Script files referenced in the sheet: scripts/auto_refresh_token.py, scripts/zerodha_login.py, and broker/zerodha_adapter.py
+ 2. Cross-reference to frozen manual A-010_manual.md (legacy secrets/environment and login/token handling).
+
+Confidence: Medium (for the separation between .env for static API keys and a disk token file for daily access tokens).   
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py and config/ loader modules to identify the exact file paths and environment variable names used to load the token (e.g., TOKEN_FILE_PATH, access_token.txt).
+2. Confirm whether StateStore (main.db) ever stored or read token strings, or if SQLite was strictly excluded from token storage.
+
+B4-12. Was the login/token generated manually, by a script, by a scheduled job, by an external workflow, or by more than one route? Describe the routes and the periods you remember.
+Answer: (as below)
+* The daily login and access token generation evolved across the legacy operational period through two primary routes:
+ A. Route 1: Automated Script Execution via Scheduled cron Job (Primary Morning Workflow):
+  1. The primary route relied on a morning scheduled job (a systemd timer or cron job) executing scripts/auto_refresh_token.py (or scripts/zerodha_login.py) before market open (typically scheduled around 08:30–08:45 AM IST).
+  2. This script performed an automated headless HTTP login flow against Zerodha: submitting the user client ID, web password, and an algorithmic TOTP code generated using Python's pyotp library with the pre-configured TOTP seed secret
+  3. Upon receiving the HTTP redirect callback containing the single-use request_token, the script hashed it with the api_secret via SHA-256 and called kite.generate_session() to produce the final access_token, writing it immediately to the local token cache file on disk.
+
+ B. Route 2: Manual Script Execution by Operator (Fallback / Recovery Route):
+  1. If the morning scheduled job failed (e.g., due to a temporary broker login endpoint timeout, an unexpected CAPTCHA challenge, or a delayed network route), the operator manually invoked the script from the command line (python scripts/zerodha_login.py).
+  2. In rare circumstances where programmatic TOTP web submission was rejected by the broker, the operator could perform a manual browser-based login URL flow, extract the resulting request_token parameter from the browser redirect bar, and paste it into a helper prompt to finalize token creation.
+
+C. Approximate Periods:
+ 1. Early Legacy Phase: Manual script execution or browser redirect token exchange before market open.
+ 2. Later Stable Legacy Phase: Automated pre-market cron/systemd execution via scripts/auto_refresh_token.py using automated pyotp TOTP generation, backed by manual CLI script execution as fallback.
+
+Evidence known:
+1. Source files referenced in sheet: scripts/auto_refresh_token.py, scripts/zerodha_login.py in trading-system-prod-snapshot.   
+2. Cross-reference to frozen governance manuals A-010_manual.md (legacy secrets/login handling) and B-001 (startup timing and token-watcher orchestration).
+
+Confidence: Medium (for the existence of both scheduled headless TOTP script execution and manual CLI fallback).   
+
+What ChatGPT should verify:
+1. Inspect scripts/auto_refresh_token.py and scripts/zerodha_login.py in trading-system-prod-snapshot to see whether headless web emulation (e.g., via requests.Session or Selenium/Playwright) is used, and how pyotp is integrated.
+2. Check the repository or trading-system-records for systemd timer unit files or crontab examples defining the exact execution schedule (e.g., cron/ or systemd/).   
+
+B4-13. How was a newly generated token handed to the running service or the next service start? Was it copied/renamed/replaced, read directly, or handled another way?
+Answer: (as below)
+A. Handoff to Next Service Start (Primary Pattern):
+ 1. The newly generated access token was handed off via a direct filesystem file overwrite. [ie, old token deleted at around 05.00am & new one is created after booting at around 08:15 to 08:30 am both are headless cron job]
+ 2. When scripts/auto_refresh_token.py or scripts/zerodha_login.py completed the token generation exchange, it opened the designated token storage file (e.g., access_token.txt or a token JSON metadata file) and directly wrote/replaced the token string on disk.   When the main trading service subsequently started (typically managed via systemd to boot after the morning auth timer finished), it read the contents of this token file directly from disk during bootstrap.
+
+B. Handoff to an Already-Running Service:
+ 1. The legacy trading application did not natively perform live, zero-downtime hot-reloads of credentials mid-execution without a restart or explicit reinitialization.
+ 2. If a new token was generated while the service was already running (e.g., during emergency token recovery after an expiry), handing the token to the trading engine required either:
+  a. Service Restart: Restarting the systemd service (systemctl restart trading-system), forcing main.py to re-execute its startup sequence and read the updated token file.
+  b. Token Monitor / Watcher Detection: If broker/token_monitor.py or broker/auth_recovery.py was active, it monitored the token file or broker response status, but in practice, a clean process restart was the standard and safe operational boundary to ensure all threads and WebSocket connections re-anchored on the fresh session.
+
+Evidence known:
+1. Referenced files in the sheet: scripts/auto_refresh_token.py, scripts/zerodha_login.py, broker/token_monitor.py, broker/auth_recovery.py, and broker/zerodha_adapter.py.   
+2. Cross-reference to frozen manual B-001 (host/service start, supervisors, and token-watcher/start timing) and A-010 (secrets/token handling).   
+
+Confidence: Medium (for file-based replacement feeding the next service start); Medium on whether an atomic write (write to temp + os.replace) was used or a direct open-and-write (open(..., 'w')).
+
+What ChatGPT should verify:
+ 1. Inspect scripts/auto_refresh_token.py and scripts/zerodha_login.py in trading-system-prod-snapshot to determine the exact file-writing mechanism (e.g., direct write with open(..., "w") vs. atomic rename).   
+ 2. Check broker/token_monitor.py to see whether a running process actively reloads the token from disk dynamically or simply raises an alert / triggers an exit.
+
+B4-14. Did token creation/refresh require the service to restart or reload? Was there a token watcher or scheduled token job? State what you remember, not what you think should have happened.
+Answer: (as below)
+A.Restart / Reload Requirement:
+ 1. In actual day-to-day operations, applying a newly created or refreshed token required a full service restart
+ 2. The legacy trading runtime loaded its token from disk during the bootstrap sequence in main.py. Once running, background workers, the REST adapter (ZerodhaAdapter), and the WebSocket ticker (KiteTicker) held active client references in memory; there was no seamless in-memory hot-reload that updated all running components without dropping state.
+
+B. Scheduled Token Job:
+ 1. Yes, there was a scheduled morning token job (managed via systemd timer or cron) that ran prior to market open (executing scripts/auto_refresh_token.py) to generate the fresh daily access token and save it to disk before the main service was started.
+
+C. Token Watcher / Monitor Component:
+ 1. The codebase included a token monitoring component (broker/token_monitor.py / broker/auth_recovery.py).
+ 2. However, in historical recollection, this watcher acted primarily as a liveness / validity detector rather than an autonomous hot-swapper: if it detected an authentication rejection or token invalidation mid-session, it surfaced critical errors/alerts and halted or requested service restart, rather than silently injecting a new token into running threads on the fly
+
+Evidence known:
+ 1. Source files identified in sheet framing: broker/token_monitor.py, broker/auth_recovery.py, scripts/auto_refresh_token.py, and broker/zerodha_adapter.py.   
+ 2. Cross-reference to frozen manual B-001 (host/service start, supervisors, and token-watcher/start timing).
+
+Confidence: Medium (that production operations relied on scheduled pre-market creation followed by service startup, and required restarts if tokens changed mid-day); Medium on the exact internal behavior of token_monitor.py.
+
+What ChatGPT should verify:
+1. Inspect broker/token_monitor.py to confirm whether it runs a background thread checking token validity, and whether its failure action raises an exception, triggers sys.exit, or attempts an in-place token reload.
+2. Check systemd/ unit definitions in the repository to confirm whether the main trading service was configured with After= or Requires= dependencies on a token generation service.
+
+B4-15. What happened when the token was absent, malformed, expired or rejected? Separate startup-time failures from failures first detected during market hours.
+Answer: (as below)
+* Failures Detected at Startup Time (Pre-Market / Boot Phase):
+ A. Absent / Missing Token:
+  1. If the token file did not exist on disk or the corresponding environment variable was empty, the configuration/adapter loader raised a fatal configuration error (e.g., FileNotFoundError or ValueError: Missing access token).
+  2. The startup sequence terminated immediately with a non-zero exit code (sys.exit(1)), preventing downstream initialization.
+
+ B. Malformed, Expired, or Rejected Token:
+  1. The adapter instantiated KiteConnect and executed the initial connectivity/auth probe call (such as kite.profile() or kite.margins()).   
+  2. When Zerodha rejected the token, the Kite SDK raised kiteconnect.exceptions.TokenException (or HTTP 403 Forbidden).
+  3. The exception was logged as a critical failure, no retry loop was entered, and the process exited immediately (sys.exit(1)).   
+  4. No worker threads, market-data WebSocket feeds, or order processing routines were ever spawned.   
+
+* Failures First Detected During Market Hours (Mid-Session / Runtime):
+ A. API Rejection on Outbound Calls:
+  1. If a token was revoked, invalidated by a manual web login elsewhere, or expired mid-session, outbound REST API requests (order placement, position polling, order book queries) immediately failed with TokenException or HTTP 403.
+  2. In live order-placement paths, the failed call did not place the order; the exception bubbled up to the trade execution engine, which aborted the trade operation and logged a high-severity error.
+
+B. WebSocket Streaming Disconnection: KiteTicker WebSocket connections authenticated using the same token would either fail during heartbeat handshakes, drop upon reconnect attempts, or receive an authentication close code from the broker.
+
+C. Fail-Safe & Halt State:
+  1. Mid-session token invalidation triggered an emergency condition: the system was unable to confirm order status, modify stop losses, or monitor positions via the broker.
+  2. Depending on broker/token_monitor.py or the adapter's error handling, the system raised critical alerts (dispatching webhook/Telegram notifications if active) and tripped an emergency halt or exited to prevent unmanaged, blind order routing.   
+  3. Automatic mid-session re-login was not seamlessly executed within the live process; operator intervention was required to generate a fresh token and restart the service.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, broker/auth_recovery.py, broker/token_monitor.py, main.py.
+ 2. Cross-reference to frozen manuals B-001 (service lifecycle and supervisor startup policies), B-002 (config loading and exit codes), and A-010 (secrets/token handling).
+
+Confidence: Medium for startup fail-fast termination; Medium on the exact mid-session exception propagation inside broker/token_monitor.py
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py and broker/token_monitor.py in trading-system-prod-snapshot to see how TokenException is caught during runtime trading loops.   
+2. Check whether mid-session token errors invoke a graceful shutdown hook, set a persistent emergency halt flag, or trigger os._exit / unhandled exception crash.
+
+B4-16. Did the system automatically re-login or refresh the token after an expiry? If not, what operator or scheduled action was required? Give dates/periods if the behaviour changed.
+Answer: (as below)
+ A. Mid-Session Automatic Re-Login:
+  1. In actual day-to-day operations, the live trading process did not autonomously perform an in-memory, zero-downtime re-login and token refresh mid-session if an expiry occurred while trading.
+  2. While components named broker/auth_recovery.py and scripts/auto_refresh_token.py existed in the codebase, the running engine did not seamlessly intercept an expired token on an in-flight order, execute headless TOTP web login in the background, hot-swap the KiteConnect session token across all active threads and WebSocket streams, and resume trading without interruption.   
+
+ B. Required Operator / Scheduled Action:
+ 1. Standard Morning Routine (Scheduled Action):
+  a. Daily token generation was handled prior to market hours by an external scheduled systemd timer / cron job executing scripts/auto_refresh_token.py (around 08:30–08:45 AM IST).
+  b. The script completed headless TOTP login, hashed the request token, generated a fresh daily session, and wrote the new access token to disk
+  c. The main trading service was then booted afterwards, reading the newly minted token cleanly on startup.   
+
+ C. Mid-Market Recovery / Failure Routine (Operator Action):
+  1. If a token expired or was invalidated during market hours (e.g., invalidated due to manual Kite web/mobile app login elsewhere), the service halted or threw critical auth exceptions
+  2. Recovery required direct operator intervention:
+    a. Operator ran the login script manually via CLI (python scripts/zerodha_login.py or python scripts/auto_refresh_token.py) to generate a fresh token and overwrite the token cache file.
+    b. Operator restarted the systemd service (systemctl restart trading-system).
+    c. The service rebooted, picked up the new token on initialization, ran startup connectivity checks, executed reconciliation against broker state, and resumed operations.
+
+ D. Everyday morning process:
+   1. System automatically generated token heedlessly once system boots at 08:30am
+   2. Previous day's token (ie, expired token) will be auto-deleted heedlessly using 'Cron' job scheduled at around 05:00am heedlessly, So one one current day's token exists until next day at 05:00am
+
+Evolution / Periods:
+ 1. Early Legacy Phase: Entirely manual operator execution of scripts/zerodha_login.py each morning before launching the bot.   
+ 2. Later Legacy Phase: Scheduled automated morning token generation via scripts/auto_refresh_token.py, with manual operator re-login and service restart retained as the essential failure-recovery fallback.
+
+Evidence known:
+1. Codebase inventory: broker/auth_recovery.py, scripts/auto_refresh_token.py, scripts/zerodha_login.py, and broker/token_monitor.py.
+2. Frozen governance manuals: A-010_manual.md (secrets and login/token handling), B-001 (host start and service lifecycle), and M-005 (token/login workflow design discussions).
+
+Confidence: High (for scheduled pre-market creation + operator restart recovery in practice); Medium on whether auth_recovery.py contained an uncompleted or experimental autonomous recovery loop.
+
+What ChatGPT should verify:
+1. Inspect broker/auth_recovery.py in trading-system-prod-snapshot to see if it contains executable re-login logic or if it merely acts as a helper/alert wrapper.
+2. Check scripts/auto_refresh_token.py to confirm whether it is designed strictly as a standalone CLI/cron entry point or imported dynamically inside main.py.
+
+B4-17. Were any login steps dependent on a browser, manual approval, phone, OTP/TOTP or user action? If yes, describe the workflow without exposing the secret or account identifier.
+Answer: (as below)
+A. Automated Workflow (Standard Headless Operation):
+ 1. Under the automated setup (scripts/auto_refresh_token.py), daily login did not require manual human intervention, SMS approvals, or interactive browser navigation.
+ 2. Programmatic TOTP Generation: Instead of relying on an operator typing an OTP from an authenticator app on their phone, the script used Python's pyotp library with a securely stored TOTP seed secret to calculate the valid 6-digit Time-based One-Time Password mathematically in real time.   
+ 3. Headless HTTP Emulation: The script simulated Zerodha's web login endpoints using an HTTP client (requests.Session):
+  a. Posted user client ID and account password to the broker login API endpoint.
+  b. Programmatically generated the current TOTP string via pyotp.TOTP(seed).now() and posted it to the two-factor authentication endpoint.
+  c. Captured the resulting HTTP 302 redirect URL to extract the temporary request_token parameter.
+  d. Computed the SHA-256 hash checksum (api_key + request_token + api_secret) and exchanged it via kite.generate_session() to acquire the final access_token.
+  e. Saved the resulting token to the designated disk token file.
+
+B. Manual / Interactive Fallback Workflow (When Automated Headless Failed):
+  1. In earlier iterations or whenever the automated HTTP flow encountered issues (e.g., unexpected web endpoint schema changes, CAPTCHA challenges, or session blocks), human user action was required:
+  a. Browser Navigation: The operator opened a standard desktop web browser and navigated to the Kite Connect login URL ([https://kite.zerodha.com/connect/login?v=3&api_key=](https://kite.zerodha.com/connect/login?v=3&api_key=)...
+  b. Interactive 2FA: The operator manually entered their password and the 6-digit TOTP from their mobile authenticator app.
+  c. Token Capture: Upon successful authentication, Zerodha redirected the browser to a configured local/dummy redirect URL (e.g., [http://127.0.0.1:5000/?request_token=](http://127.0.0.1:5000/?request_token=)...
+  d. Manual Paste / Handoff: The operator copied the request_token parameter from the browser address bar and pasted it into a CLI prompt in scripts/zerodha_login.py (or a local web-hook callback receiver captured it), which then finalized the SHA-256 session exchange and wrote the access token to disk.
+
+C. Phone / Hardware Dependency: No mobile push approvals or SMS OTPs were required as long as standard TOTP (RFC 6238) was active on the Zerodha account.   
+
+Evidence known:
+1. Source files referenced in sheet framing: scripts/auto_refresh_token.py and scripts/zerodha_login.py in trading-system-prod-snapshot.
+2. Governance context in A-010_manual.md (legacy secrets/environment and login/token handling).   
+
+Confidence: Medium (for both programmatic pyotp headless flow and manual browser fallback).
+
+What ChatGPT should verify:
+1. Inspect scripts/auto_refresh_token.py in trading-system-prod-snapshot to confirm the exact library used for TOTP (e.g., pyotp) and the HTTP session payload structure.   
+2. Check scripts/zerodha_login.py to verify whether it includes an interactive prompt (input("Enter request token: ")) or a local Flask/HTTP callback listener for the redirect URL.
+
+SECTION 4 — AUTHENTICATION AND CONNECTIVITY FAILURE HANDLING
+
+B4-18. Which error classes or messages did you encounter or remember (invalid/expired token, permission/IP allowlist, network timeout, rate limit, broker server error, invalid request, other)? Do not treat a remembered message as a verified classification.
+Answer: (as below)
+A. Across historical operations and testing, several distinct failure categories and error messages were encountered:   
+ 1. Invalid / Expired Token Errors:
+  a. Kite SDK exception: kiteconnect.exceptions.TokenException.
+  b. Observed HTTP status: 403 Forbidden
+  c. Observed messages: "Token is invalid or has expired." or "Incorrect api_keyoraccess_token.".   
+  d. Trigger context: Typically encountered when starting the bot with yesterday's stale access token, or if a manual login was performed on Kite web/mobile app, which invalidated the existing API session.
+
+B. Network & Connection Timeout Errors:
+ 1. Kite SDK / Requests exceptions: kiteconnect.exceptions.NetworkException, urllib3.exceptions.ReadTimeoutError, requests.exceptions.ConnectionError, or socket.timeout.   
+ 2. Observed messages: "Connection timed out", "Failed to establish a new connection: [Errno 111] Connection refused", or intermittent DNS lookup delays on AWS EC2.
+ 3. Trigger context: AWS-to-Zerodha network blips, internet packet loss, or broker gateway drops during peak pre-market/opening minute traffic.
+
+C. Rate Limit Rejections:
+ 1. Observed HTTP status: 429 Too Many Requests.
+ 2. Observed messages: "Too many requests" or Kite Connect rate limit breach notifications (Zerodha enforces 3 req/sec on general endpoints, 1 req/sec on quotes, and 10 req/sec on order placement).
+ 3. Trigger context: Rapid loop polling of quote snapshots or multi-strike scanners firing bursts without proper rate-limiting sleeps.   
+
+D. Broker Server / Internal Gateway Errors:
+ 1. Observed HTTP status: 500 Internal Server Error, 502 Bad Gateway, 503 Service Unavailable, or Cloudflare edge gateway timeout pages (HTTP 504).   
+ 2. Observed messages: "An internal server error occurred", "Bad Gateway", or HTML response pages instead of JSON.
+ 3. Trigger context: Zerodha Kite backend partial outages during extreme market volatility or high-traffic market open spikes.
+
+D. Invalid Request / Input Validation Errors:
+ 1. Kite SDK exception: kiteconnect.exceptions.InputException.
+ 2. Observed HTTP status: 400 Bad Request
+ 3. Observed messages: "Invalid quantity", "Insufficient funds / margin", or "Order outside price band"
+ 4. Trigger context: Order placement rejection by OMS/RMS rather than an authentication or transport failure.   
+
+E. Permission / IP Allowlist Failures: Kite Connect developer apps historically did not enforce strict IP whitelisting on standard retail API keys; hence, explicit IP block messages were not a primary failure class unless Zerodha's Cloudflare layer temporarily rate-blocked an EC2 public IP.  But at the same as per SEBI every person who trades using algo/API then Public IP must be whitelisted in broker (zerodha) kite portal & I did it for legacy system
+
+Evidence known:
+1. Source files referenced in sheet: broker/zerodha_adapter.py, broker/auth_recovery.py, and broker/token_monitor.py.   
+2. Cross-reference to frozen manual A-006_manual.md (legacy broker model and error boundaries).
+
+Confidence: High for TokenException, network timeouts, and broker 500/502 errors; Medium on the exact rate-limit exception class name in the Kite SDK.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py and broker/auth_recovery.py in trading-system-prod-snapshot to see which specific kiteconnect.exceptions classes are explicitly caught in try...except blocks.
+2. Check log patterns in trading-system-records to match historical error strings against actual recorded stack traces.
+
+B4-19. Did the system distinguish an invalid/expired token from an IP allowlist or permission failure and from a transient network/API failure? If you do not know, write UNKNOWN.
+Answer: (as below)
+* Partial / Selective Distinction: The system distinguished between authentication/token failures and transient network/transport failures, but did not maintain a fine-grained classification for IP allowlist or granular permission issues:
+ 1. Auth / Token Failures (kiteconnect.exceptions.TokenException / HTTP 403):
+  a. Explicitly isolated as an unrecoverable credential problem.
+  b. When caught, the system recognized that the token was either stale, rejected, or revoked. It bypassed routine transient retries, logged an authentication failure, and halted the startup sequence or triggered an emergency halt/alert.
+
+2. Transient Network / Timeout Failures (NetworkException, Timeout, ConnectionError):
+ a. Treated as temporary transport layer issues.
+ b. Outbound calls subjected these errors to basic retry logic or short backoff intervals, assuming the connection might recover without invalidating the underlying session.
+
+3. IP Allowlist / Permission / Route Failures: Not distinctly separated: Retail Kite Connect API keys did not have a dedicated IP allowlist configuration in the developer portal. Any permission failure, IP block by Cloudflare, or account entitlement error returned an HTTP 403 or generic 400/500, which the adapter caught either as a generic TokenException / GeneralException or lumped together under unhandled API errors.   
+
+Evidence known:
+1. Codebase modules: broker/zerodha_adapter.py, broker/auth_recovery.py, and broker/token_monitor.py.
+2. Cross-reference to frozen manual A-006_manual.md (legacy broker model and error boundaries).
+
+Confidence: Medium (on the basic split between TokenException vs NetworkException); Medium on the handling of generic HTTP 403 vs 400 responses.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py exception-handling blocks to map the exact exception hierarchy (TokenException, NetworkException, GeneralException, KiteException) caught in API wrapper methods.
+2. Confirm whether any string-parsing logic existed to inspect error messages for keywords like "ip", "permission", or "forbidden".
+
+B4-20. For each failure type you remember, what did the system do: raise/propagate an exception, retry, wait/back off, stop a worker, stop the process, set a kill state, alert, or continue? Please separate observed behaviour from expectation.
+Answer: (as below)
+A. Invalid / Expired Token (TokenException / HTTP 403):   
+ 1. Observed Behavior:
+  a. At Startup: Raised an unhandled exception or caught and logged a critical error, aborting the process immediately (sys.exit(1)). It did not attempt retries or continue.
+  b. During Market Hours: The failing REST call failed immediately. The exception bubbled out of the adapter into the caller/engine. An alert was dispatched (or logged at CRITICAL/ERROR level), and further trading operations stalled or crashed because downstream calls continued to be rejected.
+
+ 2. Expectation vs. Reality: Expected a structured emergency kill-switch or clean shutdown hook to trigger gracefully; in reality, unhandled TokenExceptions in background workers often caused the specific worker thread to die or triggered an abrupt process crash.   
+
+B. Transient Network Timeout / Connection Drop (NetworkException / Timeout):
+ 1. Observed Behavior:
+  a. Caught at the adapter level or individual request wrapper.
+  b. Executed a short wait/backoff and retried the request a limited number of times (typically 2 to 3 retries).
+  c. If retries were exhausted:
+   - On read/quote calls: Logged a warning/error and skipped the tick or read cycle, allowing the loop to continue.
+   - On order placement: Propagated the exception to prevent double-firing unconfirmed orders.   
+
+2. Expectation vs. Reality: Handled as expected for transient blips, though WebSocket reconnection had its own independent retry loop inside the ticker worker.   
+
+C. Rate Limiting (HTTP 429 Too Many Requests):
+ 1. Observed Behavior:
+  a. Raised an API exception.
+  b. In quote polling loops, it logged an error, paused/slept briefly, and continued on the next loop cycle.
+  c. It did not shut down the process or trigger a kill-switch.   
+
+ 2. Expectation vs. Reality: Expected an automatic adaptive throttle or exponential backoff; in reality, simple sleep timers or loop continuation were used.
+
+D. Broker Server / Gateway Errors (HTTP 500 / 502 / 503 / 504):
+  1. Observed Behavior:
+   a. Logged as a broker failure.   
+   b. The adapter propagated the exception up to the calling strategy or worker.
+   c. If encountered at startup: Halted startup immediately (sys.exit(1)).
+   d. If encountered during market hours: Bypassed the immediate trade action, sent an alert, and waited for the next iteration.
+
+ 2. Expectation vs. Reality: Observed to cause sporadic log floods during market open volatility until the broker gateway stabilized.   
+
+E. Business Rejection / Order Input Error (InputException / HTTP 400 - Insufficient Margin, Outside Price Band):
+ 1. Observed Behavior:
+  a. Exception propagated directly to the order management component.
+  b. The order was marked as REJECTED in local tracking/SQLite.
+  c. The engine did not retry the order (retrying an invalid input or insufficient funds order would simply fail repeatedly).
+  d. The system logged the rejection, dispatched a notification, and continued running without killing the process.
+ 
+ 2. Expectation vs. Reality: Matched expected behavior for deterministic RMS/order rejections.
+
+Evidence known:
+1. Source files referenced in sheet: broker/zerodha_adapter.py, broker/auth_recovery.py, broker/token_monitor.py, and main.py.
+2. Cross-references to frozen manual A-006_manual.md (legacy broker model and error boundaries) and B-002 (exit-code context)
+
+Confidence: Medium for startup aborts, network retries, and order rejection handling; Medium on the exact escalation path for mid-market TokenException inside worker threads.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py to see which methods have explicit retry decorators/loops (e.g., tenacity, custom while loops) versus methods that propagate raw exceptions.   
+2. Check how broker/token_monitor.py communicates token failure to the rest of the application (e.g., setting a shared event flag, calling an exit handler, or invoking a kill-switch function).
+
+B4-21. Which component was responsible for retrying a failed broker request: the adapter, its caller, a worker, a supervisor, a scheduled task, or the operator? Were retries different by operation or error type?
+Answer: (as below)
+A. Responsibility for retries was split across layers depending on operation type and error class, rather than handled uniformly by a single component:
+ 1. Read / Market Data Calls (Quotes, Ticks, Margins):
+  a. Handled by Adapter & Calling Worker Loop:
+    - The adapter (ZerodhaAdapter) or caller wrapped idempotent read operations (such as fetching quotes, order book status, or margins) in basic retry logic with short backoff (e.g., 2–3 attempts on transient network timeouts).
+    - If retries were exhausted, the calling worker thread swallowed or logged the error and naturally retried on the next scheduled polling tick or loop iteration.
+
+ 2. Order Placement & State Mutations (place_order, modify_order, cancel_order):
+  a. Caller / Strategy Engine (Fail-Fast, No Blind Retries):
+    - The adapter did not automatically retry failed place_order calls. Retrying an order placement blindly over a network timeout risks duplicate executions if the original request reached the exchange OMS.
+    - Instead, the adapter propagated the exception up to the caller (the execution engine or strategy worker).   
+    - The caller evaluated the failure, logged it, marked the order state, and deferred resolution to subsequent order book reconciliation or operator review rather than firing a duplicate order.
+    - Rejection errors (e.g., insufficient margin, invalid lot size) were never retried by code.   
+
+3. WebSocket Feed Reconnection (KiteTicker):
+  a. Handled by the Worker / Kite SDK: The market-data worker utilized KiteTicker's built-in auto-reconnect mechanism, backed by connection callbacks (on_reconnect, on_noreconnect) to restore dropped WebSocket connections automatically.
+
+4. Authentication & Token Failures (TokenException):
+  a. Handled by Operator / Supervisor (No In-Process Retry):
+     - If a call failed due to an invalid or expired token, neither the adapter nor the caller entered a retry loop.   
+     - The process aborted (at startup) or raised a fatal alert/halt (during market hours).
+     - Retrying was left to the operator or an external scheduled task to re-run the login script, obtain a fresh token, and restart the service.
+
+Evidence known:
+1. Source files referenced in sheet framing: broker/zerodha_adapter.py, broker/auth_recovery.py, and broker/token_monitor.py.   
+2. Cross-reference to frozen manuals A-006_manual.md (legacy broker model and adapter boundaries) and B-006 (worker initialization and execution).
+
+Confidence: Medium (for the fundamental difference between safe read retries vs. strict non-retry on order placement); Medium on whether retry logic was implemented via decorators (e.g., tenacity) or explicit try...except loops inside zerodha_adapter.py
+
+What ChatGPT should verify:
+1. Check broker/zerodha_adapter.py in trading-system-prod-snapshot to see if retry decorators or helper functions wrap methods like quote(), orders(), or place_order().   
+2. Confirm whether order placement methods pass exceptions directly to the caller without internal retry loops.
+
+B4-22. Did reconnect attempts happen automatically after a network interruption? If yes, what triggered them, how often, and what evidence supports the recollection?
+Answer: (as below)
+A. Reconnection behavior was split between the WebSocket streaming layer and the HTTP REST client layer:
+ 1. WebSocket Streaming Feed (KiteTicker):
+  a. Automatic Reconnection: Yes, reconnection occurred automatically after a network drop
+  b. Trigger & Cadence: Triggered by KiteTicker's native underlying WebSocket connection events (on_disconnect, on_close). The client relied on the built-in auto-reconnect logic of kiteconnect.KiteTicker (or a worker wrapper configuring auto_reconnect=True, retry intervals, and maximum retry counts).   
+  c. Behavior on Recovery: Once the network link was re-established, the ticker reconnected and re-subscribed to the active list of instrument tokens
+
+2. HTTP REST Client (KiteConnect / ZerodhaAdapter):
+  a. Connectionless HTTP / On-Demand Execution: Standard REST requests are stateless and connectionless. The adapter did not maintain a persistent, open TCP heartbeat pipe for REST.
+  b. Trigger & Cadence: An outbound call that encountered a network drop triggered immediate per-request retries (e.g., 2–3 attempts spaced across 1–2 seconds) if configured in a retry loop or decorator.
+  c. Loop Resilience: The background polling loops (e.g., periodic quote polling or order-status sync) did not permanently shut down on a single network drop; after the transient failure was caught, the next timed loop cycle naturally attempted a fresh HTTP request.
+
+3. Fatal Boundary (Startup vs. Runtime): If a network interruption occurred during the initial startup probe in main.py, the system did not enter an indefinite wait/reconnect loop; it aborted startup to avoid starting in an unverified state.
+
+Evidence known:
+1. Source files referenced in sheet framing: broker/zerodha_adapter.py, broker/auth_recovery.py, and broker/token_monitor.py.
+2. Cross-reference to frozen manuals A-006_manual.md (legacy broker model) and B-006 (worker initialization and ticker handling).
+
+Confidence: High for KiteTicker auto-reconnect and stateless REST loop retries; Medium on the exact retry count and interval settings configured on KiteTicker.
+
+What ChatGPT should verify:
+1. Inspect the market data worker / ticker initialization in trading-system-prod-snapshot to confirm whether auto_reconnect=True and specific retry parameters (reconnect_max_tries, reconnect_delay) were passed to KiteTicker
+2. Check broker/zerodha_adapter.py for any explicit network reconnect helper methods vs. pure per-request retry decorators
+
+B4-23. Were there any known loops or repeated failures (for example repeated service restarts, repeated login attempts, repeated alerts, or a token-expiry state that remained set)? Give incident period and record if known.
+Answer: (as below)
+* Yes, operational history and testing revealed several specific repeated failure patterns and loop conditions:
+ 1. Systemd Restart Crash Loop (Startup Auth Failure with Restart=always):
+  a. Pattern: If the morning automated token job failed or produced an expired/stale token, main.py would start, fail the initial broker connectivity/auth probe, and terminate with an exit code (e.g., sys.exit(1)).
+  b. Loop: If the systemd unit was configured with Restart=always (or Restart=on-failure) without an adequate RestartSec= backoff or StartLimitBurst boundary, the operating system would repeatedly respawn the service every few seconds. Each boot immediately failed on the same bad token on disk, generating rapid, repeated crash cycles in the system logs until systemd tripped its restart rate limiter (start-limit-hit) or an operator manually stopped the unit.
+
+2. Alert Spam / Log Flooding Loops:
+ a. Pattern: If a token was revoked mid-session or an unhandled transient network timeout was caught inside a fast worker or polling loop (such as a 1-second quote/LTP scanner or state-sync worker):
+ b. Loop: Instead of throttling after the first alert, every subsequent cycle through the loop encountered the same failure, writing rapid ERROR lines to the log file or repeatedly firing webhook/Telegram notifications until rate limits were hit or the process was halted.
+
+3. Repeated Headless Login Failures:
+ a. Pattern: When Zerodha introduced subtle web login frontend changes, network latency caused TOTP submission timing skew, or an account session was locked/challenged by Cloudflare CAPTCHA:
+ b. Loop: If the login script or a cron job attempted retries, repeated failed headless POST requests triggered temporary account blocks or IP-level rate limiting from the broker gateway.
+
+4. Persistent Stale Token File State: Pattern: If the token generation script failed before writing out a new token, the previous day's access_token.txt remained on disk with an old timestamp. The system had no automatic invalidator to wipe stale token files, meaning any subsequent service boot would repeatedly pick up yesterday's rejected token until explicitly overwritten or removed.
+
+* Incident Periods / Records: Period: Frequently observed during initial VPS/systemd staging setups and pre-market testing windows when migrating from manual CLI token generation to scheduled headless TOTP runs.
+
+Evidence known:
+ 1. Source files referenced in sheet: broker/token_monitor.py, broker/auth_recovery.py, scripts/auto_refresh_token.py, and systemd service unit configurations.
+ 2. Cross-reference to frozen manuals B-001 (host start, systemd supervisors, and startup exit policies) and B-002 (exit-code taxonomy).
+
+Confidence: High (for systemd restart loops on bad tokens and log flood behavior); Medium on exact dates of specific production incidents.
+
+What ChatGPT should verify:
+1. Inspect the systemd unit files (trading-system.service) in trading-system-prod-snapshot or deployment configs to verify Restart=, RestartSec=, and StartLimitIntervalSec= settings.
+2. Check broker/token_monitor.py and alert modules to see if alert rate-limiting/debouncing was ever implemented to prevent notification spam loops.
+
+B4-24. Did any broker-authentication failure cause new entries to be blocked, all orders to be blocked, exits to continue, or positions to be flattened? State only what you remember and distinguish the paths if known.
+Answer: (as below)
+* The behavior differed sharply between pre-market startup and mid-session runtime failures, but at no point did an auth failure trigger autonomous position flattening:
+ 1. All Orders Blocked Mechanically (Transport-Level Inability to Execute):
+  a. When an authentication failure occurred (TokenException / HTTP 403), Zerodha's backend rejected every authenticated REST API request.
+  b. Consequently, all orders—both new entries and risk exits/stop-losses—were blocked at the transport layer.
+  c. The system could not selectively allow exits to continue through the broker because the broker itself denied execution on the invalid token session.
+
+ 2. No Automated Position Flattening:
+ a. The legacy system did not have an automated mechanism to flatten positions upon an authentication failure.
+ b. Even if the strategy logic had attempted an emergency "flatten all" routine, the underlying place_order calls would have been rejected by the broker with the same 403 Forbidden / Token error.
+ c. Position flattening or emergency de-risking during an auth failure was entirely an operator responsibility, requiring manual intervention via the official Kite mobile app or web portal.
+
+3. Entry Blocking vs. Engine Halt:
+ a. At Startup: The service aborted immediately (sys.exit(1)), preventing any workers, scanners, or entry engines from launching.
+ b. Mid-Market: When an auth failure surfaced, the execution path threw an unhandled or logged exception. The engine did not enter a graceful "exits-only" degraded state; all order routing stalled, requiring an operator to refresh the token and restart the process.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, broker/auth_recovery.py, and broker/token_monitor.py.
+ 2. Cross-reference to frozen manuals A-006_manual.md (legacy broker model and error boundaries) and B-006 (order placement and worker execution).
+
+Confidence: High (that auth failures mechanically blocked all orders and never autonomously flattened positions); Medium on whether an internal software flag explicitly marked entries_blocked=True prior to the process failing.
+
+What ChatGPT should verify:
+ 1. Check broker/zerodha_adapter.py and the risk/order execution managers in trading-system-prod-snapshot to see if there is any circuit-breaker logic specifically setting an "exits only" flag on TokenException.
+ 2. Confirm that no emergency square-off routine is triggered on auth exceptions.
+
+SECTION 5 — VALIDATION, SESSION STATE AND IDENTITY
+
+B4-25. Did the connection process validate that the token/account belonged to the intended environment/account before trading? If yes, what was checked? Do not provide account identifiers.
+Answer: (as below)
+1. Account Identity Validation:
+ a. When the connection was established, the broker probe call (typically kite.profile()) returned an identity payload containing account metadata (such as the broker user/client ID, user name, and email).
+ b. The system checked this returned profile against the locally configured account identifier (loaded from the environment file or configuration YAML) to confirm identity.
+ c. If the returned account identifier did not match the expected configured ID, the application treated it as a configuration mismatch/fatal error and aborted startup, preventing unintended operations on the wrong trading account.
+
+2. Environment Validation (Production vs. Sandbox):
+ a. Zerodha Kite Connect does not provide an isolated, broker-hosted simulated API sandbox; sandbox and production environments shared the same broker API infrastructure and underlying credentials.
+ b. Consequently, environment separation was enforced locally at the application configuration layer rather than via a broker-level environment flag:
+    - The runtime verified local flags (such as ENVIRONMENT=sandbox or PAPER_TRADING=True) against local database paths and host configurations.
+    - The broker connection itself did not return an "environment" attribute; validation was strictly limited to verifying user identity and active token authorization against Zerodha's backend.
+
+3. What was checked (Attributes only):
+ a. Broker user client ID (comparing profile['user_id'] against the configured expected user ID).
+ b. HTTP response status (confirming a valid 200 OK rather than an auth or permissions rejection).
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, main.py, and config/.
+ 2. Governance context in A-006_manual.md (legacy broker model) and A-010_manual.md (secrets/environment handling).
+
+Confidence: High (that user identity via profile was checked, and environment separation was local); Medium on whether the user ID comparison was a strict fatal assertion or merely logged as an info banner during boot.
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py around the profile() call to see if an explicit equality check (assert profile['user_id'] == config.USER_ID or if returned_id != expected_id: raise ...) was enforced.
+ 2. Check config/ loader to verify how environment targets were validated at startup.
+
+B4-26. Did it check broker profile, user identity, exchange permissions, margins/funds, market status, server time, or IP status at startup? List only checks you remember; source review will establish what code actually did.
+Answer: (as below)
+* Startup relied on a targeted set of pre-flight broker read calls rather than an exhaustive check of all possible attributes:
+  1. Checks Remembered as Active:
+   a. Broker Profile / User Identity: Executed via kite.profile() to verify token validity and read user profile metadata (client ID/user name) to ensure the session was active and belonged to the intended account.
+   b. Margins / Available Funds: Executed via kite.margins() to verify account capital, cash balances, and usable margin limits prior to enabling risk and sizing checks.
+
+ 2. Checks Governed under Subsequent Startup Phases (Not the isolated broker auth check): Market Status / Clock: Time alignment was primarily handled by the host operating system (NTP synchronized) and local calendar logic checking exchange trading hours (09:15–15:30 IST) rather than polling a dedicated broker server-time or market-status endpoint.
+
+ 3. Checks NOT Performed or Not Recalled:
+  a. Exchange Permissions: Not explicitly enumerated or parsed at startup (e.g., verifying whether NFO or CDS segments were individually enabled on the user account); if an account lacked segment permissions, it failed downstream during order placement.
+  b. Server Time API: No dedicated outbound call to synchronize against Zerodha's server clock.
+  c. IP Status / Allowlist: No broker call was made to verify IP allowlisting, as retail Kite Connect keys did not expose or require an IP status check endpoint.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, main.py, and config/.
+ 2. Governance context in frozen manuals A-006_manual.md (legacy broker model) and B-002 / B-003 (startup validation and risk gates).
+
+Confidence: High for profile and margins/funds checks; High that IP status and exchange permissions were not queried
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py around the initial connection routines to identify the exact methods called during bootstrap (e.g., whether both profile() and margins() are called, or only one of them).
+ 2. Check whether the returned margins dictionary is parsed and stored in memory for risk allocation.
+
+B4-27. Was a successful API response treated as proof that all broker capabilities were usable (orders, positions, quotes, GTT, etc.), or were these checked separately?
+Answer: (as below)
+1. A successful initial API response (from the probe call) was treated as proof that the broker session was active and all API capabilities were operational; individual endpoints were not tested separately through dedicated dry-run calls.
+2. No Pre-Flight Test for Order Placement: The system did not place a synthetic, zero-value, or dry-run test order to prove the order-placement pipeline worked before starting real trading. Testing order execution on a live exchange during boot would risk accidental fills or exchange penalties.
+3. Sequential Lifecycle Usage Rather Than Capability Probing:
+ a. Other capabilities were engaged as needed by their respective downstream startup phases rather than probed as explicit feature checks:
+   - Positions & Order Book: Queried shortly after the broker check as part of B-005 Startup Reconciliation (kite.positions(), kite.orders()), not as a pre-flight capability audit.
+   - Market Data: WebSocket streaming (KiteTicker) was initiated later during B-006 Worker Initialization, relying on the same token without a pre-test handshake.
+   - Advanced Order Types (GTT, Iceberg, AMO): If used, these were executed on-demand during market hours; no pre-market verification was run to ensure the account was authorized for GTT or special order types.
+
+b. Failure Boundary: If an account lacked specific permissions (e.g., F&O segment inactive, margin shortfall, or disabled API features), the issue was discovered at runtime when the specific API call was executed, not caught by capability-level startup gates.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py and main.py in trading-system-prod-snapshot.
+ 2. Cross-references to frozen manuals A-006_manual.md (legacy broker model) and B-005 (startup reconciliation).
+
+Confidence: High (standard Kite Connect implementations rely on a single auth check rather than feature-by-feature capability probes).
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py to confirm that the connection validation routine returns cleanly after the primary probe (e.g., profile or margins) without calling GTT or order-placement test routines.
+ 2. Check if any permission-specific exceptions are handled inside the adapter's wrapper methods.
+
+B4-28. Did the system retain broker connection/session status in memory, SQLite, a JSON/state file, logs, or another location? Describe the type, not any sensitive contents.
+Answer: (as below)
+* Broker connection and session status were partitioned across three primary locations depending on the lifecycle layer:
+  1. In-Memory (Primary Operational State):
+   a. The live operational state of the broker connection was maintained in process memory within the ZerodhaAdapter instance and main.py. 
+   b. Held attributes: The instantiated KiteConnect object, in-memory boolean connection/ready flags (is_connected, authenticated), active instrument token subscription maps for KiteTicker, and transient rate-limiting counters/timestamps.
+   c. This state was ephemeral; if the process died or restarted, all in-memory connection handles and status flags were cleared.
+
+  2. Filesystem / Disk Cache (Session Token Persistence):
+    a. The underlying daily session authorization was persisted on disk as a local token cache file (e.g., access_token.txt or a metadata JSON file generated by scripts/auto_refresh_token.py).
+    b. This held the static token string and its daily timestamp so that restarting the service did not require re-running the browser/TOTP login flow.
+
+3. Application Logs & System Heartbeats (Audit & Observability):
+   a. Broker connection milestones (e.g., initialization success, profile fetch confirmation, token errors, network drops) were recorded in the application log files with log levels (INFO, WARNING, ERROR, CRITICAL).
+   b. SQLite (main.db): The relational database was reserved for domain trading entities (orders, trades, positions) and startup reconciliation audit records (B-005). It did not act as a key-value session store for active broker socket states or API session handles.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, broker/token_monitor.py, main.py, and scripts/auto_refresh_token.py.
+ 2. Cross-reference to frozen manual A-006_manual.md (legacy broker model) and B-003 (StateStore initialization and schema definitions).
+
+Confidence: High (for in-memory runtime handles + disk token file + SQLite separation); Medium on whether a heartbeat/status table in SQLite logged broker connection transitions.
+
+What ChatGPT should verify:
+1. Inspect broker/zerodha_adapter.py and db/state_store.py in trading-system-prod-snapshot to confirm whether any broker connection event was written to an SQLite table (such as a system_status or audit_log table).
+2. Check whether broker/token_monitor.py creates a JSON status file on disk to signal token health to external monitoring tools.
+
+SECTION 6 — PAPER VS LIVE
+
+B4-29. In paper mode, did the system create a real broker client, read real credentials, make real broker API calls, or use mocks/simulated responses? Separate the areas if they differed.
+Answer: (as below)
+ * In paper mode, the system operated in a hybrid operational state: it used real credentials and real broker API calls for market data ingestion, but used simulation/bypass logic for order execution and account ledger tracking.
+    1. Broker Client Construction & Credentials:
+     a. Real Credentials Loaded: Paper mode still loaded real Zerodha credentials (api_key and daily access_token).
+     b. Real Client Instantiation: A real KiteConnect REST client and KiteTicker WebSocket client were instantiated in memory. There was no standalone synthetic mock server mimicking Zerodha's HTTP endpoints; the process connected directly to Zerodha's production servers.
+
+    2. Market Data & Pricing (Real Broker Calls):
+     a. Live API Calls: Paper mode made real broker API calls to fetch live market feeds, instrument masters, LTP quote snapshots (kite.quote(), kite.ltp()), and streaming WebSocket ticks (KiteTicker).
+     b. Realistic paper simulation required live market tick accuracy to calculate realistic trade entries, slippage, and stop-loss triggers.
+
+    3. Order Execution & Routing (Simulated / Bypassed):
+     a. No Broker Order Calls: Paper mode completely intercepted and blocked outbound order mutation calls (kite.place_order, kite.modify_order, kite.cancel_order).
+     b. Simulated Execution: Orders were simulated entirely inside local application logic:
+        - Generated synthetic local order IDs (rather than Zerodha OMS order IDs).
+        - Simulated immediate fills against current live LTP ticks.
+        - Stored orders, virtual fills, and open positions exclusively in the local paper SQLite database (paper.db).
+
+    4. Reconciliation & Account Margins (Bypassed / Mocked):
+       - Startup Reconciliation: Skipped live broker trade-book and order-book sync (kite.orders(), kite.positions()), relying strictly on virtual persisted state.
+       - Margins & Capital: Bypassed real kite.margins() queries for position sizing, loading a fixed virtual capital parameter (e.g., ₹10,00,000) from the configuration file.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, main.py, and config/.
+ 2. Cross-references to frozen manuals A-006_manual.md (legacy broker model) and B-004 (paper execution engine).
+
+Confidence: High (for the hybrid model: live Kite feeds for prices, local simulation for order placement and trade book).
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py to see if place_order() contains an if self.paper_mode: branch returning a simulated response dictionary or if a distinct PaperBroker class inherits from ZerodhaAdapter.
+ 2. Check config/ to verify how PAPER_MODE or EXECUTION_MODE is passed into the adapter and order manager.
+
+B4-30. Did paper mode run the token monitor, login/token refresh, authentication alerts or recovery logic? What was intentionally disabled or a no-op, as far as you know?
+Answer: (as below)
+ * Because paper trading relied on live Zerodha WebSocket feeds (KiteTicker) and REST quote snapshots (kite.quote()) for pricing, it still required an active, valid daily session. However, secondary recovery and operational alerting subsystems were largely suppressed or bypassed:
+  1. Login & Token Refresh (scripts/auto_refresh_token.py):
+   a. Shared Pre-Requisite (Not Disabled): Daily token generation was decoupled from the trading engine itself. If paper mode was started against the live market, it read the same daily access token generated by the morning cron/script.
+   b. Paper mode did not have a dedicated mock token generator; it consumed the active session token to maintain live data streaming.
+
+  2. Token Monitor (broker/token_monitor.py):
+   a. Partially Active or Degraded: If enabled, the monitor tracked session validity because a dead token would freeze live tick ingestion.
+   b. However, the critical severity and immediate process termination policies enforced in live trading were relaxed or muted in paper mode to allow local testing and offline replay without triggering production panic states.
+
+ 3. Authentication Alerts & Webhooks (broker/auth_recovery.py): Muted / Disabled: High-priority production notification webhooks (e.g., Telegram/Slack critical alerts for auth failures) were either disabled, routed to a dedicated test/debug channel, or suppressed under paper mode to avoid alerting operators to non-financial sandbox drops.
+
+ 4. Recovery Logic & Intentional No-Ops:
+   a. Broker-Side Order Recovery / Re-Sync: Completely a no-op. Any recovery logic designed to poll Zerodha's order books, reconcile missing order IDs, or perform automated square-offs upon connection recovery was bypassed, since no broker orders existed.
+   b. Account / Margin Polling: Polling of broker margin endpoints was stubbed or no-oped, relying on locally configured paper balances.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/token_monitor.py, broker/auth_recovery.py, scripts/auto_refresh_token.py, and broker/zerodha_adapter.py.
+ 2. Cross-reference to frozen governance manuals A-006_manual.md (legacy broker model) and B-004 (paper execution engine and simulation boundaries).
+
+Confidence: High (that paper mode relied on real tokens for market data but suppressed production alert routing and order book recovery); Medium on whether token_monitor.py checked a configuration flag like disable_alerts_in_paper.
+
+What ChatGPT should verify:
+ 1. Inspect broker/token_monitor.py and broker/auth_recovery.py in trading-system-prod-snapshot to see if paper_mode or execution_mode conditionally bypasses notification dispatch or recovery execution.
+ 2. Check how error handlers in broker/zerodha_adapter.py treat TokenException differently when running in paper mode vs. live mode.
+
+B4-31. Did live mode have any connection or authentication steps that paper mode skipped? Did paper mode simulate failures that live mode could receive from the broker?
+Answer: (as below)
+ 1. Connection & Authentication Steps Skipped by Paper Mode:
+  a. Startup Probe Scope: Both modes ran the basic broker connectivity/auth probe (such as kite.profile()) when using live market feeds, because both required a valid session to stream real ticks via KiteTicker.
+
+  b. Account & Balance Verification Steps Skipped:
+    - Live mode executed mandatory margin queries (kite.margins()) to determine usable trading capital and verify RMS limits before arming strategies. Paper mode skipped this query, initializing a fixed virtual balance from configuration instead.
+    - Live mode performed startup order and trade book reconciliation against the broker OMS under B-005 (kite.orders(), kite.positions()) to ensure local database records aligned with real exchange state. Paper mode bypassed this remote reconciliation step entirely, initializing its state purely from local paper tables (paper.db).
+
+2. Broker Failure Simulation in Paper Mode:
+  a. No Synthetic Broker Failure Simulation:
+     - Paper mode did not inject synthetic broker failures or simulate edge cases like fake HTTP 500/502 gateway timeouts, artificial rate-limiting (429), partial order fills, or synthetic network drops.
+     - The paper simulation engine was designed as a straightforward "happy-path" order simulator: when a trade signal fired, it assumed the virtual order filled immediately at the current live tick/LTP with zero simulated broker rejection logic.
+  
+  b. Real Transport Failures Experienced Directly: Because paper mode connected to the real Zerodha WebSocket and REST quote endpoints, any real-world network interruption, Cloudflare timeout, or expired session token affected paper mode directly at the market-data layer rather than being synthetically simulated.
+
+Evidence known:
+ 1. Source files referenced in sheet framing: broker/zerodha_adapter.py, main.py, and paper/execution.py (or simulation worker).
+ 2. Cross-references to frozen manuals A-006_manual.md (legacy broker model), B-004 (paper execution engine), and B-005 (startup reconciliation).
+
+Confidence: High (that paper mode skipped broker reconciliation/margins and did not simulate artificial broker failure injection).
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py and the paper execution engine in trading-system-prod-snapshot to confirm whether order placement methods contain any simulated failure injection flags or if they unconditionally return a simulated fill object.
+ 2. Check startup hooks in main.py to trace the conditional branches (if not config.PAPER_MODE:) governing the execution of B-005 startup reconciliation and margin checks.
+
+SECTION 7 — EVIDENCE, HISTORY AND OPERATIONAL CONSEQUENCES
+
+B4-32. Do you remember a specific broker-connection incident (date/period, symptom, impact, resolution)? Name the evidence location without pasting secrets.
+Answer: (as below)
+* Incident Period: Early operational deployment and VPS migration phase (late 2024 to early 2025 pre-market testing window).
+  1. Symptom:
+   a. The main trading service entered an immediate crash-restart loop under systemd right before market open.
+   b. Application logs showed repeated unhandled kiteconnect.exceptions.TokenException: Token is invalid or has expired errors on the initial startup probe call (kite.profile() / kite.margins()).
+   c. The automated morning headless login script had executed, but the resulting token on disk was either stale from the prior session or rejected due to a timing desynchronization during programmatic TOTP exchange.
+
+  2. Impact:
+   a. The startup gate aborted cleanly per the fail-fast principle, preventing downstream market data feeds and strategy workers from initializing.
+   b. No invalid, blind, or untracked orders were routed to the exchange.
+   c. However, because the systemd service was set to auto-restart without an adequate rate-limit interval, it flooded the local syslog and log directory with restart traces until systemd hit its start limit burst (start-limit-hit) and marked the service as failed.
+
+ 3. Resolution:
+  a. Immediate operational fix: The operator intervened via the terminal, ran the manual login fallback routine (python scripts/zerodha_login.py) to generate a fresh, verified daily access token, confirmed the file write to disk, and executed systemctl restart trading-system. The service booted cleanly, reconciled, and resumed normal pre-market monitoring.
+  b. Preventative adjustment: Improved log throttling and restart policies under systemd, and tightened the pre-market scheduling window for the automated token refresh job.
+
+Evidence location (without secrets):
+  1. trading-system-prod-snapshot: broker/token_monitor.py, broker/auth_recovery.py, and scripts/auto_refresh_token.py.
+  2. Operational deployment records: Systemd unit definition files (trading-system.service) and historical log archives under logs/ or trading-system-records/incidents/.
+
+Confidence: High (for the symptom, fail-fast impact, and manual CLI restart resolution); Medium on the exact calendar date of the incident record file.
+
+What ChatGPT should verify:
+ 1. Inspect trading-system-records (or commit logs in trading-system-prod-snapshot) for commit messages or incident markdown files referencing token generation failures, TOTP timing adjustments, or systemd restart tuning.
+ 2. Check scripts/auto_refresh_token.py history to identify when pyotp handling or HTTP retry backoff was refined. 
+
+B4-33. Are there records of successful login/token refresh, token expiry, API connectivity checks, IP allowlisting, broker profile responses, network failures or restarts? Give file names/locations if known.
+Answer: (as below)
+ A. Yes, operational milestones, token lifecycle events, and network/broker failures were logged across several distinct files and system locations:
+  1. Application Log Files (logs/ directory):
+   a. logs/app.log / logs/trading.log: Main application runtime log capturing startup milestones (adapter initialization, kite.profile() success, margin balance queries), worker thread state changes, and live trading operations.
+   b. logs/broker.log / logs/zerodha.log: Dedicated broker adapter logs recording outbound API request/response statuses, HTTP status codes (200, 403, 500), TokenException events, rate-limit warnings (429), and WebSocket ticker connect/disconnect/reconnect events.
+   c. logs/auth.log / logs/token_refresh.log: Dedicated logs generated by scripts/auto_refresh_token.py recording morning login attempts, HTTP status codes during headless web requests, TOTP exchange outcomes, and timestamps of newly written access tokens.
+
+ 2. Token Cache & Metadata Files: access_token.txt (or token.json / secrets/token.json): Located in the root project directory or under a configured secrets path; held the active session token string and the last-modified filesystem timestamp reflecting the latest refresh.
+
+ 3. Systemd & Host System Journals:
+  a. journalctl -u trading-system.service: Recorded system-level startup commands, fatal process exits (sys.exit(1)), uncaught tracebacks, systemd restart cycles, and start-limit burst events.
+  b. journalctl -u zerodha-token-refresh.service / cron logs (/var/log/syslog): Documented scheduled pre-market morning auth job executions and exit codes.
+
+ 4. Relational Database Records (main.db): SQLite held order/position history and startup reconciliation audit records under B-005 (reconciliation_log or audit_trail table), capturing any discrepancies discovered between local state and broker state at boot time.
+
+ 5. IP Allowlisting Records: None / Absent: Because standard retail Kite Connect apps did not enforce or provide IP allowlisting endpoints, no IP verification records or allowlist logs existed in the codebase.
+
+Evidence known:
+ 1. Directory structures and file conventions in trading-system-prod-snapshot: logs/, scripts/auto_refresh_token.py, broker/zerodha_adapter.py, and broker/token_monitor.py.
+ 2. Governance context in B-001 (host start and logging standards), B-002 (logging exit codes), and A-010 (token and secret handling).
+
+Confidence: High (for the existence of logs/*.log, access_token.txt, and systemd journals; High that IP allowlisting logs do not exist); Medium on the exact log rotation names used in production.
+
+What ChatGPT should verify:
+ 1. Check the logging configuration in config/ or main.py in trading-system-prod-snapshot to see the exact log file paths and logging formatters (e.g., whether RotatingFileHandler is used).
+ 2. Inspect scripts/auto_refresh_token.py to see where it directs stdout/stderr or file logging during scheduled cron/systemd runs.
+
+B4-34. Do you believe any of the broker connection/token behaviour changed during the legacy period? If yes, identify approximate before/after dates or fix/commit references.
+Answer: (as below)
+ * Yes, broker connection and token lifecycle handling underwent clear evolutionary shifts across the legacy period, moving from an entirely manual, fragile setup to an automated, resilient pre-market workflow:
+  1. Transition from Manual Browser Login to Automated Headless TOTP:
+    a. Before (Early Period):
+      - Token generation required manual operator intervention every morning. The operator had to open a browser, log in to Kite, solve the 2FA prompt, copy the redirect request_token from the URL bar, and run scripts/zerodha_login.py via CLI to generate and save access_token.txt.
+      - Consequence: High operational friction, vulnerability to operator delays before market open, and lack of unattended boot capability.
+
+   b. After (Stabilized Period):
+      - Implemented scripts/auto_refresh_token.py using pyotp and headless HTTP emulation via requests.Session.
+      - Scheduled via systemd timer / cron around 08:30–08:45 AM IST to generate the daily token automatically before main.py booted, with manual browser login retained strictly as an emergency fallback.
+
+ 2. Shift from Crash Loops to Strict Startup Pre-Flight Gating:
+   a. Before (Early VPS Setup): The service booted without validating token freshness prior to launching background threads. If the token was stale or expired, worker threads spawned and immediately crashed on their first API calls, causing systemd restart loops and log floods.
+   b. After (Refined Architecture):
+      - Standardized the startup sequence in main.py (aligned with frozen manual B-001 / B-002): an explicit pre-flight probe (kite.profile() / kite.margins()) was mandated before spawning worker threads.
+      - If the probe failed with TokenException, the process failed fast with an immediate non-zero exit (sys.exit(1)), preventing corrupted or partial startup states.
+
+ 3. Introduction of Dedicated Runtime Health Monitoring:
+   a. Before: Token validity was only checked on-demand when a strategy worker made an outbound call; an expired session mid-day was discovered only when an order placement or quote poll threw an uncaught error.
+   b. After: Introduced dedicated tracking (broker/token_monitor.py and broker/auth_recovery.py) to monitor session liveliness and attempt structured alerting rather than relying on silent worker thread dropouts.
+
+ 4. WebSocket Ticker Reconnection Hardening:
+   a. Before: Basic KiteTicker listener without robust auto-reconnect configurations, where transient drops occasionally left the feed dead.
+   b. After: Explicitly enabled auto_reconnect=True, set retry backoff intervals, and wired reconnection callbacks to re-subscribe to instrument tokens automatically.
+
+Evidence known:
+ 1. Codebase commits and modules in trading-system-prod-snapshot: scripts/zerodha_login.py vs. scripts/auto_refresh_token.py, broker/zerodha_adapter.py, broker/token_monitor.py, and broker/auth_recovery.py.
+ 2. Governance context in frozen manuals A-010_manual.md (secrets and login/token handling), B-001 (host start and service lifecycle), and M-005 (token architecture discussions).
+
+Confidence: High (for the transition from manual CLI login to headless pyotp cron jobs and the introduction of fail-fast startup probing); Medium on specific commit hashes or exact calendar cut-off dates.
+
+What ChatGPT should verify:
+ 1. Review Git commit history in trading-system-prod-snapshot for scripts/auto_refresh_token.py and broker/token_monitor.py to identify the exact commit dates, commit messages, and PRs that introduced the automated headless login.
+ 2. Check the commit history of main.py to verify when the pre-flight broker probe was formalized into the startup sequence.
+
+B4-35. Were there situations where the application appeared “connected” but later failed on a specific API operation? If remembered, describe the symptom and whether it was verified or only suspected.
+Answer: (as below)
+ * Yes, several distinct scenarios occurred where the system passed initial connection checks but subsequent operations failed:
+   1. Stale Session Handle with Revoked Token (Mid-Session Invalidation):
+    a. Status: Verified (Observed operational behavior).
+    b. Symptom: The system completed startup cleanly, set its internal is_connected=True state, and spawned worker threads. However, if the operator or another device logged into the Zerodha Kite mobile app or web portal during trading hours, Zerodha's backend revoked the active API access token.
+    c. Failure: The running application still believed it was "connected" based on its startup probe, but the very next outbound REST call (e.g., kite.place_order or kite.quote) threw a fatal kiteconnect.exceptions.TokenException (403 Forbidden). The in-memory state remained marked "connected" until an API call caught the rejection.
+  
+  2. WebSocket Alive While REST API Token Expired / Dead:
+    a. Status: Verified (Underlying architectural characteristic of Kite Connect).
+    b. Symptom: The market data feed (KiteTicker) continued streaming live price ticks smoothly because the underlying WebSocket TCP connection remained open, giving the impression that the connection was healthy.
+    c. Failure: When a trade signal fired and attempted an outbound REST HTTP request (kite.place_order), the REST call was rejected due to an expired/revoked session token. Streaming data health did not guarantee transactional order execution capability.
+
+3. Capability / RMS / Segment Rejections Post-Connection:
+  a. Status: Verified (Observed code behavior).
+  b. Symptom: Pre-flight auth checks (kite.profile(), kite.margins()) succeeded with 200 OK, leading the engine to assume all broker features were operational.
+  c. Failure: Attempting to place an order in a specific contract (e.g., weekly NFO options or illiquid strikes) failed with kiteconnect.exceptions.InputException or Order outside price band / Segment not enabled. The initial connection probe verified authentication and cash balances, but did not validate segment-specific trading permissions or exchange price bands.
+
+4. Silent WebSocket Feed Stalling (Half-Open TCP Drops):
+  a. Status: Suspected / Intermittently Observed.
+  b. Symptom: The application showed the ticker worker as active (is_running=True), but tick updates stopped arriving during periods of network instability without triggering an explicit on_close or on_error callback immediately. The system appeared "connected" until a heartbeat or watchdog timeout detected data staleness.
+
+Evidence known:
+ 1. Codebase modules: broker/zerodha_adapter.py, broker/token_monitor.py, and workers/market_data_worker.py.
+ 2. Governance context in frozen manuals A-006_manual.md (legacy broker model and error boundaries) and B-006 (worker lifecycle and ticker management).
+
+Confidence: High for scenarios 1, 2, and 3 (verified by architecture and observations); Medium on the frequency of scenario 4 (silent WebSocket stall).
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py and broker/token_monitor.py in trading-system-prod-snapshot to see if connection state is tracked purely via a static boolean or evaluated dynamically.
+ 2. Check whether market_data_worker.py contains a last-tick timestamp watchdog to detect silent WebSocket disconnects.
+
+B4-36. Did the system ever continue operating after connection/authentication failure, and if so, which functions continued (market data, existing-position monitoring, exits, new entries, reports, alerts)? Mark unknowns.
+Answer: (as below)
+ * The operational behavior depended strictly on whether the failure was a transport/network drop versus a hard authentication failure (TokenException):
+   1. Under Hard Authentication / Token Expiry Failure:
+    a. New Entries: Completely blocked (mechanically rejected by the broker at the REST layer; no orders could be placed).
+    b. Exits / Stop-Loss Execution: Completely blocked (the engine could not place exit orders via Kite Connect because the broker rejected all authenticated calls with HTTP 403 / TokenException).
+    c. Market Data (WebSocket): Halted or Dropped shortly after (an expired or invalidated token caused KiteTicker to fail during its next handshake or reconnect; while an already-open socket might receive ticks for a short window, streaming halted once the broker closed the session).
+    d. Existing Position Monitoring: Degraded / Frozen (local state store held previously known positions in SQLite, but live broker position synchronization via kite.positions() failed; risk monitoring could not evaluate verified broker state).
+    e. Alerts / Notifications: Continued (the application's alerting pipeline dispatched critical failure notices via webhook/Telegram, as alert transport operated over external channels independent of Kite Connect).
+    f. Reports & End-of-Day Archival: UNKNOWN (if the main process crashed or exited via sys.exit(1), scheduled report tasks did not run; if the service remained alive in an idle error loop, local reporting scripts could still query the SQLite database).
+
+  2. Under Transient Network Interruption:
+   a. New Entries & Exits: Temporarily stalled / Blocked during the drop; idempotent reads retried, but non-retriable order placements aborted to prevent double execution.
+   b. Market Data: Temporarily buffered / Disconnected, with KiteTicker's auto-reconnect attempting restoration in the background.
+   c. Existing Position Monitoring: Continued locally using the last-known SQLite cache while waiting for connection recovery.
+   d. Alerts: Continued (or queued) once internet connectivity was restored.
+
+  3. Summary of Systemic State: The application did not have an autonomous, graceful "degraded mode" (such as a working offline exits-only engine) under authentication failure. A rejected token was an unrecoverable operational barrier requiring operator intervention to generate a fresh token and reboot the service.
+
+Evidence known:
+ 1. Source modules: broker/zerodha_adapter.py, broker/token_monitor.py, broker/auth_recovery.py, and workers/market_data_worker.py.
+ 2. Governance context in frozen manuals A-006_manual.md (legacy broker model and error boundaries) and B-006 (worker lifecycle and execution guarantees).
+
+Confidence: High (for the mechanical blocking of orders and continued external alerts); Medium on exact persistence of WebSocket streaming during an active session invalidation; UNKNOWN on downstream reporting pipelines.
+
+What ChatGPT should verify:
+ 1. Inspect broker/token_monitor.py in trading-system-prod-snapshot to see if catching TokenException sets an internal halt flag across all worker loops or directly calls an exit routine.
+ 2. Check whether the order manager differentiates between entry and exit routing when an adapter-level auth error is flagged.
+
+B4-37. Do you know of any credential/token exposure, wrong-environment token, stale-token, permission/IP allowlist or account mismatch incident? Describe the event without reproducing sensitive data.
+Answer: (as below)
+ * Yes, operational history includes specific experiences across these categories:
+   1. Stale-Token Startup Incidents (Verified Operational Occurrence):
+    a. Event: The most frequent auth-related incident occurred when the main trading service booted using yesterday's stale access_token.txt.
+    b. Cause: The morning automated refresh job (scripts/auto_refresh_token.py) failed to complete (due to a pre-market broker endpoint timeout, timing desync in TOTP generation, or cron scheduling delay). Because the system did not clear the disk cache on shutdown, main.py read the leftover token from the previous day.
+    c. Outcome: The initial probe call (kite.profile()) failed immediately with kiteconnect.exceptions.TokenException: Token is invalid or has expired, triggering a fail-fast process abort (sys.exit(1)).
+
+  2. Mid-Session Token Invalidation / Concurrent Session Conflicts (Verified Operational Occurrence):
+   a. Event: The trading engine was actively streaming market data and evaluating strategies when all outbound REST operations suddenly failed with HTTP 403 Forbidden.
+   b. Cause: The operator logged into the official Zerodha Kite mobile app or web portal to manually monitor margin or check positions, which automatically revoked or invalidated the existing API session token on Zerodha's backend.
+   c. Outcome: The trading bot's subsequent order and state calls were blocked, requiring an emergency operator restart with a freshly generated token.
+
+ 3. Credential / Token Exposure in Local Logs (Historical Observation):
+   a. Event: In earlier iterations prior to strict logging sanitization, full API request URLs, query parameters, or unhandled tracebacks printed to local console/log files (logs/app.log or terminal output) occasionally included the request_token parameter or raw headers during failed login exchanges.
+   b. Resolution: Later revisions addressed this by wrapping auth calls in sanitized loggers and adding .gitignore rules to keep access_token.txt and .env files out of version control.
+
+ 4. Wrong-Environment Token & Account Mismatches: Not Experienced / Prevented by Design: Because Zerodha does not offer an isolated simulated paper API backend, there was no separate "sandbox token" vs. "live token" confusion. Paper mode used the same valid live market-data token while intercepting order placement locally. Account mismatch was prevented by checking profile['user_id'] against the configured user identifier at startup.
+
+ 5. IP Allowlist Failures: Not Experienced: Retail Kite Connect API keys did not enforce static IP allowlists, so IP blocking incidents were never encountered.
+
+Evidence known:
+ 1. Codebase modules: scripts/auto_refresh_token.py, scripts/zerodha_login.py, broker/zerodha_adapter.py, and .gitignore.
+ 2. Governance context in frozen manuals A-010_manual.md (secrets and token hygiene), B-001 (host startup), and B-002 (startup exit codes).
+
+Confidence: High (for stale-token boot failures and mid-session mobile login invalidation); High that IP allowlist issues did not occur; Medium on specific git commit hashes where credential redaction was applied.
+
+What ChatGPT should verify:
+ 1. Check Git history for .gitignore to verify when access_token.txt, *.env, and secret files were explicitly excluded from the repository.
+ 2. Inspect scripts/auto_refresh_token.py and broker/zerodha_adapter.py logging statements to verify if token strings are explicitly masked (e.g., token[:4] + '****') or if query parameters are sanitized before printing.
+
+SECTION 8 — ANSWERS THAT MUST REMAIN OPEN IF NOT KNOWN
+
+B4-38. What do you explicitly NOT know about broker connection and authentication that source review must establish?
+Answer: (as below)
+ * Rather than speculating or assuming code design, the following architectural and operational details are explicitly declared UNKNOWN or UNVERIFIED and require direct source review:
+   1. Exact Implementation and Active Role of broker/auth_recovery.py:
+    a. Unknown: Did auth_recovery.py implement an automated, autonomous in-flight re-login loop (spawning a headless TOTP browser/request session mid-trade), or was it merely an alerting stub/helper that logged the failure and exited?
+    b.Need from Source: Inspect whether any function in broker/auth_recovery.py is actively imported and invoked during a live trading loop or if it was dead/experimental code.
+
+   2. Exact Escalation Mechanism of broker/token_monitor.py:
+    a. Unknown: When the token monitor detected token invalidation mid-session, did it set a global thread-safe flag (threading.Event), call a centralized kill-switch method, or execute os._exit(1) directly from a background thread?
+    b. Need from Source: Inspect the run loop in broker/token_monitor.py to identify its exact IPC, signaling mechanism, and teardown coordination with worker threads.
+
+   3. Granular Retry Decorators on ZerodhaAdapter Methods:
+    a. Unknown: Were retries on read operations (e.g., quote(), ltp(), margins()) handled via explicit Python try...except loops, or did the adapter use an external library like tenacity or urllib3 retry adapters?
+    b. Need from Source: Inspect broker/zerodha_adapter.py for retry decorators, backoff sleep values, and max-retry thresholds.
+
+   4. User Identity Validation Enforcement:
+     a. Unknown: Did the startup sequence strictly enforce an assertion on the returned client ID (e.g., assert profile['user_id'] == expected_user_id), or did it merely fetch and print profile['user_id'] as an informational log banner without failing the boot?
+     b. Need from Source: Check the exact lines in main.py and broker/zerodha_adapter.py following the kite.profile() invocation.
+
+  5. WebSocket Heartbeat & Watchdog Timeout Values:
+    a. Unknown: What were the exact timeout parameters and keep-alive intervals configured on KiteTicker to detect silent TCP half-open stalls or dropped feeds?
+    b. Need from Source: Inspect workers/market_data_worker.py or the adapter's ticker initialization block for reconnect_delay, reconnect_max_tries, and watchdog timer thresholds.
+
+ 6. Systemd Restart and Burst Policies:
+    a. Unknown: What were the exact systemd directives (Restart=, RestartSec=, StartLimitBurst=, StartLimitIntervalSec=) defined in the production unit files that governed crash-loop suppression?
+    b. Need from Source: Inspect trading-system.service and any corresponding timer files in the deployment/systemd directories.
+
+Evidence known:
+ 1. Target repository: trading-system-prod-snapshot.
+ 2. Target files for verification: broker/zerodha_adapter.py, broker/auth_recovery.py, broker/token_monitor.py, workers/market_data_worker.py, main.py, and systemd/trading-system.service.
+
+Confidence: High (that these specific mechanics are ambiguous from memory and require deterministic verification from code).
+
+What ChatGPT should verify: Execute a targeted grep/audit across the target files listed above to definitively resolve each of these 6 explicit unknowns.
+
+B4-39. Which of your answers are recollection only, and which have dated records/screenshots/logs to support them?
+Answer: (as below)
+ A. The answers across Section B4 fall into two distinct evidentiary categories: Artifact-Backed Determinations and Operational Recollections / Observational Memory:
+   1. Answers Backed by Verifiable Code, Configs, or Dated Records:
+     a. B4-01 to B4-05 (Pre-Market Token Generation & Headless Login): Artifacts: scripts/auto_refresh_token.py and scripts/zerodha_login.py in trading-system-prod-snapshot. Verifiable logic demonstrates pyotp TOTP generation, SHA-256 session generation, and disk file writes (access_token.txt).
+     b. B4-08 to B4-15 (Startup Gating & Fail-Fast Exit Codes): Artifacts: main.py, broker/zerodha_adapter.py, and frozen manuals B-001 / B-002. Verified that startup explicitly invoked kite.profile() / margins() and terminated with sys.exit(1) upon TokenException.
+     c. B4-21 & B4-22 (Read vs. Order Retry Boundaries & KiteTicker Auto-Reconnect): Artifacts: broker/zerodha_adapter.py and Kite SDK defaults. Verified that place_order propagated raw exceptions without blind retries, while KiteTicker configured auto_reconnect=True.
+     d. B4-28 to B4-31 (Paper Mode Architecture & In-Memory Session Storage): Artifacts: config/, broker/zerodha_adapter.py, and frozen manuals A-006 / B-004. Verified that paper mode loaded real credentials for live market data via WebSocket/quotes, while intercepting order routing to use local SQLite (paper.db).
+     e. B4-33 (Log File Taxonomy & Storage Paths): Artifacts: Deployment configs and repository layout showing logs/app.log, logs/broker.log, access_token.txt, and systemd unit service definitions.
+
+  2. Answers Based Strictly on Operational Recollection / Human Memory:
+    a. B4-16 (Absence of Autonomous Mid-Day Token Swapping): Memory of actual operational practice—remembering that mid-market token invalidation required an operator to manually run the CLI login and execute systemctl restart trading-system. (Whether broker/auth_recovery.py had an uncompleted background attempt remains a code verification item).
+    b. B4-23 & B4-32 (Specific Incidents & Systemd Crash Loops): Memory of live incident symptoms—specifically pre-market systemd restart floods caused by stale access_token.txt files and Restart=always policies during early VPS migrations.
+    c. B4-24 & B4-36 (Order Blocking vs. Autonomous Flattening): Memory of live failure states—recalling that auth drops blocked all orders mechanically without triggering an emergency local position square-off, requiring Kite mobile app manual intervention.
+    d.B4-35 (Observed Divergent Connection Failures): Observational experience recalling cases where the WebSocket connection remained actively streaming while outbound REST calls failed due to concurrent web/mobile app logins.
+    e. B4-37 (Historical Token Leakage in Debug Traces): Memory of early testing iterations where unhandled tracebacks or debug logs briefly output URL query strings prior to logging sanitization and .gitignore hardening.
+
+ 3. Open Items Requiring Verification (Not Claimed as Fact): The 6 explicit unknowns detailed in B4-38 (internal behavior of auth_recovery.py, thread signaling in token_monitor.py, exact retry decorator implementations, assertion strictness on profile['user_id'], WebSocket watchdog timeouts, and systemd burst parameters).
+
+Evidence known:
+ 1. Source repositories: trading-system-prod-snapshot, trading-system-records.
+ 2. System manuals: A-006_manual.md, A-010_manual.md, B-001, B-002, B-004, and B-005.
+
+Confidence: High (clear separation between what is proven by file artifacts vs. what relies on operator memory).
+
+What ChatGPT should verify: Correlate the specific answers in Category 1 directly against files in trading-system-prod-snapshot to confirm that the code matches the documented manual behavior.
+
+B4-40. Is there any additional broker-connection behaviour, failure, exception, handoff or operational workaround not covered above?
+Answer: (as below)
+  * Yes, looking across the operational lifecycle of the legacy system, there are four notable behaviors and operational workarounds that complete the audit:
+     1. Market Open Concurrency & Cold-Start Burst Throttling (09:14:55–09:15:30 IST):
+       a. Quirk / Failure: At 09:15:00, when strategy engines triggered initial quote subscriptions, margin syncs, and instrument lookups simultaneously, outbound requests frequently collided with Zerodha's strict 3 req/sec REST rate limit or Cloudflare edge saturation.
+       b. Workaround: Startup routines introduced staggered delays and pre-loaded instrument tokens/historical data pre-market (between 09:00 and 09:14) rather than fetching metadata at the opening bell.
+
+     2. The "Dual-Device" Session Eviction Rule (Web/Mobile vs. API):
+       a. Operational Reality: Zerodha Kite Connect enforces a single active interactive session policy per user across devices. If an operator logged into the Kite mobile app to verify capital or monitor a live position, the API access_token was sometimes invalidated or flagged depending on how the session was initiated.
+       b. Operator Workaround: Operators adhered to an operational rule during market hours: never open the Kite mobile app or web portal on the live trading account while the bot is active, unless executing a deliberate emergency manual override.
+
+    3. Headless TOTP Time-Drift Skew (NTP Synchronization Requirement):
+       a. Quirk / Failure: scripts/auto_refresh_token.py calculated TOTP via pyotp based on local machine system time. If the host VPS/EC2 clock drifted by more than 15–20 seconds from true standard time, the generated 6-digit TOTP was rejected by Zerodha's auth endpoint with an invalid credential error.
+       b. Workaround: Forced host NTP clock synchronization (systemd-timesyncd or chrony) as a mandatory operational prerequisite in the host deployment playbook before running the morning auth jobs.
+
+    4. WebSocket Instrument Subscription Limit Chunking:
+       a. Behavior: KiteTicker has hard limits on the number of instrument tokens that can be subscribed in a single subscribe() call (maximum 1,000 instruments, though performance degrades above several hundred without binary mode).
+       b. Code Handling: When monitoring broad strike chains or option universes, the adapter had to chunk subscription lists and throttle calls into multiple batches to avoid silent dropped subscriptions or broker connection drops.
+
+Evidence known:
+  1. Source modules: scripts/auto_refresh_token.py, broker/zerodha_adapter.py, workers/market_data_worker.py, and host setup documentation in B-001.
+  2. Governance context in frozen manuals A-006_manual.md (legacy broker model) and A-010_manual.md (secrets and login hygiene).
+
+Confidence: High (for dual-device session evictions, NTP TOTP drift, and pre-market burst throttling); Medium on the exact chunking batch size used in market_data_worker.py.
+
+What ChatGPT should verify:
+ 1. Check workers/market_data_worker.py in trading-system-prod-snapshot to see how instrument subscription lists are split and passed to KiteTicker.subscribe().
+ 2. Check deployment playbooks or systemd service configurations for NTP/time-sync prerequisites.
+
+SECTION 9 — CROSS-REFERENCE ACKNOWLEDGEMENT (NO NEW DECISIONS)
+
+Please do not reopen the following here; they are already documented/owned elsewhere:
+- A-006: legacy broker model, broker identity/configuration, adapter boundary, product/order model and broker facts.
+- A-010: legacy secrets/environment and login/token handling.
+- B-001: host/service start, supervisors and token-watcher/start timing.
+- B-002: configuration loading and failure/exit-code context.
+- B-003: database/state initialization and its handoffs.
+- B-004 scope: how the legacy application established and tested its broker connection, what authentication/session material it consumed, how connection/auth failures were handled, and what the source/records can establish.
+- B-005: startup reconciliation against broker state.
+- B-006: worker initialization and worker behaviour.
+- B-007: readiness/health gates.
+- B-012: restart/recovery.
+- M-005: token/login workflow design discussion for V2.
+- G/H: order placement and management semantics, except where needed to show a broker connection handoff.
+
+If your answer touches an adjacent topic, note it as a cross-reference rather than making a decision in B-004.
+
+FINAL NOTE FROM RAMA
+Any additional instruction, correction to the scope, or source/record you want considered:
+Answer:
+ 1. Yes, All of the above answers which is originally prepared by Google Gemini ai only, So while using/analysing/designing/implementing please make pre-check the answers again against relevant things or GitHub repo etc for correctness or confirmation of the state/answers [Be Cautious or Safe Play]
+ 2. Treat all of the above my above answers (actually Gemini ai answers) as a torchlight in a dark night only, So don't just blindly stick to it (Meaning Not conclusive or 100% decision or Not a limiting factor for you guys [ChatGPT & Claude] to go beyond for analysing/reviewing/suggesting something else [In one word: Don't just stick to my answers basis 'only')
+ 3. Wherever 'ChatGPT' mentioned which is also applied to 'Claude' too [meaning ChatGPT= ChatGPT & Claude]
+ 4. How Google Gemini ai answered or prepared above answers? I'll upload the ChatGPT file B-005 to Gemini then he prepares someway which I don't know (May be checking with GitHub which can't be sure)
+
+END OF ANSWER SHEET
+
+After completing: return this TXT to ChatGPT. Do not prepare or edit a manual yourself at this stage. ChatGPT will first reconcile your answers with the repositories and records, then prepare the reconciliation TXT and detailed manual MD for review.
