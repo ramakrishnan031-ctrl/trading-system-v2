@@ -1,0 +1,58 @@
+TRADING SYSTEM — CHATGPT REVIEW FOR CLAUDE
+B-005 PUBLICATION + A-011 ERRATUM E-5
+Date: 19-Oct-2026
+Status: REVIEW ONLY — NO FILES STORED, COMMITTED OR PUSHED
+
+1. B-005 PUBLICATION STATE
+Accepted, subject to the evidence Claude reports in its reconciliation. The remote `main` at `de63c4e9087976940feec94dd024213c95643dd1`, its 16-file byte comparison, and the parent `31d85d2db52c2a7f9581c8de95d5307b612ee6c3` establish the reported publication state as of Claude's read-only check at 14:34 IST on 19-Oct-2026.
+
+No further B-005 Git operation is required. B-005 remains frozen at revision 1 under DR-041. Q-43(h) remains OPEN. This does not authorise changes to any frozen B-005 content.
+
+2. A-011 E-5 TEXT — ACCEPT WITH A SMALL PRESENTATION CAUTION
+The proposed section 8.2 replacement and erratum accurately preserve the source answers as quoted:
+- Q19: “YES [But I Guess I have never ever tried Or No full & detailed idea]”
+- Q22: “UNKNOWN, Why? not 100% sure, but supposed to”
+
+The wording correctly preserves both the “YES” and the uncertainty; it does not assert that a HARD_KILL did or did not fire. It also correctly leaves the 03-Aug drill statement and the historical conflict untouched. Q-43(h) must remain OPEN. No A-007 erratum is indicated by the Q19 wording alone.
+
+The strike-through/replacement format is consistent with the stated erratum convention. Keep the source reference to the A-011 answer sheet and the explicit statement that whether a HARD_KILL fired remains unresolved.
+
+Disposition: ChatGPT review finds no substantive correction required to the proposed E-5 text.
+
+3. DR-042 — ACCEPT THE PROPOSED WORDING, BUT DO NOT PRE-MARK IT DECIDED
+The proposed DR-042 description is substantively suitable. However, the sample row ends with `DECIDED` while its own text still contains `[ChatGPT's E-5 review]` and `[Rama's approval]` placeholders and this response is only ChatGPT's review, not Rama's final approval.
+
+Therefore:
+- Keep DR-042 as a proposed/pending row until Rama explicitly approves E-5.
+- Only after Rama's approval, replace the placeholders with exact references and set status to `DECIDED`.
+- Record the date and approval reference accurately; do not invent an approval citation.
+- The row must continue to state that B-005/DR-041 is unchanged and Q-43(h) remains OPEN.
+
+Suggested wording for the decision itself is otherwise acceptable.
+
+4. POWERSHELL COMMIT/PUSH PATTERN — ACCEPT WITH ONE SAFETY IMPROVEMENT
+The proposed script-block approach correctly checks `$LASTEXITCODE` immediately after `git commit` and `git push`, checks the new commit's parent and changed-file list before pushing, and verifies local HEAD against remote `main` after pushing. This addresses the semicolon defect in the earlier one-line command.
+
+For clarity and to avoid relying on the current branch/upstream configuration, make the push target explicit:
+    git push origin HEAD:refs/heads/main
+
+Before staging, run `git fetch origin` and stop unless both local `HEAD` and `origin/main` equal the expected base commit. Do not proceed if the worktree/index contains unrelated changes or the staged path list differs from the approved inventory. A failed check means stop and report output; do not try a second commit/push automatically.
+
+The post-push check should compare the commit returned by `git rev-parse HEAD` with the SHA returned by `git ls-remote origin refs/heads/main`. If they differ, stop and report; do not force-push or reset automatically.
+
+5. V2_DESIGN_LOG DRAFT
+Claude reports that the draft changes only the two session-note lines relative to de63c4e and changes no status of an open question, VP row, or proposal. On that described scope, no content correction is requested. This is a report from Claude's comparison, not an independent byte-level verification performed in this response.
+
+The additional proposed lesson about commit/push sequencing is appropriate as a lesson learned, but should be added only through Rama's approved publication workflow. It is not a reason to amend the already-frozen B-005 package.
+
+6. FINAL DISPOSITION / NEXT STEP
+- B-005: published; frozen; no further action.
+- E-5 wording: ChatGPT review finds it substantively acceptable.
+- DR-042: do not mark DECIDED until Rama explicitly approves and placeholders are replaced with real references.
+- Q-43(h): OPEN; not resolved by E-5.
+- V2_DESIGN_LOG: draft scope is reported acceptable; publication still requires Rama's approval.
+- No commit, push, storage, or changes to frozen files are authorised by this review.
+
+Claude should return the final clean E-5 candidate and a safe, review-only publication package for Rama to inspect. It must not trigger a Stop-hook commit/push or publish anything until Rama explicitly approves.
+
+END

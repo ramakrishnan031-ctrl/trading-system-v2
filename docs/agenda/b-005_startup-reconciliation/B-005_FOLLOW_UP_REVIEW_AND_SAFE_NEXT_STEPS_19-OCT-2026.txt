@@ -1,0 +1,89 @@
+TRADING SYSTEM — B-005 FREEZE / PUBLICATION FOLLOW-UP
+INDEPENDENT REVIEW OF THE ATTACHED B-005 PACKAGE AND PUSH-COMMAND TRANSCRIPT
+Date: 19-Oct-2026
+Audience: Rama and Claude
+Status: FOLLOW-UP REVIEW — DO NOT RE-RUN COMMIT/PUSH UNTIL REPOSITORY STATE IS VERIFIED
+
+1. EXECUTIVE FINDING
+
+The B-005 documentation package is recorded as frozen under DR-041, with B-005 revision 1 and the three errata A-011 E-4, B-004 E-1 and A-008 E-3 accepted. The V2 design inputs remain PROPOSED / OPEN; Q-43(h), the HARD_KILL history conflict, remains OPEN. The separate Q19 wording correction is authorised as A-011 E-5 after the B-005 freeze and is not part of DR-041.
+
+However, the latest screenshot says nothing has been committed or pushed and asks Rama to run the push commands manually. The attached B-005_PUSH_COMMANDS_19-OCT-2026(1).txt contains a PowerShell transcript ending with an apparent successful commit `de63c4e` and push `31d85d2..de63c4e main -> main`. These statements conflict. This is the first issue to resolve; do not assume either the screenshot or the transcript proves the current repository state.
+
+2. IMMEDIATE SAFE NEXT STEP — VERIFY, DO NOT PUSH YET
+
+In the local V2 repository, run read-only checks first:
+
+    Set-Location "D:\Projects\trading-system-v2"
+    git status --short --branch
+    git log -1 --format="%H%n%ad%n%s" --date=iso-strict
+    git rev-parse HEAD
+    git rev-parse origin/main
+    git branch -vv
+    git remote -v
+
+Then compare the result with the transcript:
+- Does local HEAD equal commit `de63c4e` (full hash should be obtained locally)?
+- Does `origin/main` point to the same commit?
+- Is the working tree clean?
+- Does the commit contain the exact 16 expected files?
+- Does GitHub `main` show that commit and its tree?
+
+If the commit and push already happened, do not repeat them. Verify the remote commit/tree and report the evidence. If not, preserve the output and then follow a corrected, explicitly approved commit/push procedure. Do not paste credentials, tokens or private URLs in the report.
+
+3. REVIEW OF THE 16-FILE PACKAGE AND COMMAND TRANSCRIPT
+
+The supplied transcript records:
+- 16 expected paths and SHA-256 checks reported PASS/HASH-OK;
+- a staged-path comparison reported `STAGED LIST MATCHES (16 files)`;
+- the stated repository-wide credential-pattern search found only the previously committed B-004 answer-sheet match;
+- the docs session-link search found none;
+- PART 1 printed `PART 1 PASSED`;
+- PART 2 then displayed a commit and push result.
+
+Those are transcript claims, not independent live verification by ChatGPT. The screenshots alone cannot establish current local or remote repository state.
+
+The staging safeguard is useful: although `git add docs` is broad, the exact staged-path comparison should stop the process if the staged list differs from the 16 expected paths. Keep that guard.
+
+IMPORTANT COMMAND DEFECT: PART 2 uses `git commit -m $msg; git push` on one PowerShell line. A semicolon does not stop the second command when the first fails. Replace this with explicit, separate error checks so `git push` can never run after a failed commit. Also verify the commit's changed-file list before pushing, and verify the remote after the push. Do not execute the current PART 2 block unchanged until this is corrected and the state discrepancy is resolved.
+
+4. Q19 / A-011 E-5 — KEEP SEPARATE FROM B-005
+
+The review notes distinguish:
+- A-011 E-5: a narrow correction to the paraphrase of Rama's Q19 answer, preserving the recorded “YES” and uncertainty without deciding the historical HARD_KILL question;
+- Q-43(h): the unresolved conflict between dated records and the 03-Aug drill statement.
+
+The correction must not be bundled into DR-041 or used to close Q-43(h). Since B-005 is already frozen, prepare E-5 as a separate controlled erratum package, cite the original Q19 answer, preserve the struck original passage and replacement under the established convention, and obtain the required review/approval before replacing the A-011 manual or recording a new decision-register row. Do not modify A-007 E-2 unless new evidence demonstrates it depends on the Q19 paraphrase; the reviewed notes say it does not.
+
+5. B-005 GOVERNANCE AND CONTENT — NO REOPENING REQUIRED
+
+Based on the supplied B-005 manual/review notes and prior acceptance review:
+- B-005 remains frozen revision 1, DR-041.
+- The three accepted errata remain A-011 E-4, B-004 E-1 and A-008 E-3.
+- The B-005 V2 design-input file remains PROPOSED / OPEN; it is not a decision record.
+- Q-43(h) remains OPEN.
+- Do not re-edit the frozen B-005 manual merely to include A-011 E-5.
+- Do not treat repository files, cron declarations, historical records or prior test assertions as proof of a surviving legacy host/runtime. The retired system remains reference-only.
+
+6. RECOMMENDED SEQUENCE
+
+Step 1 — Resolve the contradiction between the screenshot and the push-command transcript with read-only Git status/log/remote checks.
+
+Step 2 — If commit `de63c4e` is already on `origin/main`, verify its 16-file tree and report the commit hash, clean/dirty status and remote equality. Do not create another commit.
+
+Step 3 — If it is not pushed, revise the push instructions so commit failure prevents push, and ensure the exact 16-file staged-list check and hash checks are re-run against the current working tree. Rama remains the person who approves and runs the operation.
+
+Step 4 — Handle A-011 E-5 as a separate post-freeze erratum review, with Q-43(h) still open. Do not combine it with B-005.
+
+Step 5 — Once publication status is established, continue to B-006/B-007 only according to the Master Redesign Agenda and their current status; do not silently merge B-005 findings into those manuals.
+
+7. FINAL REVIEW POSITION
+
+B-005 content/governance: no further B-005 edit recommended from the supplied evidence.
+Publication state: UNKNOWN / CONFLICTING EVIDENCE until the local and remote Git state is checked.
+Push script: amend the commit/push error handling before any new execution.
+A-011 E-5: separate controlled erratum, authorised in principle by Rama, pending preparation/review/approval.
+Q-43(h): OPEN.
+V2 design: no new decision made.
+
+This review does not commit, push, modify project files or operate the retired trading system.
