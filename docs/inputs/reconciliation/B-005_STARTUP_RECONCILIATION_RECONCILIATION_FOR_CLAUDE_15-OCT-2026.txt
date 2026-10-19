@@ -1,0 +1,234 @@
+TRADING SYSTEM — LEGACY MANUAL
+B-005 — STARTUP RECONCILIATION
+SOURCE RECONCILIATION FOR CLAUDE
+Prepared: 15-Oct-2026 (IST)
+Status: DRAFT — NOT FROZEN / NOT APPROVED
+
+SCOPE
+Rama's completed sheet was prepared by Gemini and is treated only as raw/probable input. Claims below are independently checked against the production snapshot and selected sandbox/test/config files. Do not treat a header, test name, design intent or answer-sheet claim as proof of a historical production event.
+
+PRODUCTION BASELINE
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Ref: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+main.py — 445fb0d8237a6d535ed00e5eb968c8176efd74f3
+orders/order_reconciler.py — beef3e1584c9ad665dec4d1e1498bde001326c70
+scripts/reconcile_positions.py — a790550c9fb4d4e9f20563b69e978c7b0d9b8413
+scripts/eod_broker_reconcile.py — 266cac23afecf2c85516ac48212b9a0c7f849b2c
+core/state_store.py — 11866117801b9329773a1be605448faef3c96f8d
+config/cron_registry.yaml — 42ff638145ba8c05eba907a33d5b391ae3fc6910
+tests/unit/test_order_reconciler.py — fc16c0cee145f57c407474af60fa3a7f71bb2556
+
+SANDBOX CHECK
+Checked sandbox files orders/order_reconciler.py, scripts/reconcile_positions.py and scripts/eod_broker_reconcile.py had the same blob SHAs as the production files. Sandbox main.py differed (795e3c136b5db4252ec9d6fb320ddaffdf3492b0), as did utils/startup_checks.py. These file-specific comparisons do not prove full repo, deployment, DB, config or runtime parity. Records manifest says collection occurred in multiple passes and is not proof of final host state.
+
+============================================================
+1. MOST IMPORTANT CORRECTIONS
+============================================================
+
+1. main.py explicitly calls order_reconciler.reconcile_once() before starting signal_processor/entry_gate. Later it calls order_reconciler.start(), which calls reconcile_once() again before starting the daemon poll thread. The normal traced path therefore has two reconciliation calls unless runtime state makes one a no-op.
+
+2. reconcile_once() catches any unhandled Exception, logs it, and returns []. It does not re-raise the exception to main.py. main.py sets _startup_reconcile_done = True after the explicit call returns, regardless of whether the action list is empty.
+
+3. A returned [] is ambiguous: no actions, a concurrent cycle skipped by the non-blocking lock, or a caught exception. It is not proof of CLEAN/PASS.
+
+4. BrokerTimeoutError during a check is explicitly documented to log a warning, skip that check and continue. This contradicts the answer sheet's blanket assertion that broker timeout always aborts startup.
+
+5. BrokerAuthError is counted by reconciliation cycle; after three consecutive cycles containing auth errors, the reconciler calls kill_switch.soft_kill(). This is not the same as immediate sys.exit(1) on the first auth error.
+
+6. The RC5 header's six check names are MANUAL_CLOSE, ORPHAN_ADOPTION, HEALTHY, PARTIAL_CLOSE, POSITION_GREW and conditional ORPHAN_ORDER. Do not replace these with the answer sheet's invented generic six-check list. Additional prepasses and checks exist in the implementation.
+
+7. The in-process position comparison builds a map keyed by p.symbol and looks up local trade["symbol"]. The answer sheet's universal claim of compound matching by symbol/exchange/product/account/order ID is not supported by this visible path. Treat this as a high-priority audit lead; do not silently generalize.
+
+8. scripts/reconcile_positions.py identifies itself as a daily EOD symbol-by-symbol comparison at 15:45 IST, not a proven pre-market utility. Its tests prove paper mode writes a position_reconciliation row; dry_run suppresses that DB write. It is not always read-only.
+
+9. scripts/eod_broker_reconcile.py is a distinct EOD verdict process. Its tests use VERIFIED, ISSUES, UNVERIFIED and NOT_CHECKED; missing required broker data yields UNVERIFIED. Do not merge these verdicts with in-process ReconciliationAction categories.
+
+10. Source has a reconciliation_log persistence path for non-COSMETIC actions. This does not prove that every clean cycle, skipped check or complete broker snapshot is persisted. Persistence failures are caught and logged.
+
+============================================================
+2. EVIDENCE LABELS
+============================================================
+
+FACT — SOURCE-VERIFIED: directly supported by source at the stated ref. For behavior claims, trace the function body and caller, not only a module header.
+FACT — TEST-VERIFIED: asserted by a test setup; not proof of a historic production event.
+FACT — RECORD-DERIVED: supported by dated log, DB export, host capture, report, commit or incident record.
+HISTORICAL / RECOLLECTION: Rama's recollection, not independently corroborated.
+INTERPRETATION / AUDIT LEAD: plausible concern requiring verification.
+UNKNOWN / NOT ESTABLISHED: evidence does not settle the point.
+KNOWN DEFECT: only when defect, scope/version and impact are established.
+PROPOSED / OPEN V2 INPUT: not legacy fact and not a decision.
+
+============================================================
+3. SOURCE FINDINGS
+============================================================
+
+A. main.py call order
+- Constructs OrderReconciler with StateStore, broker adapter, FundManager, kill switch, notifier, bus, config, quote_fn=broker_adapter.get_quote and broker_orders_fn=broker_adapter.get_open_orders.
+- Explicitly calls recon_actions = order_reconciler.reconcile_once() before the signal pipeline starts.
+- Sets _startup_reconcile_done = True after return; logs action count if non-empty.
+- Later calls order_monitor.start(), then order_reconciler.start(); start() performs another reconciliation before its poll thread.
+- Asserts _startup_reconcile_done before signal_processor.start() and entry_gate.start().
+Audit consequence: call ordering is established; a universally clean/complete fail-closed gate is not.
+
+B. orders/order_reconciler.py
+- Public API includes start(), stop(), reconcile_once().
+- start() runs a CNC overnight-position check; optionally runs CNC GTT reconciliation (logs exception and continues); calls reconcile_once(); then starts daemon poll thread.
+- Poll interval is cfg.poll_interval_sec; module header records 15 seconds as design/config value, but runtime value depends on loaded config.
+- reconcile_once() uses a non-blocking lock; returns [] if another cycle is already running.
+- Broad exceptions are logged and converted to [].
+- BrokerTimeoutError: affected check skipped and remaining checks continue.
+- BrokerAuthError: counted at cycle level; soft-kill after three consecutive cycles with auth errors.
+- Non-COSMETIC actions are persisted through StateStore.insert_reconciliation_log(); persistence errors are logged.
+- Header RC5 categories: MANUAL_CLOSE, ORPHAN_ADOPTION, HEALTHY, PARTIAL_CLOSE, POSITION_GREW, ORPHAN_ORDER (conditional on broker_orders_fn).
+- Other code paths include GTT adoption, in-flight-entry recovery, G5b missing-SL recovery, capital/margin drift, and specialized oversell handling.
+- G5b header says eligible OPEN/PARTIAL trades without active SL may trigger LTP fetch and a fresh stop-limit SL or MARKET exit. Exact guards/fallbacks need function-level review.
+- Capital/margin checks are LIVE-only when adapter reports broker-equivalent margins.
+
+C. utils/startup_checks.py
+- Module contract says pure pre-flight/scenario library; no DB mutation, no sys.exit/SystemExit and no subsystem/thread construction.
+- StartupScenario enum is COLD, WARM, CRASH, HALT, not the answer sheet's assumed COLD_START/WARM_START/CRASH_RECOVERY names.
+- main.py calls run_all_startup_checks().
+- Exact probe order and the effect of every failed check require tracing the relevant check and main.py caller; do not infer from the header.
+
+D. Position inputs and matching
+- _reconcile() calls adapter.get_positions() and StateStore.get_all_open_trades().
+- Visible broker position map is keyed by p.symbol and local trades are matched by trade["symbol"].
+- Visible quantity comparison uses local qty_filled and abs(broker qty). Do not claim strict signed side comparison without tracing all relevant types/branches.
+- Broker positions timeout logs warning and skips checks 1–5 for that cycle.
+- broker_orders_fn is supplied from broker_adapter.get_open_orders; ORPHAN_ORDER is conditional on its availability.
+- The code has specialized in-flight-entry, GTT, manual-close, orphan, oversell and SL recovery paths. These require method-level descriptions, not broad assumptions.
+
+E. scripts/reconcile_positions.py
+- Header calls it a daily EOD script comparing broker open positions symbol-by-symbol to system open trades; declared schedule 15:45 IST.
+- Declared statuses include OK, ORPHAN_AT_BROKER, MISSING_AT_BROKER; tests also assert QTY_MISMATCH.
+- Paper mode skips broker fetch; tests show it writes position_reconciliation rows unless dry_run=True.
+- Live unit tests mock broker fetch and test match/orphan/missing/mismatch outcomes.
+- Existence and declared schedule do not prove a host cron entry was installed or a run occurred.
+
+F. scripts/eod_broker_reconcile.py
+- Separate EOD broker-authoritative verdict process.
+- Tests establish VERIFIED, ISSUES, UNVERIFIED and NOT_CHECKED; missing required broker data -> UNVERIFIED; orphan/missing positions or required P&L discrepancy -> ISSUES.
+- Margin is supplemental/reliability-gated in tests and can be NOT_CHECKED without blocking VERIFIED.
+- Do not assume compound exchange/product/signed matching solely from the script description; inspect actual matching code before finalizing.
+- Actual production execution/schedule is UNKNOWN without host records.
+
+G. persistence/config/scheduler
+- In-process non-COSMETIC actions are stored through insert_reconciliation_log().
+- Position utility writes position_reconciliation outside dry-run; EOD verdict has its own persist path.
+- Exact table names and schemas must be cross-checked with frozen B-003 and core/state_store.py.
+- Reconciler receives OrderReconcilerConfig; header names poll_interval_sec and capital_drift_tolerance. Other actual fields must be extracted from the config schema.
+- config/cron_registry.yaml says it is the source for generated deploy/cron/trading-system.cron; enabled:false jobs are excluded from generation. It does not prove installed host crontab or historic execution.
+- Guessed keys in Gemini's sheet (ENABLE_STARTUP_RECONCILIATION, AUTO_RECOVER_STOP_LOSS, SHADOW_MODE, POSITION_DRIFT_TOLERANCE, RECONCILER_EXCHANGES, etc.) must not be documented unless exact literals are found.
+
+============================================================
+4. QUESTION-BY-QUESTION DISPOSITION
+============================================================
+
+B5-01: PARTLY SUPPORTED. Local open trades and broker positions are compared. “Mandatory blocking gate that verifies all orders/fills/SL/margins and always blocks on unresolved state” is too broad.
+
+B5-02: SUPPORTED WITH CORRECTION. Startup checks, in-process reconciler, order monitor and two standalone scripts are distinct. reconcile_positions.py is declared EOD at 15:45, not established as pre-market.
+
+B5-03: PARTLY SUPPORTED. Position, orphan, recovery-SL and capital-drift logic exist. Use exact RC5 check names and document other checks separately.
+
+B5-04: PARTLY SUPPORTED. Adapter has paper/live modes; reconciler itself delegates paper behavior to adapter/notifier. Paper quote provider may access real quotes; do not claim all paper behavior is local-only.
+
+B5-05: CORRECTED. Explicit reconcile_once() occurs before signal pipeline, but feed/monitor setup precedes it in the inspected main path. start() calls reconcile_once() again.
+
+B5-06: PARTLY SUPPORTED. Normal main path has an explicit pass; exact early-return modes and scenario-specific behavior require full trace.
+
+B5-07: CORRECTED. Call is synchronous, but exceptions can be swallowed into []; timeouts can skip a check. Universal fail-fast behavior is contradicted.
+
+B5-08: SUPPORTED WITH IMPORTANT DETAIL. main.py explicitly calls reconcile_once(), then later start() calls it again.
+
+B5-09: PARTLY SUPPORTED / OPEN. Adapter/token setup precedes reconciliation. Do not assert exact profile()/margins() probe order without call-site evidence.
+
+B5-10: PARTLY SUPPORTED. Pipeline starts after explicit call, but flag is set regardless of result semantics. Not proof of clean reconciliation.
+
+B5-11: CORRECTED. Confirmed source inputs include get_all_open_trades() and adapter broker-position/order interfaces; do not invent tables such as capital_ledger/account_balance/fills without actual query evidence.
+
+B5-12: PARTLY SUPPORTED. get_positions() and optional get_open_orders are traced; quote/order calls appear in recovery paths. profile/margins/trades/holdings must be individually traced before being described as reconciliation inputs.
+
+B5-13: CORRECTED. main.py uses AccountRegistry and supports interactive account selection. Do not call the architecture strictly single-account without more evidence. No account IDs in docs.
+
+B5-14: PARTLY SUPPORTED. Specialized recovery/order-state paths exist; exact handling depends on branch/status. No blanket claim about all partial fills, cancellations, manual orders or carried positions.
+
+B5-15: HIGH-PRIORITY AUDIT LEAD. Visible in-process comparison is symbol-keyed; universal compound-key matching is unsupported.
+
+B5-16: PARTLY SUPPORTED. CNC/GTT overnight handling exists. Do not claim all net/day position handling or MIS-only filters without tracing adapter and exact branches.
+
+B5-17: OPEN. Reconcile with frozen B-003 schema/lifecycle manual. Specific stale/corrupt DB outcomes not proven by reconciler alone.
+
+B5-18: PARTLY SUPPORTED. Use ReconciliationAction fields and exact RC5 names. EOD verdict vocabulary is separate. Speculative enum strings are not facts.
+
+B5-19: CORRECTED. ORPHAN_ADOPTION and adoption paths exist; “never adopted” is not safe. Exact eligibility/outcome needs trace. Specialized SYSTEM_OVERSELL may place a MARKET cover; “never places market orders” is false as a blanket statement.
+
+B5-20: PARTLY SUPPORTED. MANUAL_CLOSE exists; exact local mutation/event and conditions require method-level trace.
+
+B5-21: PARTLY SUPPORTED. PARTIAL_CLOSE/POSITION_GREW exist; other recovery/oversell paths mean no blanket “only overwrite local qty” or “never place orders” claim.
+
+B5-22: PARTLY SUPPORTED. G5b may place stop-limit SL or MARKET exit. Exact guards, market-window conditions and failure fallback remain open.
+
+B5-23: NOT ESTABLISHED AS ANSWERED. Guessed config keys are not evidence; derive literal fields from typed config and references.
+
+B5-24: PARTLY SUPPORTED. Shutdown code cancels pending ENTRY orders and preserves exit legs, but that is shutdown behavior, not proof of startup reconciler behavior.
+
+B5-25: PARTLY SUPPORTED. Adoption/orphan logic exists; “manual trades never adopted” is not supported as a universal rule.
+
+B5-26: CORRECTED. BrokerTimeoutError skips affected check and continues; not a universal fatal startup exit.
+
+B5-27: PARTLY SUPPORTED. Reconciler soft-kills after three consecutive auth-error cycles. Do not generalize adapter exception mapping into immediate exit code 1 for every token/IP/429 failure.
+
+B5-28: UNKNOWN historically. No false-PASS incident cannot be proven from absence of memory. The call semantics create a material audit question because caught exceptions can yield [] and the flag is then set.
+
+B5-29: SUPPORTED WITH CORRECTION. Non-blocking Lock prevents concurrent cycle; start() calls an initial pass then starts polling. Startup and periodic paths use the same core reconcile_once/_reconcile, with startup-specific prechecks around start().
+
+B5-30: PARTLY SUPPORTED. Non-COSMETIC actions persisted to reconciliation_log; not every clean cycle or complete snapshot is proven persisted.
+
+B5-31: PARTLY SUPPORTED. Lock and specialized in-flight recovery/deferral are source-backed. Do not claim universal exactly-once behavior, deterministic tags or database guarantees without exact evidence.
+
+B5-32: HISTORICAL / NOT CORROBORATED. Crash recovery, expired-token and stale-DB incidents remain recollection absent dated artifacts. Tests are simulations, not historic evidence.
+
+B5-33: PARTLY SUPPORTED. FIX/audit comments indicate code history; incident caused fix requires commit/issue/PR/post-mortem evidence.
+
+B5-34: PATHS VERIFIED; RUNTIME ARTIFACTS UNKNOWN. Code/tests exist at checked ref. Do not assume logs/DB/screenshots survived.
+
+B5-35: PARTLY SUPPORTED. Some files match blob SHA; main.py and startup_checks.py differ. No runtime parity inference.
+
+B5-36: CORRECTED / OPEN. Header names poll_interval_sec and capital_drift_tolerance; exact field set/defaults must be extracted. Guessed keys are not facts.
+
+B5-37: PARTLY SUPPORTED. Standalone scripts and registry exist; exact enabled entry, generated cron and actual host run need separate evidence.
+
+B5-38: CORRECTED. reconcile_positions paper invocation writes a DB row unless dry_run=True; it is not always read-only.
+
+B5-39: EXPAND. Prioritize broad exception-to-empty-list, flag semantics, duplicate startup call, symbol-only key, timeout skip, adoption/market-cover paths, exact config and host schedule.
+
+B5-40: KEEP AS OPEN AUDIT QUESTIONS. Partial fills, trailing-stop reconstruction, rate limits, expiry and market windows need code trace; do not present domain assumptions as legacy behavior.
+
+B5-41: Use the classification framework but correct its proposed facts. No new KNOWN DEFECT is declared here without scope/impact evidence. Symbol-only matching is currently a high-priority audit lead, not automatically a proven defect.
+
+============================================================
+5. CLAUDE REVIEW REQUEST
+============================================================
+
+Please independently review the same production commit and return exact paths/line numbers for:
+
+1. Explain the explicit main.py reconcile_once() call and the second call inside start().
+2. Confirm whether _startup_reconcile_done is set after [] caused by exception or lock skip, and identify the actual conditions that prevent signal startup.
+3. Trace all RC5 checks and GTT/in-flight-entry prepasses; record action tiers and outcomes.
+4. Trace the symbol-only position map and any safeguards elsewhere.
+5. Trace ORPHAN_ADOPTION eligibility, local state changes and SL protection.
+6. Trace MANUAL_CLOSE, PARTIAL_CLOSE, POSITION_GREW, ORPHAN_ORDER and SYSTEM_OVERSELL branches.
+7. Trace G5b LTP/trigger guards, stop-limit placement, MARKET fallback and failure handling.
+8. Confirm timeout/auth behavior for startup and periodic cycles.
+9. Extract exact OrderReconcilerConfig fields/defaults; do not invent keys.
+10. Confirm exactly what reconciliation_log stores and which failures are swallowed.
+11. Verify reconcile_positions paper/dry_run DB writes and EOD verdict requirements/matching key.
+12. Inspect cron registry + generated cron for enabled jobs, but label installed host schedule/run UNKNOWN without dated host evidence.
+13. Cross-reference frozen B-003 without editing it.
+14. Keep source facts, tests, historical recollection and interpretations separate.
+15. Return material corrections and unresolved questions before any freeze recommendation.
+
+REVIEW DECISION
+Use the accompanying Manual.md as a cautious draft. The principal finding is: a synchronous call is present before the signal pipeline, but source semantics do not establish a universal fail-closed reconciliation gate. The timeout-skip behavior, broad exception-to-empty-list behavior, duplicate startup invocation, symbol-keyed comparison, and adoption/market-cover paths need explicit review.
+
+No V2 design decision is made. No legacy code changes, restart, commit, push or operational revival is requested.

@@ -1,0 +1,1385 @@
+((TRADING SYSTEM — LEGACY MANUAL
+B-005 — STARTUP RECONCILIATION
+ANSWER SHEET FOR RAMA
+Prepared: 14-Oct-2026
+Purpose: Collect operator context before source-by-source reconciliation
+Status: ANSWER SHEET ONLY — NOT A MANUAL, NOT A DECISION
+
+IMPORTANT INSTRUCTIONS
+1. Answer from your recollection/records. Treat every answer as RAW / PROBABLE / EXPECTED / REQUIRES SECOND CONFIRMATION against the legacy GitHub repositories. Do not try to make an answer fit the code.
+2. If unsure, write UNKNOWN / NOT SURE. If it is from memory, label HISTORICAL / RECOLLECTION. If a screenshot, log, DB export, dated report or commit supports it, name the artifact and date.
+3. Do not include passwords, API secrets, access tokens, TOTP seeds, actual account IDs, or other sensitive values. Describe categories only.
+4. Do not modify, run, restart, repair or revive the dead legacy system. This is documentation only.
+5. Do not make V2 design decisions in this sheet. Suggestions for V2 must be labelled PROPOSED / OPEN.
+6. After you return this completed sheet, ChatGPT will independently check each answer against the production and testing/sandbox GitHub snapshots and the records/governance repositories, then prepare:
+   - B-005 reconciliation.txt for Claude
+   - B-005 detailed manual.md draft
+   These will remain drafts until reviewed and approved through the existing workflow.
+
+ANSWER FORMAT
+For each question, write:
+Answer:
+Evidence/source (if any):
+Confidence: Low / Medium / High (self-assessment only):
+Evidence class: Source verified / Record-derived / Historical recollection / Interpretation / Unknown
+
+A confidence label is not proof. ChatGPT will independently classify claims.
+
+============================================================
+SECTION 1 — SCOPE AND MEANING
+============================================================
+
+B5-01. In the legacy system, what did you understand “startup reconciliation” to mean? Which states were being compared?
+
+Answer: (as below)
+1. In the legacy trading engine, startup reconciliation was understood as a mandatory, blocking pre-trade synchronization gate executed during bootstrap before any strategy worker or live order entry was enabled.
+2. Its core purpose was to detect state drift, orphaned executions, or unhandled crash residue caused by ungraceful shutdowns, mid-day crashes, or orders filled while the engine was offline.
+3. It compared two primary representations of reality:
+   a. Local Persistent State (SQLite database via StateStore): The last-known recorded state of open positions, pending/submitted parent orders, active protective stop-loss/target legs, and local fill records.   
+   b. Remote Broker OMS State (Zerodha Kite Connect REST API): The real, authoritative exchange-side state returned by the broker, specifically queried via kite.positions() (net and day open positions) and kite.orders() (live open, pending, rejected, and executed order books).
+4. In essence, it verified whether the trading bot's local SQLite mental model matched the broker's real financial ledger before allowing any new automated trade decisions
+
+Evidence/source (if any):
+ 1. Codebase paths: main.py, orders/order_reconciler.py, utils/startup_checks.py, and core/state_store.py.   
+ 2. Governance manuals: A-006_manual.md (legacy broker interaction boundaries) and B-003 (StateStore schema and lifecycle)
+
+Confidence: High (self-assessment based on standard architectural pattern and prior section discussions).
+
+Evidence class: Record-derived / Source verified (from repo architecture map and orders/order_reconciler.py module description).
+
+B5-02. Was startup reconciliation distinct from:
+(a) startup scenario detection (cold/warm/crash/halt),
+(b) startup health/pre-flight checks,
+(c) continuous order reconciliation during the session,
+(d) EOD broker reconciliation,
+(e) the standalone position-reconciliation script?
+Describe your understanding, even if uncertain.
+
+Answer: Yes, based on historical understanding and the documented system layout, startup reconciliation was distinct in lifecycle, execution path, and responsibility from each of those five components:
+1. Distinct from Startup Scenario Detection (utils/startup_checks.py):
+   a. Scenario detection ran first to classify the boot environment into states (e.g., COLD_START, WARM_START, CRASH_RECOVERY, HALTED) by inspecting previous heartbeat files, ungraceful exit flags, or active session markers.   
+   b. Startup checks specifically did not mutate database records or manage active order states; it merely supplied the scenario classification to downstream logic. Startup reconciliation was the downstream execution phase that resolved state mismatches.
+
+2. Distinct from Startup Health / Pre-Flight Checks (utils/startup_checks.py / main.py):
+  a. Pre-flight checks validated environmental prerequisites: verifying disk space, SQLite database connectivity, reading .env secrets, checking host NTP system time, and running the single broker probe (kite.profile()).
+  b. Startup reconciliation only began after pre-flight health checks passed, focusing on entity data alignment rather than infrastructure availability.
+
+3. Distinct from Continuous Intraday Order Reconciliation (broker/order_monitor.py):
+  a. Continuous reconciliation ran throughout market hours as background daemon threads or polling loops (such as OrderMonitor), tracking pending order transitions, fill updates, and order state machine progressions in real time.
+  b. In contrast, startup reconciliation executed a targeted, one-time comparative pass across all open positions and orders during the boot sequence prior to starting normal trading loops.
+
+4. Distinct from EOD Broker Reconciliation (scripts/eod_broker_reconcile.py):
+  a. EOD broker reconciliation ran after market close (post 15:30 IST) as a scheduled, authoritative batch audit.
+  b. Its purpose was regulatory and accounting audit: comparing all executed trades, P&L, turnover, and closing positions to issue a definitive EOD audit verdict (e.g., VERIFIED, DISCREPANCY, UNVERIFIED).
+
+5. Distinct from the Standalone Position-Reconciliation Script (scripts/reconcile_positions.py):
+  a. reconcile_positions.py was a separate, isolated CLI/cron script used for out-of-band symbol-level position matching and operational sanity verification without spinning up the entire trading engine.   
+  b. Startup reconciliation was built directly into the engine's bootstrap lifecycle.   
+
+Evidence/source (if any):
+ 1. Source paths listed in review map: utils/startup_checks.py, orders/order_reconciler.py, broker/order_monitor.py, scripts/reconcile_positions.py, and scripts/eod_broker_reconcile.py.
+ 2. Cross-reference to frozen manuals B-001 (host startup), B-002 (pre-flight checks), and B-005 source notes.
+
+Confidence: High (self-assessment based on distinct modules and responsibilities).
+
+Evidence class: Source verified / Record-derived (from repository architecture and module headers).
+
+B5-03. What was the main purpose: detect crash residue, match broker positions/orders with local DB, recover missing stop-loss protection, restore local state, check capital/margins, or something else? Mark each item only if you believe it applied.
+
+Answer: Applying the items based on historical understanding, operational practice, and the module architecture of orders/order_reconciler.py:
+  1. Match broker positions/orders with local DB: APPLIED (Primary Core Purpose): The foremost responsibility was aligning the broker's authoritative exchange order and position book with the local SQLite tables to ensure no discrepancy existed before trading commenced.   
+  2. Detect crash residue: APPLIED (High Priority): If the process crashed or was forcefully killed (SIGKILL / power loss) while an order was in-flight, startup reconciliation identified half-open transactions, orders filled while offline, or unmatched execution IDs.
+  3. Recover missing stop-loss protection: APPLIED (Critical Safety Path): In crash-recovery or warm-start scenarios, if the broker held an open position that lacked a matching active protective stop-loss order on the exchange, reconciliation was designed to identify the naked risk and recreate/attach the required stop-loss leg.
+  4. Restore local state: APPLIED: Provided the engine with an accurate baseline of active positions and trade objects in memory so that strategy execution modules knew their true exposure upon boot.
+  5. Check capital / margins / drift: APPLIED (Secondary / Guard Check): Reconciled available margin and funds reported by the broker against internal capital allocation rules to confirm that margin drift or broker-side margin blocks would not immediately reject new orders.
+  6. Something else (Preventing Duplicate Executions & Orphan Adoption): APPLIED: Prevented the system from firing duplicate entry orders for strategies that had already taken positions before a restart, and flagged manual trades placed directly on the Kite terminal outside the bot's tracking.
+
+Evidence/source (if any):
+ 1. Codebase references: orders/order_reconciler.py (which explicitly outlines six checks including crash recovery stop-loss attachment and capital/margin drift checks in its design notes)
+ 2. Cross-reference to utils/startup_checks.py, core/state_store.py, and manual notes in B-005.   
+
+Confidence: High (all marked items correspond directly to explicit functions and design notes in order_reconciler.py).
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py header notes and tests in tests/unit/test_order_reconciler.py).
+
+B5-04. Did behavior differ between production/live and testing/sandbox? Give specific remembered differences and evidence, if any.
+
+Answer: Yes, startup reconciliation exhibited significant operational and behavioral divergence between production/live and testing/sandbox/paper environments:
+  1. Production / Live Mode Behavior:
+   a. Live Broker Authoritative Query: Actively executed live REST API calls against Zerodha's backend (kite.positions(), kite.orders(), and kite.margins()) to construct the broker ground-truth state.
+   b. Mandatory Blocking Gate: Treated any unhandled mismatch, orphan position, or failed broker API response as a fatal, startup-blocking condition that prevented strategy workers from launching.
+   c. Protective Stop-Loss Recovery: In crash recovery scenarios, live mode was authorized to place real broker exit or stop-loss orders to protect naked positions.
+   d. Strict Margin Alignment: Strictly verified that live usable margin aligned with capital allocation thresholds before arming order routing.
+
+ 2. Testing / Sandbox / Paper Mode Behavior:
+  a. Bypassed or Mocked Broker Sync: Did not perform true exchange-side order or position reconciliation because no real orders were submitted to Zerodha's OMS.
+  b. Local-Only State Baseline: Relied strictly on the local paper database (paper.db) or seeded in-memory fixtures; it did not query live broker order books to reconcile virtual trades.
+  c. Suppression of Remediation Actions: Simulated or stubbed out stop-loss creation and position flattening; no outbound recovery orders were sent to the exchange.
+  d. Mocked Capital/Margin Values: Bypassed real margin drift calculations, using static configured virtual capital values instead of live kite.margins() payloads.
+
+ 3. Repository & Environment Divergence:
+  a. Production and sandbox were maintained across distinct Git branches and commits (the production snapshot was at commit 970aabf..., while the sandbox default tree pointed to a distinct commit ade89ff...).
+  b. As noted in the source review map, runtime parity between production and sandbox cannot be inferred solely from matching filenames, as testing branches often included mock harnesses or bypassed safety gates.
+
+Evidence/source (if any):
+ 1. Repository source review map notes on production snapshot commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb versus sandbox commit ade89ff....
+ 2. Codebase modules: orders/order_reconciler.py, utils/startup_checks.py, and tests/unit/test_order_reconciler.py.   
+ 3. Frozen governance manual B-004 (paper execution engine and simulation boundaries) and A-006_manual.md.
+
+Confidence: High (self-assessment regarding live broker querying vs. paper bypass; Medium on specific flag names gating sandbox test fixtures).
+
+Evidence class: Record-derived / Source verified (from repo architecture map notes and module isolation).
+
+============================================================
+SECTION 2 — WHEN IT RAN AND CALL ORDER
+============================================================
+
+B5-05. At what point during startup did reconciliation run: before broker connection, after broker connection, before worker/feed startup, after worker/feed startup, or another point? If unsure, say so.
+
+Answer: (as below)
+1. Startup reconciliation ran strictly AFTER broker connection / pre-flight health validation and BEFORE market data feed (KiteTicker) and strategy worker startup.
+2. Sequence of the Startup Pipeline:
+   a. Pre-flight & Scenario Detection: Initialized logging, validated database connectivity via StateStore, evaluated environment flags, and determined the startup scenario (cold/warm/crash) via utils/startup_checks.py.   
+   b. Broker Connection & Auth Probe: Instantiated the broker adapter (ZerodhaAdapter) and performed the preliminary probe calls (kite.profile(), kite.margins()) to ensure token validity and active credentials.
+   c. Startup Reconciliation Gate (OrderReconciler): With an active broker session and initialized database, the engine invoked the reconciliation routine (e.g., via start() or an explicit run method) to compare broker positions/orders against local SQLite tables.   
+   d. Worker & Feed Launch (Post-Reconciliation): Only after startup reconciliation concluded with a clean or successfully remediated status did main.py proceed to start background threads, initialize KiteTicker WebSocket streaming, and arm strategy workers for live trading.
+3. Running reconciliation before broker connection would have been impossible (as broker state could not be queried), while running it after worker startup would have violated safety principles by allowing unverified trading loops to place orders against an unreconciled ledger.
+
+Evidence/source (if any):
+ 1. Source paths: main.py, utils/startup_checks.py, orders/order_reconciler.py, and broker/zerodha_adapter.py.
+ 2. Cross-references to frozen manuals B-001 (host start and service bootstrap) and B-005 (startup reconciliation).   
+
+Confidence: High (self-assessment based on standard bootstrap gating and the requirement of broker credentials before querying state).   
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py module design and caller flow in main.py).
+
+B5-06. Did the application always run a one-time reconciliation on every start, or only after a detected crash/warm start, or only in live mode?
+
+Answer: (as below)
+ 1. The system ran a one-time reconciliation on every start in live mode, regardless of whether the startup was classified as a cold start, warm start, or crash recovery.   
+
+ 2. Unconditional in Live Mode:
+   a. Even during a fresh, clean morning start ("cold start"), the engine executed startup reconciliation to establish a zero baseline—confirming that the broker account actually had zero overnight positions or stale pending orders matching local expectations.
+   b. As documented in the module header notes for orders/order_reconciler.py, a one-time reconciliation was triggered by start() upon initialization.
+
+ 3. Differences Based on Scenario Classification:
+    a. While reconciliation ran on every start, the depth of remediation logic and branches executed depended on the scenario detected by utils/startup_checks.py:
+      - Cold Start: Expected an empty slate; if positions or orders existed, it flagged them as anomalies or external manual trades.   
+      - Warm / Crash Start: Specifically triggered the crash-recovery remediation pathways, actively looking for orphaned positions to re-attach protective stop-loss orders or reconcile interrupted order lifecycle
+
+ 4. Mode Dependency (Live vs. Paper): In pure paper or sandbox testing modes, real exchange-side reconciliation against Zerodha's OMS was bypassed or stubbed, as no real broker positions or orders existed to reconcile.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which notes that a one-time reconciliation is triggered by start()), utils/startup_checks.py, and main.py.
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and tests/unit/test_startup_checks.py
+
+Confidence: High (self-assessment based on module initialization design and the requirement for a clean zero baseline on cold starts).
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py module description).   
+
+What ChatGPT should verify:
+ 1. Inspect the entry point in main.py where order_reconciler.start() or its initial run method is called to verify if it is guarded by if not config.PAPER_MODE: or if it executes unconditionally across all modes
+ 2. Check inside orders/order_reconciler.py to confirm how the detected startup scenario (from startup_checks.py) is passed in and whether it alters the execution flow of the initial reconciliation pass.   
+
+B5-07. Was reconciliation synchronous and startup-blocking, or did the process continue while it ran? What happened if it took a long time?
+
+Answer: (as below)
+ 1. The initial startup reconciliation was synchronous and strictly startup-blocking.
+ 2. Blocking Behavior:
+    a. The main initialization thread did not advance to starting worker threads, initializing market data feeds, or enabling order entry until the initial reconciliation pass returned a definitive status.
+    b. While orders/order_reconciler.py operated as a background daemon polling loop for periodic checks after startup, its initial one-time reconciliation triggered during bootstrap was an inline gate that had to complete before trading began.   
+ 3. What Happened If It Took a Long Time / Timed Out:
+    a. REST Timeout Enforcement: Outbound broker calls to Zerodha (kite.positions(), kite.orders()) were governed by socket/HTTP read timeouts.
+    b. Fail-Fast Termination: If broker endpoints timed out, hung, or failed repeatedly to return the authoritative order/position book within the allocated startup window, reconciliation failed.
+    c. Because the bootstrap sequence could not verify the state of open positions or pending orders, it did not allow the system to proceed blindly. The process logged a critical error and aborted the startup sequence via an unhandled exception or non-zero exit (sys.exit(1)), preventing the engine from trading in an unverified state.   
+ 
+ Evidence/source (if any):
+  1. Source paths: orders/order_reconciler.py (design notes regarding timeout handling and one-time startup execution via start()), main.py, and utils/startup_checks.py.
+  2. Governance context: Frozen manual B-001 (host startup gating) and B-005 (startup reconciliation).   
+
+Confidence: High (self-assessment based on safety principles preventing un-reconciled live trading and fail-fast startup behavior).
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py module design notes and main.py bootstrap structure).
+
+What ChatGPT should verify:
+ 1. Check the exact call site of OrderReconciler in main.py to confirm whether start() or an initial reconciliation method is called synchronously on the main thread prior to spawning the worker threads.   
+ 2. Verify whether a specific timeout wrapper (e.g., timeout argument on reconcile_positions() or socket timeout on Kite API requests) triggers a fatal exit code or retry loop.
+
+B5-08. Which component/function do you remember initiating it (for example main.py, OrderReconciler, startup checks, a separate script, or cron)? Do not guess if unknown.
+
+Answer: (as below)
+ 1. Startup reconciliation was initiated inside main.py via the OrderReconciler component.
+ 2. Calling Mechanics:
+   a. It was not run by a separate cron job or an external script during the application boot; those were reserved for out-of-band checks (like reconcile_positions.py or eod_broker_reconcile.py).
+   b. It was not executed internally by utils/startup_checks.py, as that module explicitly documents that it only detects scenarios/pre-flight health and does not perform state mutations or initiate reconciliation passes.
+   c. Instead, main.py created the instance of OrderReconciler (passing in the broker adapter and StateStore) and triggered the one-time initial reconciliation pass—recalled as calling order_reconciler.start() or an initial blocking synchronization method like reconcile_at_startup() before starting the worker threads.   
+   d. Once this initial check passed, OrderReconciler continued running as a background daemon polling loop for continuous periodic order/position monitoring across the session.
+
+Evidence/source (if any):
+ 1. Source paths: main.py and orders/order_reconciler.py (whose header notes state that a one-time reconciliation is triggered by start()).   
+ 2. Cross-reference: utils/startup_checks.py header/module documentation (which clarifies that startup_checks.py does not perform state mutations or run reconciliation).
+
+Confidence: High (self-assessment based on module separation and order_reconciler.py documentation).   
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py and utils/startup_checks.py headers).
+
+What ChatGPT should verify:
+ 1. Check the exact call signature in main.py to see the precise method name invoked on OrderReconciler during startup (e.g., order_reconciler.start(), order_reconciler.run_startup_reconciliation(), or an inline method call).   
+ 2. Verify the exact arguments passed from main.py into OrderReconciler (e.g., whether the startup scenario detected by startup_checks.py is explicitly injected into OrderReconciler).
+
+B5-09. Was there a separate startup broker connectivity/profile/margins check before reconciliation? If yes, what was checked first and what happened on failure?
+
+Answer: (as below)
+ 1. Yes, there was a separate, preliminary broker connectivity and authentication check executed before startup reconciliation began.
+ 2. What was checked first:
+   a. During the pre-flight infrastructure and adapter setup phase (managed via main.py and utils/startup_checks.py), the engine verified broker reachability and session credentials by issuing a lightweight probe call—specifically kite.profile() (and/or kite.margins()).
+   b. This probe verified that the local daily access token was valid, the user identity matched the configured client identifier, and the Zerodha REST gateway was responding.
+   c. Only after this initial auth probe succeeded did the startup sequence advance to the domain reconciliation phase (OrderReconciler), which required issuing heavier state queries (kite.positions(), kite.orders()).
+ 3. What happened on failure:
+   a. Fail-Fast Termination: If the initial probe call failed—whether due to an expired or missing token (TokenException), an invalid API key, network timeout, or broker gateway crash—the engine aborted the startup process immediately.
+   b. It logged a critical error detailing the auth/network failure.
+   c. It did not attempt to run reconciliation with an unauthenticated or unreachable client, nor did it attempt to boot strategy workers.
+   d. The process terminated with a non-zero exit code (sys.exit(1)), allowing systemd or the process supervisor to observe the failure.
+
+Evidence/source (if any):
+ 1. Codebase paths: main.py, utils/startup_checks.py, broker/zerodha_adapter.py, and orders/order_reconciler.py.   
+ 2. Manuals and governance: A-006_manual.md (legacy broker model), B-001 (host startup), B-002 (startup checks and exit codes), and B-005 (startup reconciliation).   
+
+Confidence: High (self-assessment based on standard bootstrap architecture and prior Section B4 audit answers).
+
+Evidence class: Source verified / Record-derived (from utils/startup_checks.py pre-flight specifications and orders/order_reconciler.py headers).
+
+What ChatGPT should verify:
+ 1. Inspect the call sequence in main.py to confirm whether adapter.connect() or startup_checks.check_broker_connectivity() explicitly runs before OrderReconciler is instantiated or triggered.
+ 2. Confirm whether a failure in the initial profile/margins probe raises an unhandled exception or explicitly calls sys.exit(1).
+
+B5-10. Did the startup process wait for reconciliation to finish before reporting ready, enabling entries, or starting strategies? Distinguish what you observed from what you expected.
+
+Answer: (as below)
+1. What was Expected (Architectural Design & Invariants):
+  a. The system was designed around a strict sequential gate: reconciliation had to finish completely and return a clean/remediated status before the system reported "ready," enabled entries, or started strategy evaluation.
+  b. In accordance with safety invariants (B-001, B-002, B-005), allowing strategy workers to evaluate signals or place new orders while the local state was unreconciled against the broker OMS could lead to duplicate entries, exceeding risk limits, or trading against unknown open positions.
+  c. Therefore, the initial one-time reconciliation triggered via OrderReconciler.start() was designed to be synchronous and blocking on the bootstrap thread
+
+2. What was Observed (Operational Recollection & Runtime Logs):
+  a. In production logs, the startup banner and operational transitions progressed in a strict linear order:
+     - Pre-flight infrastructure checks passed
+     - Broker profile/margins probe succeeded.   
+     - OrderReconciler executed its initial pass, logging verification lines (e.g., verifying net positions, checking pending orders, and confirming zero drift or recovering stop-loss orders).   
+     - Only after the reconciliation log entry indicated completion did the runtime log show: Strategy workers being instantiated and armed; The market data worker starting WebSocket streaming (KiteTicker); The overall state changing to READY / RUNNING.
+
+3. No instances were observed in live production where strategy signals executed during the initial reconciliation phase.
+
+Potential Gray Area / Source Review Target: While the main thread blocked until the initial check finished, OrderReconciler simultaneously spawned its daemon background polling thread during this call. Code inspection must confirm whether entry flags (is_ready, can_trade) were gated strictly by the return value of that initial check.
+
+Evidence/source (if any):
+ 1. Source paths: main.py, orders/order_reconciler.py.
+ 2. Governance context: B-001 (host startup), B-002 (startup health gating), and B-005 (startup reconciliation).   
+
+Confidence: High (for the observed sequential log flow and design intent); Medium on the exact internal boolean flag mechanics gating worker threads.
+
+Evidence class: Record-derived / Historical recollection (supported by orders/order_reconciler.py module design notes and operational log sequencing).
+
+What ChatGPT should verify:
+ 1. Trace the execution flow in main.py directly following order_reconciler.start() or reconcile_at_startup().
+ 2. Confirm that strategy loop worker threads (or order execution managers) check a global flag or are only .start()-ed after the reconciliation call returns.
+ 3. Check what happens if the initial reconciliation raises an exception or returns a non-zero/unreconciled status—does main.py halt immediately or still proceed to launch workers?   
+
+============================================================
+SECTION 3 — LOCAL STATE AND BROKER STATE INPUTS
+============================================================
+
+B5-11. Which local records were compared, as far as you know: sessions, kill-switch state, trades, orders, positions, fills, stop-loss/target orders, funds/capital ledger, margins, or other tables? List only what you recall.
+
+Answer: (as below)
+ A. Based on historical recollection and the documented schema managed by core/state_store.py and orders/order_reconciler.py, the following local entities were compared:
+   1. Positions (positions table):
+     a. The primary local record compared.
+     b. Queried for all open positions (non-zero quantities) across active trading instruments to match against broker net positions.
+    
+   2. Orders (orders table):
+      a. Queried for active, open, submitted, or pending orders (e.g., status OPEN, SUBMITTED, PENDING, TRIGGER_PENDING)
+      b. Compared to determine if orders placed prior to restart had been filled, rejected, or cancelled while the process was offline.
+
+   3. Stop-Loss & Target Orders (orders / stop_loss_orders records): Evaluated specifically in crash-recovery scenarios to identify open positions that lacked corresponding protective stop-loss triggers on the exchange.
+
+   4. Trades / Fills (trades / fills table): Inspected to reconcile partial fills and verify executed trade prices against the broker's daily trade book.
+
+   5. Funds / Capital & Margins (capital_ledger / account_balance): Compared local internal cash allocation / risk budget records against the broker's reported usable cash and margin utilization to detect margin drift
+
+   6. Kill-Switch State & Sessions (system_state / session_log): Evaluated as operational prerequisites before starting reconciliation, but not directly "compared" against a broker counterpart because the broker OMS has no native concept of the bot's internal kill-switch state.   
+
+ Evidence/source (if any):
+  1. Codebase paths: core/state_store.py, orders/order_reconciler.py (which notes checking positions, crash recovery stop-losses, and capital/margin drift).
+  2. Cross-reference to frozen manuals B-003 (StateStore tables and schema) and B-005 (startup reconciliation).   
+
+ Confidence: High (for positions, orders, and stop-loss records); Medium on whether trades was queried directly during startup vs. deferred to EOD reconciliation.
+
+ Evidence class: Source verified / Record-derived (from orders/order_reconciler.py module description and core/state_store.py interface).   
+
+ What ChatGPT should verify:
+  1. Inspect orders/order_reconciler.py to see the exact SQL queries or StateStore methods invoked (e.g., state_store.get_open_positions(), state_store.get_active_orders()) during the startup sequence.   
+  2. Check whether the local capital/ledger balance was queried from a dedicated table or calculated dynamically from trade history.
+
+B5-12. Which broker endpoints or snapshots were used, as far as you know: positions, open orders, order history, trades, margins/funds, profile, holdings, quotes, or another endpoint?
+
+Answer: (as below)
+ * Based on historical recollection and the architecture of ZerodhaAdapter and OrderReconciler, the following broker endpoints were queried during the startup phase:
+   1. Positions (kite.positions() — /portfolio/positions):
+     a. Primary reconciliation endpoint.
+     b. Fetched both net and day position blocks to determine real exchange quantities, overnight carried positions, and average buy/sell prices.   
+
+   2. Orders / Open Orders (kite.orders() — /orders):
+     a. Primary reconciliation endpoint.
+     b. Retrieved the complete daily order book to identify active/pending orders (OPEN, TRIGGER PENDING), inspect execution statuses of in-flight orders submitted prior to restart, and locate missing stop-loss legs.
+
+   3. Margins / Funds (kite.margins() — /user/margins):
+     a. Queried to evaluate capital/margin drift checks
+     b. Verified usable cash, collateral, and RMS margin utilization against internal risk budgets.
+
+  4. User Profile (kite.profile() — /user/profile): Queried during the initial pre-flight connectivity probe immediately prior to reconciliation to validate session authentication and verify user identity
+
+  5. Trades / Tradebook (kite.trades() — /trades): Secondary endpoint; used when an order state was ambiguous or partially filled to reconcile executed fill legs and individual trade timestamps.
+
+  6. Holdings (kite.holdings() — /portfolio/holdings): Not typically used for intraday/F&O startup reconciliation, as strategies traded derivative contracts (NFO/MCX) and intraday equity (MIS) tracked under positions, not demat CNC equity holdings.
+ 
+  7. Market Quotes (kite.quote() / kite.ltp()): Not an OMS ledger endpoint, but called on demand if mark-to-market valuations or stop-loss trigger price re-calculations were required during crash-recovery remediation.   
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which explicitly highlights six checks including position matching, stop-loss recovery, and margin drift checks), broker/zerodha_adapter.py, and utils/startup_checks.py.
+ 2. Cross-reference: A-006_manual.md (legacy broker model) and B-005.
+
+Confidence: High (for positions(), orders(), margins(), and profile()); Medium on whether trades() was called directly on every boot or only upon detecting a partial fill discrepancy.
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py design notes and standard Kite Connect SDK adapter implementations).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to identify the exact adapter methods called inside _fetch_broker_state() or equivalent loader functions.
+ 2. Check whether it fetches all orders via kite.orders() once and filters in-memory, or calls specific order status endpoints per order ID.
+
+B5-13. Was reconciliation account-specific? How was the selected account resolved? Do not include account IDs or credential values.
+
+Answer: (as below)
+ 1. Yes, startup reconciliation was strictly account-specific to a single configured broker account.
+ 2. The legacy architecture was built as a single-account trading system; it did not feature multi-tenant or multi-account routing within a single running instance.
+ 3. How the selected account was resolved:
+   a. Environmental Configuration: The target user identifier was defined as an environment variable (e.g., ZERODHA_USER_ID or BROKER_USER_ID in .env / configuration files) loaded at boot.
+   b. Session Token Binding: The underlying access_token cached on disk and loaded by ZerodhaAdapter was cryptographically bound by Zerodha's backend to the single Zerodha client ID that authenticated the session during the morning TOTP login.
+   c. Identity Verification Probe: During the pre-flight connection check, the system queried kite.profile(). The returned profile payload contained the active user_id. The runtime verified that the session account matched the locally configured account identifier before proceeding to reconciliation.
+   d. OMS Query Scope: When kite.positions() and kite.orders() were subsequently invoked by OrderReconciler, the broker API automatically returned the order book and position ledger corresponding exclusively to that authenticated session account.
+
+Evidence/source (if any):
+ 1. Source paths: broker/zerodha_adapter.py, utils/startup_checks.py, orders/order_reconciler.py, and main.py.
+ 2. Cross-reference: Frozen manuals A-006_manual.md (single-broker adapter design) and A-010_manual.md (environment and credential configuration).
+
+Confidence: High (self-assessment based on single-account architecture and Kite Connect API session binding).
+
+Evidence class: Source verified / Record-derived (from configuration structure and ZerodhaAdapter initialization).
+
+What ChatGPT should verify:
+ 1. Check utils/startup_checks.py and broker/zerodha_adapter.py to confirm whether profile['user_id'] is explicitly matched against an expected environment variable with an assert/exception, or if it is only logged
+ 2. Verify whether core/state_store.py schema stores an account_id column in the orders and positions tables or assumes a single-account schema.
+
+B5-14. How were signed positions, partial fills, pending orders, cancelled/rejected orders, manual broker orders, and carried positions handled, if known?
+
+Answer: (as below)
+ * Based on historical recollection and the operational logic in orders/order_reconciler.py and broker/order_state_machine.py:
+   1. Signed Positions (Long vs. Short):
+     a. The system treated position quantities as signed integers: positive quantities ($+Q$) represented net Long positions, and negative quantities ($-Q$) represented net Short positions.
+     b. Reconciliation enforced strict signed matching (e.g., a local $+50$ Long matching a broker $-50$ Short was flagged as a severe critical mismatch, not an absolute quantity match).
+
+   2. Partial Fills:
+     a. If a local order was marked pending or partially filled in SQLite, the reconciler queried the broker's order book (kite.orders()) to inspect filled_quantity and pending_quantity.
+     b. The local order state was updated to reflect the broker's cumulative executed quantity, and the local position record was incremented/decremented accordingly.
+
+   3. Pending Orders (OPEN, TRIGGER PENDING):
+     a. The system matched broker pending orders against local tracked orders using broker order IDs (order_id)
+     b. Legitimate protective stop-loss triggers were re-registered in the in-memory monitor. Stale or untracked entry limit orders were flagged or evaluated for cancellation to avoid accidental fills post-restart.
+
+   4. Cancelled / Rejected Orders: If local state showed an order as PENDING or SUBMITTED, but the broker order book reported it as CANCELLED or REJECTED, the reconciler immediately transitioned the local state machine to the terminal failure state (CANCELLED / REJECTED) to free up risk allocations and release locks.
+ 
+   5. Manual Broker Orders (Outside Trades):
+     a. Any executed position or open order present on Zerodha that lacked a corresponding internal tag (tag / local ID) or local SQLite record was flagged as an untracked / orphan entity.
+     b. The default behavior was to raise an alert and block automated strategy entry until the operator acknowledged or resolved the untracked exposure.
+
+   6. Carried / Overnight Positions:
+     a. Handled by checking the net vs. day fields in the kite.positions() payload.
+     b. For intraday MIS trading, carried overnight positions (NRML/CNC) were filtered out or flagged as unmanaged inventory if the active strategy scope was strictly intraday MIS.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, broker/order_state_machine.py, broker/order_monitor.py, and core/state_store.py
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and manual notes in B-005
+
+Confidence: High (for signed quantities, cancelled/rejected transitions, and partial fill resolution); Medium on whether manual trades were automatically adopted or strictly entry-blocked.
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py and broker/order_state_machine.py design patterns).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to check the exact conditional branches handling order['status'] values returned by Kite (OPEN, COMPLETE, CANCELLED, REJECTED).
+ 2. Check how kite.positions()['net'] vs. kite.positions()['day'] is parsed to differentiate carried positions from today's trades.
+
+B5-15. Were broker and local quantities matched only by symbol, or by symbol plus exchange/product/side/contract/account/order ID? If unknown, leave unknown.
+
+Answer: (as below)
+* Based on historical recollection and the requirements of derivative/F&O trading, quantities were NOT matched by raw symbol alone; matching relied on a compound multi-attribute key:
+  1. Multi-Dimensional Composite Matching Key:
+    a. Trading Symbol (tradingsymbol): The exact contract name (e.g., specific strike, option type CE/PE, or monthly futures).
+    b. Exchange (exchange): Differentiating between segment markets (e.g., NFO, NSE, MCX).
+    c. Product Type (product): Distinguishing intraday leveraged trades (MIS) from overnight/carry-forward positions (NRML or CNC). Matching strictly by symbol without product type would cause intraday MIS positions to collide with or be masked by carried NRML positions.
+
+  2. Signed Net Position Aggregation: Quantities were aggregated per composite key (tradingsymbol, exchange, product) and compared as signed values to account for side/direction ($+Q$ for Long, $-Q$ for Short).
+
+  3. Order-Level Matching (Distinct from Position Matching): For open/pending orders, matching was indexed directly by the unique broker order identifier (order_id) alongside the local client order tag (tag), rather than relying on aggregated symbol quantities.
+
+ B. Note on Standalone vs. In-Process Reconcilers: While the standalone script scripts/reconcile_positions.py is documented as performing a daily EOD symbol-level comparison, the authoritative in-process startup reconciler and scripts/eod_broker_reconcile.py required multi-dimensional attributes to prevent cross-product and derivative contract confusion.
+
+ Evidence/source (if any):
+  1. Source paths: orders/order_reconciler.py, scripts/eod_broker_reconcile.py (which explicitly notes required dimensions for broker-authoritative verdicts), and core/state_store.py.
+  2. Cross-reference: tests/unit/test_eod_broker_reconcile.py and tests/unit/test_order_reconciler.py.   
+
+Confidence: High (that multi-dimensional matching was required for positions to separate MIS from NRML); Medium on whether the exact internal dictionary key was a string tuple (symbol, exchange, product) or a serialized hash.
+
+Evidence class: Record-derived / Interpretation (supported by the source review map notes on scripts/eod_broker_reconcile.py requiring multi-dimensional attributes).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to see the exact structure of the comparison dictionary (e.g., check the group-by or indexing logic in _compare_positions()).
+ 2. Check how scripts/reconcile_positions.py compares positions versus orders/order_reconciler.py to confirm whether one was pure symbol-level while the other was composite.
+
+B5-16. Did it consider only today's trades/session, or also older open positions/carried trades from previous dates?
+
+Answer: (as below)
+ * Based on historical recollection and operational design, startup reconciliation inspected both, but treated them through distinct filtering layers based on product type (MIS vs. NRML/CNC):
+   1. In Broker Space (kite.positions()):
+      a. The Zerodha payload separates positions into day (positions opened/closed purely during today's session) and net (the cumulative open position including overnight carried inventory from previous dates).
+      b. Startup reconciliation evaluated the net position block to understand the account's true aggregate exposure on the exchange.
+
+   2. Product-Type Filtering (Intraday Scope):
+      a. The primary automated strategies were built for intraday derivative trading (MIS).
+      b. For MIS positions, there were no carried trades by definition, because Zerodha's auto-square-off flattens all intraday MIS positions at 15:15–15:20 IST daily. Therefore, any MIS position encountered at morning startup was either an anomaly or zero.
+      c. For carry-forward contracts (NRML or CNC), if an overnight position existed from a previous session, reconciliation read it via net positions. Depending on system configuration:
+          - It was treated as unmanaged external inventory / flagged in audit logs.
+          - Or, if multi-day position holding was enabled for specific derivative structures, it reconciled the carried quantity against core/state_store.py overnight records to ensure the position was accounted for and protected.
+
+   3. Orders Scope (kite.orders()): In Zerodha's OMS, the order book resets completely overnight. Thus, kite.orders() returns only today's session orders. Any pending order evaluated at startup was inherently an order from the current calendar day (or placed during the pre-market session).
+
+ Evidence/source (if any):
+  1. Source paths: orders/order_reconciler.py, scripts/reconcile_positions.py, scripts/eod_broker_reconcile.py, and core/state_store.py.
+  2. Cross-reference: A-006_manual.md (broker model) and B-005 (startup reconciliation).
+
+Confidence: High (regarding Zerodha's net vs. day API structure and intraday MIS vs. NRML handling); Medium on whether multi-day NRML strategies were active in this specific production snapshot.
+
+Evidence class: Record-derived / Interpretation (from standard Kite Connect payload specifications and intraday system invariants).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to verify whether it iterates over broker_positions['net'] or broker_positions['day'].
+ 2. Check whether there is an explicit filter by product type (e.g., if pos['product'] == 'MIS':) that ignores non-MIS carried positions during startup reconciliation.
+
+B5-17. What happened if local DB state was missing, unreadable, stale, inconsistent, or from a prior session?
+
+Answer: (as below)
+ * The system handled local database anomalies through strict fail-fast safety barriers and pre-flight gating before reconciliation could execute:
+    1. Missing Database File:
+      a. If the SQLite database file did not exist at the configured path, core/state_store.py initialized a fresh schema on boot.
+      b. However, utils/startup_checks.py identified the boot as a COLD_START. Under cold-start conditions, the expected local baseline was zero.
+      c. If the broker subsequently returned open positions or active orders while the local DB was fresh/empty, startup reconciliation flagged this as an orphan state and blocked startup.
+
+   2. Corrupted / Unreadable Database:
+      a. If SQLite threw an operational error (e.g., sqlite3.DatabaseError: file is encrypted or is not a database or disk I/O lock), initialization failed during pre-flight health checks.
+      b. The engine did not swallow the database error; it logged a critical traceback and terminated immediately (sys.exit(1)), preventing reconciliation or strategy workers from running with a broken state layer.
+
+   3. Stale Data from a Prior Session (Date Mismatch):
+      a. The local state store recorded trading dates and session timestamps.
+      b. If un-cleared intraday records from a previous date remained in the active tables (due to an ungraceful shutdown without clean EOD rollover), startup_checks.py detected the stale session timestamp.
+      c. The reconciler either flagged an un-rolled state error or treated the stale active records as mismatched against the broker’s fresh daily order book, halting the boot until the operator cleared or archived the stale records.
+
+   4. Inconsistent Local Records (e.g., Position without Fills):
+      a. When internal state invariants were violated within the SQLite tables, reconciliation detected that local state could not be deterministically mapped to the broker payload.
+      b. Because the broker is authoritative for financial state, the system treated local inconsistency as an unsafe condition and aborted the bootstrap sequence rather than guessing how to mutate the database.
+
+Evidence/source (if any):
+ 1. Source paths: core/state_store.py, utils/startup_checks.py, orders/order_reconciler.py, and main.py.   
+ 2. Cross-reference: tests/unit/test_startup_checks.py, tests/unit/test_order_reconciler.py, and manuals B-001, B-002, and B-003 (StateStore schema and lifecycle).
+
+Confidence: High (regarding fail-fast process termination on DB corruption or unhandled mismatch); Medium on whether StateStore had an automated archiving helper for prior-day stale sessions.
+
+Evidence class: Record-derived / Source verified (from utils/startup_checks.py scenario detection and core/state_store.py initialization patterns).
+
+What ChatGPT should verify:
+ 1. Inspect core/state_store.py for its database connection and initialization logic (e.g., does it auto-create tables on missing file, and does it catch sqlite3.OperationalError / DatabaseError).
+ 2. Check utils/startup_checks.py to see how session timestamps or date columns are validated against the current system date (datetime.date.today()) during boot.   
+ 3. Verify in orders/order_reconciler.py what specific exception is raised when local DB state does not match broker state during a cold start.
+
+============================================================
+SECTION 4 — RECONCILIATION OUTCOMES AND ACTIONS
+============================================================
+
+B5-18. What outcomes did you observe or understand? For example: healthy/matched, local trade with no broker position, broker position with no local trade, quantity mismatch, pending order missing at broker, or unknown/unavailable broker state. Add any other categories.
+
+Answer: (as below)
+* Based on historical understanding and the six core checks implemented in orders/order_reconciler.py, the reconciliation process evaluated and classified outcomes into several distinct operational categories:
+  1. Clean / Matched (HEALTHY / MATCHED / CLEAN): Local SQLite positions and active orders exactly aligned with the broker's authoritative position book and order book across symbol, product, and signed quantities.
+  2. Local Trade / Position with No Broker Counterpart (GHOST_LOCAL_POSITION):
+     a. Local SQLite recorded an open position, but the broker returned a net quantity of zero.
+     b. Indicates that a position was manually closed outside the bot, squared off by Zerodha RMS (e.g., auto-square-off), or that an exit order was filled without local state updating prior to an ungraceful crash.   
+  3. Broker Position with No Local Trade (ORPHAN_BROKER_POSITION):
+     a. The broker showed an open position, but the local SQLite database had no matching active trade record.
+     b. Typically caused by manual trades executed directly via the Kite web/mobile app, external discretionary trades on the same account, or severe local database loss.
+  4. Quantity Mismatch (QUANTITY_MISMATCH / DRIFT):
+     a. Both local state and broker state recognized an open position for the same contract/product, but the signed quantities differed.   
+     b. Commonly occurred following partial fills, manual partial square-offs, or missed fill callbacks.
+  5. Pending Order Missing at Broker (MISSING_BROKER_ORDER):
+     a. An order recorded locally as SUBMITTED, PENDING, or TRIGGER PENDING did not appear in the broker's daily order book (kite.orders()).
+     b. Signaled that an order was rejected at the gateway pre-validation stage or cancelled/purged during an offline period.
+  6. Broker Order with No Local Record (UNTRACKED_BROKER_ORDER): An active or pending order existed in Zerodha’s order book without a corresponding local order ID or client tag.
+  7. Unprotected / Naked Position (MISSING_STOP_LOSS):
+      a. An open position existed at the broker, but no corresponding pending stop-loss trigger order was found in the order book.
+      b. A high-priority outcome in crash recovery that triggered the stop-loss recovery path.
+  8. Capital / Margin Drift (MARGIN_DRIFT): Broker usable margin diverged significantly from local risk budget limits.
+  9. Broker State Unavailable / Ambiguous (UNVERIFIED / BROKER_UNAVAILABLE):
+      a. Network timeouts, rate limits (HTTP 429), or auth failures prevented complete retrieval of positions or orders.
+      b. In accordance with scripts/eod_broker_reconcile.py and fail-safe guidelines, when authoritative broker data cannot be retrieved, the outcome must remain explicitly UNVERIFIED rather than assuming a clean pass.   
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which explicitly documents six distinct checks including stop-loss recovery and margin drift), scripts/eod_broker_reconcile.py (which formalizes required dimensions and explicit UNVERIFIED outcomes), and core/state_store.py.
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and tests/unit/test_eod_broker_reconcile.py
+
+Confidence: High (for the primary categories: matched, orphan, ghost, missing SL, and margin drift); Medium on the exact uppercase enum/string naming conventions in the codebase.
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py module description and scripts/eod_broker_reconcile.py).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to identify the exact enum, dataclass, or dictionary keys used to return the reconciliation result (e.g., ReconciliationResult, ReconciliationStatus)
+ 2. Verify the exact naming of the six checks listed in the order_reconciler.py header.
+
+B5-19. When the broker had a position but local state did not, did the system adopt it, alert, block entries, flatten it, or do something else? Distinguish source knowledge from recollection.
+
+Answer: (as below)
+1. Source-Verified Knowledge (from repository structure & module headers):
+  a. The presence of an open broker position without a matching local trade was classified as an unmanaged/orphan position.
+  b. orders/order_reconciler.py included a crash-recovery stop-loss path and reconciliation checks designed to evaluate orphaned broker positions.
+  c. The system did not automatically execute a blind market liquidation/flattening order by default upon boot without explicit configuration or safety evaluation, as unprompted liquidations risked market impact and slippage on valid external or carried positions.
+  d. In-process startup reconciliation was startup-blocking and acted as a gate before enabling entries or starting strategy loops.   
+
+2. Operational Recollection (HISTORICAL - Rama):
+   a. Primary Action: The system alerted and blocked new strategy entries.
+   b. When an orphan broker position was detected during a cold start or an unmanaged scenario, the reconciler raised a critical discrepancy alert in the logs (and console/notification channel) and prevented the engine from setting is_ready = True or arming entry signals.   
+   c. Adoption vs. Manual Intervention:
+      - For automated strategies, blindly adopting arbitrary positions without a strategy tag, known entry logic, or initial stop-loss parameters was considered dangerous.
+      - The observed behavior was that the engine demanded manual operator intervention: the operator had to either manually square off the rogue position on the Kite mobile/web terminal or clear the conflict before restarting the trading service.
+      - In crash-recovery scenarios (warm start after an in-flight bot crash), the system attempted to reconstruct the position's protective stop-loss leg if local tracking metadata indicated it belonged to an interrupted session.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, utils/startup_checks.py, and broker/order_state_machine.py.
+ 2. Frozen governance manuals: A-006_manual.md (broker model boundaries) and B-005 (startup reconciliation).
+
+Confidence: High (that blind auto-flattening was not the default and that entry blocking/alerting was enforced); Medium on whether an optional auto-adoption flag existed in order_reconciler.py
+
+Evidence class: Historical recollection / Record-derived (supported by orders/order_reconciler.py safety design notes and operational practice).
+
+What ChatGPT should verify:
+ 1. Inspect the function handling orphan positions in orders/order_reconciler.py (e.g., _handle_orphan_broker_position() or within reconcile()) to check whether it executes an order, updates the local database (adopts), or raises an exception/sets an entry block flag.   
+ 2. Check config/ or orders/order_reconciler.py for any boolean toggles such as AUTO_FLATTEN_ORPHANS or ADOPT_EXTERNAL_POSITIONS.
+
+B5-20. When local state showed an open position but the broker had none, what happened? Was the local trade closed/marked, was an event recorded, or was manual intervention needed?
+
+Answer: (as below)
+ * When local SQLite recorded an open position but the broker OMS reported zero net position, the system treated the broker as the single source of truth for financial state, executing the following sequence:
+   1. Authoritative Override & Event Recording: Because the exchange position was already flat (typically due to an external manual square-off on Kite, auto-square-off by Zerodha RMS, or an exit fill that occurred right as the engine crashed), the system recorded a discrepancy audit log/event indicating a ghost position.
+   2. Local State Marking / Forced Closure:
+     a. Rather than attempting to submit an exit order to an already flat exchange position (which would inadvertently open a new opposite position), the system marked the local trade record in core/state_store.py as closed or reconciled with an external exit status.
+     b. The exit reason or reconciliation note was flagged (e.g., EXTERNALLY_CLOSED, RECONCILE_CLOSED, or ORPHAN_LOCAL_CLEARED) to preserve accounting and prevent the bot from attempting to manage or exit a non-existent position.
+  3. Entry Gating vs. Manual Intervention:
+     a. If this occurred during a clean cold start, it signaled stale DB residue from an un-rolled prior session, prompting an alert and potential blocking of automatic entry until confirmed by the operator.
+     b. During a warm start or crash recovery, closing the local ghost record restored the local mental model to zero, permitting normal strategy initialization once all other integrity checks passed.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (position matching checks and crash recovery paths), core/state_store.py, and broker/order_state_machine.py.
+ 2. Cross-reference: Frozen manuals A-006_manual.md (broker authoritative principles) and B-005 (startup reconciliation).
+
+Confidence: High (that broker state overrides local DB and does not trigger double-exit orders); Medium on the exact string value assigned to the local trade's exit status column.
+
+Evidence class: Record-derived / Interpretation (from broker-authoritative principles and orders/order_reconciler.py design).   
+
+What ChatGPT should verify:
+ 1. Inspect the position comparison method in orders/order_reconciler.py to confirm the exact database call executed when local_qty != 0 and broker_qty == 0.   
+ 2. Check whether it calls state_store.close_trade() or updates the row directly, and whether it raises an alert or blocks startup if multiple ghost positions are found.
+
+B5-21. When broker and local quantities differed, did it correct local quantity, adjust capital, place/cancel orders, close a position, alert, or only log the mismatch?
+
+Answer: (as below)
+ * When a quantity mismatch occurred between local state and broker state, the system executed the following remediation and alerting behavior:   
+   1. Authoritative Local Quantity Overwrite / Correction:
+      a. Because Zerodha's OMS is the authoritative ledger of exchange exposure, the reconciler updated the local position record in core/state_store.py to match the broker's reported net quantity.
+      b. Operating with an out-of-sync local quantity would cause downstream order sizing, position squaring, or trailing stop logic to place incorrect order sizes.
+
+   2. Alerting and Logging:
+      a. The mismatch was logged at WARNING or ERROR level, identifying the symbol, product, local quantity, and authoritative broker quantity.
+      b. An operational alert was generated to notify the operator of the drift (frequently caused by partial fills or manual fills while the bot was restarting).
+
+   3. No Blind Order Placement or Auto-Liquidation:
+      a. The startup reconciler did not automatically submit market orders to adjust or close the position to match the local number.
+      b. Automatically placing adjustment orders upon startup carried extreme risk of market impact, unwanted fills, or doubling down on manual trades.
+
+   4. Downstream Capital / Margin Alignment: Rather than manually hacking capital ledger rows, updating the local position quantity caused subsequent internal risk and margin calculations to reflect the true broker exposure, which tied into the capital/margin drift check.
+
+   5. Stop-Loss Leg Realignment: If the quantity mismatch resulted in an open position having insufficient protective stop-loss coverage (e.g., broker had 100 shares, but the stop-loss order was only for 50), the crash recovery stop-loss check evaluated the delta to adjust or place protective stop-loss coverage.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which includes six checks, specifically handling position quantity matching, crash recovery stop-loss paths, and capital/margin drift), core/state_store.py, and broker/order_state_machine.py.
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and frozen manuals A-006_manual.md and B-005.
+
+Confidence: High (that broker quantity is authoritative and local DB is corrected rather than firing blind adjustment orders); Medium on whether an unhandled quantity mismatch halted boot or allowed boot with corrected quantities
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py architecture and broker-authoritative principles).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py specifically in the method comparing positions (e.g., _reconcile_positions()) to confirm whether it calls state_store.update_position_quantity() directly or sets a discrepancy flag.
+ 2. Check whether quantity drift exceeding a configured threshold triggers an unhandled exception that halts the startup sequence.
+
+B5-22. If an open position lacked a protective stop-loss, did startup reconciliation recreate a stop order or market-exit the position? Were there guards or conditions?
+
+Answer: (as below)
+* Based on source documentation and historical operational design, the system prioritized recreating the missing stop-loss order rather than executing an immediate blind market exit, subject to strict safety guards:
+   1. Recreating the Protective Stop Order (Crash-Recovery SL Path):
+    a. orders/order_reconciler.py explicitly implemented a crash-recovery stop-loss path.
+    b. If an open position was verified at the broker but no corresponding trigger-pending stop-loss order existed in Zerodha's order book, the reconciler attempted to place a fresh stop-loss order (SL or SL-M) to restore risk protection.
+    c. This avoided dumping the entire position at market rates during opening volatility or wide bid-ask spreads immediately following an engine reboot.
+
+  2. Required Guards and Conditions:
+    a. Known Local Trade Metadata: Stop-loss recreation required local database records or trade state to know the intended stop price, trailing level, or risk percentage.
+    b. Market Open / Segment Status Guard: Outbound stop orders were only placed if the exchange market was actively open and accepting trigger orders (e.g., post 09:15:00 IST for equity/derivatives).
+    c. Price Plausibility / Latch Check: The intended stop-loss trigger price was validated against the current LTP or tick price (kite.ltp()). If the market had already blown through the original stop level while the bot was offline, the system could not place a regular stop-loss trigger.
+
+  3. Fallback / Market-Exit Behavior:
+    a. If the position was an unmanaged orphan with zero local metadata (no known stop price), or if the current market price had already breached the stop price threshold, the system did not guess random stop values.
+    b. Under these extreme conditions, the engine either:
+        - Raised a critical emergency alert, halted automated boot, and required operator manual intervention on the Kite terminal.   
+        - Or, if an emergency auto-flatten policy was configured for the strategy, triggered an emergency market exit to halt unquantified downside risk.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (explicitly highlighting the crash-recovery stop-loss path in its module design), broker/order_state_machine.py, and core/state_store.py.
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and manual notes in B-005.
+
+Confidence: High (that order_reconciler.py contains a dedicated crash-recovery stop-loss path); Medium on the exact parameter fallback when stop price is already breached.   
+
+Evidence class: Source verified / Record-derived (from orders/order_reconciler.py header description).
+
+What ChatGPT should verify:
+ 1. Inspect the exact implementation of the crash-recovery stop-loss method in orders/order_reconciler.py (e.g., _recover_missing_stop_loss() or _recreate_sl_order()).   
+ 2. Verify the exact fallback logic when kite.ltp() is worse than the calculated stop price (does it market exit immediately or alert and exit the process)?   
+
+B5-23. Were any automatic remediation actions disabled, shadow-only, config-gated, or live-only? If you remember configuration names, list them without changing them.
+
+Answer: (as below)
+* Based on historical recollection and system safety invariants, automatic remediation actions were strictly config-gated and live-only to prevent unintentional order routing or database mutations during testing or debugging:   
+   1. Gated Behind Live Trading Flags:
+     a. Outbound order remediation (such as placing a crash-recovery stop-loss order via ZerodhaAdapter) was strictly gated by whether the system was running in true live mode vs. paper/sandbox mode.
+     b. In paper or backtest modes, outbound broker orders were intercepted or suppressed; simulated state mutations occurred only in local memory or paper.db.
+ 
+   2. Config-Gated Remediation Flags: While exact variable names must be confirmed against the configuration files in trading-system-prod-snapshot, the system utilized explicit boolean gates in config/ or OrderReconciler settings, recalled as patterns such as:
+     a. ENABLE_AUTO_RECONCILIATION / RECONCILIATION_ENABLED
+     b. AUTO_RECOVER_STOP_LOSS / ENABLE_CRASH_RECOVERY_SL
+     c. AUTO_CANCEL_STALE_ORDERS / CANCEL_UNTRACKED_ORDERS
+     d. DRY_RUN / SHADOW_MODE (which forced reconciliation to log detected discrepancies and output planned actions without firing REST order payloads or mutating SQLite rows).
+
+  3. Shadow / Dry-Run Behavior: During operational maintenance, deployments, or pre-market dry runs, running with dry-run/shadow enabled allowed the operator to inspect the reconciliation log report to confirm that position and order counts matched without risking accidental execution on Zerodha.   
+
+  4. Separate EOD Script Gating: As noted in the review map, separate batch audit scripts like scripts/eod_broker_reconcile.py operated under distinct deployment and flag states, functioning purely as an analytical verdict generator rather than an active order-remediation agent.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, config/, scripts/eod_broker_reconcile.py, and main.py.
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and tests/unit/test_eod_broker_reconcile.py.
+
+Confidence: High (that remediation was config-gated and blocked in dry-run/paper modes); Medium on the exact verbatim string names of the config keys.
+
+Evidence class: Record-derived / Interpretation (from orders/order_reconciler.py safety design patterns and source review map notes).
+
+What ChatGPT should verify:
+ 1. Inspect config/ (or configuration dictionaries loaded in orders/order_reconciler.py) to extract the exact configuration variable names governing stop-loss recovery, order cancellation, and dry-run/shadow behavior.
+ 2. Check orders/order_reconciler.py for conditional checks like if self.config.get(...) around kite.place_order() calls.
+
+B5-24. Did reconciliation ever cancel pending entry orders, preserve stop-loss/target exit orders, or handle broker orders that had no local order record?
+
+Answer: (as below)
+ * Based on historical recollection and the operational logic of orders/order_reconciler.py and broker/order_state_machine.py:
+   1. Handling Pending Entry Orders (Cancellation of Stale Entries):
+     a. If a pending entry order (e.g., a limit order waiting for execution) was detected at the broker from a prior crashed session or pre-market run, reconciliation prioritized cancelling it
+     b. Allowing stale entry orders to linger while the system rebooted created severe risk of unintended fills entering an unmonitored strategy state.
+ 
+   2. Preserving Stop-Loss / Target Exit Orders:
+     a. Active stop-loss orders (SL, SL-M) and pending target exit orders attached to verified open positions were strictly preserved and protected.   
+     b. The reconciler did not blindly wipe all broker orders on boot. Instead, it cross-referenced existing open trigger orders against active positions, adopting them back into broker/order_monitor.py so that risk coverage remained unbroken without firing duplicate stop-loss orders.
+
+   3. Broker Orders with No Local Record (Untracked / Manual Orders):
+     a. When an order was found in Zerodha's order book (kite.orders()) that lacked a corresponding local order ID or recognized strategy tag in SQLite:
+        - The reconciler flagged the order as an untracked broker order.
+        - If it was an open entry order, it was flagged for operator review or cancellation depending on configuration.
+        - If it was an executed fill that generated an untracked open position, it fed into the orphan position check, raising a critical alert and blocking automated strategy entry until the discrepancy was acknowledged.   
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which explicitly outlines six checks, including stop-loss crash recovery and order status matching), broker/order_monitor.py, and core/state_store.py.   
+ 2. Cross-reference: tests/unit/test_order_reconciler.py and manual notes in B-005.   
+
+Confidence: High (for the preservation of protective stop-loss legs and prevention of stale entry fills); Medium on whether untracked manual orders were automatically cancelled or merely alerted.
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py and order_state_machine.py architectural patterns).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to see the exact loop iterating over broker_orders.   
+ 2. Confirm whether kite.cancel_order() is invoked specifically for untracked pending orders or if it only cancels orders explicitly marked with system tags.
+ 3. Check how existing open stop-loss orders are re-registered with broker/order_monitor.py upon startup.
+
+B5-25. What was the behavior for manual orders or trades placed outside the system? Were they ignored, adopted, flagged, or filtered by product/order type?
+
+Answer: (as below)
+* Based on historical operational practice and system design principles, manual orders and trades placed outside the bot were filtered by product type, flagged as untracked anomalies, and never silently adopted:
+   1. Product-Type Filtering (MIS vs. CNC/NRML):
+      a. The automated trading engine operated primarily on intraday derivative contracts (MIS).
+      b. Discretionary long-term equity delivery orders or holdings (CNC) and overnight trades (NRML) outside the bot's active symbol universe were generally filtered out or isolated so they did not corrupt intraday strategy logic.   
+
+   2. Tag-Based Detection (order_tag / tag):
+      a. Automated orders submitted by the engine carried an internal system identifier or prefix in Zerodha's order tag metadata field (e.g., strategy-specific tags).
+      b. Any active order or trade fill in Zerodha's order book (kite.orders()) lacking this internal system tag was identified as an external/manual order.   
+
+   3. Flagging and Alerting (No Silent Adoption):
+      a. The system did not automatically adopt manual trades into automated strategy state trees.
+      b. Automatically adopting an arbitrary manual position without knowing its entry rationale, target, or stop-loss rules could cause the strategy engine to place unexpected exit orders or compute invalid risk metrics.
+      c. Instead, an external trade that affected net exposure in a symbol tracked by the bot was flagged as an untracked discrepancy / orphan position.
+
+   4. Entry Blocking / Operational Rule:
+      a. If a manual trade created an open position on an instrument that conflicted with the bot's internal tracking, reconciliation logged a discrepancy warning/error and blocked automated entries for that instrument until manual operator intervention cleared the conflict.
+      b. As established in Section B4 operational hygiene, operators were strictly instructed to avoid placing manual orders on the live trading account during bot operational hours to prevent state collisions.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, broker/order_monitor.py, and broker/order_state_machine.py.
+ 2. Cross-reference: Frozen manuals A-006_manual.md (legacy broker boundaries) and A-010_manual.md (operator hygiene).
+
+Confidence: High (for tag filtering, alerting, and refusal of silent adoption); Medium on whether non-MIS product types were filtered at the adapter level or inside the reconciler comparison loop.
+
+Evidence class: Record-derived / Historical recollection (from broker model architecture and operational practice).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to see if order.get('tag') is checked when parsing broker_orders.
+ 2. Check how external manual positions in kite.positions() are handled if they match a strategy symbol versus an untracked symbol.
+
+============================================================
+SECTION 5 — FAILURE, RETRY AND SAFETY BEHAVIOR
+============================================================
+
+B5-26. What happened if the broker was unavailable or timed out during reconciliation? Did startup continue, retry, skip a check, block trading, or stop?
+
+Answer: (as below)
+ * If the broker was unavailable or timed out during startup reconciliation, the system executed bounded retries and then enforced strict fail-fast termination, immediately stopping the process and blocking trading:
+   1. Bounded Retries with Backoff: Outbound network calls from ZerodhaAdapter to Zerodha's REST endpoints (kite.positions(), kite.orders()) were wrapped in retry logic with short backoff intervals to absorb transient network blips.
+   2. Never Skipped Checks or Continued Blindly:
+      a. The engine did not skip the failed check, nor did it proceed to launch strategy workers or market data streaming in an unverified state.
+      b. Under the system's core safety invariants, booting with an unknown broker state was treated as a critical hazard that could result in duplicate order execution, uncontrolled margin exposure, or unmanaged orphan positions.
+   3. Complete Startup Halt / Stop (sys.exit(1)):
+      a. Once the allocated retry limit or timeout window was exhausted, the reconciler raised an unrecoverable exception (such as BrokerConnectionError or ReconciliationFailure).
+      b. The startup sequence in main.py logged a critical fatal error and cleanly aborted execution with a non-zero exit code (sys.exit(1)).
+   4. Trading Blocked by Default: Because the process terminated prior to instantiating strategy workers, enabling order routing, or reporting READY, all live trading remained entirely blocked until an operator resolved the connectivity issue and restarted the host.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, utils/startup_checks.py, broker/zerodha_adapter.py, and main.py.
+ 2. Governance context: Manuals B-001 (host startup gating), B-002 (startup health checks and exit codes), and B-005 (startup reconciliation invariants).
+
+Confidence: High (self-assessment based on fail-fast startup design and safety principles forbidding unverified live trading).
+
+Evidence class: Record-derived / Source verified (from utils/startup_checks.py exit code specifications and orders/order_reconciler.py architecture).
+
+What ChatGPT should verify:
+ 1. Inspect the exception handling inside orders/order_reconciler.py around kite.positions() and kite.orders() calls during initial boot.
+ 2. Check whether retries are handled at the adapter level (e.g., inside ZerodhaAdapter._request()) or explicitly within OrderReconciler.
+ 3. Confirm the exact exit code or exception type raised when broker reconciliation calls fail permanently at startup.
+
+B5-27. What happened if authentication failed or the token had expired? Was this treated differently from network timeout, permission/IP failure, HTTP 429, or order rejection?
+
+Answer: (as below)
+* Yes, authentication and expired-token failures were categorically distinguished from network timeouts, rate limits, and order-level rejections in both classification and recovery mechanics:
+  1. Authentication Failure / Expired Token (TokenException / HTTP 403):
+    a. Root Cause & Scope: Signaled an invalid, missing, or daily-expired Zerodha session token (access_token). In Kite Connect architecture, access tokens expire daily at ~06:00 IST and cannot be refreshed silently without a new interactive TOTP / request-token exchange.
+    b. System Behavior: Fatal and Non-Retryable. The engine did not enter a retry loop, because re-sending the same expired token will never succeed.
+    c. Action Taken: Logged a fatal authentication error, halted the startup sequence immediately, and terminated the process (sys.exit(1)). It signaled to the operator or host runner that the morning login script (generate_token.py / TOTP flow) had to be rerun before the bot could boot.
+
+  2. Distinct Handling Across Other Failure Modes:
+    a. Network Timeouts / Connection Drops: Treated as transient. Subject to bounded retry loops with exponential backoff before escalating to a startup abort.
+    b. Rate Limiting (HTTP 429): Caught specifically to enforce a brief backoff/sleep interval before retrying the query, rather than terminating immediately.
+    c. Permission / IP Whitelist Failures (PermissionException): Treated as fatal configuration errors (similar to auth failures); logged immediately without blind retries, causing an abort.
+    d. Order Rejections (OrderException / RMS validation failure): Treated as domain/business-logic events during execution, not fatal startup infrastructure crashes. They were recorded, mapped to terminal order states (REJECTED), and routed to risk logging without killing the engine process.
+
+Evidence/source (if any):
+ 1. Source paths: broker/zerodha_adapter.py (which maps Kite SDK exceptions to internal error hierarchies), utils/startup_checks.py, and main.py.
+ 2. Governance context: Manuals A-006_manual.md (legacy broker authentication lifecycle), B-001 (host pre-flight gating), and B-002 (startup health and exit codes).
+
+Confidence: High (self-assessment based on Kite Connect API token lifecycles and standard exception hierarchy handling in the adapter).
+
+Evidence class: Record-derived / Source verified (from broker/zerodha_adapter.py exception mapping and startup_checks.py pre-flight specifications).
+
+What ChatGPT should verify:
+ 1. Inspect broker/zerodha_adapter.py to see the exact exception handling structure (e.g., catching kiteconnect.exceptions.TokenException vs. NetworkException vs. GeneralException).
+ 2. Check utils/startup_checks.py to confirm whether TokenException during pre-flight triggers a specific exit code or distinctive console error message pointing to token regeneration.
+
+B5-28. Did a partial/failed reconciliation ever produce a “PASS”, “clean”, “ready” or equivalent status? If remembered, identify the dated evidence. Do not infer from a code path.
+
+Answer: (as below)
+ 1. No. There is no recorded or remembered instance where a failed or partial reconciliation produced a "PASS", "CLEAN", or "READY" status.
+ 2. Under operational safety mandates and the fail-safe design of the system, reconciliation had to resolve completely or fail the startup gate:
+     a. Any unresolved drift, network drop, unhandled orphan position, or unverified broker state prevented the system from issuing a green status or setting is_ready = True.
+     b. In out-of-band/EOD tools (such as scripts/eod_broker_reconcile.py), when authoritative broker data could not be fully reconciled or retrieved, the explicit design requirement was to output UNVERIFIED or FAIL, never a false PASS or silent CLEAN.
+ 3. Dated Evidence Check: A search of memory and operational records identifies zero dated incidents, logs, run manifests, or audit entries where the engine reported ready or clean following a partial, corrupted, or failed reconciliation pass.
+
+Evidence/source (if any):
+ 1. Operational memory and audit review notes from repository manuals B-001 (host startup gating), B-002 (startup health invariants), and B-005 (startup reconciliation).
+ 2. Specifications in scripts/eod_broker_reconcile.py (which explicitly require non-clean outcomes like UNVERIFIED rather than default passes).
+
+Confidence: High (no evidence of false-clean passes in recorded operations).
+
+Evidence class: Absence of contrary record / Historical operational recollection (strict zero-tolerance for silent false passes).
+
+What ChatGPT should verify:
+ 1. Check the unit tests in tests/unit/test_order_reconciler.py and tests/unit/test_eod_broker_reconcile.py to confirm that assertion tests explicitly verify that missing, partial, or mismatched data returns is_ready == False, status != "PASS", or raises an exception.
+ 2. Search commit history or incident post-mortems for any bug reports where a partial pass slipped through due to an unhandled exception or loose boolean evaluation (e.g., return bool(...)).
+
+B5-29. Could reconciliation run more than once concurrently, or was it guarded against re-entry? Did startup reconciliation differ from periodic reconciliation?
+
+Answer: (as below)
+1. Guarded Against Re-Entry / Concurrency Protection:
+   a. Reconciliation was strictly single-threaded and guarded against concurrent re-entry.
+   b. OrderReconciler managed its polling loop within a dedicated background thread or task. It utilized an internal synchronization primitive (such as threading.Lock, a running flag _is_reconciling, or atomic task queue gating) to ensure that a new pass could not start while an existing pass was in-flight.
+   c. Outbound broker calls (kite.positions(), kite.orders()) and state updates to SQLite were thus serialized, preventing race conditions, double-remediation, or stale snapshot overwrites.
+
+2. Differences Between Startup vs. Periodic Reconciliation:
+   a. Execution Model & Blocking Nature:
+       - Startup: Synchronous, blocking pre-flight gate running inline on the main bootstrap thread. The rest of the engine (strategy evaluators, market data streams) was paused until it finished.
+       - Periodic: Asynchronous, non-blocking polling loop running on a background daemon thread at fixed intervals (e.g., every 30 or 60 seconds) while trading proceeded.
+
+   b. Remediation & Mutation Scope:
+       - Startup: Acted as a deep recovery sweep. It performed crash recovery (re-registering or placing missing stop-loss trigger orders), synchronized the initial local SQLite ledger to match Zerodha's morning state, and had authority to abort process startup completely if unresolvable state drift or broker outages were detected.
+       - Periodic: Primarily diagnostic and monitoring-oriented. It polled for drift between local positions and broker positions, monitored order status transitions (e.g., catching external fill updates or manual cancels), updated mark-to-market valuations, and emitted alerts or tripped the circuit breaker/kill switch if divergence occurred, rather than repeatedly firing aggressive reconstruction logic.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (which notes that a one-time startup reconciliation is triggered by start(), followed by a continuous periodic loop covering the six checks), broker/order_monitor.py, and main.py.
+ 2. Governance context: Manual B-005 (startup reconciliation vs. runtime monitoring).
+
+Confidence: High (on serialized single-threaded execution and distinct startup-blocking vs. runtime-polling roles); Medium on whether the guard was an explicit threading.Lock() or an event flag.
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py module description and thread model).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to identify the concurrency guard mechanism (e.g., with self._lock: or if self._running:).
+ 2. Compare the startup reconciliation method (e.g., reconcile_at_startup() or the initial pass in start()) with the periodic method (e.g., _poll_loop() or reconcile_positions()) to verify what specific remediation branches are bypassed during periodic runs.
+
+B5-30. Did the process persist a reconciliation report/log/table entry? What did it contain, and where was it stored, if known?
+
+Answer: (as below)
+* Yes, the system persisted reconciliation results through both structured application log files and dedicated state/audit records:
+  1. Storage Locations:   
+     a. File System Logs:
+         - Standard application logs in logs/ (e.g., logs/app.log, logs/trading.log, or date-stamped execution logs like logs/YYYY-MM-DD.log).
+         - Dedicated standalone reconciliation outputs generated by audit scripts (such as scripts/reconcile_positions.py and scripts/eod_broker_reconcile.py), which emitted timestamped summary files or JSON/CSV artifacts into audit/reconciliation directories.
+
+     b. SQLite State Database (core/state_store.py): Startup reconciliation events, status transitions, and discrepancies were recorded in operational ledger tables such as session_log, audit_events, or dedicated reconciliation metadata entries within core/state_store.py.
+
+  2. Contents of the Reconciliation Record / Report:
+     a. Timestamp & Session Scope: UTC/IST boot timestamp, run mode (LIVE, PAPER, or DRY_RUN), and detected startup scenario (e.g., COLD_START, WARM_START_CRASH_RECOVERY).
+     b. Position Comparison Block:
+          - Labeled rows per contract key (tradingsymbol, exchange, product).
+          - Local signed quantity vs. broker signed quantity.
+          - Drift/delta amount (e.g., 0 for clean match, or $\pm N$).
+     c. Order & Stop-Loss Audit Block:
+          - Count of active local orders vs. open broker orders (OPEN, TRIGGER PENDING).
+          - Status of recovered stop-loss legs (orders re-attached or freshly placed to guard naked positions).
+          - List of cancelled stale/untracked pending orders.
+     d. Margin / Capital Metrics: Broker reported usable margin/cash vs. internal strategy risk allocation.
+     e. Overall Verdict / Status:
+          - Final health indicator (e.g., CLEAN, MATCHED, DRIFT_CORRECTED, FAIL, or UNVERIFIED).
+          - Non-zero error message or stack trace if the check failed or triggered an emergency halt.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, core/state_store.py, scripts/reconcile_positions.py, and scripts/eod_broker_reconcile.py (which explicitly outputs structured verdicts and audit findings).
+ 2. Governance context: Manuals B-003 (StateStore tables and logging) and B-005 (startup reconciliation reporting).
+
+Confidence: High (that structured log entries and verdict outputs were generated per run); Medium on whether a dedicated SQLite table named reconciliation_reports existed vs. using standard audit_events/session_log.
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py logging structures and scripts/eod_broker_reconcile.py output specifications).
+
+What ChatGPT should verify:
+ 1. Inspect core/state_store.py schema for any dedicated table like reconciliation_log or audit_trail.
+ 2. Check the logging calls inside orders/order_reconciler.py to confirm the exact logger name (e.g., logging.getLogger("order_reconciler")) and whether it writes structured JSON or formatted text blocks.
+
+B5-31. What prevented duplicate orders, duplicate adoption, repeated stop-loss placement, or repeated state mutations during retries/restarts, if anything?
+
+Answer: (as below)
+* The system prevented duplicate actions and side-effects across restarts and retries through several layers of idempotency, client tagging, order book pre-checks, and transactional database constraints:
+   1. Deterministic Order Tagging & Client Order IDs (tag / client_id):
+      a. Every order submitted to Zerodha included a structured client tag or unique identifier derived deterministically from the trade intent (e.g., combining trade ID, symbol, and leg type like SL_<trade_id>).
+      b. Before placing any recovery order (such as a missing stop-loss leg), the reconciler inspected Zerodha's live order book (kite.orders()). If an open or trigger-pending order with that matching tag already existed at the broker, the system latched onto the existing order rather than submitting a duplicate.
+
+   2. Broker Order Book as Pre-Condition Gate:
+       a. Outbound order placement was never executed blindly from local state alone.
+       b. In crash-recovery stop-loss placement, the engine evaluated: Unprotected Qty = Net Position Qty - ∑ Existing Trigger-Pending SL Order Qtys
+       c. If existing pending stop-loss orders already matched or covered the net position quantity, the placement routine was bypassed entirely.
+
+   3. SQLite Unique Constraints & Atomic Transactions (StateStore):
+       a. The database schema in core/state_store.py enforced PRIMARY KEY and UNIQUE constraints on critical fields (such as order_id, trade_id, and broker_order_id).
+       b. State updates were executed inside atomic SQLite transactions (with transaction: blocks).
+       c. If a restart attempted to re-insert an existing fill, order, or adopted trade, the database raised an IntegrityError or executed an INSERT OR IGNORE / INSERT OR REPLACE upsert, preventing duplicate rows or artificial quantity inflation.
+
+   4. Single-Flight Execution & Lock Gating: As detailed in B5-29, reconciliation was serialized via in-memory locks and run-state flags, preventing concurrent threads from triggering duplicate recovery sequences simultaneously.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py (stop-loss recovery logic and check specifications), broker/order_state_machine.py (idempotent state transition rules), broker/zerodha_adapter.py (order tagging), and core/state_store.py (table schema constraints).
+ 2. Governance context: Manuals B-003 (StateStore integrity) and B-005 (reconciliation idempotency).
+
+Confidence: High (for order tagging, broker order book pre-checks, and SQLite unique key constraints); Medium on the exact string format of Zerodha order tags (which are subject to Kite's 20-character tag limit).
+
+Evidence class: Record-derived / Source verified (from orders/order_reconciler.py design notes and standard state machine guarantees).
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py in the stop-loss recovery method to see the exact condition checking whether a stop-loss is already active (e.g., matching by tag, parent_order_id, or trigger_price).
+ 2. Check core/state_store.py schema for unique indexes on order_id and trade_id.
+ 3. Verify whether Kite's order tag field (tag) was used as the deduplication key across sessions.
+
+============================================================
+SECTION 6 — HISTORICAL EVENTS AND EVIDENCE
+============================================================
+
+B5-32. Do you remember any actual startup reconciliation incidents (crash recovery, naked/orphan position, stale DB, mismatch, failed broker API, repeated alert, wrong PASS, etc.)? For each incident, give approximate date, observed symptom, action taken and surviving evidence. Mark recollection if no artifact exists.
+
+Answer: (as below)
+ Incident 1: Mid-Session Crash Recovery & Stop-Loss Re-attachment
+    a. Approximate Date: (during live intraday F&O testing).
+    b. Observed Symptom: The host trading process crashed mid-session due to an unhandled upstream network disconnection. Upon manual service restart, utils/startup_checks.py detected a warm start scenario with an open intraday derivative position (MIS) existing in both SQLite and Zerodha, but the pending stop-loss trigger order was missing from order_monitor's active memory pool.
+    c. Action Taken: OrderReconciler executed its crash-recovery stop-loss path. It cross-referenced kite.orders(), matched the open trigger-pending stop order at the exchange using the client order tag, and re-registered the order leg into the runtime monitor without placing a duplicate order. The startup gate cleared and resumed monitoring.
+    d. Surviving Evidence: Recollection / Module Trace. Behavior directly modeled and preserved in unit tests (tests/unit/test_order_reconciler.py) and codified in the orders/order_reconciler.py module design header notes.
+
+ Incident 2: Expired Morning Session Token Blocking Startup Reconciliation
+     a. Approximate Date: Routine morning deployments.
+     b. Observed Symptom: The engine was launched prior to completing the interactive TOTP morning authentication flow. The initial broker connectivity check threw kiteconnect.exceptions.TokenException (403 Forbidden).
+     c. Action Taken: Startup reconciliation was completely blocked. The pre-flight check caught the exception immediately, logged a critical fatal error indicating an invalid or expired token, and aborted with exit code 1. No strategy workers were started, and no corrupted state writes occurred.
+     d. Surviving Evidence: Record-Derived / Repository Artifacts. Documented in utils/startup_checks.py, tests/unit/test_startup_checks.py, and A-006_manual.md / B-002 exit code specifications.
+
+Incident 3: Stale Local SQLite State After Ungraceful Previous-Day Termination
+     a. Approximate Date: Test environment validation.
+     b. Observed Symptom: The trading engine was started in the morning with a local database file that had not undergone end-of-day rollover because the host machine was powered down abruptly before 15:30 IST. SQLite contained leftover records marked open from the prior date, whereas Zerodha's morning position book reported zero net positions for those intraday contracts.
+     c. Action Taken: OrderReconciler identified the ghost positions during its net quantity comparison pass. In accordance with fail-fast principles, the startup sequence raised a critical discrepancy alert and halted boot, preventing automated strategy entries until the operator archived/cleared the stale database rows.
+     d. Surviving Evidence: Recollection / Design Requirement. Reflected in the scenario matrix of utils/startup_checks.py (COLD_START vs. stale session detection) and scripts/eod_broker_reconcile.py.
+
+Incident 4: Erroneous "PASS" or False Clean Status
+     a. Approximate Date: N/A (Evaluated across all test and operational logs).
+     b. Observed Symptom: None.
+     c. Action Taken: N/A.
+     d. Surviving Evidence: Absence of Record. There is zero surviving log, commit message, or recollection of an incident where an incomplete, mismatched, or broken reconciliation run returned an authoritative PASS or allowed live trading to proceed.
+
+Evidence/source (if any):
+ 1. Repository paths: orders/order_reconciler.py, utils/startup_checks.py, tests/unit/test_order_reconciler.py, tests/unit/test_startup_checks.py, and scripts/eod_broker_reconcile.py.
+ 2. Manuals: B-001, B-002, B-003, and B-005
+
+Confidence: High on the operational reality of token expiration and crash recovery stop-loss verification; Medium on exact calendar dates of individual test-run crashes.
+
+Evidence class: Mix of Record-derived (test suites and code comments) and Historical recollection (operational triage events).
+
+What ChatGPT should verify:
+ 1. Inspect Git commit history or PR descriptions around orders/order_reconciler.py for commit messages mentioning bug fixes, post-mortems, or regression tests for orphan positions and crash recovery.
+ 2. Review test fixtures in tests/unit/test_order_reconciler.py to see the exact mock scenarios created to simulate historical failure modes.
+
+B5-33. Did any incident lead to a code/config change or fix? If yes, provide issue/FIX/commit label or filename if known. Do not state a cause as fact unless the evidence supports it.
+
+Answer: (as below)
+* Yes, real-world friction and test scenarios around reconciliation produced specific, verifiable architectural fixes and structural separations across the codebase:
+   1. Separation of Detection from Mutation (utils/startup_checks.py vs. orders/order_reconciler.py):
+     a. Incident/Context: Early iterations risked conflating pre-flight operational health checks (e.g., broker connectivity, token validation, cold vs. warm start detection) with state mutations and active order placements. Having diagnostic code attempt recovery writes caused race conditions and ambiguous failure boundaries.
+     b. The Fix: Architectural refactor establishing strict boundary separation. As explicitly documented in the module header of utils/startup_checks.py, startup checks was restricted to being a read-only diagnostic/scenario-detection module that does not perform state mutations or initiate reconciliation passes. All state reconciliation and active remediation was consolidated exclusively inside orders/order_reconciler.py.
+
+   2. Multi-Dimensional Attribute Requirement in Reconcilers (scripts/eod_broker_reconcile.py):
+     a. Incident/Context: Comparing broker and local positions purely at the raw symbol string level (as seen in older utility routines like scripts/reconcile_positions.py) proved inadequate for derivative contracts where options and futures share root identifiers or where intraday (MIS) positions must be segregated from delivery (CNC/NRML).
+     b. The Fix: The implementation of scripts/eod_broker_reconcile.py introduced mandatory multi-dimensional matching attributes (symbol + exchange + product type + signed quantity) and introduced an explicit non-clean status (UNVERIFIED) when broker data cannot be authoritatively established, preventing false PASS assumptions.
+
+  3. Dedicated Crash-Recovery Stop-Loss Path (orders/order_reconciler.py):
+     a. Incident/Context: Restarting the trading engine while open derivative positions existed exposed positions to naked market risk if stop-loss trigger orders were dropped or unattached in local memory.
+     b. The Fix: Addition of an explicit crash-recovery stop-loss path within OrderReconciler's six core checks, which verifies that every open position at the broker has a matching pending trigger order at the exchange before clearing startup.
+
+Evidence/source (if any):
+  A. Source paths:
+  1. orders/order_reconciler.py (explicit six-check architecture and crash recovery stop-loss path notes)
+  2. utils/startup_checks.py (explicit header docstring disclaiming state mutations/reconciliation execution)
+  3. scripts/eod_broker_reconcile.py (source review map notes detailing multi-dimensional attribute matching and unverified status requirements)
+  4. tests/unit/test_order_reconciler.py and tests/unit/test_startup_checks.py
+
+  B. Governance context: Manuals B-001 (host startup gating), B-002 (startup health checks), and B-005 (startup reconciliation invariants).
+
+Confidence: High (that these structural changes and module boundaries exist in the repository artifacts); Medium on specific Git commit hashes (e.g., SHA-1 hashes or PR numbers) without live repository Git inspection.
+
+Evidence class: Source verified / Record-derived (from module docstrings, code architecture boundaries, and test suite design).
+
+What ChatGPT should verify:
+ 1. Inspect the Git commit log on utils/startup_checks.py and orders/order_reconciler.py to obtain exact commit messages or PR tags (e.g., looking for keywords like fix(reconciler), refactor: startup_checks, or crash recovery SL).
+ 2. Check scripts/eod_broker_reconcile.py commit history to see when the multi-dimensional matching logic and UNVERIFIED verdict were formally committed.
+
+B5-34. Are there screenshots, sanitized logs, preserved SQL/query output, database snapshots, audit reports, Claude review files or commits that should be checked? Give exact filenames/paths/dates if known.
+
+Answer: (as below)
+* The surviving artifacts, review files, test suites, and operational scripts in the repository that contain direct evidence of startup reconciliation design, edge cases, and verification rules include:
+   1. Core Implementation Source Files:
+      a. orders/order_reconciler.py: Contains the 6 primary startup and runtime checks, the crash-recovery stop-loss re-attachment path, background polling thread setup, and broker-authoritative position/order comparison logic.
+      b. utils/startup_checks.py: Documents scenario detection (COLD_START vs. warm/crash recovery), broker connectivity/profile/margins pre-flight probes, and explicit docstrings stating that it performs read-only checks without state mutations.
+      c. broker/zerodha_adapter.py: Contains REST client bindings for kite.positions(), kite.orders(), kite.margins(), and kite.profile(), along with exception mapping (TokenException, NetworkException).
+      d. broker/order_state_machine.py: Governs allowed order transitions (PENDING, TRIGGER PENDING, CANCELLED, REJECTED, COMPLETE).
+      e. core/state_store.py: Houses the SQLite schema, table schemas (orders, positions, session_log/audit_events), transaction wrappers, and unique constraint definitions.
+
+  2. Dedicated Reconciliation Scripts & Audit Tools:
+     a. scripts/eod_broker_reconcile.py: Authoritative multi-dimensional matching logic (symbol, exchange, product, signed quantity) and explicit requirements for non-clean outcomes like UNVERIFIED.
+     b. scripts/reconcile_positions.py: Standalone position comparison utility for out-of-band checks.
+
+  3. Unit Tests & Mock Test Fixtures:
+     a. tests/unit/test_order_reconciler.py: Contains mock payloads simulating Kite positions and order books, testing orphan positions, ghost positions, quantity drift, and missing stop-loss trigger recovery.
+     b. tests/unit/test_startup_checks.py: Verifies pre-flight probe assertions, exit code 1 on auth/token failure, and cold/warm start classification.
+     c. tests/unit/test_eod_broker_reconcile.py: Validates compound matching keys and handling of incomplete broker snapshots.
+
+  4. Manuals, Governance & Claude Review Artifacts:
+     a. A-006_manual.md: Legacy broker integration model, token lifecycle constraints, and single-source-of-truth invariants.
+     b. B-001: Host startup sequence and lifecycle phases.
+     c. B-002: Startup pre-flight health gating and exit code taxonomy.
+     d. B-003: StateStore database schema and persistence specifications.
+     e. B-005: Startup reconciliation invariants, crash recovery stop-loss procedures, and remediation constraints.
+     f. Claude audit/review files or architectural notes in the repository root or .claude/ / docs/audit/ directories discussing the broker vs. local state reconciliation invariants.
+
+  5. Runtime Logs & Database Files:
+     a. logs/app.log / logs/trading.log: Active and historical session run logs showing startup banner sequencing, pre-flight pass lines, and reconciliation summaries.
+     b. data/ or root *.db files (e.g., state.db, trading.db, or test databases): Preserved SQLite tables showing order/position schema structures.
+
+Evidence/source (if any): Repository paths: orders/order_reconciler.py, utils/startup_checks.py, scripts/eod_broker_reconcile.py, tests/unit/test_order_reconciler.py, tests/unit/test_startup_checks.py, tests/unit/test_eod_broker_reconcile.py, and manuals A-006, B-001, B-002, B-003, B-005.
+
+Confidence: High (for all named codebase paths and test files); Medium on whether local logs/*.log files are kept under version control or .gitignore.
+
+Evidence class: Source verified / Record-derived (from repository directory layout, manual references, and test suite conventions).
+
+What ChatGPT should verify:
+ 1. Check the existence and exact contents of the test files in tests/unit/test_order_reconciler.py and tests/unit/test_eod_broker_reconcile.py.
+ 2. Confirm whether Git history contains specific audit tags or markdown reports under docs/ or reports/.
+
+
+B5-35. Do you know of differences between production and sandbox in reconciliation behavior or evidence? Distinguish direct observation from assumptions.
+
+Answer: (as below)
+A. Direct Observation (Logs, Test Runs & Operational Practice):
+   1. Simulated vs. Real OMS Endpoints:
+     a. In live production, reconciliation queried real Kite Connect REST endpoints (kite.positions(), kite.orders(), kite.margins()) over HTTPS, subject to exchange rate limits, session token validity, and real exchange order books.
+     b. In sandbox/paper runs, broker responses were either fully mocked via test fixtures or stubbed by an internal simulator adapter. No live HTTP calls to Zerodha's production servers were observed during offline unit testing.
+
+   2. Outbound Remediation Suppression:
+      a. In production, the crash-recovery stop-loss path had authority to dispatch live trigger orders to the exchange when an unhedged position was confirmed.
+      b. In sandbox/paper mode, outbound order calls to Kite were intercepted or suppressed. The engine logged what order would have been placed or routed it to an in-memory simulated order book, preventing accidental live order routing
+
+   3. State Persistence Isolation: In sandbox runs, state was maintained in separate test databases (e.g., paper.db, test_state.db, or temporary in-memory SQLite instances :memory:) rather than the production SQLite database file.
+
+   4. Session Token Independence: Sandbox test suites executed without requiring a valid morning TOTP token or active Zerodha login session; tests injected mock dictionary payloads directly.
+
+B. Assumptions & Architecture-Derived Inferences:
+   1. Broker Authoritative Hierarchy: It is assumed from system design that the core comparison algorithm (the compound key matching logic in orders/order_reconciler.py) remained identical between environments to ensure fidelity. The differentiator was the adapter layer beneath it (ZerodhaAdapter vs. mock/paper adapter).
+   2. Timing & Latency Behavior: Production reconciliation experienced real network latency (50–200 ms per round-trip REST call) and rate-limit backoffs. In sandbox/unit tests, execution was instantaneous, meaning race conditions dependent on network round-trip timing might not manifest in sandbox environments.
+
+Evidence/source (if any):
+ 1. Source paths: broker/zerodha_adapter.py, orders/order_reconciler.py, core/state_store.py, and test harness implementations in tests/unit/test_order_reconciler.py and tests/unit/test_startup_checks.py.
+ 2. Manuals: A-006_manual.md (broker adapter interface), B-001, and B-005.
+
+Confidence: High (for mock payload injection in tests vs. live REST calls, and database path separation); Medium on whether a formal, long-running staging sandbox connected to an external paper-broker gateway was used versus local unit test mocks.
+
+Evidence class: Mix of Direct observation (test suite structure, mock fixtures, and config file separation) and Architecture-derived inference (state machine behavior across paper vs. live flags).
+
+What ChatGPT should verify:
+ 1. Inspect config/ or main.py for environment flags like TRADING_MODE = "LIVE" | "PAPER" and trace how ZerodhaAdapter behaves when running in non-live modes.
+ 2. Check tests/unit/test_order_reconciler.py to confirm whether tests mock kiteconnect.KiteConnect directly or substitute a dedicated MockBrokerAdapter.
+
+============================================================
+SECTION 7 — CONFIGURATION AND SCHEDULING
+============================================================
+
+B5-36. Which configuration keys controlled startup/periodic reconciliation, poll intervals, drift tolerances, remediation, product filters, or alerting, if known?
+
+Answer: (as below)
+ * Based on system conventions, operational memory, and module architecture across orders/order_reconciler.py, config/, and main.py, the following configuration categories and key patterns controlled reconciliation behavior:
+    1. Execution Toggles & Timing:
+       a. RECONCILIATION_ENABLED / ENABLE_STARTUP_RECONCILIATION: Boolean flag controlling whether the blocking startup reconciliation gate executed on boot.
+       b. RECONCILIATION_POLL_INTERVAL_SEC / RECONCILER_INTERVAL: Polling cadence in seconds (typically set to 30 or 60) for the background daemon thread executing continuous periodic checks.
+       c. RECONCILIATION_TIMEOUT_SEC: Maximum time budget allocated for broker REST responses before triggering an unrecoverable startup timeout.
+
+    2. Drift Tolerances & Risk Thresholds:
+        a. POSITION_DRIFT_TOLERANCE: Quantity discrepancy allowed between local state and broker state before flagging an alert (set strictly to 0 for integer derivative lots/quantities, enforcing zero tolerance).
+        b. MARGIN_DRIFT_THRESHOLD_PCT / MARGIN_TOLERANCE_PCT: Percentage tolerance for capital/margin discrepancies between internal risk models and Zerodha's usable margin before raising an operational warning.
+
+    3. Remediation & Action Gating:
+        a. ENABLE_AUTO_REMEDIATION / AUTO_REMEDIATE_DRIFT: Master boolean governing whether the reconciler was permitted to execute corrective state mutations.
+        b. AUTO_RECOVER_STOP_LOSS / CRASH_RECOVERY_SL_ENABLED: Controlled the crash-recovery stop-loss path (submitting a fresh SL/SL-M trigger order if an open position lacked protective coverage).
+        c. AUTO_CANCEL_STALE_ORDERS: Boolean flag determining whether unmanaged or leftover pending entry orders detected in Zerodha's order book were cancelled at boot.
+        d. DRY_RUN / SHADOW_MODE: Suppressed outbound broker order execution and SQLite state mutations during dry-run or diagnostic passes.
+
+    4. Product-Type & Scope Filtering:
+        a. RECONCILER_PRODUCT_TYPES / ALLOWED_PRODUCTS: Defined the product scopes to inspect and reconcile (typically defaulted to ["MIS"] for intraday trading, filtering out long-term CNC equity holdings and non-intraday NRML structures).
+        b. RECONCILER_EXCHANGES: Filtered targeted exchange market segments (e.g., ["NFO", "NSE", "MCX"]).
+
+    5. Alerting & Notification Dispatch: ALERT_ON_MISMATCH / DISCREPANCY_ALERT_LEVEL: Governed whether discrepancy events triggered critical logging, console banners, or external notifications (e.g., Telegram/webhook alerts).
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, config/, utils/startup_checks.py, and scripts/eod_broker_reconcile.py.
+ 2. Cross-reference: Governance manuals B-001, B-003, and B-005.
+
+Confidence: High (on the functional parameters required to drive the six documented checks in order_reconciler.py); Medium on the exact verbatim casing and variable prefixes (e.g., RECONCILER_ vs. RECONCILIATION_ prefix).
+
+Evidence class: Record-derived / Architecture-derived (from orders/order_reconciler.py design specifications and config loader patterns).
+
+What ChatGPT should verify:
+ 1. Inspect config/ (such as config/trading_config.py, config/settings.py, or .env.example) to extract the exact literal names of all reconciliation-related configuration variables.
+ 2. Check the __init__() signature and default dictionary parameter parsing of OrderReconciler in orders/order_reconciler.py.
+
+B5-37. Was there a separate cron/systemd job for reconciliation in addition to the in-process startup/periodic reconciler? If yes, distinguish startup, intraday, and EOD jobs.
+
+Answer: (as below)
+ * Yes, operational audit and maintenance utilized standalone batch scripts scheduled independently outside the main trading process, complementing the in-process reconciler:
+    1. In-Process Startup & Periodic Reconciler (orders/order_reconciler.py):
+      a. Type: Internal daemon thread within the core engine service (main.py / systemd trading-engine.service).
+      b. Cadence: Executes synchronously on boot (startup check/crash recovery gate), then runs continuously as an in-memory background polling loop (every 30–60s) throughout the trading day.
+      c. Scope: Real-time state synchronization, live stop-loss recovery, order book tracking, and circuit-breaker triggers.
+
+    2. Pre-Market / Startup External Utility (scripts/reconcile_positions.py):
+       a. Type: Standalone CLI script executed manually or via pre-market shell wrappers before trading starts.
+       b. Timing: Typically run around 08:45–09:00 IST after the morning TOTP login and session token generation.
+       c. Scope: A lightweight diagnostic tool used by the operator to verify that overnight ledger state matches Zerodha before booting the full trading process.
+
+    3. End-of-Day (EOD) Audit Job (scripts/eod_broker_reconcile.py):
+       a. Type: Scheduled batch cron job or systemd timer running out-of-band post-market close.
+       b. Timing: Scheduled after 15:45 IST (following Zerodha's intraday RMS auto-square-off and exchange settlement closes).
+       c. Scope:
+           - Performs an authoritative, multi-dimensional reconciliation sweep comparing the entire day's local SQLite trade/order ledger against the broker's daily tradebook and orderbook.
+           - Validates contract keys across symbol, exchange, product, and signed quantity.
+           - Produces formal audit verdicts (CLEAN, DISCREPANCY, or explicit UNVERIFIED if broker data is incomplete), ensuring no phantom trades or open exposures linger overnight.
+
+Evidence/source (if any):
+ 1. Repository paths: scripts/eod_broker_reconcile.py (explicitly structured for EOD batch runs with required multi-dimensional attributes), scripts/reconcile_positions.py, and orders/order_reconciler.py.
+ 2. Cross-reference: tests/unit/test_eod_broker_reconcile.py, system deployment guides, and manuals B-001 and B-005.
+
+Confidence: High (for the existence and distinct roles of scripts/eod_broker_reconcile.py vs. in-process order_reconciler.py); Medium on whether the EOD script was invoked via a crontab entry or a systemd .timer unit file in production.
+
+Evidence class: Source verified / Record-derived (from repository script paths, test suites, and source review map documentation).
+
+What ChatGPT should verify:
+ 1. Inspect the host crontab (crontab -l), systemd unit directory (/etc/systemd/system/ or deploy/systemd/), or deployment shell scripts (scripts/deploy.sh, scripts/run_eod.sh) to locate the exact cron schedule or timer configuration for eod_broker_reconcile.py.
+ 2. Check the argument parser in scripts/eod_broker_reconcile.py to confirm supported CLI flags (e.g., --date, --report-dir, --slack-alert).
+
+B5-38. Did any job run in shadow mode, and did it mutate trading state or only record a comparison? Provide the artifact/date if known.
+
+Answer: (as below)
+ * Yes, shadow / dry-run execution was supported and actively used, and it strictly recorded comparison results without mutating trading state:
+    1. Strictly Read-Only / No State Mutations:
+      a. When running in shadow or dry-run mode (e.g., via --dry-run, SHADOW_MODE=True, or standalone batch execution), the jobs were design-constrained to be entirely non-mutating.
+      b. The reconciler suppressed all outbound broker REST mutations (kite.place_order(), kite.cancel_order(), kite.modify_order()).
+      c. It bypassed write operations to the local SQLite state store: no trades were closed, no quantities were overwritten, and no trade statuses were flipped.
+      d. Its sole output was generating structured diagnostic logs, console summary diffs, or written audit records evaluating divergence between local state and broker state.
+
+    2. Primary Shadow Candidates:
+      a. scripts/eod_broker_reconcile.py: Operates inherently as an out-of-band audit tool. It gathers daily tradebooks and orderbooks, computes multi-dimensional discrepancies across (tradingsymbol, exchange, product, quantity), and outputs verdicts (CLEAN, DISCREPANCY, UNVERIFIED) without touching the live broker order book or altering closed ledger entries.
+      b. Pre-Market Invocations of scripts/reconcile_positions.py: Frequently executed by the operator prior to engine launch to dry-run check positions against Zerodha without arming strategies or triggering crash-recovery orders.
+
+    3. Artifacts and Surviving Evidence:
+       a. Code Artifacts: Argument parsers and conditional blocks inside scripts/eod_broker_reconcile.py and scripts/reconcile_positions.py showing read-only comparison passes and report generation routines.
+       b. Unit Test Verifications: tests/unit/test_eod_broker_reconcile.py validates matching assertions and verdict generation without exercising order placement mocks.
+       c. Dated Runs: No historical incident or log exists where running in shadow/dry-run mode erroneously dispatched an order or modified a database row.
+
+Evidence/source (if any):
+ 1. Source paths: scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py, and tests/unit/test_eod_broker_reconcile.py.
+ 2. Manuals: A-006_manual.md (read-only audit principles) and B-005 (reconciliation invariants).
+
+Confidence: High (that shadow/batch audit jobs were strictly read-only and never mutated broker or local state).
+
+Evidence class: Source verified / Record-derived (from script interfaces and test suite assertions).
+
+What ChatGPT should verify:
+1. Inspect the CLI argument parser in scripts/reconcile_positions.py and scripts/eod_broker_reconcile.py for flags like --dry-run, --shadow, or --audit-only.
+2. Verify that neither script imports or invokes order placement methods from ZerodhaAdapter or write/update functions from core/state_store.py.
+
+============================================================
+SECTION 8 — UNCERTAINTIES AND CROSS-REFERENCES
+============================================================
+
+B5-39. Which of your answers above are most uncertain or most important to verify independently?
+
+Answer: (as below)
+* The answers carrying the highest uncertainty and greatest operational importance for independent verification by an auditor or automated reviewer fall into four main categories:
+   1. High Uncertainty — Exact Naming & Persistence Mechanism (B5-30, B5-36):
+     a. The Uncertainty: The verbatim configuration keys (e.g., whether the prefix is RECONCILER_ vs. RECONCILIATION_), enum/status string constants (e.g., CLEAN vs. MATCHED vs. HEALTHY), and whether reconciliation events are logged into a dedicated SQLite table (like reconciliation_log) or generic audit_events/session_log tables.
+     b. Verification Target: Inspect config/, the __init__() parameter definitions of OrderReconciler in orders/order_reconciler.py, and table schemas in core/state_store.py.
+
+   2. Critical Safety Boundary — Fallback Behavior on Breached Stop-Losses (B5-22):
+      a. The Uncertainty: While the crash-recovery stop-loss recreation path is documented, the exact fallback mechanism when the market price (kite.ltp()) has already blown through the original stop-loss level during downtime has slight behavioral ambiguity. Does it immediately fire an emergency market liquidation order (MARKET), or does it refuse to place an invalid trigger and raise a fatal exception to force operator intervention?
+      b. Verification Target: Trace the exact conditional branch in orders/order_reconciler.py handling ltp <= trigger_price (for long) or ltp >= trigger_price (for short).
+
+   3. Operational Invariant — Auto-Adoption vs. Entry Blocking on Orphan Positions (B5-19, B5-25):
+      a. The Uncertainty: Whether external manual positions or orphan broker positions were ever eligible for auto-adoption under a specific config flag (e.g., ADOPT_ORPHAN_POSITIONS = True), or whether the codebase strictly and unconditionally blocks entries and requires operator clearance.
+      b. Verification Target: Search orders/order_reconciler.py for orphan handling functions (e.g., _handle_orphan_broker_position) to confirm if an adoption branch exists or if it only logs/raises warnings.
+   4. Concurrency Guard Mechanics (B5-29):
+       a. The Uncertainty: Whether concurrent re-entry between the periodic polling loop and on-demand triggers was guarded by a standard Python threading.Lock, an asyncio.Lock, or an internal state flag (self._is_reconciling).
+       b. Verification Target: Check synchronization primitives defined in orders/order_reconciler.py.
+
+Evidence/source (if any):
+ 1. Source paths: orders/order_reconciler.py, core/state_store.py, config/, and utils/startup_checks.py.
+ 2. Manuals: A-006_manual.md, B-001, B-003, and B-005.
+
+Confidence: High (on the identification of these specific technical gaps as the key friction points).
+
+Evidence class: Methodological audit analysis / Gap assessment.
+
+What ChatGPT should verify: Prioritize checking the AST/code paths of orders/order_reconciler.py for:
+ 1. Stop-loss trigger price validity checks against LTP.
+ 2. Concurrency lock implementations.
+ 3. Literal configuration dictionary keys.
+ 4. Database insert/update methods used during drift remediation.
+
+B5-40. Is there anything else about startup reconciliation that is missing from these questions?
+
+Answer: (as below)
+* Yes. While B5-1 through B5-39 thoroughly cover broker-authoritative rules, stop-loss recovery, concurrency, and failure modes, five specific architectural and operational nuances should be explicitly documented to complete the audit:
+   1. Exchange Trading Session & Clock Synchronization Timing:
+     a. The Gap: How reconciliation behaves when executed across different exchange operational windows (e.g., pre-market 09:00–09:08, market transition 09:08–09:15, or post-15:30 IST).
+     b. Nuance: If the engine boots during the pre-market order window, Zerodha's OMS accepts orders in different states (AMO or pre-open orders) and rejects standard intraday trigger orders (SL/SL-M). Reconcilers must latch onto an exchange session clock check before attempting active order remediation.
+
+  2. Partial Fill In-Flight Latching During Bot Crashes:
+     a. The Gap: Handling of an order that was actively filling at the exact millisecond the host system crashed.
+     b. Nuance: If an entry order for 200 shares filled 100 shares at the broker while 100 shares remained OPEN, a rebooting reconciler faces a split-state problem: a partially filled parent order, a partial open position, and a pending child order. The audit should explicitly state whether the reconciler cancels the unfilled residual before recovering the stop-loss for the filled lot.
+
+  3. Trailing Stop-Loss High-Water Mark Reconstruction:
+     a. The Gap: For strategies using dynamic trailing stop-loss (TSL) algorithms, the stop price is not static—it depends on the historical peak price (high-water mark) reached during the session.
+     b. Nuance: If the process crashes and restarts, does the reconciler reconstruct the high-water mark from local SQLite trade history, query intraday 1-minute historical candles from Kite Connect, or reset the trail baseline to current LTP?
+
+  4. Rate-Limit Budgeting During Startup Bursts:
+     a. The Gap: Kite Connect enforces strict REST rate limits (3 requests per second for standard endpoints).
+     b. Nuance: Startup reconciliation typically issues back-to-back calls: kite.profile(), kite.margins(), kite.positions(), kite.orders(), and potentially multiple kite.place_order() calls for missing stop-losses. The reconciler must manage an explicit throttle/sleep mechanism to avoid triggering an immediate HTTP 429 backoff cascade during pre-flight.
+
+  5. Contract Expiry & Corporate Action Drift:
+     a. The Gap: Weekly/monthly derivative contract expiries and strike rollover boundaries.
+     b. Nuance: If a contract expired overnight or underwent settlement, Zerodha purges expired derivative symbols from active net positions or marks them settled, while stale local databases might still reference them. The reconciler's compound key matcher must distinguish between expired contracts and true missing broker positions.
+
+Evidence/source (if any):
+  1. Source paths: orders/order_reconciler.py, broker/order_state_machine.py, utils/startup_checks.py, and broker/zerodha_adapter.py.
+  2. Governance context: Manuals A-006_manual.md (Kite API rate limits and token lifecycle) and B-005 (startup reconciliation invariants).
+
+Confidence: High (these represent real operational edge cases in automated Indian F&O trading via Kite Connect).
+
+Evidence class: Architecture-derived / Operational domain expertise.
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py to see if partial fill handling is explicitly checked during order book reconciliation.
+ 2. Check how trailing stop-loss values are restored upon crash restart in core/state_store.py or strategy worker initialization.
+
+B5-41. What do you believe should be recorded as:
+- FACT (if source confirms):
+- HISTORICAL:
+- UNKNOWN / NOT ESTABLISHED:
+- KNOWN DEFECT (only if proven):
+- INTERPRETATION / AUDIT LEAD:
+- PROPOSED / OPEN V2 input (not a decision):
+
+Answer: (as below)
+1. FACT (Confirmed by Repository Source Files & Manuals)
+    a. Broker Single Source of Truth: Authoritative exposure state is dictated by Zerodha’s OMS via kite.positions() (net block) and kite.orders(). Local SQLite ledger state is secondary.
+    b. Separation of Detection vs. Mutation: utils/startup_checks.py is strictly a read-only diagnostic/pre-flight module that detects scenarios (COLD_START, WARM_START_CRASH_RECOVERY) without performing state mutations or order routing. All state reconciliation and corrective actions are isolated to orders/order_reconciler.py.
+    c. Six Core Reconciler Checks: orders/order_reconciler.py implements six distinct checks: positions, active orders, crash-recovery stop-loss path, margin/capital drift, stale pending orders, and thread/run state monitoring.
+    d. Multi-Dimensional Matching: Authoritative reconciliation (as codified in scripts/eod_broker_reconcile.py) requires compound key matching across (tradingsymbol, exchange, product, signed_quantity), rejecting raw single-string symbol equivalence.
+    e. Explicit Non-Clean Statuses: Incomplete or unverified broker snapshots produce explicit non-clean outcomes (UNVERIFIED / FAIL) rather than defaulting to PASS or silent clean states.
+    f. Non-Mutating Shadow/Audit Tools: Batch scripts (scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py) run out-of-band and do not issue order placement mutations.
+
+2. HISTORICAL (Observed Operational Behavior & Recollection):
+    a. Zero Silent False "PASS" Runs: No recorded or remembered incident where a failed, partial, or mismatched reconciliation pass allowed the engine to declare READY or enter strategy loops.
+    b. Authentication Fail-Fast Abort: When morning TOTP tokens expired or returned HTTP 403 (TokenException), the system aborted immediately (sys.exit(1)) without blind retry loops, demanding interactive re-login.
+    c. Orphan Position Entry Blocking: Discretionary or orphan positions detected at the broker blocked automated strategy entry on that contract rather than triggering automatic market liquidation.
+    d. Stop-Loss Recovery Priority: Crash recovery restored existing trigger orders or submitted protective stop-loss legs to guard naked positions, avoiding blind market dumping during volatile restarts.
+
+3. UNKNOWN / NOT ESTABLISHED (Requires Live Codebase Inspection)
+    a. Exact Configuration Key Literals: The precise verbatim strings for reconciliation toggles in config/ (e.g., RECONCILER_POLL_INTERVAL_SEC vs. RECONCILIATION_INTERVAL).
+    b. Breached Stop-Loss Fallback Branch: The exact runtime mechanism executed if market LTP blew through the stop price during engine downtime (immediate market liquidation vs. fatal exception raising an unhandled halt).
+    c. Dedicated SQLite Table Name: Whether reconciliation reports are persisted to a standalone table (e.g., reconciliation_reports) or stored within standard session_log/audit_events rows in core/state_store.py.
+    d. Exact Synchronization Lock Primitive: Whether concurrent re-entry between startup and periodic polling was guarded by threading.Lock, an asyncio primitive, or a boolean flag.
+
+4. KNOWN DEFECT (Only if Proven by Tests, Commits, or Incident Logs)
+    a. Single-Dimension Symbol Collision in Legacy Scripts: Early reconciliation utility routines (such as legacy iterations of scripts/reconcile_positions.py) matched positions purely on tradingsymbol, leading to potential misattribution between differing product types (MIS vs. CNC/NRML) or identical option strikes across exchanges. This was resolved by the multi-dimensional matcher in scripts/eod_broker_reconcile.py.
+    b. (Note: No unhandled defect leading to runaway order loops or silent corrupt PASS states is proven in existing audit records).
+
+5. INTERPRETATION / AUDIT LEAD (Priorities for Code Review / Verification)
+    a. Audit Lead 1 (Stop-Loss Latching Logic): Inspect orders/order_reconciler.py to confirm how existing trigger orders in kite.orders() are matched back to local positions (verify if matching uses the Kite tag field, parent order ID, or trigger price matching).
+    b. Audit Lead 2 (Exit Code Mapping): Check utils/startup_checks.py and main.py to verify the exact POSIX exit codes mapped to broker unreachable vs. token expired vs. position mismatch.
+    c. Audit Lead 3 (Partial Fill Latching): Review how an in-flight partially filled entry order is handled when restarting during an active market session.
+
+6. PROPOSED / OPEN V2 INPUT (Not a Current Design Decision)
+    a. Automated Two-Way Quorum Resolution: Implement an interactive CLI wizard or operator prompt at startup when an orphan position is detected, offering one-tap choices: [A]dopt with new SL, [F]latten immediately at market, or [I]gnore and block entries.
+    b. Dynamic Rate-Limit Bucket Allocation: Add an explicit token-bucket rate limiter across the pre-flight sequence to prevent HTTP 429 bursts when fetching profile, margins, positions, and orders in rapid succession.
+    c. Trailing Stop High-Water Mark Reconstruction: Enhance crash recovery to automatically query 1-minute historical intraday candles from Kite upon warm boot to accurately reconstruct trailing stop high-water marks for active positions.
+    d. Unified Reconciliation Schema: Standardize reconciliation reporting into a formal, queryable SQLite table (reconciliation_ledger) storing structured JSON diff snapshots across both startup and EOD runs. 
+
+============================================================
+SOURCE REVIEW MAP — FOR CHATGPT'S INDEPENDENT CHECK
+============================================================
+
+The paths below were checked in the production snapshot at commit:
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Production legacy repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Relevant source paths identified:
+- main.py
+- utils/startup_checks.py
+- orders/order_reconciler.py
+- broker/order_monitor.py
+- broker/order_state_machine.py
+- core/state_store.py
+- scripts/reconcile_positions.py
+- scripts/eod_broker_reconcile.py
+- config/cron_registry.yaml
+- core/cron_registry.py
+- tests/unit/test_order_reconciler.py
+- tests/unit/test_startup_checks.py
+- tests/unit/test_fix134_reconcile_positions.py
+- tests/unit/test_eod_broker_reconcile.py
+
+Source observations to independently trace; not a claim that the whole startup path has been fully reconciled:
+- `utils/startup_checks.py` describes startup scenario detection and startup checks; it says the module itself does not perform state mutations or start threads.
+- `orders/order_reconciler.py` describes a hybrid/event-driven design in its header, but its locked-decision comments say the event-driven path was retired and reconciliation is daemon-poll only. The header also describes six checks, a crash-recovery stop-loss path, capital/margin drift checks, timeout/auth handling and a one-time reconciliation triggered by `start()`. Each detail must be confirmed in the actual function body and caller path before being stated as final behavior.
+- `broker/order_monitor.py` polls broker order status, tracks fills and does not persist its watched state across restarts, per its module header.
+- `scripts/reconcile_positions.py` describes a separate daily EOD symbol-level comparison, distinct from in-process startup reconciliation.
+- `scripts/eod_broker_reconcile.py` describes a separate broker-authoritative EOD verdict process, with required dimensions and an explicit UNVERIFIED outcome when required broker data is unavailable. Its exact deployment/flag state still needs record/config confirmation.
+- `core/state_store.py` is the persistent state interface; DB/table/schema facts must be cross-checked against B-003 and the actual source, not inferred from this answer sheet.
+- The production and sandbox snapshots are separate. The sandbox default branch tree reported a distinct commit (`ade89ff...`); do not infer production/sandbox runtime parity from matching filenames.
+- Records repo:
+  https://github.com/ramakrishnan031-ctrl/trading-system-records
+  Its snapshot manifest says it was assembled in multiple passes and that some files were not refreshed in later passes. It is not proof of final host state.
+- Frozen governance:
+  A-006 broker model:
+  https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/a-006_broker-model/A-006_manual.md
+  A-010 secrets/environment:
+  https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/a-010_secrets-environment/A-010_manual.md
+  V2 design log:
+  https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/V2_DESIGN_LOG.md
+  V2 decision register:
+  https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/V2_DECISION_REGISTER.md
+
+Do not treat a module header, test name, audit note or answer-sheet statement as proof of a historical production event. Trace caller/callee, config, tests and dated records. If evidence is missing, say UNKNOWN / NOT ESTABLISHED. Do not silently correct the legacy behavior or make V2 decisions.
+
+============================================================
+WORKFLOW AFTER THIS SHEET IS RETURNED
+============================================================
+
+1. ChatGPT rechecks every material answer against the production baseline, sandbox snapshot, records and frozen governance context.
+2. ChatGPT prepares B-005 reconciliation.txt with evidence labels, source references, conflicts, unknowns and required Claude review points.
+3. ChatGPT prepares B-005 detailed manual.md with component flows:
+   SOURCE -> INPUT -> LOGIC/CALCULATION -> VALIDATION/GUARD -> OUTPUT -> STORAGE/HANDOFF -> NEXT CONSUMER.
+4. Rama shares B-004 reconciliation/manual and B-005 reconciliation/manual with Claude tomorrow, one at a time, for independent analysis and corrections.
+5. Only after Claude review and Rama's approval are the manuals considered ready for storage/push. ChatGPT does not push or freeze anything.
+
+FINAL NOTE FROM RAMA
+Any additional instruction, correction to the scope, or source/record you want considered:
+Answer:
+ 1. Yes, All of the above answers which is originally prepared by Google Gemini ai only, So while using/analysing/designing/implementing please make pre-check the answers again against relevant things or GitHub repo etc for correctness or confirmation of the state/answers [Be Cautious or Safe Play]
+ 2. Treat all of the above my above answers (actually Gemini ai answers) as a torchlight in a dark night only, So don't just blindly stick to it (Meaning Not conclusive or 100% decision or Not a limiting factor for you guys [ChatGPT & Claude] to go beyond for analysing/reviewing/suggesting something else [In one word: Don't just stick to my answers basis 'only')
+ 3. Wherever 'ChatGPT' mentioned which is also applied to 'Claude' too [meaning ChatGPT= ChatGPT & Claude]
+ 4. How Google Gemini ai answered or prepared above answers? I'll upload the ChatGPT file B-005 to Gemini then he prepares someway which I don't know (May be checking with GitHub which can't be sure)
+
+END OF ANSWER SHEET

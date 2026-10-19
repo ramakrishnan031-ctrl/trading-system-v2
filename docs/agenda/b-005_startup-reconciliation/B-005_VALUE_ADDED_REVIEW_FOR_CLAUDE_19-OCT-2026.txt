@@ -1,0 +1,86 @@
+TRADING SYSTEM — LEGACY MANUAL
+B-005 STARTUP RECONCILIATION
+CHATGPT VALUE-ADDED REVIEW FOR CLAUDE
+Date: 19-Oct-2026
+Status: REVIEW / RECOMMENDATIONS ONLY — NOT A FREEZE, COMMIT OR PUSH AUTHORIZATION
+
+PURPOSE
+This review evaluates the B-005 answer sheet, ChatGPT's 15-Oct reconciliation and manual draft, and the subsequent B-005_review_notes.md / B-005_manual.md / B-005_v2_design_inputs.md material available in this Project context. It is intended to help Claude prepare B-005 revision 1 for Rama's review. Do not treat the Gemini-generated answer sheet as evidence. Do not alter the dead legacy system or make V2 decisions.
+
+OVERALL RECOMMENDATION
+Proceed to a controlled B-005 revision 1, but do NOT freeze it yet. Claude's first-pass source reconciliation is materially stronger than the original 15-Oct draft and supports the central finding: the inspected source does not establish a fail-closed startup-reconciliation gate. The manual now distinguishes what code does from what the operator may have expected, and correctly documents the in-flight recovery wiring defect, the abort/empty-result path, the symbol-only/absolute-quantity matching, the non-adoption of broker-only positions, and the limited persistence of cycle actions.
+
+Before freeze, Claude should make the targeted corrections and verification checks below. Keep the three cross-manual errata PROPOSED until Rama approves the complete B-005 package and the affected manuals' errata. No file should be stored as frozen, committed or pushed merely because this review says to proceed.
+
+1. HIGH-PRIORITY TECHNICAL FINDINGS — PRESERVE THESE
+
+1.1 Two startup passes, not one.
+The authoritative flow is B-005_manual.md section 3, rows S1–S18: main.py performs PASS 1 at Phase 0f; the reconciler's start() performs PASS 2 at Phase 0g. The kill check between them matters. Do not describe the reconciliation as one atomic transaction or as a single pass.
+
+1.2 The pass result is not a fail-closed readiness verdict.
+The boot flag is set after the call returns even if the cycle returned an empty result after an exception. The startup continues unless the active-kill check ends it. The accurate description is a source-verified conditional defect / latent path, with the 05-Aug session record as evidence of an abort path—not proof that a production start actually experienced the same failure. Avoid the absolute claim that every start was unsafe or that an incident definitely occurred.
+
+1.3 In-flight recovery was coded but not wired at the production call site.
+The recovery path depends on an order placer that main.py does not pass, including at the named 02-Jul commit 9becf8c. Tests that supply the dependency establish behaviour of the tested method, not production wiring. Preserve the distinctions:
+- the recovery method exists in source;
+- the required dependency is absent at the relevant call site;
+- therefore the described recovery did not run through that service wiring;
+- whether a particular order was stranded as a result remains UNKNOWN / NOT ESTABLISHED unless a dated record proves it.
+
+1.4 Broker/local matching was materially narrower than the generated answer claims.
+Document symbol-only matching, exchange being dropped, absolute rather than signed quantity comparison, no holdings read by the in-process reconciler, and no broker-position adoption path. Do not import the answer sheet's imagined compound key, full order-book reconciliation, fills/capital_ledger/account_balance tables, NFO/MCX scope, invented config keys, retries/backoff, or blanket sys.exit(1) gate.
+
+1.5 Actions and audit evidence have limits.
+The cycle's reconciliation_log actions are written at cycle end and only for the applicable non-COSMETIC outcomes; there is no durable record of a startup pass/verdict as such. An abort after an action can therefore leave no row describing that action. Keep this separate from the question of whether the underlying broker order or local state mutation happened.
+
+1.6 Broker-only positions are not adopted or automatically protected by the inspected reconciler.
+They are logged as human orders and left alone; do not imply that the service necessarily adopted, protected, flattened or blocked entries for such a position. Keep the dated 22-Jul census evidence in its proper class and retain the conflict over whether the account was “system-only” as an unresolved historical question.
+
+2. REQUIRED REVISION / QUALITY CHECKS BEFORE FREEZE
+
+A. Resolve the review notes' remaining Rama choice explicitly.
+The review notes ask whether to add A-011 erratum E-5 for the conflicting HARD_KILL history or leave the matter as open Q-43(h) for I-002 / H-010. Recommendation: keep this cross-topic history conflict OPEN in Q-43(h) for now and do not make the B-005 freeze depend on resolving it. B-005's three proposed errata are already scoped to facts B-005 directly established. If Claude believes A-011 E-5 is necessary, provide the exact passages and record hierarchy for Rama to decide separately; do not silently broaden B-005's errata scope.
+
+B. The optional question about Rama's own orders is not a blocker.
+The 16-Jun human-order note and 22-Jul census conflict. Keep both records and the UNKNOWN status. An answer from memory remains HISTORICAL (Rama), not source-verified. It should affect later human-order policy discussion, not the legacy finding that the reconciler logs and leaves broker-only positions.
+
+C. Check the latest manual text against review notes.
+The review notes say a final re-read on 18-Oct corrected SR9 and SR16. Ensure the delivered B-005_manual.md contains those corrected versions and that the reconciliation, matrix, summary, and errata do not retain superseded wording:
+- SR9: HARD_KILL in the in-flight path can occur at a start only if set inside a pass before CHECK2 or between the kill check and PASS 2.
+- SR16: the auth-error window runs from the margins read to PASS 1 and includes token or permission refusal.
+Use the manual's matrix rows as the single authoritative statement and make other sections refer back to them.
+
+D. Verify all three proposed errata as a coordinated set.
+- A-011 E-4: correct the claims about the in-flight recovery and CHECK1's exit price/alert.
+- B-004 E-1: remove the claim that the order placer’s timeout branch relies on recovery that actually ran.
+- A-008 E-3: remove the claim that an orphan broker position is adopted.
+Each must retain the established errata convention (original struck through, replacement immediately after, status line, erratum section) and remain PROPOSED until Rama's approval. Do not alter the frozen legacy conclusions elsewhere beyond the specific accepted errata.
+
+E. Re-run final mechanical checks after edits.
+Run the existing Markdown/table/strike-through checker, citation-range and cross-reference checks, and value-blind secret/identifier scan on every changed file. Confirm that all paths, section references, SR/R/W matrix references and repository line citations resolve against the exact stated source revision. Record the exact commit for each repository/tree used; do not imply the production baseline, testing snapshot and records repository are one simultaneous snapshot.
+
+F. Confirm package completeness.
+The review notes identify three original input files that were not yet stored at the proposed paths. At freeze, preserve the original answer sheet, reconciliation and 15-Oct manual draft byte-identically, with their recorded SHA-256 hashes, and keep the revised manual/review notes separate. Do not overwrite the historical draft. Ensure B-005_v2_design_inputs.md is present and explicitly PROPOSED / OPEN, not part of the legacy facts.
+
+3. PAPER / LIVE, CRON AND HOST-STATE DISCIPLINE
+
+- State only what source and repository records establish about the paper adapter and live adapter. Do not infer full paper/live parity.
+- The repository cron registry and generated cron file do not prove what was installed on either deleted VM. The installed schedules and whether the EOD jobs actually ran remain UNKNOWN / NOT ESTABLISHED unless dated evidence proves otherwise.
+- Keep the 15:45 reconcile_positions script and 15:58 eod_broker_reconcile process separate from the in-process startup reconciler. Their matching, write, dry-run and verdict semantics are not interchangeable.
+- The 19-of-24 selected-file comparison is a bounded testing-tree comparison, not whole-repository parity and not evidence of host deployment.
+- Do not describe the current manual as an operational recovery procedure. The system is dead/reference-only and both VMs are gone.
+
+4. V2 GOVERNANCE BOUNDARY
+
+Keep B-005_manual.md strictly legacy-only. Keep future considerations in B-005_v2_design_inputs.md and the V2 design log as PROPOSED / OPEN. B-005 findings may inform later topics (B-006/B-007, G-008/G-015, H/I/K/L/M/N/O), but must not decide their requirements or silently ratify VP-57, VP-60, VP-67 or any other V2 item. The review notes' proposed scheduling changes to V2 ratification points are governance annotations, not decisions.
+
+5. RECOMMENDED NEXT ACTIONS
+
+1. Claude prepares B-005 revision 1 using the first-pass review notes and the corrected 18-Oct matrix entries.
+2. Claude returns a concise change log: each change, source/evidence basis, manual section/row, and whether it affects a frozen manual erratum.
+3. Claude confirms the three errata are still PROPOSED, confirms the input originals are preserved unchanged, and reports the results of all mechanical/security/citation checks.
+4. Rama reviews the revised package and answers the optional historical question only if he wishes; neither the optional answer nor the HARD_KILL cross-topic issue should be silently decided by Claude.
+5. ChatGPT performs a final acceptance review of Claude's revision. Rama then explicitly decides whether to freeze and store/commit/push. This document does not authorize those actions.
+
+FINAL POSITION
+B-005 is close to documentation-ready, but it is not frozen. The principal technical conclusions are well supported in the current reviewed materials. The remaining work is controlled revision, exact cross-document consistency, preservation of the original inputs, and final citation/security checks—not redesigning the legacy system and not making V2 decisions.

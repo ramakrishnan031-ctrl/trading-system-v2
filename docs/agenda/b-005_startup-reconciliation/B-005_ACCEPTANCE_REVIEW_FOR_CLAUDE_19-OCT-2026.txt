@@ -1,0 +1,98 @@
+TRADING SYSTEM — LEGACY MANUAL
+B-005 STARTUP RECONCILIATION
+CHATGPT ACCEPTANCE REVIEW — REVISION 1
+Date: 19-Oct-2026
+Status: ACCEPTANCE REVIEW / NOT FREEZE AUTHORIZATION
+
+PURPOSE
+Review B-005 revision 1 and its linked change-control package after Claude applied the 19-Oct value-added review. This note is for Claude and Rama. It does not authorize storage, freeze, commit or push, and it does not authorize legacy-system operation or V2 implementation.
+
+EXECUTIVE POSITION
+B-005 revision 1 is substantially improved and appears technically coherent in the reviewed package. I recommend CONDITIONAL ACCEPTANCE FOR RAMA'S FINAL APPROVAL, subject to the focused checks and governance decision below. Do not describe this as already frozen. The manual's status correctly remains DRAFT; the three cross-manual errata remain PROPOSED.
+
+The most important improvements are correctly preserved: two distinct startup passes; the boot flag proves call-and-return, not successful reconciliation; the conditional non-fail-closed path is not promoted into a proven production incident; the in-flight recovery is scoped to the versions actually read and its missing production composition dependency; the narrow symbol/absolute-quantity matching; no broker-position adoption; cycle-end-only action persistence; and the separation between repository declarations, dated records, testing snapshot and deleted-host state.
+
+1. ACCEPTANCE FINDINGS — KEEP AS WRITTEN
+
+1.1 Startup sequence and readiness claim
+The authoritative sequence is manual section 3, rows S1–S18. PASS 1 runs only when startup reaches Phase 0f. PASS 2 runs in the reconciler's start() after the intervening kill check. The final statement must not say every start runs twice. The boot flag records that PASS 1 returned; it is not a success verdict. The conditional defect and the absence of a located occurrence at a start are properly distinguished.
+
+1.2 In-flight recovery
+The revision's wording “did not run in any version read” is materially safer than “never ran.” The manual identifies the dependency gate, the production construction sites, the specific commits read, and the scope of inference between those versions. Keep the source facts, the interval interpretation, and the unknown outcome for any individual order separate. Do not infer that an order was actually stranded.
+
+1.3 HARD_KILL behaviour inside the cycle
+The SR9 correction is important: an unknown-product in-flight position can produce a CRITICAL alert as well as a log, and the path may flatten under HARD_KILL subject to the described code conditions. Keep SR9 as the authoritative matrix row and ensure A-011 E-4 points to it. The revised wording must not imply that this path ran in production merely because it is coded.
+
+1.4 Matching, orphan positions and evidence
+Section 7 correctly describes the symbol-keyed broker snapshot, dropped exchange, absolute quantity comparison, lack of holdings reads by the cycle, and absence of an adoption path. Keep the “system-only” premise as a conflict between records rather than settled fact. Keep the EOD scripts separate from the in-process startup reconciler and do not infer installed schedules from the repository cron artifacts.
+
+1.5 Paper mode, tests and host state
+The revision correctly avoids asserting full paper/live parity, production/testing whole-tree parity, installed cron state, or surviving host behaviour. Tests were read, not run; their assertions do not prove a production event. The manual is a retired-system evidence record, not a recovery runbook. Preserve these qualifications in summaries and any handover message.
+
+2. ONE GOVERNANCE CHOICE: HARD_KILL HISTORY AND Q19
+
+The HARD_KILL history conflict should remain outside B-005's freeze decision. B-005's three errata remain the right scoped set: A-011 E-4, B-004 E-1 and A-008 E-3.
+
+However, the separate Q19 wording issue is not merely the same ambiguity. The reviewed notes report that A-011 section 8.2 summarises Rama's answer (“YES [But I Guess I have never ever tried Or No full & detailed idea]”) as “never tried.” If the original answer sheet confirms that quotation and context, “never tried” is not a faithful paraphrase of the recorded answer. My recommendation is:
+- Do not add A-011 E-5 or A-007 E-3 to the B-005 errata package.
+- Ask Rama to authorize a separate, narrow correction to A-011 and any dependent A-007 text, preserving the original answer and its uncertainty without converting it into a firm claim about what did or did not happen.
+- Keep Q-43(h) OPEN for the conflicting measured/recorded HARD_KILL history. Correcting a misquoted answer must not silently resolve the separate conflict over the dated kill records.
+- This is a separate governance item and must not block or be silently bundled into the B-005 decision.
+
+This approach corrects a potentially inaccurate attribution while preserving the evidence conflict and the scope of the B-005 package.
+
+3. REQUIRED FINAL QUALITY CHECKS BEFORE RAMA APPROVES
+
+The review notes report that revision-1 checks passed. Treat those as Claude's reported results, not as independently rerun checks by ChatGPT. Before freeze/push, Claude should confirm:
+
+A. Cross-manual errata:
+- A-011 E-4, B-004 E-1 and A-008 E-3 are all visibly marked PROPOSED, revised 19-Oct-2026.
+- Original passages remain visible and struck through, replacement text immediately follows, status lines and erratum sections follow the established convention.
+- The exact passages, especially the in-flight recovery wording and CHECK1 alert/exit-price correction, agree with B-005 sections 5 and 6.2.
+- No wording elsewhere reintroduces “never ran,” “never wired,” “twice at every non-HALT start,” or claims of actual incidents without evidence.
+
+B. Authoritative text consistency:
+- SR9 and SR16 use the corrected 18-Oct wording.
+- Section 3 remains authoritative for startup sequence; section 4 for cycle and errors; section 5 for in-flight recovery; section 6.2 for startup outcomes; section 7 for matching; section 8 for persistence and alerts.
+- Summary, final statement, answer-sheet reconciliation, errata and V2 inputs cite those rows rather than inventing alternate summaries.
+- The B5-06 answer remains “Partly,” consistent with the corrected PASS 1/PASS 2 distinction.
+
+C. Evidence and references:
+- Verify citations against their named source revision, including the three production commits and the testing/records snapshots; do not imply that those snapshots represent one simultaneous host state.
+- Resolve the remaining missing input paths at the actual freeze location, and treat DR-041 as proposed until Rama approves the freeze.
+- Keep the known cross-reference checker false positives explicitly documented; do not report them as unresolved technical claims.
+- Confirm the four preserved input artifacts are byte-identical to the hashes recorded in the review notes. Keep the 15-Oct draft separate from the revision-1 manual.
+
+D. Security and mechanics:
+- Re-run Markdown/table/strike-through validation, value-blind sensitive-pattern scanning, repository-wide credential-pattern and Claude-session-link searches, citation-range checks, cross-reference checks, and errata-convention checks on the exact final candidate set.
+- Record the exact files and rules checked and the result. A pattern scan is not proof that no sensitive material exists.
+- Recheck the whole docs/ tree for repository-wide rules, not just changed files, where the rule applies to the whole repository.
+- Confirm no secret, account/client identifier, host/address, SSH detail, token, or session URL was introduced in the review or package.
+- Ensure the V2 decision register remains unchanged unless Rama explicitly approves a separate decision. V2 design inputs remain PROPOSED / OPEN.
+
+4. PACKAGE AND GOVERNANCE BOUNDARY
+
+The package should contain, as separate files:
+1. B-005_manual.md — revision 1, legacy facts only, DRAFT until approved.
+2. B-005_v2_design_inputs.md — PROPOSED / OPEN, not requirements or decisions.
+3. B-005_review_notes.md — change log, evidence map, checks, open questions and process lessons.
+4. The three original input files, byte-identical, retained at the agreed input paths.
+5. ChatGPT's 19-Oct review, preserved unchanged if Rama chooses to include it in the freeze package.
+6. A-011, B-004 and A-008 manuals with their proposed errata, without presenting those errata as accepted.
+7. V2_DESIGN_LOG.md with lessons and annotations, not silent decision-register changes.
+
+Do not overwrite the 15-Oct manual draft or the original reconciliation. Do not let an “acceptance” response silently authorize commit/push. Rama decides storage, freeze and repository actions.
+
+5. RECOMMENDED DECISION
+
+My recommendation is to accept B-005 revision 1 as technically ready for Rama's final approval once Claude confirms the final candidate set and checks above. No new legacy finding or V2 decision is needed for this acceptance. The three errata remain PROPOSED until explicitly approved with the B-005 freeze.
+
+Separately, ask Rama to choose whether to authorize a narrow A-011/A-007 correction for the Q19 mischaracterisation. Keep that choice independent from Q-43(h)'s unresolved HARD_KILL history conflict and independent from the B-005 freeze.
+
+FINAL STATUS
+B-005 revision 1: CONDITIONALLY ACCEPTABLE FOR RAMA'S FINAL APPROVAL.
+B-005 freeze: NOT YET AUTHORIZED.
+A-011 E-4 / B-004 E-1 / A-008 E-3: PROPOSED.
+Q-43(h) HARD_KILL history: OPEN.
+Q19 wording correction in A-011/A-007: SEPARATE RAMA DECISION.
+V2 design inputs and scheduling annotations: PROPOSED / OPEN.
