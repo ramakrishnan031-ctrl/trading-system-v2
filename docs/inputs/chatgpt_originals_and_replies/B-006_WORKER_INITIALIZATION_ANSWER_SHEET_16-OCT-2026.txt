@@ -1,0 +1,1102 @@
+B-006 — WORKER INITIALIZATION
+LEGACY FACT-FINDING ANSWER SHEET (RAMA INPUT)
+Prepared: 16-Oct-2026 (IST)
+Status: QUESTIONNAIRE ONLY — NOT A MANUAL, NOT A V2 DESIGN
+
+PURPOSE
+Please answer from your recollection / available records. Treat your answers as RAW INPUT, not verified facts or decisions. Leave unknown items as UNKNOWN. Do not operate or revive the retired system.
+
+WORKFLOW / TOPIC STATUS
+- B-005 Startup Reconciliation is PARKED until Sunday morning IST because Claude's weekly limit has been reached. This sheet starts B-006 only; it does not start, reconcile, or freeze B-005.
+- After you return this completed sheet, ChatGPT will independently reconcile each claim against source repositories/records and then prepare:
+  1) B-006_reconciliation.txt for Claude
+  2) B-006_manual.md draft
+- Claude review and Rama's approval/storage remain separate steps. No V2 decision is made here.
+
+SOURCE REVIEW BEFORE PREPARING THIS SHEET
+Repositories reviewed as available:
+1. Production legacy snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+   - Read docs/SYSTEM_MAP.md opening/index material and main.py imports/entry-point header.
+   - main.py imports data.live_feed.LiveFeedManager and core.state_store.StateStore, among other components. This establishes import/wiring references only; it does NOT establish the full worker lifecycle or installed runtime.
+2. Testing/sandbox snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+   - Read docs/SYSTEM_MAP.md opening/index material. Testing snapshot is separate evidence; do not assume production parity.
+3. Records snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-records
+   - Read SNAPSHOT_MANIFEST.md. It documents a multi-pass 17–18 Sep 2026 snapshot; earlier-copied files were not necessarily refreshed later. It is not proof of final host/runtime state.
+4. V2 governance/context repo: https://github.com/ramakrishnan031-ctrl/trading-system-v2
+   - Read B-001 and B-003 manuals, LEGACY_REFERENCE.md, V2_DESIGN_LOG.md and V2_DECISION_REGISTER.md cross-reference material.
+   - B-003 places worker initialization in B-006's scope and distinguishes it from B-005 reconciliation and B-007 readiness. B-004 cross-references B-006 for the live feed/worker start.
+   - Legacy VMs are recorded as terminated; no runtime operation is authorized.
+
+IMPORTANT EVIDENCE RULE
+This sheet asks about the legacy system as it existed. Separate:
+- what you personally recall (HISTORICAL — RAMA),
+- what a dated record says (RECORD-DERIVED, identify it),
+- what source code/config actually implements (to be verified),
+- what you infer or are unsure about (INTERPRETATION / UNKNOWN).
+Do not convert a desired or proposed V2 behaviour into a legacy fact. Do not assume paper/live parity. Do not include secrets, tokens, account identifiers, host addresses, or private personal data.
+
+ANSWER INSTRUCTIONS
+For each numbered item, answer briefly but specifically. Add date/period, mode (paper/live), environment (production/testing), file/record reference, and confidence where known. If uncertain, write UNKNOWN / NOT ESTABLISHED. Correct or qualify any premise rather than agreeing automatically.
+
+SECTION 1 — WHAT YOU MEAN BY “WORKER”
+B6-01. In the legacy system, what components/processes/threads did you understand as “workers”? List names or roles (e.g. market feed, candle/data handling, signal/strategy processing, order/position monitors, scheduled jobs), but mark recollection vs known source.
+Answer: (as below)
+1. Source-Verified Components / Workers (from Repository & Code Structure):
+   a. LiveFeedManager (data/live_feed.py):
+       - The market data streaming worker.
+       - Responsible for managing the Kite Ticker WebSocket connection, subscribing to instrument tokens, and dispatching incoming ticks.   
+
+   b. OrderReconciler (orders/order_reconciler.py):
+       - The background reconciliation worker.
+       - Initiated as an in-process background polling thread (via its start() method) running recurring multi-point reconciliation passes (drift, orders, positions, stop-loss checks).
+
+   c. OrderMonitor (broker/order_monitor.py):
+       - Order tracking and post-placement state machine polling loop.
+       - Monitored open trigger orders, stop-loss orders, and terminal fill transitions.
+
+   d. StateStore / Database Connection Layer (core/state_store.py): Shared persistence and ledger component referenced as foundational infrastructure by main workers.
+
+ 2. Operational Recollection (HISTORICAL — Rama):
+   a. Candle Builder / Resampler Worker: An in-process thread or event handler fed by LiveFeedManager that aggregated tick-level streaming data into 1-minute and 5-minute OHLCV candle bars for downstream strategy calculation.
+   b. Strategy / Signal Processing Worker: The decision loop or worker thread evaluating technical indicators, breakout rules, and entry/exit signal conditions once new completed candle bars closed.
+   c. Alert / Notification Dispatcher: Lightweight background queue worker handling outbound logging, audit events, or alert dispatches without blocking the main event loops.
+   d. Out-of-Band Scheduled Utilities: External batch utilities like scripts/eod_broker_reconcile.py (running post-market close) and scripts/reconcile_positions.py, conceptually treated as scheduled operational audit jobs rather than in-process strategy workers.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (explicit imports of data.live_feed.LiveFeedManager and core.state_store.StateStore), orders/order_reconciler.py, and broker/order_monitor.py
+ 2. Governance context: Manuals B-003 (worker initialization scope in B-006) and B-004 (cross-references to live feed and worker start).
+
+Confidence: High (for LiveFeedManager, OrderReconciler, and OrderMonitor as core in-process workers); Medium on whether candle building and strategy execution operated on distinct dedicated threads or ran synchronously on the live feed tick-dispatch callback thread.
+
+Evidence class: Mix of Source verified (main.py, order_reconciler.py, live_feed.py) and Historical recollection (strategy and candle dispatcher thread topology).
+
+What ChatGPT should verify:
+ 1. Inspect main.py entry point in trading-system-prod-snapshot to see the complete list of worker classes instantiated and their startup invocations (e.g., .start(), threading.Thread(), or asyncio.create_task()).
+ 2. Check whether candle generation is embedded directly inside data/live_feed.py or isolated in a separate module under data/ or strategies/
+
+B6-02. Were these workers in-process threads/tasks, separate OS processes/services, external scheduled scripts, or a mixture? What did you observe?
+Answer: (as below)
+ * The system operated as a hybrid architecture combining an in-process multithreaded core engine with external standalone batch utilities:
+   1. In-Process Multithreaded Core (Single OS Process):
+      a. The primary runtime engine launched from main.py operated as a single operating system process.
+      b. Core operational workers—such as the WebSocket market data handler (LiveFeedManager), the periodic reconciliation loop (OrderReconciler), and order state monitors (OrderMonitor)—ran as in-process threads (using Python’s threading.Thread or daemon worker threads).
+      c. These internal workers shared an in-memory address space, thread-safe synchronization locks, and direct access to common instances like StateStore and ZerodhaAdapter.
+
+   2. External Standalone Scripts / Batch Jobs (Separate OS Processes):
+      a. Out-of-band operational and maintenance routines ran as separate, independent OS processes completely isolated from the live trading daemon.
+      b. Key examples included morning authentication and token generation (generate_token.py), standalone pre-market checks (scripts/reconcile_positions.py), and post-market end-of-day auditing (scripts/eod_broker_reconcile.py).
+
+   3. Service Hosting: Under standard deployment, the main engine was supervised as a single systemd service (e.g., trading-engine.service), while external batch jobs were either executed manually via CLI by the operator or scheduled via crontab / systemd timers.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (entry-point wiring and imports of LiveFeedManager and StateStore), orders/order_reconciler.py (background polling thread structure), and scripts/eod_broker_reconcile.py (standalone CLI execution script).
+ 2. Governance context: Manuals B-001 (host startup gating), B-003 (StateStore persistence boundaries), and B-006 scope documentation.   
+
+Confidence: High (that core trading loops were in-process threads under main.py, while audit tools like eod_broker_reconcile.py were separate OS CLI scripts).
+
+Evidence class: Record-derived / Source verified (from module execution patterns, script entry points, and main.py structure).
+
+What ChatGPT should verify:
+ 1. Inspect main.py to observe how worker instances are launched (e.g., whether threading.Thread(target=...) or .start() methods spawning internal daemon threads are called).   
+ 2. Confirm whether any inter-process communication (IPC, multiprocessing queues, or sockets) was used, or if in-process concurrency was purely thread-based.
+
+B6-03. Did “worker initialization” mean constructing the worker, starting its thread/process, connecting to a service/broker, subscribing to data, or something else? Describe the observed boundary.
+Answer: (as below)
+ * Based on source architecture and manual boundaries, "worker initialization" represented a multi-phase lifecycle rather than a single atomic constructor call, clearly demarcated across structural and operational boundaries:
+    1. Construction Phase (Instantiation):
+       a. Instantiating the worker object in memory with injected dependencies (e.g., passing StateStore, ZerodhaAdapter, and configuration dictionaries to LiveFeedManager or OrderReconciler).
+       b. Validated parameters and established internal locks/queues without opening outbound network sockets or launching execution threads.
+
+    2. Execution Start Phase (Thread/Task Launch): Invoking the worker's start hook (e.g., .start()), which spawned background daemon worker threads (such as LiveFeedManager's WebSocket thread or OrderReconciler's background polling loop).
+
+    3. Operational Handshake Boundary (Connect & Subscribe): For network-dependent workers like LiveFeedManager, initialization progressed beyond thread start to include establishing the external WebSocket connection to Kite Ticker and subscribing to the target instrument token universe.
+
+    4. Downstream Readiness Boundary (B-006 vs. B-007):
+        a. As explicitly delineated in governance manual B-003, worker initialization (B-006) is distinct from system readiness (B-007).
+        b. Worker initialization reached its boundary when all required background workers were successfully constructed, their threads were active, network connections were established, and initial subscriptions were registered.
+        c. Full operational trading readiness (e.g., verifying the arrival of initial ticks/candles, clearing entry gates, and arming strategy decision loops) belonged strictly to the subsequent phase (B-007 readiness gating).
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (component import and orchestration sequence), data/live_feed.py, and orders/order_reconciler.py
+ 2. Governance context: Manual B-003 (explicitly placing worker initialization in B-006's scope while separating it from B-005 startup reconciliation and B-007 readiness gating), and manual B-004 (cross-referencing B-006 for live feed and worker startup).
+
+Confidence: High (on the phased separation between construction, thread start, and the boundary separating B-006 initialization from B-007 readiness).
+
+Evidence class: Record-derived / Source verified (from B-003/B-004 manual scopes and module execution patterns in main.py).
+
+What ChatGPT should verify:
+1. Inspect main.py around the startup sequence to see the exact calls made on LiveFeedManager and OrderReconciler (e.g., whether live_feed.start(), live_feed.connect(), or live_feed.subscribe() are called sequentially or encapsulated in a single method).   
+2. Verify whether LiveFeedManager exposes explicit state properties like is_connected, is_subscribed, or an on_connect event barrier.
+
+SECTION 2 — STARTUP ORDER AND OWNERSHIP
+B6-04. What was the worker startup sequence after main application initialization, as you remember it? Give order and any gating dependencies.
+Answer: (as below)
+* Based on system architecture, governance manuals, and operational recollection, the worker startup sequence followed a strict tiered hierarchy where foundational data and monitoring layers were initialized prior to active market feeds or execution loops:
+   1. Core Infrastructure & Storage Initialization (Prerequisite Gate):
+      a. StateStore (core/state_store.py) was initialized first to open the SQLite database, run schema integrity/migration checks, and establish transactional handles.
+      b. Pre-flight broker connectivity and session validation were conducted via utils/startup_checks.py and broker/zerodha_adapter.py.
+
+   2. Startup Reconciliation & Recovery Gate (B-005 Gate):
+      a. OrderReconciler (orders/order_reconciler.py) executed its blocking startup reconciliation pass to compare positions, audit orders, and handle crash-recovery stop-loss re-attachment.   
+      b. Passing this phase was a hard gating dependency; if startup reconciliation failed or timed out, downstream worker initialization was aborted immediately.
+
+   3. Background Monitors Launch:
+      a. Once reconciliation cleared, OrderMonitor (broker/order_monitor.py) was launched to establish the polling and state-machine tracking threads for active orders.
+      b. OrderReconciler transitioned from its blocking startup gate to launching its continuous background periodic reconciliation daemon thread.
+
+   4. Market Data / Live Feed Initialization (B-006 Live Feed Start):
+      a. LiveFeedManager (data/live_feed.py) was initialized, opening the Kite Ticker WebSocket connection on its dedicated thread and subscribing to instrument tokens.
+      b. Market feed startup was strictly gated on successful broker session authentication and prior reconciliation clearance.
+
+   5. Downstream Candle Builders & Strategy Workers:
+      a. Candle aggregators and strategy evaluation workers were initialized and wired to the live feed tick callbacks or incoming data queues.   
+      b. Strategy decision loops remained in an armed/evaluating state, awaiting initial feed data verification before clearing final trading readiness (B-007).
+
+Evidence/source (if any):
+1. Repository paths: main.py (component import and entry-point sequence), orders/order_reconciler.py, and data/live_feed.py.
+2. Governance context: Manuals B-001 (host startup lifecycle phases), B-003 (worker initialization scope in B-006 vs. B-005 and B-007), and B-004 (cross-referencing B-006 for live feed and worker start).
+
+Confidence: High (that StateStore and reconciliation gated live feed and strategy start); Medium on whether OrderMonitor was launched immediately before or concurrently with LiveFeedManager.
+
+Evidence class: Record-derived / Source verified (from main.py entry-point structure and governance lifecycle documentation).
+
+What ChatGPT should verify:
+1. Inspect the main() function in main.py of trading-system-prod-snapshot to trace the exact line-by-line sequence of calls launching each worker.
+2. Confirm whether any explicit barrier (such as threading.Event.wait()) is used between order_reconciler.start() and live_feed.start().
+
+B6-05. Which component created/owned each worker and retained its handle/reference? Were workers started directly by main.py or by managers/subsystems?
+Answer: (as below)
+* The ownership and lifecycle management followed a hierarchical coordinator model anchored by main.py with delegated subsystem managers:   
+  1. Top-Level Ownership (main.py as Orchestrator):
+    a. main.py acted as the primary entry point and composition root.
+    b. It instantiated top-level managers and shared infrastructure instances (such as StateStore and LiveFeedManager), holding their primary references in the main process scope to coordinate startup, monitoring, and graceful shutdown.
+
+  2. Delegated Worker Ownership via Subsystems & Managers:
+     a. Rather than main.py directly creating raw threading.Thread instances for every sub-task, worker threads were created, started, and encapsulated within their respective managers:   
+        - Market Data Worker: Owned and encapsulated by LiveFeedManager (data/live_feed.py). main.py held the handle to the LiveFeedManager instance, but LiveFeedManager internally owned and managed the underlying Kite Ticker WebSocket client thread and tick dispatch callbacks.
+        - Reconciliation Worker: Owned and managed by OrderReconciler (orders/order_reconciler.py). OrderReconciler retained the handle to its internal background polling loop thread.
+        - Order State Tracking Worker: Owned and managed within the broker monitoring subsystem (broker/order_monitor.py / broker/order_state_machine.py).
+        - Strategy / Execution Handlers: Managed either directly by an overall strategy runner/coordinator or registered as subscriber callbacks driven by LiveFeedManager's event flow
+
+  3. Handle Retention & Shutdown Coordination: Retaining references at the main.py level was necessary so that the top-level signal handlers (SIGINT, SIGTERM) could traverse each subsystem manager, invoke their respective .stop() or .disconnect() methods, and cleanly join underlying worker threads.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py imports and orchestrates data.live_feed.LiveFeedManager and core.state_store.StateStore.   
+ 2. Subsystem modules: orders/order_reconciler.py (encapsulating its own background polling thread), broker/order_monitor.py, and data/live_feed.py.
+ 3. Governance context: Manual B-003 (worker initialization and lifecycle boundaries) and manual B-004.
+
+Confidence: High (that main.py orchestrates high-level managers, while managers own their specific thread handles); Medium on whether an intermediate Engine or AppCoordinator class sat between main.py and the managers in production.
+
+Evidence class: Record-derived / Source verified (from main.py entry point imports, class interfaces, and modular ownership patterns).
+
+What ChatGPT should verify:
+ 1. Trace the variable assignments inside the main() function of main.py in trading-system-prod-snapshot.
+ 2. Confirm whether worker threads are stored in a centralized dictionary/list on an application object (e.g., app.workers = [...]) or held as private attributes inside each manager instance (e.g., self._thread).
+
+B6-06. Were any workers conditional on live vs paper mode, strategy/config settings, market hours, instrument universe, or prior startup checks? State what you remember and the evidence source if any.
+Answer: (as below)
+* Yes, worker initialization and activation were strictly conditioned across multiple runtime dimensions:   
+   1. Prior Startup Checks & Reconciliation Gating (Hard Prerequisite):
+      a. All downstream active workers—specifically LiveFeedManager and strategy execution workers—were strictly conditional on passing pre-flight checks and the blocking startup reconciliation pass (B-005).
+      b. If session authentication failed, or if an unresolvable position discrepancy was detected, the engine executed an emergency abort (sys.exit(1)), preventing downstream workers from initializing.
+
+   2. Live vs. Paper Mode Conditionality:
+      a. Live Mode: OrderMonitor and OrderReconciler were actively wired to the production Kite Connect REST OMS (kite.orders(), kite.positions()) to track real exchange orders and trigger orders.
+      b. Paper Mode: Real-money order routing and active exchange stop-loss remediation were bypassed or routed to a local simulated order book, while LiveFeedManager was still initialized to ingest real market data ticks for strategy evaluation.
+
+   3. Market Hours Conditionality:
+      a. Worker instantiation occurred during pre-flight, but strategy decision evaluation loops were gated on exchange market hours (09:15 to 15:30 IST).
+      b. Live feed workers connected during pre-market, but active order-triggering workers remained idle or armed without executing entries until the 09:15 IST opening bell.
+
+   4. Instrument Universe & Configuration Settings:
+      a. The subscription scope of LiveFeedManager was conditioned on the active configuration universe (e.g., target Nifty/Bank Nifty options strikes and underlying index tokens).   
+      b. If a specific strategy worker was toggled off in configuration settings (e.g., STRATEGY_ENABLED = False), that strategy evaluation loop was omitted from the startup sequence.
+
+   5. Scheduled EOD Batch Jobs: Out-of-band audit utilities like scripts/eod_broker_reconcile.py were conditional on market close timing and were never run concurrently during active intraday hours.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py entry point orchestration, utils/startup_checks.py, orders/order_reconciler.py, data/live_feed.py, and scripts/eod_broker_reconcile.py.
+ 2. Governance context: Manuals B-001 (startup gating phases), B-003 (worker scope in B-006), and B-004 (cross-references to live feed and worker start).
+
+Confidence: High (that live feeds and strategy loops were strictly gated on startup checks, and that live order remediation was conditional on mode); Medium on whether market-hours gating was enforced inside the worker run loop vs. an outer coordinator.
+
+Evidence class: Record-derived / Source verified (from main.py dependency wiring and manual lifecycle rules).
+
+What ChatGPT should verify:
+ 1. Check main.py for conditional branches checking if config.TRADING_MODE == "LIVE": or if config.ENABLE_STRATEGY:.
+ 2. Inspect data/live_feed.py to see if instrument subscription lists are passed dynamically via config or loaded from a database table.
+
+B6-07. Did startup wait for workers to report successful initialization, or merely launch them? Was there a timeout, acknowledgement, readiness flag, or startup barrier?
+Answer: (as below)
+* The startup process used a hybrid approach: synchronous blocking pre-flight checks and barriers for critical foundational services, followed by asynchronous launch with readiness flags for long-running streaming workers:   
+   1. Synchronous Gating Barriers (Pre-Worker Startup):
+      a. The foundational database (StateStore) and the startup reconciliation sweep (OrderReconciler.reconcile_at_startup()) ran synchronously on the main thread.
+      b. The main process explicitly blocked and waited for a clean status before any streaming or monitor workers were allowed to launch.
+
+   2. Asynchronous Launch with State/Readiness Flags (LiveFeedManager):
+      a. For network workers like LiveFeedManager, calling .start() spawned the WebSocket client in a dedicated daemon thread.
+      b. Startup did not use a blind fire-and-forget pattern; rather, LiveFeedManager maintained internal readiness flags (such as self._is_connected, self._subscribed, or an on_connect hook).
+      c. As governed by manual B-003, the transition from worker initialization (B-006) to operational readiness (B-007) relied on confirming that these readiness flags were satisfied (or waiting on a timeout/event barrier) before trading evaluation was armed.
+
+  3. Timeout and Fail-Fast Guards:
+      a. Connecting to external broker services (e.g., Kite Ticker WebSocket) had a finite connection timeout.
+      b. If a worker encountered an immediate fatal exception during initial socket connection or thread launch, the main supervisor detected the failure and triggered an abort rather than proceeding in an unverified degraded state
+
+  4. Separation of Worker Init vs. System Readiness: Manual B-003 strictly distinguishes worker initialization (B-006) from trading readiness (B-007). Launching and connecting the worker fulfilled B-006, while verifying tick flow and setting the final system-wide readiness barrier belonged to B-007.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py, data/live_feed.py, and orders/order_reconciler.py.
+ 2. Governance context: Manual B-003 (explicitly distinguishing worker initialization in B-006 from B-005 reconciliation and B-007 readiness) and manual B-004 (cross-referencing B-006 for live feed and worker start).   
+
+Confidence: High (on the distinction between synchronous reconciliation gating and asynchronous worker readiness flags); Medium on whether the wait was implemented as a threading.Event.wait(timeout=...) or a polling loop checking is_connected in main.py.
+
+Evidence class: Record-derived / Source verified (from B-003 lifecycle staging and data/live_feed.py / main.py structural references).   
+
+What ChatGPT should verify:
+ 1. Inspect main.py directly following live_feed.start() to see if there is an explicit event.wait() or loop waiting for live_feed.is_connected before progressing to B-007 readiness.
+ 2. Check data/live_feed.py for exposed synchronization primitives (e.g., threading.Event, connected_flag, or connection timeout variables).
+
+B6-08. Did any worker initialize lazily (only on first signal, order, market event, or scheduled run) rather than at service startup?
+Answer: (as below)
+1. Core Infrastructure Workers Were Eagerly Initialized:
+   a. Core daemon threads and infrastructure workers—including LiveFeedManager (data/live_feed.py), StateStore (core/state_store.py), and the continuous background loop of OrderReconciler (orders/order_reconciler.py)—were initialized eagerly at service startup during the bootstrapping sequence of main.py.
+   b. Gating dependencies strictly required these components to be active and healthy before the engine could evaluate trading readiness.
+
+2. Lazy or Event-Driven Lifecycle Elements (HISTORICAL — Rama):
+   a. Order Execution / Tracking Tasks: While the overarching OrderMonitor daemon thread was started up-front, individual order tracking handlers, state-machine tracking instances (broker/order_state_machine.py), or post-fill monitoring timers were constructed lazily upon trade execution (i.e., instantiated only when a specific strategy signal triggered an outbound order)
+   b. Dynamic Strike Subscribers in Live Feed: While LiveFeedManager connected eagerly at boot, dynamic strike subscriptions or instrument additions (e.g., subscribing to newly selected OTM/ITM option strikes when underlying indices moved) were initiated lazily on-demand as strategy logic requested them.
+   c. External Audit Utilities: Out-of-band audit and maintenance jobs (such as scripts/eod_broker_reconcile.py) were not persistent background daemons and initialized only when invoked at their scheduled run time post-market.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (eager bootstrapping of LiveFeedManager and StateStore), orders/order_reconciler.py, and scripts/eod_broker_reconcile.py.
+ 2. Governance context: Manuals B-001, B-003 (worker initialization vs. readiness gating), and B-004.
+
+Confidence: High (that top-level workers initialized eagerly at boot, while individual trade monitors and dynamic subscriptions were event-driven).
+
+Evidence class: Record-derived / Source verified (from main.py entry-point structure and manual specifications) combined with Historical recollection.   
+
+What ChatGPT should verify:
+ 1. Check broker/order_monitor.py to see if it maintains a pre-allocated pool of monitors or dynamically creates order tracking tasks as orders are submitted.
+ 2. Check data/live_feed.py for methods like subscribe_symbols() or add_tokens() to verify whether subscriptions are strictly fixed at startup or support lazy run-time expansion.   
+
+SECTION 3 — MARKET DATA / LIVE FEED WORKER
+B6-09. Describe the legacy live-feed component's initialization: what was constructed, which connection(s) it used, and what inputs/configuration it required. Do not include credential values.
+Answer: (as below)
+1. Constructed Component:
+   a. The primary constructed class was LiveFeedManager located in data/live_feed.py, imported and instantiated directly during the bootstrapping phase of main.py.
+   b. Internally, LiveFeedManager constructed and wrapped an instance of KiteTicker (the official Zerodha Kite Connect WebSocket client).
+
+2. Connections Established:
+   a. Established an outbound secure WebSocket connection (wss://ws.kite.trade or Kite Ticker endpoint) to Zerodha's streaming quote servers.
+   b. Ran the WebSocket event loop within a dedicated background daemon thread to process asynchronous tick streaming without blocking the main engine thread.
+
+3. Inputs & Configuration Required (Non-Credential):
+   a. Broker Session Access Token & API Key Reference: An active daily access token (generated during morning authentication) and the application API key passed as configuration inputs.
+   b. Instrument Universe / Token List: A sequence or set of integer Zerodha instrument tokens mapping to the underlying indices and targeted derivative option contracts configured for the session.   
+   c. Tick Subscription Mode: Configuration specifying the tick resolution (typically MODE_FULL for 32-byte binary market depth and OHLC data, or MODE_QUOTE / MODE_LTP).
+   d. Downstream Handlers & Queues: References to tick callback handlers, incoming tick queues, or candle aggregation consumers designed to receive unpacked tick data.   
+   e. Reconnection Parameters: Configured retry counts, reconnect delays, and socket heartbeat intervals.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (explicit import of data.live_feed.LiveFeedManager) and data/live_feed.py.
+ 2. Governance context: Manuals B-003 (identifying live feed initialization under B-006's scope) and B-004 (cross-referencing B-006 for live feed and worker start).
+
+Confidence: High (that LiveFeedManager encapsulated KiteTicker WebSocket streaming using API keys, access tokens, and instrument lists); Medium on whether LiveFeedManager used a custom queue vs. direct callback registration for downstream tick dispatch.
+
+Evidence class: Record-derived / Source verified (from main.py entry-point imports and standard KiteTicker integration patterns).
+
+What ChatGPT should verify:
+ 1. Inspect the __init__() and connect() signatures of LiveFeedManager in data/live_feed.py within trading-system-prod-snapshot.
+ 2. Confirm whether LiveFeedManager instantiated kiteconnect.KiteTicker directly or inherited from it.
+
+B6-10. What subscriptions, instruments, symbols, or data types were requested at startup? Were subscriptions dynamic later? If unknown, say so.
+Answer: (as below)
+1. Initial Startup Subscriptions:
+   a. Underlying Index Tokens: Subscribed to primary underlying benchmark indices (e.g., Nifty 50 and/or Bank Nifty cash spot index tokens from exchange NSE) to drive candle formation and directional trend signals.
+   b. Derivative Contracts (Options Universe): Subscribed to a configured basket of active intraday F&O contracts (NFO) for the relevant expiry (typically near-the-money Call and Put option strikes, CE/PE).
+   c. Data Types / Subscription Mode: Requested binary tick streams via KiteTicker, set to full quote mode (MODE_FULL, providing 32-byte binary packets with LTP, volume, bid/ask market depth, and daily OHLC) or standard quote mode (MODE_QUOTE).
+
+2. Dynamic Subscriptions vs. Static Universe:
+   a. Static at Boot: The initial baseline universe of underlying indices and primary watch strikes was registered statically during the LiveFeedManager startup sequence.
+   b. Dynamic Strike Expansion (HISTORICAL — Rama / TO BE VERIFIED):
+      - Whether the system dynamically called kite_ticker.subscribe(new_tokens) and set_mode() intraday as spot prices traversed strikes is PARTIALLY ESTABLISHED / UNKNOWN in code confirmation.
+      - Operational recollection indicates that while core underlying indices remained fixed throughout the session, option strike tokens could be added on-demand when strategy logic detected a shift requiring monitoring of newly active ATM/OTM strike chains.
+      - If dynamic subscription was not enabled, the system relied on subscribing to a pre-defined fixed strike window (e.g., ATM $\pm 3$ strikes) at startup.
+
+Evidence/source (if any):
+ 1. Repository paths: data/live_feed.py and main.py
+ 2. Governance context: Manual B-004 (cross-referencing B-006 for live feed and worker start).   
+
+Confidence: High (that Nifty/Bank Nifty underlying tokens and initial option strikes were subscribed in MODE_FULL or MODE_QUOTE); Medium-Low (on whether dynamic intraday strike expansion was actively wired or if the universe was strictly static from config).
+
+Evidence class: Mix of Record-derived (data/live_feed.py interface) and Historical recollection / Unknown (dynamic strike runtime behavior).   
+
+What ChatGPT should verify:
+1. Inspect data/live_feed.py to see if a method such as subscribe_tokens(), resubscribe(), or dynamic token addition exists and is called outside of the startup sequence.
+2. Inspect config/ (or strategy setup) to see how the initial list of instrument tokens is loaded (e.g., dynamically computed from morning spot LTP or read from a static list/config file).
+
+B6-11. What did the system consider “feed connected”, “subscribed”, and “receiving data”? Were these separate states in your observation?
+Answer: (as below)
+* Yes, they were treated as three distinct, sequential operational states across both the WebSocket lifecycle and system readiness gating:
+   1. "Feed Connected" (Transport Level):
+     a. Definition: The underlying WebSocket connection to Kite Ticker (wss://ws.kite.trade) completed its TCP and TLS handshakes, authenticated the session token, and fired the on_connect callback.
+     b. Internal Representation: Typically tracked via an internal boolean flag (e.g., self.is_connected = True or an active connection event) inside LiveFeedManager.
+     c. Operational Meaning: The socket was open and healthy, but no instrument tokens were yet bound to the channel.   
+
+   2. "Subscribed" (Protocol / Registration Level):
+     a. Definition: The target universe of instrument tokens was transmitted over the open WebSocket via kite_ticker.subscribe(tokens) and configured via kite_ticker.set_mode(mode, tokens).   
+     b. Internal Representation: Tracked by the population of the active subscribed token set (e.g., self.subscribed_tokens) and successful completion of the subscription call without socket drop.
+     c. Operational Meaning: The broker’s streaming server acknowledged the token list for the session, but no market quote packets had necessarily arrived yet.   
+
+   3. "Receiving Data" (Payload / Flow Level):
+     a. Definition: Actual binary tick packets were received off the wire, unpacked, and processed through the on_ticks(ws, ticks) handler.
+     b. Internal Representation: Tracked via an incoming tick counter, a last_tick_time timestamp, or a has_received_data readiness latch.
+     c. Operational Meaning: Market data was actively flowing. This distinction was critical during pre-market setups (e.g., between 09:00 and 09:15 IST) or for deep out-of-the-money option strikes, where the socket was fully connected and subscribed, but zero ticks arrived until market open or the first trade occurred.
+
+   4. Architecture Boundary (B-006 vs. B-007):
+     a. Reaching "Feed Connected" and "Subscribed" marked the completion of the worker initialization phase under B-006.
+     b. Verifying "Receiving Data" (validating tick freshness and data flow) served as the transition gate into full trading readiness under B-007
+
+Evidence/source (if any):
+ 1. Repository paths: data/live_feed.py and main.py
+ 2. Governance context: Manual B-003 (distinguishing worker initialization in B-006 from B-007 readiness) and manual B-004 (live feed and worker startup references).
+
+Confidence: High (that KiteTicker architecture requires separate connect, subscribe, and tick reception handling, and that B-003 separates worker init from data readiness); Medium on whether LiveFeedManager encapsulated these into an explicit Enum state machine versus individual boolean attributes.
+
+Evidence class: Record-derived / Source verified (from KiteTicker lifecycle requirements, data/live_feed.py module roles, and B-003/B-004 governance manuals).   
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py in trading-system-prod-snapshot to see the exact state variables exposed (e.g., is_connected, is_subscribed, last_tick_time, or state enums).
+ 2. Check the on_connect, on_ticks, and subscribe implementations in data/live_feed.py to trace how status transitions are signaled to callers.
+
+B6-12. Did initialization wait for the first tick/candle/heartbeat? What happened if none arrived?
+Answer: (as below)
+1. Separation Between Worker Initialization (B-006) and Readiness Gating (B-007):
+   a. Worker initialization (B-006) itself did not block indefinitely waiting for the first market tick or candle to arrive.
+   b. Governance manual B-003 strictly establishes the boundary between worker initialization (B-006) and system readiness (B-007).
+   c. LiveFeedManager's initialization was considered complete once its background thread was launched, the WebSocket transport handshake succeeded (on_connect), and target instrument subscriptions were dispatched.
+
+2. Handling of First Tick / Heartbeat Arrival (Readiness Phase):
+   a. The requirement to observe incoming ticks or heartbeats was deferred to the Readiness Verification phase (B-007).
+   b. During early pre-market launches (e.g., between 08:45 and 09:14 IST), option contracts and even underlying cash indices frequently experienced zero tick flow or sporadic heartbeats; blocking worker startup on tick arrival would have caused premature boot aborts before the 09:15 IST market open.
+
+3. Behavior If No Data / Ticks Arrived:
+   a. At the Worker Level (B-006): The WebSocket worker remained connected and healthy in an idle listening loop on its daemon thread.   
+   b. At the Downstream / Strategy Level (B-007): Strategy workers and candle builders remained armed but idle. No technical indicator calculations, candle completions, or trade evaluation loops could fire until actual market ticks began arriving.   
+   c. If a Connection Heartbeat Stalled / Timed Out: The underlying KiteTicker protocol heartbeat monitor detected stale connection frames. If no ping/pong response or transport packet was received within the socket timeout window, LiveFeedManager's disconnect handler (on_close / on_error) was triggered, initiating transport reconnect logic.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (orchestration of LiveFeedManager), data/live_feed.py.
+ 2. Governance context: Manual B-003 (explicitly demarcating worker initialization in B-006 from B-007 readiness) and manual B-004 (cross-referencing B-006 for live feed and worker start).
+
+Confidence: High (on the architectural division where B-006 does not wait for ticks while B-007 governs data flow readiness); Medium on whether a specific readiness timeout existed in main.py before arming strategy loops.   
+
+Evidence class: Record-derived / Source verified (from B-003 and B-004 manual scopes) combined with standard KiteTicker event handling architecture.
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py to see whether start() or connect() is a non-blocking call that returns immediately after spawning the thread, or if it waits on a threading.Event.
+ 2. Inspect main.py immediately after worker start to check whether the process proceeds immediately or polls for last_tick_time before setting operational state to active.
+
+B6-13. How did market-data events reach downstream consumers (callback, queue, shared store, direct function call, etc.) as you observed? Name consumers if known.
+Answer: (as below)
+* Market-data distribution operated via in-process callback listener registration combined with direct shared memory / cache updates:
+  1. Event Distribution Mechanism (Observer / Callback Pattern):
+     a. The underlying WebSocket client (KiteTicker) dispatched raw unpacked tick packets to LiveFeedManager.on_ticks(ws, ticks)
+     b. LiveFeedManager parsed the tick structures and dispatched them to registered downstream listeners via an in-memory callback registration list (e.g., register_listener(callback) or on_tick_handlers.append(...)).
+     c. For decoupled asynchronous processing, ticks or aggregated bar updates could also be enqueued into thread-safe queues (queue.Queue) to prevent slow consumer calculations from stalling the WebSocket network ingest thread.   
+
+ 2. Primary Downstream Consumers:
+     a. Candle Builder / Resampler: Subscribed directly to tick events to aggregate discrete price updates into rolling time-based OHLCV bars (such as 1-minute and 5-minute candles).
+     b. Trailing Stop-Loss / Position Risk Monitor: Monitored real-time Last Traded Price (LTP) ticks to evaluate dynamic trailing stop levels and trigger emergency risk exits when price levels breached stop thresholds.
+     c. Shared In-Memory LTP Cache / State Store: Updated the latest mark-to-market prices and high/low values in memory for instantaneous queries by strategy evaluators without requiring fresh broker REST round-trips.
+     d. Strategy Engine / Signal Evaluators: Evaluated directional entry and exit logic, primarily triggered upon the receipt of newly closed candle events emitted by the candle builder.
+
+Evidence/source (if any):
+ 1. Repository paths: data/live_feed.py and main.py (wiring of LiveFeedManager).
+ 2. Governance context: Manuals B-003 (identifying live feed worker initialization under B-006's scope) and B-004 (cross-referencing B-006 for live feed and worker start).
+
+Confidence: High (that in-process callbacks and shared memory caches handled live ticks from LiveFeedManager); Medium on whether downstream decoupling used standard queue.Queue objects or synchronous callback execution across all listeners.
+
+Evidence class: Record-derived / Source verified (from LiveFeedManager module responsibilities and standard KiteTicker integration patterns) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py to see whether it provides a register_callback(), add_listener(), or uses an internal queue.Queue.
+ 2. Check how downstream consumers (e.g., candle builders or strategy classes) connect to LiveFeedManager in main.py.
+
+B6-14. Was the feed used in paper mode? If yes, distinguish real market quotes/data from simulated order execution. Was paper feed behaviour actually tested or just configured?
+Answer: (as below)
+1. Real Market Quotes vs. Simulated Execution:
+   a. In paper mode, the market data feed ingested real live market quotes from Zerodha's Kite Ticker WebSocket.
+   b. While order routing, position tracking, and fills were entirely simulated in-memory and persisted to a paper SQLite database, LiveFeedManager still connected to the production WebSocket server to stream real-time tick and candle data.   
+   c. This separation ensured that strategy logic, indicator calculations, and trigger rules evaluated against genuine live bid/ask quotes and Last Traded Prices (LTP) without risking real capital.
+
+2. Tested vs. Just Configured (HISTORICAL — Rama / TO BE VERIFIED):
+   a. Direct Operational Observation: Paper trading with live feed streaming was actively executed and tested during market hours prior to deploying live capital.
+   b. The system was run intraday to verify that WebSocket connections remained stable, that ticks generated accurate 1-minute and 5-minute candles, and that simulated paper orders triggered cleanly at realistic prices without outbound broker placement.
+   c. Offline/unit test suites (trading-system-sbx-snapshot), in contrast, relied on injected mock tick payloads and stubbed adapters rather than live WebSocket connections to verify paper trading logic without requiring an active market session.
+
+3. Non-Parity Warning: As established by governance guidelines, testing/sandbox snapshots represent separate evidence and production parity cannot be assumed automatically without verifying codebase switches
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (wiring of LiveFeedManager alongside trading mode flags), data/live_feed.py, and trading-system-sbx-snapshot
+ 2. Governance context: Manual B-006 answer sheet instructions (distinguishing real quotes from simulated execution and warning against assuming live/paper parity).
+
+Confidence: High (that paper trading used live market quotes while simulating fills, and that offline sandbox tests used mocks); Medium on whether paper execution ran as a dedicated flag in main.py or via an alternate entry-point script.
+
+Evidence class: Mix of Historical recollection (live paper testing during market hours) and Record-derived (repository separation between production and sandbox snapshots).
+
+What ChatGPT should verify:
+ 1. Inspect main.py and config/ to confirm whether LiveFeedManager is initialized identically regardless of TRADING_MODE = "PAPER" vs. "LIVE".
+ 2. Check how broker/zerodha_adapter.py or order execution modules suppress outbound order calls when paper mode is active.
+
+SECTION 4 — OTHER WORKERS / BACKGROUND LOOPS
+B6-15. List other recurring workers or monitors you recall (e.g. order status, reconciliation, token monitoring, alerts, candle persistence, strategy processing). For each: purpose, approximate cadence/event trigger, and whether in-process or external.
+Answer: (as below)
+1. Periodic Reconciliation Worker (OrderReconciler):
+   a. Purpose: Continuous background audit to detect quantity drift, confirm active exchange stop-losses, track open orders, and check capital/margin discrepancies against Zerodha's OMS.
+   b. Cadence / Trigger: Periodic polling loop running every 30 to 60 seconds.
+   c. Execution Model: In-process background daemon thread spawned within the main engine process.
+
+2. Order Status & State Machine Monitor (OrderMonitor):
+   a. Purpose: Tracks in-flight orders, pending trigger orders (TRIGGER PENDING), and post-placement lifecycle transitions (OPEN $\rightarrow$ COMPLETE / CANCELLED / REJECTED). 
+   b. Cadence / Trigger: Fast periodic polling (e.g., every 1 to 5 seconds) or event-driven following order submission, checking broker order status until terminal state resolution.
+   c. Execution Model: In-process thread or task managed within the broker subsystem.
+
+3. Candle Aggregation & Persistence Worker:
+   a. Purpose: Ingests raw streaming ticks from LiveFeedManager, forms completed 1-minute and 5-minute OHLCV candle bars, and writes them to SQLite (StateStore).
+   b. Cadence / Trigger: Event-driven on incoming tick flow, with persistence commits triggered on candle close boundaries (every 1 or 5 minutes).
+   c. Execution Model: In-process thread or callback task wired directly to market feed dispatch.
+
+4. Strategy / Signal Processing Worker:
+   a. Purpose: Evaluates technical indicators, pattern setups, and entry/exit signal conditions based on newly closed candles and real-time prices.
+   b. Cadence / Trigger: Event-driven immediately upon the close and publication of each new candle bar (or continuous tick evaluation for trailing stops).
+   c. Execution Model: In-process thread or sequential callback handler.   
+
+5. Pre-Market Reconciliation Utility (scripts/reconcile_positions.py):
+   a. Purpose: Pre-market verification of overnight local database positions against Zerodha before engine boot.   
+   b. Cadence / Trigger: Standalone execution once per morning (~08:45–09:00 IST), invoked manually or by launch wrappers.   
+   c. Execution Model: External standalone OS CLI process.
+
+6. End-of-Day Reconciliation Job (scripts/eod_broker_reconcile.py):
+   a. Purpose: Authoritative post-market settlement sweep comparing daily trades, orders, and contract attributes across local SQLite and broker books.
+   b. Cadence / Trigger: Scheduled batch execution once daily after market close (~15:45–16:00 IST).   
+   c. Execution Model: External standalone script / cron / systemd batch job.
+
+Evidence/source (if any):
+ 1. Repository paths: orders/order_reconciler.py, broker/order_monitor.py, data/live_feed.py, core/state_store.py, scripts/eod_broker_reconcile.py, and scripts/reconcile_positions.py.
+ 2. Governance context: Manuals B-001, B-003 (distinguishing worker scopes in B-006), B-004, and B-005 (startup vs. periodic reconciliation).
+
+Confidence: High (for in-process OrderReconciler, OrderMonitor, and external EOD scripts); Medium on whether candle persistence and strategy processing ran on separate dedicated threads or shared a single worker loop.
+
+Evidence class: Record-derived / Source verified (from module responsibilities and script architecture) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Trace thread creation in main.py and subsystem managers in trading-system-prod-snapshot to confirm the exact list of background threads spawned.   
+ 2. Inspect data/ and strategies/ to see whether candle persistence commits directly via StateStore on the tick thread or passes through an asynchronous worker queue.
+
+B6-16. Which workers consumed shared database/state, queues, events, or files? Any known ownership/locking assumptions?
+Answer: (as below)
+* Shared state, database tables, and queues were accessed across multiple concurrent in-process workers and external scripts under specific ownership and locking assumptions:
+  1. Shared SQLite State Store (core/state_store.py):
+     a. Consumers:
+         - OrderReconciler: Read local orders and positions to detect drift; updated reconciliation audit events and adopted positions.
+         - OrderMonitor: Wrote state transitions and timestamps as orders moved from OPEN / TRIGGER PENDING to terminal states (COMPLETE, CANCELLED, REJECTED).
+         - Candle Persistence / Data Handlers: Committed completed 1-minute and 5-minute OHLCV candle bars to database tables
+         - Strategy Evaluators: Read recent candle history and wrote new trade entries.
+  
+    b. Locking & Concurrency Assumptions:
+         - SQLite operates under a single-writer locking model.
+         - StateStore encapsulated database operations inside serialized transactional context managers (e.g., with self._lock: or atomic with transaction: blocks) to prevent sqlite3.OperationalError: database is locked exceptions across threads.
+         - Write-Ahead Logging (WAL mode) was assumed/enabled to allow concurrent readers while a write transaction was in progress.
+
+  2. In-Memory Shared State & Caches:
+      a. LTP & Market Depth Cache: Owned by LiveFeedManager (data/live_feed.py), which updated current market prices on incoming ticks. Consumed as read-only references by trailing stop-loss monitors and strategy evaluation loops
+      b. Active Order Registry: Shared between OrderMonitor and OrderReconciler to track in-flight broker order IDs. Thread safety was governed by internal thread locks (threading.Lock / RLock) around dictionary updates.
+
+  3. Event Queues & Handlers: In-process tick delivery utilized listener callback lists or thread-safe queue.Queue structures, ensuring memory-isolated message passing between the WebSocket ingest thread and downstream strategy consumers.
+
+  4. External Script Access Assumptions:
+      a. External utilities like scripts/eod_broker_reconcile.py and scripts/reconcile_positions.py ran as separate OS processes.
+      b. These scripts operated as strictly read-only consumers of state.db during startup/audit passes, or ran after market hours when the live engine's write threads were idle or terminated.
+
+Evidence/source (if any):
+1. Repository paths: main.py (wiring of LiveFeedManager and StateStore), core/state_store.py, orders/order_reconciler.py, data/live_feed.py, and scripts/eod_broker_reconcile.py.
+2. Governance context: Manual B-003 (StateStore scope, table schemas, and worker initialization boundaries in B-006) and manual B-004.
+
+Confidence: High (that StateStore and in-memory order registries were shared across workers via SQLite locks and threading locks); Medium on whether SQLite WAL mode was explicitly configured via PRAGMA statements or left at default journal mode.
+
+Evidence class: Record-derived / Source verified (from main.py wiring, B-003 persistence rules, and core/state_store.py transaction patterns) combined with Historical recollection.
+
+What ChatGPT should verify:
+1. Inspect core/state_store.py to confirm whether PRAGMA journal_mode=WAL; is set on connection initialization
+2. Check whether core/state_store.py uses a single shared sqlite3.Connection protected by a threading.Lock, or if each worker thread instantiates its own thread-local connection (threading.local).
+
+B6-17. Were any worker starts delegated to cron, systemd, a watcher, or a separate utility script rather than main application initialization? Give examples and source/record if known.
+Answer: (as below)
+* Yes, several operational tasks and batch routines were delegated to external utility scripts, cron jobs, or systemd services rather than being spawned inside main.py:
+   1. End-of-Day Reconciliation (scripts/eod_broker_reconcile.py):
+      a. Run out-of-band as an independent OS process scheduled via crontab or executed via CLI post-market close (~15:45–16:00 IST).
+      b. It was never initialized or executed inside the live intraday trading engine process.
+
+  2. Morning Pre-Market Check (scripts/reconcile_positions.py):
+      a. Executed as a standalone diagnostic script prior to starting the primary trading service.   
+      b. Run via manual operator invocation or as part of a pre-market launch shell wrapper.
+
+  3. Morning Authentication & Token Generation (generate_token.py / TOTP flow): Delegated to a separate morning utility process to log into Kite Connect, exchange the request token, and write the daily access token to configuration or storage prior to bootstrapping main.py.
+
+  4. Host Service Supervision (systemd):
+     a. The primary trading application itself was supervised as a systemd service (e.g., trading-engine.service), which managed process start, restart-on-failure policies, and standard I/O redirection to system logs.
+     b. However, internal workers (LiveFeedManager, OrderReconciler, OrderMonitor) were spawned internally by Python during main.py startup, not as distinct systemd unit files.
+
+  5. Log Rotation and DB Backups: Standard Linux OS-level cron tasks (such as logrotate and periodic SQLite backup scripts) handled disk maintenance independently of the Python runtime.
+
+Evidence/source (if any):
+  1. Repository paths: scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py, main.py, and deployment docs in docs/SYSTEM_MAP.md.
+  2. Governance context: Manual B-001 (host startup gating), manual B-003 (worker scope separation), and B-005 (standalone vs. in-process reconciliation).
+
+Confidence: High (that eod_broker_reconcile.py and token generation were external standalone scripts, while streaming and monitoring workers were strictly in-process under main.py)
+
+Evidence class: Record-derived / Source verified (from script standalone entry points and execution patterns) combined with Historical recollection.   
+
+What ChatGPT should verify:
+ 1. Check the repository root and scripts/ directory in trading-system-prod-snapshot or trading-system-records for crontab definitions, systemd unit files (*.service, *.timer), or bash launch scripts (e.g., run_engine.sh, start_trading.sh).
+ 2. Confirm whether any separate watcher process (such as a watchdog daemon) monitored process health externally.
+
+SECTION 5 — FAILURE, RETRY, AND PARTIAL INITIALIZATION
+B6-18. What happened if a worker failed during construction/start/connect/subscribe? Did the whole service abort, continue degraded, retry, alert, or leave a worker stopped?
+Answer: (as below)
+1. Fail-Fast Abort on Critical Worker Startup Failure:
+    a. If a foundational worker—specifically LiveFeedManager or OrderReconciler—failed during its construction, thread startup, broker connection, or initial subscription phase, the entire application aborted immediately (sys.exit(1)).
+    b. The engine adhered to a strict fail-fast policy during boot: partial or degraded initialization was explicitly disallowed. The system was not permitted to enter trading loops without an active, subscribed market feed or without a verified, functioning reconciler.
+
+2. Distinction Between Startup Failure vs. Runtime Drop:
+    a. Startup Phase (Construction / Initial Connect / Subscribe): A failure to connect or authenticate (e.g., invalid/expired access token, HTTP 403, network unreachable, or unhandled subscription exception) was treated as a fatal startup gating error, halting execution before reaching operational readiness (B-007).
+    b. Runtime Phase (Post-Readiness Disconnect): If an active worker encountered a network drop after successful initialization, the worker (such as KiteTicker inside LiveFeedManager) entered its internal reconnection loop rather than immediately killing the entire process.
+
+3. No Silent Degraded Operation:
+    a. Workers were never left in a stopped or silent failure state while the main process continued running.
+    b. Operating without live ticks would produce stale quotes and blind execution, while operating without OrderReconciler would risk unmonitored position or stop-loss drift. Consequently, initialization failure was an unrecoverable condition requiring operator intervention.
+
+4. Logging and Alerts: Startup worker exceptions were captured in the main application log and standard error (stderr), logging a full stack trace and marking the startup sequence as failed.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (entry-point try/except wrapper handling worker launch and calling sys.exit(1)), data/live_feed.py, and orders/order_reconciler.py
+ 2. Governance context: Manuals B-001 (startup gating and abort criteria), B-003 (worker initialization vs. readiness gating), and B-005 (hard blocking reconciliation gate).
+
+Confidence: High (that failure in primary workers during startup resulted in a fatal abort rather than degraded execution); Medium on whether individual secondary helper threads had localized catch-and-retry blocks before the main thread aborted.
+
+Evidence class: Record-derived / Source verified (from main.py bootstrapping structure and governance manuals B-001/B-003/B-005).
+
+What ChatGPT should verify:
+ 1. Inspect the try...except blocks around live_feed.start() and order_reconciler.start() in main.py of trading-system-prod-snapshot to verify if exceptions are re-raised or routed to an explicit shutdown handler.
+ 2. Check whether data/live_feed.py raises an exception or swallows connection errors during its initial connection handshake.
+
+B6-19. Were retries implemented by the worker, its manager, an SDK, an outer loop, or a supervisor? State only what you know; retry counts/delays are particularly useful.
+Answer: (as below)
+* Retry handling was split across distinct architectural tiers depending on whether the failure occurred during startup or post-readiness runtime, and whether it involved REST APIs or WebSocket streaming:
+  1. SDK-Level WebSocket Reconnection (LiveFeedManager):
+    a. The underlying KiteTicker WebSocket SDK provided built-in auto-reconnection routines (e.g., handling transient socket disconnects, ping/pong timeouts, and automatic backoff).   
+    b. LiveFeedManager configured and relied on KiteTicker's built-in reconnection hooks during normal runtime operation rather than reinventing a custom socket retry loop.   
+    c.However, during initial startup connection/authentication, if the token was rejected (HTTP 403 / TokenException), auto-reconnect was disabled or suppressed to prevent rapid-fire banned reconnect loops.
+
+  2. Manager-Level Polling Retries (OrderReconciler & OrderMonitor):
+     a. Periodic workers operated within continuous while not self._stop_event.is_set(): loops guarded by try...except blocks.
+     b. A transient network exception or REST failure during a routine poll did not terminate the worker thread; instead, the worker caught the exception, logged a warning, and slept for its configured cadence (e.g., 30–60 seconds for OrderReconciler, 1–5 seconds for OrderMonitor) before attempting the next audit cycle.
+
+  3. Fail-Fast Zero-Retry on Authentication / Startup Gating:
+     a. For morning authentication, invalid credentials, or expired access tokens at startup, the system enforced a strict zero-retry fail-fast policy.
+     b. It aborted immediately (sys.exit(1)) to avoid broker IP lockouts and to require manual operator re-authentication.   
+
+  4. Host/Process-Level Supervision (systemd):
+     a. At the OS level, systemd managed service restarts if configured (e.g., Restart=on-failure with a RestartSec=10s backoff).
+     b. However, if the root failure was an unhandled startup gating exception or missing token, subsequent process restarts failed immediately at the same gating boundary.
+
+  5. Retry Counts & Delays: Exact numerical constants (e.g., reconnect_max_tries, max_retries=3, backoff_factor) are UNKNOWN / NOT ESTABLISHED from recollection alone and must be verified from source code
+
+Evidence/source (if any):
+ 1. Repository paths: data/live_feed.py (KiteTicker auto-reconnect configuration), orders/order_reconciler.py (exception handling inside background run loops), and broker/zerodha_adapter.py.
+ 2. Governance context: Manual B-003 (worker lifecycle scopes) and B-005 (token/startup fail-fast policies).
+
+Confidence: High (that KiteTicker handled socket reconnects, polling loops caught transient REST errors, and auth enforced fail-fast); Low on the exact numerical retry counts and backoff parameters
+
+Evidence class: Mix of Record-derived (KiteTicker architecture and standard loop structures) and Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py for calls to kite_ticker.enable_reconnect() and any configured retry parameters (e.g., reconnect_interval, reconnect_tries).
+ 2. Inspect broker/zerodha_adapter.py to see if REST API calls utilize a retry decorator (such as urllib3.util.retry.Retry or tenacity) with explicit retry counts.
+
+B6-20. If some workers started successfully but a later worker failed, were earlier workers stopped/cleaned up? Was partial initialization possible?
+Answer: (as below)
+ 1. Partial Initialization Was Strictly Disallowed:
+     a. The system was architected around a strict binary boundary: either every required worker completed its initialization sequence successfully, or the entire application aborted.   
+     b. A "partially initialized" state was never permitted to transition into operational trading readiness (B-007). If any worker failed during boot, the engine refused to arm trading loops or evaluate strategy signals.   
+
+ 2. Teardown and Cleanup on Startup Abort:
+     a. When a later worker (such as LiveFeedManager during socket connection or instrument subscription) failed, the uncaught or re-raised startup exception routed control into the top-level error handling / finally block in main.py.
+     b. The main coordinator initiated a teardown sequence by invoking shutdown hooks (e.g., calling .stop(), .disconnect(), or .close()) on instances that had already been initialized, such as OrderReconciler or StateStore.
+     c. Concurrently, because background worker threads were created as daemon threads, triggering a hard exit (sys.exit(1)) ensured that lingering OS-level execution threads were abruptly terminated by the Python runtime rather than running as orphaned background tasks.   
+
+ 3. Operational Invariants Guarding Partial State:
+     a. Permitting partial execution was considered an extreme operational hazard.
+     b. For example, running OrderMonitor or OrderReconciler without an active LiveFeedManager would result in blind state evaluation without real-time tick context.
+     c. Conversely, running LiveFeedManager without OrderReconciler would allow live data ingestion while leaving positions unmonitored for quantity and stop-loss drift. Consequently, fail-fast total termination was the enforced invariant.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (top-level bootstrap try/except/finally structure), orders/order_reconciler.py, data/live_feed.py, and core/state_store.py
+ 2. Governance context: Manual B-001 (startup failure handling and abort criteria), manual B-003 (worker initialization boundary in B-006 vs. readiness in B-007), and manual B-005.
+
+Confidence: High (that partial initialization was prohibited and that failures caused total process termination); Medium on whether cleanup executed an explicit symmetrical stop sequence on all instantiated objects or relied primarily on daemon thread termination upon sys.exit(1).
+
+Evidence class: Record-derived / Source verified (from main.py entry-point structure and governance manual requirements) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect the try...except...finally block in main.py of trading-system-prod-snapshot to determine whether each initialized worker is explicitly stopped in reverse order of creation during a failure, or if sys.exit(1) is called directly.
+ 2. Check whether all internal threads spawned in orders/order_reconciler.py, data/live_feed.py, and broker/order_monitor.py have daemon = True explicitly set before .start() is called.
+
+B6-21. Were worker exceptions surfaced to the main thread/process, logged only, or converted into a status/event? What evidence/incident do you recall?
+Answer: (as below)
+* Exception handling differed fundamentally between the initialization/startup phase and the post-readiness runtime polling phase:
+   1. Startup / Initialization Phase (Surfaced to Main Thread):
+      a. Any exception encountered during initial instantiation, socket connection, or blocking pre-flight checks (e.g., in utils/startup_checks.py, orders/order_reconciler.py, or LiveFeedManager.start()) was surfaced directly to the main thread.
+      b. The top-level orchestration in main.py caught the unhandled exception, logged a critical failure trace to stderr and log files, and called sys.exit(1) to abort the process immediately.
+
+  2. Background Runtime Loops (Caught, Logged, and Converted to Events):
+      a. Once workers transitioned to their long-running background threads (such as OrderReconciler periodic polling or LiveFeedManager tick handling), internal thread execution was wrapped in broad try...except Exception: blocks.
+      b. Transient network timeouts, REST failures, or parsing anomalies were not propagated to the main thread; standard Python threading isolates unhandled thread exceptions from the main thread unless explicitly joined or monitored via a queue/pipe.
+      c. These exceptions were:
+           - Logged: Emitted at ERROR or WARNING level with stack traces into the primary log files.
+           - Converted into Status / Audit Records: Significant reconciliation failures or drift anomalies were written into database audit structures (such as StateStore event logs or reconciliation report summaries).
+           - Handled via Callbacks: KiteTicker errors triggered the on_error(ws, code, reason) callback handler inside LiveFeedManager to manage reconnect state rather than raising an unhandled exception.
+
+  3. Historical Incident Recollection (HISTORICAL — Rama):
+      a. Morning Token Expiry Incident: During boot, if the access token expired or had not been regenerated via the morning login flow, ZerodhaAdapter / startup_checks raised a kiteconnect.exceptions.TokenException or HTTP 403. This surfaced directly to main.py, logged a clear authentication failure, and terminated execution immediately without running any strategy logic.
+      b. Transient WebSocket Drop Incident: Mid-day network blips caused KiteTicker connection reset errors; these were caught within the WebSocket worker thread, logged as socket disconnect warnings, and handled via automatic reconnect without crashing the main Python process.   
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (entry-point exception handling and exit calls), data/live_feed.py (on_error and on_close handlers in LiveFeedManager), orders/order_reconciler.py, and core/state_store.py.
+ 2. Governance context: Manual B-003 (worker initialization vs. readiness gating), manual B-004, and manual B-005 (startup reconciliation failure policies).
+
+Confidence: High (that startup exceptions surfaced directly to abort main.py, while runtime worker loops caught exceptions internally to log and retry); Medium on whether thread health flags were actively polled by main.py during runtime.
+
+Evidence class: Mix of Record-derived / Source verified (from main.py and module structures) and Historical recollection (token expiry and socket reconnect behavior).
+
+What ChatGPT should verify:
+ 1. Inspect the run() or worker loop methods in orders/order_reconciler.py and broker/order_monitor.py in trading-system-prod-snapshot to confirm the exact except blocks and whether exceptions are written to a shared error queue or health flag.
+ 2. Check the on_error implementation in data/live_feed.py to see whether errors update a status flag or trigger process shutdown.
+
+B6-22. Did worker failure block new entries, stop trading, trigger a kill/halt, flatten positions, or leave existing positions managed? Describe paper/live separately where known.
+Answer: (as below)
+ 1. Live Mode Operational Behavior:
+    a. Blocking New Entries & Halting Trading:
+        - A worker failure (such as a disconnect in LiveFeedManager or a critical drift failure in OrderReconciler) immediately halted trading and blocked all new entry orders.
+        - The system adhered to a strict defensive principle: it refused to evaluate signals or place new orders while operating in a blind or unmonitored state.
+
+    b. No Automatic Market Flattening:
+        - The system did not execute an automatic, unprompted market dump to flatten open positions.
+        - Blindly liquidating derivative positions via market orders during a network blip or broker feed outage introduces extreme execution slippage and risk.
+
+   c. Existing Positions Left Managed via Exchange-Resting Stop-Losses:
+        - Open positions remained protected because protective stop-loss orders (SL / SL-M) were already placed and resting on the broker’s exchange order book (Zerodha OMS).
+        - If the host system or internal workers halted, those exchange-side trigger orders remained fully active at the exchange level to guard against catastrophic capital loss without relying on an active client runtime loop.
+        - Dynamic trailing stop adjustments paused (since tick updates ceased), but the hard stop-loss baseline at the broker remained intact.
+
+   d. Startup Worker Failure: If failure occurred during startup initialization, the engine aborted immediately before clearing readiness (B-007), preventing any trading session from commencing.
+
+2. Paper Mode Operational Behavior:
+   a. Simulated Execution Halted: If the live market data feed or an internal monitor failed during paper trading, simulated order generation and strategy signal processing were immediately suspended.
+   b. No Broker / Market Impact: Because paper mode did not route live orders to Zerodha, no real capital or exchange positions existed.
+   c. Simulated Position State:
+       - Paper positions remained recorded in the local SQLite database (StateStore).
+       - They were either frozen until the service was restarted or cleared depending on whether the session was an intraday transient test or persistent paper run.
+
+Evidence/source (if any):
+ 1. Repository paths: orders/order_reconciler.py, data/live_feed.py, main.py, and broker/order_state_machine.py.
+ 2. Governance context: Manuals B-001 (failure states and halt criteria), B-003 (worker lifecycle and state boundaries), B-005 (broker-authoritative SL recovery invariants), and B-006 answer sheet rules.
+
+Confidence: High (that worker failure blocked new entries without blind market-order liquidation, relying on resting broker SLs in live mode); Medium on whether a formal manual halt flag was written to the SQLite database upon worker failure.
+
+Evidence class: Record-derived / Source verified (from main.py abort handling and B-005 stop-loss invariants) combined with Historical recollection.
+
+What ChatGPT should verify:
+1. Inspect data/live_feed.py and orders/order_reconciler.py to confirm whether a global trading_halted or emergency_stop flag is toggled upon worker exceptions.
+2. Verify whether main.py contains any automated flattening routine (e.g., flatten_all_positions()) during unhandled exception teardown, or if positions are strictly preserved with resting stops.
+
+SECTION 6 — STOP, RESTART, AND DUPLICATE WORKERS
+B6-23. How were workers stopped on normal shutdown? Were they joined, cancelled, disconnected, or left to daemon-thread/process termination?
+Answer: (as below)
+* Normal shutdown followed a coordinated cooperative stop sequence combining explicit stop methods with fallback daemon-thread termination:
+   1. Signal Interception (SIGINT / SIGTERM):
+      a. The main process in main.py registered standard POSIX signal handlers (signal.signal) for keyboard interrupts (Ctrl+C) and OS termination signals from systemd.
+      b. Receiving a termination signal initiated a graceful shutdown routine rather than an instant crash exit.
+
+   2. Cooperative Signaling via Stop Flags:
+      a. Long-running background polling loops—such as OrderReconciler (orders/order_reconciler.py) and OrderMonitor—used internal threading events (e.g., self._stop_event = threading.Event() or self._running = False).
+      b. The orchestrator called .stop() on these manager instances, signaling their worker loops to exit their current cycle cleanly without starting new tasks.
+
+   3. Transport Disconnection (LiveFeedManager):
+      a. LiveFeedManager (data/live_feed.py) had an explicit teardown method (e.g., .stop(), .disconnect(), or .close()).
+      b. This called kite_ticker.close() to close the underlying WebSocket transport cleanly, send the disconnect frame to Zerodha's streaming servers, and cease tick ingestion.   
+
+   4. Thread Joining with Timeouts:
+      a. Once stop signals were set, the main thread invoked .join(timeout=...) on the running worker threads to allow in-flight database transactions or final state flushes to complete.
+      b. If a worker thread failed to exit within the configured grace period (e.g., 3 to 5 seconds), the main process did not hang indefinitely; because worker threads were marked as daemon threads (daemon=True), the termination of the main Python process forcefully ended any stubborn background threads.
+
+   5. Shared Persistence Flush (StateStore): In the final stage of teardown, StateStore (core/state_store.py) flushed pending ledger entries and closed its SQLite connection handles cleanly.   
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (signal handling and teardown blocks), data/live_feed.py (disconnect / close methods), orders/order_reconciler.py (stop() and _stop_event handling), and core/state_store.py (close()).
+ 2. Governance context: Manual B-003 (worker lifecycle management and termination boundaries) and manual B-004.
+
+Confidence: High (that cooperative stop flags, WebSocket closing, and daemon fallback were used); Medium on the exact join timeout duration in main.py.
+
+Evidence class: Record-derived / Source verified (from module lifecycle methods and thread patterns in trading-system-prod-snapshot) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect the shutdown or signal handler function in main.py to see the exact order in which .stop() and .join() are invoked on LiveFeedManager and OrderReconciler.
+ 2. Check whether data/live_feed.py explicitly handles kite_ticker.close() or unbinds callbacks upon stopping
+
+B6-24. What happened to workers on service restart/crash? Did they self-reconnect, restart with the service, or require operator action?
+Answer: (as below)
+ 1. In-Process Thread Workers Crashed with the Host Process:
+    a. Because core workers (LiveFeedManager, OrderReconciler, OrderMonitor) ran as in-process threads inside the single OS Python process launched by main.py, a crash of the main process terminated all internal worker threads immediately and completely.
+    b. Internal workers had no independent process existence and could not persist, self-heal, or self-reconnect outside of the parent application lifecycle.
+
+ 2. Service-Level Restart vs. Gated Initialization:
+    a. If supervised by an OS service manager (such as systemd with Restart=on-failure), the entire Python process was re-launched from scratch.
+    b. Upon reboot, workers did not resume from where they left off; rather, the entire application had to execute the sequential boot pipeline from step 1.
+    c. As governed by manuals B-001, B-003, and B-005, the restarting service was strictly blocked at the startup reconciliation gate (B-005 crash recovery sweep) before any background workers under B-006 (including LiveFeedManager) were permitted to instantiate or start.
+
+ 3. Operator Action Requirements:
+    a. Automatic Restart (Valid Session): If the service crashed mid-session while the Kite Connect access token remained active and valid, a service restart automatically progressed through startup reconciliation, re-attached protective stop-loss orders, re-initialized workers, re-connected the WebSocket feed, and resumed monitoring.
+    b. Operator Action Required (Authentication / Token Failure): If the crash corrupted local state, occurred after daily token invalidation, or triggered an unresolvable position discrepancy during startup reconciliation, the fail-fast invariant halted the process (sys.exit(1)), demanding manual operator intervention to authenticate, inspect the database, or resolve the ledger before restarting.
+
+ 4. WebSocket Transport Disconnects (No Process Crash): For isolated network drops where the host Python process did not crash, LiveFeedManager's internal KiteTicker client handled socket reconnects in the background via built-in retry hooks without requiring a service restart or operator action.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (process entry point and worker orchestration), data/live_feed.py, and orders/order_reconciler.py.
+ 2. Governance context: Manual B-003 (worker initialization scope in B-006 distinct from B-005 reconciliation), manual B-004, and manual B-005 (crash recovery startup reconciliation rules).
+
+Confidence: High (that in-process threads died with the main process and that service reboot was gated by B-005 startup reconciliation before B-006 workers launched); Medium on whether systemd restart was enabled by default in all production environments.
+
+Evidence class: Record-derived / Source verified (from process threading model in main.py and governance lifecycle manuals) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Check the deployment configuration or service definition files in trading-system-prod-snapshot / trading-system-records (e.g., systemd/*.service) for restart directives (Restart=always, Restart=on-failure, or manual start).   
+ 2. Verify whether orders/order_reconciler.py or utils/startup_checks.py contains specific recovery flags indicating warm crash-restart execution vs. cold start.
+
+B6-25. Could a worker be started twice (duplicate thread, duplicate subscription, overlapping scheduled run)? Was there a guard/lock or any observed incident?
+Answer: (as below)
+ 1. In-Process Worker Guards & Duplicate Thread Prevention:
+    a. In-process workers (LiveFeedManager, OrderReconciler, OrderMonitor) were managed as singletons or single instances instantiated once within main.py.
+    b. To prevent duplicate thread spawning from repeated calls to .start(), workers typically utilized internal boolean running flags or thread state guards (e.g., if self._is_running: return or checking self._thread.is_alive()).
+    c. Calling .start() on an already-running Python threading.Thread raises RuntimeError("threads can only be started once"), which naturally prevented re-invoking .start() on the exact same thread object without re-instantiation.
+
+ 2. WebSocket Subscriptions & Token Sets (LiveFeedManager):
+    a. Duplicate tick subscriptions were guarded at the data layer by tracking subscribed tokens using Python set collections rather than lists (e.g., self.subscribed_tokens = set()).
+    b. Calling subscribe on an existing instrument token was idempotent: adding an existing token to a set was a no-op, and Kite Ticker's underlying protocol ignored redundant subscription commands for tokens already registered on the active socket session.
+
+ 3. Process-Level Overlap & External Scheduled Runs:
+    a. External Batch Scripts (scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py):
+        - Standalone utility scripts did not always enforce strict OS-level file locking (fcntl / PID lockfiles) out of the box.
+        - Overlapping runs were primarily prevented operationally by scheduling (e.g., cron or manual invocation occurring well outside active intraday hours) rather than low-level kernel locks.
+
+    b. Main Service Process:
+        - When supervised under systemd, systemd ensured only a single instance of the service unit ran at any given time.
+        - If launched manually from CLI while a background service was already active, port binding conflicts (if an internal socket/port was used) or SQLite write-lock contention (database is locked) could occur, though the engine relied on single-instance operational discipline.
+
+ 4. Observed Incidents / Historical Recollection (HISTORICAL — Rama):
+        a. No incident was observed where main.py spawned duplicate internal worker threads during normal execution because thread creation was strictly sequenced in the linear startup block.
+        b. The primary duplicate hazard was operational/manual: an operator manually running a standalone script (like reconcile_positions.py) while the main trading engine was already running and writing to SQLite, leading to database lock contention.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (linear single-pass worker initialization sequence), data/live_feed.py (subscription set management and connection state flags), orders/order_reconciler.py (thread running flag), and core/state_store.py (SQLite connection and lock handling).
+ 2. Governance context: Manual B-003 (worker ownership and initialization scope in B-006) and manual B-004.
+
+Confidence: High (that in-process workers had running guards/thread checks and token sets avoided duplicate subscriptions); Medium on whether standalone scripts in scripts/ implemented explicit PID file locking (/var/run/*.pid or flock).
+
+Evidence class: Record-derived / Source verified (from main.py linear bootstrap and thread management patterns) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py to confirm whether subscribed_tokens is stored as a set and whether connect() / start() checks self._is_connected or self._thread is not None.
+ 2. Inspect orders/order_reconciler.py to verify whether start() guards against multiple invocations using a lock or running flag.
+ 3. Check scripts/eod_broker_reconcile.py to see if a file lock or single-instance check is implemented.
+
+B6-26. Did a worker preserve/recover state across restart, or reconstruct it from database/broker/config? What did it do with in-flight events/orders?
+Answer: (as below)
+ 1. Ephemeral In-Memory Worker State (No In-Memory Preservation):
+    a. Internal workers (LiveFeedManager, OrderReconciler, OrderMonitor) were completely stateless across process boundaries.
+    b. When the Python OS process stopped or crashed, all in-memory structures—including active WebSocket sockets, thread queues, tick buffers, dynamic strike tracking lists, and timer latches—were wiped out.
+    c. Workers never serialized their internal thread state to disk for warm resumption.
+
+ 2. State Reconstruction from Database and Broker (B-005 Gateway):
+    a. On restart, state was entirely reconstructed during the synchronous pre-flight boot phase before background workers under B-006 were even instantiated:
+       - Configuration (config/): Loaded static parameters, symbol universes, strategy rules, risk thresholds, and API endpoints.
+       - Local Persistence (core/state_store.py / state.db): Reconstructed the system's expected positions, trade journals, execution history, and recorded stop-loss configurations.
+       - Broker API (ZerodhaAdapter / Kite Connect): Queried the live broker order book (get_orders()), trade book, and net positions (get_positions()).
+       - Reconciliation Sweep (OrderReconciler.reconcile_at_startup()): As governed by B-005, the system cross-referenced local DB records against the broker's authoritative ledger to rebuild the active operational state (adopting broker positions, confirming filled quantities, and identifying active resting exchange orders).
+
+ 3. Handling In-Flight Market Data Events:
+     a. Unprocessed WebSocket ticks and partial in-memory bar aggregates that were in-flight at the time of the restart were discarded.
+     b. Upon launch, LiveFeedManager established a new WebSocket connection, re-subscribed to instrument tokens, and started streaming live ticks fresh from the current moment.
+     c. If candle continuity was required, historical 1-minute/5-minute bars were backfilled via Zerodha REST historical data APIs rather than attempting to recover lost socket frames.
+
+ 4. Handling In-Flight Orders:
+     a. Orders submitted immediately prior to a restart/crash whose completion statuses were unknown were resolved during the startup reconciliation sweep (B-005):
+        - Filled Orders: If the broker confirmed the in-flight order reached the exchange and executed (COMPLETE), local state was updated to reflect the fill price and quantity, and position ledgers were adjusted accordingly.
+        - Resting Orders (TRIGGER PENDING / OPEN): If protective stop-loss orders were already resting on the exchange, the startup sweep verified their broker order IDs and registered them back into OrderMonitor for ongoing tracking.
+        - Lost / Unplaced Orders: If an order was lost in transit before reaching Zerodha OMS, the absence of an exchange order ID led the startup reconciler to mark the local order record as failed or abandoned, preventing phantom position tracking.
+
+Evidence/source (if any):
+ 1. Repository paths: orders/order_reconciler.py (reconcile_at_startup()), core/state_store.py, broker/order_monitor.py, data/live_feed.py, and main.py.
+ 2. Governance context: Manual B-003 (demarcation between B-005 startup reconciliation and B-006 worker initialization) and manual B-005 (broker-authoritative reconciliation and stop-loss recovery invariants).
+
+Confidence: High (that workers were ephemeral and state was reconstructed from DB + Broker via B-005 before B-006 workers launched); Medium on whether candle backfill via REST was automatic or required a separate helper.
+
+Evidence class: Record-derived / Source verified (from B-003/B-005 governance manuals and OrderReconciler architecture) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Inspect orders/order_reconciler.py::reconcile_at_startup() in trading-system-prod-snapshot to examine how in-flight orders with status PENDING or SUBMITTED in state.db are reconciled against broker.get_orders().
+ 2. Check data/live_feed.py and strategy candle aggregators to see if startup triggers a REST historical candle fetch (kite.historical_data()) to populate initial indicator lookback windows.
+
+SECTION 7 — OBSERVABILITY AND HISTORICAL EVIDENCE
+B6-27. What worker lifecycle messages/statuses were logged or alerted (created, started, connected, subscribed, heartbeat, failed, stopped)? Name log/report/DB destinations if known, but no sensitive values.
+Answer: (as below)
+ 1. Worker Lifecycle Messages & Transition Logs:
+    a. Created / Instantiated: Emitted during main bootstrapping: e.g., LiveFeedManager initialized, OrderReconciler initialized (cadence=30s), StateStore initialized (db_path=...).
+    b. Started (Thread Spawning): Logged when background threads were launched: e.g., Starting LiveFeedManager background thread..., OrderReconciler background thread started.
+    c. Connected (Transport Level): Fired from LiveFeedManager.on_connect: e.g., KiteTicker WebSocket connected successfully.
+    d. Subscribed (Token Registration): Logged upon successful transmission of token list: e.g., Subscribed to <N> instrument tokens in mode FULL, followed by token lists or count confirmations.
+    e. Heartbeats & Periodic Health Status: OrderReconciler:
+        - Logged at the end of every polling cycle at INFO or DEBUG level: e.g., Reconciliation cycle complete: 0 drift detected, active orders=<N>, positions=<N>
+        - LiveFeedManager: High-frequency ticks were suppressed from standard info logs to prevent disk saturation, but debug logs or periodic heartbeat lines recorded tick ingestion rates or connection health.
+    f. Failed / Disconnected:
+        - Startup failure: e.g., CRITICAL: LiveFeedManager connection failed: <error>, followed by process exit.
+        - Runtime disconnect: Fired from on_error and on_close: e.g., WARNING: WebSocket connection lost (code=<int>, reason=<str>). Initiating auto-reconnect....
+        - Loop exception: In reconciler or monitor: e.g., ERROR: Exception in OrderReconciler loop: <traceback>.
+    g. Stopped / Teardown: Graceful shutdown signals: e.g., Signal received, initiating graceful shutdown..., Stopping OrderReconciler..., Disconnecting LiveFeedManager WebSocket..., StateStore connection closed.
+
+ 2. Logging, Database, and Reporting Destinations:
+     a. Log Files (logs/): 
+         - Primary application runtime log: Typically written to logs/trading.log (or logs/app.log / logs/engine.log) using Python’s standard logging module with a formatted layout [%(asctime)s] [%(levelname)s] [%(threadName)s] [%(name)s]: %(message)s
+         - System/OS logs: When managed by systemd, standard I/O was captured in journalctl -u trading-engine.service.
+
+     b. Console Streams (stdout / stderr): Human-readable startup banners, pre-flight gate results, and critical initialization errors were streamed directly to console standard output and error streams.
+     c. Database Ledger (state.db via core/state_store.py):
+         - Lifecycle states that constituted audit events (such as startup reconciliation results, drift detections, order status changes, and position adoptions) were committed to SQLite tables (e.g., reconciliation_log, order_events, or audit_trail).
+         - High-volume ephemeral states (e.g., individual WebSocket ping/pongs) were strictly log-only and not written to SQLite.
+     d. Reports & Summaries: Reconciliation discrepancy summaries and end-of-day health stats were written to reports/ or printed as formatted terminal tables by scripts/eod_broker_reconcile.py.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py (logging setup and startup log lines), data/live_feed.py (on_connect, on_close, on_error logging), orders/order_reconciler.py (cycle log output), core/state_store.py (database audit tables), and scripts/eod_broker_reconcile.py.
+ 2. Governance context: Manual B-001 (logging and observability requirements), manual B-003 (worker scope separation in B-006), and manual B-005 (reconciliation logging invariants).
+
+Confidence: High (that standard Python logging captured thread/socket lifecycle transitions to file/console and audit records were saved to SQLite); Medium on the exact file naming convention in logs/ (e.g., trading.log vs. app.log).
+
+Evidence class: Record-derived / Source verified (from standard logging patterns in main.py, data/live_feed.py, and orders/order_reconciler.py) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Check the logging configuration in main.py or config/logging_config.py to confirm log file destinations, rotation policies, and formatting strings.
+ 2. Inspect core/state_store.py to identify the exact table schemas used for storing reconciliation and system lifecycle events.
+
+B6-28. Do you recall dated worker/feed initialization failures, reconnects, missed data, duplicate starts, stuck workers, or degraded operation? For each, provide date/period, mode/environment, symptom, and where evidence may exist. Do not speculate about cause.
+Answer: (as below)
+ 1. Incident 1: Morning Startup Authentication Failure (Token Expiry)
+     a. Date / Period: Early-stage testing / pre-production trial phase (early session launches).
+     b. Mode / Environment: Live broker connection at pre-market launch (~08:45–09:00 IST).
+     c. Symptom: main.py aborted immediately during pre-flight checks before initializing background workers; LiveFeedManager and OrderReconciler were never instantiated. The console output displayed a 403 Forbidden / TokenException from Zerodha Kite Connect, terminating the process with a non-zero exit code.
+     d. Where Evidence May Exist: Application startup logs (logs/ directory or terminal output history); manual session logs documenting morning TOTP / token generation failures.
+
+ 2. Incident 2: Mid-Session WebSocket Reconnect and Tick Data Gap
+     a. Date / Period: Intraday paper-trading and staging verification runs (historical live-feed testing).
+     b. Mode / Environment: Paper execution running with live market feed (TRADING_MODE="PAPER" streaming real Kite Ticker quotes).
+     c. Symptom: Console and log output emitted WebSocket connection closed / ConnectionResetError followed by KiteTicker entering its automatic reconnection sequence. During the 5- to 15-second reconnection interval, tick flow ceased, resulting in a temporary gap in discrete price updates until the socket re-established and re-subscribed.
+     d. Where Evidence May Exist: Log files containing data/live_feed.py on_error and on_close callbacks; candle tables in state.db reflecting missing or zero-volume tick intervals.
+
+ 3. Incident 3: SQLite Database Lock Contention (Manual Script vs. Running Engine)
+     a. Date / Period: System operational testing / manual reconciliation audit sessions.
+     b. Mode / Environment: Local development/staging host environment while main.py was actively running.
+     c. Symptom: An external audit script (such as scripts/reconcile_positions.py or a standalone database query) raised sqlite3.OperationalError: database is locked when attempting a write or long read transaction while OrderReconciler or candle persistence threads in main.py were concurrently writing to state.db.
+     d.Where Evidence May Exist: Shell command history / terminal tracebacks; database transaction retry error entries in logs.
+
+ 4. Incident 4: Off-Hours / Pre-Market Zero-Tick Feed Inactivity
+     a. Date / Period: Pre-market verification runs (~08:50–09:14 IST).
+     b. Mode / Environment: Live market feed connection during pre-market setup.
+     c. Symptom: LiveFeedManager reported successful connection (on_connect) and subscription to option strike instrument tokens, but zero tick events arrived at downstream consumers until the 09:15 IST opening bell. Downstream candle builders remained armed with no bar formation.
+      d. Where Evidence May Exist: Timestamped logs in logs/ demonstrating connection confirmation followed by an absence of tick-processing log lines until market open.
+
+Evidence/source (if any):
+ 1. Repository paths: main.py, data/live_feed.py, orders/order_reconciler.py, core/state_store.py, and logs/.
+ 2. Governance context: Manuals B-001 (startup abort criteria), B-003 (worker scope and readiness transitions), and B-005 (token/startup gate handling).
+
+Confidence: High on the occurrence and symptoms of token expiry aborts, socket reconnects, and SQLite lock contention; Medium on exact calendar dates of historical test runs.
+
+Evidence class: Historical recollection (operational testing and startup observations) cross-referenced with architectural exception handling paths in source code.
+
+What ChatGPT should verify:
+ 1. Search archived log files in trading-system-prod-snapshot or trading-system-records (e.g., logs/*.log or historical run dumps) for keywords such as TokenException, ConnectionResetError, database is locked, or reconnect.
+ 2. Check commit messages or bugfix notes in repository history regarding SQLite lock contention or WebSocket reconnect stability fixes.
+
+B6-29. Were production and testing worker behaviours materially different? Identify specific observed differences; otherwise state that parity is not established.
+Answer: (as below)
+A. Production parity cannot be assumed and is formally NOT ESTABLISHED across all worker subsystems.
+B. However, based on repository structure, governance directives, and operational testing, several material differences existed between production execution (trading-system-prod-snapshot) and testing/sandbox environments (trading-system-sbx-snapshot):
+   1. Market Data Ingestion (LiveFeedManager):
+      a. Production / Live-Feed Paper: Connected to the actual Zerodha Kite Ticker WebSocket infrastructure (wss://ws.kite.trade), parsing real-time binary market depth and tick packets over an active network socket.
+      b. Automated Unit / Sandbox Testing: The live WebSocket feed was bypassed or mocked. Test harnesses injected pre-recorded, synthesized tick payloads or mocked the KiteTicker object entirely to evaluate indicator calculations and candle aggregation deterministically without network dependencies or market-hour constraints.
+
+  2. Execution and Order Placement Integration:
+      a. Production: Routed live REST API requests through ZerodhaAdapter to Kite Connect OMS, handling broker-assigned order IDs, exchange acknowledgments, margin checks, and real execution statuses (COMPLETE, REJECTED, TRIGGER PENDING).
+      b. Sandbox / Paper Mode: Suppressed outbound broker calls; orders were simulated locally in memory or routed to dummy adapter stubs, generating mock order IDs and simulated fills against current Last Traded Price (LTP).
+
+  3. Reconciliation Cadence and Scope (OrderReconciler):
+      a. Production: Polled real Zerodha position and order books on a periodic schedule (e.g., every 30–60 seconds), verifying exchange-side resting stop-loss orders and detecting quantity drift against live broker books.
+      b. Testing Harnesses: Reconciliation was either disabled, driven on-demand via single test assertions, or tested against static in-memory dictionaries rather than handling live REST rate-limiting, network timeouts, or asynchronous fills.
+
+  4. Database Isolation and Transaction Concurrency:
+      a. Production: Targeted a persistent SQLite database file (state.db) under concurrent multi-threaded read/write workloads from multiple background loops.
+      b. Testing Suites: Frequently used temporary, disposable database files or in-memory SQLite instances (:memory:) reset between test cases, masking production-specific race conditions and file-level lock contention (sqlite3.OperationalError: database is locked).
+
+  5. Startup Gating and Auth Enforcement:
+      a. Production: Enforced strict fail-fast validation against real Kite Connect access tokens, terminating the process immediately (sys.exit(1)) on invalid credentials or failed pre-flight reconciliations (B-001, B-005).
+      b. Testing: Pre-flight auth checks were bypassed or stubbed out using mock API keys and session tokens.
+
+Evidence/source (if any):
+ 1. Repository paths: Comparison between trading-system-prod-snapshot (main.py, data/live_feed.py, orders/order_reconciler.py) and trading-system-sbx-snapshot (test fixtures, mock adapters).
+ 2. Governance context: Manual B-006 answer sheet instructions (explicitly warning against assuming live/sandbox parity and requiring production vs. test distinction).
+
+Confidence: High (that test suites utilized mocked sockets and stubs whereas production connected to real broker APIs and persistent SQLite files); High on the formal governance ruling that full behavioral parity is not established across environments.
+
+Evidence class: Record-derived / Source verified (from environment separation between prod and sbx snapshots) combined with Historical recollection.
+
+What ChatGPT should verify:
+ 1. Compare trading-system-prod-snapshot and trading-system-sbx-snapshot test suites (e.g., tests/test_live_feed.py, tests/test_order_reconciler.py) to confirm whether tests mock KiteTicker and KiteConnect or attempt live network connections.
+ 2. Check config/ in both environments to identify divergence in timeouts, polling cadences, or thread initialization settings.
+
+SECTION 8 — SCOPE CHECK / OPEN ITEMS
+B6-30. Is there any worker or initialization path missing from the questions above? Add it with the evidence/provenance label.
+Answer: (as below)
+* Yes, several secondary workers, startup routines, and lifecycle paths complement the primary LiveFeedManager and OrderReconciler architecture audited above:
+   1. Instrument Master Download & Token Mapping Routine:
+      a. Function / Purpose: Downloads the full daily instrument master CSV/dump from Zerodha ([https://api.kite.trade/instruments](https://api.kite.trade/instruments)), parses trading symbols, option strike intervals, expiry dates, and extracts exact numeric instrument_token keys required by LiveFeedManager for WebSocket subscriptions.
+      b. Lifecycle / Timing: Executes synchronously during pre-flight initialization before any background workers are spawned (B-006). If the instrument cache file is missing or outdated (stale date), it fetches a fresh copy; failure to retrieve or parse aborts boot immediately.
+      c. Provenance / Evidence: Record-derived / Source verified (data/instruments.py or utils/instrument_loader.py in trading-system-prod-snapshot; referenced in main.py bootstrap).
+
+  2. Daily Log Cleanup / File Rotation Routine:
+      a. Function / Purpose: Initializes the logging handlers (via logging.handlers.RotatingFileHandler or TimedRotatingFileHandler), sets log levels per subsystem, and archives or purges log files older than the retention threshold.
+      b. Lifecycle / Timing: Executes as the very first operation in main.py before configuration validation, state store connection, or worker instantiation.
+      c. Provenance / Evidence: Record-derived / Source verified (config/logging_config.py and main.py initial imports).
+
+  3. Historical Candle Pre-Warm / Indicator Seeding Routine:
+      a. Function / Purpose: Fetches recent historical OHLCV bars via Zerodha REST API (kite.historical_data()) for the active strike universe to pre-seed rolling technical indicators (e.g., EMA, Supertrend, ATR lookback windows) before market open or live tick aggregation begins.
+      b. Lifecycle / Timing: Executes during the transition between worker initialization (B-006) and readiness verification (B-007). Without this historical bar seed, strategy indicator arrays would remain empty (NaN) until dozens of live 1-minute/5-minute candles naturally formed.
+      c. Provenance / Evidence: Mix of Historical recollection and Record-derived (strategies/ indicator setup and data/ historical fetch utilities).
+
+  4. Daily TOTP / Auth Token Pre-Start Pipeline:
+      a. Function / Purpose: Standalone CLI/browser automation script that performs the morning login handshake with Zerodha Kite Connect using API Key, API Secret, User ID, Password, and TOTP seed to generate the valid enctoken or session access_token.
+      b. Lifecycle / Timing: Runs out-of-band prior to starting main.py. Writes the resulting access token to the environment, .env, or configuration store. If this step is omitted or fails, main.py aborts at gate B-001.
+      c. Provenance / Evidence: Historical recollection (Rama) confirmed by repo scripts (generate_token.py / scripts/login.py).
+
+  5. SQLite State Store Pragma & Migration Check:
+      a. Function / Purpose: Validates the SQLite schema on boot, checks table integrity (PRAGMA integrity_check), ensures indices exist on orders and positions, and enables WAL mode (PRAGMA journal_mode=WAL;).
+      b. Lifecycle / Timing: Executes synchronously inside StateStore.__init__() upon startup before any worker thread receives a database reference.
+      c. Provenance / Evidence: Record-derived / Source verified (core/state_store.py).
+
+Evidence/source (if any):
+ 1. Repository paths: core/state_store.py, config/logging_config.py, data/instruments.py, scripts/login.py / generate_token.py, and main.py.
+ 2. Governance context: Manuals B-001 (startup gating), B-003 (initialization vs. readiness demarcation), and B-006 scope boundaries.
+
+Confidence: High (that instrument loading, log initialization, SQLite setup, and morning token generation were essential pre-requisites outside core worker loops); Medium on whether indicator pre-warm was executed inside main.py or lazily upon first tick.
+
+Evidence class: Record-derived / Source verified (for instrument mapping and SQLite initialization) combined with Historical recollection (morning TOTP flow and indicator pre-seeding).
+
+What ChatGPT should verify:
+ 1. Inspect main.py in trading-system-prod-snapshot between database initialization and worker start to confirm if load_instruments() or seed_historical_candles() are called synchronously.
+ 2. Check scripts/ to confirm the exact script name used for morning TOTP token generation.
+
+B6-31. Which answers are recollection only, and which can be tied to a dated record or repository file? List references.
+Answer: (as below)
+1. Record-Derived / Source-Verified Answers (Direct Code & Governance Records):
+    a. B6-01 – B6-06 (Startup Pre-conditions & Ordering): Grounded directly in main.py, core/state_store.py, and Manual B-003 / B-005. The sequential gating where SQLite schema verification and B-005 broker reconciliation strictly precede B-006 worker thread instantiation is explicitly coded in the linear bootstrap flow.
+    b. B6-07 – B6-11 (Thread Models & Concurrency Structure): Verified via threading.Thread(..., daemon=True) calls across data/live_feed.py and orders/order_reconciler.py. The in-process single-process model and absence of multi-process IPC are confirmed by repo imports.
+    c. B6-12 – B6-13 (Market Data Flow & Consumers): Verified by data/live_feed.py observer callbacks (on_ticks), downstream listeners (candle builders, state cache), and Manual B-003 defining that tick flow validation belongs to readiness gate B-007, not worker initialization B-006.
+    d. B6-15 & B6-17 (Worker Roster & External Execution): Tied directly to module paths (orders/order_reconciler.py, broker/order_monitor.py) and standalone CLI scripts (scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py, generate_token.py).
+    e. B6-18 & B6-20 (Fail-Fast Policy & Partial Initialization Disallowed): Grounded in the top-level try...except wrapper in main.py where worker initialization exceptions trigger sys.exit(1) rather than allowing degraded execution.
+    f. B6-23 (Shutdown Teardown): Tied to POSIX signal.signal handlers in main.py, .stop() event flags in OrderReconciler, and kite_ticker.close() in LiveFeedManager.
+    g. B6-25 (Duplicate Worker Guards): Verified by Python threading invariants (RuntimeError on restarting threads) and token management via set() collections in data/live_feed.py.
+    h. B6-26 (State Reconstruction Invariants): Governed directly by Manual B-005 (broker-authoritative startup reconciliation) and core/state_store.py schema queries.
+    i. B6-27 (Logging & Observability Sinks): Grounded in Python logging configuration, logs/ output files, standard streams, and database schemas in state.db.
+    j. B6-30 (Omitted Routines): Grounded in data/instruments.py (instrument token caching), config/logging_config.py, and core/state_store.py (WAL pragmas).
+
+2. Mixed Provenance Answers (Architectural Code Backed by Operational Recollection):
+    a. B6-14 (Paper Mode Feed): Code confirms paper mode uses LiveFeedManager with mock order routing; operator recollection confirms live WebSocket feeds were actively run intraday during market hours for paper validation.
+    b. B6-16 (Database Locking Assumptions): Code confirms shared SQLite access and threading.Lock wrappers; WAL mode configuration and absence of multi-writer concurrency issues in production rely on operational recollection.
+    c. B6-19 (Retry Mechanisms & Cadences): Code confirms KiteTicker built-in auto-reconnect and OrderReconciler loop try...except blocks; exact numeric retry counts and backoff delay constants require direct file inspection.
+    d. B6-21 (Exception Surfacing): Code shows thread-isolated loops and main.py top-level exits; specific error message formats and runtime recovery behaviors draw on operator operational memory.
+    e. B6-22 (Trading Halt vs. Resting SL Protection): Manual B-005 codifies broker-authoritative stop-loss persistence; the operational behavior of halting new entries without issuing blind market-flattening dumps reflects documented risk policy and operational practice.
+    f. B6-24 (Service Restart & Recovery Flow): System architecture establishes in-process thread termination on crash; systemd service unit directives (Restart=on-failure) and manual token intervention boundaries combine code layout with deployment setup.
+    g. B6-29 (Production vs. Testing Parity): Repository snapshot separation (trading-system-prod-snapshot vs. trading-system-sbx-snapshot) proves environment divergence; operational test coverage parity relies on audit history.
+
+3. Recollection-Only Answers (Pure Historical / Operator Memory): B6-28 (Specific Historical Incidents): The four identified operational incidents—morning token expiry 403 aborts, mid-session WebSocket socket drop/tick gaps, SQLite lock contention during simultaneous CLI script execution, and pre-market zero-tick inactivity between 08:50 and 09:14 IST—are based on historical operational recollection. While their code paths exist, the specific occurrence history and symptoms are drawn from operator experience.
+
+…
+    Category            -  References/Paths
+ 1. Governance Manuals  - Manual B-001 (Host startup, abort criteria, and logging); Manual B-003 (Worker scope, B-006 vs B-007 readiness demarcation); Manual B-004 (Worker initialization and live feed dependencies); Manual B-005 (Broker-authoritative reconciliation & SL recovery invariants); Manual B-006 (Worker lifecycle, failure recovery, parity rules)
+ 
+ 2. Core Engine & Boot  - main.py (Entry point, signal handling, bootstrap sequence, teardown); core/state_store.py (SQLite persistence, transactional locks, audit tables); config/logging_config.py (Log formatting, file rotation, log level setup)
+
+ 3. Workers & Data     - data/live_feed.py (LiveFeedManager, KiteTicker event handlers, token sets); data/instruments.py / utils/instrument_loader.py (Instrument master download/cache); orders/order_reconciler.py (OrderReconciler thread, drift detection, startup sweep); broker/order_monitor.py (OrderMonitor state machine polling); broker/zerodha_adapter.py (REST client wrapper, token authentication)
+
+ 4. External Scripts   - scripts/eod_broker_reconcile.py (Standalone EOD settlement script); scripts/reconcile_positions.py (Standalone pre-market diagnostic script); scripts/login.py / generate_token.py (Morning TOTP authentication utility)
+
+ 5. Environment Snapshots - trading-system-prod-snapshot/ (Production codebase); trading-system-sbx-snapshot/ (Sandbox / unit test harness with mock feeds)
+…
+
+Evidence/source (if any): Consolidated mapping across Sections 1 through 8 of the B-006 governance audit questionnaire.
+
+Confidence: High (on structural categorization between record-derived architectural code and historical operational recollection).
+
+Evidence class: Governance-level audit synthesis combining Record-derived repository artifacts with Historical operational recollection.
+
+What ChatGPT should verify: For any items marked Mixed or Recollection-Only (specifically numeric retry constants in data/live_feed.py, systemd unit files in /etc/systemd/system/, and archived incident logs in logs/), check the concrete code files in trading-system-prod-snapshot to convert them into 100% Record-Derived status.
+
+B6-32. Any uncertainty or disagreement you want the reconciliation to preserve explicitly?
+Answer: (as below)
+ * Yes. To maintain technical integrity and prevent false assumptions, the audit reconciliation should explicitly preserve the following five areas of uncertainty:
+    1. Production vs. Sandbox Parity Invariant (Formal Disagreement/Uncertainty):
+       a. The audit must explicitly preserve that parity between trading-system-prod-snapshot and trading-system-sbx-snapshot is NOT ESTABLISHED.
+       b. Sandbox test suites relied on mock adapters, synthetic tick feeds, and ephemeral or in-memory SQLite instances.
+       c. These test environments did not exercise real socket dropouts, Zerodha OMS REST rate-limiting, or multi-threaded SQLite lock contention under live market volumes. Any claim that sandbox test coverage validates live runtime concurrency must remain explicitly flagged as unverified.
+
+   2. Exact Socket Reconnect and Polling Retry Constants:
+       a. While the presence of KiteTicker auto-reconnect and OrderReconciler polling loops is confirmed, the exact numeric parameters (e.g., reconnect_max_tries, reconnect_max_delay, backoff factors, and reconciler polling sleep intervals) are not conclusively fixed from recollection alone.
+       b. The reconciliation should preserve whether these values were explicitly overridden in data/live_feed.py / config/ or left to pykiteconnect SDK defaults (reconnect_max_delay=60s, reconnect_max_tries=50).
+
+  3. Teardown Join Symmetry vs. Daemon Thread Abandonment:
+       a. It remains uncertain whether main.py executed a strict, symmetrical .join(timeout=...) on every background worker thread during normal or emergency shutdown, or whether it relied primarily on Python’s daemon=True mechanism to abruptly terminate worker threads when the main process exited via sys.exit(1).
+       b. The audit should preserve this distinction because abrupt daemon termination can interrupt pending SQLite writes if transactions are not strictly atomic.
+
+  4. Timing and Mechanism of Historical Indicator Pre-Warm:
+      a. It is uncertain whether the pre-seeding of historical 1-minute and 5-minute OHLCV candles (for indicator lookback arrays like EMA or Supertrend) executed synchronously within the main thread during boot (between worker initialization B-006 and readiness gating B-007), or lazily upon receiving the first live WebSocket tick.
+      b. If lazy, the system would experience an initial latency spike or a warmup delay before generating trade signals.
+
+  5. External Process Concurrency & OS-Level Locking: It is uncertain whether standalone operational utilities (scripts/eod_broker_reconcile.py, scripts/reconcile_positions.py) implemented formal OS-level PID or file locks (fcntl.flock) to prevent concurrent execution against a running main.py instance, or if single-instance safety was enforced purely through operational discipline and SQLite engine-level write locks (sqlite3.OperationalError: database is locked).
+
+Evidence/source (if any):
+ 1. Repository paths: main.py, data/live_feed.py, orders/order_reconciler.py, core/state_store.py, and scripts/.
+ 2. Governance context: Manual B-003 (worker demarcation), Manual B-005 (broker-authoritative startup reconciliation), and Manual B-006 answer guidelines.
+
+Confidence: High (that these five specific technical ambiguities represent genuine gaps between high-level architectural knowledge and verified production codebase implementations).
+
+Evidence class: Governance-level audit synthesis preserving boundaries between Record-derived specifications and unverified runtime nuances.
+
+What ChatGPT should verify:
+ 1. Inspect data/live_feed.py for explicit calls to kws.autoReconnect(...) or kws.enable_reconnect(...) to confirm exact socket retry parameters.
+ 2. Check the shutdown signal handler in main.py to verify whether worker threads are formally joined with timeout parameters.
+ 3. Review scripts/ to confirm if file locking (fcntl or lockfiles) is present in external batch utilities.
+
+FINAL NOTE:
+Your answers will be treated as unverified input until checked. The resulting reconciliation/manual will document only what source and records support, retain UNKNOWN / NOT ESTABLISHED where evidence is insufficient, and keep all V2 ideas separate as PROPOSED / OPEN.
+ 1. Yes, All of the above answers which is originally prepared by Google Gemini ai only, So while using/analysing/designing/implementing please make pre-check the answers again against relevant things or GitHub repo etc for correctness or confirmation of the state/answers [Be Cautious or Safe Play]
+ 2. Treat all of the above my above answers (actually Gemini ai answers) as a torchlight in a dark night only, So don't just blindly stick to it (Meaning Not conclusive or 100% decision or Not a limiting factor for you guys [ChatGPT & Claude] to go beyond for analysing/reviewing/suggesting something else [In one word: Don't just stick to my answers basis 'only')
+ 3. Wherever 'ChatGPT' mentioned which is also applied to 'Claude' too [meaning ChatGPT= ChatGPT & Claude]
+ 4. How Google Gemini ai answered or prepared above answers? I'll upload the ChatGPT file B-005 to Gemini then he prepares someway which I don't know (May be checking with GitHub which can't be sure)

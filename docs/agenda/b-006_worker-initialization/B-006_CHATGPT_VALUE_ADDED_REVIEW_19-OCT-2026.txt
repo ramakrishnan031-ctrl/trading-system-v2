@@ -1,0 +1,71 @@
+TRADING SYSTEM — LEGACY MANUAL / V2 REDESIGN
+CHATGPT VALUE-ADDED REVIEW — B-006 WORKER INITIALIZATION
+Date: 19-Oct-2026
+Disposition: ACCEPT THE SUBSTANCE; REQUIRED CROSS-DOCUMENT CORRECTION BEFORE FREEZE
+
+1. EXECUTIVE RESULT
+
+Claude's B-006 first-pass work is substantially stronger than the original answer sheet and ChatGPT's 16-Oct draft. The source-based worker inventory (TH1–TH31), ordered start sequence (ST1–ST10), failure matrix (F1–F13), process-exit analysis (X1–X5), paper/live distinction, bounded production/testing comparison, and explicit unknowns are useful and appropriately separate legacy facts from proposed V2 inputs.
+
+However, I do NOT recommend freezing the B-006 package unchanged. There is one material cross-document contradiction with the already-frozen B-005 manual and DR-041. Resolve it through the established erratum/governance process; do not silently edit the frozen B-005 manual or weaken the B-006 source finding to make the documents agree.
+
+2. REQUIRED CORRECTION — B-005 CLAIMS “BEFORE ANY WORKER”
+
+B-005_manual.md, final summary (around line 336), and DR-041 state that PASS 1 ran “before any worker.” B-006_manual.md contradicts this with a detailed source trace:
+- ST2: TH1–TH4 start during Phase 0e, before PASS 1. TH3 is the MIS auto square-off poller and can place MIS exits.
+- ST4: TH5, TH7–TH10 also start before PASS 1 under the repository configuration.
+- ST6: PASS 1 occurs later, after those early starts.
+- B-006 sections 19 and 22 correctly describe the consequence as a code-path finding, with occurrence NOT ESTABLISHED.
+
+This is not a wording-only inconsistency. In particular, the early MIS auto square-off poller means the legacy service could have a worker capable of placing exits before the first reconciliation pass and before later start gates. The B-006 source analysis says no occurrence was found; do not claim an incident occurred.
+
+Required action:
+A. Keep the B-006 source finding unless a fresh source trace disproves it.
+B. Amend B-006_review_notes.md section 6: “No erratum is proposed” is no longer supportable. Record a proposed, narrow B-005 erratum/cross-reference, with the precise passages and reason.
+C. Propose an erratum to frozen B-005 under the normal approval process. Correct the “before any worker” wording to distinguish the synchronous PASS 1 position from the nine Phase 0e threads already started. Preserve B-005's other findings and freeze status; do not silently rewrite it.
+D. Update the B-006 review notes, manual cross-references and V2 design log only after the exact wording/approval path is agreed. Do not alter DR-041 retroactively or create a V2 decision.
+
+Suggested factual replacement concept for B-005 (Claude should cite the exact lines and check every summary):
+“PASS 1 ran before the post-reconciliation worker wave, including the signal processor and the reconciler's PASS 2 start. It did not run before every worker: B-006 identifies nine threads started in Phase 0e before PASS 1, including the MIS auto square-off poller. Whether any of those early workers acted during a start before PASS 1 is NOT ESTABLISHED.”
+This is a proposed wording concept, not an approved erratum. The final sentence must remain consistent with B-006's evidence and terminology.
+
+3. OTHER REVIEW FINDINGS
+
+3.1 Legacy manual
+- The evidence taxonomy and pinned production baseline (970aabf3c78d777d9d34549e021f7c8e756c7bdb) are clearly stated.
+- The distinction between source code, dated records, library source/test, Rama's generated answer sheet and host-runtime unknowns is good.
+- The manual does not treat tests as run when they were only inventoried; it labels the small library experiment separately.
+- Paper mode is not incorrectly described as using the live WebSocket; the dormant/no-subscription feed path is explained.
+- The production/testing comparison is explicitly scoped to selected files/blocks, not whole-tree or host parity.
+- Conditional failure paths and the absence of a dated occurrence are generally kept separate. Preserve that distinction in any edits.
+
+3.2 V2 design inputs
+- Correctly marked PROPOSED / OPEN, explicitly not a decision or requirement, and says a ChatGPT review does not ratify it.
+- The considerations are routed to their owning agenda topics; no V2 implementation/design decision should be inferred from them.
+- Keep VP-57, VP-64, VP-67 annotations as tracking only and Q-44 open. Do not close those audit questions merely because the manual maps the code path.
+
+3.3 Review notes / design log
+- Q-44 is appropriate as an OPEN register of unresolved historical occurrence questions. The B-006 code path does not prove host occurrence.
+- Q-40(g) is usefully narrowed by the B-006 findings, while occurrence remains unknown.
+- The review notes' section 6 must be corrected for the B-005 contradiction above; the statement that the frozen manuals are all consistent and no erratum is proposed cannot remain as written.
+- Keep the B-006 answer sheet and ChatGPT's original reconciliation/draft byte-identical in the inputs area at the eventual freeze, as the existing workflow specifies. Do not overwrite originals with Claude's revised output.
+
+4. DO NOT CHANGE / DO NOT OVERCLAIM
+
+- Do not claim that any early worker actually placed an order/exit during reconciliation; this is an open historical occurrence question.
+- Do not state that the production host ran the repository configuration merely because the manual calculates behavior under that configuration.
+- Do not claim whole-tree production/testing parity.
+- Do not convert the proposed V2 worker-state, readiness, shutdown, supervision or composition-test considerations into approved requirements.
+- Do not combine B-006 with B-007; readiness/health remains B-007, and shutdown/restart topics remain B-011/B-012.
+- Do not reopen or change B-005's substantive reconciliation findings beyond the narrow cross-document correction supported by B-006.
+
+5. RECOMMENDED NEXT STEPS
+
+1. Claude updates B-006_review_notes.md section 6 to flag the B-005 contradiction and drafts a narrowly scoped B-005 erratum for review; do not publish/freeze yet.
+2. Claude checks every occurrence of “before any worker” and equivalent summaries in B-005, B-006, the design log and register so that the same distinction is used consistently.
+3. Keep the B-005 erratum proposed until Rama explicitly approves it under the normal governance process. The existing B-005 freeze/DR-041 remains in force meanwhile.
+4. Once the cross-document correction is resolved, return the complete B-006 package for a final acceptance check: B-006_manual.md, B-006_v2_design_inputs.md, B-006_review_notes.md, updated V2_DESIGN_LOG.md / V2_DECISION_REGISTER.md, plus the three original input files unchanged.
+5. Only after acceptance and Rama's approval should the package be marked frozen and the SAVE list supplied. No commit/push is authorised by this review.
+
+FINAL DISPOSITION
+B-006 is technically promising and the main source-based findings are accepted in substance. It is NOT ready to freeze unchanged because its strongest new finding directly contradicts the frozen B-005 statement that PASS 1 preceded “any worker.” Resolve that narrowly and transparently, preserving uncertainty about historical occurrence; then conduct the final acceptance check.

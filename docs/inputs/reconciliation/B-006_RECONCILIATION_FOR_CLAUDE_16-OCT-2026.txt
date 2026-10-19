@@ -1,0 +1,132 @@
+B-006 — WORKER INITIALIZATION
+SOURCE RECONCILIATION / REVIEW PACKAGE FOR CLAUDE
+Prepared: 16-Oct-2026 (IST)
+Status: REVIEW DRAFT — NOT FROZEN; Rama answers are RAW / PROBABLE / EXPECTED pending claim-by-claim verification.
+
+0. REVIEW PURPOSE AND GUARDRAILS
+This review compares Rama's completed B-006 answer sheet (32 questions) against accessible GitHub source snapshots and governance/context files. The answer sheet is not treated as proof, even where it labels claims “source-verified.” Do not accept its paraphrased code assertions without inspecting the exact current source, call sites, and applicable revision.
+
+B-005 Startup Reconciliation remains PARKED until Sunday morning IST. B-006 is a separate topic. B-006 covers worker construction/start/lifecycle as evidenced; B-005 owns startup broker/local-state reconciliation; B-007 owns system readiness/health gating. Do not collapse these boundaries.
+
+Legacy is DEAD / REFERENCE ONLY. No operation, revival, patching, tuning, deployment, or V2 design is authorized. Do not reproduce secrets, tokens, account identifiers, or sensitive host details. All V2 ideas remain PROPOSED / OPEN.
+
+1. SOURCES EXAMINED / LIMITATIONS
+A. Rama answer sheet:
+- `B-006_WORKER_INITIALIZATION_ANSWER_SHEET_16-OCT-2026(1).txt` (uploaded attachment; 32 answers, including assertions and self-suggested verification tasks).
+- All responses are RAW / PROBABLE / EXPECTED. They may guide search but are not independently validated facts.
+
+B. Production snapshot:
+- `main.py` — https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/main.py
+  Retrieved blob SHA: `445fb0d8237a6d535ed00e5eb968c8176efd74f3`
+  Confirmed at the inspected file header/import region: main.py describes itself as single orchestration script and imports `threading`, `LiveFeedManager`, `OrderReconciler`, `OrderMonitor`, `StateStore`, and numerous other components. This establishes imports/possible wiring, NOT that each imported component is instantiated or started, nor exact order.
+- `data/live_feed.py` — https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/data/live_feed.py
+  Retrieved blob SHA: `10ebd00ee728c449c6df4dcc5e576a92f3361e10`
+  Confirmed from module/class documentation and visible initialization fields: describes KiteTicker WebSocket management, bounded tick queue and single consumer thread; defines `LiveFeedManager`; constructor includes credentials as parameters (values must not be copied), `paper_mode`, reconnect parameters, callback list, lock, queue capacity 10,000, stop event, consumer-thread and ticker references, and watchdog-related fields. These facts do NOT establish caller order, successful connection, subscription count, actual paper deployment, or live host state.
+- `orders/order_reconciler.py` — https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/orders/order_reconciler.py
+  Retrieved blob SHA: `beef3e1584c9ad665dec4d1e1498bde001326c70`
+  Module design header describes `OrderReconciler.start()/stop()/reconcile_once()`, daemon poll thread, poll interval config (header states P14=15 seconds), startup reconciliation on `start()`, and paper behaviour delegated to adapter/notifier. Verify these contracts against implementation and exact caller; module comments/decision header alone are not proof of effective runtime.
+- `broker/order_monitor.py` — https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/blob/main/broker/order_monitor.py
+  Retrieved blob SHA: `c4f4aaa564f1dc342aa31265cc155191a71e5916`
+  Module design header describes a single daemon polling thread with start/stop, tracking orders and driving order-state transitions; it explicitly says it does not persist state across restarts. Verify actual implementation and main.py instantiation/call sites before asserting operationally active.
+- `utils/startup_checks.py` — production snapshot path exists in repo; startup-check module documentation says checks are library functions and do not themselves construct/start/stop subsystems or control process. This is relevant to boundaries, not proof of worker sequencing.
+- `scripts/eod_broker_reconcile.py`, `scripts/reconcile_positions.py` — relevant as potential standalone utilities. The sandbox `scripts/reconcile_positions.py` header describes an EOD standalone script and a cron time; that is sandbox evidence only and does not prove production cron execution.
+
+C. Sandbox/testing snapshot:
+- `docs/SYSTEM_MAP.md` — https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot/blob/main/docs/SYSTEM_MAP.md
+  This file is large, time-evolving operational/historical documentation. Sandbox evidence must not be projected onto production. Snapshot parity is NOT ESTABLISHED.
+- `scripts/reconcile_positions.py` — https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot/blob/main/scripts/reconcile_positions.py
+  Retrieved blob SHA: `a790550c9fb4d4e9f20563b69e978c7b0d9b8413`
+  Its header describes an EOD comparison script and intended cron timing; not proof of installed cron or production use.
+- `utils/startup_checks.py` — https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot/blob/main/utils/startup_checks.py
+  Retrieved blob SHA: `61ff67676d8230640a2aafb6bd6d75d7a185fbb6`
+  Module header expressly says the module does not start/stop/construct subsystems or perform process control. Sandbox-only unless identical production blob verified.
+
+D. Records snapshot:
+- `SNAPSHOT_MANIFEST.md` — https://github.com/ramakrishnan031-ctrl/trading-system-records/blob/main/SNAPSHOT_MANIFEST.md
+  The known manifest describes a multi-pass 17–18 Sep 2026 snapshot; copied files may not all have been refreshed in later passes. Records are not proof of current/final host state. In this pass, individual dated worker incident records and installed cron/systemd evidence have NOT been confirmed.
+
+E. V2 governance repository:
+- B-001 / B-003 / B-004 manuals and V2 governance references provide agenda boundaries and prior documented context. They are governance/context sources, not substitutes for legacy implementation evidence.
+- Repo: https://github.com/ramakrishnan031-ctrl/trading-system-v2
+- Relevant paths should be cited by Claude in the final manual using the exact currently committed files/lines. This review did not establish the current remote contents/commit of every governance file.
+
+2. CLAIM RECONCILIATION — PRELIMINARY
+Labels:
+- SUPPORTED AT MODULE-DESCRIPTION LEVEL: directly visible in retrieved module header/constructor region; implementation/caller/runtime still requires verification.
+- NEEDS IMPLEMENTATION TRACE: answer sheet claim requires inspecting full function body and caller.
+- NOT ESTABLISHED: current inspected evidence does not substantiate it.
+- HISTORICAL — RAMA: retain only as recollection unless dated record corroborates.
+- SANDBOX-ONLY: do not state as production fact.
+
+B6-01 to B6-03 — meaning/type/boundary of workers
+- SUPPORTED AT MODULE-DESCRIPTION LEVEL: LiveFeedManager exists and is described as managing KiteTicker, a bounded queue, and one consumer thread. OrderReconciler and OrderMonitor modules exist and their headers describe background polling/thread lifecycle.
+- NEEDS IMPLEMENTATION TRACE: which are actually instantiated and started by production main.py; exact thread/process topology; whether candle construction, strategy evaluation, alerts, and persistence are separate workers or callback/synchronous consumers.
+- NOT ESTABLISHED: a complete worker inventory, single-OS-process claim for all runtime activity, absence of IPC, and service-unit/host execution model.
+- HISTORICAL — RAMA: candle/resampler, strategy loop, alert dispatcher and out-of-band job descriptions until exact modules/call sites/records are found.
+
+B6-04 to B6-08 — startup order, ownership, conditions, readiness, lazy initialization
+- main.py imports relevant components, but import does not prove construction/start.
+- NEEDS IMPLEMENTATION TRACE: follow actual main()/startup phases line by line, including every constructor, `.start()`, `.connect()`, subscription call, conditional, exception branch and cleanup path. Establish precise sequence only from this trace.
+- NOT ESTABLISHED: claimed order “StateStore → startup reconciliation → workers”; fail-fast semantics; explicit readiness events/timeouts; mode/market-hours/strategy gating; no lazy workers. B-003/B-005/B-007 boundary is governance scope, not evidence of code barrier.
+- Do not describe `on_connect`, “subscribed”, or first-tick criteria as a system readiness gate without verifying the actual gate and its consumer.
+
+B6-09 to B6-14 — feed construction, subscriptions, states, data flow, paper
+- SUPPORTED AT MODULE-DESCRIPTION LEVEL: LiveFeedManager has KiteTicker-related fields, tracked subscription set, bounded queue, callback references, consumer thread reference, stop event and reconnect/watchdog parameters. Module doc says ticks are distributed through queue + single consumer thread.
+- NEEDS IMPLEMENTATION TRACE: exact `start`, `connect`, `on_connect`, `on_ticks`, subscribe/unsubscribe, callback dispatch, reconnect, watchdog, stop behavior; callback consumers and subscription source/universe; queue overflow policy and its side effects.
+- NOT ESTABLISHED: specific instruments, FULL-mode subscriptions, dynamic subscriptions, first-tick wait, connected-vs-subscribed-vs-receiving definitions, successful production operation, or actual paper-mode live feed.
+- Paper claims require tracing paper-mode adapter and LiveFeedManager construction in production main.py, plus test/dated evidence. A `paper_mode` constructor parameter is not proof it was used.
+
+B6-15 to B6-17 — other workers, shared state, external jobs
+- SUPPORTED AT MODULE-DESCRIPTION LEVEL: OrderReconciler and OrderMonitor are separate modules whose headers describe polling worker threads. Reconciler header describes configured polling and startup pass; OrderMonitor header describes a daemon polling thread.
+- NEEDS IMPLEMENTATION TRACE: effective cadence from loaded config; actual start calls; shared StateStore access/locking; queue/event wiring; external script invocation paths.
+- SANDBOX-ONLY: `reconcile_positions.py` header's EOD timing/cron description.
+- NOT ESTABLISHED: production crontab/systemd timer execution, scheduled job cadence, or full worker/monitor list.
+
+B6-18 to B6-22 — failure, retries, partial start, exceptions, trading response
+- NEEDS IMPLEMENTATION TRACE: every worker’s startup/runtime exception handling, SDK retry behavior, manager retry loops, critical-failure callback, kill-switch interaction, and top-level exception/finally handling.
+- NOT ESTABLISHED: universal fail-fast boot; “partial initialization disallowed”; exact cleanup on late worker failure; all worker exceptions reaching main; universal entry block/kill; no auto-flatten; paper/live distinctions.
+- A class-level retry parameter or module comment does not establish effective retry policy or safety response. Separate startup failure from runtime loss; separate entry gating from management of existing positions.
+
+B6-23 to B6-26 — stop/restart/duplicate/state recovery
+- SUPPORTED AT MODULE-DESCRIPTION LEVEL: OrderMonitor header says its state is not persisted across restarts. LiveFeedManager has a stop event and thread/ticker references. OrderReconciler exposes start/stop in its header.
+- NEEDS IMPLEMENTATION TRACE: stop/join/disconnect order, signal handler, main finally block, restart supervisor config, idempotence/duplicate guards, recovery of orders/positions and queue/event loss.
+- NOT ESTABLISHED: every worker is daemonized; all threads die exactly as claimed; systemd Restart policy installed; singleton guarantees; all in-flight work reconstructed by B-005.
+
+B6-27 to B6-29 — observability, incidents, parity
+- NEEDS RECORDS: lifecycle log formats/targets, dated incidents, reconnect/missed-tick/duplicate-worker evidence, testing-vs-production comparison.
+- NOT ESTABLISHED: the specific incidents in Rama's answer (token expiry abort, feed outage, duplicate worker, missed data) because no dated evidence was tied to them in the submitted answer.
+- PARITY NOT ESTABLISHED. Do not infer production behavior from sandbox tests or snapshots.
+
+B6-30 to B6-32 — omitted paths, provenance, uncertainty
+- Treat listed instrument download/cache, token refresh, health server, webhook receiver, token monitor, watchdog and scheduled utilities as candidate paths only until each is traced to its production caller/config/schedule.
+- Preserve the user's stated uncertainty and any conflict. Do not convert answer-sheet labels “verified” or “high confidence” into audit conclusions.
+
+3. REQUIRED SECOND-PASS SOURCE WORK BEFORE FINAL FREEZE
+Claude / reviewer should:
+1. Read production `main.py` from actual `def main` / startup phase implementation through worker startup and `finally`/shutdown. Produce an ordered table: source line, object, constructor, call, gating condition, exception handling, cleanup.
+2. Read full production implementations and call sites for:
+   - `data/live_feed.py`
+   - `orders/order_reconciler.py`
+   - `broker/order_monitor.py`
+   - `broker/order_state_machine.py`
+   - `core/state_store.py`
+   - relevant strategy/candle modules actually referenced from main/feed callbacks
+   - `scripts/healthcheck_server.py` and any token/watchdog/alert background components that main starts.
+3. Verify production vs sandbox blob identity for each relied-upon file; report SHA per file. Never say “same” based on matching names.
+4. Check records repo for dated logs, incident reports, crontab snapshots, systemd unit evidence and execution records. Identify evidence date, environment, and whether it proves installed/executed behavior.
+5. Distinguish code-implemented, configuration-dependent, test-observed, record-observed, and host-runtime-established claims.
+6. Use precise unknowns when evidence is absent. Do not claim absence based on a narrow search.
+7. Check all references/line numbers against the exact commit reviewed; provide commit SHA and line spans in the final manual.
+8. Keep B-005 parked; do not alter its draft/status or combine its artifacts with B-006.
+
+4. EDITORIAL CORRECTIONS REQUIRED
+- Replace “Source-Verified” in Rama’s answer with claim-specific status until the source trace is complete.
+- Replace assertions like “strict fail-fast,” “all workers must be ready,” “single OS process,” “only one worker,” “paper mode uses real live quotes,” “cron ran,” and “automatic halt/no flatten” with either traced code facts or UNKNOWN / NOT ESTABLISHED.
+- Avoid invented example log strings unless actual source strings are quoted and cited.
+- Do not use generic best-practice rationale as evidence for legacy behavior.
+- Do not derive a V2 design recommendation from a legacy observation. If later useful, list it only as PROPOSED / OPEN input with no decision.
+
+5. CURRENT REVIEW DISPOSITION
+The attached answer sheet is useful as a search map and recollection record, but it is too assertive to serve as a verified B-006 narrative. The source excerpts inspected substantiate that key worker modules exist and document certain intended threading/queue structures. They do not yet substantiate the exact production startup sequence, live deployment, all worker behaviors, incident history, or host scheduler/service state.
+
+Recommended disposition: prepare B-006 manual as a cautious evidence ledger with explicit “verified at module level / implementation trace pending / not established” tags. Do not freeze until the implementation/call-site/records pass above is complete.

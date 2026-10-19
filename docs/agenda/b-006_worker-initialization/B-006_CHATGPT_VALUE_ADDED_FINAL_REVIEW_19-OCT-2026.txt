@@ -1,0 +1,133 @@
+TRADING SYSTEM — B-006 WORKER INITIALIZATION
+INDEPENDENT VALUE-ADDED REVIEW OF REVISION 1 PACKAGE
+Date: 19-Oct-2026
+Review status: ACCEPT FOR FINAL GOVERNANCE CHECKS; NOT YET A FREEZE APPROVAL
+
+PACKAGE REVIEWED
+1. B-006_manual.md — revision 1, DRAFT.
+2. B-006_review_notes.md — revision 1, OPEN, including the final acceptance checklist and proposed DR-043.
+3. V2_DESIGN_LOG.md — current attached version.
+4. Previously supplied supporting context: B-005 frozen manual and proposed E-1, A-011 frozen manual and proposed E-6, B-006_v2_design_inputs.md, and V2_DECISION_REGISTER.md / DR-041 context.
+5. ChatGPT's two earlier B-006 review files and the original answer/reconciliation/draft provenance as referenced by the notes.
+
+LIMITATION
+This is an independent documentary and consistency review of the supplied package and its recorded checks. I have not independently rerun Claude's 472-line source-anchor check, secret scans, Markdown scripts, object-ID checks or repository diff from the underlying working tree in this review. Those results are assessed as Claude's recorded verification, not represented as tests I personally reran. The package must remain uncommitted until Rama's approval.
+
+1. EXECUTIVE RECOMMENDATION
+
+ACCEPT THE TECHNICAL SUBSTANCE OF B-006 REVISION 1, SUBJECT TO THE FINAL GOVERNANCE CHECKS BELOW.
+
+The manual is now materially complete for its assigned scope: it inventories the workers, maps the start order, separates construction/start/connect/subscribe/readiness, records conditional failure paths and process-exit behaviour, distinguishes source/library/test/record evidence, documents paper/live differences and carries unknowns forward without turning them into V2 requirements.
+
+The two proposed corrections are justified and appropriately narrow:
+- B-005 E-1 corrects the frozen manual's overbroad summary that PASS 1 ran “before any worker”.
+- A-011 E-6 corrects the summary that reconciliation occurred “immediately before the threads start”.
+
+Keep B-006 DRAFT and both errata PROPOSED until the final package is checked and Rama explicitly approves the freeze and both errata. Do not append DR-043, change the register, commit or push before approval.
+
+2. TECHNICAL FINDINGS THAT SHOULD BE PRESERVED
+
+2.1 The nine early starts are the central finding
+The sequence is stated consistently in the manual: four threads start during construction on every start, and five optional/shadow-related threads start in Phase 0e under the repository configuration, giving nine before PASS 1. The later Phase 0g workers start after reconciliation. TH3, the MIS auto square-off poller, is among the early starts and has an exit-placement capability. This is a code-path capability, not proof that an exit occurred before PASS 1 on a historical start. Keep the occurrence UNKNOWN / NOT ESTABLISHED.
+
+2.2 Inventory counts are correctly qualified
+“31 inventory rows” is not “31 simultaneously running threads”. The manual distinguishes the 31 inventory rows, the 25 named threads calculated for a live start with repository configuration, waitress task threads, and pools whose workers are created as work arrives. Keep that distinction in the final statement, summaries and future references.
+
+2.3 Initialization is not readiness
+The inspected start path does not wait for workers to report running, connected, subscribed, receiving ticks or ready. The feed's connect call is not a subscription or first-tick barrier. The manual appropriately leaves global readiness to B-007. Do not let the “System Active” message be read as proof that all workers or the market-data path were healthy.
+
+2.4 Late exit and process lifetime are scoped correctly
+The manual distinguishes code-path interpretation, CPython/library source, a scratch-library test, and historical occurrence. The claim that a late exit can wait for executor work and a non-daemon HARD_KILL flatten worker is not a measured production duration. Occurrence remains NOT ESTABLISHED. Keep this qualification in X4 and the final statement.
+
+2.5 Feed wiring and alert claims are scoped
+The wording “no caller in the runtime files searched” is better than a universal “no caller exists”. The inert configuration and unwired notifier are findings within the stated search scope. Preserve the search scope beside the conclusion.
+
+2.6 Historical failures are not generalized
+The TGT retry incident on 22–23 June is record-derived and specific. It does not establish that all worker errors were silent. The order monitor's three-failure self-stop is a separate source finding. Keep these as separate rows.
+
+2.7 Paper/live and source provenance
+The manual does not claim full paper/live parity. It states paper mode does not open the WebSocket and records the relevant mode-specific differences. It also separates the production baseline from the testing tree, dated records, library source, and repository configuration from installed-host state. These distinctions are essential and should not be compressed away in summaries.
+
+3. CROSS-DOCUMENT ERRATA — ACCEPT THE PROPOSED WORDING, SUBJECT TO FINAL DIFF
+
+B-005 E-1:
+- The phrase “and before any worker” is contradicted by the B-006 start trace.
+- The correction should only strike that phrase and state that PASS 1 ran after the threads already started during Phase 0e and before the later Phase 0g worker wave.
+- Preserve the existing B-005 sequence, outcome matrix and other findings.
+- Keep any early worker's actual consequential action before PASS 1 NOT ESTABLISHED.
+
+A-011 E-6:
+- The phrase “immediately before the threads start” is contradicted by the B-006 trace and A-011's own step 11 table.
+- The correction should only strike that phrase and clarify that the reconciliation precedes the threads of steps 14–16 but follows the threads already started at step 11.
+- Do not rewrite unrelated boot-table entries or lifecycle findings.
+
+DR-041:
+- Keep the register append-only. Do not edit DR-041 in place.
+- The future freeze row should explain how its “before any worker” summary is to be read with B-005 E-1.
+- DR-043 is only proposed text until Rama approves the freeze and errata.
+
+The notes' phrase-by-phrase search and its decision not to broaden the errata are good governance. Do not add unrelated errata without new direct evidence.
+
+4. FINAL PACKAGE CHECKS STILL REQUIRED BEFORE FREEZE
+
+Claude's review notes report the following checks as passed. They are credible as recorded results but should be tied to the exact final candidate hashes:
+
+A. B-006 manual
+- Revision 1, status DRAFT.
+- 472 cited source lines checked; reported result 472 matched, 0 failed.
+- All cross-references resolve except the documented expected exceptions: not-yet-stored input paths, F31 as a fix ID rather than an inventory row, future DR-043, and multi-section references that the checker splits.
+- No unresolved placeholders.
+- Inventory rows, thread counts, start sequence, failure rows and process-exit rows agree across the authoritative sections and summaries.
+
+B. Review notes
+- Status remains OPEN.
+- The change log, acceptance checklist and proposed freeze record match the exact candidate package.
+- No claim that the package has already been stored, committed or pushed.
+
+C. B-005 and A-011
+- Their working copies differ from the frozen copies only by the intended struck/replacement phrase, the erratum status sentence and the erratum section, as the notes report.
+- Existing freeze status remains in force while the errata are PROPOSED.
+- Do not accept a broader rewrite under the guise of the erratum.
+
+D. V2 design log and design inputs
+- B-006 agenda status, lessons, session notes, Q-44, Q-40(g), and VP-57/VP-64/VP-67 annotations must agree with the review notes.
+- VP annotations and scheduling moves are governance tracking only; they do not ratify any V2 design proposal.
+- Q-44 remains OPEN; Q-40(g)'s historical occurrence remains OPEN/UNKNOWN.
+- B-006_v2_design_inputs.md remains PROPOSED / OPEN and unchanged unless a separate justified change is identified.
+
+E. Decision register and DR-043
+- V2_DECISION_REGISTER.md remains unchanged until approval.
+- DR-043 must not be appended in advance. When approved, it should name B-006 revision 1, B-005 E-1 and A-011 E-6, clarify DR-041 without rewriting it, keep Q-44 open, and state that no V2 design decision was made.
+- Ensure the future DR-043 row's “DECIDED” status is only applied when Rama has actually approved the freeze and errata. Until then it is proposed text, not a decision.
+
+F. Security and file integrity
+- Re-run Markdown checks, reference/anchor checks, secret/identifier-pattern scans, and Claude-session-link scans over the exact final package before any push.
+- Confirm the three original B-006 input files are preserved byte-identically and their hashes match the values recorded in the review notes.
+- Check all modified files, not only the manual. The notes say a known credential-pattern match remains in an older B-004 answer-sheet line; do not misreport that as a new B-006 finding, but confirm it is the already-known match and that no new sensitive match was introduced.
+- Preserve the no-secret rule, including examples and diagnostic output.
+
+G. Evidence and repository boundary
+- Keep source claims pinned to the stated baseline commit, records claims tied to the named record/date, and library claims tied to the pinned library/version.
+- Repository evidence does not prove what was installed or running on either deleted legacy VM.
+- Do not run legacy code, touch a VM/service/broker, or perform operational testing as part of this documentation finalization.
+
+5. SMALL PRESENTATION / GOVERNANCE IMPROVEMENTS
+
+1. In the final freeze record, keep the distinction explicit between “source-verified code path” and “historical occurrence not established”. Avoid any sentence that could be read as proving the nine early threads acted during a real production start.
+2. Preserve the phrase “25 named threads ... with repository configuration” anywhere the count is used; do not shorten it to an unqualified live-host measurement.
+3. Make the delivery note list the exact candidate filenames and hashes. The notes' test results should be reproducible against those exact bytes.
+4. Keep the status vocabulary synchronized: B-006 DRAFT; review notes OPEN; B-005 and A-011 frozen with errata PROPOSED; V2 inputs PROPOSED / OPEN; Q-44 OPEN; register unchanged.
+5. Do not turn the useful cross-topic leads for B-007/B-008/B-010/B-011/B-012 into new claims inside B-006. Leave each topic's substantive analysis to its own agenda item.
+
+6. RECOMMENDED FINALIZATION SEQUENCE
+
+1. Claude returns the exact final candidate files and hashes, plus the recorded results from section 15.
+2. ChatGPT checks that exact candidate set and any final diff, with no new scope expansion.
+3. Rama explicitly approves (a) B-006 freeze and (b) B-005 E-1 and A-011 E-6. Approval should be unambiguous and recorded.
+4. Only after approval, update statuses, append DR-043 to the append-only register, close the review notes, apply the agreed governance tracking moves and assemble the approved storage list.
+5. Rama stores/commits/pushes from his own environment, then verifies the remote commit and exact file blobs. Do not claim publication until verified.
+
+FINAL DISPOSITION
+B-006 revision 1 is technically strong and acceptable in substance. The source trace and the two narrow errata reconcile the important contradiction without silently changing the legacy baseline or making V2 decisions. I recommend proceeding to the final exact-file acceptance check and then Rama's explicit approval. Until those steps occur, B-006 is not frozen and neither erratum is accepted.
+
+END OF REVIEW

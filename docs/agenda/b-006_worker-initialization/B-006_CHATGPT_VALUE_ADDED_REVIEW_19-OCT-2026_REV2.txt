@@ -1,0 +1,126 @@
+TRADING SYSTEM — B-006 WORKER INITIALIZATION
+CHATGPT VALUE-ADDED ACCEPTANCE REVIEW
+Date: 19-Oct-2026
+Status: INDEPENDENT REVIEW — NOT APPROVAL TO FREEZE
+
+PURPOSE
+This review assesses Claude's B-006 revision-1 package and its cross-document changes, using the attached B-006 manual, review notes, B-005 frozen manual, and the available project records. It is a review/handoff file, not a source edit, freeze approval, V2 decision, or authorization to commit/push.
+
+EXECUTIVE DISPOSITION
+ACCEPT THE SUBSTANCE OF B-006 REVISION 1, SUBJECT TO THE SPECIFIC CHECKS BELOW.
+Do not freeze B-006 or accept the two proposed errata solely on the strength of this review until the exact final package is checked together. The proposed corrections are appropriately narrow and preserve the frozen B-005 baseline while making the contradiction visible. B-005's existing freeze is not itself cancelled by a proposed erratum.
+
+The most important new legacy finding is well supported within the supplied source trace: nine threads start during Phase 0e before PASS 1, including the MIS auto square-off poller. PASS 1 then runs before the later Phase 0g wave. Therefore a blanket statement that PASS 1 occurs “before any worker” is wrong. This is a source-order finding, not proof that any early worker actually placed an order or otherwise acted during a particular start.
+
+1. REQUIRED CROSS-DOCUMENT CORRECTIONS
+
+1.1 B-005 E-1 — KEEP PROPOSED UNTIL RAMA APPROVES
+The proposed correction to B-005 section 21 is justified. Replace only the inaccurate phrase “and before any worker” with the carefully scoped description: PASS 1 occurs after the Phase 0e threads already started during construction and before the later Phase 0g worker wave. Preserve the existing startup-reconciliation findings, outcome matrix, evidence labels and freeze status. Keep the actual occurrence of an early worker taking consequential action as NOT ESTABLISHED unless dated runtime evidence proves it.
+
+The B-005 header says it is FROZEN revision 1 and that E-1 remains PROPOSED. That is a coherent governance state: the manual stays frozen except for the proposed erratum until explicit approval.
+
+1.2 A-011 E-6 — JUSTIFIED, BUT VERIFY EXACT TARGET TEXT
+B-006's source trace also conflicts with A-011 section 5's summary that reconciliation occurs “immediately before the threads start.” The proposed erratum is justified if it strikes only that inaccurate phrase and clarifies that the reconciliation sits after the Phase 0e threads and before the later workers shown at steps 14–16. Do not rewrite the entire boot table or change unrelated A-011 lifecycle findings.
+
+1.3 DR-041 — DO NOT EDIT THE HISTORICAL REGISTER ROW IN PLACE
+The proposed approach is sound: preserve the append-only DR-041 record and make the interpretation of its phrase “before any worker” explicit through the approved erratum and the later freeze record. Ensure the future record says exactly which phrase is superseded and links B-005 E-1. Avoid language suggesting that DR-041 itself was rewritten.
+
+1.4 AVOID ERRATUM SCOPE CREEP
+The review notes say the repository search found other similar phrases and that the remaining checked phrases are true. Keep a final phrase-by-phrase cross-document check in the acceptance evidence. Do not broaden the errata to B-004, B-001, A-011 sections 8/11/13/14, or unrelated startup statements unless new direct evidence shows a specific contradiction.
+
+2. B-006 MANUAL — ACCEPTED FINDINGS, WITH THESE FINAL CHECKS
+
+The manual's structure is strong and appropriate for a permanent legacy record:
+- A complete worker inventory (TH1–TH31), including workers started in constructors, pools, child processes and on-demand paths.
+- Ordered startup sequence (ST1–ST10) and explicit waits/non-waits.
+- Initialization versus connection, subscription and readiness kept distinct.
+- Failure paths and whether previously started workers are stopped.
+- Interpreter-exit and executor-pool behavior distinguished from application _shutdown.
+- State rebuilt by workers, liveness, paper-mode distinctions, records, source versions and unknowns.
+- A clear boundary between legacy facts and proposed V2 inputs.
+
+Before final acceptance, verify the following exact items in the final files:
+
+A. Inventory/count wording:
+The manual reports 31 inventory rows, then derives a live-start thread count under the repository configuration. Keep the counted categories and exclusions explicit. TH31 groups several on-demand workers; do not let “31 workers” be misread as 31 simultaneously running threads. The manual already distinguishes inventory rows from the derived runtime count; preserve that distinction in any summary.
+
+B. Worker that can place orders before PASS 1:
+TH3 is described as the MIS auto square-off poller and starts before PASS 1. This is an important capability finding. State only that its thread is started before PASS 1 and its code path can place MIS exits at configured checks. Do not claim an exit actually occurred during startup without a dated record.
+
+C. “No readiness wait”:
+The evidence supports that main.py does not wait for workers to report ready, connected, subscribed or receiving ticks; the feed's connect call is not a first-tick barrier. Keep this scoped to the inspected startup path. Do not infer that every worker necessarily fails or that no external monitor exists.
+
+D. Process-exit claims:
+The analysis of daemon threads, ThreadPoolExecutor's interpreter-exit hook and the non-daemon HARD_KILL flatten worker is technically relevant. Preserve the distinction between:
+- a code-path conclusion about what can keep the process alive;
+- a library-source fact about the pinned interpreter/library;
+- a scratch-library test;
+- an actual historical production occurrence.
+The claim that a late exit ends after active/queued pool tasks and any flatten work finish is a code-path interpretation, not a measured duration for a legacy host. “Occurrence NOT ESTABLISHED” is correct.
+
+E. Failure evidence:
+The TGT retry failure on 22–23 June is a dated record-derived event. Do not generalize it into proof that all failures were silent. Keep the separate order-monitor three-failure stop/restart behavior and the evidence basis already cited.
+
+F. Feed configuration and alerts:
+The finding that certain reconnect configuration keys and notifier wiring were not consumed in the inspected runtime path is appropriately framed as a source finding/known ambiguity. Keep “no caller found in the stated search scope,” not an unrestricted claim that no alert could ever have been sent by any route.
+
+G. Source identity:
+The manual pins the principal source claims to baseline commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb and separately labels library, test, testing-tree and records evidence. Preserve these labels and do not imply that the baseline proves installed host state. The supplied evidence does not justify saying the complete host/runtime state is known.
+
+H. Paper/live:
+Keep the manual's mode-specific findings. Do not summarize as full paper/live parity. In particular, do not infer live feed behavior from paper mode, and do not assume the same worker set or side effects without the explicit mode-specific source path.
+
+I. Line citations and document references:
+Run the stated final line/anchor/reference checks against the exact final candidate files. Because revision 1 changes section numbers and inserts errata, stale cross-references are a practical risk even if the technical findings are right.
+
+3. REVIEW NOTES — GOOD GOVERNANCE, ONE FINAL CONSISTENCY PASS
+
+The review notes are useful because they record:
+- the first-pass miss and its cause;
+- exact changes in revision 1;
+- the proposed cross-document errata;
+- evidence-scope and masking controls;
+- checks run and the intended acceptance sequence;
+- items deliberately kept open and V2 inputs left undecided.
+
+Before freeze, confirm that the notes' status and next-step text match the actual delivery state. They currently say OPEN, not frozen, and require ChatGPT's acceptance check and Rama's approval. Do not mark them complete or frozen before those steps occur.
+
+The notes state that no files are committed or stored. Treat that as the current declared state, not as an independent check of GitHub. Do not claim a push or repository update occurred unless Rama supplies/authorizes evidence of it.
+
+4. V2 DESIGN INPUTS AND DESIGN LOG — DO NOT TURN OBSERVATIONS INTO REQUIREMENTS
+
+The proposed V2 design inputs should remain proposals/observations. The new B-006 findings may inform later decisions about worker lifecycle, startup gating, readiness, cancellation, shutdown, task pools, feed subscriptions and worker ownership, but B-006 itself does not decide what V2 must retain, reject or redesign.
+
+Keep the tracking annotations VP-57, VP-64 and VP-67 as tracking annotations only; do not treat annotation or scheduling movement as ratification. Keep Q-44 open until its audit leads are resolved. Keep Q-40(g)'s occurrence status open/unknown as recorded. Do not create a decision-register row before the approved freeze process requires it.
+
+The lesson recorded in the design log is valuable: inventory searches must include threads started by constructors and during intermediate construction phases; process-exit analysis must check executor workers' inherited daemon flags against the pinned interpreter. Preserve it as a process lesson, not a V2 architecture decision.
+
+5. FINAL ACCEPTANCE CHECKLIST
+
+Before asking Rama to approve the freeze, Claude should return the exact candidate package and report:
+
+[ ] B-006_manual.md — revision 1, status DRAFT until approved; no unresolved placeholders; all cited line ranges and cross-references resolve.
+[ ] B-006_review_notes.md — OPEN until approval; change log and checks reflect the exact candidate.
+[ ] B-006_v2_design_inputs.md — unchanged from the reviewed version unless a separately identified, justified change is proposed; no V2 decisions silently made.
+[ ] B-005_manual.md — frozen text preserved except the exact proposed E-1 passage; erratum remains PROPOSED pending approval.
+[ ] A-011_manual.md — frozen text preserved except the exact proposed E-6 passage; erratum remains PROPOSED pending approval.
+[ ] V2_DESIGN_LOG.md — lesson, agenda row and session note consistent; tracking annotations do not imply ratification.
+[ ] V2_DECISION_REGISTER.md — unchanged until the freeze is approved and the governance process calls for its append-only record.
+[ ] Exact cross-document phrase search rerun across manuals, design log and register; results and scope recorded.
+[ ] Markdown structure/table checks, secret-pattern scan, session-link scan, citation-anchor check and document-reference check rerun on the final candidate set.
+[ ] Byte-identical preservation and SHA-256 recorded for the three original ChatGPT B-006 input files at the freeze, as planned.
+[ ] The future freeze record explicitly records Rama's approval, both errata, and the intended reading of DR-041 without rewriting its historic row.
+[ ] No source code, VM, service, broker, live trading or legacy runtime action performed as part of this documentation review.
+
+6. RECOMMENDED DISPOSITION
+
+My recommendation is:
+1. Accept B-006 revision 1's technical substance.
+2. Keep B-006 in DRAFT and both B-005 E-1 and A-011 E-6 PROPOSED until Rama explicitly approves them.
+3. Have Claude perform the final acceptance checklist on the exact six-file package plus the unchanged decision register.
+4. Return the final files and check results to ChatGPT for the acceptance check already specified in the workflow.
+5. Only then ask Rama for the freeze and errata approval. Store/commit/push only under Rama's explicit approval and normal project process.
+
+No V2 design decision is made by this review. The legacy system remains DEAD / REFERENCE ONLY.
+
+END OF REVIEW
