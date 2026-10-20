@@ -1,0 +1,46 @@
+B-011 — SHUTDOWN
+CLAUDE REPOSITORY-RESEARCH PROMPT
+Date: 20-Oct-2026
+Project: Trading_System-v2_redesign
+
+Read the complete file `B-011_SHUTDOWN_ANSWER_SHEET_FOR_CLAUDE_20-OCT-2026.txt` first and answer every ID. Do not draft the manual yet.
+
+REPOSITORY AND BASELINE
+- Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+- Use the pinned commit for every code/config/doc/test claim.
+- Production snapshot only for B-011. Do not inspect sandbox/testing, records, or V2 repositories.
+- Do not contact or inspect any VM, broker, database, running service, installed crontab, host logs or external account.
+- Do not run legacy code or tests. Tests may be read, never executed.
+- No edits, commits, pushes, deployment, or operational commands.
+- Use the established masking/security workflow. Never output secrets, tokens, account/client identifiers, hostnames, addresses or credential values.
+- Do not use current default branch as a substitute for the pinned commit.
+
+RESEARCH METHOD
+1. Trace `main.py` shutdown entry points, signal registration, `_shutdown_event`, `_shutdown()`, `_start_eod_self_exit_thread`, `_eod_self_exit_due`, `_resolve_position_pipeline`, `_position_requires_service`, `_classify_active_positions`, and flatten-drain handling.
+2. Trace every called stop/close/join/checkpoint operation and each component's lifecycle. Follow callers/callees far enough to distinguish actual shutdown behaviour from argument passing or comments.
+3. Inspect the relevant `config/system_config.yaml`, `core/market_windows.py`, `deploy/systemd/trading-system.service`, README/deployment/startup docs, component implementations, and directly relevant tests.
+4. Search for signal handlers, shutdown event writers/readers, `_shutdown` callers, worker start/stop methods, process exit codes, self-exit references, and test coverage. State exactly what scope was searched. Negative search results are only valid for the scope actually examined.
+5. Inspect relevant records only if present and safe within the production repository. Do not open potentially sensitive broker/account exports. Records are not proof beyond their own date/deployed commit.
+6. Keep B-010 EOD square-off and B-012 restart/recovery as cross-references. Do not expand B-011 into those topics.
+7. Distinguish source facts, config declarations, tests (read only), historical record facts, interpretations, known defects/doc drift, and unknown host/runtime facts. Never infer that a checked-in systemd unit, cron declaration, test, or code path was installed or executed.
+8. Do not propose repairs or V2 architecture.
+
+ANSWER SHEET REQUIREMENTS
+- Answer every ID B11-A1 through B11-H7.
+- Give exact paths, function/class names and line ranges at the pinned commit.
+- Explain trigger/input → logic → guard → output/state mutation → storage/handoff → next consumer, including error/timeout paths.
+- State configured values and formulas exactly where supported.
+- Provide a status table with every ID exactly once: SOURCE-ANSWERED, PARTIALLY ANSWERED, UNKNOWN / NOT ESTABLISHED, or NOT INSPECTED.
+- Explicitly identify relevant files not read, and tests inventoried/read but not run.
+- Include the normal self-exit, external stop, residual-position stop, flatten-in-progress drain, and cleanup-failure walkthroughs.
+- Include a component-by-component lifecycle table. Do not state that a component stops simply because `_shutdown()` accepts it as an argument.
+- Preserve unknowns; no assumption filling.
+
+DELIVER EXACTLY THESE TWO FILES
+1. `B-011_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt`
+2. `B-011_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt`
+
+The inventory/method file must include the pinned SHA, all read paths and line ranges, search scopes, test files read (not run), records read/not read, security/masking method, any process exceptions, and explicit confirmation that no code/tests/host/broker/DB/service/cron were run or contacted.
+
+Do not create the manual, reconciliation, design inputs, or V2 decisions. Do not commit or push. Return both text files to Rama and stop.

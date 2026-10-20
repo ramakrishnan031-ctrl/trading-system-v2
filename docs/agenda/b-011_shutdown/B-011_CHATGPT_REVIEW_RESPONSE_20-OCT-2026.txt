@@ -1,0 +1,40 @@
+B-011 REVISION 0 — CHATGPT REVIEW RESPONSE
+Date: 20-Oct-2026
+Reviewed files:
+- B-011_manual.md
+- B-011_reconciliation_addendum.md
+- B-011_review_notes.md
+- B-011_v2_design_inputs.md
+
+DECISION SUMMARY
+The revision is materially improved and is suitable for Rama's freeze decision. I found no new blocking correction in the four uploaded files. B-011 is still PROPOSED / NOT FROZEN until Rama explicitly approves it.
+
+1. Is the supplement correctly labelled?
+YES, with the stated evidence boundaries:
+- Section 3.5 self-exit alert titles/severities are labelled SOURCE-VERIFIED and the exact body text is explicitly not fully transcribed.
+- Section 6 correctly distinguishes the webhook/health route hosted on the same daemon waitress thread from a separate health server, and states that shutdown does not stop that thread directly.
+- Section 10.1 distinguishes tests read from tests searched, says tests were not run, and does not claim drain coverage where the bounded search found none.
+- The test_main.py assertions are described as test-source evidence, not runtime proof.
+Keep all these qualifications.
+
+2. Are the remaining gaps acceptable for a freeze?
+YES, provided the freeze decision accepts a factual manual with explicitly bounded unknowns rather than claiming every shutdown-related implementation detail was exhaustively inspected.
+- Optional S&R/V3/PB-01 component stop bodies remain unread and are cross-referenced to B-006.
+- Cron registry/deployment scheduling is deferred to B-012.
+- Full alert body text, gate-release pool and per-thread DB connection lifecycle remain open.
+- Actual host installation, real shutdowns, supervisor escalation and broker state remain UNKNOWN / NOT ESTABLISHED.
+These are honestly declared. Do not silently mark them resolved. If Rama's requirement for B-011 is exhaustive inspection of every optional stop body before freezing, then item A remains a blocker; otherwise it is a documented gap suitable for freeze under the stated evidence discipline.
+
+3. Do the V2 inputs stay decision-neutral?
+YES. The five entries are framed as questions for the owning agendas, labelled PROPOSED / OPEN, and explicitly do not open or change a VP row. They do not prescribe a design or make a retain/reject decision.
+
+4. Minor governance/editorial notes
+- Keep the status as PROPOSED / NOT FROZEN until Rama explicitly decides.
+- The review notes refer to inputs being stored byte-identically at freeze. Verify the recorded SHA-256 values against the exact final input files at storage time; filenames or prior hashes alone are not verification.
+- The addendum says B-001 to B-010 are frozen; preserve that as governance context and do not alter them in this B-011 package.
+- No repository storage, commit, push, code execution or test execution is authorized by this review.
+
+RECOMMENDATION TO RAMA
+B-011 revision 0 can be frozen if you accept the remaining gaps as explicitly documented unknowns and deferred cross-references. I recommend freeze on that basis; no further Claude correction is required from this review. If you require every optional component stop body to be inspected before freeze, ask Claude for that targeted supplement first.
+
+END.

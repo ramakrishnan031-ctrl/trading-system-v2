@@ -1,0 +1,62 @@
+B-011 SHUTDOWN: SOURCE INVENTORY AND METHOD
+Date: 20-Oct-2026 (IST)
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Companion: B-011_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt
+
+1. CLONE AND READ METHOD
+- Blob-less, non-cone sparse clone checked out at the pinned commit; explicit file paths only.
+- After each checkout: sensitive_check.py (never-open blobs present locally must be 0). Final result: 0; local objects 8,105.
+- Every file read through mask_read2.py (masking filter). Masks seen: host tokens, IPv4, client-ID-like tokens (including false positives on lint markers). Masked values are not reproduced.
+- No tree-wide or history git command used in B-011.
+- Outputs scanned with scan_ids.py before delivery.
+
+2. PROCESS EXCEPTION (disclosed)
+- While adding the root README to the sparse set, the pattern "README.md" was entered without a leading slash. In non-cone mode it matched README.md in every directory, so one never-open blob (docs/web_claude/README.md) was fetched into the local object store and the working tree. sensitive_check reported 1.
+- Its contents were not opened, read, printed or searched; only its path and blob ID were identified.
+- Fix: pattern changed to "/README.md"; sparse set reapplied (the never-open directory left the working tree); the promisor pack holding that blob (7 README blobs, fetched in the same call) was deleted from the local object store; sensitive_check rerun: 0.
+- Lesson for the design log (proposed): always anchor non-cone sparse patterns with a leading slash.
+
+3. FILES AND LINE RANGES READ (970aabf)
+- main.py: 116, 119, 446-470, 613-616, 1048, 1064, 1075, 1115-1563 (classification, due predicate, self-exit thread), 1570-1579, 1599-1831 (_shutdown), 2041-2052, 2085-2190 (main), 2193-2216, 2318-2334, return lines 2201-3899 with adjacent log lines, 3958, 4000-4030, 4100-4156, 4240-4294.
+- capital/kill_switch.py 1140-1310 (flatten state, dispatch, worker, drain).
+- core/state_store.py 251-300, 658-690.
+- core/config_loader.py 62-70, 98-102, 165-190.
+- core/market_windows.py 46-119 (special-session lines by search).
+- config/system_config.yaml 84-112.
+- signals/webhook_receiver.py 480-492, 1160-1180.
+- signals/signal_processor.py 304-360.
+- screening/entry_gate.py 241-268.
+- orders/smart_tgt_manager.py 206-232.
+- orders/order_reconciler.py 457-470.
+- orders/tgt_retry_manager.py 122-135.
+- broker/order_monitor.py 503-590.
+- broker/clock_skew_probe.py 89-100.
+- broker/token_monitor.py 114-125.
+- data/live_feed.py 153-175.
+- data/candle_store.py 120-135.
+- deploy/systemd/trading-system.service 1-50 (host paths and an identifier in it are not reproduced).
+- README.md (searched for shutdown terms; line 60 cited).
+
+4. SEARCH SCOPES
+- Python: all 330 non-test .py files at the pinned commit (checked out). Searches: `_shutdown_event`, `shutdown_event.set()`, `_shutdown(`, `def stop`, `def drain_flatten`, `service_window_end`, `special_session`, `return <n>` in main.py after line 2190.
+- Not searched: shell scripts, cron declarations, YAML other than system_config.yaml, docs other than those listed. Negative findings hold only for the Python scope.
+
+5. FILES NOT READ (with reason)
+- Stop bodies of sr_detector, market_regime_runner, portfolio_allocator, v3_chain, pb01_entry_stage, pb01_capture_worker, retest_monitor, structure_exit_manager, zone_warmer: optional components; cross-reference frozen B-006 section 3.
+- core/time_authority.py, effect_telemetry.emit_census, `_invalidate_token`, utils/startup_checks.py: outside the core shutdown path or covered by B-001/B-006.
+- Thread creation lines for EOD, MIS, pre-alert, margin-sync, health and webhook threads: B-006/B-010.
+- Tests inventoried by name, not read: tests/unit/test_main.py, tests/unit/test_kill_switch.py, tests/integration/test_hard_kill_flatten_chain.py, tests/crash_test/test_kill_switch_edges.py, tests/unit/test_webhook_receiver.py, tests/unit/test_clear_kill_switch.py, tests/unit/test_kill_switch_product_filter.py, tests/unit/test_mo1_flatten_quote_key.py.
+- Deployment docs other than README and the unit; cron registry file.
+
+6. TESTS READ (NOT RUN)
+- tests/unit/test_eod_lifecycle_pipeline_aware.py (test names and selected bodies).
+- tests/unit/test_fix129_graceful_shutdown.py (test names and selected bodies).
+
+7. RECORDS
+- Read (searched for shutdown terms, selected ranges): docs/audit/s4_boot_outage_17jul2026.md; docs/audit/liveness_alarm_17jul2026.md.
+- Present from an earlier checkout, not read for B-011: docs/audit/p1_health_require_hmac_done_17jul2026.md, docs/audit/strategy_direction_investigation_17jul2026.md.
+- Not opened: broker book exports, never-open paths, the separate records repository.
+
+8. CONFIRMATION
+No legacy code or tests were run. No VM, host, broker, database, running service, installed crontab, log or external account was contacted. No edit, commit or push was made to any repository.

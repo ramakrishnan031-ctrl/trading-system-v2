@@ -1,0 +1,122 @@
+B-011 — SHUTDOWN
+LEGACY SOURCE-RESEARCH ANSWER SHEET FOR CLAUDE
+Date prepared: 20-Oct-2026
+Project: Trading_System-v2_redesign
+Status: RESEARCH INPUT ONLY — NOT A MANUAL, NOT FROZEN
+
+PURPOSE
+Document the DEAD / REFERENCE-ONLY production snapshot's shutdown and service self-exit behaviour as it exists in source. This is not an instruction to run, repair, revive, or redesign the legacy system.
+
+REPOSITORY SCOPE — MANDATORY
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Use this exact commit for every source claim. Do not silently switch to main/latest.
+For B-011, use ONLY this production snapshot. Do not inspect the sandbox/testing repo, records repo, V2 repo, VM, broker, database, service, installed crontab, logs, or any live system.
+Do not run legacy code or tests. Do not edit files, commit, push, deploy, or execute operational commands.
+Use the established masking/security workflow. Never print credentials, tokens, account/client identifiers, hostnames, addresses, or secrets. A path category may be documented; secret values may not.
+If a file/record is not read, label it NOT INSPECTED. A repository declaration is not proof of installation or execution.
+
+WORKING TOPIC
+Master Redesign Agenda B-011 = Shutdown.
+B-010 owns EOD square-off; B-012 owns restart/recovery detail. Cross-reference those topics without rewriting their scope.
+The first-pass source review by ChatGPT found these starting points to verify, not blindly accept:
+- README.md says main.py self-exits cleanly after the service window.
+- config/system_config.yaml declares trading_hours.service_window_end: "17:35", with comments explaining the historical change from a hardcoded 16:00.
+- main.py has an EOD window-end self-exit watchdog; it is armed only for normal starts and skipped for --interactive, --resume, or TS_IGNORE_MARKET_WINDOW=1.
+- The watchdog is intended to wait until the configured window end and until positions requiring this service are absent; it also gates on HARD_KILL flatten-in-progress.
+- main.py then waits on _shutdown_event and calls _shutdown(...); exact signal registration, shutdown ordering, each component's stop/close behaviour, and error handling require a complete source trace.
+- deploy/systemd/trading-system.service declares KillSignal=SIGINT, TimeoutStopSec=30, Restart=on-failure and RestartPreventExitStatus=3 4 5. This is a repository declaration only, not proof of the installed unit.
+- The source comments describe a 15-second bounded drain for a HARD_KILL flatten on external stop, because the service stop timeout is 30 seconds; the internal EOD self-exit waits on the flatten gate. Verify the executable path and limits.
+These are search leads, not a substitute for answering every question below.
+
+ANSWER RULES
+For every ID provide:
+1. Status: SOURCE-ANSWERED / PARTIALLY ANSWERED / UNKNOWN-NOT ESTABLISHED / NOT INSPECTED.
+2. Exact repository path, class/function and line range at the pinned commit.
+3. Trigger/input → logic → guards → output/state mutation → next consumer.
+4. Exceptions, timeout, partial completion and whether processing continues or exits.
+5. Distinguish executable code from comments/docstrings/config, tests, historical records, and host/runtime claims.
+6. If negative searching is used, state the exact files searched and scope. Do not claim a whole-tree negative result from a partial search.
+7. Do not infer actual production shutdown or notification from source alone.
+8. Do not propose a fix or V2 design.
+
+A. SHUTDOWN ENTRY POINTS AND TRIGGERS
+B11-A1. What exact source paths can initiate shutdown or set the shutdown event? Include OS signals, keyboard interrupt, explicit code paths, and the EOD self-exit watchdog.
+B11-A2. Where are signal handlers registered? Which signals are handled, and what exact action does each handler perform?
+B11-A3. What is the difference between a request to stop, setting _shutdown_event, invoking _shutdown(), returning from main(), and process exit?
+B11-A4. Does the EOD self-exit watchdog call _shutdown directly or only set the event? Trace its caller and consumer.
+B11-A5. Which startup modes/environment overrides disable or bypass the self-exit watchdog? State exact conditions and their source.
+B11-A6. Are there any additional shutdown triggers outside main.py? Search callers/consumers with a clearly bounded search and list each verified path.
+
+B. SERVICE WINDOW AND POSITION GATING
+B11-B1. Where is service_window_end declared, parsed, validated and passed into the watchdog? State the configured baseline value and units/timezone only where source establishes them.
+B11-B2. What is the exact due formula for self-exit? Include the clock boundary (>= or >), trading-day/holiday behaviour and any special-session handling.
+B11-B3. How does the watchdog determine which positions require the process to stay alive? Trace DB inputs, strategy intent, ENTRY product, identity mapping, statuses/quantities and error paths.
+B11-B4. Which position classes are allowed not to hold the process open? Verify the exact broker-protected product set and whether unknown/conflicting identity is treated conservatively.
+B11-B5. What happens if position lookup fails, identity is unresolved/conflicting, or active-position count is unknown?
+B11-B6. How does HARD_KILL flatten-in-progress affect self-exit? Identify the sentinel/return states and the caller's interpretation.
+B11-B7. Does this shutdown path close/square off positions itself? Separate its lifecycle gate from B-010's EOD square-off and broker-side protection.
+B11-B8. What logs, reports, or notifications are emitted when self-exit is deferred or proceeds? Identify exact payload fields and best-effort/failure handling.
+
+C. _shutdown() SEQUENCE AND COMPONENT LIFECYCLE
+B11-C1. Locate the complete _shutdown() definition and enumerate its exact ordered steps.
+B11-C2. For every component passed to _shutdown, record whether it is stopped, joined, closed, flushed, or merely notified. Cover signal processor, entry gate, smart target, reconciler, monitor, live feed, candle store, webhook receiver, clock-skew probe, token monitor, TGT retry manager, S&R detector/zone warmer/retest monitor/structure exit manager, V3 components, PB-01 workers and kill-switch flatten worker where applicable.
+B11-C3. What timeout applies to each join/stop/close? Identify daemon versus non-daemon threads where established. Do not assume all workers are stopped because they are passed as arguments.
+B11-C4. In what order are webhook ingress, signal processing, order monitoring/reconciliation, exit management, and state persistence stopped? Explain possible in-flight work at each boundary.
+B11-C5. Does shutdown cancel outstanding broker orders or close open positions? Trace explicit calls; if absent from the reviewed shutdown path, say so without claiming no other code path can do it.
+B11-C6. How are exceptions from individual stop operations handled? Does one failure prevent later components from being cleaned up?
+B11-C7. How is the StateStore/WAL flushed/checkpointed/closed? Exact order, checkpoint mode, failure handling and DB connection implications.
+B11-C8. Is a SHUTDOWN system event written? What fields/reason/mode are recorded, and at what point relative to store closure?
+B11-C9. What does _shutdown return or signal to main()? What exit code follows successful cleanup and which exceptions map to non-zero codes?
+B11-C10. Is shutdown idempotent or protected against concurrent/repeated calls? State only what the code proves.
+
+D. EXTERNAL STOP, TIMEOUT AND FLATTEN DRAIN
+B11-D1. What does the checked-in systemd unit declare for KillSignal, TimeoutStopSec, Restart, RestartSec and RestartPreventExitStatus? Include path and lines.
+B11-D2. How does SIGINT/SIGTERM from an operator/system manager map to the Python shutdown path? Verify the actual source handler rather than relying on the unit comment.
+B11-D3. Trace the HARD_KILL flatten-in-progress drain. What starts it, what is polled/waited, the exact grace period, timeout outcome and CRITICAL notification?
+B11-D4. Distinguish internal self-exit (after position gate) from external stop with residual exposure or flatten still in progress.
+B11-D5. If the external 30-second service stop timeout expires, what does source/config say may happen? Mark actual systemd enforcement and real-host occurrence UNKNOWN unless independently evidenced.
+B11-D6. Does the code guarantee all broker positions are flat before any external stop? If not, state the boundary precisely.
+
+E. WORKERS, THREADS AND RESOURCE CLEANUP
+B11-E1. Inventory the threads/workers and services whose lifecycle is relevant to shutdown. Include exact creation/start path and corresponding stop path, or mark no stop path found within searched scope.
+B11-E2. Which workers receive the shared shutdown_event? Which have independent stop events or loops? Do not conflate the two.
+B11-E3. Are HTTP/webhook servers stopped, and if so how? Include server implementation, bind/listen and close/join sequence.
+B11-E4. Are executors/thread pools (including gate-release pool) shut down? Determine wait/cancel_futures semantics and whether any pool can keep the process alive.
+B11-E5. Are live feed/WebSocket, candle writer/store, token monitor, clock probe, target retry, reconciler and order monitor each stopped and joined? Give per-component evidence.
+B11-E6. Are file handlers, logging, telemetry, metrics/health HTTP servers, SQLite handles and other resources explicitly closed? List confirmed actions and unknowns.
+B11-E7. What is the shutdown behaviour if a component was never started, already stopped, or its is_alive/stop method raises?
+
+F. PAPER/LIVE, SCHEDULE AND RUNTIME BOUNDARIES
+B11-F1. Does shutdown behaviour branch by paper/live mode? Enumerate source-level differences only.
+B11-F2. What is the role of service_window_end versus market_close, entry_end, eod_entry_cutoff, eod_squareoff_time and the 17:35 service cutoff? Keep each control distinct.
+B11-F3. Does the watchdog use the system clock directly or time_authority? How is timezone awareness established and what happens on clock/read errors?
+B11-F4. How does special-session configuration affect service self-exit, if at all? Distinguish it from the EOD square-off time.
+B11-F5. What happens on weekends/holidays, late starts, starts after the configured window, or a missed self-exit? Trace source paths and defer restart consequences to B-012.
+B11-F6. Does cron or token-watcher participate in normal shutdown/next-day restart? Identify source links only; actual installed schedules/runtime are outside this task.
+
+G. TESTS, DOCUMENTATION AND HISTORICAL EVIDENCE
+B11-G1. Identify relevant tests by path and the exact behaviour they assert. Do not run them. If tests are numerous, inventory them and inspect only those that directly exercise B-011.
+B11-G2. Do tests cover signal handlers, self-exit position classification, unresolved/conflicting identity, flatten drain, stop timeout, each component cleanup, DB flush and exit codes? Mark coverage NOT ESTABLISHED where no test was inspected.
+B11-G3. Identify README, systemd unit, deployment docs, config comments and source docstrings relevant to shutdown. Record contradictions/documentation drift.
+B11-G4. Are any historical records in the production repo relevant to shutdown/self-exit/overnight process lifecycle? Read only if relevant and safe; state date, deployed commit and scope. Do not inspect the separate records repository.
+B11-G5. What evidence would be required to prove shutdown actually occurred on a particular host/date? Do not contact the host; list evidence types as UNKNOWN here if absent.
+B11-G6. Which relevant source/test/docs files were not read? Provide an explicit inventory and reason.
+
+H. END-TO-END TRACE AND COMPLETENESS
+B11-H1. Trace normal scheduled self-exit: runtime loop → configured window end → position identity/read → flatten gate → shutdown event → ordered cleanup → return code → declared supervisor interpretation.
+B11-H2. Trace external stop with no active position and no flatten in progress.
+B11-H3. Trace external stop with an INTRADAY survivor or unresolved/conflicting position.
+B11-H4. Trace external stop while HARD_KILL flatten is in progress, including the bounded drain and timeout risk.
+B11-H5. Trace a component stop exception and the resulting cleanup/exit path.
+B11-H6. Provide one source-to-consumer table with: component; source path/function/lines; input; calculation/logic; guard; output/state change; storage/handoff; next consumer; error/timeout behaviour; evidence status.
+B11-H7. List every unresolved question and separate source fact, interpretation, known defect/doc drift, historical record fact and host/runtime unknown.
+
+REQUIRED FINAL OUTPUT
+Return TWO UTF-8 text files to Rama; do not draft the manual yet:
+1. B-011_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt
+2. B-011_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt
+
+The answers file must include every ID B11-A1 through B11-H7 exactly once in a status table, then detailed evidence-backed answers grouped by the same sections. Preserve unknowns.
+The source inventory/method file must list pinned commit, paths read with line ranges, paths searched and search scope, relevant tests inventoried/read (not run), records read/not read, security/masking checks, any process exceptions, and explicit statements that no code/tests/host/broker/DB/service/cron were run or contacted.
+Do not create B-011 manual, reconciliation, design proposals or V2 decisions. Do not edit/commit/push. Stop after returning the two files.

@@ -1,0 +1,314 @@
+B-011 SHUTDOWN: CLAUDE REPOSITORY ANSWERS
+Date: 20-Oct-2026 (IST)
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (all line numbers are at this commit)
+Method, file list, search scopes and the process exception: B-011_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt
+
+Labels: SOURCE = FACT (SOURCE-VERIFIED) at 970aabf. CONFIG = configuration declaration at 970aabf. TEST = test read, never run. RECORD = RECORD-DERIVED (record date and deployed commit given). INTERP = INTERPRETATION. DEFECT = KNOWN DEFECT. DRIFT = KNOWN DOC DRIFT. UNKNOWN = UNKNOWN / NOT ESTABLISHED.
+Nothing here says that a checked-in unit, cron declaration, test or code path was installed or executed on any host.
+
+======================================================================
+1. STATUS TABLE (every ID once)
+======================================================================
+| ID | Status |
+|---|---|
+| B11-A1 | SOURCE-ANSWERED |
+| B11-A2 | SOURCE-ANSWERED |
+| B11-A3 | SOURCE-ANSWERED |
+| B11-A4 | SOURCE-ANSWERED |
+| B11-A5 | SOURCE-ANSWERED |
+| B11-A6 | PARTIALLY ANSWERED |
+| B11-B1 | SOURCE-ANSWERED |
+| B11-B2 | SOURCE-ANSWERED |
+| B11-B3 | SOURCE-ANSWERED |
+| B11-B4 | SOURCE-ANSWERED |
+| B11-B5 | SOURCE-ANSWERED |
+| B11-B6 | SOURCE-ANSWERED |
+| B11-B7 | SOURCE-ANSWERED |
+| B11-B8 | PARTIALLY ANSWERED |
+| B11-C1 | SOURCE-ANSWERED |
+| B11-C2 | PARTIALLY ANSWERED |
+| B11-C3 | PARTIALLY ANSWERED |
+| B11-C4 | SOURCE-ANSWERED |
+| B11-C5 | SOURCE-ANSWERED |
+| B11-C6 | SOURCE-ANSWERED |
+| B11-C7 | SOURCE-ANSWERED |
+| B11-C8 | SOURCE-ANSWERED |
+| B11-C9 | SOURCE-ANSWERED |
+| B11-C10 | PARTIALLY ANSWERED |
+| B11-D1 | SOURCE-ANSWERED |
+| B11-D2 | SOURCE-ANSWERED |
+| B11-D3 | SOURCE-ANSWERED |
+| B11-D4 | SOURCE-ANSWERED |
+| B11-D5 | PARTIALLY ANSWERED |
+| B11-D6 | SOURCE-ANSWERED |
+| B11-E1 | PARTIALLY ANSWERED |
+| B11-E2 | PARTIALLY ANSWERED |
+| B11-E3 | PARTIALLY ANSWERED |
+| B11-E4 | PARTIALLY ANSWERED |
+| B11-E5 | SOURCE-ANSWERED |
+| B11-E6 | PARTIALLY ANSWERED |
+| B11-E7 | PARTIALLY ANSWERED |
+| B11-F1 | SOURCE-ANSWERED |
+| B11-F2 | SOURCE-ANSWERED |
+| B11-F3 | SOURCE-ANSWERED |
+| B11-F4 | SOURCE-ANSWERED |
+| B11-F5 | PARTIALLY ANSWERED |
+| B11-F6 | PARTIALLY ANSWERED |
+| B11-G1 | PARTIALLY ANSWERED |
+| B11-G2 | PARTIALLY ANSWERED |
+| B11-G3 | SOURCE-ANSWERED |
+| B11-G4 | SOURCE-ANSWERED |
+| B11-G5 | UNKNOWN / NOT ESTABLISHED |
+| B11-G6 | SOURCE-ANSWERED |
+| B11-H1 | SOURCE-ANSWERED |
+| B11-H2 | SOURCE-ANSWERED |
+| B11-H3 | SOURCE-ANSWERED |
+| B11-H4 | SOURCE-ANSWERED |
+| B11-H5 | SOURCE-ANSWERED |
+| B11-H6 | PARTIALLY ANSWERED |
+| B11-H7 | SOURCE-ANSWERED |
+Count: 56 (A6, B8, C10, D6, E7, F6, G6, H7).
+
+======================================================================
+A. SHUTDOWN TRIGGERS
+======================================================================
+B11-A1 (SOURCE)
+Writers of the shutdown event, searched across all 330 non-test .py files:
+- main.py 116: module global `_shutdown_event = threading.Event()`.
+- main.py 1570-1579 `_install_signal_handlers`: SIGINT and SIGTERM handler calls `_shutdown_event.set()` (1573). Installed at main.py 3958.
+- main.py 1525: the eod-self-exit thread calls `shutdown_event.set()` (the same object, passed at 4141).
+- main.py 1629: `_shutdown()` sets it again as its first act.
+No other `.set()` of this event was found in the scope. main.py 4009-4020 records that the post-start webhook self-check USED to set it (cause of the 17-Jul outage) and since 27-Jul degrades and alarms instead; utils/startup_checks.py 805 carries the same note.
+Keyboard interrupt: Ctrl+C delivers SIGINT, which goes to the same handler. No `except KeyboardInterrupt` was found in main.py's tail (4285-4293).
+Other exits that are not the shutdown event: main() returns early (holiday or weekend 0, outside start window 0, lock failure 1; main.py 2085-2190); `_main_locked` returns 5, 4, 6, 3, 9 or 1 on start-up failures (2201-3899); uncaught exceptions map to exit 1 or 2 (4288-4293). These paths never reach `_shutdown()`.
+
+B11-A2 (SOURCE)
+main.py 1570-1579. SIGINT and SIGTERM; each registration is in try/except (OSError, ValueError). The handler logs the signal and calls `_shutdown_event.set()`. It does not call `_shutdown()`, exit or raise. Registration call: main.py 3958.
+
+B11-A3 (SOURCE)
+- Request to stop: a signal, or the self-exit decision.
+- `_shutdown_event.set()`: only a flag. The main thread is parked in `_shutdown_event.wait()` (main.py 4249); workers that were given the event see it.
+- `_shutdown()` (1599-1831): the ordered cleanup, run once by the main thread after the wait returns (4252-4277).
+- Return from main(): `_main_locked` returns 0 (4278); main()'s `finally` releases the instance lock (2085-2190).
+- Process exit: `sys.exit(main())` (4287). INTERP: the interpreter then waits for any non-daemon thread still alive; the HARD_KILL flatten worker is non-daemon (capital/kill_switch.py 1189-1197), so a worker that outlived the 15 s drain keeps the process alive after "Shutdown complete".
+
+B11-A4 (SOURCE)
+Only sets the event. main.py 1525 `shutdown_event.set()` then return; it never calls `_shutdown`. Caller: started at main.py 4135-4156 (daemon thread "eod-self-exit"). Consumer: the main thread's `_shutdown_event.wait()` at 4249, which then calls `_shutdown(...)` at 4252.
+
+B11-A5 (SOURCE)
+main.py 4129-4133: armed only if NOT (`--interactive` OR `--resume` OR env `TS_IGNORE_MARKET_WINDOW == "1"`). When not armed, no self-exit thread starts; the process then stops only by signal or an exception. `--status` and `--dry-run` return before the runtime loop (main() bypass list, 2085-2190); their exact exit path was not traced line by line.
+
+B11-A6 (PARTIAL)
+Search: `_shutdown_event`, `shutdown_event.set()` and `_shutdown(` across the 330 non-test .py files. Verified: only main.py writes the event. broker/rate_limiter.py 156 and 236-237 READ it (abort a wait). main.py 4109 and 4119 pass it to the pre-alert and margin-sync threads (readers). Scripts that stop the service from outside (for example a systemctl call in a script) were not searched for; the 330-file scope covers Python only, not shell files or cron.
+
+======================================================================
+B. EOD SELF-EXIT GATE
+======================================================================
+B11-B1 (SOURCE, CONFIG)
+- Declared: config/system_config.yaml 112 `service_window_end: "17:35"` (comment 105-111).
+- Schema default "16:00" (core/config_loader.py 98); validator 179-188 requires market_close <= service_window_end < SERVICE_WINDOW_END_MAX (18:15, the forward-shadow recorder's cron time, 62-70), else ValueError at boot.
+- Parsed once: main.py 2211 `_parse_hhmm` (613-616, splits "HH:MM", no further check); boot banner 2212-2216 (2041-2052).
+- Passed: main.py 4142 `window_end=_service_window_end`.
+- Timezone: compared against `core.time_authority.now_ist()` (1355), so IST wall clock. The YAML value itself carries no zone.
+
+B11-B2 (SOURCE)
+`_eod_self_exit_due` (main.py 1230-1326): if `now.time() < window_end` return (False, -1), so due needs now >= window_end. No trading-day, holiday or special-session check inside the gate or the thread. Due iff the flatten gate is clear AND active count == 0. The thread first sleeps until today's window_end (1393-1402), then polls every 60 s (1558-1560).
+
+B11-B3 (SOURCE)
+- Read: `store.get_active_positions_with_identity()` (core/state_store.py 658-): trades in OPEN, PARTIAL or PENDING_FILL, with `strategy` and the ENTRY order's product (LEFT JOIN; NULL if no ENTRY row). The docstring records 148 of 743 trades with no ENTRY row on 25-Aug (RECORD-like comment, not verified).
+- `_resolve_position_pipeline` (1121-1148): strategy intent first (`strategy_intent_fn` from loaded strategies, 4135-4156), then entry product via PRODUCT_TO_INTENT. Outcome INTRADAY, DELIVERY, CONFLICT or UNRESOLVED.
+- `_position_requires_service` (1164-1179) and `_classify_active_positions` (1182-1227) count positions that keep the service up and attach notes: intraday_survivor, delivery_without_broker_protection, conflict, unresolved.
+- Quantities are not examined in the gate; status set only.
+
+B11-B4 (SOURCE)
+`_BROKER_PROTECTED_PRODUCTS = frozenset({"CNC"})` (main.py 1161). Only a DELIVERY position whose entry product is CNC lets the service exit. CONFLICT and UNRESOLVED keep it up (conservative). TEST: test_eod_lifecycle_pipeline_aware.py test_only_cnc_is_treated_as_broker_protected, test_t3_*, test_t3b_*.
+
+B11-B5 (SOURCE)
+- Identity read raises: logs error, falls back to `count_active_positions()` (product-blind; any active trade keeps the service up).
+- That fallback raises: returns (False, -1): not due, retried next poll.
+- Non-sequence read: falls back (TEST test_a_non_sequence_read_falls_back_instead_of_reading_as_flat).
+- `strategy_intent_fn is None`: CRITICAL log at thread start (1377-1389) and the product-blind path is used (TEST test_without_a_strategy_resolver_*, test_p3d_*).
+- CONFLICT, UNRESOLVED, delivery-without-protection: counted as requiring service; `_report_unresolved` sends CRITICAL via send_alert_recorded, once per position (latch 1408).
+
+B11-B6 (SOURCE)
+`flatten_in_progress_fn` = kill_switch.is_flatten_in_progress (4135-4156; capital/kill_switch.py 1152-1163: True while FlattenState is RUNNING or DRAINING). Checked before the position read. True or raising: (False, -2) (`_ACTIVE_FLATTEN_IN_PROGRESS = -2`, main.py 1064). The thread warns once and keeps polling; it never exits while a flatten is in progress. TEST test_t5c_flatten_gate_still_wins_and_is_checked_first.
+
+B11-B7 (SOURCE)
+No. The gate and thread only read and alert; neither places, cancels nor closes positions. Square-off is B-010 (EOD routine 15:17 and MIS passes). CNC carry relies on broker-side delivery holding, not on this path. INTERP: an INTRADAY survivor after window_end keeps the process up indefinitely, polling; nothing in this path flattens it.
+
+B11-B8 (PARTIAL)
+SOURCE: proceed: INFO log, then notifier alert titled "EOD Clean Shutdown" (INFO), then event set. Deferred: warning log and an "EOD shutdown deferred" alert (warned once per state via warned_not_flat); flatten in progress: warn once; identity problems: CRITICAL via send_alert_recorded. Each send is wrapped so a failure is logged and the loop continues. The exact body field list of each payload was not transcribed line by line (UNKNOWN at field level).
+
+======================================================================
+C. _shutdown()
+======================================================================
+B11-C1 (SOURCE)
+main.py 1599-1831, in order:
+1 `_shutdown_event.set()`; log "Shutdown initiated" (1629-1630)
+2 kill_switch.drain_flatten(timeout=15.0) if kill_switch given (1643-1656)
+3 effect_telemetry.emit_census
+4 if `_broker_auth_failed`: `_invalidate_token()`
+5 webhook_receiver.stop  6 signal_proc.stop  7 sr_detector.stop  8 market_regime_runner.stop  9 portfolio_allocator.stop  10 v3_chain.stop  11 pb01_entry_stage.stop  12 pb01_capture_worker.stop  13 retest_monitor.stop  14 structure_exit_manager.stop  15 zone_warmer.stop  16 entry_gate.stop  17 smart_tgt.stop  18 tgt_retry_manager.stop  19 order_reconciler.stop  20 order_monitor.cancel_all_entry_orders()  21 order_monitor.stop  22 clock_skew_probe.stop  23 token_monitor.stop  24 live_feed.disconnect  25 candle_store.stop
+26 notifier.send INFO "System Stopping" (body "Version ... IST") (~1795-1804)
+27 store.insert_system_event("SHUTDOWN", timestamp) (1805-1812)
+28 store.checkpoint_wal() PASSIVE (1815-1825)
+29 store.close() (1827-1830)
+30 log "Shutdown complete" (1831)
+Optional components are skipped when None.
+
+B11-C2 (PARTIAL) - see section H6 table. Summary: stopped and joined (bounded): signal_proc, entry_gate, order_reconciler, order_monitor, clock_skew_probe, token_monitor, tgt_retry_manager, live_feed (watchdog). Notified only (flag set, no join): webhook_receiver, candle_store. smart_tgt: callback unregistered, in-flight modifies flushed (5 s), executor shut. Optional V3/SNR components: stop() called; their bodies not read in B-011 (B-006 section 3 cross-reference).
+
+B11-C3 (PARTIAL, SOURCE)
+signal_proc: dispatcher join 10 s, then executor.shutdown(wait=True) UNBOUNDED, then screener.shutdown (signals/signal_processor.py 326-347). entry_gate: poll join 5 s + executor shutdown(wait=False) + fixed sleep 3 s (screening/entry_gate.py 241-258). smart_tgt: flush 5 s, shutdown(wait=False, cancel_futures=True) (orders/smart_tgt_manager.py 206-226). order_reconciler 5 s (orders/order_reconciler.py 457-463). order_monitor 5 s (broker/order_monitor.py 516-521). clock_skew_probe 2 s (broker/clock_skew_probe.py 89-92). token_monitor 5 s (broker/token_monitor.py 114-119). tgt_retry 5 s (orders/tgt_retry_manager.py 122-127). live_feed watchdog check interval + 1 s (data/live_feed.py 153-167). candle_store none (data/candle_store.py 120-122). Flatten drain 15 s. Sum of stated bounds before step 26 exceeds 30 s only if several joins hit their limits (INTERP). Daemon flags: flatten worker non-daemon (kill_switch 1193-1197); self-exit thread daemon; other threads' daemon flags not re-read here (B-006).
+
+B11-C4 (SOURCE + INTERP)
+Order: flatten drain, ingress (webhook 503 for new requests; in-flight requests continue, signals/webhook_receiver.py 483-490, 1166-1176), signal processing, SNR/V3 workers, entry gate, exit management (smart_tgt, tgt_retry), reconciler, monitor (entry orders cancelled first), probes, live feed, candles, then persistence. INTERP: a webhook request in flight after step 5 can still hand a signal to signal_proc until its stop; Flask has no stop (entry_gate comment in _shutdown) so its thread lives until process exit; ticks still arrive until step 24, after exit managers stopped.
+
+B11-C5 (SOURCE)
+Only ENTRY-leg orders tracked by order_monitor are cancelled (broker/order_monitor.py 530-590; legs "" or "ENTRY"); SL, TGT and EOD legs are kept. No position is closed by `_shutdown`. Other paths that close positions (B-010 EOD, kill switch) are outside this answer.
+
+B11-C6 (SOURCE)
+Each step is in its own try/except Exception with log.error (checkpoint: warning); the sequence continues. A hang (not an exception) does block later steps (INTERP from unbounded executor.shutdown(wait=True)).
+
+B11-C7 (SOURCE)
+After all stops: SHUTDOWN event insert, then `checkpoint_wal()` = `PRAGMA wal_checkpoint(PASSIVE)` (core/state_store.py 266-283), failure logs warning; then `store.close()` closes only the calling thread's connection (251-264): other threads' connections stay open until they close themselves.
+
+B11-C8 (SOURCE)
+Yes, `insert_system_event(event_type="SHUTDOWN", timestamp=now_ist_iso)` (main.py 1805-1812), before checkpoint and close. No reason or mode field: `_shutdown` accepts `mode` (1625) and the caller passes `mode_label` (4276), but it is not written to the event. INTERP: the event does not say whether the stop was self-exit, signal or flatten-timeout.
+
+B11-C9 (SOURCE)
+`_shutdown` returns None; `_main_locked` returns 0 (4278) regardless of step failures; main() returns it; `sys.exit(0)`. TradingSystemError escaping main() gives 1, any other Exception 2 (4288-4293). Start-up codes: 5 config load (2201), 4 (2290, kill switch HALT per unit comment), 6 (2370-2374, 2552: credential/env), 3 (several start-up check failures), 9 (2572), 1 (3899). Meanings of 4, 6 and 9 taken from nearby log lines and comments; not traced fully.
+
+B11-C10 (PARTIAL)
+No guard flag or lock around `_shutdown` was found; it is called from one place (4252), once. Event setting is idempotent. Component stops: signal_proc and entry_gate return early if not running; others re-set events and re-join harmlessly (INTERP). Concurrent invocation is not possible from source paths found, but no explicit protection exists.
+
+======================================================================
+D. EXTERNAL STOP AND SUPERVISOR
+======================================================================
+B11-D1 (CONFIG) deploy/systemd/trading-system.service (blob 3d97c92c): KillSignal=SIGINT (24); TimeoutStopSec=30 (25); Restart=on-failure (33); RestartSec=10 (34); RestartPreventExitStatus=3 4 5 (35). Installation on any host: UNKNOWN.
+
+B11-D2 (SOURCE) SIGINT (declared KillSignal) and SIGTERM both reach the handler at main.py 1570-1579, which only sets the event; the main thread then runs `_shutdown` (4249-4252). The unit comment (22-23) "Ctrl+C handler ... SHUTDOWN event, DB flush" matches source in substance.
+
+B11-D3 (SOURCE)
+Started by a HARD_KILL: `_dispatch_flatten_worker` (capital/kill_switch.py 1165-1227), single-flight, state RUNNING, non-daemon thread "ks-hard-kill-flatten"; if thread start fails it runs inline. Worker sets COMPLETE in finally (1229-1258). Drain: `drain_flatten(timeout)` (1260-1306): returns True if not RUNNING/DRAINING; if inline (no handle) CRITICAL and False; else DRAINING, `join(timeout)`, False if still alive (state left DRAINING), else COMPLETE and True. `_shutdown` passes 15.0 s (`_FLATTEN_DRAIN_GRACE_SEC`, main.py 1075, 1624, 1645). False: CRITICAL log "SHUTDOWN WITH FLATTEN STILL RUNNING ... POSITIONS MAY REMAIN OPEN AT THE BROKER" (1646-1652). This is a log record only; no notifier.send in that branch. Exception: CRITICAL, continue.
+DRIFT: drain_flatten's docstring (1266-1270) says the internal self-exit uses timeout=None; source always passes 15 s. INTERP: harmless for self-exit, which cannot be due while a flatten is in progress.
+
+B11-D4 (SOURCE + INTERP)
+Internal: event set only after now >= window_end, no flatten in progress and zero positions requiring service; then the 15 s drain returns immediately. External: no position or flatten check before the handler sets the event; `_shutdown` drains at most 15 s, then stops everything, leaving any residual intraday position unmanaged by the process (broker-side SL legs kept, C5).
+
+B11-D5 (PARTIAL)
+CONFIG: TimeoutStopSec=30. INTERP from systemd's documented behaviour (not verified here): after 30 s without exit the manager escalates (normally SIGKILL), which would kill the non-daemon flatten worker and skip remaining cleanup steps. Actual enforcement and any real occurrence: UNKNOWN.
+
+B11-D6 (SOURCE) No. External stops do not consult positions; only the internal self-exit gate does, and that gate reads the DB, not the broker book.
+
+======================================================================
+E. COMPONENT LIFECYCLE
+======================================================================
+B11-E1 (PARTIAL) Stop paths per component: H6 table. Threads not stopped by `_shutdown` (found in main.py): EOD squareoff poller, MIS pollers, pre-alert (4103-4110), margin-sync (4113-4121), eod-self-exit, health server/waitress and the webhook Flask thread (4000). They end at process exit if daemon (B-006 TH rows). Creation lines for every component were not re-read in B-011.
+
+B11-E2 (PARTIAL) Given the shared event: rate limiter (abort waits), pre-alert thread, margin-sync thread, eod-self-exit thread. Independent stop events: signal_proc, entry_gate, order_reconciler, order_monitor, clock_skew_probe, token_monitor, tgt_retry, live_feed, candle_store, webhook sweeper. Others not checked.
+
+B11-E3 (PARTIAL) webhook_receiver.stop only sets `_shutting_down` and `_sweeper_stop` (signals/webhook_receiver.py 1166-1176); new requests get 503. No server close/join; the Flask thread is not stopped (comment at the entry_gate step). Bind/listen details not re-read (B-006).
+
+B11-E4 (PARTIAL) signal_proc executor shutdown(wait=True, cancel_futures=False), unbounded; entry_gate executor shutdown(wait=False) then 3 s sleep (workers orphaned if still running); smart_tgt modify executor shutdown(wait=False, cancel_futures=True) after 5 s flush. INTERP: ThreadPoolExecutor workers are joined at interpreter exit by Python's atexit hook, so a stuck worker can delay exit. Gate-release pool and other pools: not separately traced.
+
+B11-E5 (SOURCE) see C3; every one of these has a stop and bounded join except candle_store (event only) and live_feed's consumer (ticker.close, watchdog join only).
+
+B11-E6 (PARTIAL) Confirmed: main-thread SQLite connection closed; WAL PASSIVE checkpoint; instance lock released in main()'s finally. Not found in `_shutdown`: logging handler flush/close (Python's logging.shutdown at exit is standard behaviour, INTERP), telemetry beyond emit_census, health HTTP server stop, other threads' DB connections.
+
+B11-E7 (PARTIAL) None-valued optional components are skipped. signal_proc and entry_gate return early if not running. Others whose thread is None skip the join. A raising stop is caught by `_shutdown` (C6). is_alive is not used by `_shutdown`.
+
+======================================================================
+F. MODE, TIME, CALENDAR
+======================================================================
+B11-F1 (SOURCE) No branch on mode in `_shutdown`; `mode` is accepted and unused (C8). order_monitor docstring says paper cancel is simulated (542). Live-only for V2 (DR-001); legacy paper paths not traced.
+
+B11-F2 (SOURCE, CONFIG) trading_hours ordering (core/config_loader.py 165-177): market_open <= entry_start < entry_end <= eod_entry_cutoff <= eod_squareoff_time <= market_close; then market_close <= service_window_end < 18:15. service_window_end (17:35) is only the self-exit time; EOD square-off (B-010) and entry cutoffs are separate controls.
+
+B11-F3 (SOURCE) Thread uses `core.time_authority.now_ist` (main.py 1355, 1393-1400, 1491, 1558-1560) and `time.sleep`. Clock read errors inside the thread: not separately handled in the lines read (UNKNOWN). Time authority internals: B-001/B-006 cross-reference, not re-read.
+
+B11-F4 (SOURCE, CONFIG) special_sessions moves market_open, market_close and eod_squareoff per date (core/market_windows.py 46-119; main.py 446-470, 2318-2334). service_window_end is not moved; system_config.yaml 86-89 states the same limitation for the MIS cutoff. INTERP: on a late special session the 17:35 self-exit can fall before the session's close; the validator checks only the base config.
+
+B11-F5 (PARTIAL) Weekend or holiday: main() returns 0 before start (2096-2133, holiday sentinel file under logs/). After the start cutoff: return 0 unless bypassed. Started after window_end the same day: thread computes target in the past and goes straight to polling (INTERP from 1393-1402). Missed self-exit (positions stay): process stays up past midnight; the target is computed once from the start date, so polling continues (INTERP); main.py 1377-1389 comment states the 15:15 SOFT_KILL then never auto-clears and the next day takes no entries. Restart consequences: B-012.
+
+B11-F6 (PARTIAL) core/config_loader.py 63-67 names the cron registry's forward_shadow_record at 18:15 as the bound for service_window_end. Token-watcher and next-day start by cron or timer: not traced in B-011 (B-012). Installed schedules: UNKNOWN.
+
+======================================================================
+G. TESTS, DOCS, RECORDS
+======================================================================
+B11-G1 (PARTIAL, TEST, not run)
+- tests/unit/test_eod_lifecycle_pipeline_aware.py (571 lines): 23 tests listed by name; they assert delivery-only CNC carry exits, intraday survivor/conflict/unresolved stay up and report, empty book exits, before-window unchanged, flatten gate checked first, fallback on bad read, resolver truth table, only CNC protected, count_active_positions stays product-blind and its consumers unchanged, production resolver not None and resolves every shipped strategy, missing resolver announced. Assertions read by name and selected bodies, not every line.
+- tests/unit/test_fix129_graceful_shutdown.py (178 lines): cancel_all_entry_orders cancels ENTRY, keeps exit legs, empty list, failure non-fatal, unset leg treated as ENTRY, count returned.
+- Inventoried by name only, not read: tests/unit/test_main.py, tests/unit/test_kill_switch.py, tests/integration/test_hard_kill_flatten_chain.py, tests/crash_test/test_kill_switch_edges.py, tests/unit/test_webhook_receiver.py, tests/unit/test_clear_kill_switch.py, tests/unit/test_kill_switch_product_filter.py, tests/unit/test_mo1_flatten_quote_key.py.
+
+B11-G2 (PARTIAL) Covered by tests read: position classification, unresolved/conflict, flatten gate precedence, entry-order cancel. NOT ESTABLISHED in tests read: signal handlers, `_shutdown` order, drain timeout, each component cleanup, DB checkpoint/close, exit codes (test_main.py and kill-switch tests not read).
+
+B11-G3 (SOURCE)
+- README.md 60: "starts the workers, and self-exits cleanly after the service window" (consistent, unqualified).
+- Unit 22-35 comments; 28 "Exit 0 = holiday guard shutdown or normal EOD completion". DRIFT: exit 5 is in RestartPreventExitStatus but the comment block names only 0, 3, 4, 1/2; exits 6 and 9 are not mentioned (they would be restarted).
+- DRIFT: drain_flatten docstring timeout=None vs 15 s passed (D3).
+- DRIFT: order_monitor docstring mentions paper mode.
+- main.py 4123-4128 comment: self-exit was hardcoded 16:00 until 25-Jul-2026; schema default still "16:00" (core/config_loader.py 98).
+- RECORD liveness_alarm_17jul2026.md cites main.py 983-990 and a 16:00 window at its own commit; superseded by current source.
+
+B11-G4 (RECORD)
+- docs/audit/s4_boot_outage_17jul2026.md (17-Jul-2026; S4 commit 84cee3e named): a failed post-start /health check set `_shutdown_event`, a graceful exit 0, 0 trades that day; systemd did not restart (Restart=on-failure).
+- docs/audit/liveness_alarm_17jul2026.md (built and deployed 17-Jul-2026): a clean exit 0 has the same systemd signature as an operator stop; liveness probe added. Out-of-scope note on the "`_shutdown_event.set()` halts the day" design question.
+Both are proof only of their own date and commit.
+
+B11-G5 (UNKNOWN) Evidence that would prove a shutdown on a host and date, none inspected: journal lines "Shutdown initiated" / "Shutdown complete"; SHUTDOWN row in system_events; systemd unit status and exit code; liveness probe output; broker book at the time.
+
+B11-G6 (SOURCE) Files not read: listed in the inventory, section 5.
+
+======================================================================
+H. WALKTHROUGHS AND TABLE
+======================================================================
+B11-H1 Normal self-exit
+Thread starts (4135-4156) → sleeps to today 17:35 IST (1393-1402) → poll: flatten gate (False) → identity read → classify → 0 requiring service → INFO log + "EOD Clean Shutdown" alert → event set (1525) → main wait returns (4249) → `_shutdown` steps 1-30 (drain returns True at once) → return 0 → sys.exit(0) → unit: Restart=on-failure does not restart exit 0 (declared).
+
+B11-H2 External stop, flat, no flatten
+SIGINT/SIGTERM → handler sets event → `_shutdown`: drain True → stops → entry orders cancelled → SHUTDOWN event → checkpoint → close → exit 0. Identical record to H1 (C8).
+
+B11-H3 External stop with intraday survivor or unresolved position
+No gate is consulted → same as H2. Position remains at the broker with its SL/TGT legs if any (C5); no process manages it afterwards. Not flattened by this path (D6).
+
+B11-H4 External stop during HARD_KILL flatten
+Handler → `_shutdown` → drain_flatten(15 s): worker join; if still alive, CRITICAL log, state DRAINING, cleanup continues and closes the main-thread store connection while the worker may still be using the store through its own connection (INTERP). Process does not exit while the non-daemon worker lives; at 30 s the declared supervisor escalates (D5, UNKNOWN on host). Inline-flatten case: drain returns False immediately with a CRITICAL.
+
+B11-H5 Component stop exception
+E.g. order_reconciler.stop raises → log.error → next step runs → exit 0 still returned (C6, C9). A hang (e.g. signal_proc executor wait) delays all later steps including SHUTDOWN event and checkpoint; under the declared 30 s stop timeout those may never run (INTERP).
+
+B11-H6 Source-to-consumer table
+| Component | Source | Input | Logic | Guard | Output / state | Handoff | Next consumer | Error / timeout | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| Signal handler | main.py 1570-1579 | SIGINT/SIGTERM | log, set event | try on install | event set | `_shutdown_event` | main wait 4249 | install errors ignored | SOURCE |
+| Self-exit thread | main.py 1329-1563 | now_ist, store, flatten fn | sleep to window_end, poll 60 s | `_eod_self_exit_due` | event set or alerts | event | main wait | reads fall back; alerts best-effort | SOURCE |
+| Due predicate | main.py 1230-1326 | now, store, fns | >= window_end, flatten, classify | (False,-1)/(False,-2) | (due, count) | return | thread | fallback count; -1 on failure | SOURCE |
+| Flatten drain | kill_switch 1260-1306 | timeout 15 s | join worker | state RUNNING/DRAINING | True/False | return | `_shutdown` CRITICAL | inline: False; timeout: DRAINING | SOURCE |
+| Webhook receiver | webhook_receiver 1166-1176 | stop call | set flags | none | 503 for new | none | Flask (not stopped) | none | SOURCE |
+| Signal processor | signal_processor 326-347 | stop | set event, join, shutdown pool | `_running` | stopped | none | none | join 10 s; pool unbounded | SOURCE |
+| SNR/V3 optional (7) | stop() calls in `_shutdown` | stop | not read | None skip | not read | n/a | n/a | caught | NOT INSPECTED (B-006) |
+| Entry gate | entry_gate 241-258 | stop | set event, join, pool no-wait, sleep | `_running` | stopped | none | none | 5 s + 3 s | SOURCE |
+| Smart target | smart_tgt_manager 206-226 | stop | unregister, flush, pool cancel, clear memory | executor None | memory cleared, DB kept | DB state | next start | 5 s flush | SOURCE |
+| TGT retry | tgt_retry_manager 122-127 | stop | set event, join | alive check | stopped | none | none | 5 s | SOURCE |
+| Reconciler | order_reconciler 457-463 | stop | set event, join | thread None | stopped | none | none | 5 s | SOURCE |
+| Order monitor cancel | order_monitor 530-590 | watched orders | cancel ENTRY legs | leg filter | broker cancels, CANCELLED, untrack | DB + broker | none | per-order logged | SOURCE |
+| Order monitor | order_monitor 516-521 | stop | set event, join | thread None | stopped | none | none | 5 s | SOURCE |
+| Clock probe | clock_skew_probe 89-92 | stop | set event, join | thread None | stopped | none | none | 2 s | SOURCE |
+| Token monitor | token_monitor 114-119 | stop | set event, join | thread None | stopped | none | none | 5 s | SOURCE |
+| Live feed | live_feed 153-167 | disconnect | event, ticker.close, watchdog join | ticker None | disconnected | none | none | close errors swallowed | SOURCE |
+| Candle store | candle_store 120-122 | stop | set event | none | timer told to stop | none | none | no join | SOURCE |
+| Notifier | main.py ~1795-1804 | text | send INFO | try | Telegram attempt | none | operator | logged | SOURCE |
+| System event | main.py 1805-1812 | timestamp | insert SHUTDOWN | try | DB row (no mode/reason) | DB | B-012 restart | logged | SOURCE |
+| WAL checkpoint | state_store 266-283 | none | PRAGMA PASSIVE | try | WAL frames moved | DB file | next open | warning | SOURCE |
+| Store close | state_store 251-264 | none | close own-thread conn | conn None | closed | none | none | logged | SOURCE |
+| Exit | main.py 4278, 4285-4293 | return | sys.exit | except chain | 0 / 1 / 2 | process | supervisor | n/a | SOURCE |
+
+B11-H7 Unresolved questions
+- SOURCE FACT: external stop never checks positions or flatten beyond 15 s; SHUTDOWN event has no reason or mode; `_shutdown` returns 0 whatever failed.
+- INTERP: non-daemon flatten worker can hold the process past "Shutdown complete"; unbounded signal_proc pool wait can push cleanup past the 30 s stop timeout; store closed while a worker may still write.
+- KNOWN DEFECT candidates (for ChatGPT's reconciliation to classify): mode accepted but not recorded; special-session close later than service_window_end not prevented.
+- DRIFT: drain_flatten docstring; unit exit-code comments; schema default 16:00 vs config 17:35; order_monitor paper mention.
+- RECORD: 17-Jul graceful exit 0 halted a trading day (S4); later changed to degrade (27-Jul, main.py 4007-4027).
+- HOST UNKNOWN: whether the unit is installed as checked in; real stop-timeout escalations; actual shutdown dates; installed cron/timers.

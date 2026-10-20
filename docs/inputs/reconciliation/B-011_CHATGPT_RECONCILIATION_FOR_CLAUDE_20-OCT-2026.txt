@@ -1,0 +1,57 @@
+B-011 SHUTDOWN — CHATGPT RECONCILIATION NOTES
+Date: 20-Oct-2026
+Status: Independent review of Claude's answer and method files; NOT FROZEN.
+Pinned production baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+1. OVERALL ASSESSMENT
+Claude supplied a useful, structured source-backed answer for all 56 IDs and a candid method/inventory file. The central shutdown lifecycle is coherent: internal self-exit waits for the configured service window, checks the DB-derived position identity and flatten state, then sets the event; external SIGINT/SIGTERM skips that position gate; _shutdown drains the hard-kill flatten worker for a bounded interval, then stops components and persists the SHUTDOWN event/checkpoint/close sequence.
+
+This is NOT yet a fully closed source audit. Several lifecycle component stop bodies, tests, deployment docs and the cron registry were not read. Status labels PARTIAL / UNKNOWN should remain. No code or tests were run; no host, broker, database, running service or installed crontab was checked.
+
+2. INDEPENDENT SOURCE SPOT-CHECK
+ChatGPT independently fetched `main.py` lines 1590–1840 from the stated pinned production repository. The returned source supports Claude's main ordering and key details:
+- `_shutdown_event.set()` first.
+- `kill_switch.drain_flatten(timeout=flatten_drain_timeout_sec)` before teardown.
+- census and conditional token invalidation before component stops.
+- webhook receiver stops before signal processor.
+- entry orders are cancelled before order monitor stop; comment explicitly says SL/TGT/EOD legs are preserved.
+- notifier attempt, SHUTDOWN event insert, PASSIVE WAL checkpoint, store close, then “Shutdown complete”.
+- each principal operation has an individual exception handler and cleanup continues.
+- source comment explicitly says Flask has no clean stop and its daemon thread dies on process exit.
+- source comments explain the bounded external-stop drain and possible remaining broker exposure.
+
+This spot-check does not independently validate every line, every component implementation, the tests, historical records, or the complete source inventory. The GitHub response exposed `main.py` at the pinned commit but reported a slice SHA; do not treat that as a full-file hash.
+
+3. HIGH-PRIORITY RECONCILIATION POINTS
+R1 — “Reverse-order shutdown” is a docstring characterization, not a strict reverse of all construction order unless construction order is traced. Prefer describing the actual ordered sequence in the manual.
+R2 — Drain timeout discrepancy: Claude says the `drain_flatten` docstring describes `timeout=None` for internal self-exit, while `_shutdown` passes 15 seconds. The source comments say internal self-exit cannot arrive mid-flatten because the self-exit gate waits first. Record this as doc drift, not automatically a runtime defect.
+R3 — Service-window vs special sessions: source answer says `service_window_end` is not moved by special-session configuration and may precede a late special-session close. Preserve as a source-level limitation; host effects unknown.
+R4 — External stop safety: external stop does not run the position gate. A still-running hard-kill flatten gets at most 15 seconds of drain before teardown continues. This is a source-level exposure boundary; do not say the system always closes positions before exit.
+R5 — `_shutdown` failure semantics: per-step exceptions are generally caught and the caller returns 0. A hang, especially the unbounded signal processor executor wait, can still block subsequent cleanup. Distinguish exception from hang.
+R6 — Shutdown event content: the answer says the SHUTDOWN DB event contains timestamp and event type only, not mode or reason, despite `_shutdown` accepting `mode`. This is supported by the spot-checked source.
+R7 — Test coverage: two tests were read selectively; several named tests were only inventoried. Never describe uninspected tests as proving behaviour.
+R8 — Source inventory scope: the 330 non-test Python search is explicitly bounded. Shell scripts, cron declarations and many docs were not searched. Do not generalize its negative findings to the repository as a whole.
+R9 — Process exception: the README sparse-pattern mistake fetched one never-open blob temporarily, then was removed and the safety check returned to zero. Preserve this method disclosure in the audit trail; do not overstate that the blob was read.
+R10 — Production records: the two July audit records describe their own dates/commits only; they do not establish present-day host configuration or repeated occurrence.
+
+4. STATUS / EVIDENCE LABELS TO PRESERVE
+- SOURCE-VERIFIED: pinned code path inspected, exact path and lines included.
+- CONFIG: checked-in configuration or unit declaration; installation/execution not established.
+- TEST: test source read, never run; only inspected assertions can support the claim.
+- RECORD-DERIVED: historical record scoped to its own date and deployed commit.
+- INTERPRETATION: reasoned implication, not literal source fact.
+- KNOWN DOC DRIFT: comments/docs/config defaults disagree with the current configured value or call behaviour.
+- UNKNOWN / NOT ESTABLISHED: no evidence inspected to settle the point.
+Do not silently upgrade PARTIAL answers.
+
+5. REQUIRED BEFORE FREEZE
+Ask Claude for a targeted supplement only if the user wants the shutdown manual frozen at a stronger completeness level:
+A. Read the stop bodies for the optional components listed in the inventory, and inspect the exact thread/executor lifecycle for the gate-release pool, health server, webhook server and candle store.
+B. Read `tests/unit/test_main.py`, `tests/unit/test_kill_switch.py`, `tests/integration/test_hard_kill_flatten_chain.py` and `tests/crash_test/test_kill_switch_edges.py` only where they directly test shutdown, drain, DB flush and exit codes. Do not run tests.
+C. Inspect cron registry and relevant deployment docs only to document declared scheduling/restart relationships; do not claim installed runtime.
+D. Transcribe exact alert payload fields if the manual needs them.
+E. Resolve the exit-code comment drift by documenting it as drift unless a pinned-source comparison proves a different classification. Do not fix the legacy source.
+If completeness is not expanded, the manual must carry the unanswered items as UNKNOWN / NOT ESTABLISHED and reference the method inventory.
+
+6. GOVERNANCE
+No legacy repair, no V2 design, no code/test execution, no commit/push. This file is a reconciliation aid, not a freeze decision. Rama approval remains required before storing/committing/pushing any manual.
