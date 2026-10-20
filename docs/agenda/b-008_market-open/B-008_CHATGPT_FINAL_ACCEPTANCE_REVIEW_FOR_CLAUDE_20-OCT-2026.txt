@@ -1,0 +1,91 @@
+TRADING SYSTEM — B-008 MARKET-OPEN HANDLING
+CHATGPT VALUE-ADDED REVIEW — REVISION 1 FILES
+Date: 20-Oct-2026
+Status: FINAL ACCEPTANCE REVIEW — REQUIRED CORRECTIONS BEFORE FREEZE
+
+FILES REVIEWED
+1. B-008_manual(1).md
+2. B-008_reconciliation_addendum.md
+3. B-008_review_notes(1).md
+4. B-008_v2_design_inputs(1).md
+5. The screenshot describing Claude's revision and the prior ChatGPT value-added review.
+
+OVERALL VERDICT
+ACCEPT WITH REQUIRED EDITS. Claude has applied nearly all of the prior review correctly. The baseline commit is pinned, the pre-10:00 webhook path is traced, the 16-file/15-row discrepancy is qualified, B-005/B-006/B-007 are correctly identified as frozen, and the PDF is kept outside the repository with its sensitive identifier omitted. The stage table, flow diagram and evidence matrix are useful improvements.
+
+However, the manual still contains one material overgeneralization, and the V2-input file contains an ambiguous statement about whether early alerts were “kept.” Correct these before asking Rama to freeze the package. Do not commit, push or freeze yet.
+
+1. REQUIRED CORRECTION — MANUAL SECTION 8, ITEM 3
+
+Current wording:
+“A pre-10:00 alert was refused with 403 and not kept; any opening setup before 10:00 was lost by design.”
+
+This exceeds the documented evidence. Section 3 expressly says only the intraday Chartink webhook path was traced; alternate ingress and resumption paths were not fully traced, and the PB-01 path remains unresolved. Therefore “any opening setup” and “by design” imply system-wide certainty that the manual itself does not establish.
+
+Replace with a scoped statement such as:
+“On the inspected intraday Chartink webhook path, an alert received before 10:00 was rejected with HTTP 403 before parsing and was not retained as a signal or queued; the request was still represented by a webhook audit row. The effect on other ingress or resumption paths was not established.”
+
+Keep the distinction between:
+- not retained as a signal / not queued; and
+- request audit evidence retained.
+Do not imply the request left no evidence.
+
+2. REQUIRED CLARIFICATION — V2 INPUTS ROW 2
+
+Current legacy finding:
+“Alerts before the window were refused with 403 and not kept.”
+
+“Not kept” is ambiguous and could be read as meaning no record of the request exists, which contradicts the manual's audit-row finding. Change the LEGACY finding to:
+“On the inspected intraday webhook path, alerts before the global entry window were refused with HTTP 403 before parsing; no signal row was stored and nothing was queued, but a webhook audit row was written. Other routes were not fully traced.”
+
+Keep the owner question non-decisional and PROPOSED / OPEN. Do not convert this into a V2 requirement or open/change any VP row.
+
+3. SMALL PRECISION IMPROVEMENT — MANUAL FINAL STATEMENT
+
+Section 2 correctly labels the 09:15 session-open statement as HISTORICAL (Rama). Section 10 says “At the baseline the exchange opened at 09:15...” which can read as source-verified. Preserve the evidence class in the final summary, e.g.:
+“Rama identifies 09:15 IST as the NSE regular-session open; the inspected baseline configures the system entry floor at 10:00 IST...”
+The source-verified point is the configured 10:00 floor, not a host-side record proving when a production session actually opened or traded.
+
+4. SOURCE TRACE AND WORDING CHECKS
+
+These are otherwise satisfactory, subject to one last verification:
+- Source claims are pinned to trading-system-prod-snapshot commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- The 403-before-parse path is scoped to the inspected intraday webhook. The audit-row statement and later time checks are included.
+- The 16-file inventory and 15-row PDF table are reconciled at the list level only. The manual does not claim all 16 were enabled or eligible on 24-Sep.
+- The PDF's “READY · warnings”, Mode Live, job list and 18/45 count remain record-derived, not proof of host identity, installed state, order permission or an order submission.
+- B-005, B-006 and B-007 are correctly frozen and are not reopened.
+- The manual separates source facts, Rama's recollection, the PDF and unknowns.
+- The original 19-Oct reconciliation is preserved; the new addendum is a separate revision artifact.
+- V2 inputs remain PROPOSED / OPEN and no V2 decision is made.
+- No account identifier is reproduced.
+
+Please re-check the exact cited source lines at the pinned commit after the two required wording changes. In particular, do not expand “no signal row stored and nothing queued” beyond the traced branch. Keep B8-OQ1–OQ3 and B8-OQ7–OQ9 open unless new evidence genuinely resolves them.
+
+5. REVIEW NOTES AND PACKAGE CONTROL
+
+The review notes say the earlier ChatGPT review points were all applied and refer to hashes in the delivery reply. After the corrections:
+- Update the review notes to record these two required edits and the final acceptance outcome.
+- Recalculate SHA-256 for all four current deliverables and record the full hashes in the delivery reply or review notes. Do not rely only on 16-character prefixes.
+- Keep the three original B-008 inputs byte-identical; do not overwrite them with revised versions.
+- Preserve the PDF as reference-only and outside the repository unless Rama explicitly changes that decision.
+- Run the Markdown/reference and sensitive-data checks again.
+- Do not commit, push, store as frozen, or declare B-008 closed without Rama's explicit approval.
+
+6. FINAL RECOMMENDATION
+
+Make the two required corrections (manual section 8.3 and V2-input row 2), preferably the small precision edit in section 10, rerun checks, update review notes and return the revised four files for final confirmation.
+
+After those edits, I expect the B-008 package to be acceptable for Rama's freeze decision, provided the source-line check passes. This review does not itself freeze or approve storage/commit/push.
+
+CURRENT REVIEWED FILE HASHES (before the required edits; for identification only)
+B-008_manual(1).md
+SHA-256: 0bccbd9985775cf3d5a28589175d588a96ccf484c9d3de5e60c8a728af273d53
+
+B-008_reconciliation_addendum.md
+SHA-256: 4ac82cd7ca42490896ce4836dcae6dbbd898f317e5e8c5e543b73dc6f9c3b2d0
+
+B-008_review_notes(1).md
+SHA-256: c7d69d35a9317538281d78bc8d4ab85e0c3a527e9cb177da69e5f64781230315
+
+B-008_v2_design_inputs(1).md
+SHA-256: 8470f5643c28d992dd762858c97c0209d74a4eea7502289cb6e554bf641d078c

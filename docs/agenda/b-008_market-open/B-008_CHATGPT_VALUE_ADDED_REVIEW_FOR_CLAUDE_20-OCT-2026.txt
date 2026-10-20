@@ -1,0 +1,157 @@
+TRADING SYSTEM — B-008 MARKET-OPEN HANDLING
+CHATGPT VALUE-ADDED REVIEW FOR CLAUDE
+Date: 20-Oct-2026 (IST)
+Status: REVIEW FEEDBACK — NOT A FREEZE / NOT AN APPROVAL TO COMMIT
+
+PURPOSE
+Review the B-008 answer sheet, the 19-Oct reconciliation and manual draft, and Claude's 20-Oct first-pass files: B-008_manual.md, B-008_v2_design_inputs.md, and B-008_review_notes.md.
+
+The legacy system remains DEAD / REFERENCE ONLY. Documentation only. Do not modify or run legacy code, do not design V2 in this documentation phase, and do not commit/push or freeze without Rama's explicit approval.
+
+OVERALL VERDICT
+The first pass is careful and substantially improves on the Gemini-generated answer sheet. The distinction between exchange open (09:15 IST) and the configured system entry floor (10:00 IST) is correct. The most important new source-trace finding is that, before 10:00, an intraday alert is rejected at the webhook with HTTP 403 before parsing; it is not stored or queued. The strategy-count discrepancy is also partly resolved: the inspected baseline contains 16 strategy files, while the 24-Sep briefing shows 15 rows and omits pb01_breakout_retest.
+
+Do not freeze yet. Make the corrections and verification passes below first.
+
+1. GOVERNANCE AND EVIDENCE BASE
+
+1.1 Correct source pinning
+Use the exact legacy baseline commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb throughout B-008. The main.py blob SHA is a file-object identifier, not the whole-tree commit. Do not present it as the source revision. For each source claim, cite repository, full commit SHA, path and relevant line range. Label any unverified claim UNKNOWN / NOT ESTABLISHED or INTERPRETATION / AUDIT LEAD.
+
+1.2 Preserve evidence classes
+Keep source code, dated record, operator recollection and inference separate. The 24-Sep PDF proves only what the briefing reported; it does not by itself prove the originating host, installed production configuration, job side effects, or any order submission. Existing 03/03A records are testing-VM evidence and must not be presented as production-host evidence.
+
+1.3 Correct governance wording
+The 19-Oct reconciliation says B-005 is “parked” and describes B-006/B-007 as separate or drafts. These manuals are now FROZEN. Update wording to:
+- B-005 Startup Reconciliation — FROZEN.
+- B-006 Worker Initialization — FROZEN.
+- B-007 Readiness / Health Gating — FROZEN.
+Keep their scopes separate from B-008. Cross-reference settled findings without reopening those manuals.
+
+1.4 Input preservation and privacy
+Keep the three original B-008 inputs byte-identical when stored, using the hashes in Claude's review notes. The 24-Sep PDF is reference evidence only and should remain outside the repository unless Rama explicitly decides otherwise. Do not reproduce its account identifier, mailbox/account details, or credentials.
+
+2. REQUIRED MANUAL CORRECTIONS
+
+2.1 Pre-10:00 signal disposition — update B8-OQ4
+The source trace recorded in Claude's review notes covers:
+- signals/webhook_receiver.py lines 500–612
+- signals/signal_processor.py lines 900–990, 2030–2050 and 2390–2405
+- core/market_windows.py lines 140–180
+- config/system_config.yaml lines 27–48 and 615–630
+- main.py lines 2316–2325
+- orders/order_placer.py line 1077
+
+The finding is that before 10:00, an intraday alert is rejected at the webhook with HTTP 403 before payload parsing; it is not stored or queued. Later stages also re-check time eligibility.
+
+Revise manual sections 3 and 6 and B8-OQ4. Be precise:
+- The webhook-level rejection is established for the inspected source path at the pinned baseline.
+- Do not generalize to every possible signal route unless all routes were traced.
+- “Not stored or queued” applies to the rejected pre-10:00 webhook request in this path; do not imply no audit evidence exists if the webhook audit records the request.
+- State what is known about later time checks and cite exact functions/lines after final verification.
+- Preserve Rama's operational statement that order/signal processing for trading starts at 10:00, but distinguish that recollection from the code-level finding about the early webhook response.
+
+2.2 Exchange open vs configured entry floor
+Keep these terms unambiguous:
+- NSE regular-session open: 09:15 IST (label source appropriately).
+- Configured system entry floor: 10:00 IST in config/system_config.yaml.
+- The 09:25 strategy windows shown in the briefing do not override the global 10:00 floor.
+Do not describe 10:00 as the exchange open, and do not infer that all feed/data collection or every internal process is idle before then. The source finding establishes webhook rejection before 10:00, not that all data collection starts at 10:00.
+
+2.3 Strategy count: resolve discrepancy without overclaiming
+The inspected baseline inventory has 16 strategy files. The 24-Sep briefing displays 15 rows. Claude's review notes identify the omitted strategy as pb01_breakout_retest.
+
+Revise the manual and qualify the conclusion:
+- The inspected baseline strategy-file inventory contains 16 files.
+- The supplied briefing renders 15 rows and omits pb01_breakout_retest.
+- This explains the displayed-count difference at the inventory/list level; it does not prove all 16 were enabled, eligible, or intended to trade on 24-Sep.
+- If the manual says “16 current strategies,” attribute that to Rama unless registry/configuration and enabled status are separately verified.
+- Do not invent the omitted strategy's briefing values.
+
+2.4 Pre-market schedule vs entry gate
+The PDF reports completed jobs at 08:15, 08:20, 08:30, 08:35, 08:55, 09:00, 09:14 and 09:15, with the 09:20 briefing pending at report time. It reports Mode: Live and “READY · warnings” (0 critical, 1 warning, 0 auto-fixed), run ID 20260924_091502_c, and 18/45 plan items done.
+
+Keep these as PDF-reported facts only. The schedule is not itself evidence that the jobs controlled entry permission. Claude's review notes say the pre-market schedule did not gate entries; describe it as preparation/monitoring unless source proves an actual connection to order eligibility.
+
+2.5 Readiness warning — cross-reference B-007 without merging scopes
+For the 24-Sep PDF, report only what it says and cross-reference frozen B-007 for readiness/health semantics. Do not repeat the generated claim that every failed check calls sys.exit(1), and do not infer from “READY · warnings” that orders were permitted or blocked that day.
+
+2.6 Holidays and startup
+Keep Rama's correction that the system did not start/boot on weekends or exchange holidays, labelled operator-reported unless pinned source plus host evidence establishes the full historical behaviour. The holiday_guard/is_trading_day import and holiday-config presence are source facts, not proof the production scheduler never launched the service on those dates.
+
+2.7 Paper/live, feed, candles and failure claims
+Keep exact 09:16/09:20 candle timing, historical candle warm-up, paper-fill semantics, Telegram delivery, WebSocket incidents, HTTP 429, SQLite lock incidents, manual restarts and recovery times unverified unless source and dated evidence support them. Do not copy invented log lines or treat illustrative text in the answer sheet as actual records.
+
+3. RECONCILIATION FILE — REQUIRED EDITS
+
+Revise B-008_RECONCILIATION_FOR_CLAUDE_19-OCT-2026.txt as a new dated revision; preserve the original input unchanged:
+1. Pin all code evidence to baseline 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+2. Record the pre-10:00 webhook 403-before-parse/no-queue finding, with precise scope and line citations.
+3. Record the 16-file vs 15-row strategy discrepancy and identify pb01_breakout_retest as omitted, without implying enabled/trading status.
+4. Mark B8-OQ4 ANSWERED for the inspected intraday webhook path, retaining a caveat for untraced alternate paths.
+5. Mark B8-OQ5 PARTLY ANSWERED / ANSWERED AT INVENTORY LEVEL, with the qualification above.
+6. Mark B8-OQ6 answered by the frozen B-007 finding only to the extent supported there; cite B-007, do not duplicate its manual.
+7. Keep OQ1–OQ3 and OQ7–OQ9 open unless fresh evidence resolves them. Production deployment identity, PDF host identity, exact boot-vs-token chronology, actual host crontab/systemd state, candle timing, alert delivery and paper/live parity remain separate questions.
+8. Correct B-005/B-006/B-007 status to FROZEN.
+9. List claims removed/reclassified from the Gemini-generated answers and why.
+10. Ensure no credential/account identifiers or sensitive values appear.
+
+4. MANUAL STRUCTURE AND TECHNICAL COMPLETENESS
+
+The manual is a good foundation. Ensure the lifecycle is documented:
+Chartink/webhook ingress
+→ request validation/time guard
+→ strategy/symbol mapping
+→ signal processor and later time checks
+→ entry eligibility
+→ order creation/dispatch boundary
+→ relevant persistence/audit evidence.
+
+For every stage, include SOURCE → INPUT → LOGIC → GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER. Include exact function names and line ranges only after verifying the pinned baseline. A compact flow diagram should show the early 403 rejection branch and distinguish it from later time checks.
+
+Add a compact evidence matrix distinguishing:
+- what source code proves;
+- what the 24-Sep PDF reports;
+- what Rama recalls;
+- what remains unknown.
+This prevents repository declarations, email output and host runtime from being conflated.
+
+Make the distinction between exchange open and system entry floor explicit in the summary, flow diagram and conclusions.
+
+5. V2 DESIGN INPUTS — KEEP STRICTLY NON-DECISIONAL
+
+B-008_v2_design_inputs.md is labelled PROPOSED / OPEN, and no V2 row is opened or changed. However, this project phase remains factual legacy documentation, not V2 design. Keep this file only as a segregated future-input parking list if the agreed workflow permits it; do not develop or decide the four V2 questions during B-008 finalization. No “should” statement is an approved requirement. If project governance defers V2-input files until the legacy manual is reviewed, keep it outside the frozen manual package.
+
+The four questions are future prompts, not decisions:
+- effective strategy windows and single source of truth;
+- handling/visibility of early alerts;
+- consistent strategy registry in reports;
+- ownership/defence-in-depth of window checks.
+Do not open or change VP rows during this documentation pass.
+
+6. REVIEW NOTES / CHANGE CONTROL
+
+Update B-008_review_notes.md after changes:
+- Record this review outcome and accepted/rejected suggestions.
+- List exact filenames, revision dates and SHA-256 hashes after revision.
+- Record remaining open questions and required evidence.
+- State nothing is frozen/committed until Rama explicitly approves.
+- Do not rewrite the original answer sheet or 19-Oct inputs; keep them byte-identical as source artifacts.
+
+7. FINAL VERIFICATION CHECKLIST
+
+[ ] All source claims pin to full baseline commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+[ ] Re-check line numbers at that commit; no blob SHA is presented as a commit.
+[ ] Pre-10:00 intraday webhook 403-before-parse/no-queue finding is accurately scoped.
+[ ] Later time checks are documented without implying all internal data processing begins at 10:00.
+[ ] 16 strategy files vs 15 briefing rows is reconciled with pb01_breakout_retest identified as omitted; no invented row values.
+[ ] PDF claims remain report-derived; host identity and order outcome remain unproven by the PDF alone.
+[ ] B-005, B-006 and B-007 are described as FROZEN and remain separate.
+[ ] Unverified generated claims remain UNKNOWN / NOT ESTABLISHED or are removed.
+[ ] Manual includes source/input/logic/guard/output/storage/next-consumer flow.
+[ ] Sensitive account identifiers, credentials and tokens are absent.
+[ ] Markdown, cross-references, tables, hashes and sensitive-data scans pass.
+[ ] No legacy code was executed; no V2 decision was made; no file was committed/pushed/frozen.
+
+RECOMMENDED NEXT STEP
+Claude should revise the B-008 manual, reconciliation and review notes using these findings, then return the revised files to ChatGPT for final acceptance review. Do not commit, push or freeze until Rama reviews and explicitly approves. Keep B-008 open if any source trace or evidence boundary remains unresolved.

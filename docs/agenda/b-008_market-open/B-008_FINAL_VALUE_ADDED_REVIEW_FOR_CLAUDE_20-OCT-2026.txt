@@ -1,0 +1,74 @@
+TRADING SYSTEM — B-008 MARKET-OPEN HANDLING
+CHATGPT FINAL VALUE-ADDED REVIEW FOR CLAUDE
+Date: 20-Oct-2026
+Status: FINAL FOCUSED REVIEW — NOT FREEZE / NOT COMMIT APPROVAL
+
+FILES REVIEWED
+- B-008_manual(2).md
+- B-008_reconciliation_addendum(1).md
+- B-008_review_notes(2).md
+- B-008_v2_design_inputs(2).md
+- The accompanying screenshot and the prior ChatGPT final acceptance review.
+
+OVERALL VERDICT
+The three requested corrections have been applied correctly:
+1. Manual section 8, item 3 now limits the finding to the inspected intraday webhook path and preserves the audit-row qualification.
+2. V2 input row 2 now distinguishes no signal row/queue from the webhook audit row, while remaining PROPOSED / OPEN.
+3. The final statement labels 09:15 as Rama's identification of the regular-session open, not as a source-derived host fact.
+
+The manual, reconciliation addendum and V2 inputs are now substantively acceptable for Rama's freeze decision, subject to the small consistency check below. No broad rewrite is needed.
+
+1. ONE SMALL CONSISTENCY CORRECTION RECOMMENDED
+
+In B-008_manual.md section 3, the narrative correctly says a refused pre-10:00 request still leaves a webhook audit row. However, the stage table row “Door checks” currently says in the “Storage / hand-off” column: “none for a refusal”. Read literally, this contradicts the audit-row statement.
+
+Please change that cell to something explicit, such as:
+“No signal row/queue on refusal; webhook audit row remains (lines 529–534).”
+
+Keep the separate ingress row's audit-row description. This is a precision correction only; it does not change the finding.
+
+2. FINAL TECHNICAL CHECK
+
+Otherwise, the revised files are coherent:
+- Production source claims are pinned to commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- The 403-before-parse finding is restricted to the inspected intraday webhook path; untraced routes remain open.
+- The 16 strategy-file vs 15 briefing-row discrepancy is resolved at inventory/list level only; enabled/eligible status is not inferred.
+- The 24-Sep briefing remains record-derived; its host identity, installed state, entry permission and order outcome are not inferred.
+- B-005, B-006 and B-007 remain FROZEN and separate.
+- The original 19-Oct reconciliation remains unchanged; the addendum is a separate revision.
+- V2 input remains PROPOSED / OPEN and does not make a V2 decision.
+- The PDF remains reference-only, outside the repository, with its account identifier omitted.
+- The remaining questions stay open as documented.
+
+The review notes say 39 cited lines were re-checked and the Markdown/sensitive-data checks passed. Treat those as reported checks; rerun only the checks affected by the final table-cell edit and update the file hash.
+
+3. PACKAGE HASH CHECK
+
+I independently calculated SHA-256 for the four files attached in this turn. They match the full hashes shown in Claude's screenshot:
+
+- B-008_manual.md
+  5021E5A703AC9D93E5D63DC926DCFC336DA48438F809865569B979F17BA3C4D8
+
+- B-008_reconciliation_addendum.md
+  4AC82CD7CA42490896CE4836DCAE6DBBD898F317E5E8C5E543B73DC6F9C3B2D0
+
+- B-008_review_notes.md
+  AB368B04423B73AF81CEE5CA1F4BED1D9F21D010AF33CA28A6752C12D00DC410
+
+- B-008_v2_design_inputs.md
+  7259D8F70FE60803DFA4A51740E35A4629F7E7151CAC0380644DD894C286463B
+
+Important: if the manual is changed to correct the table cell, its SHA-256 will change. Recompute that hash and update the proposed package manifest; do not use the current manual hash after editing. The other hashes should remain unchanged unless their files are also edited.
+
+4. GOVERNANCE / NEXT STEP
+
+After the one table-cell clarification and the affected checks:
+- Return the final four files and a closed manifest with exact filenames and full SHA-256 hashes.
+- Keep all files DRAFT / PROPOSED until Rama explicitly approves the freeze.
+- Do not commit, push, or store as frozen on Rama's behalf.
+- Preserve the original B-008 answer sheet, 19-Oct reconciliation and 19-Oct manual draft byte-identically as input artifacts.
+
+RECOMMENDATION
+Apply the single table-cell clarification, rerun affected checks, and then return B-008 for Rama's freeze decision. Subject to that correction and hash refresh, I see no remaining substantive issue that should prevent B-008 finalisation. This review is not itself a freeze or approval to commit/push.
+
+END
