@@ -1,0 +1,107 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-010 END-OF-DAY OPERATION — SOURCE INVENTORY AND METHOD
+Date: 20-Oct-2026 (IST)
+Companion to: B-010_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt
+Security: no credential, account, client, host or path value is reproduced. A generated crontab containing host paths was read for job names only.
+
+1. BASELINE
+- Repository: trading-system-prod-snapshot, the only repository used.
+- Commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb. "git cat-file -t" returns "commit", and the working tree's HEAD equals it.
+- Not used: trading-system-sbx-snapshot and trading-system-records (the prompt; Rama, 20-Oct-2026).
+
+2. METHOD
+- Clone: blob-less, sparse (no cone), explicit file paths only. Every file was read through a masking filter. After each checkout a never-open check ran; it reported 0 every time.
+- Objects in the local pack: 8,105 after B-010's additions, up from 8,094 at the end of B-009 (git count-objects). 12 files were added by path: 8 test files, 1 generated crontab file and 3 records. That gave 11 new objects; which file's blob was already present was not checked.
+- Negative searches: git grep over the working tree, which contains all 330 Python files outside tests/ (checked against the tree listing at B-009: no file missing). Searches in tests/ cover only the eight test files checked out.
+- Procedure exception, disclosed:
+  - One command, "git log -1 --format=%cs 970aabf -- deploy/cron/trading-system.cron", was run. It is a history command, which the partial-clone rule forbids.
+  - Its output (a date) was not used in either deliverable.
+  - The object count and never-open check afterwards showed no new blob fetched and 0 never-open blobs.
+- No code or test was run. No VM, broker or database was contacted. No repository file was changed. Nothing committed or pushed.
+
+3. FILES READ AT THE BASELINE (line ranges read)
+| File | Lines read | Use |
+|---|---|---|
+| orders/eod_squareoff.py | 1-1888 (all) | EOD routine |
+| orders/mis_autosquareoff.py | 1-1325 (all except the bodies of 515-548 helper accessors, read by name) | MIS unit |
+| core/mis_squareoff_timing.py | 1-159 | MIS timing contract |
+| core/market_windows.py | 50-142, 143-225 | Windows, holiday, special sessions |
+| core/state_store.py | 266-300, 728-745, 1015-1060, 1135-1260, 1300-1406; matched lines in 1524-1861 | EOD queries, log, statuses |
+| core/schema.sql | 611-639 | eod_squareoff_log |
+| core/events.py | 173-186 | EodSquareoffComplete |
+| capital/fund_manager.py | 1687-1747 | reset_daily_pnl |
+| orders/order_manager.py | 709-740; matched lines 13, 198, 236 | Trade status |
+| orders/order_placer.py | 1060-1100 (from B-009); matched status-update lines | PENDING transition |
+| orders/order_reconciler.py | 472-537 | stale-order sweep |
+| broker/zerodha_adapter.py | 1221-1242, 1043-1046 (paper cancel), 2108-2160, 232-247 | Positions, paper, market protection |
+| alerts/telegram_notifier.py | 348-362 | send() signature |
+| main.py | 688-843, 3295-3384, 3860-3868, 4060-4071 (from B-009), 4240-4262; matched lines | Wiring, callbacks, liveness |
+| config/system_config.yaml | 96-124, 355-377; matched lines (27-112, 738-741) | Config |
+| config/cron_registry.yaml | 183-197, 320-358 (from B-009), job blocks at 439-510, 542-550; job-name list | Declared jobs |
+| core/cron_registry.py | 1-40 | Registry loader |
+| scripts/generate_crontab.py | 1-40 | Generator |
+| deploy/cron/trading-system.cron | Job-name comment lines only; 46 job lines counted | Generated crontab |
+
+4. SEARCHES (pattern, then scope and result; all over the 330 runtime Python files unless stated)
+- check_and_fire / fire_now / post_wire_init / _check_restart_recovery: callers in main.py 797, 3866, 4094 (start_polling), plus internal calls. fire_now's only runtime caller is main.py 797.
+- EodSquareoffComplete: publisher eod_squareoff.py 514; subscriber shadow_tracker.py 195. No other.
+- eod_squareoff_log: core/schema.sql, core/state_store.py, ops/control_tower/freshness.py 114-115, scripts/backup_restore_drill.py 54.
+- reset_daily_pnl: fund_manager.py 1687; caller eod_squareoff.py 531.
+- entry_gate= / _entry_gate / set_entry_gate: eod_squareoff.py 156 and main.py 4254 (the shutdown call) only. EOD is never given the gate.
+- PENDING_FILL: readers in capital/, core/, ops_dashboard/. The only writer is the insert in order_manager.py 236. No UPDATE to 'PENDING_FILL' among the trade-status UPDATEs listed (state_store.py 1524, 1574, 1601, 1624, 1647, 1674, 1787, 1813, 1861, 2432, 2461; order_manager.py 412, 489, 643, 714; order_placer.py 3823; order_reconciler.py 2648; kill_switch.py 1539; eod_squareoff.py 898; sl_breach_monitor.py 260; structure_exit_manager.py 354).
+- effective_grace_sec / _retry_remaining_mis_positions: definitions only, no caller (including tests).
+- auto_resume_kill_switch: core/config_loader.py 649 only.
+- market_protection in the adapter: optional; omitted when None (2116-2119).
+- mis_autosq.is_alive in main.py: not referenced. /health lists four daemons (4066-4071).
+
+5. RECORDS (docs/ names; docs/web_claude/ excluded and never opened)
+- Read in part:
+  - docs/incident/2026-09-03_naked_position_ANANTRAJ.md (03-Sep-2026, deployed 2d08436);
+  - docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md (10-Sep-2026);
+  - docs/audit/mo5_investigation_22jul2026.md (22-Jul-2026);
+  - docs/design/2026-09-03_exit_path_design.md (03-Sep-2026, a design draft).
+- Found by name, not read:
+  - docs/audit/eod_capture_safety_2026-07-24.md
+  - docs/audit/eod_email_findings_06aug2026.md
+  - docs/audit/ledger6_eod_verify_measurement_03aug2026.md
+  - docs/audit/mo5_deploy_22jul2026.md
+  - docs/design/p1_eod_broker_reconcile_build_design_02jul2026.md
+  - docs/design/p1_eod_broker_sync_assessment_02jul2026.md
+  - docs/approvals/cron_officer/20-Jun-2026/sample_clean_eod.html
+- Deliberately not opened: docs/incident/2026-09-03_ANANTRAJ_broker_book.json (a broker book export; may carry account data).
+- Name search for a 27-Aug or 02-Sep record (eod, squareoff, mis_, 27aug, 28aug, 02sep, 03sep, 04sep, 2026-08-2x, 2026-09-0x, tatapower, coalindia): none beyond the files above.
+
+6. TESTS (checked out; none run; no stored result found)
+| File | Test functions |
+|---|---|
+| tests/unit/test_eod_squareoff.py | 68 (names read) |
+| tests/unit/test_fix063_two_pass_eod.py | 3 |
+| tests/unit/test_mis_autosquareoff.py | 48 |
+| tests/unit/test_mis_squareoff_restore_and_settle.py | 29 |
+| tests/unit/test_mis_squareoff_notifier.py | 23 |
+| tests/unit/test_fix135_eod_cleanup.py | 14 |
+| tests/unit/test_eod_verify_honest.py | 6 |
+| tests/crash_test/ct140_eod_failure.py | 0 (script) |
+- Assertions are read only where cited (test_eod_squareoff.py 1080-1081, and names).
+- Names only, not checked out: test_alert_direction_eod_29jun.py, test_eod_broker_reconcile.py, test_eod_lifecycle_pipeline_aware.py, test_fix073_eod_entry_cutoff.py, test_fix130_eod_pre_alert.py, test_v3_eod_route.py.
+
+7. NOT READ (and why)
+- The post-market scripts (scripts/eod_cleanup.py, eod_verify.py, eod_broker_reconcile.py, reconcile_positions.py, wal_checkpoint.py): out of the EOD routine's code path; F7 answers at declaration level.
+- reports/ modules; eod_squareoff.py _format_summary_body in detail; alerts/mis_squareoff_notifier.py (frozen in B-006 at thread level).
+- deploy/systemd/*: names only.
+- Library sources (kiteconnect): not needed.
+
+8. LIMITATIONS
+- A selected-path review, not a complete-tree audit.
+- Source is not host execution. Records are true for their own dates and commits only.
+- The four records are AI-prepared investigations.
+- Comments that cite incidents are treated as pointers, not records.
+
+9. QUALITY GATE
+- Baseline stated in both files: yes.
+- IDs: 50 (A5 B5 C9 D7 E7 F7 G5 H5), each answered once; status table in H5.
+- MIS passes kept separate from EOD: yes.
+- No claim that EOD success means a flat broker account: yes (C8, F5).
+- No claim that cron declarations ran: yes.
+- No claim that tests pass: yes.
+- No code changes, commits, pushes or V2 design: yes.

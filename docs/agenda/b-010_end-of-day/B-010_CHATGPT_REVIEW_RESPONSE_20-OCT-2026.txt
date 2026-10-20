@@ -1,0 +1,79 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+CHATGPT REVIEW RESPONSE — B-010 REVISION 0
+Date: 20-Oct-2026
+Baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Status: REVIEW COMPLETE; B-010 MAY PROCEED TO OWNER DECISION, NOT AUTOMATICALLY FROZEN
+
+1. OVERALL REVIEW
+
+The uploaded B-010_manual.md, B-010_reconciliation_addendum.md, B-010_review_notes.md, and B-010_v2_design_inputs.md are coherent with the preceding ChatGPT reconciliation and the stated evidence boundaries. The manual remains a detailed legacy record, not an operating procedure. I found no reason in these four documents to reopen the accepted B-010 source findings.
+
+Recommendation: accept B-010 revision 0 as the review candidate, subject to Rama's explicit freeze decision and the separate decision on proposed B-009 erratum E-1. Do not commit or push until Rama approves.
+
+2. QUESTION 1 — IS B-009 E-1 WORDING ACCEPTABLE FOR ALL FOUR PLACES?
+
+Recommendation: YES, substantively acceptable for all four places listed in B-010_manual.md section 19.
+
+The proposed replacements correctly distinguish:
+- what EodSquareoff._fire() attempts conditionally;
+- what main.py actually wires at the pinned baseline;
+- the separate disabled retest-path qualification; and
+- the unchanged finding that no source path feeds fresh candidates to EntryGate.add().
+
+The wording also preserves the boundary that actual host gate_state contents are UNKNOWN / NOT ESTABLISHED. It does not claim that a gate-state row existed or that a particular host retained one.
+
+Minor editorial suggestion only: in the first replacement, “main.py passes it neither” is understandable but slightly awkward. If editing before freeze, use “main.py passes neither component to EodSquareoff” (or equivalent), without changing the factual scope. The other three replacements are clear.
+
+GOVERNANCE: This is a recommendation, not authorization to change B-009. Rama must explicitly accept or reject E-1. If accepted, apply only the four in-place errata with the superseded wording preserved as the project specifies; record the decision in the appropriate register and status/review notes. If rejected or deferred, leave all frozen B-009 files unchanged and keep E-1 proposed/open.
+
+3. QUESTION 2 — DO THE V2 INPUTS STAY DECISION-NEUTRAL?
+
+YES. B-010_v2_design_inputs.md labels itself PROPOSED / OPEN, calls its prompts “considerations,” names owner topics, and explicitly says no VP row is opened or changed. Its five items ask questions rather than select a V2 architecture or require a specific solution.
+
+The questions are legitimate inputs for later governance:
+- end-of-day ownership and interaction between safety passes;
+- evidence required before declaring completion;
+- consistency of trade-state names and transitions;
+- centralization/validation of broker order construction;
+- accounting close relative to final fills.
+
+No V2 decision should be inferred from these questions. Keep them proposed/open until the owning agenda and decision register explicitly settle them.
+
+4. QUESTION 3 — REMAINING LINE OR SCOPE ISSUES BEFORE FREEZE
+
+No blocking issue identified from the uploaded review package. The following are non-blocking controls to preserve:
+
+A. Source scope
+The review is a selected-path audit at the pinned commit, not proof of deployed host behaviour. Keep the existing statements that no code/tests or live systems were run, and that cron declarations do not prove installation/execution.
+
+B. Historical evidence
+Keep incident outcomes labelled record-derived and limited to each record's date/commit. Do not convert comments, designs, or later source into proof of production execution.
+
+C. MIS notifications
+The manual now distinguishes the defective direct duplicate notifier call from the separate critical_sink -> MisSquareoffNotifier path with a correctly formed Telegram call and e-mail fallback. This is the correct scope. Actual delivery remains UNKNOWN / NOT ESTABLISHED.
+
+D. EOD completion
+Keep the statement that COMPLETE/event publication counts do not prove the broker book is flat. The zero-row COMPLETE update concern remains a source-level defect; any subsequent duplicate/recovery fire remains an interpretation unless supported by a dated record.
+
+E. Proposed erratum
+Do not silently amend B-009. The B-010 manual can be reviewed/frozen with E-1 clearly labelled proposed, but the cross-manual correction should only be applied after Rama's explicit decision.
+
+F. File package and governance
+The review notes specify four B-010 artifacts and source inputs. Before storage, confirm the final names, hashes and destinations against the agreed inventory. Do not claim anything has been stored, committed or pushed merely because the files were uploaded to chat.
+
+5. RECOMMENDED DECISION CHECKPOINT FOR RAMA
+
+Please decide separately:
+1. B-010 manual package: FREEZE revision 0 / RETURN FOR REVISION.
+2. Proposed B-009 E-1: ACCEPT / REJECT / DEFER.
+
+Suggested default based on this review: FREEZE B-010 revision 0, and ACCEPT E-1 with the minor wording polish above. These remain recommendations until Rama confirms them.
+
+6. WHAT CHATGPT HAS NOT DONE
+
+- No repository file has been changed, committed or pushed.
+- No frozen B-009 manual has been edited.
+- No V2 design decision has been made.
+- No claim is made that the source was deployed or ran on a host.
+
+END.

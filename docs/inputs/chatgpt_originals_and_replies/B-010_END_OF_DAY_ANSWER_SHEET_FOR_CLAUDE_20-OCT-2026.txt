@@ -1,0 +1,179 @@
+B-010 — END-OF-DAY OPERATION
+REPOSITORY-BACKED ANSWER SHEET FOR CLAUDE
+Prepared: 20-Oct-2026
+Project: Trading_System-v2_redesign
+Primary repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+PURPOSE
+Claude must answer this sheet by independently inspecting the pinned production-snapshot repository. ChatGPT will then reconcile Claude's answer against the repository evidence and prepare the B-010 manual draft. This sheet is not itself the manual and is not a design proposal.
+
+GOVERNANCE / SCOPE
+- The legacy system is DEAD / REFERENCE ONLY. Read source and records only. Do not run legacy code, contact a VM/broker/database, or make operational changes.
+- Use ONLY the production snapshot above for B-010. Do not consult the sandbox or records repositories unless Rama explicitly changes this instruction.
+- Do not change any file, create a branch, commit, push, or edit the repository.
+- Do not design V2 or recommend repairs. Record existing behavior and defects factually.
+- Never expose credentials, tokens, TOTP secrets, account/client identifiers, private host details, or other sensitive values.
+- Repository source proves only what the pinned source contains, not what was installed or ran on a host.
+- Cite exact repository path, function/class, line range, configuration key and relevant caller/callee. State when line numbers refer to the pinned baseline.
+- Use the evidence labels: FACT (SOURCE-VERIFIED), FACT (RECORD-DERIVED, with record/date/deployed commit), HISTORICAL (Rama-reported), INTERPRETATION, KNOWN DEFECT, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION.
+- Do not turn comments/docstrings into executable behavior without tracing the actual code path.
+- Keep source-backed answers separate from any inference. Negative findings must state search scope and method.
+- Answer all IDs once. Do not silently omit unanswered items. If evidence is insufficient, say UNKNOWN / NOT ESTABLISHED and explain what evidence is missing.
+
+B-010 TOPIC BOUNDARY
+B-009 hands off to B-010 at the 15:17 EOD routine. B-010 documents end-of-day processing, its trigger and sequence, cancellations and exits, verification/summary/reset behavior, persistence, reporting/alerts, retry/recovery, and paper/live differences. Startup and workers are covered by B-001–B-006; readiness by B-007; market open by B-008; intraday flow by B-009; restart by B-012. Cross-reference frozen manuals rather than reopening them.
+
+KNOWN STARTING POINTS — VERIFY THESE, DO NOT ASSUME THEM
+At the pinned baseline, source comments/configuration indicate:
+- `orders/eod_squareoff.py` implements the general EOD routine and is called/polled rather than requiring its own scheduler thread by default.
+- `config/system_config.yaml` distinguishes the 15:03 and 15:06 MIS passes, the 15:09 MIS protective cutoff, the 15:15 order-placement cutoff / entry-cancellation control, and the 15:17 EOD accounting/emergency backstop.
+- `orders/mis_autosquareoff.py` is a separate two-pass MIS safety path, not a replacement for the general EOD routine.
+- General EOD code comments say it handles INTRADAY/MIS and COVER_ORDER/CO, not DELIVERY/CNC.
+- EOD code documents `eod_squareoff_log`, `EodSquareoffComplete`, restart recovery and daily P&L reset / WAL checkpoint behavior.
+These are research leads. Verify exact runtime wiring, actual implementation, conditions, and any divergence between comments/config and code.
+
+ANSWER SHEET
+For each question provide:
+- Answer and evidence label
+- Exact file path + function/class + line range at pinned baseline
+- Configuration keys/tables/events where applicable
+- Caller → component → output/next consumer
+- Paper/live distinction, if evidenced
+- Record evidence separately from source
+- Unknowns and search scope
+
+SECTION A — OWNERSHIP, BOUNDARY, AND ENTRY POINTS
+
+B10-A1. Define the exact B-010 responsibility boundary. What begins the EOD phase and what work is explicitly delegated to B-009, B-011, B-012, or other agenda topics?
+
+B10-A2. Identify every EOD-related component and its responsibility: general EOD square-off, separate MIS passes, order monitor, reconciler/stale-order sweep, fund manager/P&L reset, state store, event bus, notifier/reporting, entry gate and retest monitor. Do not infer a component is active merely because it exists.
+
+B10-A3. Trace the construction and wiring of the general EOD component from `main.py`: constructor arguments, optional dependencies, callbacks, post-wire initialization, subscriptions, and any late-bound setters. Give exact caller/callee references.
+
+B10-A4. What actually triggers the general EOD routine? Trace `check_and_fire`, `fire_now`, any `start_polling` helper, and the production-main wiring. Identify poll interval, thread model, timezone source, due predicate and holiday guard. Separate helper capability from the path actually wired in `main.py`.
+
+B10-A5. Identify all other callers of `fire_now` or EOD square-off, including daily-loss/emergency handling. For each caller, state whether time and holiday checks are bypassed, what reason/trigger metadata is passed, and what follows if the call fails.
+
+SECTION B — CLOCKS, WINDOWS, AND SCHEDULING
+
+B10-B1. Build a verified IST timeline of all end-of-session controls that affect open positions or EOD state: 15:00 entry-window end, 15:03 MIS pass 1, 15:06 MIS pass 2, 15:09 protective cutoff, 15:15 order-placement cutoff and tracked-entry cancellation/SOFT_KILL, 15:17 general EOD routine, and any later service-window/self-exit time. For every time, identify its owning code path and exact effect. Do not merge controls that merely coincide.
+
+B10-B2. How is `eod_squareoff_time` evaluated? Trace `MarketWindows`/time-authority behavior, special-session overrides, timezone/date handling and holiday handling. Is the general EOD time session-relative or absolute IST? State code evidence and limits.
+
+B10-B3. Which cron registry jobs, generated cron entries, systemd timers, poll loops or in-process threads relate to EOD, summaries, reset, backup, log cleanup, or service self-exit? Trace the declared configuration to the generator and runtime consumer. Distinguish declared schedule from installed/actually executed schedule.
+
+B10-B4. What happens if the 15:17 general EOD routine starts late, is called more than once, or a call raises? Include per-date fired state, locking, idempotency and retry behavior.
+
+B10-B5. What does the code do on a trading holiday, weekend, special session, or a date where the session close differs from the ordinary schedule? Identify paths where a general EOD override does NOT alter the MIS cutoff or other clocks. Mark untested combinations UNKNOWN if no evidence establishes the outcome.
+
+SECTION C — GENERAL EOD FIRE SEQUENCE
+
+B10-C1. Trace `_fire()` in exact execution order from entry to return. Include gate/retest cleanup, write-ahead log, kill switch, cancellation pass, wait/settle interval, open-position query/exit pass, stale-order sweep, summary, persistence, WAL checkpoint, event publication, notification, daily P&L reset, and kill-switch resumption where present. Correct this list to match executable source; do not assume every listed step is present or in this order.
+
+B10-C2. Which new entries are blocked during EOD, by what mechanism, and when? What if a kill state is already active? Does EOD clear or override an existing HARD_KILL/SOFT_KILL, or resume only a kill it set itself?
+
+B10-C3. What exactly is cancelled in pass 1? Trace selection predicates and broker calls for pending entry orders, and separately pending SL/TGT/other exit legs. Explain failure handling and whether failures abort or allow position exit to continue.
+
+B10-C4. Why does the general EOD routine wait between cancellation and the second pass? Trace the source rationale and actual wait. How are late/phantom fills discovered and incorporated before the position query? Is that guaranteed or only intended?
+
+B10-C5. How are open positions selected for exit? Identify broker-vs-local source, status/product filters, symbol/quantity rules, deduplication and exclusion of DELIVERY/CNC. Explain whether COVER_ORDER/CO is included in the code even if production records do not establish it was used.
+
+B10-C6. What order type/protocol and price construction are used for general EOD exits? Trace configuration/defaults, marketable-limit/market paths, retries/grace windows, inter-order delay and any protocol switch. Do not infer actual fills from order submission.
+
+B10-C7. How are pending exit legs handled before flattening? What is the consequence if cancelling SL/TGT fails but the market exit proceeds? Trace any later stale-order sweep and its limits.
+
+B10-C8. Does the general EOD routine wait for broker-confirmed fills or a flat account? Trace the handoff to `OrderMonitor`, `OrderReconciler` and events. State precisely what success counters mean and what they do not prove.
+
+B10-C9. What does `EodFireResult` contain? Trace attempted/succeeded/failed counts, timing, fired date/time and recovery flag to callers, logs, database and notifications.
+
+SECTION D — SEPARATE MIS SAFETY PASSES
+
+B10-D1. Trace `orders/mis_autosquareoff.py` from its main poll thread to both passes. Establish how it is wired, poll cadence, pass-specific per-date flags, serialization, and the relation to the general EOD thread.
+
+B10-D2. For MIS pass 1, document its trigger time calculation, product eligibility, cancel-protection sequence, exit order protocol, grace/cutoff behavior and outcome states. Include the source for any price-seeking LIMIT_THEN_MARKET behavior.
+
+B10-D3. For MIS pass 2, document its trigger time calculation, product eligibility, explicit exit protocol, whether grace/retry is allowed, and the terminal outcome vocabulary. Do not assume it is equivalent to pass 1.
+
+B10-D4. Trace post-pass verification and the 15:09 deadline: how are remaining positions/orders detected, how are they reported, and what actions occur on timeout or broker-state uncertainty?
+
+B10-D5. Trace restoration of protective SL orders on every failure path after protective orders have been cancelled. Identify the failure classes, bounded wait/poll logic, live-state definitions, alerts and cases where restoration itself cannot be established as successful.
+
+B10-D6. Trace the historical reason and code changes for the two-pass MIS routine. Use only records in the production repository. Identify record dates and deployed commits. Separate measured incident facts from source comments, inference and claims about normal operation.
+
+B10-D7. Reconcile the separate MIS path with the 15:15 SOFT_KILL / tracked-entry cancellation and 15:17 general EOD routine. State the distinct responsibility of each and any ordering/race/overlap guard in source.
+
+SECTION E — FAILURE, PARTIAL SUCCESS, AND RECOVERY
+
+B10-E1. What happens if cancellation fails for some orders? What if exit submission fails for some positions? Trace exception handling, per-item continuation, summary counts and alerts. Does one failure abort the whole sweep?
+
+B10-E2. What happens if broker position/order queries fail or return incomplete/ambiguous state? State fail-open/fail-closed behavior only when source proves it. Identify whether local trade rows can differ from broker truth.
+
+B10-E3. Trace write-ahead persistence: when is an IN_PROGRESS row created, what happens if the write-ahead insert fails, how is COMPLETE persisted, what fallback is attempted, and what if both writes fail?
+
+B10-E4. Trace restart recovery in `post_wire_init` / `_check_restart_recovery`: required persisted state, late-fire guard, time window, recovery-fire condition, treatment of IN_PROGRESS/failed/complete rows, notification, and any no-retry/manual-review cases. Distinguish a recovery helper from proof that the host restarted or that recovery succeeded.
+
+B10-E5. Explain per-date idempotency and retry behavior for `check_and_fire` versus `fire_now`, including exception resets and partial failures that return without raising. Can a partial failure cause a second EOD run? What duplicate effects are possible?
+
+B10-E6. Trace interaction with order-monitor failure/stop, reconciler liveness, external supervisor, and 15:15 entry cancellation. What is established by source and what remains outside the repository evidence?
+
+B10-E7. Trace daily-loss emergency closure through its callback into `fire_now`. What occurs if EOD is not wired, `fire_now` raises, or positions remain? Which kill state is set and in what order?
+
+SECTION F — DATABASE, LEDGER, RESET, REPORTING, ALERTS
+
+B10-F1. Identify the `eod_squareoff_log` schema/table creation and every write/update/read consumer. List columns and state meanings (e.g., IN_PROGRESS/COMPLETE) only where schema/code proves them. Is there one row per date in all failure/retry cases?
+
+B10-F2. Trace end-of-day summary/report generation: exact function, source tables, P&L fields, counts, status interpretation, notification delivery, and failure behavior. Separate EOD square-off summary from broader daily trading report or cron-generated report.
+
+B10-F3. Trace `fund_manager.reset_daily_pnl` and all related ledger/accounting effects. Establish timing relative to exits and the MIS passes, whether repeated EOD fires can write multiple RESET_PNL rows, and how consumers should interpret rows when a reset is repeated. Do not make accounting recommendations.
+
+B10-F4. Trace SQLite WAL checkpoint: caller, point in sequence, returned fields/logging and failure handling. What does a successful checkpoint prove and not prove?
+
+B10-F5. Identify events published by the EOD routine, including `EodSquareoffComplete`, payload fields and subscribers. State whether event publication indicates all positions are confirmed flat or only that the routine completed its sequence with counts.
+
+B10-F6. Inventory EOD-related logs, Telegram/email alerts, critical sentinels, counters/telemetry and `/health` liveness. Trace exact producers and consumers. Do not infer alerts were delivered on a historical date without a record.
+
+B10-F7. Identify backup, cleanup and post-market jobs in the cron registry that may run near/after EOD. Trace declared schedules and generated commands; do not claim the installed crontab executed them.
+
+SECTION G — PAPER/LIVE AND HISTORICAL EVIDENCE
+
+B10-G1. Compare paper and live EOD paths. Identify adapter differences, simulated versus broker orders/fills, notification labels, position source and any mode-specific branch. Where parity is not established, say UNKNOWN.
+
+B10-G2. Inventory production-repository EOD-related incident/audit records. For each, state date/window, deployed commit if recorded, facts actually evidenced, and what the record does not establish. Do not consult the separate records repository.
+
+B10-G3. What records establish the 27-Aug auto-square-off incident and the 02/03-Sep protective-order failure history? Reconcile each record with the code at baseline without treating the current code as proof of historical behavior.
+
+B10-G4. Are there tests for EOD sequencing, double-fire prevention, partial failure, retry/restart recovery, product filters, MIS pass ordering, reset ledger effects and paper/live parity? Inventory tests by path/name and assertions. Do not run legacy tests; do not claim a test passes unless a stored result proves it.
+
+B10-G5. Identify source/code/documentation drift, stale comments, unreferenced helpers, missing callers, latent product branches, or claims whose runtime state cannot be verified. Give exact evidence and classify each as KNOWN DEFECT, KNOWN DOC DRIFT, INTERPRETATION or UNKNOWN.
+
+SECTION H — END-TO-END TRACE AND COMPLETENESS
+
+B10-H1. Provide one end-to-end source trace for an ordinary scheduled EOD day: time trigger → gate/kill → cancellations → position query → exit submission → fill/monitor/reconciliation → result log/event → report/alerts → daily P&L reset/checkpoint. Mark any asynchronous or unverified handoff.
+
+B10-H2. Provide a separate trace for daily-loss/emergency `fire_now`, including differences from the scheduled path and how it interacts with the later 15:17 backstop.
+
+B10-H3. Provide a failure/restart trace for: crash after IN_PROGRESS write; cancellation failure; exit failure; exception before COMPLETE; COMPLETE persistence failure; partial failure without exception; recovery firing after restart. For each, cite code and state the expected source path versus any unknown host behavior.
+
+B10-H4. State exactly what source inventory/search was inspected for B-010. Include all EOD-related files read, files found but not read, tests and records reviewed, search method/scope, and any exclusions. Do not imply a full-repository audit if only selected paths were read.
+
+B10-H5. Provide a final question-status table for every ID B10-A1 through B10-H5, each appearing exactly once with one of: ANSWERED, PARTLY ANSWERED, UNKNOWN / NOT ESTABLISHED, DEFER (name the agenda topic). A source answer may be complete even when the operator's historical observation is unknown.
+
+REQUIRED OUTPUT FORMAT
+1. A completed copy of this answer sheet, preserving all IDs and answering each question directly.
+2. A concise source inventory and search/method note.
+3. An evidence table with exact file/function/line/config/table/event/record references.
+4. A list of candidate source defects/documentation drift, without proposing fixes or V2 decisions.
+5. A list of explicit unknowns and operator-only questions.
+6. No manual draft yet. ChatGPT will do the reconciliation and manual draft after this repository-backed answer is returned.
+
+CHECK BEFORE RETURN
+- Use pinned baseline `970aabf3c78d777d9d34549e021f7c8e756c7bdb`, not the current default branch unless it is verified identical.
+- Do not use sandbox/records repositories.
+- Do not execute source or connect to external systems.
+- Do not change repository files or governance registers.
+- Do not expose secrets or personal/account identifiers.
+- Check the count and ensure every B10 ID appears exactly once.
+- Report any source path unavailable at the pinned commit as unavailable; do not substitute a later version silently.
+
+END OF B-010 ANSWER SHEET

@@ -1,0 +1,89 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-010 RECONCILIATION FOR CLAUDE
+Date: 20-Oct-2026
+Baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Status: ChatGPT independent source reconciliation; manual draft follows separately.
+Security: no credentials or sensitive account/host data reproduced.
+
+1. OVERALL ASSESSMENT
+Claude's B-010 research is substantial and mostly internally consistent. The central distinction is correctly preserved:
+- MIS AutoSquareoff is a separate two-pass unit at configured 15:03 and 15:06.
+- The 15:15 order-monitor control cancels tracked entry orders and applies SOFT_KILL; it does not close positions.
+- EodSquareoff is the separate 15:17 compound routine, which places exits and then performs persistence, WAL checkpoint, event publication, P&L reset and summary handling.
+- None of the source-level completion indicators proves that the broker account is flat or that the host actually ran the code.
+
+This reconciliation independently re-fetched the pinned source ranges from GitHub. It is a selected-path verification, not a complete-tree audit, and no code/tests or live systems were run.
+
+2. SOURCE CLAIMS INDEPENDENTLY RECHECKED
+At the pinned baseline:
+- orders/eod_squareoff.py, blob 54f6cd6223353df0e9ad8bc823472f28b19b3818:
+  _fire ordering and exception guards; gate clearing is conditional on self._entry_gate being non-None; write-ahead insert failure logs and continues; cancellation pass, 2-second wait, position exits, stale sweep, COMPLETE persistence, checkpoint, event, reset_daily_pnl, conditional kill-switch resume, summary and telemetry are present in the cited order.
+- main.py line-range fetch (file content slice; do not treat its returned SHA as a verified full-file SHA):
+  EodSquareoff construction does not pass entry_gate. It wires the stale-order sweep and separately constructs the MIS notifier and MIS square-off unit.
+- core/state_store.py, blob 11866117801b9329773a1be605448faef3c96f8d:
+  get_pending_intraday_orders selects trades whose status is exactly PENDING_FILL and whose ENTRY product is MIS or CO.
+- orders/order_placer.py, blob e3a602909befa3fd3ba4b27caeed108724c07947:
+  OrderPlacer attempts to transition the trade to PENDING before the broker call.
+- orders/mis_autosquareoff.py, blob d654fd9a53ce946c0757a4621bfac3389e0b34b1:
+  _emit invokes notifier.send(severity, title, message=detail), inside a try/except.
+- alerts/telegram_notifier.py, blob 21af57459355294cdbecfb138bb9ebd136a2fb0b:
+  send() requires body and source_module; it has no message parameter.
+- orders/eod_squareoff.py promotion path:
+  MARKET fallback calls place_order without market_protection. This is a source fact; broker refusal is a separate record-derived fact and should remain labelled as such.
+
+3. IMPORTANT QUALIFICATIONS / RECONCILIATION
+A. Entry-gate correction to frozen B-009
+CONFIRMED SOURCE DEFECT / DOCUMENTATION ERRATUM:
+The B-009 statement that the 15:17 routine clears the entry gate is incorrect for the pinned baseline. _fire() only clears the gate when one was passed into EodSquareoff. main.py's constructor call does not pass entry_gate. The clear step is therefore inert in the wired path. This does not overturn B-009's separate finding that no runtime caller feeds fresh candidates into EntryGate.add(); only the claim that EOD clears stored gate entries needs correction.
+Governance: do not edit the frozen B-009 manual silently. Record an approved erratum against B-009/DR-046, and amend only after Rama approves the erratum workflow.
+
+B. MIS Telegram alert defect — precise scope
+CONFIRMED SOURCE DEFECT:
+The MIS unit's direct _notifier.send(...) call uses the unsupported keyword message and omits required body/source_module. That direct send attempt raises and is caught/logged. However, main.py also wires a separate critical_sink to MisSquareoffNotifier, which is invoked before the direct notifier call. Therefore do NOT say that all MIS critical alerts or the separate notifier path are necessarily broken. Source establishes the direct call mismatch; actual delivery on a given date remains UNKNOWN / NOT ESTABLISHED.
+
+C. EOD pending-entry cancellation defect
+CONFIRMED SOURCE PATH:
+The EOD query selects status PENDING_FILL, while OrderPlacer attempts PENDING before the broker call. The reviewed source search reports no runtime update back to PENDING_FILL. Therefore the EOD query can miss resting entry orders that have transitioned to PENDING. Do not overstate that no entry cancellation happens at 15:15: that is a separate OrderMonitor path and its effect depends on that monitor running. Actual host state is unknown.
+
+D. EOD MARKET orders and protection
+CONFIRMED SOURCE FACT:
+The examined EOD MARKET fallback calls omit market_protection; the adapter omits a protection field when none is provided. The record-backed reports of broker rejection are separate historical evidence. Phrase operational outcome conditionally: the source path is vulnerable to rejection under the documented broker constraint; this review does not establish that the baseline code ran on a given date.
+
+E. COMPLETE persistence gap
+CONFIRMED SOURCE PATH, based on Claude's cited state_store ranges, pending full independent line-by-line recheck if needed:
+The COMPLETE UPDATE does not check affected-row count. If the write-ahead insert failed but the UPDATE returns successfully with zero rows changed, the exception fallback will not run, and no COMPLETE row may exist. Label the possible subsequent recovery fire as an interpretation, not a witnessed event.
+
+F. MIS PASS 1 / PASS 2 and notifier distinction
+Keep these separate from general EOD:
+- The source describes PASS 1 as MARKET with a 1.5% protection band and PASS 2 as MARKET with a 2.5% band; the module header's LIMIT_THEN_MARKET wording is documentation drift.
+- MIS candidates are broker MIS positions; the source path has no system-ownership check. The record that a HUMAN_ORDER-labelled position was a candidate is record-derived, not proof of all runs.
+- Protection restoration and post-pass verification are source paths, not evidence of successful operation on the host.
+
+G. Counts, records and cron
+- Test function counts and names are inventory only; no tests were run and no passing status may be inferred.
+- Cron registry and generated crontab establish declarations only, not installation or execution.
+- Historical records establish only their stated date/commit and scope. Comments citing incidents are not independent incident records.
+- The inventory says seven records were found by name but not read; do not describe their contents as inspected.
+- One forbidden history command was disclosed. Its output was not used; note this as a process exception, not a source-content finding.
+
+4. MANUAL DRAFTING RULES
+The accompanying manual draft:
+- remains an UNFROZEN draft and is not committed/pushed;
+- labels source facts, record-derived facts, interpretations, defects, unknowns and open questions separately;
+- keeps general EOD distinct from the MIS two-pass unit and 15:15 control;
+- does not assume host execution, flat-book success, paper/live parity, alert delivery or cron execution;
+- includes the entry-gate erratum as a governance note, not a silent amendment to B-009;
+- makes no V2 design or retain/reject decision.
+
+5. OPEN / NOT ESTABLISHED
+- Installed cron and systemd timers; actual execution on any date.
+- Actual host state, thread liveness, external supervisor behaviour, broker state and alert delivery.
+- Paper/live parity.
+- Whether the MIS critical_sink successfully delivered a notification on a specific date.
+- Whether EOD's zero-row COMPLETE update path occurred in production.
+- Whether any of the source defects were corrected/deployed after the pinned baseline.
+- Actual special-session behaviour.
+- Full review of post-market scripts, report modules, systemd files, and the unread named records.
+
+6. RECOMMENDED NEXT STAGE
+Use the accompanying B-010 manual as a review draft only. Do not freeze it yet. Claude should correct any source-reference or wording issues raised here, especially the entry-gate correction to B-009 and the distinction between the broken direct MIS notifier call and the separate critical_sink path. Rama approves any freeze or erratum and any repository storage/commit/push.

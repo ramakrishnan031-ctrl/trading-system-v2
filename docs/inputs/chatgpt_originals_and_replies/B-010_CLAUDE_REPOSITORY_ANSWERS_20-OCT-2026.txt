@@ -1,0 +1,681 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-010 END-OF-DAY OPERATION — CLAUDE'S REPOSITORY-BACKED ANSWERS
+Date: 20-Oct-2026 (IST)
+Answers: B-010_END_OF_DAY_ANSWER_SHEET_FOR_CLAUDE_20-OCT-2026.txt, under B-010_CLAUDE_REPOSITORY_RESEARCH_PROMPT_20-OCT-2026.txt
+Companion: B-010_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt (sources, searches, records, tests, limits)
+Status: RESEARCH INPUT FOR CHATGPT'S RECONCILIATION. Not a manual, not frozen. Nothing committed or pushed. No V2 decision.
+Security: no credential, token, account or client identifier, host or path value is reproduced.
+
+======================================================================
+0. BASELINE AND READING RULES
+======================================================================
+
+- Repository: trading-system-prod-snapshot. Commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb, confirmed to exist and checked out (git cat-file and rev-parse HEAD). Every "file L-L" below is a line range at this commit.
+- Only this repository was used. The sandbox and records repositories were not read (the prompt; Rama's instruction of 20-Oct).
+- Source proves only what the pinned source contains. It does not prove what was installed or ran on the VM. Records prove their own dates and deployed commits only.
+- Labels: FACT (SOURCE-VERIFIED); FACT (RECORD-DERIVED: record, date, deployed commit); INTERPRETATION; KNOWN DEFECT; KNOWN DOC DRIFT; UNKNOWN / NOT ESTABLISHED; OPEN QUESTION; DEFER (topic).
+- Terms used below:
+  - "EOD" is the general end-of-day routine, orders/eod_squareoff.py, class EodSquareoff.
+  - "MIS unit" is the separate two-pass routine, orders/mis_autosquareoff.py, class MisAutoSquareoff.
+- Counts: the sheet holds 50 IDs (A5, B5, C9, D7, E7, F7, G5, H5). Each is answered once below; the status table is in H5.
+
+======================================================================
+SECTION A — OWNERSHIP, BOUNDARY, AND ENTRY POINTS
+======================================================================
+
+B10-A1. Boundary
+FACT (SOURCE-VERIFIED), with the boundary as the sheet sets it:
+- B-010 starts where the MIS unit's first pass becomes due (15:03). It covers:
+  - the MIS passes;
+  - the 15:15 controls, as far as they touch end of day;
+  - the 15:17 EOD routine and its sequence, persistence and reset;
+  - the post-market jobs up to the service's self-exit (service_window_end 17:35; config/system_config.yaml 105-112; main.py 4123-4161, the eod-self-exit thread, frozen in B-006 as TH29).
+- Delegated:
+  - intraday signals, orders and the 15:00 entry end: B-009 (frozen, DR-046);
+  - start-up and workers: B-001 to B-006;
+  - /health semantics: B-007;
+  - shutdown at self-exit: B-011;
+  - restart: B-012;
+  - order and position lifecycle detail, reconciliation checks (G-015): G topics;
+  - kill-switch semantics: I topics;
+  - alerts and reports: L topics;
+  - cron installation: M topics.
+
+B10-A2. Components (constructed path first; "active" means wired and started in main.py, not proven running)
+| Component | Role at end of day | Evidence |
+|---|---|---|
+| EodSquareoff | 15:17 compound routine | main.py 3300-3319; poll thread 4093-4100 (start_polling via the eod-scheduler wrapper) |
+| MisAutoSquareoff | 15:03 and 15:06 MIS passes | main.py 3323-3337 (timing), 3359-3380 (construction, start_polling) |
+| MisSquareoffNotifier | Separate human-facing alert path for MIS criticals | main.py 3338-3357; B-006 TH1, TH2 |
+| OrderMonitor | Tracks EOD exit orders (leg "EOD"); its 15:15 force-close cancels tracked entries and sets SOFT_KILL | eod_squareoff.py 1313-1323; order_monitor.py 794-830; B-009 section 3 |
+| OrderReconciler | sweep_stale_orders called by EOD; its 15 s poll continues | main.py 3384; order_reconciler.py 472-537 |
+| FundManager | reset_daily_pnl (RESET_PNL ledger row); release on cancel | eod_squareoff.py 529-534, 907-922; fund_manager.py 1687-1717 |
+| StateStore | eod_squareoff_log; EOD queries; WAL checkpoint | state_store.py 1015-1039, 1135-1168, 1207-1250, 1300-1406, 285 onward |
+| EventBus | EodSquareoffComplete | eod_squareoff.py 512-527; core/events.py 173-186 |
+| Notifier | Daily summary; recovery and late-skip alerts; force-close alert | eod_squareoff.py 559-565, 646-708, 1800-1815, 1856-1876; main.py 702-723 |
+| Entry gate | EOD would clear it, but it is NOT passed to EOD | main.py 3300-3319 has no entry_gate; the only "entry_gate=" in runtime code is the shutdown call (main.py 4254). See G5, D-1 |
+| Retest monitor | Set only on the retest-enabled path, which is off | main.py 3794; B-006 TH11 |
+| ShadowTracker | Subscribes to EodSquareoffComplete; disabled by config | shadow_tracker.py 195, 415; B-006 section 3 |
+
+B10-A3. Construction and wiring of EOD (FACT, SOURCE-VERIFIED)
+- main.py 3300-3319 passes:
+  - adapter, store, fund_manager, state_machine, bus, market_windows, time_authority, kill_switch, logger and order_monitor;
+  - inter_order_delay_ms = 500 (config 360);
+  - market_close = "15:30" (config 104);
+  - notifier and mode;
+  - exit_protocol = "LIMIT_THEN_MARKET" (config 363);
+  - limit_aggressive_pct = 0.01 (364);
+  - limit_grace_sec = 120 (365).
+- Not passed: entry_gate (constructor default None, eod_squareoff.py 132).
+- Late binding:
+  - _eod_ref["eod"] = eod (main.py 3321), for the daily-loss callback;
+  - set_stale_order_sweep(order_reconciler.sweep_stale_orders) (3384);
+  - set_retest_monitor (3794, only on the retest-enabled path);
+  - post_wire_init() (3866), which runs _check_restart_recovery after bus subscriptions are wired.
+- Ordering (INTERPRETATION from line order): post_wire_init at 3866 runs before the Phase 0f startup reconcile (3868 onward) and before order_monitor.start() (3960). A recovery fire at start therefore places exits and calls track() before the monitor's poll thread runs.
+- config eod_squareoff.auto_resume_kill_switch (config 362) is declared in the schema (core/config_loader.py 649) but read nowhere else in runtime code. KNOWN DOC DRIFT (an inert setting).
+
+B10-A4. What triggers EOD (FACT, SOURCE-VERIFIED)
+- main.py 4093-4100 starts thread "eod-scheduler", target eod.start_polling, with poll_interval_sec = 5 (config 361).
+- start_polling (eod_squareoff.py 290-312) starts daemon "eod_squareoff_poll". Its loop calls check_and_fire(now_ist()) every 5 s; exceptions are logged and the loop continues (300-306). The wrapper thread ends.
+- check_and_fire (202-236) returns False:
+  - unless MarketWindows.is_eod_squareoff_due(now) (market_windows.py 194-205: not a holiday, and now.time() >= the effective EOD time);
+  - on a trading holiday (217-218; already inside the due test);
+  - if already fired for that date (220-223).
+- Otherwise it claims the per-date flag and calls _fire. On an exception it resets the flag and re-raises; the poll loop logs it and tries again 5 s later.
+- Clock: core.time_authority.now_ist (eod_squareoff.py 63). The time is absolute IST, special sessions aside (B2).
+- Helper capability versus wired path: start_polling is the wired path. is_alive (314-322) reports that poll thread and is exposed on /health as "eod_scheduler" (main.py 4069).
+
+B10-A5. Other callers of fire_now (FACT, SOURCE-VERIFIED)
+- Search: fire_now across all 330 runtime Python files outside tests/. One runtime caller: main.py 797-800, inside _on_daily_loss_breach (756-817), with reason "daily_loss_limit_breached" and triggered_by "fund_manager".
+  - FACT (RECORD-DERIVED: docs/audit/mo5_investigation_22jul2026.md lines 23-30, 22-Jul-2026, "deployed tree"): the same was found then, with no operator trigger.
+- fire_now (238-288) bypasses the time and holiday checks, logs CRITICAL and sets the date flag. On an exception it resets the flag and re-raises. On a partial failure (positions_failed or cancels_failed > 0) it also resets the flag, so the 15:17 check_and_fire can run again.
+- The daily-loss callback catches a fire_now exception, logs it and still sets SOFT_KILL (802-815). If EOD is not wired it logs a warning and sets SOFT_KILL only (806-809).
+- _check_restart_recovery also calls _fire directly (1788, 1887); see E4.
+
+======================================================================
+SECTION B — CLOCKS, WINDOWS, AND SCHEDULING
+======================================================================
+
+B10-B1. Timeline (FACT, SOURCE-VERIFIED; configured values, not proof of execution)
+| IST | Control | Owning code | Effect |
+|---|---|---|---|
+| 14:45 | EOD pre-alert | main.py 931-970, 4102-4110 (B-006 TH27) | Telegram warning only |
+| 15:00 | entry_end | config 47; market_windows.py 143-150 | Entries ineligible (B-009) |
+| 15:03 | MIS PASS 1 (cutoff - 6m) | config 59, 90; core/mis_squareoff_timing.py 146-148; mis_autosquareoff.py 359-385 | Per symbol: cancel MIS SL/TGT, verify, place MARKET exit with a 1.5% protection band (C1 of D2) |
+| 15:06 | MIS PASS 2 (cutoff - 3m) | config 91; mis_autosquareoff.py 336-357 | The same with a 2.5% band, after resolving any PASS 1 residual |
+| 15:09 | MIS protective cutoff | config 59 | Deadline used to classify DEADLINE_BREACH (441, 1239-1256); no action of its own |
+| 15:15 | Placement cut-off | config 48; order_placer.py 1076-1097 | Placer refuses new orders |
+| 15:15 | Tracked-entry cancellation and SOFT_KILL ("force-close") | config 740; order_monitor.py 614-615, 794-830; main.py 688-724 | Cancels tracked ENTRY orders, SOFT_KILL; closes nothing; runs only while the order monitor runs |
+| 15:17 | EOD routine | config 49; eod_squareoff.py 202-236, 326-570 | Section C |
+| 15:30 | market_close | config 104 | Upper limit for a recovery fire with no log row (1825) |
+| 15:40 to 18:50 | Post-market cron jobs | config/cron_registry.yaml (F7) | Declared, not proof of runs |
+| 17:35 | service_window_end, self-exit | config 112; main.py 4123-4161 | Service stops (B-011) |
+- Ordering is validated at start: entry_end < CHECK_1 < CHECK_2 < cutoff < eod_squareoff_time, or start-up fails (mis_squareoff_timing.py 150-155).
+
+B10-B2. How eod_squareoff_time is evaluated (FACT, SOURCE-VERIFIED)
+- is_eod_squareoff_due (market_windows.py 194-205): not a holiday, and now.time() >= the date's effective EOD time. That is the special-session value when the date has one (75-89), otherwise trading_hours.eod_squareoff_time.
+- It is an absolute IST clock time per date, not relative to the session.
+- Holidays come from MarketWindows' holiday set (main.py 2320-2328). Weekends count as holidays unless the date is a special session (93-106).
+- special_sessions is empty at the baseline (config 117-122, example commented out).
+- EOD's own recovery limit, _market_close_time, is the constructor's fixed "15:30" (eod_squareoff.py 149; main.py 3312). It is not special-session aware. INTERPRETATION: on a special session that closes after 15:30, the no-row recovery path would refuse to fire.
+
+B10-B3. Scheduled and in-process items related to EOD
+- In process (FACT, SOURCE-VERIFIED):
+  - eod_squareoff_poll (5 s);
+  - mis_autosquareoff_poll (5 s; poll_interval_sec taken from eod_squareoff.poll_interval_sec, main.py 3334, 3345);
+  - mis_f_prepass_poll (B-006 TH2);
+  - eod-pre-alert;
+  - eod-self-exit (main.py 4123-4161).
+- Declared (config/cron_registry.yaml) and generated:
+  - scripts/generate_crontab.py composes each crontab line from the registry fields cron_expression, env_wrapper, command, log_target, marker_name and enabled (lines 1-29).
+  - A generated file is stored at deploy/cron/trading-system.cron (151 lines; 46 job lines), with one job per registry entry under a "# <name> [<schedule>]" comment.
+  - Its post-market jobs:
+    - fetch_daily_candles 15:40;
+    - reconcile_positions 15:45;
+    - eod_cleanup 15:50;
+    - reconstruct_excursions 15:50;
+    - eod_verify 15:55;
+    - eod_broker_reconcile 15:58;
+    - sr_detector_backfill 15:58;
+    - wal_checkpoint 16:00;
+    - generate_screened_csv 16:01;
+    - daily_trade_review 16:07;
+    - trade_journal 16:10;
+    - compute_strategy_metrics 16:15;
+    - metrics_summary 16:16;
+    - gemini_log_review 16:20;
+    - strategy_registry_officer 16:22;
+    - gemini_trade_coach 16:40;
+    - gemini_data_integrity_check 17:00;
+    - control_tower 17:05;
+    - check_cron_drift 18:00;
+    - forward_shadow_record 18:15;
+    - cron_officer_eod 18:50.
+  - The overnight jobs from 00:00 include log_cleanup, db_backup and the retention jobs.
+  - daily_report (16:05) is enabled: false, "RETIRED 29-Aug-2026" (registry 542-550).
+- systemd: deploy/systemd/ holds a cron-watchdog.timer and services (tree listing). Not read for B-010.
+- UNKNOWN / NOT ESTABLISHED: the installed crontab and timers, and any run on any date. The generator's --check mode compares against a live crontab supplied as a file (generate_crontab.py 28); no live crontab is in the repository.
+
+B10-B4. Late start, double call, exception (FACT, SOURCE-VERIFIED)
+- Late start: check_and_fire fires at the first poll at or after 15:17. Nothing stops a late fire on the same date: there is no upper bound in check_and_fire, unlike the recovery path's 15:30 limit.
+- Double call: an in-memory per-date flag under a lock (220-227) prevents a second scheduled fire in the same process.
+- Exception: the flag is reset and the exception re-raised (229-235); the poll loop retries every 5 s.
+  - INTERPRETATION: an exception after reset_daily_pnl (step 7) but before return would repeat the reset on retry. The steps after it (resume, summary, telemetry) each catch their own exceptions, so this is unlikely in source terms.
+- One unguarded call: get_pending_intraday_orders (873) and get_open_intraday_positions (1063) are not wrapped. A store exception there propagates out of _fire after the write-ahead row and the SOFT_KILL. The soft-kill resume (536-544) is then skipped and the next poll retries the whole sequence.
+- The flag is in memory only; restart behaviour is E4.
+
+B10-B5. Holidays, weekends, special sessions
+- FACT (SOURCE-VERIFIED):
+  - EOD does not fire on a holiday or weekend (217-218; market_windows.py 93-106), except on a configured special-session date.
+  - The MIS unit's holiday guard is the same function (main.py 3365; mis_autosquareoff.py 330-331). But its CHECK_1, CHECK_2 and cutoff are fixed config times built once (main.py 3329-3337); they ignore special_sessions.
+  - Likewise the global entry window and eod_entry_cutoff (market_windows.py 143-150, 177-190) and the order monitor's 15:15 force-close (config 740) are fixed times that ignore special sessions.
+- INTERPRETATION: on a special session (for example an evening session), the MIS passes, 15:15 controls and entry window would act at their ordinary clock times, while EOD would use the session's eod_squareoff_time.
+- UNKNOWN / NOT ESTABLISHED: any actual special-session run. special_sessions is empty at the baseline, and no test combining a special session with the MIS unit was found among the tests read (companion file).
+
+======================================================================
+SECTION C — GENERAL EOD FIRE SEQUENCE
+======================================================================
+
+B10-C1. _fire in executable order (FACT, SOURCE-VERIFIED; eod_squareoff.py 326-570)
+0. Timestamps (334-338).
+1. If an entry gate is wired, clear_all (340-347). Not wired in main.py: inert.
+2. If a retest monitor is wired, clear_all (349-356). Inert at the baseline.
+3. Write-ahead: insert_eod_squareoff_log_start, an IN_PROGRESS row (358-378). On failure it logs EOD_WRITEAHEAD_FAILED and proceeds.
+4. Kill switch: if none is active, soft_kill(reason "EOD_SQUAREOFF") and remember that EOD set it; otherwise log and skip (380-392).
+5. Pass 1, cancellations:
+   a. _cancel_pending_entries (400; 864-945).
+   b. _cancel_pending_exit_legs (407; 947-1025).
+   c. Counts are combined (408-410).
+6. time.sleep(2) (417-424).
+7. Pass 2: _exit_open_positions (429-432; 1027-1425). It includes the LIMIT grace sleep and MARKET promotion (1382-1407) and the residual broker sweep (1409-1423).
+8. Stale-order sweep, if wired (439-447). It is wired to OrderReconciler.sweep_stale_orders.
+9. Summary log line (451-457).
+10. Persist COMPLETE, with a fallback insert on exception (459-497).
+11. WAL checkpoint, TRUNCATE mode (499-510).
+12. Publish EodSquareoffComplete (512-527).
+13. fund_manager.reset_daily_pnl (529-534).
+14. Resume the kill switch only if EOD set it (536-544).
+15. Build EodFireResult (546-557).
+16. Telegram daily summary, if a notifier is present (559-565).
+17. Effect telemetry increment (567-569); return.
+
+B10-C2. Entry blocking during EOD (FACT, SOURCE-VERIFIED)
+- EOD sets SOFT_KILL only if is_active("any") is false (382-387).
+- On an ordinary day, if the order monitor ran its 15:15 force-close, SOFT_KILL is already active at 15:17. EOD then sets nothing and resumes nothing (388-392, 537).
+- EOD never clears a kill it did not set. If it did set one, it resumes it at step 14 (EOD_SQUAREOFF_COMPLETE).
+- Entries are also closed by the 15:00 window and the 15:15 placement cut-off independently (B-009).
+
+B10-C3. What Pass 1 cancels (FACT, SOURCE-VERIFIED)
+- Entries: get_pending_intraday_orders (state_store.py 1015-1039) selects trades with status = 'PENDING_FILL' whose ENTRY order has product MIS or CO.
+  - Each one: cancel_order; on success the trade and order are set CANCELLED and the reservation released (884-928).
+  - On failure: CRITICAL log, failed += 1, continue (886-892, 930-943).
+- Exit legs: get_pending_exit_orders_for_open_positions (1135-1168) selects non-terminal SL and TGT orders of OPEN or PARTIAL trades whose entry product is MIS or CO.
+  - Each one is cancelled with its variety; on success the order row is set CANCELLED (981-1007).
+  - Per-row failures are logged CRITICAL and counted, without stopping. A failed fetch skips the whole step (960-968).
+- No failure aborts Pass 2.
+- KNOWN DEFECT (source path): the entry selection keys on 'PENDING_FILL'.
+  - OrderManager inserts a trade as PENDING_FILL (orders/order_manager.py 13, 198, 236), but OrderPlacer sets it to "PENDING" before the broker call (order_placer.py 1061-1071).
+  - No runtime code sets PENDING_FILL afterwards. Search across the 330 files: no UPDATE to 'PENDING_FILL'; the trade-status updates are listed in the companion file.
+  - So a trade with an entry order resting at the broker reads PENDING, and Pass 1 cannot select it.
+  - tests/unit/test_eod_squareoff.py 1080-1081 seeds PENDING_FILL directly ("create_trade sets status=PENDING_FILL already"), so the test does not exercise the placer's transition.
+  - INTERPRETATION of the effect: small at 15:17. The order monitor's 60 s fill timeout and the 15:15 entry cancellation would normally have cancelled any entry already, but both depend on the monitor running (B-009 D3).
+
+B10-C4. Why EOD waits between the passes (FACT, SOURCE-VERIFIED)
+- The 2 s sleep (417-424) is FIX-063. The rationale is in its comment: a "phantom fill" arriving as the cancel is sent should reach the order monitor (2 s poll), the state machine and the DB, and then appear in the open-position query.
+- INTERPRETATION: this is intended, not guaranteed. One 2 s monitor cycle may or may not have run in that window, and the trade-status update depends on the event chain.
+- The broker-position filter in Pass 2 (1065-1120) is the stronger guard: it re-reads broker positions before exiting.
+
+B10-C5. How positions are selected for exit (FACT, SOURCE-VERIFIED)
+- Local rows come from get_open_intraday_positions (state_store.py 1207-1250): status OPEN or PARTIAL, qty_filled > 0, ENTRY product MIS or CO, grouped by trade and sorted by symbol.
+- Broker filter: get_positions once, keeping symbols with non-zero quantity and product in EMERGENCY_FLATTEN_PRODUCTS ({MIS, CO}; 1071-1087).
+  - Local rows whose symbol is absent at the broker are skipped, with a warning (1104-1120).
+  - If the broker read fails, the filter is skipped and the DB quantity used (1088-1094).
+- Quantity: the broker's absolute quantity for that symbol replaces the row's (1257-1260). Zero means skip without counting (1261-1272).
+- DELIVERY/CNC is excluded by both the local and the broker filter.
+- CO: a branch exists (order_protocol CO_PLUS_TGT with entry variety "co"; 1166, 1172-1247). It cancels the CO bracket instead of placing a reverse order.
+  - On the traced placement path no order is CO_PLUS_TGT (B-009 D2), so this branch is latent.
+  - FACT (RECORD-DERIVED, a comment at mis_autosquareoff.py 86-87 citing a query): "SELECT DISTINCT product FROM orders = {MIS, CNC}". No date is given.
+- Residual sweep: a second, fresh get_positions (1446-1454) finds non-zero MIS/CO broker positions not already handled. Only those whose symbol has a local trade today are flattened; others are logged as human and skipped (1456-1513).
+- INTERPRETATION: quantity is keyed by symbol, not by trade. Two local OPEN trades on one symbol would each be sent the full broker quantity. The skip on a later zero read applies only after the first exit fills, which is not awaited. Not established that this ever occurred.
+
+B10-C6. Order type and price (FACT, SOURCE-VERIFIED)
+- With exit_protocol LIMIT_THEN_MARKET (config 363):
+  - one batched get_quote (1135-1150);
+  - a LIMIT at LTP x (1 - 0.01) for a SELL, or x (1 + 0.01) for a BUY (1275-1287);
+  - if there is no LTP, MARKET (1288-1295);
+  - place_order with intent INTRADAY and tag EOD_SQUAREOFF (1300-1308);
+  - 0.5 s between orders (1378-1380).
+- After all symbols: one 120 s sleep (1386-1393). Then _promote_limits_to_market re-reads positions, cancels each LIMIT still open and places MARKET for the remaining quantity (1592-1722). If that re-read fails, LIMITs are left in place (1617-1627).
+- Residual sweep: a marketable LIMIT at LTP +/- the emergency buffer, or MARKET when there is no LTP (1516-1590).
+- KNOWN DEFECT (source plus records): every MARKET placed by EOD omits market_protection. That covers the no-LTP fallback (1294), the promotion (1663-1671) and the residual fallback (1547-1548).
+  - The adapter sends no protection band when none is given (broker/zerodha_adapter.py 2116-2119).
+  - FACT (RECORD-DERIVED):
+    - docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md line 21 records the broker refusing a MARKET order: "Market orders without market protection are not allowed via API" (10-Sep-2026, production);
+    - order_placer.py 137-138 quotes the same rejection from 15-Jun;
+    - docs/incident/2026-09-03_naked_position_ANANTRAJ.md lines 128-131 list these EOD MARKET call sites (at deployed 2d08436).
+  - INTERPRETATION: such an EOD MARKET order would be refused, counted as failed (promotion) or caught (residual), and the position left to the broker's auto square-off.
+  - FACT (RECORD-DERIVED, same incident, lines 312-315): the 27 EOD-leg orders ever placed up to 03-Sep were all LIMIT. No EOD MARKET is recorded as executed.
+
+B10-C7. Exit legs before flattening (FACT, SOURCE-VERIFIED)
+- Pass 1b cancels SL/TGT before Pass 2 (402-410). If a leg's cancel fails, Pass 2 still runs (comment at 403-406; code continues).
+- INTERPRETATION: a surviving SL or TGT could fill after the EOD exit and open a reverse position. The comment names that risk (402-404).
+- The later stale-order sweep (order_reconciler.py 472-537) only marks local orders CANCELLED when their parent trade is already terminal. It makes no broker call and so cannot cancel a live leg.
+
+B10-C8. Does EOD wait for fills or a flat book? (FACT, SOURCE-VERIFIED)
+- No. The module says fill confirmation is out of scope (EOD7, 25; 35). EOD hands each exit to OrderMonitor.track with leg "EOD" (1313-1323, 1560-1571, 1672-1682) and records an orders row.
+- positions_succeeded counts exit orders placed (1352), CO cancels accepted (1241), promotions placed (1701) and residual orders placed (1503-1504). It does not count fills.
+- A later fill reaches the placer only through the order monitor's events. The reconciler's 15 s checks pick up the rest (B-009 section 8).
+- EodSquareoffComplete and the COMPLETE row do not prove a flat book.
+
+B10-C9. EodFireResult (FACT, SOURCE-VERIFIED)
+- Fields (eod_squareoff.py 77-89): fired_date, fired_at, positions_attempted/succeeded/failed, cancels_attempted/succeeded/failed, duration_sec, recovery_fire.
+- Built at 546-557 and returned.
+- Consumers:
+  - fire_now's partial-failure test (285-287);
+  - the daily-loss callback, which ignores the return value (797-801);
+  - check_and_fire returns only a boolean.
+- The same counts go to the log line (452-457), the eod_squareoff_log row (465-497) and the event (514-525). recovery_fire is only in the result object; it is not persisted.
+
+======================================================================
+SECTION D — SEPARATE MIS SAFETY PASSES
+======================================================================
+
+B10-D1. Wiring and polling (FACT, SOURCE-VERIFIED)
+- Built at main.py 3359-3379 with:
+  - adapter, store, the timing contract, now_fn = time_authority.now_ist, is_trading_holiday_fn;
+  - limit_grace_sec 120 and an inter-order delay of 0.5 s;
+  - protection percentages of 1.5 and 2.5 (config 376-377);
+  - the notifier and a critical_sink to MisSquareoffNotifier.
+- start_polling (3380; mis_autosquareoff.py 389-420): one daemon "mis_autosquareoff_poll" thread calling check_and_fire every 5 s.
+- Per-date, per-pass fired flags under one lock (306-313). PASS 1 attempts are bounded at 3 (269, 364-368).
+- PASS 2 takes priority once due (336-357).
+- Relation to EOD: separate threads. Each unit serialises its own passes; there is no lock between the MIS unit and EOD. Their times do not overlap by configuration (validated ordering, B1).
+- is_alive exists (422-427), but main.py does not put it on /health (4060-4071 lists order_monitor, order_reconciler, eod_scheduler and live_feed). KNOWN DOC DRIFT against its docstring ("must be visible to /health like the EOD one").
+
+B10-D2. PASS 1 (FACT, SOURCE-VERIFIED)
+- Due at CHECK_1 = cutoff 15:09 - 6 minutes = 15:03 (mis_squareoff_timing.py 146-148; config 59, 90).
+- Eligibility: broker positions with product exactly "MIS", non-zero quantity and a symbol (549-569). CNC, CO, NRML and unknown products are excluded and counted in the scan log (459-476).
+- There is no check that the position is system-owned.
+  - FACT (RECORD-DERIVED, 10-Sep-2026 record lines 18-19): a position the reconciler had labelled HUMAN_ORDER (IDEA) was counted as a PASS 1 candidate.
+  - This differs from EOD's residual sweep, which skips human positions (1488-1495).
+- Per symbol (702-916):
+  - read the local resting MIS SL/TGT (state_store.py 1170-1205);
+  - cancel each;
+  - verify at the broker by polling order history up to 5 s (1177-1214);
+  - only then place the exit.
+  - On a cancel failure or non-confirmation, protection is restored and the exit is not submitted (846-857).
+- Exit protocol: MARKET with market_protection 1.5% (860-878).
+- KNOWN DOC DRIFT:
+  - the header (34) says "PASS 1 ... LIMIT_THEN_MARKET, grace capped", but the code always places MARKET for PASS 1 (860);
+  - effective_grace_sec (1265-1283) and _retry_remaining_mis_positions (1258-1261) have no caller in the 330 runtime files;
+  - limit_grace_sec is stored (292) and unused on the executable path.
+- Outcomes: the MisState vocabulary (152-178). After the exits, positions are re-read (D4).
+- An inconclusive outcome (BROKER_STATE_UNAVAILABLE or RECONCILIATION_UNKNOWN) leaves PASS 1 retryable (376-382).
+
+B10-D3. PASS 2 (FACT, SOURCE-VERIFIED)
+- Due at CHECK_2 = 15:09 - 3 minutes = 15:06 (91).
+- Same eligibility as PASS 1.
+- Explicit protocol: PASS_2_EXIT_PROTOCOL = "MARKET" (93), with market_protection 2.5%.
+- No grace and no retry: a raise resets the flag for the next poll (349-356).
+- Residual gate first (717-812). For each symbol with a PASS 1 order:
+  - read the broker's open orders once;
+  - a read failure blocks the symbol (608-638, 649-650);
+  - a live PASS 1 order is cancelled and verified (651-670);
+  - the position is re-read before sizing (672-700, 782-812).
+- Terminal vocabulary: as PASS 1, plus PASS_1_ABANDONED_FOR_PASS_2, PASS_2_STARTED_LATE and PASS_1_RUNNING_AT_PASS_2_DUE (165-171, 344-348, 436-439).
+
+B10-D4. Post-pass verification and the 15:09 deadline (FACT, SOURCE-VERIFIED)
+- _verify_mis_positions_closed (1216-1256) re-reads broker positions immediately after the exits are placed:
+  - read failure: RECONCILIATION_UNKNOWN, critical;
+  - any MIS still open: MIS_REMAINS, or DEADLINE_BREACH if now >= 15:09, critical;
+  - flat: EXIT_FILLED, or DEADLINE_BREACH if past the cutoff.
+- A pre-flight budget check emits DEADLINE_BREACH_ANTICIPATED and proceeds anyway (486-499).
+- There is no action at timeout beyond alerts. PASS 2 is the only retry.
+- INTERPRETATION: there is no settle wait between placing and the check (501-502). A MARKET order still executing may read as MIS_REMAINS.
+  - FACT (RECORD-DERIVED, 10-Sep record line 23): MIS_REMAINS was logged 4 s after PASS 1, for a symbol whose exit had been rejected. The record does not test the no-wait case.
+- Results are kept in memory only (1287-1293). The submitted band is logged (886-899).
+
+B10-D5. Restoring protection (FACT, SOURCE-VERIFIED)
+- _restore_protection is called on the cancel-failed path (850) and the exit-raised path (904). It never raises (917-943).
+- Steps (945-1131):
+  1. Recover the original SL row from the local orders table; if absent, "RESTORE FAILED: original SL parameters not found".
+  2. Side-scoped idempotency against the broker's open orders. A read failure gives PROTECTION_UNKNOWN and the restore proceeds.
+  3. Re-place the SL with the original parameters.
+  4. Verify by polling order history up to 5 s (1133-1175):
+     - TRIGGER PENDING or OPEN: RESTORE_CONFIRMED;
+     - REJECTED or CANCELLED: RESTORE_FAILED;
+     - COMPLETE: RESTORE_FILLED;
+     - timeout: PROTECTION_UNKNOWN.
+- The TGT is deliberately not restored (929-930).
+- Cases where restoration cannot be established: no local SL row; an empty broker id (1075-1085); PROTECTION_UNKNOWN; or the restore itself raising.
+- FACT (RECORD-DERIVED, 10-Sep record line 22): "RESTORE FAILED: original SL parameters not found" occurred for a position with no local trade (IDEA).
+
+B10-D6. Why the MIS unit exists (records in the production repository only)
+- FACT (RECORD-DERIVED, source comments, not separate records):
+  - mis_autosquareoff.py 18-24: TATAPOWER, a closing-auction stock, was closed by the broker at 15:12:47 on 27-Aug-2026, with a Rs 59.00 charge;
+  - 37-46: the schedule moved on 03-Sep-2026 from 15:07/15:10/15:12 to 15:03/15:06/15:09;
+  - 48-57: 02-Sep COALINDIA and 03-Sep ANANTRAJ.
+  - No separate 27-Aug or 02-Sep record file was found by name in docs/ (search in the companion file).
+- FACT (RECORD-DERIVED):
+  - docs/incident/2026-09-03_naked_position_ANANTRAJ.md, 03-Sep-2026, deployed 2d08436. PASS 1 cancelled both protective orders and did not submit an exit; G5b restored an SL 11.5 s later; the position was closed manually (lines 14-45).
+    - Lines 311-317: up to then the MIS exit had "NEVER executed"; all 27 EOD-leg orders were LIMIT, 26 of them at 15:17.
+  - docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md, 10-Sep-2026, production. PASS 1 MARKET was rejected for lack of market protection; manual close; PASS 2 found the book flat (lines 12-29).
+  - docs/design/2026-09-03_exit_path_design.md: a design draft, not a record of operation.
+- INTERPRETATION: the protection-band, residual-gate and restore code at the baseline post-dates those incidents. The source cannot show that it ran afterwards.
+
+B10-D7. MIS unit against the 15:15 controls and EOD
+- FACT (SOURCE-VERIFIED):
+  - MIS PASS 1 and PASS 2 handle broker MIS positions only.
+  - The 15:15 controls block and cancel entries and close nothing (main.py 693-701).
+  - EOD at 15:17 handles local OPEN/PARTIAL MIS and CO trades, then residual system-owned broker MIS/CO positions, then accounting.
+  - The ordering is validated (mis_squareoff_timing.py 150-155).
+  - No code links them: no lock, no shared flag, no "MIS done" check in EOD.
+- INTERPRETATION: EOD's broker-position filter (1104-1120) skips symbols the MIS passes already flattened.
+- The MIS unit writes no orders rows for its exits and does not track them with the order monitor (comment 581-583; 869-899 has no store or monitor call).
+  - So local trades closed by MIS exits remain OPEN until the reconciler's CHECK1 sees the broker flat (B-009 section 8).
+  - The 03-Sep record line 324 shows a local SL row not marked CANCELLED until 15:17:04.
+
+======================================================================
+SECTION E — FAILURE, PARTIAL SUCCESS, AND RECOVERY
+======================================================================
+
+B10-E1. Partial failure (FACT, SOURCE-VERIFIED)
+- Every per-item cancel or exit failure is logged CRITICAL, counted and skipped, with no abort (886-892, 930-943, 985-1023, 1360-1376, 1707-1716).
+- Exit failures also set the trade's exit_reason to EOD_EXIT_FAILED (1724-1734).
+- Unguarded store reads can abort the run (B4).
+- Alerts: there is no dedicated per-failure Telegram message in EOD. Failures appear in the CRITICAL log, the counts, the event and the log row; the daily summary does not report them.
+
+B10-E2. Broker queries failing (FACT, SOURCE-VERIFIED)
+- EOD:
+  - positions read fails: fall back to the DB view and quantity, a fail-toward-squaring choice (1088-1094);
+  - quote fails: MARKET for all (1144-1150);
+  - promotion re-read fails: LIMITs stay (1617-1627);
+  - residual read fails: sweep skipped (1446-1454);
+  - trades read fails: all residuals treated as system-owned (1473-1480).
+- MIS unit: every read failure gives BROKER_STATE_UNAVAILABLE or RECONCILIATION_UNKNOWN and no exit; "a failure is never flat" (443-456, 1223-1233).
+- Local trade rows can differ from broker truth. EOD's filter and the MIS unit's broker-only view exist because of that (comments 1053-1061, 745-752).
+
+B10-E3. Write-ahead persistence (FACT, SOURCE-VERIFIED)
+- IN_PROGRESS: INSERT OR REPLACE on the unique fired_date (state_store.py 1348-1368), at step 3. A failure is logged and the run proceeds (368-378).
+- COMPLETE: UPDATE ... WHERE fired_date (1370-1406). The fallback insert (insert_eod_squareoff_log, INSERT OR REPLACE, 1310-1346) runs only if the UPDATE raises (476-492). If both fail: EOD_LOG_PERSIST_FAILED, CRITICAL (493-497).
+- KNOWN DEFECT (source path): the UPDATE does not check how many rows it changed (1386-1406).
+  - If the write-ahead insert had failed, the UPDATE changes no row and raises nothing, so the fallback is not reached and no row exists for the date.
+  - The comment at 478-480 ("Guarantees we always have a COMPLETE row") does not hold on that path.
+  - INTERPRETATION: a restart later the same day before 15:30 would then find no row and recovery-fire a second EOD (E4).
+
+B10-E4. Restart recovery (FACT, SOURCE-VERIFIED; _check_restart_recovery 1736-1887, via post_wire_init at main.py 3866)
+1. Row COMPLETE (or no status column, read as COMPLETE): mark fired; warn if it recorded failures; no retry (1763-1775).
+2. Row IN_PROGRESS: CRITICAL; mark fired; _fire(recovery_fire=True) (1777-1788).
+   - On an exception: CRITICAL plus a notifier alert ("EOD Recovery Failed"), with no flag reset and no retry (1789-1816).
+   - This path checks neither the time nor holidays.
+3. No row, before EOD time, or a holiday: return (1819-1823).
+4. No row, after market_close 15:30: CRITICAL. If open intraday positions remain (or the count is unknown), write a system event EOD_SKIPPED_LATE and send an alert; no fire (1825-1877).
+5. No row, between the EOD time and 15:30: warning; mark fired; _fire(recovery_fire=True) (1879-1887). An exception here is not caught inside the method.
+- With recovery_fire set, rows are trimmed to what the broker still shows. The filter now applies to every fire (1096-1103).
+- A helper existing is not proof that the host restarted or that recovery succeeded: UNKNOWN for any date. Restart in general: DEFER TO B-012.
+
+B10-E5. Idempotency and retries (FACT, SOURCE-VERIFIED)
+- check_and_fire:
+  - resets its flag only on an exception (229-235), not on a partial failure;
+  - a partial scheduled run is final for the day in that process.
+- fire_now:
+  - resets on an exception and on a partial failure (273-288), so the 15:17 run repeats the sequence;
+  - a full success blocks the 15:17 run.
+- Repeated effects of a rerun:
+  - INSERT OR REPLACE of the date row (one row per date; the earlier run's counts are overwritten);
+  - a second soft_kill/resume cycle;
+  - a second checkpoint and event;
+  - a second RESET_PNL ledger row with pnl_delta = -current net. Documented at 252-256 and asserted by tests/unit/test_fire_now_retry_resets_daily_pnl_twice_nonzero, test_eod_squareoff.py 787.
+- Double exits are guarded only by the broker re-read at the second run (1104-1120). INTERPRETATION: exits from the first run that have not yet filled are not visible to that re-read.
+
+B10-E6. Order monitor, reconciler, supervisor, 15:15 (source facts, with host unknowns)
+- FACT (SOURCE-VERIFIED):
+  - EOD does not need the order monitor to run its sequence; track() only registers.
+  - If the monitor has stopped (B-009 D3):
+    - EOD exits are not polled into fill events;
+    - the 15:15 tracked-entry cancellation does not run, so EOD's own SOFT_KILL step sets the kill.
+  - The reconciler's 15 s cycle is independent of EOD.
+  - Liveness: eod_scheduler, order_monitor and order_reconciler are on /health (main.py 4060-4071); the MIS unit is not (D1).
+- UNKNOWN / NOT ESTABLISHED: any external supervisor's behaviour, and whether any of these threads stopped on any date.
+
+B10-E7. Daily-loss closure (FACT, SOURCE-VERIFIED; main.py 756-817)
+1. CRITICAL log, then a "DAILY LOSS LIMIT HIT" Telegram alert (775-792).
+2. fire_now. EOD's _fire sets SOFT_KILL if none is active and resumes it at its own step 14.
+3. The callback then sets SOFT_KILL (811-814) whether fire_now succeeded, raised (802-805) or EOD was absent (806-809).
+- INTERPRETATION: between EOD's resume and the callback's soft_kill there is a short interval with no kill active.
+- Positions that remain after a partial run are retried by the 15:17 run (E5).
+- Trigger: FundManager's on_daily_loss_breach, fired post-trade (fund_manager.py 21, 306, 342). Detailed semantics: DEFER TO F and I topics.
+
+======================================================================
+SECTION F — DATABASE, LEDGER, RESET, REPORTING, ALERTS
+======================================================================
+
+B10-F1. eod_squareoff_log (FACT, SOURCE-VERIFIED; core/schema.sql 611-639)
+- Columns: id, fired_date (unique index), fired_at, the six counts, duration_sec, status ('COMPLETE' default; IN_PROGRESS or COMPLETE), completed_at.
+- Writers: state_store.py 1310-1346, 1348-1368, 1370-1406, called only from EOD.
+- Readers:
+  - EOD recovery (1750);
+  - ops/control_tower/freshness.py 114-115;
+  - scripts/backup_restore_drill.py 54 (table list).
+- The schema comment says the daily report reads it; the daily report job is retired (B3). The report module itself was not read.
+- One row per date by the unique index. A rerun replaces it (E5). A missing row is possible (E3).
+
+B10-F2. Summary versus reports (FACT, SOURCE-VERIFIED)
+- EOD's _send_daily_summary (646-708) reads get_trades_for_date and sends one INFO Telegram message.
+  - It counts trades in CLOSED, CLOSED_MANUAL or EXITING (582) and coerces a null net P&L to 0 (585-593).
+  - Human or untracked symbols come from reconciliation_log ORPHAN_ADOPTION (630-645).
+  - The body comes from _format_summary_body (711 onward; not read line by line).
+  - Any failure is logged (563-565).
+- INTERPRETATION: the summary is sent right after the EOD exits are placed. Trades exited by this run are still OPEN or EXITING without final P&L, so they are counted at P&L 0 or left out.
+- Broader reports are separate cron jobs (daily_trade_review 16:07, trade_journal 16:10 and others; B3), not read for B-010. DEFER TO L topics.
+
+B10-F3. reset_daily_pnl (FACT, SOURCE-VERIFIED; fund_manager.py 1687-1717)
+- Under the lock it reads today's realised net P&L from SQL (get_daily_realized_net_pnl, state_store.py 2647) and writes one RESET_PNL ledger row: amount 0, balance_before = old, balance_after 0, pnl_delta = -old.
+- Reserved and used capital are not reset.
+- Timing: step 13 of EOD, after the exits are placed and before any of them fill.
+- INTERPRETATION: realised P&L from 15:17 exit fills is booked after that day's RESET_PNL row. The MIS unit's header (11-14) states this as its reason for leaving 15:17 unchanged.
+- Repeated fires write repeated rows (E5). The code comment says to sum pnl_delta (252-256). No accounting recommendation is made here.
+
+B10-F4. WAL checkpoint (FACT, SOURCE-VERIFIED)
+- EOD step 11 calls store.checkpoint() (499-510; state_store.py 285 onward: TRUNCATE mode, skipped when called on the ticker thread).
+- It logs busy, log and checkpointed. A failure is logged and the run continues.
+- A separate wal_checkpoint cron job (16:00) calls PASSIVE checkpoint_wal (266-283 docstring; registry 502-510).
+- A successful checkpoint proves only that SQLite's WAL frames were folded at that moment. It says nothing about trades or the broker.
+
+B10-F5. Events (FACT, SOURCE-VERIFIED)
+- EodSquareoffComplete (core/events.py 173-186):
+  - fields: source_module, fired_date and the six counts;
+  - the docstring describes positions_succeeded as "MARKET exit orders placed", although LIMIT is the default (KNOWN DOC DRIFT).
+- Subscriber: ShadowTracker._on_eod_complete (shadow_tracker.py 195, 415), disabled by config (B-006).
+- No other runtime subscriber (search, companion file).
+- It means "the sequence finished, with counts", not "flat".
+
+B10-F6. Logs, alerts, telemetry, liveness (FACT, SOURCE-VERIFIED)
+- EOD:
+  - CRITICAL lines per failure (above);
+  - EOD_WRITEAHEAD_FAILED, EOD_LOG_PERSIST_FAILED, EOD_RECOVERY_FROM_IN_PROGRESS, EOD_RECOVERY_FAILED (with alert), EOD_SKIPPED_LATE (system event and alert);
+  - the daily summary (INFO);
+  - the effect-telemetry "eod_squareoff" counter (145, 569);
+  - /health eod_scheduler.
+- MIS unit:
+  - _emit always logs first (1295-1304), then the critical_sink (MisSquareoffNotifier), then notifier.send.
+  - KNOWN DEFECT (source path): _emit calls notifier.send(severity=..., title=..., message=detail) (1316-1322). TelegramNotifier.send has no "message" parameter and requires body and source_module (alerts/telegram_notifier.py 348-356). That call would raise every time; it is caught and logged as "notifier failed" (1323-1324).
+  - The critical_sink path is separate and unaffected.
+- Force-close alert: main.py 702-723.
+- 14:45 pre-alert: main.py 931-970.
+- Delivery on any date: UNKNOWN without a record.
+
+B10-F7. Post-market jobs (FACT, SOURCE-VERIFIED as declarations only)
+- As listed in B3.
+- EOD-relevant ones by name:
+  - reconcile_positions 15:45 (critical);
+  - eod_cleanup 15:50 (prunes signals, among other things, per the census record cited in B-009);
+  - eod_verify 15:55 (critical);
+  - eod_broker_reconcile 15:58 (critical);
+  - wal_checkpoint 16:00.
+- Overnight: db_backup 01:00, retention 02:00-02:30, log_cleanup 00:00.
+- Their scripts were not read for B-010.
+- Not proof of the installed crontab or of any run.
+
+======================================================================
+SECTION G — PAPER/LIVE AND HISTORICAL EVIDENCE
+======================================================================
+
+B10-G1. Paper and live (FACT, SOURCE-VERIFIED)
+- There is no mode branch in EOD or the MIS unit; both use the adapter. In paper mode the adapter:
+  - simulates placement and fills (zerodha_adapter.py 2139-2160);
+  - answers get_positions from in-memory paper fills (1229-1242);
+  - marks paper cancels CANCELLED (1043-1046).
+- Alert titles carry the mode label.
+- The daily-loss callback states that paper fire_now simulates closes (main.py 772).
+- Parity of behaviour: UNKNOWN. The census record cited in B-009 found no paper trades in its window.
+
+B10-G2. EOD-related records in the production repository (scope: names under docs/, excluding docs/web_claude/)
+| Record | Date and commit | Read | What it shows | What it does not show |
+|---|---|---|---|---|
+| docs/incident/2026-09-03_naked_position_ANANTRAJ.md | 03-Sep-2026, deployed 2d08436 | Lines 1-45, 126-136, 308-318 and matched lines | MIS PASS 1 naked window; EOD MARKET sites; all EOD exits LIMIT up to then | Behaviour after 03-Sep |
+| docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md | 10-Sep-2026, production | Lines 1-30 | PASS 1 MARKET rejected without a protection band; human-labelled position taken as a candidate; failed restore; manual close | Whether the later code fixed it in production |
+| docs/audit/mo5_investigation_22jul2026.md | 22-Jul-2026, deployed tree | Lines 1-30 | fire_now flag defect and its only caller | The fix's deployment |
+| docs/design/2026-09-03_exit_path_design.md | 03-Sep-2026 | Lines 1-30 and matched lines | A design draft (no code written) | Anything as operation |
+- Named, not read: docs/audit/eod_capture_safety_2026-07-24.md, eod_email_findings_06aug2026.md, ledger6_eod_verify_measurement_03aug2026.md, mo5_deploy_22jul2026.md; docs/design/p1_eod_broker_reconcile_build_design_02jul2026.md, p1_eod_broker_sync_assessment_02jul2026.md; docs/approvals/cron_officer/20-Jun-2026/sample_clean_eod.html.
+- docs/incident/2026-09-03_ANANTRAJ_broker_book.json was deliberately not opened: it is a broker book export that may carry account data.
+
+B10-G3. The 27-Aug and 02/03-Sep history
+- 27-Aug (TATAPOWER, broker auto square-off at 15:12:47, Rs 59.00): only in the source comment at mis_autosquareoff.py 18-24. No record file found by name.
+- 02-Sep (COALINDIA): only in source comments (52-53, 98-100, 924) and the 03-Sep incident's narrative. No separate record found by name.
+- 03-Sep (ANANTRAJ): the incident record, at 2d08436, with the schedule then at 15:07/15:10/15:12 (incident lines 224-228).
+- Baseline code (protection bands, the 5 s cancel settle, restore with verification, the residual gate) is dated 03-Sep to 10-Sep in comments. It is not proof of how those days ran.
+
+B10-G4. Tests (inventory only; none run; no stored result found)
+| Test file | Test functions | Relevant assertions (by name) |
+|---|---|---|
+| tests/unit/test_eod_squareoff.py | 68 | Idempotency (130); next day (140); soft-kill set and resume (159-178); pending entries (210); delivery untouched (230, 386); cancel and exit failures continue (247, 272, 534); CO cancel (450, 478); log row and counts (605, 623); event (660); fire_now flags (681-787); restart cases (856-907); reset called (998); LIMIT_THEN_MARKET (1272-1632); broker filter (1685-1745); gate clear (1811-1855); checkpoint (1878-1914); summary (1936-1968); residual sweep (1994-2053) |
+| tests/unit/test_fix063_two_pass_eod.py | 3 | Two-pass sleep |
+| tests/unit/test_mis_autosquareoff.py | 48 | MIS passes |
+| tests/unit/test_mis_squareoff_restore_and_settle.py | 29 | Restore and settle |
+| tests/unit/test_mis_squareoff_notifier.py | 23 | Notifier |
+| tests/unit/test_fix135_eod_cleanup.py | 14 | eod_cleanup |
+| tests/unit/test_eod_verify_honest.py | 6 | eod_verify |
+| tests/crash_test/ct140_eod_failure.py | 0 (a script) | EOD failure crash test |
+- Other names in the tree, not read: test_alert_direction_eod_29jun.py, test_eod_broker_reconcile.py, test_eod_lifecycle_pipeline_aware.py, test_fix073_eod_entry_cutoff.py, test_fix130_eod_pre_alert.py, test_v3_eod_route.py.
+- INTERPRETATION:
+  - the entry-cancel tests seed PENDING_FILL directly (1080-1081), so they do not catch C3's defect;
+  - no test reading of the notifier-signature mismatch (F6) was done.
+- Paper/live parity tests: none identified by name.
+
+B10-G5. Defects and drift (see also section 3 below)
+| ID | Class | Finding | Evidence |
+|---|---|---|---|
+| D-1 | KNOWN DEFECT (wiring) | EOD is constructed without entry_gate, so its gate clear never runs | main.py 3300-3319; eod_squareoff.py 132, 340-347 |
+| D-2 | KNOWN DEFECT | Pass 1 entry cancel selects PENDING_FILL; pending trades read PENDING | state_store.py 1035; order_placer.py 1061-1071 |
+| D-3 | KNOWN DEFECT (source plus records) | EOD MARKET orders carry no market protection; the broker refused such orders on recorded dates | C6 |
+| D-4 | KNOWN DEFECT | The COMPLETE update does not check its row count; the fallback cannot cover a failed write-ahead | E3 |
+| D-5 | KNOWN DEFECT | The MIS _emit notifier call uses a non-existent parameter | F6 |
+| D-6 | KNOWN DOC DRIFT | PASS 1 "LIMIT_THEN_MARKET" in the header; MARKET in code; grace helpers unreferenced | D2 |
+| D-7 | KNOWN DOC DRIFT | Timing docstring still shows 15:07 < 15:10 < 15:12 | mis_squareoff_timing.py 85-88 against config 59, 90-91 |
+| D-8 | KNOWN DOC DRIFT | MIS is_alive "visible to /health", but it is not wired | D1 |
+| D-9 | KNOWN DOC DRIFT | auto_resume_kill_switch declared, never read | A3 |
+| D-10 | KNOWN DOC DRIFT | The event docstring says MARKET exits; LIMIT is the default | F5 |
+| D-11 | KNOWN DOC DRIFT | Module docstring EOD1/EOD5 say "MARKET" and "soft_kill -> ... -> resume"; the code adds LIMIT_THEN_MARKET, a residual sweep, write-ahead, checkpoint and reset | 1-39 against 326-570 |
+| I-1 | INTERPRETATION | MIS passes take broker MIS positions without an ownership check; EOD residual skips human ones | D2 |
+| I-2 | INTERPRETATION | Symbol-keyed quantity in EOD with multiple trades on one symbol | C5 |
+| I-3 | INTERPRETATION | The summary is sent before EOD exits fill; RESET_PNL precedes EOD fills | F2, F3 |
+| I-4 | INTERPRETATION | Special sessions move EOD only, not the MIS, 15:15 or entry clocks | B5 |
+| I-5 | INTERPRETATION | A recovery fire runs before startup reconcile and before the monitor starts | A3 |
+- Correction to a frozen manual (for Rama and ChatGPT; not applied here): B-009_manual.md (FROZEN, DR-046) states twice that the 15:17 routine clears the entry gate. Section 11 cites "(eod_squareoff.py 340-352)", and section 15 item 1 cites "(eod_squareoff.py 340-347; entry_gate.py 260-279)". Per D-1, that step is inert at the baseline because no gate is passed. The B-009 conclusion that no source path feeds the gate with new signals is unaffected; only the statement that EOD clears stored gate rows is wrong.
+
+======================================================================
+SECTION H — END-TO-END TRACE AND COMPLETENESS
+======================================================================
+
+B10-H1. An ordinary scheduled day (source path)
+1. 15:03 and 15:06: MIS passes on broker MIS positions (D2-D4). Their exits are not written locally (async: fills reach local trades only via reconciler CHECK1).
+2. 15:15: placement cut-off; tracked-entry cancellation and SOFT_KILL, if the order monitor runs.
+3. 15:17:00 to 15:17:05: the eod_squareoff_poll sees the time due, and check_and_fire claims the date.
+4. _fire:
+   a. gate clear (inert);
+   b. IN_PROGRESS row;
+   c. kill already active, so no change;
+   d. Pass 1 cancels (entries: none selectable, D-2; SL/TGT legs);
+   e. 2 s;
+   f. Pass 2: local OPEN rows filtered by broker positions; LIMIT at LTP +/- 1%; tracked by the order monitor (async);
+   g. 120 s; promotion of unfilled LIMITs to MARKET (D-3);
+   h. residual sweep;
+   i. stale sweep;
+   j. COMPLETE row;
+   k. checkpoint;
+   l. event;
+   m. RESET_PNL;
+   n. no resume;
+   o. summary alert (before fills).
+5. After that: fills via order-monitor events; the reconciler's 15 s cycle (async).
+6. 15:45 onward: cron jobs (declared).
+7. 17:35: self-exit (B-011).
+
+B10-H2. Daily-loss path
+- Any time intraday (holiday and time checks bypassed): the callback alerts, then fire_now runs the same _fire (with SOFT_KILL set and resumed by EOD), then the callback sets SOFT_KILL.
+- If fully successful, 15:17 does not run that day. On a partial failure or an exception, 15:17 runs the full sequence again (E5), with a second RESET_PNL.
+
+B10-H3. Failure and restart traces (source path; host behaviour UNKNOWN)
+| Case | Source path |
+|---|---|
+| Crash after IN_PROGRESS | The row stays IN_PROGRESS; at the next start the same day, recovery fires at any time of day without a holiday check (E4.2) |
+| Cancellation failure | Counted, continue (E1) |
+| Exit failure | Counted, EOD_EXIT_FAILED, continue (E1) |
+| Exception before COMPLETE | Scheduled: flag reset, retry each 5 s; SOFT_KILL set by EOD stays set; the row stays IN_PROGRESS until a run completes. fire_now: flag reset, the exception reaches the daily-loss callback, SOFT_KILL set |
+| COMPLETE persistence failure | Fallback insert; if both fail, CRITICAL. If the write-ahead had failed, the UPDATE matches nothing and no row is written (D-4) |
+| Partial failure without exception | Scheduled: final for the day. fire_now: 15:17 reruns |
+| Recovery after restart | E4 cases 2 and 5 |
+
+B10-H4. Inspection scope: see the companion file. In short: selected files at the baseline (listed there); negative searches over all 330 Python files outside tests/; eight test files and four records read in part; not a full-repository audit.
+
+B10-H5. Question status
+| Status | IDs |
+|---|---|
+| ANSWERED | A1, A2, A3, A4, A5, B1, B2, B4, C1, C2, C3, C4, C5, C6, C7, C8, C9, D1, D2, D3, D4, D5, D7, E1, E2, E3, E4, E5, E7, F1, F3, F4, F5, H1, H2, H3, H4, H5 |
+| PARTLY ANSWERED | B3 (installed schedule unknown), B5 (special-session runs unknown), D6 (27-Aug and 02-Sep only in comments), E6 (supervisor unknown), F2 (body formatter and report jobs not read), F6 (delivery unknown), F7 (scripts not read), G1 (parity unknown), G2 (seven records unread), G3 (no 27-Aug or 02-Sep record file), G4 (tests not run), G5 (scope-limited) |
+| UNKNOWN / NOT ESTABLISHED | none as a whole ID |
+| DEFER | restart detail inside E4 to B-012; shutdown at self-exit to B-011 (both answered at source level here) |
+| Total | 50 IDs, each once (H5 itself counted under ANSWERED) |
+
+======================================================================
+3. EVIDENCE TABLE (principal references; all at 970aabf)
+======================================================================
+| Claim | File | Function or key | Lines |
+|---|---|---|---|
+| EOD wiring | main.py | EodSquareoff(...) | 3300-3321, 3384, 3794, 3866, 4093-4100 |
+| EOD trigger | orders/eod_squareoff.py | check_and_fire, start_polling | 202-236, 290-312 |
+| fire_now | orders/eod_squareoff.py; main.py | fire_now; _on_daily_loss_breach | 238-288; 756-817 |
+| Sequence | orders/eod_squareoff.py | _fire | 326-570 |
+| Entry cancel query | core/state_store.py | get_pending_intraday_orders | 1015-1039 |
+| Exit-leg query | core/state_store.py | get_pending_exit_orders_for_open_positions | 1135-1168 |
+| Open positions | core/state_store.py | get_open_intraday_positions | 1207-1250 |
+| Pending status set | orders/order_placer.py | place | 1061-1071 |
+| Exits | orders/eod_squareoff.py | _exit_open_positions; _promote_limits_to_market; _sweep_residual_broker_positions | 1027-1425; 1592-1722; 1427-1590 |
+| Protection omitted | broker/zerodha_adapter.py | place_order validation | 2116-2119 |
+| Log schema | core/schema.sql | eod_squareoff_log | 611-639 |
+| Log writes | core/state_store.py | insert/update eod log | 1300-1406 |
+| Recovery | orders/eod_squareoff.py | _check_restart_recovery | 1736-1887 |
+| Reset | capital/fund_manager.py | reset_daily_pnl | 1687-1717 |
+| Event | core/events.py | EodSquareoffComplete | 173-186 |
+| MIS timing | core/mis_squareoff_timing.py | build | 103-159 |
+| MIS passes | orders/mis_autosquareoff.py | check_and_fire; _run_pass; _execute...; _restore...; _verify... | 320-387; 431-510; 702-916; 917-1175; 1177-1256 |
+| MIS emit | orders/mis_autosquareoff.py; alerts/telegram_notifier.py | _emit; send | 1295-1324; 348-356 |
+| Windows | core/market_windows.py | is_trading_holiday; is_eod_squareoff_due | 93-106; 194-205 |
+| Config | config/system_config.yaml | trading_hours, eod_squareoff, circuit_breaker, special_sessions | 47-112, 117-122, 359-377, 738-741 |
+| Crons | config/cron_registry.yaml; scripts/generate_crontab.py; deploy/cron/trading-system.cron | registry; generator; generated file | 359-768; 1-29; whole file (job names only) |
+
+======================================================================
+4. UNKNOWNS AND OPERATOR-ONLY QUESTIONS
+======================================================================
+- Installed crontab and systemd timers; runs on any date.
+- Whether EOD, the MIS passes, recovery or fire_now ran on any given date beyond the four records.
+- Whether any alert was delivered.
+- An external supervisor's behaviour.
+- Special-session operation.
+- Paper/live parity.
+- Whether a gate_state row ever existed on the host (relevant to D-1).
+- Operator-only: what Rama saw at 15:03-15:17 on ordinary days; whether he relied on the daily summary; how manual closes were done.
+
+END OF FILE

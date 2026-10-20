@@ -1,7 +1,7 @@
 # B-009 INTRADAY OPERATION: REVIEW NOTES
 
 Date: 2026-10-20 (revision 2; revisions 0 and 1 the same day)
-Status: CLOSED 2026-10-20. Revision 2, with ChatGPT's value-added review and its revision-2 corrections of 20-Oct applied (sections 9 and 10). Rama approved the final files on 20-Oct-2026: the B-009 legacy manual is FROZEN (revision 2, DR-046), the reconciliation addendum is frozen with it, and the V2 inputs remain PROPOSED / OPEN. Rama stores and pushes the package (section 11); Claude commits nothing.
+Status: CLOSED 2026-10-20. Revision 2, with ChatGPT's value-added review and its revision-2 corrections of 20-Oct applied (sections 9 and 10). Rama approved the final files on 20-Oct-2026: the B-009 legacy manual is FROZEN (revision 2, DR-046), the reconciliation addendum is frozen with it, and the V2 inputs remain PROPOSED / OPEN. Rama stores and pushes the package (section 11); Claude commits nothing. Erratum E-1 to the manual and the addendum (the 15:17 routine is not given the entry gate) was accepted on 20-Oct-2026 and recorded in DR-047 with the B-010 freeze.
 
 ## 1. Sources
 - Inputs: Rama's uploads of 20-Oct-2026, to be stored byte-identical at the freeze:

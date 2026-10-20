@@ -1,6 +1,6 @@
 # B-009 INTRADAY OPERATION: LEGACY MANUAL
 
-Status: FROZEN 2026-10-20 (revision 2, DR-046). ChatGPT's value-added review and its revision-2 corrections (both 20-Oct-2026) were applied (sections 19 and 20); Rama approved the final files on 20-Oct-2026. No erratum to a frozen manual.
+Status: FROZEN 2026-10-20 (revision 2, DR-046). ChatGPT's value-added review and its revision-2 corrections (both 20-Oct-2026) were applied (sections 19 and 20); Rama approved the final files on 20-Oct-2026. No erratum to a frozen manual. Erratum E-1 to this manual (sections 11, 14 and 15: the 15:17 routine is not given the entry gate, so it does not clear it) added 2026-10-20 during B-010, accepted in ChatGPT's review response of 20-Oct-2026, approved by Rama on 20-Oct-2026 and recorded in DR-047 (2026-10-20) together with the B-010 freeze.
 Date: 2026-10-20 (revision 2; revisions 0 and 1 the same day)
 Scope: legacy facts only. A legacy behaviour reaches V2 only through a row in V2_DECISION_REGISTER.md (DR-016; W-1). No VM, service, host or broker operation and no change to legacy source; this manual records a retired system, not an operating procedure.
 Working copy of: docs/inputs/manuals/B-009_INTRADAY_OPERATION_MANUAL_DRAFT_20-OCT-2026.md (ChatGPT's draft). With it come ChatGPT's reconciliation of 20-Oct, the answer sheet and prompt of 20-Oct, and Claude's repository answers of 20-Oct; all are stored unchanged at the freeze. The draft carried its source claims as "pending recheck"; this manual rechecked them at the baseline (B-009_review_notes.md section 3) and corrects two of Claude's own answer lines (B-009_reconciliation_addendum.md item 1).
@@ -242,7 +242,7 @@ sp-dispatcher -> pool of 5 workers   signals/signal_processor.py 377-399
 
 ## 11. Hand-off to end of day
 - The MIS passes at 15:03 and 15:06, the 15:15 placement cut-off, the 15:15 entry cancellation with SOFT_KILL, and the 15:17 routine are distinct (section 3).
-- The 15:17 routine first clears the entry gate and parked retest candidates (eod_squareoff.py 340-352); the rest is B-010's.
+- ~~The 15:17 routine first clears the entry gate and parked retest candidates (eod_squareoff.py 340-352); the rest is B-010's.~~ (superseded by erratum E-1) The 15:17 routine's first steps would clear the entry gate and parked retest candidates (eod_squareoff.py 340-356), but main.py passes neither component to EodSquareoff (3300-3319; the retest monitor only on the disabled retest path, 3794), so the steps are inert at the baseline (B-010_manual.md section 3.2); the rest is B-010's.
 - FACT (RECORD-DERIVED, mis_autosquareoff.py 18-24): the MIS passes were added after a broker auto square-off of a closing-auction stock at 15:12:47 on 27-Aug-2026. Before 03-Sep the passes ran at 15:07 and 15:10 (37-43).
 
 ## 12. Paper and live (FACT, SOURCE-VERIFIED unless marked)
@@ -291,13 +291,13 @@ sp-dispatcher -> pool of 5 workers   signals/signal_processor.py 377-399
 | Order monitor (order_monitor.py 594-1192) | Tracked orders | History poll every 2 s | 60 s, partial cancel, price move, 15:15, 3-failure stop | OrderFilled, OrderPartiallyTerminated, status events | Event bus | Placer, order manager, slippage recorder |
 | Reconciler (order_reconciler.py 633-1060, 4169 onward) | Broker positions and orders; local trades | CHECK1-8, G5b, dedupe, MTM, recovery | One cycle at a time | Close, flatten, SL, alerts | trades; fund ledger | Operator alerts; kill switch |
 | MIS square-off (mis_autosquareoff.py) | Open MIS positions | PASS 1, PASS 2 | 15:09 cutoff | Exit orders | orders | Order monitor; B-010 |
-| EOD (eod_squareoff.py 326 onward) | Day state | Clear gate, cancel, exit, summary, reset | Once per day | Square-off actions, summary and reset; a flat book is the intent, the outcome is not established by this trace | DB | B-010 |
+| EOD (eod_squareoff.py 326 onward) | Day state | ~~Clear gate, cancel, exit, summary, reset~~ (superseded by erratum E-1) Cancel, exit, summary, reset (the gate clear is inert: no gate is passed) | Once per day | Square-off actions, summary and reset; a flat book is the intent, the outcome is not established by this trace | DB | B-010 |
 | Feed (data/live_feed.py) | Ticks, none subscribed at start | Candle build | Watchdog armed on first tick | Exit-retry LTP | candles (dormant) | Placer exit retry |
 
 ## 15. Known defects, ambiguities and negative findings
 1. KNOWN DEFECT D1, the pullback gate is never fed.
    - Group A sets pullback_wait_enabled: true, but the processor only uses the flag to skip the fresh-quote re-anchor (signal_processor.py 1082). No runtime file adds a signal to the entry gate. The only add() reference is the gate's own docstring (entry_gate.py 103); its other constructor call is store rehydration (209).
-   - The gate is still constructed and polled. At start it reloads gate_state rows (entry_gate.py 156, 179-235). The only writer of those rows is add() (332), which has no caller, and the 15:17 routine clears them, in memory and in the store (eod_squareoff.py 340-347; entry_gate.py 260-279). So no source path at the baseline gives the gate new entries. What a host's gate_state held, for example rows left by an earlier version, is UNKNOWN.
+   - The gate is still constructed and polled. At start it reloads gate_state rows (entry_gate.py 156, 179-235). The only writer of those rows is add() (332), which has no caller, ~~and the 15:17 routine clears them, in memory and in the store (eod_squareoff.py 340-347; entry_gate.py 260-279)~~ (superseded by erratum E-1) and nothing clears them at the baseline: EntryGate.clear_all (entry_gate.py 260-279) would, but the 15:17 routine is not given the gate (main.py 3300-3319). So no source path at the baseline gives the gate new entries. What a host's gate_state held, for example rows left by an earlier version, is UNKNOWN.
    - So, on the source path, a Group A signal reaches no pullback wait. Its entry is derived as for every strategy (signal_processor.py 1028-1030), with the webhook trigger as the reference and without the fresh-quote re-anchor. The submitted price is that derived price, not the raw trigger.
    - The comment at signal_processor.py 1074-1075 ("EntryGate already waits") and the gate's header (24, 30) disagree with the wiring.
    - Search scope: all 330 Python files outside tests/.
@@ -379,4 +379,22 @@ ChatGPT's revision-2 corrections of 20-Oct-2026 (B-009_REVISION_2_REQUIRED_CORRE
   - The manual states what the code reads and leaves the intended value unresolved.
 - Wording caution: the EOD output in section 14 is stated as intent, not outcome.
 - Rama approved the final files on 20-Oct-2026. B-009 is FROZEN (DR-046).
+
+## Erratum (2026-10-20, found during B-010)
+- E-1. Status: ACCEPTED.
+  - Proposed in B-010_manual.md section 19 (2026-10-20).
+  - Accepted in ChatGPT's review response of 20-Oct-2026, with one wording polish applied ("main.py passes neither component to EodSquareoff").
+  - Approved by Rama with the B-010 freeze and recorded in DR-047 (2026-10-20).
+  - The struck text stays visible; the replacement is the text in force.
+- Passages changed (the original struck through, the replacement immediately after it):
+  1. Section 11, the 15:17 routine's first step.
+  2. Section 14, the EOD row's logic cell.
+  3. Section 15, item 1, what clears gate_state rows.
+  - FACT (SOURCE-VERIFIED at 970aabf: main.py 3300-3319, 3794, 4254; orders/eod_squareoff.py 132, 340-356). Detail: B-010_manual.md sections 3.2 and 19.
+- Passages checked and not changed:
+  - section 15 item 1's finding that no source path feeds new signals to the gate (D1);
+  - its statement that a host's gate_state contents are UNKNOWN;
+  - section 5's statement that no path parks a signal.
+- Reason: the B-009 statement read EodSquareoff's own code, not its construction in main.py. This is the same class of error as the B-005 lesson on optional dependencies (V2_DESIGN_LOG, 2026-10-16).
+- Impact: with nothing clearing the table at the baseline, any gate_state rows left by an earlier version would persist across days; whether any existed is UNKNOWN. No V2 decision depends on the old wording.
 

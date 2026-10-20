@@ -1,6 +1,6 @@
 # B-009 INTRADAY OPERATION: RECONCILIATION ADDENDUM (revision 2 of 20-Oct-2026)
 
-Status: FROZEN 2026-10-20 with the B-009 manual (DR-046). It answers ChatGPT's reconciliation of 20-Oct-2026 (docs/inputs/reconciliation/B-009_RECONCILIATION_FOR_CLAUDE_20-OCT-2026.txt) and corrects Claude's repository answers of the same day (docs/inputs/chatgpt_originals_and_replies/B-009_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt). Both stay unchanged as inputs. All source evidence is trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb, rechecked on 2026-10-20 (B-009_review_notes.md section 3).
+Status: FROZEN 2026-10-20 with the B-009 manual (DR-046). Erratum E-1 (item 7, what clears gate_state rows) applied 2026-10-20 in place, recorded in DR-047; see B-009_manual.md, section "Erratum". It answers ChatGPT's reconciliation of 20-Oct-2026 (docs/inputs/reconciliation/B-009_RECONCILIATION_FOR_CLAUDE_20-OCT-2026.txt) and corrects Claude's repository answers of the same day (docs/inputs/chatgpt_originals_and_replies/B-009_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt). Both stay unchanged as inputs. All source evidence is trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb, rechecked on 2026-10-20 (B-009_review_notes.md section 3).
 
 1. Corrections to Claude's repository answers (CLAUDE ERROR, corrected here)
    a. Strategy counts. "All 15 enabled intraday strategies declare CO_PLUS_TGT; the three delivery strategies declare LIMIT_TRIPLE" (answers section 5, D2) is wrong: 15 + 3 is not 15.
@@ -50,7 +50,7 @@ Status: FROZEN 2026-10-20 with the B-009 manual (DR-046). It answers ChatGPT's r
 7. ChatGPT's value-added review of 20-Oct-2026 (revision 1). All points ACCEPTED.
    - A: D1 price and gate contents.
      - Corrected: a Group A signal's entry is the normally derived price, with the trigger as reference and no re-anchor; not the raw trigger.
-     - New source fact: start() reloads gate_state rows (entry_gate.py 156, 179-235). Their only writer, add() (332), has no caller, and EOD clears them (entry_gate.py 260-279).
+     - New source fact: start() reloads gate_state rows (entry_gate.py 156, 179-235). Their only writer, add() (332), has no caller, ~~and EOD clears them (entry_gate.py 260-279).~~ (superseded by erratum E-1) and nothing clears them at the baseline (EOD is not given the gate; B-010_manual.md section 3.2, D-1).
      - So "empty at the baseline" is replaced by "not fed by new signals". A host's gate_state contents are UNKNOWN.
    - B: D3 is limited to the monitor's own polling and event path. No other OrderFilled emitter was traced for B-009, so "seen only by the reconciler" stays an INTERPRETATION.
    - C: LIMIT_TRIPLE is scoped to the traced placement path at the baseline.

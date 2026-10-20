@@ -1,0 +1,68 @@
+CLAUDE PROMPT — B-010 END-OF-DAY OPERATION
+Project: Trading_System-v2_redesign
+Date: 20-Oct-2026
+
+Please research and complete the attached B-010 answer sheet directly from the primary production GitHub repository:
+
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+INPUT
+Use the accompanying file `B-010_END_OF_DAY_ANSWER_SHEET_FOR_CLAUDE_20-OCT-2026.txt` as the exact questionnaire. Preserve its section structure and all B10 IDs.
+
+MANDATORY GOVERNANCE
+- Legacy system is DEAD / REFERENCE ONLY. This is documentation, not operational work.
+- Inspect source and repository records only. Do not run code/tests, connect to a VM, broker or database, or perform live operations.
+- Use only `trading-system-prod-snapshot` for this task. Do not inspect sandbox or records repositories unless Rama explicitly authorizes it.
+- Do not edit repository files, create branches, commit, push, or modify governance files.
+- Do not design V2, repair the legacy system, recommend fixes, or make decisions about retaining/replacing behavior.
+- Never reproduce credentials, tokens, TOTP secrets, account/client identifiers, private host details or other sensitive values.
+- A source snapshot is not proof of installed or historical runtime behavior.
+- Do not assume comments/docstrings are executable. Trace callers, callees and actual conditions.
+- Keep source facts, record-derived facts, interpretations, defects, historical recollections and unknowns clearly separated.
+
+RESEARCH METHOD
+1. Confirm the pinned commit exists and use that exact commit for all evidence.
+2. Inspect B-009’s boundary statement only as a cross-reference; do not reopen B-009 or other frozen manuals.
+3. Trace general EOD (`orders/eod_squareoff.py`) from construction/wiring in `main.py`, its trigger/polling, fire sequence, dependencies and downstream consumers.
+4. Separately trace the MIS two-pass safety unit (`orders/mis_autosquareoff.py`), its construction/wiring, schedule/config, state and outcome paths. Do not merge it conceptually with the general 15:17 EOD routine.
+5. Inspect relevant `core/market_windows.py`, time authority, `config/system_config.yaml`, `config/cron_registry.yaml`, cron generator/output, state-store/schema methods, order monitor/reconciler, fund-manager reset, event definitions/subscribers, alert/reporting consumers, relevant tests and EOD-related records present inside the production repository.
+6. Search callers and references for `check_and_fire`, `fire_now`, `post_wire_init`, `_check_restart_recovery`, MIS pass methods, `EodSquareoffComplete`, `eod_squareoff_log`, `reset_daily_pnl`, and EOD report/alert producers. Record search scope for negative findings.
+7. Follow each sequence end-to-end. Do not stop at a module’s docstring.
+8. Treat the answer sheet as research questions, not as a list of facts to confirm. Correct any starting-point assumption that the pinned source contradicts.
+9. Answer every ID once. If evidence is absent, say UNKNOWN / NOT ESTABLISHED and identify what would be required to establish it. If a topic belongs to B-011/B-012 or another agenda item, mark DEFER and explain the boundary.
+
+CITATIONS
+For each material claim include exact repository path, function/class and line range from the pinned baseline. Include configuration keys, DB tables/columns, event payloads and callers where relevant. For records, include the record path, date/window and deployed commit if the record states one. Do not cite an uninspected file as though read. Do not invent line numbers.
+
+EVIDENCE LABELS
+Use:
+- FACT (SOURCE-VERIFIED)
+- FACT (RECORD-DERIVED — specify date/window/deployed commit)
+- HISTORICAL (Rama-reported)
+- INTERPRETATION
+- KNOWN DEFECT
+- KNOWN DOC DRIFT
+- UNKNOWN / NOT ESTABLISHED
+- OPEN QUESTION
+- DEFER (agenda topic)
+
+OUTPUTS
+Return:
+1. `B-010_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt` — completed questionnaire with all original IDs.
+2. `B-010_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt` — source inventory, paths read/not read, searches and scope, record/test inventory, exclusions and limitations.
+
+Do NOT prepare the final manual. ChatGPT will independently reconcile your repository-backed answer before drafting the manual.
+
+FINAL QUALITY GATE
+- Verify the pinned commit and state it in both outputs.
+- Confirm all B10 IDs are present exactly once and provide the total count.
+- Keep source facts separate from records and host/runtime unknowns.
+- Keep the separate MIS passes distinct from general EOD.
+- Do not claim EOD success means the broker account is flat unless source proves broker-confirmed flatness.
+- Do not claim cron registry declarations prove installed crontab execution.
+- Do not claim tests pass unless there is a stored test result; do not execute tests.
+- List every unresolved question honestly.
+- No code changes, no commits, no pushes, no V2 design.
+
+Return the two text deliverables for Rama to review.
