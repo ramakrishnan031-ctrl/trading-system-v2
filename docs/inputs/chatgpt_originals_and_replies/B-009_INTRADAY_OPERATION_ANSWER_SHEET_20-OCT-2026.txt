@@ -1,0 +1,323 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-009 ANSWER SHEET — INTRADAY OPERATION
+
+Prepared: 20-Oct-2026, 08:35 IST
+Status: USER INPUT REQUESTED — NOT A FACTUAL MANUAL, NOT FROZEN
+Scope: B-009 only — INTRADAY OPERATION
+Purpose: collect Rama's historical operating context and answerable facts before independent source/record reconciliation. After Rama returns this sheet, prepare B-009_RECONCILIATION_FOR_CLAUDE.txt and a detailed B-009 manual draft .md. Do not skip that sequence.
+
+======================================================================
+1. GOVERNANCE AND HOW TO ANSWER
+======================================================================
+
+The legacy trading system is DEAD / REFERENCE ONLY.
+
+This is documentation only. Do NOT repair, revive, tune, test against a broker, deploy, or operate the legacy system. No V2 architecture or implementation is decided by this sheet.
+
+Please answer from direct knowledge or available records. Use these labels where useful:
+- FACT — directly confirmed by a record you have seen
+- HISTORICAL RECOLLECTION — remembered, but not currently supported by a record
+- PREFERENCE / V2 INPUT — a future-system preference, not a legacy fact
+- UNKNOWN / NOT ESTABLISHED
+- DEFER TO ANOTHER AGENDA ITEM
+
+You may leave an answer blank or write UNKNOWN / NOT ESTABLISHED. Do not guess to complete the sheet. Keep exact dates, times, timezone, symbols, status names, examples, messages, and paths when known. If you have a log, screenshot, email, report, or incident record, identify it by date and filename/location; do not expose secrets or account identifiers.
+
+Do not silently resolve source-code contradictions. Record what you remember or what a dated record says; independent reconciliation will compare it with the production source.
+
+Frozen manuals and governance:
+- A-001 to A-011 remain frozen, subject only to accepted errata.
+- B-001 to B-004 remain frozen.
+- B-005 Startup Reconciliation is frozen (DR-041), with accepted errata.
+- B-006 Worker Initialization is frozen (DR-043), with accepted errata.
+- B-007 Readiness / Health and B-008 Market-Open Handling remain separate agenda topics. Their source findings are not to be merged into B-009.
+- B-010 EOD, B-011 Shutdown, and B-012 Restart / Recovery remain separate.
+- C topics own scanner/webhook/signal lifecycle; D topics own trade-decision and screening logic; E topics own market data and technical analysis; F/G topics own sizing, capital, orders and trade/position management; H/I topics own operator intervention, kill states and failure policy; L topics own alerts, logs, reports and evidence. B-009 may cross-reference these topics but must not settle their detailed subjects.
+- Any V2 idea must be explicitly marked PREFERENCE / V2 INPUT and remains open until decided in V2_DECISION_REGISTER.md.
+- Do not include passwords, API keys, access tokens, TOTP secrets, session contents, private host/account identifiers, or other credential values.
+
+======================================================================
+2. PRODUCTION SOURCE REVIEW COMPLETED BEFORE PREPARING THIS SHEET
+======================================================================
+
+Primary repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Reviewed reference:
+- Production baseline commit used by the project: 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- The fetched production main.py blob SHA at that reference was 445fb0d8237a6d535ed00e5eb968c8176efd74f3.
+- This is repository/source evidence only. It does NOT prove what was installed or running on a deleted production VM at any particular time.
+- The fetched files below were inspected at the named baseline ref. Individual blob SHAs are included to make the reviewed source identifiable.
+
+Relevant source files reviewed for B-009:
+1. main.py — SHA 445fb0d8237a6d535ed00e5eb968c8176efd74f3
+   Scope: orchestration and runtime worker wiring; startup phases; signal processor, entry gate, order monitor, reconciler, feed, clock/token monitors, and lifecycle transitions.
+2. config/system_config.yaml — SHA bf742ae5c81c60614370361998e6a102a1064ff7
+   Scope: global trading windows and controls; order-monitor and other runtime configuration. The source comments identify global entry_start as a floor over strategy-specific windows, entry_end as the strategy eligibility backstop, and eod_entry_cutoff as a separate absolute order-placement deadline.
+3. signals/signal_processor.py — SHA 7fab0a02a302770ac72bbbd662549d5c091086c1
+   Scope: queue-draining worker and signal-processing orchestration; documented stages include pre-flight, strategy lookup, secondary screen, price derivation, sizing, risk approval, reservation, placement and status update.
+4. signals/webhook_receiver.py — relevant signal hand-off boundary; receives/validates inbound signals and manages queue/in-flight handling. Detailed webhook semantics remain C topics.
+5. screening/secondary_screener.py — SHA b6f8ff7223ad803869e976f92d794dfc7c811b59
+   Scope: secondary-screen orchestration, score/status/step results and market-data snapshot. Detailed screen formulas belong to D topics.
+6. screening/entry_gate.py — SHA 46b173171bdfeba48af641b67a361618e5acba58
+   Scope: price-watchlist gate. Its module header describes an LTP poll gate, release when price enters a tolerance zone, hard timeout, and release after three consecutive quote failures. Whether/how it is wired into the live path must be traced separately; module documentation alone does not prove runtime use.
+7. orders/order_placer.py — SHA e3a602909befa3fd3ba4b27caeed108724c07947
+   Scope: order placement lifecycle, trade/order persistence, entry protocol, fill-map and reservation hand-off. Detailed order protocol belongs to G topics.
+8. orders/order_manager.py — SHA 978d213532532d7db72b215bc8ed415b848928ae
+   Scope: DB writes for trades/orders and fill/status persistence.
+9. broker/order_monitor.py — SHA c4f4aaa564f1dc342aa31265cc155191a71e5916
+   Scope: broker order-status polling, state-machine updates, fill timeout/cancel handling and order events.
+10. orders/order_reconciler.py — SHA beef3e1584c9ad665dec4d1e1498bde001326c70
+    Scope: ongoing reconciliation poll and its interactions with orders, positions, state and alerts. B-005 owns startup reconciliation; G-015 owns intraday broker reconciliation detail.
+11. orders/mis_autosquareoff.py — SHA d654fd9a53ce946c0757a4621bfac3389e0b34b1
+    Scope: MIS protective two-pass square-off. Its header distinguishes the 15:03/15:06 passes, configured 15:09 protective cutoff, 15:15 SOFT_KILL, and 15:17 EOD-accounting/backstop. B-010 owns EOD operation; B-009 should record only the intraday hand-off and observed interactions.
+12. orders/eod_squareoff.py — SHA 54f6cd6223353df0e9ad8bc823472f28b19b3818
+    Scope: EOD fire and restart-check boundary; detailed EOD sequence belongs to B-010.
+13. core/market_windows.py — source inspected for market/entry windows, holiday handling and time comparisons.
+14. strategies/loader.py — SHA 99e83b192021297a3df472840728b88123c7b891
+    Scope: strategies loaded from YAML at startup; no hot reload described in the module.
+15. strategies/schema.py — SHA 22530161a5ee5a24bd85a7701b45269b3f2bacdb
+    Scope: allowed strategy direction/intent/protocol and strategy configuration schema.
+16. data/live_feed.py — source inspected as a live market-feed boundary; B-004/B-006 own connection and worker-initialization detail.
+17. config/cron_registry.yaml — SHA 42ff638145ba8c05eba907a33d5b391ae3fc6910
+    Scope: repository-declared cron jobs. A registry declaration is not proof of installed host cron or a historical run.
+
+Source-derived leads to reconcile (NOT claims about what actually ran on a particular host):
+- The repository configuration states a global entry_start of 10:00 and entry_end of 15:00; it separately states an eod_entry_cutoff of 15:15 and an EOD square-off time of 15:17.
+- The same configuration comments say the global entry_start is a floor over strategy-specific windows; strategy files may declare earlier windows that do not override the global floor.
+- The signal processor's module header describes a sequential signal pipeline from pre-flight through order placement and status update.
+- The order monitor's module header describes polling broker order state and handling fill timeouts; it does not itself place orders.
+- The repository contains separate MIS protective square-off and EOD accounting/backstop mechanisms. Do not collapse them into one generic “square-off”.
+- The production repository contains source for live, broker and market-data components. The existence of code/config does not establish that it was enabled, healthy, connected, called, or installed on the legacy VM.
+- The `main.py` and component files were fetched at the baseline ref, but the complete repository tree was not pinned as one newly audited snapshot in this B-009 preparation. Do not claim that this was a new full-repository audit or a host capture.
+
+No production VM, broker, database, live service, or trading process was contacted or run for this questionnaire.
+
+======================================================================
+3. B-009 SCOPE AND BOUNDARIES
+======================================================================
+
+B-009 asks: what the legacy system did during the active intraday session, from the point B-008's market-open handling hands over to normal session operation until B-010's EOD operation takes over.
+
+Focus:
+- What actually ran repeatedly during the session and at what cadence.
+- How new signals/candidates entered the running system and moved through processing (only at lifecycle level; C/D own detailed logic).
+- How the system observed market data and quotes during the session.
+- How order submissions, fills, partial fills, timeouts, cancellations, exits and local state updates were coordinated (G owns exact order semantics).
+- How open positions and pending orders were monitored.
+- How intraday risk/kill controls, market windows, strategy windows, and cut-offs affected actions.
+- What the system recorded outcomes and raised alerts, if known.
+- What happened on degraded feed, stale quotes, broker errors, worker failures, duplicate signals, missed cycles, or delayed orders during the session.
+- What evidence exists for paper/live differences.
+- Where the intraday process handed over to the separate MIS square-off/EOD processes.
+
+Explicitly outside B-009:
+- Host boot and service supervision (B-001).
+- Configuration loading (B-002), database initialization (B-003), broker startup/authentication (B-004), startup reconciliation (B-005), worker initialization (B-006), readiness/health contract (B-007), and opening-window handling (B-008).
+- Detailed scanner/webhook/queue semantics (C), trade decision and screening formulas (D), data calculations and technical analysis (E), sizing/capital allocation (F), order protocol and full order/position lifecycle (G), operator interventions (H), kill-switch semantics and failure governance (I), logging/alerts/reporting (L), cron/service/deployment details (M), tests (N), and architecture/design (O).
+- EOD operation (B-010), shutdown (B-011), restart/recovery (B-012).
+- Any proposed V2 behavior or repair.
+
+======================================================================
+4. QUESTIONS — HISTORICAL INTRADAY OPERATION
+======================================================================
+
+A. DAILY SESSION AND NORMAL OPERATION
+
+B9-A1. In your historical understanding, what marked the transition from “market-open handling” (B-008) to normal intraday operation? Was there a specific message, flag, event, time, or simply continuous running?
+
+Answer:
+
+(D) Uncertainty / conflict: UNKNOWN / NOT ESTABLISHED whether an in-memory runtime flag or SQLite state.db record was explicitly toggled from STARTUP to INTRADAY_ACTIVE, or if session eligibility was evaluated purely dynamically on each worker cycle via core/market_windows.py
+
+B9-A2. During a normal trading day, what did you understand the system to do continuously or repeatedly after the entry window opened? List the activities in the order you remember them.
+
+Answer:
+
+B9-A3. Did the service remain running continuously throughout the session, or were there separate scheduled jobs/processes that performed important intraday actions? Identify any known examples and distinguish service workers from cron jobs.
+
+Answer:
+
+B9-A4. Were there known periods when the service was running but entries were intentionally not allowed (for example, before a configured entry time or after an entry cut-off)? What was the observed behavior during those periods?
+
+Answer:
+
+B. SIGNAL ARRIVAL AND PROCESSING — LIFECYCLE ONLY
+
+B9-B1. What signal source(s) were actually used during the legacy intraday session? Was Chartink the sole source, or were there other sources? Give the period/date if this changed.
+
+Answer:
+
+B9-B2. When a fresh signal arrived during market hours, what did you observe happening next? Include any visible status, delay, queueing, screening, or notification. Do not guess internal code behavior.
+
+Answer:
+
+B9-B3. Were signals that arrived outside the entry window, after the strategy's window, or close to the end-of-day cut-off ignored, rejected, queued, or processed later? What do you remember observing? If uncertain, say so.
+
+Answer:
+
+B9-B4. Did duplicate/repeated signals for the same symbol/strategy occur? If yes, what did the system visibly do (ignore, reprocess, reject, create another trade, or unknown)? Provide dated examples if available.
+
+Answer:
+
+B9-B5. Did you observe signals that were accepted by the scanner but rejected by the trading system? If yes, provide the rejection reason/message or report evidence. Detailed rejection formulas are for D topics.
+
+Answer:
+
+C. MARKET DATA AND INTRADAY OBSERVATION
+
+B9-C1. During the session, what market-data channels did you believe were active (WebSocket ticks, REST quotes, candle polling/storage, historical fetches, or other)? Mark only what you know and identify the period.
+
+Answer:
+
+B9-C2. Did you observe stale/missing prices, delayed candles, gaps, frozen feeds, or periods when a feed appeared connected but no useful data reached consumers? Give dates/symbols and records if available.
+
+Answer:
+
+B9-C3. What did the system do when a quote, candle, or market-data request failed? Did it retry, skip a cycle, reject a candidate, continue with cached data, stop a worker, block entries, or was the outcome unknown?
+
+Answer:
+
+B9-C4. Were there observed differences between the price used for screening/decision, the planned entry price, the submitted order price, and the eventual fill price? Give examples or records if known. Do not calculate formulas here.
+
+Answer:
+
+D. ORDER AND POSITION MONITORING — OBSERVED SESSION BEHAVIOR
+
+B9-D1. After the system submitted an entry order, what did you observe while it was pending? For example, status updates, repeated broker checks, timeout, cancellation, replacement, or alert. State what is remembered versus recorded.
+
+Answer:
+
+B9-D2. Were partial fills observed? If yes, how did the system behave with the remaining quantity, capital reservation, stop/target orders, and trade status? If unknown, say so.
+
+Answer:
+
+B9-D3. How were open positions monitored during the session? Identify any visible polling cadence, WebSocket event, order monitor, position check, stop-loss/target monitoring, or manual check you remember.
+
+Answer:
+
+B9-D4. Did the system monitor broker positions and local database trades/orders continuously during the session? What evidence supports the answer? If you only know that a reconciler module existed, say that; do not infer successful operation from source existence.
+
+Answer:
+
+B9-D5. Did you observe any case where the broker showed an order/position that the local system did not show, or vice versa? Include the date, symbol (if safe), and record reference. Do not include account identifiers.
+
+Answer:
+
+B9-D6. How did an intraday exit normally happen, as you observed it: stop-loss, target, manual close, strategy exit, risk control, scheduled square-off, or other? Separate known paths and avoid assuming that every configured path fired.
+
+Answer:
+
+E. TIME WINDOWS, RISK CONTROLS AND INTRADAY GATES
+
+B9-E1. Did you observe the configured global entry start/end being enforced in actual operation? What records or examples support this? Distinguish configuration from observed enforcement.
+
+Answer:
+
+B9-E2. Did each strategy have its own entry window, and did the global entry window override or constrain it in practice? Record what you remember; source reconciliation will resolve implementation details.
+
+Answer:
+
+B9-E3. Were there intraday conditions that blocked new entries while allowing existing orders/positions to continue being monitored or exited (kill switch, daily loss, capital drift, clock skew, broker failure, strategy breaker, or another guard)? Identify known incidents and the observed effect.
+
+Answer:
+
+B9-E4. Did you observe the system cancelling pending entry orders at an intraday cut-off? If yes, when and how was completion verified? Do not conflate entry cancellation with closing an already-open position.
+
+Answer:
+
+B9-E5. Did the system ever stop taking new entries but leave existing positions open? What was the reason and what happened next?
+
+Answer:
+
+F. ERRORS, DEGRADATION AND RECOVERY DURING THE SESSION
+
+B9-F1. What happened when the broker API timed out, returned an error/rate-limit response, or authentication failed during an active session? Provide concrete examples and dates if possible.
+
+Answer:
+
+B9-F2. Did a worker stop, crash, repeatedly fail, or silently stop processing during the session? Which worker or activity, what symptom was visible, and what was the consequence?
+
+Answer:
+
+B9-F3. Were there incidents of an entry order being accepted by the broker but not reflected locally, or of local state changing without confirmed broker action? Give the most reliable evidence you have.
+
+Answer:
+
+B9-F4. What happened when the process/service restarted or lost network connectivity during market hours? If that belongs to a specific incident/restart agenda, identify the record and mark the detail DEFER TO B-012 rather than reconstructing it here.
+
+Answer:
+
+B9-F5. Did you observe repeated orders, duplicate exits, an unprotected position, a missed exit, or a position closed by the broker before the system's own exit? Provide dated records if available.
+
+Answer:
+
+B9-F6. Were there known incidents where alerts were missing, late, misleading, or sent despite the underlying action not succeeding? Give the alert text/date and the actual outcome if known. L owns alert delivery detail.
+
+Answer:
+
+G. PAPER/LIVE AND EVIDENCE
+
+B9-G1. Did paper mode behave differently from live mode during the intraday session? State only observed differences, with period and evidence. Do not assume parity or difference based only on source.
+
+Answer:
+
+B9-G2. Which records did you actually use to monitor intraday operation: dashboard, Telegram, email, logs, CSV/report, database query, broker UI, or something else? Which ones survive?
+
+Answer:
+
+B9-G3. Do you have any dated examples of a full intraday path from signal arrival through reject/entry/fill/monitor/exit? Identify files or records without pasting secrets or account identifiers.
+
+Answer:
+
+B9-G4. Were there intraday performance/latency measurements, counts, or reports that you trust? State exactly what was measured, the time window, and the record. Do not infer profitability or execution quality from a status count alone.
+
+Answer:
+
+H. COMPLETENESS AND UNKNOWNS
+
+B9-H1. What important intraday behavior have the questions missed?
+
+Answer:
+
+B9-H2. Which of your answers above are based on direct records versus memory or generated/AI-prepared material? Identify the ones that need particular caution.
+
+Answer:
+
+B9-H3. Are there known discrepancies between what the repository says and what you remember happened on the production VM? List them without trying to resolve them.
+
+Answer:
+
+B9-H4. Any additional incidents, screenshots, reports, logs, email briefings, or notes relevant to intraday operation? List dates and filenames/locations.
+
+Answer:
+
+======================================================================
+5. SOURCE-RECONCILIATION LEADS — NOT FOR RAMA TO RESOLVE
+======================================================================
+
+These items are deliberately carried forward for independent source reconciliation. They are not assertions that the production host actually behaved this way.
+
+1. Signal-processing path: inspect the actual caller/callee chain from webhook arrival through queue, signal processor, screening, price/quantity/risk, capital reservation, order placement and status persistence. Identify every early return/rejection and consumer.
+2. Runtime windows: compare config/system_config.yaml, core/market_windows.py, per-strategy YAML windows, order-placement cut-off checks and scheduled jobs. Keep eligibility window, last order-placement deadline, MIS protective cutoff, SOFT_KILL and EOD accounting as distinct controls.
+3. Active monitoring: trace the order monitor, reconciler poll, live feed, candle store, entry gate, target/SL managers, token monitor and clock-skew probe. For each, establish constructor, start point, cadence, input, output, failure path, stop behavior and whether it is wired/enabled under the repository configuration.
+4. Actual exit paths: trace protective exits, strategy exits, stop/target legs, cancellation, forced square-off and any manual close/reconciliation paths. B-009 records their intraday operation only; B-010 owns the EOD sequence and G owns exact order mechanics.
+5. State transitions: distinguish signal status, trade status, order status, position state, capital reservation, kill state and any worker state. Do not collapse them into a single “trade status”.
+6. Error handling: for each API/quote/order/DB/worker failure, identify whether the path retries, skips, marks a failure, raises a kill, stops a worker, alerts, or continues. A generic “retry logic exists” statement is insufficient.
+7. Paper/live parity: compare relevant branches and adapters; distinguish source-defined behavior from observed host evidence.
+8. Evidence: source code/config is not proof of production runtime. Search available dated incident records, reports, logs, screenshots and broker evidence; if evidence no longer exists, label UNKNOWN / NOT ESTABLISHED.
+9. Avoid topic leakage: startup reconciliation is B-005; readiness contract B-007; market-open transition B-008; EOD B-010; shutdown B-011; restart/recovery B-012. Detailed scanner/signal handling is C, decision formulas D, data/technical analysis E, sizing/capital F, orders/positions G, alerts/logging L.
+10. The reviewed production source was fetched by explicit paths at the preserved baseline ref. This is not a complete newly pinned tree audit and does not establish installed VM state.
+
+======================================================================
+6. ANSWER SUMMARY — FILL IN IF USEFUL
+======================================================================
+
+- What I directly know from records:
+- What I remember historically:
+- What is uncertain / UNKNOWN:
+- Which records I can supply:
+- Which questions should be deferred:
+- Any V2 preference (clearly labelled, not a legacy fact):
+
+END OF B-009 ANSWER SHEET

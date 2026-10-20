@@ -1,0 +1,53 @@
+B-009 REVISION 1 — CHATGPT FINAL REVIEW / REQUIRED CORRECTIONS
+Prepared: 20-Oct-2026
+Target: Claude
+Disposition: NOT YET READY TO FREEZE. Two factual/internal-consistency corrections remain, plus one wording caution. Please revise and return the four files for final review. Do not commit or push.
+
+FILES REVIEWED
+- B-009_manual.md — SHA-256 7de0a543269b0a90ab62e0695ed1df1a4f1981fdf81cf5abc84c4d9261a5368c
+- B-009_reconciliation_addendum.md — SHA-256 fde78606962e7bd20e7448d063816ba8203148ca5b049f0700d6affca18900a1
+- B-009_review_notes.md — SHA-256 46eae95fd7ea6b44371b0267123b04ae624b6c35a5e819bf947047bbee84cb1c
+- B-009_v2_design_inputs.md — SHA-256 47a671426731d50b925ed0ad6ffa70e1d6a4b807926c47a6499c5187ef665dbd
+
+OVERALL
+The revision incorporates the prior A–G feedback well. D1 is now more accurately scoped to newly processed signals and correctly distinguishes the normally derived entry price from the raw webhook trigger. The persisted gate-state/reload caveat is documented; D2 and D3 are bounded to the traced source path; the 15:15 control and census windows are clearer; and the V2 inputs remain proposed/open. I accept the three review-question dispositions and the decision not to read the twelve unused records absent a concrete claim requiring them.
+
+REQUIRED CORRECTION 1 — ANSWER-SHEET ID COUNT
+Manual section 16 says “all 44 IDs.” The answer sheet uploaded for B-009 contains 38 question IDs:
+A1–A4 (4), B1–B5 (5), C1–C4 (4), D1–D6 (6), E1–E5 (5), F1–F6 (6), G1–G4 (4), H1–H4 (4) = 38.
+The manual's status table also lists 38 IDs across its rows. Please change “all 44 IDs” to “all 38 IDs” in B-009_manual.md section 16, then run a coverage check confirming each of the 38 B9-A1 through B9-H4 IDs appears exactly once in the status table. If the Claude repository-answer file uses a different total, explain that difference rather than carrying an unsupported count into the manual.
+
+REQUIRED CORRECTION 2 — GAP_FADE_LONG EFFECTIVE WINDOW
+Manual section 4 currently says:
+“With every eligible file at 09:25-15:00, the global 10:00 binds the start and both ends are 15:00.”
+But the same section immediately records that market_windows.py 160–162 and signal_processor.py 975–976 say gap_fade_long cuts off at 11:30, while gap_fade_long.yaml says 15:00. Therefore, the broad statement that every eligible strategy ends at 15:00 is internally inconsistent with the source discrepancy already documented.
+
+Please preserve the discrepancy without silently resolving it. Suggested replacement:
+“Both global and strategy windows apply, with the narrower effective window controlling. The global 10:00 start binds the strategies whose configured/source-specific start is 09:25. Most eligible strategies have a 15:00 end in the traced path. KNOWN DOC DRIFT: gap_fade_long's source logic says 11:30 while its YAML declares 15:00; its effective end must be described as a source/config discrepancy, not asserted uniformly as 15:00.”
+Also adjust the Group B table's “Window” cell or add a note so readers can distinguish the YAML-declared window from the source-coded gap_fade_long cutoff. Keep the 11:30-versus-15:00 discrepancy visible as a known documentation/source conflict; do not guess which was intended.
+
+WORDING CAUTION — EOD OUTPUT
+In section 14, the EOD component's output is labelled “Flat book.” This may read as a guaranteed outcome rather than the routine's intended result. Prefer “square-off actions, summary and reset (intended flat state; actual outcome not established by this source trace)” or equivalent, unless a cited source proves a guarantee. Preserve the B-010 cross-reference.
+
+ACCEPTED AS WRITTEN
+- D1: no source path feeds newly processed signals to EntryGate.add(); entry derivation uses the webhook trigger as reference without fresh-quote re-anchoring for the affected group. Persisted gate_state on a historical host remains UNKNOWN.
+- D2: the traced placement path uses the placer's LIMIT_TRIPLE default regardless of strategy declaration; historical orders are established only where records show them.
+- D3: three-failure stop and absence of an in-source restart path are source findings; host supervisor and whether the monitor stopped in production remain UNKNOWN.
+- The 15:15 placement cutoff is separate from the monitor-cycle entry cancellation/SOFT_KILL. “Force-close” is retained only as the historical source name and its actual effect is stated.
+- 16 strategy YAML files; 15 eligible by configuration (12 INTRADAY + 3 DELIVERY); pb01_breakout_retest disabled.
+- Census: 725 for complete era 09-Jul–16-Jul; 1,876 is the pruned-era residue for 12-Jun–08-Jul. Keep periods attached to values.
+- The per-ID status categories and the twelve-record unread list are acceptable. Do not read more records unless a concrete claim needs them.
+- V2 design inputs remain PROPOSED / OPEN and must not become decisions or requirements in this phase.
+- Do not reopen B-005 to B-008 or change the V2 decision register.
+
+FINAL RETURN
+Please revise the four files as revision 2 and return them for final review. In the review notes, record:
+1. the 38-ID coverage result;
+2. the corrected gap_fade_long window wording;
+3. the EOD output wording change, if made;
+4. hashes for all four final files and Markdown/ID/session-link/citation checks;
+5. the pinned baseline commit and confirmation of what was and was not independently checked.
+
+Important transparency: ChatGPT has reviewed the four uploaded artifacts and their internal consistency. The claimed repository line-by-line verification is recorded as Claude's verification in the notes; this review does not independently re-fetch or re-read all production repository blobs. Do not describe this review as a second independent source checkout.
+
+Nothing is frozen, committed, or pushed. Rama retains freeze and push approval.

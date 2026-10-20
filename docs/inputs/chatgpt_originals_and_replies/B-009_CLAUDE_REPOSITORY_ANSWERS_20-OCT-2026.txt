@@ -1,0 +1,545 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-009 INTRADAY OPERATION — CLAUDE'S REPOSITORY-BACKED ANSWERS
+Date: 20-Oct-2026 (IST)
+Answers: B-009_INTRADAY_OPERATION_ANSWER_SHEET_20-OCT-2026.txt, under B-009_PROMPT_FOR_CLAUDE_REPOSITORY_REVIEW_20-OCT-2026.txt
+Status: RESEARCH INPUT FOR CHATGPT'S RECONCILIATION. Not a manual, not a reconciliation, not frozen. Nothing committed or pushed. No V2 decision.
+Security: no credential, token, account, client, host or address value appears below. Masked reads only.
+
+======================================================================
+1. REPOSITORY / REF INVENTORY AND EVIDENCE BOUNDARIES
+======================================================================
+
+1.1 Repository inspected
+- trading-system-prod-snapshot at commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb (the project baseline). Every "FACT (SOURCE-VERIFIED)" line below is at this commit; "file L-L" means line numbers in that file at this commit.
+- Method: a blob-less sparse clone with explicit file paths; every read went through a masking filter; the never-open check reported 0 never-open blobs after each checkout. This is a SELECTED-PATH review (section 6), not a complete-tree audit.
+
+1.2 Repositories NOT inspected, and why
+- The prompt names three repositories. On 20-Oct-2026 Rama directed that the production snapshot is the primary repository and the other two be left. Sandbox (trading-system-sbx-snapshot) and records (trading-system-records) were therefore not read for B-009.
+- Records used instead: four dated records that live inside the production repository itself (docs/audit and docs/incident, section 6), and findings already frozen in B-005 to B-008, cited by section. A record proves what it says on its own date at its own deployed commit, which is not 970aabf unless stated.
+- CONFLICT TO NOTE, not resolved here: the prompt asked for all three repositories; this file follows Rama's later instruction.
+
+1.3 What this evidence cannot show
+- Source at 970aabf is not proof of what was installed, enabled or running on the production VM on any date. No VM, broker, database or service was contacted; no legacy code was run.
+- Questions about what Rama saw, used or remembers are operator-only. They are marked UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY) and are not asked here.
+
+1.4 Labels
+FACT (SOURCE-VERIFIED) · FACT (RECORD-DERIVED) · INTERPRETATION / AUDIT LEAD · KNOWN DEFECT · UNKNOWN / NOT ESTABLISHED · DEFER TO <topic>. HISTORICAL (Rama-reported) is not used: no Rama statement was supplied for B-009.
+
+======================================================================
+2. ANSWERS BY QUESTION ID
+======================================================================
+
+A. DAILY SESSION AND NORMAL OPERATION
+
+B9-A1. Transition from market-open handling to normal intraday operation
+- FACT (SOURCE-VERIFIED): no session flag, event or state row marks the transition. Every gate evaluates the clock when it is consulted:
+  - the webhook at each request: signals/webhook_receiver.py 580-583, MarketWindows.is_entry_allowed;
+  - the processor for each signal: signals/signal_processor.py 909-912 (global window) and 974-982 (per-strategy window);
+  - the placer before each broker call: orders/order_placer.py 1073-1097 (eod_entry_cutoff).
+- The test itself is core/market_windows.py 143-150: entry_start <= now < entry_end on a non-holiday.
+- Negative search (runtime .py outside tests/, 325 files): no "INTRADAY_ACTIVE", session-state or market-open event. "intraday_active" in capital/fund_manager.py 116-142 and main.py 2693-2713 is a capital-split flag for active trade types, not a session state.
+- The pre-filled answer names "SQLite state.db". INTERPRETATION: no file of that name was found in the runtime code searched; the records name the main database data_store/trading_system.db (incident record of 03-Sep, line 7).
+- So the "transition" is continuous running: the first request at or after 10:00 passes the window test (B-008 section 2, DR-045). There is one 09:15 event, the margin re-sync thread (B-006 TH28), which is B-008's.
+- Answer to the uncertainty: evaluated dynamically per request and per signal; no toggled flag exists at the baseline.
+
+B9-A2. What ran repeatedly after the entry window opened (source wiring, repository configuration)
+- FACT (SOURCE-VERIFIED). Worker start-up is frozen in B-006 section 3 (rows TH1 to TH31); the cadences below are the ones that matter during the session.
+
+  | Activity | Thread | Cadence | Source (config line) |
+  |---|---|---|---|
+  | Webhook ingress | webhook-server | per request (waitress, 8 task threads) | main.py 3988-4000 |
+  | Signal processing | sp-dispatcher plus up to 5 sp-worker threads | as signals are queued | main.py 3974; signal_processor.py 377-404 |
+  | Order polling | order-monitor | every 2 s | config 193 |
+  | Reconciliation | order_reconciler_poll | every 15 s | config 469 |
+  | TGT retry | tgt-retry-manager | every 30 s | config 488 |
+  | Entry-gate poll | eg-poll | 5 s | constructor default, entry_gate.py 114-115 |
+  | Clock-skew probe (live only) | broker_clock_skew_probe | 60 s | config 190 |
+  | Token monitor (live only) | token-monitor | - | main.py 3964 |
+  | Candle timer | candle-store-timer | each 60 s boundary | - |
+  | EOD poller | eod_squareoff_poll | every 5 s | config 361 |
+  | MIS square-off pollers | mis_f_prepass_poll, mis_autosquareoff_poll | - | B-006 TH2, TH3 |
+  | 14:45 pre-alert | eod-pre-alert | once | main.py 931-970, 4102-4110 |
+  | Shadow observers | sr-detector, allocator-window, v3-chain, pb01-capture, pb01-entry | per their config | enabled at the baseline (B-006 TH5 to TH10) |
+
+  - The entry-gate poll runs but is never fed: section 5, KNOWN DEFECT D1.
+  - The candle timer has nothing to close, because no tick arrives (B-006 section 6; see C1).
+- Order of activity per signal: B2. Order of activity per position: D3.
+
+B9-A3. Service workers versus scheduled jobs
+- FACT (SOURCE-VERIFIED) for service workers: every intraday trading action runs inside the one service process — the threads of A2. That includes the 15:03/15:06 MIS passes, the 15:15 force-close and the 15:17 EOD routine.
+- FACT (SOURCE-VERIFIED) for jobs the repository declares (config/cron_registry.yaml) with a run time between 09:15 and 15:30:
+  - cron_officer_briefing 09:20 (lines 169-182);
+  - capture_metrics, every 5 minutes 09:00-15:55 Mon-Fri (320-334);
+  - liveness_probe, same window (335-358);
+  - disk_monitor, hourly (183-197).
+  - preflight_phase_c runs at 09:15 (262-277); B-007 and B-008 own it.
+- None of these places, cancels or exits an order.
+- A registry declaration is not proof of an installed crontab or of any run. Whether these ran on given dates: UNKNOWN / NOT ESTABLISHED (DEFER TO M topics).
+
+B9-A4. Periods with the service running but entries not allowed
+- FACT (SOURCE-VERIFIED), by configuration:
+  - before 10:00 and from 15:00 (config 28 and 47; market_windows.py 150; the end is exclusive);
+  - from 15:15 the placer refuses any order (config 48; order_placer.py 1076-1097);
+  - at 15:15 the order monitor's force-close fires a SOFT_KILL (config 740; broker/order_monitor.py 794-830; main.py 688-701), which blocks entries for the rest of the day.
+- How each window refusal shows (FACT, SOURCE-VERIFIED):
+  - at the webhook, HTTP 403 "Outside entry window" before the payload is parsed (webhook_receiver.py 580-583);
+  - a signal already queued is marked REJECTED_OUTSIDE_ENTRY_WINDOW (signal_processor.py 909-912, 974-982, 1201).
+- The pre-10:00 audit row is B-008's (DR-045).
+- Observed behaviour on any date: UNKNOWN / NOT ESTABLISHED. The census record (19-Jul, line 41) counts 25,960 POSTs blocked with 403 over 12-Jun to 16-Jul. It does not split them by reason; the kill switch also answers 403 (webhook_receiver.py 567-568).
+
+B. SIGNAL ARRIVAL AND PROCESSING — LIFECYCLE ONLY
+
+B9-B1. Signal sources actually used
+- FACT (SOURCE-VERIFIED): one ingress — HTTP POSTs to the webhook, keyed by scanner name (webhook_receiver.py 549-554 answers 404 for an unknown scanner). The code comments name Chartink as the sender (main.py 3985).
+- FACT (SOURCE-VERIFIED): EOD-type scanners go to a separate handler (webhook_receiver.py 562-564). The shadow observers of A2 produce no orders on the live path ("shadow" or "observe" modes; signal_processor.py 1131-1172).
+- Which sources were actually used, and over which periods: UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY or records). The webhook_audit row counts in the census (19-Jul, lines 39-41) show POSTs arrived; they do not name the sender.
+
+B9-B2. What happened after a fresh signal arrived (source path; C and D own the detail)
+FACT (SOURCE-VERIFIED), in order:
+1. Webhook guards: authentication; kill switch, 403 (567-568); queue backpressure, 503 (570-578); entry window, 403 (580-583); payload parsing.
+2. Per symbol, in webhook_receiver.py 895-1072:
+   - invalid symbol or price;
+   - EXPIRED if older than signal_queue.expiry_sec = 600 s (config 127; lines 916-926);
+   - IN_PROCESS if the symbol is already claimed in flight (934-935);
+   - DUPLICATE if (symbol, scanner) was seen within the dedup window (937-945), or the fingerprint row already exists (981-1015);
+   - otherwise a signals row with status QUEUED (963-980), then onto the queue (1046-1049);
+   - QUEUE_FULL if the queue is full (1050-1068).
+   - Statuses returned before the insert are not signals rows (webhook response only).
+3. The processor marks the signal PROCESSING (signal_processor.py 897), then:
+   - kill switch;
+   - global window;
+   - age over 600 s;
+   - shadow-inning guard;
+   - strategy lookup through scan_webhook_map;
+   - strategy control;
+   - per-strategy window;
+   - strategy circuit breaker (lines 905-990).
+4. Secondary screening (998-1020). The screener writes PASSED, REJECTED_<step> or SKIPPED_<reason>. A failed quote gives SKIPPED_QUOTE_UNAVAILABLE (secondary_screener.py 170-193).
+5. Entry and SL derivation (1028-1030). Momentum strategies only re-fetch a fresh quote and re-derive (1081-1106); see D1.
+6. Sizing (1111-1128). Then the per-strategy position cap and one-trade-per-symbol-direction guard, risk approval and reservation, all under the portfolio lock (1302-1344). Status RESERVED.
+7. Target derived (1368); the "INTRADAY SIGNAL" Telegram alert is sent before placement (1370-1380). Then:
+   - a second kill-switch check, REJECTED_KILL_SWITCH_LATE (1389-1396);
+   - shutdown, REJECTED_SHUTDOWN (1398-1405);
+   - entry throttle, REJECTED_ENTRY_THROTTLED (1410-1418).
+8. OrderPlacer.place() (1446-1460). On success the signal is PROCESSED (1543). On timeout the signal is TIMEOUT and the trade UNKNOWN_IN_FLIGHT (1464-1484). A client-side rate limit re-queues up to 3 times (1486-1532). Other failures give PLACEMENT_FAILED (1233-1246).
+- Any reject: status REJECTED_<check> and the reservation released (1193-1217). An EXPIRED reject at the processor sends a warning at most once a minute (1221-1231).
+- What the operator saw: UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY).
+
+B9-B3. Signals outside the entry or strategy window, or near the cut-off
+- FACT (SOURCE-VERIFIED):
+  - Outside the global window the webhook refuses with 403; nothing is queued (580-583).
+  - A queued signal whose time passes the window before processing is REJECTED_OUTSIDE_ENTRY_WINDOW (911-912), not held for later.
+  - Per-strategy windows are rejected the same way (977-982).
+  - After 15:15 the placer refuses the order: the trade is marked REJECTED and the reservation released (order_placer.py 1076-1097).
+  - Nothing in the inspected path parks a signal for a later window. (The WAIT_FOR_RETEST diverter is configured off: B-006 TH11.)
+- All 15 enabled strategy files declare 09:25-15:00 (pb01_breakout_retest, disabled: 09:25-11:00). So the global 10:00 floor binds for all of them; see E2.
+- Observed: UNKNOWN / NOT ESTABLISHED.
+
+B9-B4. Duplicate or repeated signals
+- FACT (SOURCE-VERIFIED): three layers.
+  - An in-memory per-symbol in-flight claim gives IN_PROCESS (934-935).
+  - A per-(symbol, scanner) cache gives DUPLICATE (940-947).
+  - The unique (fingerprint, fingerprint_date) row gives DUPLICATE, except a QUEUE_FULL row being retried (981-1015).
+  - Downstream, the processor refuses a second trade on the same symbol and direction (signal_processor.py 802 onward), and the risk engine has a REJECTED_DUPLICATE_SYMBOL check (census record line 122).
+- FACT (RECORD-DERIVED, census 19-Jul, lines 18-20): 81% of raw arrivals over the six complete days were intentional de-duplication. REJECTED_DUPLICATE_SYMBOL appears 39 times (line 154).
+- Whether a duplicate ever created a second trade: no such case was found in the records read. NOT ESTABLISHED.
+
+B9-B5. Signals accepted by the scanner but rejected by the system
+- FACT (RECORD-DERIVED, census 19-Jul, lines 136-155): over the complete era (30,769 rows), the leading terminal statuses were:
+
+  | Status | Count | Share |
+  |---|---:|---:|
+  | REJECTED_SCORE | 10,949 | 35.58% |
+  | REJECTED_STRATEGY_CONTROL | 5,685 | 18.48% |
+  | REJECTED_DAILY_TRADES | 5,146 | 16.72% |
+  | REJECTED_SIZING_CONCENTRATION | 3,098 | 10.07% |
+  | REJECTED_SHADOW_INNING_ACTIVE | 2,801 | 9.10% |
+  | REJECTED_STRATEGY_CIRCUIT_BREAKER | 898 | 2.92% |
+  | SKIPPED_QUOTE_UNAVAILABLE | 725 | 2.36% |
+
+  - 19.00% of admitted signals reached the risk engine (line 18).
+  - The record's code citations are at deployed commit 7319d06, not the baseline.
+  - It records that the EOD cleanup prunes REJECTED_* rows, so REJECTED counts survive only for the complete era (lines 43-53).
+- DEFER TO D topics for every rejection formula.
+
+C. MARKET DATA AND INTRADAY OBSERVATION
+
+B9-C1. Market-data channels active during the session
+- FACT (SOURCE-VERIFIED): the decision path uses REST quotes.
+  - The screener calls quote_fn([symbol]) (secondary_screener.py 170).
+  - The momentum re-anchor calls quote_fn (signal_processor.py 1085).
+  - In live mode get_quote goes to the broker (census record lines 435-436, at its own commit).
+- FACT (SOURCE-VERIFIED, frozen in B-006 section 6): the WebSocket feed connects in live mode but subscribes to nothing at start. Its only subscriber is the exit-retry path (order_placer.py 3397-3412, FIX-061). So ticks, and the 60-second candles built from them, do not reach the decision path at the baseline.
+  - FACT (RECORD-DERIVED, 25-Jul; B-006 section 6 and B-007 section 9): the tick/candle path was recorded as dormant.
+- Historical candles: the shadow observers fetch through _make_sr_fetch_fn (main.py 3480-3487); fetch_daily_candles is a 15:40 job (cron registry 359-373). Neither feeds an intraday entry decision. DEFER TO E topics.
+- Which channels were active on given dates: UNKNOWN / NOT ESTABLISHED.
+
+B9-C2. Stale or missing prices, gaps, frozen feeds
+- FACT (RECORD-DERIVED, census 19-Jul):
+  - 725 SKIPPED_QUOTE_UNAVAILABLE in the complete era (line 148), 1,876 over the full retention window (line 91);
+  - a per-day table at lines 284 onward;
+  - an inherited claim about 2026-07-08, re-examined at lines 311-335.
+  - Lines 449-452: the live quote path does not detect a partial response and logs one INFO line per signal; the paper path warns.
+- Feed "connected but no data": the watchdog arms on the first tick, and none came while nothing was subscribed (B-007 section 9, B-006 section 6). Dated symbol-level stale-price incidents beyond these: NOT ESTABLISHED.
+
+B9-C3. What happened when a quote or market-data request failed
+- FACT (SOURCE-VERIFIED):
+  - The screener marks the signal SKIPPED_QUOTE_UNAVAILABLE and the processor returns without retry; the in-flight claim is released (secondary_screener.py 170-193; signal_processor.py 1008-1013, 1248-1271). The candidate is dropped.
+  - A failed momentum re-anchor logs a warning and continues on the stale webhook price (1088-1106).
+  - Entries are not blocked and no worker stops.
+  - Order-monitor and broker failures: see F1.
+
+B9-C4. Differences between the screening price, planned entry, submitted price and fill
+- FACT (SOURCE-VERIFIED): four prices exist on the path.
+  - trigger_price, from the webhook;
+  - the derived entry_price with an entry offset (1028-1030), re-derived from a fresh quote for momentum strategies only (1081-1106);
+  - the submitted LIMIT price;
+  - the fill recorded by the order monitor, with slippage computed against the expected price (order_monitor.py 136 onward).
+  - A slippage guard compares the fill against the signal trigger (order_placer.py 1099 onward; FIX-128).
+  - The ACCEPT evidence record carries trigger, final entry, the re-anchor flag, SL, target and quantity (signal_processor.py 1427-1445).
+- Dated examples: UNKNOWN / NOT ESTABLISHED (records not read for this). A record named docs/audit/mo9_slippage_reference_hold_25jul2026.md exists in the tree listing; it was not read. DEFER TO G and L topics.
+
+D. ORDER AND POSITION MONITORING
+
+B9-D1. While an entry order was pending
+- FACT (SOURCE-VERIFIED):
+  - The trade is set PENDING before the broker call (order_placer.py 1061-1071).
+  - The order is tracked and polled every 2 s through get_order_history (order_monitor.py 252-310, 594-639).
+  - An OPEN entry is cancelled after 60 s (config 194; order_monitor.py 1074-1107). It is also cancelled early if price moves toward the target before filling (1128-1192; FIX-140).
+  - Exit legs are exempt from both (1085).
+  - At 15:15 every tracked ENTRY order is cancelled and SOFT_KILL fires (794-830; main.py 688-701).
+  - A timeout during place() leaves the trade UNKNOWN_IN_FLIGHT, owned by the reconciler's in-flight recovery (order_reconciler.py 4169 onward).
+- Remembered versus recorded: UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY).
+
+B9-D2. Partial fills
+- FACT (SOURCE-VERIFIED):
+  - An ENTRY order reaching PARTIAL is cancelled at once on the first partial (order_monitor.py 910-940). Its terminal handling emits OrderPartiallyTerminated.
+  - The placer then commits capital at the filled quantity, records the trade OPEN and places SL and TGT at the filled quantity (order_placer.py 1788-1830; header OP-NS1 to OP-NS3, lines 116-130).
+  - If exit placement fails after retries: soft_kill (header 1802-1804). The LIMIT_TRIPLE path runs an emergency flatten and hard_kill (OP-NS5, 141-150).
+  - The remaining quantity is cancelled, not chased.
+- KNOWN AMBIGUITY (source):
+  - The docstring at order_monitor.py 891-892 says "Exit legs (SL/TGT/EOD) keep the timeout path".
+  - The code at 943-946 exempts SL, TGT and EOD from the PARTIAL timeout, and ENTRY is handled earlier. So the 5-minute partial timeout (config 739) reaches only a leg with no recognised label.
+- Observed partial fills: UNKNOWN / NOT ESTABLISHED. DEFER TO G.
+
+B9-D3. How open positions were monitored
+- FACT (SOURCE-VERIFIED) for the source path at the baseline:
+  - Protection is a pair of broker orders, an SL (stop-limit) and a TGT LIMIT, placed at entry fill (LIMIT_TRIPLE; D6 and section 5 D2). The broker executes them.
+  - The order monitor polls those legs every 2 s and emits OrderFilled; the placer closes the trade on an exit fill (order_placer.py 1767-1786).
+  - The reconciler every 15 s compares broker positions with local trades:
+    - CHECK1 manual close, CHECK2 orphan, CHECK4 partial close, CHECK5 growth, CHECK6 orphan orders;
+    - G5b places a missing SL;
+    - duplicate-exit removal;
+    - CHECK7 capital drift, CHECK8 CO SL drift (alert only);
+    - an unrealised MTM refresh (order_reconciler.py 816-1060).
+  - The TGT-retry worker every 30 s re-places a missing target (B-006 TH23).
+  - The smart-target trail and trailing SL are not active on the LIMIT_TRIPLE path (D2).
+  - No tick stream drives exits (C1).
+- Manual checks: UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY).
+
+B9-D4. Continuous broker-versus-local monitoring, and evidence
+- FACT (SOURCE-VERIFIED): the reconciler poll is wired and started (main.py 3961; order_reconciler.py 423-455) at a 15 s cadence. A cycle that is still running makes the next one skip (633-642).
+- Its liveness appears on /health (main.py 4056-4071). B-007 section 10 found no consumer of that verdict in the trading path.
+- FACT (RECORD-DERIVED): records show it acting.
+  - 03-Sep incident, line 43: G5b placed a recovery SL at 15:07:16.
+  - The 22-Jul orphan-adoption record describes CHECK2's behaviour with dated instances.
+- These records establish operation on those dates only. Successful operation on other days: NOT ESTABLISHED.
+
+B9-D5. Broker and local state disagreeing
+- FACT (RECORD-DERIVED, orphan_adoption_22jul2026.md lines 18-32):
+  - two broker positions with no local trade, on 19-Jun (THELEELA) and 25-Jun (RAMCOIND);
+  - the record attributes RAMCOIND to the system's own duplicate-exit oversell; THELEELA is "unexplained";
+  - the record also states the broker account was used by the system only (line 9-14). That account's identifier is masked and not reproduced.
+- FACT (RECORD-DERIVED, 03-Sep incident, lines 14-45): ANANTRAJ — the position remained while both protective orders had been cancelled.
+- Other cases: NOT ESTABLISHED. DEFER TO G-015.
+
+B9-D6. How an intraday exit happened
+- FACT (SOURCE-VERIFIED), as paths in the source:
+  - SL leg fill and TGT leg fill, both broker-resting orders;
+  - the MIS auto square-off at 15:03 (PASS 1, limit then market) and 15:06 (PASS 2, market) (orders/mis_autosquareoff.py 26-36; config 59, 90-91);
+  - the EOD routine at 15:17 as backstop (config 49; eod_squareoff.py 326 onward);
+  - daily-loss breach: EOD fire_now then SOFT_KILL (main.py 756-817);
+  - reconciler flatten paths and the HARD_KILL flatten (B-006 TH31);
+  - a manual close detected by CHECK1.
+  - The 15:15 force-close closes nothing (mis_autosquareoff.py 7-8; main.py 693-701).
+- FACT (RECORD-DERIVED, 03-Sep incident):
+  - the MIS PASS 1 cancelled both protective orders and did not submit the exit (lines 35-41);
+  - G5b restored an SL 11.5 s later (43-44);
+  - the position was finally closed manually (lines 19-22).
+  - The record's deployed commit was 2d08436, with passes then at 15:07 and 15:10 (mis_autosquareoff.py 37).
+- Which path normally fired: UNKNOWN / NOT ESTABLISHED.
+
+E. TIME WINDOWS, RISK CONTROLS AND INTRADAY GATES
+
+B9-E1. The global entry start and end enforced in operation
+- FACT (SOURCE-VERIFIED): enforced in code at three points: the webhook, processor step 1, and processor step 2 through is_entry_allowed_for_strategy (B-008 section 3, DR-045).
+- Observed enforcement: UNKNOWN / NOT ESTABLISHED; see A4 for the 403 count, which has no reason split.
+
+B9-E2. Per-strategy windows and the global window
+- FACT (SOURCE-VERIFIED): both apply; the narrower wins (market_windows.py 152-175). A malformed strategy time falls back to the global window only (171-173).
+- All 15 enabled strategy files declare 09:25-15:00, so the global 10:00 floor binds the start and the end is the same 15:00.
+- KNOWN DOC DRIFT:
+  - market_windows.py 160-162 and signal_processor.py 975-976 cite gap_fade_long cutting off at 11:30, but gap_fade_long.yaml line 50 says 15:00;
+  - the docstring default "09:30 / 13:30" (164) is not what the files declare.
+
+B9-E3. Conditions that blocked new entries while existing positions stayed managed
+- FACT (SOURCE-VERIFIED):
+  - SOFT_KILL blocks entries (kill_switch.py 510-525: "entry" is true for SOFT_KILL or HARD_KILL). It leaves exit management running.
+  - SOFT_KILL sources on the intraday path:
+    - orphan order (main.py 820-843);
+    - the 15:15 force-close (688-701);
+    - api_failure_threshold, 3 consecutive (config 356-357);
+    - clock skew over 30 s (config 186);
+    - daily loss, after closing positions (756-817).
+  - HARD_KILL sources: the order monitor's 3 consecutive API failures (main.py 727-752; config 741); exit placement failing after an entry fill (OP-NS5).
+  - Per strategy: the strategy circuit breaker (signal_processor.py 984-990; config 732 onward).
+  - Risk checks reject per signal (census line 122). The degraded webhook start stops all entries while exits continue (main.py 4006-4054).
+- Incidents with dates: 03-Sep (D6); the June HARD_KILL clusters (exit_rejection_hard_kill_forensics_22jul2026.md lines 3-11, 34-39). Further detail: DEFER TO I topics.
+
+B9-E4. Pending entry orders cancelled at a cut-off
+- FACT (SOURCE-VERIFIED): at 15:15, _check_force_close cancels each tracked ENTRY order and fires the SOFT_KILL callback (order_monitor.py 794-830).
+  - Completion is not verified there: a cancel result is logged, and the order's later state comes from normal polling.
+  - The 15:17 EOD routine also cancels pending entries (mis_autosquareoff.py 9-10).
+  - The 60 s fill timeout cancels any unfilled entry long before either.
+- Observed: UNKNOWN / NOT ESTABLISHED.
+
+B9-E5. Entries stopped while positions stayed open
+- FACT (SOURCE-VERIFIED): yes by design. SOFT_KILL (E3), the degraded webhook start (main.py 4034-4036: "entries cannot arrive, exits/reconciler/EOD squareoff continue") and each day after 15:00 all stop entries while positions stay managed until 15:03/15:06/15:17.
+- FACT (RECORD-DERIVED): 17-Jul is the opposite case. The service stopped and nothing ran (main.py 4009-4020, the comment quoting the outage; cron registry 336-340).
+- Other dated cases: NOT ESTABLISHED.
+
+F. ERRORS, DEGRADATION AND RECOVERY
+
+B9-F1. Broker API timeout, error, rate limit or authentication failure
+FACT (SOURCE-VERIFIED), by site:
+- Order monitor:
+  - a timeout skips the order this cycle (655-662);
+  - another error counts up to 3, then HARD_KILL and the monitor STOPS ITSELF (663-689);
+  - authentication failing 3 times calls the same callback and stops the monitor (640-654).
+  - After it stops, nothing polls fills for the rest of the process life. See section 5, D3.
+- Placement:
+  - a timeout gives TIMEOUT / UNKNOWN_IN_FLIGHT with no retry (signal_processor.py 1464-1484);
+  - a client rate limit re-queues up to 3 times (1486-1532);
+  - other broker errors give PLACEMENT_FAILED;
+  - each is recorded to the kill switch's API-failure count (1478-1479, 1490-1491, 1533-1536).
+- Sizing, risk or reserve broker errors give REJECTED_*_BROKER_ERROR (1122-1125, 1319-1322, 1332-1335).
+- Dated examples: the June exit rejections (forensics record lines 3-11). DEFER TO I and G.
+
+B9-F2. Workers that stopped or failed silently
+- FACT (SOURCE-VERIFIED):
+  - The order monitor's self-stop (F1).
+  - The pullback entry gate never receives entries (section 5, D1).
+  - Failure behaviour of every thread: B-006 section 7 (rows F1 to F13).
+- FACT (RECORD-DERIVED):
+  - the TGT-retry worker sat dead or crash-looping for days (main.py 4077-4079, comment citing a 24-Jun post-mortem);
+  - smart TGT never fired (B-006 TH22).
+- Further incidents: NOT ESTABLISHED.
+
+B9-F3. Broker-accepted entry not reflected locally, or local change without broker action
+- FACT (SOURCE-VERIFIED): the paths are UNKNOWN_IN_FLIGHT recovery (order_reconciler.py 4169-4600) and CHECK2's in-flight-orphan handling (2069-2226).
+- FACT (RECORD-DERIVED): THELEELA 19-Jun (D5). DEFER TO G-015.
+
+B9-F4. Restart or network loss during market hours
+- DEFER TO B-012. Source pointers only:
+  - order-monitor and fill-map rehydration (main.py 3952-3955);
+  - the startup reconcile (B-005);
+  - EOD restart recovery (B-006 ST5).
+
+B9-F5. Repeated orders, duplicate exits, unprotected positions, missed exits, broker-closed positions
+- FACT (RECORD-DERIVED):
+  - ANANTRAJ unprotected 03-Sep (D6).
+  - June: exits rejected, then HARD_KILL, then a kill-flatten oversell and orphan debris; the record says all three rejection variants were fixed by 24-Jun (forensics lines 23-39).
+  - RAMCOIND 25-Jun, a duplicate-exit oversell (D5).
+  - A broker auto square-off of a closing-auction stock at 15:12:47 on 27-Aug (mis_autosquareoff.py 18-24) is why the MIS passes exist.
+- Others: NOT ESTABLISHED.
+
+B9-F6. Alerts missing, late, misleading, or sent despite failure
+- FACT (SOURCE-VERIFIED):
+  - The signal alert is sent before placement (signal_processor.py 1370-1380), so it can announce a trade that is then refused (KILL_SWITCH_LATE, ENTRY_THROTTLED, the 15:15 cut-off or a broker error).
+  - The force-close alert text was corrected to stop claiming it closes positions (main.py 707-718).
+  - The live quote path has no missing-quote warning (census lines 448-452).
+- FACT (RECORD-DERIVED): reconciler CHECK1 alerts that claimed a manual close were, when measured on 26-Jul, all the system's own orders filling (order_reconciler.py 1423-1426, comment). The 17-Jul outage raised no alert (cron registry 336-340).
+- DEFER TO L.
+
+G. PAPER/LIVE AND EVIDENCE
+
+B9-G1. Paper versus live during the session
+- FACT (SOURCE-VERIFIED) for source differences:
+  - feed, clock probe and token monitor are live only (B-006 TH13 to TH19);
+  - paper cancels stale paper orders at start (main.py 3948-3951);
+  - paper quotes use their own alias map and rate limit (census lines 432-441).
+- FACT (RECORD-DERIVED): all 361 trades in the census window (12-Jun to 16-Jul) were LIVE; zero paper trades (lines 429-430).
+- Observed behavioural differences: NOT ESTABLISHED.
+
+B9-G2. Records used to monitor intraday operation; which survive
+- UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY) for what Rama used.
+- Source shows: Telegram alerts, the email path for CRITICAL sentinels (main.py 4028-4033), /health on 8080, logs, the ops dashboard (ops_dashboard/), and the signals, trades and webhook_audit tables.
+- Records in the repository: docs/audit and docs/incident (section 6). The "Cron Morning Briefing" PDF of 24-Sep is a B-008 reference held by Rama, not stored.
+
+B9-G3. A dated full path from signal to exit
+- FACT (RECORD-DERIVED, partial): 03-Sep ANANTRAJ — entry COMPLETE at 10:01:33 with SL and TGT placed, through the 15:07 MIS pass, to a manual close (incident lines 16-45).
+- The record starts at the entry fill, not at signal arrival. A complete signal-to-exit trace: NOT ESTABLISHED in the records read.
+
+B9-G4. Trusted performance or latency measurements
+- FACT (SOURCE-VERIFIED): the processor keeps avg_ms and per-check counts (signal_processor.py 1273-1276, 2663 onward), exposed through /health metrics (main.py 4076).
+- FACT (RECORD-DERIVED): the census's funnel counts (A2). It is a status census, not an execution-quality measure.
+- Latency records: NOT ESTABLISHED.
+
+H. COMPLETENESS AND UNKNOWNS
+
+B9-H1. Behaviour the questions missed
+1. The order protocol actually used (section 5, D2).
+2. The pullback gate is never fed (D1).
+3. The order monitor stops itself after 3 failures (D3).
+4. The signal alert precedes placement (F6).
+5. EXPIRED is 600 s, not the 60 s often quoted (config 127; the processor's constructor default of 60 is overridden by main.py 3613-3614).
+6. The shadow observers run alongside live trading (A2).
+
+B9-H2. Records versus memory or generated material
+- Every answer here is source- or record-derived; none is memory.
+- Caution:
+  - the four records are AI-written investigations at their own commits;
+  - the census's code line numbers are at commit 7319d06;
+  - the incident record's are at 2d08436.
+
+B9-H3. Repository versus remembered production behaviour
+- UNKNOWN / NOT ESTABLISHED (OPERATOR-ONLY). The records themselves show deployed commits other than the baseline (H2).
+
+B9-H4. Further incidents and records
+Names from the tree listing at 970aabf; NOT READ for B-009:
+- docs/audit/tick_candle_dormancy_25jul2026.md (read for B-006)
+- s4_boot_outage_17jul2026.md
+- liveness_alarm_17jul2026.md
+- throttle_selection_and_record_correction_19jul2026.md
+- consecutive_losses_gate_wired_19jul2026.md
+- kill_drill_03aug2026.md
+- mo9_slippage_reference_hold_25jul2026.md
+- pending_reconciliation_14jul2026.md
+- mr4_block2_order_reconciliation_14jul2026.md
+- monday_post_session_results_20jul2026.md
+- orphan_adoption_forensics_22jul2026.md
+- pre15jun_large_orphans_22jul2026.md
+
+======================================================================
+3. SOURCE-TO-CONSUMER TRACE (baseline source wiring, not host execution)
+======================================================================
+
+| Source | Input | Logic | Guard | Output | Storage / hand-off | Next consumer |
+|---|---|---|---|---|---|---|
+| Webhook (webhook_receiver.py 549-1072) | POST: scanner, symbols, prices, time | parse; per-symbol checks | auth, kill 403, backpressure 503, window 403, expiry 600 s, in-flight, dedup, fingerprint | QUEUED row; queue tuple | signals table; signal_queue | sp-dispatcher |
+| Signal processor (signal_processor.py 867-1276) | queue tuple | pre-flight, strategy, screen, prices, size, risk, reserve | kill, windows, age, breaker, caps, kill-late, shutdown, throttle | status per stage; place() call | signals.status; fund reservation | OrderPlacer |
+| Secondary screener (secondary_screener.py 170-297) | signal plus REST quote | steps and score | quote availability | PASSED / REJECTED_* / SKIPPED_* | signals.status | processor |
+| Order placer (order_placer.py 961-1097, 1767-1830) | trade fields | LIMIT_TRIPLE entry; exits at fill | last-mile kill; 15:15 cut-off; slippage; R:R gate | trade PENDING to OPEN; SL and TGT legs | trades, orders; fill map | order monitor; reconciler |
+| Order monitor (order_monitor.py 594-1192) | tracked orders | poll history every 2 s | 60 s fill timeout; partial cancel; price-move cancel; 15:15 force-close; 3-failure stop | OrderFilled / OrderPartiallyTerminated / status events | event bus | placer, order manager, slippage recorder |
+| Reconciler (order_reconciler.py 633-1060, 4169) | broker positions and orders; local trades | CHECK1-8, G5b, dedupe, MTM, in-flight recovery | non-blocking lock | close, adopt, flatten, SL, alerts | trades; fund ledger | operator alerts; kill switch |
+| MIS square-off (mis_autosquareoff.py) | open MIS positions | PASS 1 at 15:03, PASS 2 at 15:06 | cutoff 15:09 | exit orders | orders | order monitor; B-010 |
+| EOD (eod_squareoff.py 326 onward) | all intraday state | clear gate, cancel, exit, summary, reset | once per day | flat book; P&L reset | DB | B-010 |
+| Live feed (live_feed.py) | ticks (none subscribed at start) | candle build | watchdog from first tick | candles; exit-retry LTP | candles table (dormant) | candle store; placer exit retry |
+
+Control summary (lifecycle level only):
+
+| Time (IST) | Control | What it does |
+|---|---|---|
+| 10:00 | entries open | global floor over every strategy's 09:25 |
+| 15:00 | entry_end | eligibility closes |
+| 15:03 | MIS PASS 1 | limit, then market |
+| 15:06 | MIS PASS 2 | market |
+| 15:09 | protective cutoff | the deadline both passes are timed against |
+| 15:15 | placement cut-off; force-close SOFT_KILL | no new orders; pending entries cancelled; closes nothing |
+| 15:17 | EOD accounting and backstop | B-010's routine |
+
+All times are from config lines 28-96 and 739-741.
+
+======================================================================
+4. CONTRADICTIONS, AMBIGUITIES AND NEGATIVE FINDINGS
+======================================================================
+
+- C1: the strategy YAMLs declare order_protocol "CO_PLUS_TGT"; the placer ignores it (section 5, D2).
+- C2: the comment at signal_processor.py 1074-1075 says "Pullback strategies skip this (EntryGate already waits for current price)"; no entry is ever added to the gate (D1).
+- C3: the partial-fill docstring and the code disagree (D2 under B9-D2).
+- C4: gap_fade_long's "11:30" in comments versus 15:00 in its file (E2).
+- C5: the config comments count 16 strategies (line 32) and 15 (line 44) — already B-008's known ambiguity.
+- C6: entry_gate.py's header (24, 30) says it is not wired into the processor. main.py does wire its release callback (870-880) but never feeds it.
+- Negative searches (runtime .py outside tests/, 325 files):
+  - session-state flag (A1): none;
+  - callers of EntryGate.add(): none outside its own module (the docstring at entry_gate.py 103);
+  - readers of a strategy's order_protocol on the placement path: none;
+  - live_feed.subscribe callers: one, order_placer.py 3404.
+
+======================================================================
+5. KNOWN DEFECTS (source evidence; runtime effect not measured)
+======================================================================
+
+D1. KNOWN DEFECT — the pullback gate is wired but never fed.
+- Six enabled strategies set pullback_wait_enabled: true: first_pullback_long and _short, open_high_breakdown_short, open_low_breakout_long, vwap_bounce_long, vwap_rejection_short (lines 35 or 36 of each file).
+- The processor only uses the flag to skip the fresh-quote re-anchor (signal_processor.py 1082). No code path adds these signals to EntryGate (section 4).
+- So, on the source path, these strategies place at once, on the stale webhook-trigger basis, with no pullback wait.
+- INTERPRETATION: the gate's own 5 s poll and 2 workers run on an empty watchlist, apart from rows rehydrated from the store (entry_gate.py 195-235).
+
+D2. KNOWN DEFECT — the per-strategy order protocol is not honoured.
+- All 15 enabled intraday strategies declare CO_PLUS_TGT; the three delivery strategies declare LIMIT_TRIPLE.
+- OrderPlacer always uses self._default_protocol (order_placer.py 961), whose constructor default is "LIMIT_TRIPLE" (572). main.py's construction (3061-3087) passes no protocol, and no runtime code reads the strategy's order_protocol.
+- Effect on the source path: every entry is a LIMIT entry with SL and TGT placed at fill. The smart-target trail and CO-specific logic, which branch on "CO_PLUS_TGT" (order_placer.py 1881-1889, 2071-2079), never apply.
+- Consistent with B-006 TH22 (RECORD-DERIVED: smart TGT never fired) and with the 03-Sep record's separate SL and TGT orders.
+- INTERPRETATION: whether LIMIT_TRIPLE was intended operationally is a G-topic question; the configuration says otherwise.
+
+D3. KNOWN DEFECT (design consequence) — the order monitor stops itself for the rest of the process.
+- After 3 consecutive authentication or API failures it fires HARD_KILL and sets its own stop event (order_monitor.py 648-653, 677-688).
+- No restart path was found. Fills of resting SL and TGT legs would then be seen only through the reconciler's CHECK1 or CHECK4.
+- Its death is visible on /health (main.py 4067), which nothing in the trading path consumes (B-007).
+
+======================================================================
+6. FILES INSPECTED (trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb)
+======================================================================
+
+Source and configuration (blob prefix; the sheet's quoted SHAs all match):
+- main.py 445fb0d8
+- config/system_config.yaml bf742ae5
+- signals/signal_processor.py 7fab0a02
+- signals/webhook_receiver.py 0f15a0ab (no SHA in the sheet)
+- screening/secondary_screener.py b6f8ff72
+- screening/entry_gate.py 46b17317
+- orders/order_placer.py e3a60290
+- orders/order_manager.py 978d2135 (SHA only; content not read)
+- broker/order_monitor.py c4f4aaa5
+- orders/order_reconciler.py beef3e15
+- orders/mis_autosquareoff.py d654fd9a
+- orders/eod_squareoff.py 54f6cd62
+- core/market_windows.py 25625e8c (no SHA in the sheet)
+- strategies/loader.py 99e83b19 (SHA only)
+- strategies/schema.py 22530161
+- data/live_feed.py 10ebd00e (no SHA in the sheet)
+- config/cron_registry.yaml 42ff6381
+- orders/order_protocol_co.py; orders/full_entry_engine.py; orders/entry_engine.py; capital/kill_switch.py (grep only)
+- the 16 files in config/strategies/ (selected keys)
+
+Records:
+- docs/audit/signal_mortality_census_19jul2026.md 9f9db372
+- docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md 1bd4b2ee (lines 1-40)
+- docs/incident/2026-09-03_naked_position_ANANTRAJ.md 1cf75adc (lines 1-45)
+- docs/audit/orphan_adoption_22jul2026.md 8d4c1aca (lines 1-35)
+
+Frozen manuals cross-referenced: B-005, B-006 (sections 3, 6, 7), B-007 (sections 9, 10), B-008 (sections 2, 3; DR-045).
+
+Not inspected: sandbox and records repositories (section 1.2); never-open paths.
+
+======================================================================
+7. CLAIMS I DID NOT ACCEPT FROM THE ANSWER-SHEET LEADS, AND WHY
+======================================================================
+
+1. Lead 3 lists the entry gate among "active monitoring" components. It is constructed and started, but no runtime path feeds it (D1). It is not an active pullback mechanism at the baseline.
+2. Sheet item 13 names "core/market_windows.py" without a SHA. Item 16 names "data/live_feed.py" as the market-feed boundary. Accepted, with SHAs added. But the feed does not feed decisions: REST quotes do (C1).
+3. Sheet item 7 says the placer covers the "entry protocol" without noting that the strategy's protocol is ignored (D2). The protocol actually used is LIMIT_TRIPLE.
+4. Sheet item 11's "15:15 SOFT_KILL" is accepted, but it is the order monitor's force-close (main.py 688-701), not part of mis_autosquareoff. That module only labels it.
+5. The pre-filled B9-A1 answer frames a possible "SQLite state.db" toggle. No such flag or file was found (A1); the uncertainty is answered from source.
+6. "Signal expiry (e.g. 60s)" appears in project standards, not in the sheet. The legacy value is 600 s (H1, item 5).
+
+======================================================================
+8. OPEN ITEMS FOR THE RECONCILIATION (no V2 content)
+======================================================================
+
+- Operator-only: A3 (actual crons), B1, B2, D1, D3, G2, H3.
+- Records not read that could close items (B9-H4): tick_candle_dormancy, mo9_slippage, pending_reconciliation, kill_drill.
+- Sandbox and records repositories, if Rama later wants them consulted.
+
+END OF FILE

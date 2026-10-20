@@ -1,0 +1,88 @@
+TRADING SYSTEM — B-009 INTRADAY OPERATION
+INSTRUCTIONS FOR CLAUDE — REPOSITORY-BACKED ANSWERS
+Date: 20-Oct-2026
+Purpose: complete the supplied B-009 answer sheet using direct repository/records inspection, instead of asking Rama/Gemini to answer source-code questions.
+
+INPUT FILE
+B-009_INTRADAY_OPERATION_ANSWER_SHEET_20-OCT-2026.txt
+
+TASK
+Answer the B-009 questionnaire by inspecting the GitHub repositories and available records. Do not ask Rama/Gemini to fill repository-derived answers. Treat the answer sheet's source inventory and leads as a starting point, not as proof; independently verify each material claim against the repository.
+
+REPOSITORIES
+1. Production legacy snapshot:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+2. Sandbox/testing snapshot:
+https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+3. Records snapshot:
+https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+SOURCE BASELINE
+- Production baseline commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Use this exact commit for production-source claims unless a question specifically requires another ref.
+- Inspect sandbox and records repositories at their own explicit refs; do not merge their evidence into production facts.
+- State exact repository, full commit/ref, path, function/class and line range for every important claim.
+- A blob SHA is not a repository commit. Do not call a selected-path review a complete-tree audit.
+- Repository code/config does not prove what was installed, enabled, connected, or executed on the historical production VM.
+
+GOVERNANCE / SCOPE
+- The legacy system is DEAD / REFERENCE ONLY. Documentation only.
+- Do not run legacy code, contact any VM/broker, perform live operations, modify legacy source, or implement/fix anything.
+- Do not design V2 or turn candidate ideas into requirements.
+- B-005, B-006, B-007 and B-008 are frozen; cross-reference their findings where useful but do not reopen or merge their scopes.
+- B-009 covers normal intraday operation between B-008 market-open handling and B-010 EOD hand-off.
+- Respect the answer sheet's boundaries for C/D/E/F/G/H/I/L and B-010/B-011/B-012. Cross-reference detailed topics instead of deciding them in B-009.
+- Do not reproduce secrets, tokens, TOTP material, credentials, account identifiers or private host identifiers.
+- Do not alter or overwrite the supplied answer sheet. Return a separate Claude response/research file.
+
+HOW TO ANSWER
+For each question:
+1. Give the best repository-backed answer the inspected evidence supports.
+2. Label it with one or more of:
+   FACT (SOURCE-VERIFIED); FACT (RECORD-DERIVED); HISTORICAL (Rama-reported) only if an actual Rama statement/record is supplied; INTERPRETATION / AUDIT LEAD; KNOWN DEFECT (only where evidence supports it); UNKNOWN / NOT ESTABLISHED; DEFER TO B-XXX / C/D/E/F/G/H/I/L topic.
+3. Cite precise source or record.
+4. State evidence limits and what remains unknown.
+5. If source evidence conflicts with an answer-sheet lead, preserve the conflict; do not silently correct or harmonize it.
+6. Do not invent runtime observations, dates, timings, incidents, alerts, status messages, broker outcomes, or logs.
+7. Do not answer “yes, it runs” merely because a module exists. Trace wiring, constructor/caller, start point, cadence, enabled/configured state, consumer and failure path. Even then, describe source wiring rather than host execution unless dated records prove execution.
+8. Where the answer depends on historical runtime evidence that is absent, leave it UNKNOWN / NOT ESTABLISHED and list what evidence would resolve it.
+
+REQUIRED SOURCE INVESTIGATION
+Independently trace relevant paths, not only module headers:
+- Signal lifecycle: webhook ingress → request guards → parsing → dedup/in-flight state → queue → signal processor → secondary screening → price/quantity/risk/capital stages → order placement → persistence/status update.
+- Intraday windows and controls: global/strategy windows, expiry, order-placement cutoff, kill/control checks, pending-entry cancellation, and distinct MIS protective cutoff / SOFT_KILL / EOD backstop.
+- Runtime workers: order monitor, reconciler, live feed, quote/candle consumers, entry gate, target/SL management, token/clock monitors, and other intraday loops. For each establish wiring, startup point, cadence, inputs/outputs, errors, retry/skip/stop behavior, alerting, and whether the live path actually calls it.
+- State distinctions: signal status, trade status, order status, position state, capital reservation, kill state and worker state.
+- Paper/live branches and adapters: report only differences proven in source; runtime parity remains unknown without evidence.
+- Repository-declared cron jobs: declarations are not proof of installed host crontab or execution.
+- Records: inspect available dated logs, reports, screenshots and incidents; clearly identify repository/ref/path/date and what the evidence actually proves.
+
+ANSWER SHEET HANDLING
+- Preserve all question IDs (B9-A1 onward); answer each or explicitly mark UNKNOWN / NOT ESTABLISHED / DEFER.
+- You may add concise source-backed findings under the answer without deleting the question.
+- Correct source-inventory mistakes only in your separate response, explaining the discrepancy.
+- Do not mark the whole repository “fully audited” unless you actually pin and inspect the complete tree.
+- Existing source leads in section 2 are not automatically verified; re-check each relevant one.
+- Do not ask Rama to answer code questions. Only identify genuinely operator-only historical questions that cannot be answered from source/records; leave those unknown unless Rama later chooses to provide recollection.
+
+DELIVERABLE
+Return a separate file:
+B-009_CLAUDE_REPOSITORY_ANSWERS_[DATE].txt
+
+Include:
+1. Repository/ref inventory and evidence boundaries.
+2. Answers to every question ID in the supplied sheet, with source citations and labels.
+3. A source-to-consumer trace table for important runtime components:
+   SOURCE → INPUT → LOGIC → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER.
+4. Calculation/control summary only at intraday-lifecycle level; detailed formulas belong to owning C/D/E/F/G agenda.
+5. Contradictions, known defects, negative findings with search scope, and unanswered questions.
+6. Explicit list of files/paths inspected and commit/ref for each repository.
+7. A short section “Claims I did not accept from the answer-sheet leads, and why.”
+8. No V2 design decisions, implementation plan, commit or push.
+
+NEXT STAGE
+After Claude returns this repository-backed answer file, ChatGPT will independently reconcile claims against source and records, then prepare:
+- B-009_RECONCILIATION_FOR_CLAUDE.txt
+- a detailed B-009 legacy manual draft .md
+
+Those drafts will be discussed and corrected before Rama approves any freeze or push package. Do not create the final reconciliation/manual yet, and do not commit or push anything in this stage.

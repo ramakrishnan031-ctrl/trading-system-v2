@@ -1,0 +1,84 @@
+B-009 — VALUE-ADDED REVIEW AND REQUIRED FINALISATION
+Prepared by ChatGPT | 20-Oct-2026
+Target: Claude
+Status: REVIEW FEEDBACK ONLY — B-009 remains DRAFT. Do not freeze, commit, or push from this review.
+
+PURPOSE
+I reviewed the four delivered files:
+- B-009_manual.md
+- B-009_reconciliation_addendum.md
+- B-009_review_notes.md
+- B-009_v2_design_inputs.md
+
+Overall assessment: the package is materially improved and is close to final review. The pinned-baseline framing, correction of the strategy counts and census windows, explicit source-vs-record boundaries, per-ID status table, and decision-neutral V2 inputs are good. Keep the original answer sheet, Claude repository answers, and ChatGPT reconciliation as immutable inputs as planned. Do not reopen frozen B-005 to B-008.
+
+MY DISPOSITIONS ON THE THREE REVIEW QUESTIONS
+
+1) Do D1–D3 meet the evidence bar?
+YES, as source-path KNOWN DEFECTS, subject to the precision edits below. The reported search scope is all 330 Python files outside tests, checked out at the pinned production snapshot baseline; 325 is only the number of non-empty files matched by git grep, not the scope. Keep this distinction.
+
+- D1 — pullback gate: evidence supports that no runtime caller feeds new signals through EntryGate.add(), while pullback_wait_enabled is read to skip fresh-quote re-anchoring. However, the manual's statement that Group A “places at once, on the webhook-trigger price” is too categorical unless the full entry derivation proves submitted price equals the raw trigger. The pipeline says entry/SL are derived and the trigger can be transformed. Replace with wording such as: “No pullback-wait path is reached for newly processed signals; the normal entry derivation proceeds without the fresh-quote re-anchor, using the webhook trigger as its reference. The exact submitted price depends on the downstream entry calculation.” Only state exact price if separately demonstrated.
+- D1 additional scope check: section 14 says the gate's rows are “rehydrated from the store only”; section 15 says the gate is “empty at the baseline,” while also noting WatchEntry is constructed in store rehydration. Please verify whether rehydration can populate active gate entries. If this is a source-only statement, say “no source path feeds newly processed signals to the gate” and avoid implying runtime emptiness. Actual gate contents on a historical host remain UNKNOWN unless a record proves them.
+- D2 — order protocol: evidence supports a source-path defect: constructor default LIMIT_TRIPLE, no protocol supplied at construction or place() callers, and no strategy order_protocol reader on the traced placement path. Keep “KNOWN DEFECT” but bound the claim to the traced baseline path. Group C declares LIMIT_TRIPLE, so its effective behavior happens to match the default; Groups A/B declare CO_PLUS_TGT but the path does not honor it. Historical order protocol is record-established only where an individual record shows it.
+- D3 — monitor stop: evidence supports that either of the two per-monitor failure counters reaching three calls HARD_KILL and sets the monitor stop event; the monitor is started once in the traced source and no in-source restart path was found. Because the 15:15 cancellation is inside that poll cycle, it also depends on the monitor remaining alive. Keep host-supervisor and historical occurrence explicitly UNKNOWN. To avoid overclaim, phrase “the monitor no longer polls/emits fill events through its own polling path” rather than saying absolutely that no broker fill can ever become an OrderFilled event by any route.
+
+2) Is the per-ID status table acceptable?
+YES. It is better than a single global “answered” label because it distinguishes source answers, record answers, partial answers, operator-only unknowns, provenance, and deferrals. Keep all 44 IDs, preserve the difference between an answer about source behavior and an answer about what the operator actually saw or did. Ensure B2 remains source-answered, with the operator-observation portion still unknown. The addendum's agenda ownership correction is accepted: G owns orders/positions/execution; do not use the earlier incorrect D/G mapping.
+
+3) Must the twelve unread records be read before freeze?
+Not by default. The current manual transparently lists them as unread, and the four records used are scoped to the claims they support. Do not expand scope merely for completeness. Read an unread record only if a specific final claim depends on it, if it contradicts a cited record, or if a reviewer identifies a concrete missing evidence link. Otherwise retain the unread list and state that those records were not used to establish B-009 claims.
+
+REQUIRED EDITS BEFORE FINAL REVIEW
+
+A. Correct D1 price wording and resolve the gate-rehydration/“empty at baseline” ambiguity described above. This is the most important remaining precision issue.
+
+B. Tighten D3 wording to the monitor's polling/event path; keep the external supervisor and whether this ever occurred in production as UNKNOWN.
+
+C. In section 18 / final statement, scope “Every entry was LIMIT_TRIPLE” to the traced source path at baseline. Suggested: “On the traced placement path at the baseline, OrderPlacer used LIMIT_TRIPLE regardless of the strategy's declared order_protocol.” This avoids turning a source trace into an unqualified claim about every historical order or every possible route.
+
+D. In section 3, keep the distinction between:
+- 15:00 entry eligibility end;
+- 15:15 placer cutoff;
+- 15:15 tracked-entry cancellation + SOFT_KILL, dependent on the order-monitor cycle;
+- 15:17 EOD routine.
+The name “force-close” is potentially misleading because this callback cancels tracked ENTRY orders and sets SOFT_KILL; it does not close open positions. Preserve the source/config name if useful, but explicitly label it as a historical name and state its actual effect at first use.
+
+E. Keep the source/record/runtime boundary consistent throughout:
+- source code proves a source path at commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb;
+- a record proves only its own stated period/deployed commit;
+- neither alone proves installed crontab, a service actually running, host-supervisor behavior, or what the operator saw.
+The current manual generally handles this well; do not weaken those caveats in final edits.
+
+F. Strategy and census corrections in the addendum are accepted:
+- 16 YAML files total;
+- 15 eligible by configuration: 12 INTRADAY + 3 DELIVERY;
+- pb01_breakout_retest is INTRADAY but disabled;
+- 1,876 is the pruned-era residue for 12-Jun to 08-Jul; 725 is the complete-era count for 09-Jul to 16-Jul.
+Make sure no remaining section reintroduces the earlier wrong wording.
+
+G. Review the final output for consistent naming and no unsupported absolute claims. In particular, distinguish “connected” from “subscribed/receiving” for the feed; keep the census period attached to its figures; and do not infer actual production behavior from the baseline alone.
+
+V2 DESIGN INPUTS
+The V2 inputs file is appropriately labelled PROPOSED / OPEN and asks questions rather than making decisions. Keep it decision-neutral. Do not turn the five considerations into requirements, open/change VP rows, or prescribe a V2 architecture here. Route any future decision through the established owning topic and decision register.
+
+FINALISATION PACKAGE TO RETURN
+Please revise the existing four files in place as a new revision, without changing the original source-input files:
+1. B-009_manual.md — apply A–G above and update its revision/status.
+2. B-009_reconciliation_addendum.md — record the final dispositions and any additional correction; do not rewrite the original Claude answers.
+3. B-009_review_notes.md — answer the three questions, list exact changed sections, and record the checks performed.
+4. B-009_v2_design_inputs.md — retain the open/proposed boundary; only revise if needed for consistency with corrected legacy wording.
+
+Then report:
+- exact changed files and sections;
+- baseline commit used;
+- whether all citations/line references were checked at that baseline;
+- the exact scope of negative searches;
+- Markdown/ID/session-link/citation/hash check results;
+- SHA-256 for each final file;
+- any remaining UNKNOWN / NOT ESTABLISHED items;
+- explicit confirmation: no legacy code was run, no host/broker operation occurred, no V2 decision was made, and nothing was frozen/committed/pushed.
+
+Do not freeze or push. Return the revised four files for ChatGPT/Rama review first.
+
+CHATGPT'S OVERALL DISPOSITION
+Accept the package with the focused corrections above. No need to read the twelve unread records unless a concrete claim requires them. The manual remains factual legacy documentation; the V2 input sheet remains proposed/open. Rama retains freeze and push approval.

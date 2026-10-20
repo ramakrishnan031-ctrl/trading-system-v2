@@ -1,0 +1,186 @@
+TRADING SYSTEM — LEGACY DOCUMENTATION
+B-009 INTRADAY OPERATION
+CHATGPT RECONCILIATION FOR CLAUDE
+Date: 20-Oct-2026
+Revision: 0 — reconciliation draft
+Status: DRAFT / NOT FROZEN / NOT APPROVED FOR COMMIT OR PUSH
+
+PURPOSE
+Reconcile B-009_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt against the B-009 answer sheet, frozen B-005 through B-008, and the evidence boundaries stated in Claude's research file. Use this addendum to correct the manual draft and report any source claims that need a final line-level recheck.
+
+IMPORTANT EVIDENCE LIMIT
+This reconciliation is based on Claude's supplied repository-backed answer file and its citations, the answer-sheet context, and frozen governance findings available in this project. It is not a claim that ChatGPT independently re-opened every cited GitHub blob in this pass. Claude must re-check the cited source at the pinned commit before calling any line-level check complete. Keep that limitation explicit.
+
+1. OVERALL ASSESSMENT
+
+Claude's answer file is a strong, useful source-trace. It answers the majority of B-009 questions, separates source code from dated records and unknown host behaviour, and surfaces three important defect leads:
+- Pullback entry gate is constructed/started but no caller feeds it.
+- Strategy-declared order_protocol is not read by the live placement path; the placer appears to use LIMIT_TRIPLE.
+- Order monitor stops itself after three consecutive broker/API or authentication failures, with no restart path found.
+
+Proceed to the manual draft, but do not freeze it yet. Resolve the contradictions and scope questions below, and recheck exact source references. B-009 remains DRAFT.
+
+2. REPOSITORY SCOPE — RESOLVED WITH QUALIFICATION
+
+Claude followed Rama's latest direction to use the production repository as the primary source and not inspect sandbox or records repositories for this pass. This supersedes the earlier prompt's request to inspect all three repositories.
+
+Required manual wording:
+- Production source baseline: trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Sandbox and records repositories were not inspected for this B-009 pass, by instruction.
+- Dated records used were selected files within the production repository at their own commits/deployment contexts. Their line numbers/commit context must not be silently represented as baseline-source lines.
+- This was a selected-path review, not a complete-tree audit.
+- Source code does not prove production VM installation, enabled state or execution.
+
+Do not request more repository inspections unless a specific material unresolved claim cannot be answered from the primary repository and available frozen records. Mark the limitation; let Rama decide if the additional repository evidence is needed.
+
+3. HIGH-PRIORITY CORRECTIONS / CONSISTENCY CHECKS
+
+3.1 Strategy count and “enabled” terminology
+The B-008 governance finding distinguishes 16 strategy files in the inspected baseline from 15 rows in the 24-Sep briefing, with pb01_breakout_retest omitted from that briefing. Claude's B-009 file says “all 15 enabled strategy files declare 09:25–15:00 (pb01_breakout_retest, disabled: 09:25–11:00).” This is easy to misread as PB-01 being among the 15 enabled strategies.
+
+Required action:
+- State exactly: “The selected baseline inventory contains 16 strategy files; the B-009 source review identifies 15 as enabled for the intraday path and treats pb01_breakout_retest as disabled for ordinary entry. Its observer/capture components, if wired, are separate from normal strategy eligibility.”
+- Verify this exact enabled/disabled classification from strategy loader, config, and runtime mapping. If not fully established, say “the answer file reports 15 enabled intraday strategies; configuration/loader eligibility needs final verification.”
+- Do not use “16 strategies” as shorthand for 16 enabled strategies.
+
+3.2 Order protocol defect — avoid overgeneralising the declared strategy population
+Claude says all 15 enabled intraday strategies declare CO_PLUS_TGT, while three delivery strategies declare LIMIT_TRIPLE, and the placer defaults to LIMIT_TRIPLE without consuming the strategy field.
+
+Required action:
+- Keep the finding as a source-path defect lead, not a claim of measured runtime behaviour.
+- Verify loader/config mapping, OrderPlacer constructor at main.py, every caller of place(), and all reads of order_protocol at the pinned baseline.
+- Explicitly distinguish strategy metadata, actual OrderPlacer selection, and historical broker order evidence.
+- Phrase result as: “At the inspected baseline, the traced placement path does not consume the per-strategy order_protocol and appears to use the default LIMIT_TRIPLE path; the actual protocol used on each historical production order is not established by source alone.”
+- If source verification is complete, retain KNOWN DEFECT with this scope; otherwise label INTERPRETATION / AUDIT LEAD until verified.
+
+3.3 Pullback EntryGate
+The answer file reports six strategies with pullback_wait_enabled=true, a started EntryGate, but no caller of EntryGate.add() outside its own module. It concludes those strategies place immediately based on the webhook trigger rather than waiting for pullback.
+
+Required action:
+- Recheck all EntryGate.add() references across the complete relevant runtime tree, not just a partial grep result.
+- Trace every branch controlled by pullback_wait_enabled and confirm whether any alternate queue/callback adds a signal.
+- Keep the negative-search scope (“runtime .py outside tests/, 325 files”) visible. Do not state global absence without that scope.
+- If confirmed, document as KNOWN DEFECT in the manual, with operational effect described as source-path behaviour; do not invent realized trade outcomes.
+
+3.4 Order monitor self-stop
+The answer file says three consecutive API/authentication failures trigger HARD_KILL and the monitor stops itself, with no restart path found.
+
+Required action:
+- Verify the actual counter reset rules, what constitutes a failure, whether authentication and general API failures share thresholds, the stop event, thread wrapper, any supervisor/restart path, and how polling ownership changes after stop.
+- Distinguish “no restart path found in inspected source” from proof that no external supervisor exists on the host.
+- Record the /health liveness visibility and the absence of a trading-path consumer as a separate readiness/governance finding, cross-referencing frozen B-007 rather than reopening it.
+
+3.5 Candle/live-feed wording
+The answer file states the WebSocket connects in live mode but subscribes to nothing at start; the only subscriber is an exit-retry path, so ticks and 60-second candles do not reach the entry decision path.
+
+Required action:
+- Preserve this as a key source-path finding if rechecked.
+- Distinguish “feed object connects” from “subscribed symbols receive ticks”; do not describe the feed as operationally healthy merely because a connection is created.
+- The dated B-006/B-007 evidence describes a dormant tick/candle path; it does not prove every historical date behaved identically.
+
+3.6 MIS / 15:15 / EOD boundaries
+The answer file distinguishes 15:03 MIS PASS 1, 15:06 PASS 2, 15:09 protective cutoff, 15:15 order-monitor force-close/SOFT_KILL, and 15:17 EOD routine. Keep these as distinct controls.
+
+Required action:
+- Never say the 15:15 “force-close” itself closes open positions; the answer file says it cancels tracked entry orders and fires SOFT_KILL, and closes nothing.
+- Keep the 15:17 routine in B-009 only as a boundary/hand-off; detailed EOD processing belongs to B-010.
+- Verify actual scheduling/wiring from source, not only config comments.
+- Source wiring is not proof the control ran on a specific date.
+
+3.7 Signal expiry is 600 seconds, not 60 seconds
+The answer file says config value 600 seconds overrides a processor constructor default of 60 seconds.
+
+Required action:
+- Verify the exact runtime assignment/override in main.py and config at the pinned baseline.
+- State the effective source configuration and distinguish it from the constructor default.
+- Do not carry a generic 60-second value into the manual.
+
+3.8 REST quote path vs WebSocket
+The answer file reports screening and momentum re-anchor use REST quote_fn; live WebSocket ticks do not drive the entry decision path.
+
+Required action:
+- Trace quote_fn construction and paper/live binding; confirm which adapter/provider is passed at runtime.
+- Keep paper/live differences source-based only; no parity claim without dated tests or records.
+- If live quote partial-response detection is absent, state exact inspected branch and evidence, not a system-wide “no quote validation” claim.
+
+4. RECORDS AND HISTORICAL CLAIMS
+
+Claude's file uses four dated records, each with its own commit context:
+- docs/audit/signal_mortality_census_19jul2026.md (commit 7319d06 for cited code references)
+- docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md
+- docs/incident/2026-09-03_naked_position_ANANTRAJ.md (record's deployed commit 2d08436)
+- docs/audit/orphan_adoption_22jul2026.md
+
+Required action:
+- For every metric, incident or dated example, state the record's date/window and what it actually proves.
+- Do not cite the baseline commit as the record's deployed commit.
+- Keep the 19-Jul census values (30,769 rows, status counts, 81% dedup, quote-unavailable counts) explicitly record-derived and scoped to its documented period; they are not timeless performance estimates.
+- The 03-Sep incident shows one particular MIS failure/recovery/manual-close sequence, not normal daily operation.
+- The 22-Jul orphan-adoption record establishes only its recorded cases and the claims written there.
+- Do not imply that every listed but unread file in H4 was reviewed. Keep them in “not read” list or inspect only if a specific question needs them.
+
+5. QUESTION STATUS / MANUAL SCOPE
+
+5.1 Answer every B9 question ID
+Preserve all IDs from the answer sheet. For each, record one of:
+- ANSWERED — SOURCE-VERIFIED
+- ANSWERED — RECORD-DERIVED
+- PARTLY ANSWERED
+- UNKNOWN / NOT ESTABLISHED
+- DEFER TO B-XXX / agenda topic
+
+Do not use a global “all answered” label when operator-only or date-specific runtime questions remain unknown.
+
+5.2 Operator-only questions
+The answer file flags A3, B1, B2, D1, D3, G2 and H3 as operator-only or historically unknown. Preserve that limitation. Do not ask Rama to answer source-code questions, but do not silently convert his memory into fact if he later supplies it.
+
+5.3 Cross-references
+- B-005: startup reconciliation — frozen.
+- B-006: worker initialization — frozen.
+- B-007: readiness/health gating — frozen.
+- B-008: market-open handling — frozen DR-045.
+- B-010: EOD square-off/accounting detail — upcoming agenda.
+- C/D/E/F/G/H/I/L: detailed owning agendas for signal/strategy, order/position, S&R/entry, risk/capital, reports/evidence and operational failure topics as defined in the agenda.
+Use these as cross-references only; do not reopen frozen manuals or settle other agendas here.
+
+6. REQUIRED DELIVERABLES FROM CLAUDE
+
+A. Revise this reconciliation into a final review addendum with:
+- per-question status;
+- verified source line references;
+- resolved vs unresolved items;
+- explicit evidence class and source commit for every claim;
+- exact change list for the manual;
+- full list of paths inspected and negative-search scope.
+
+B. Prepare a detailed B-009 manual draft:
+- System/session context and scope boundary.
+- Intraday timeline and distinct time controls.
+- Signal lifecycle from ingress to placement.
+- Quote/feed/candle path.
+- Order/position monitoring and reconciliation.
+- Kill switches, cut-offs and failure/degradation.
+- Paper/live source differences.
+- Evidence, metrics, historical incidents, limitations.
+- Known defects and negative findings.
+- Full end-to-end walkthrough.
+- Cross-reference index.
+- Per component: SOURCE → INPUT → LOGIC → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER.
+- Mark source wiring separately from deployed host execution.
+- Include exact formulas only where the B-009 source path needs them; defer detailed sizing, S&R, R:R and capital formulas to their owning agendas.
+
+C. Update a separate review-notes file with:
+- every ChatGPT point accepted/rejected and reason;
+- final checks performed;
+- full SHA-256 hashes;
+- remaining unknowns;
+- statement that nothing is frozen/committed/pushed by this work.
+
+7. SECURITY / CHANGE CONTROL
+- Do not expose credentials, account IDs, tokens, TOTP, private host identifiers or secret values.
+- Do not modify the original B-009 answer sheet or Claude repository-answer file.
+- Do not modify legacy code, run legacy code, contact the VM/broker, or implement any fix.
+- Do not design V2.
+- Do not commit, push or freeze. Return drafts to ChatGPT and Rama for discussion and explicit approval.
+
+END
