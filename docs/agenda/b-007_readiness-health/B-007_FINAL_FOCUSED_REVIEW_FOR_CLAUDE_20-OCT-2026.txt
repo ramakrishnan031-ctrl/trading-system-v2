@@ -1,0 +1,104 @@
+B-007 READINESS / HEALTH
+FINAL FOCUSED REVIEW — VALUE-ADDED FEEDBACK FOR CLAUDE
+Date: 20-Oct-2026
+Status: REVIEW OPINION ONLY — NOT A FREEZE OR GOVERNANCE APPROVAL
+
+FILES REVIEWED
+- B-007_manual.md (revision 1)
+- B-007_v2_design_inputs.md (revision 1)
+- B-007_review_notes.md (revision 1)
+- The proposed A-011 E-7 and B-001 E-3 text embedded in the manual/review notes
+- The prior review's correction list, as recorded in the revision history
+
+OVERALL VERDICT
+The revision substantially applies the previous review. The manual is now a detailed, evidence-bounded legacy record rather than a high-level health summary. The walkthrough, source-to-consumer matrix, declared/invoked/reachable check columns, distinct port-8080 and port-5000 routes, bounded negative searches, watchdog limits, and explicit errata decision process are all valuable improvements.
+
+My recommendation: APPROVE THE TECHNICAL SUBSTANCE FOR FINALISATION, subject to the focused checks below. Do not mark B-007 frozen, and do not commit/push, until Rama approves the B-007 freeze, the two errata independently, the attribution question, and the exact package.
+
+1. IMPORTANT FINAL PACKAGE CHECK — MAKE THE FILE LIST CLOSED, NOT OPEN-ENDED
+
+B-007_review_notes.md section 14 lists three new B-007 files, but then says that “at the freeze” it will also include the three inputs, ChatGPT's value-added review, and “any later review files.” That is not yet an exact, closed package manifest.
+
+Before Rama approves the freeze:
+- Give the exact final path and SHA-256 for every file proposed for storage.
+- Separate files that are new, files that modify existing committed content, and files merely retained as unchanged inputs.
+- Explicitly state whether the original ChatGPT answer sheet, original reconciliation, original draft, and this review are to be stored unchanged; do not imply they are included unless each is listed.
+- For A-011 and B-001, state the proposed final content for each erratum, but do not include an accepted replacement unless Rama accepts that specific erratum.
+- Identify the exact V2_DESIGN_LOG.md change set and confirm V2_DECISION_REGISTER.md remains unchanged unless a freeze row is separately approved.
+- Recompute hashes after the final edits. Hashes from a prior candidate must not be carried forward.
+
+This is a packaging/governance clarification, not a reason to reopen the technical analysis.
+
+2. TECHNICAL REVIEW — ITEMS THAT ARE NOW WELL HANDLED
+
+2.1 Evidence provenance and scope
+The manual now identifies the production baseline, separate testing-tree commit, and records-repository commit. It correctly distinguishes file object IDs from repository commits and does not infer host execution from source alone. The defined INSPECTED SCOPE materially improves negative claims. Keep the bounded wording wherever “not found” or “no writer/reader” is used.
+
+2.2 Readiness versus health
+The manual correctly concludes that “System Active” was not a readiness verdict; the service had no readiness state or start step that waited for every worker to be healthy. It distinguishes the app health route on port 8080 from the webhook's own /health on port 5000. It also correctly says a 401 at the webhook self-check establishes that the server answered, not that an authenticated signal could be accepted end-to-end.
+
+2.3 Startup checks
+The declared class, invocation, reachability, and caller outcome columns are a strong correction. The distinction between “10 checks declared BLOCK” and the subset that could actually affect a live daily start is now clear. Retain the caveat that actual production failures/warnings are not established unless a dated record supports them.
+
+2.4 Feed watchdog
+The source defaults are separated from effective host values. The text does not invent a first-tick timeout or per-symbol freshness guard, and distinguishes forced reconnect from kill-switch effects. This is appropriately evidence-led.
+
+2.5 Runtime effects and dated records
+The manual does not treat degraded health, pre-flight CRITICAL_FAILURE, GUI NOT READY, or a liveness alarm as proof that trading was blocked or positions were flattened. The 10-Aug capture is correctly limited: it establishes the captured unit/endpoint/database readings, not the precise startup gate or exit code. The dated records remain scoped to their time and contents.
+
+2.6 V2 design inputs
+The V2 file remains PROPOSED / OPEN and does not adopt the illustrative state names as a state model. Ownership is separated across B-008, B-011/B-012, signal topics, monitoring, alerts, tests and O-004. Keep this separation unchanged.
+
+3. ONE NEW MATERIAL FINDING — KEEP IT VISIBLE, BUT DO NOT OVERSTATE IT
+
+The in-flight heartbeat finding in B-007_manual.md section 11 is material:
+- a symbol claim gets a heartbeat timestamp;
+- the sweeper evicts claims older than 60 seconds;
+- the heartbeat updater has no caller found in the stated inspected scope;
+- the signal processor's heartbeat callback is not wired in main.py;
+- therefore, on the inspected code path, an otherwise-working signal-processing claim can be classified as STALLED and evicted while the first signal is still processing.
+
+The manual appropriately labels this as a conditional/latent defect with no observed occurrence found, and says records were not searched for such an occurrence. Keep that qualification. Do not state that it happened in production, and do not resolve its downstream consequences here. The V2 design-input question belongs to C-005/C-008/B-009, as already recorded.
+
+For final accuracy, verify that the source line anchors for the claim creation, update_heartbeat, processor callback wiring, and sweeper expiry all refer to the pinned production baseline. The review notes say the 341 anchors passed; this check is already reported, so repeat it only if the final edit changes these passages or the anchors.
+
+4. PROPOSED ERRATA — KEEP BOTH INDEPENDENT AND OPTIONAL
+
+A-011 E-7:
+- The proposed replacement correctly distinguishes the pre-flight verdict from the GUI's own readiness label and scopes the missing-writer conclusion.
+- Keep the exact struck/replacement text and surrounding clause as currently shown.
+- Acceptance is Rama's decision, separate from the B-007 manual freeze.
+
+B-001 E-3:
+- The proposed replacement correctly says the probe reads the database's kill state and cannot distinguish who set it.
+- Keep the exact struck/replacement text and surrounding clause as currently shown.
+- Acceptance is Rama's decision, separate from E-7 and the B-007 manual freeze.
+
+Do not treat the cross-document search, successful errata rebuild, or this review as approval. If Rama rejects either, remove that erratum's replacement/status sentence/erratum section from the final package and retain the committed manual unchanged. If accepted, update status and the relevant governance/review-note references exactly as the project's process requires.
+
+5. FINAL CONSISTENCY CHECKS
+
+The reported checks are good evidence of process discipline: Markdown structure, sensitive-pattern scan, 341 source anchors, cross-references, errata rebuild, and preservation of committed design-log lines. Before presenting the freeze candidate:
+- rerun checks after any final edit;
+- verify every hash against the exact bytes being proposed;
+- ensure the manual, V2 inputs and review notes all say DRAFT / PROPOSED / OPEN as appropriate;
+- ensure no statement says B-007 is frozen or that either erratum is accepted;
+- keep the 15-Aug ruling attributed as a statement quoted in code and RECORD-DERIVED, pending Rama's confirmation;
+- preserve V2_DECISION_REGISTER.md unchanged unless an explicitly approved governance action requires otherwise;
+- retain the sensitive-data scan caveat: a clean pattern scan is not proof that no sensitive content exists.
+
+6. RAMA'S FREEZE DECISIONS — DO NOT DECIDE ON HIS BEHALF
+
+At the freeze, Rama should make each decision separately:
+1. Accept/reject the B-007 manual freeze.
+2. Accept/reject A-011 E-7.
+3. Accept/reject B-001 E-3.
+4. Confirm or leave OPEN whether the 15-Aug readiness ruling is correctly attributed to him.
+5. Approve the exact closed file list and hashes before storing/committing/pushing.
+
+If the attribution question stays open, the design-input item should remain open; it need not hold the factual B-007 manual freeze unless it materially changes a legacy finding.
+
+FINAL RECOMMENDATION
+No further broad rewrite is warranted. Make the package manifest exact, rerun any checks affected by final edits, and return the closed candidate package to Rama for the five explicit decisions above. The technical substance is suitable for finalisation; the document remains a DRAFT until Rama approves it.
+
+END

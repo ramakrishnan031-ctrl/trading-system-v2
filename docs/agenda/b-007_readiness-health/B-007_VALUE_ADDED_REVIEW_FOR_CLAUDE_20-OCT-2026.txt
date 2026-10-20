@@ -1,0 +1,140 @@
+B-007 READINESS / HEALTH GATING
+CHATGPT VALUE-ADDED REVIEW FOR CLAUDE
+Date: 20-Oct-2026 (IST)
+Status: REVIEW FEEDBACK ONLY — NOT APPROVAL, NOT FROZEN
+
+OVERALL VERDICT
+The first pass is materially stronger than the original draft. It traces the principal code paths, distinguishes a health endpoint from a trading-readiness gate, corrects several generated answer-sheet claims, and keeps V2 considerations separate from legacy facts. I recommend a targeted revision and final consistency pass, not a restart.
+
+Do NOT freeze, commit, or push solely on this review. Keep the manual and both errata open until the corrections below are resolved and Rama explicitly approves the freeze.
+
+1. REQUIRED CORRECTIONS / CLARIFICATIONS
+
+1.1 Baseline identity
+The manual identifies production baseline 970aabf3c78d777d9d34549e021f7c8e756c7bdb, records commit ae7335cbc8ad3762a39a9ddde15eb5103e2d6b29, and testing-tree commit ade89ff241ce05d05fc37071bae05447263541c3. Keep these distinctions consistent:
+- Production facts are bounded to the exact production baseline.
+- Testing-tree comparisons are bounded to the separately pinned testing commit.
+- Records facts are bounded to the records commit and the dated record itself.
+- A file/blob SHA identifies a file object, not the complete repository tree.
+- None of this establishes installed host state or runtime execution unless a dated record specifically supports that claim.
+Where the manual says “public production repository” or “baseline repository,” ensure the exact repo/ref/commit is discoverable.
+
+1.2 Scope negative-search claims
+The review notes describe a search over 330 Python files outside the top-level tests folder plus specifically listed files. This is a bounded search, not proof that no relevant reader/writer exists anywhere in the repository.
+Keep scope limitations near conclusions such as:
+- nothing in the trading path reads health/readiness;
+- no runtime file writes the GUI pre-flight tables;
+- queue metrics are never measured;
+- no other runtime file writes a value;
+- no health consumer exists.
+Preferred wording: “No such reader/writer was found in the stated inspected scope at the pinned baseline.” If the search covered more extensions/directories, list them. Do not turn a bounded negative search into a universal claim.
+
+1.3 Narrow the “only health-to-trading link” statement
+The notes say the kill switch was the only link from a health signal to trading. Avoid implying that every health failure caused a trading action. State precisely:
+- no direct consumer of the /health aggregate verdict was found in the inspected trading path;
+- separate feed/error paths may invoke kill-switch behavior;
+- those call paths must be documented individually;
+- endpoint degradation does not prove the kill switch changed, entries were blocked, exits continued, positions were flattened, or the process terminated.
+Make the summary wording match the detailed distinctions.
+
+1.4 Startup-check classes versus effective gates
+C3 is described as BLOCK but its failure path is interpreted as unreachable in the normal start because an earlier gate handles the scenario. C8 is NONE because the caller passes webhook_url=None. C13 may pass as “skipped” when the NTP pool cannot be reached.
+Explicitly distinguish:
+- function's declared/classified effect;
+- whether it is invoked in this start path;
+- whether the condition is reachable in that context;
+- what the caller actually does with the result.
+This prevents “10 checks can block” from being read as “10 checks effectively block every start.”
+
+1.5 Distinguish the two /health routes
+Keep port 8080 application health separate from port 5000 webhook self-check in headings, diagrams, tables, and cross-references. Avoid saying “the health endpoint” where both could be meant.
+Tie the 401-as-reachable rule to the exact self-check path and dated evidence. A 401 proves neither that a real signal can be accepted nor that end-to-end delivery works.
+
+1.6 Feed watchdog consequences
+The manual appropriately says the watchdog is live-mode only, armed after a tick has been seen, conditioned by market-window wiring, and does not establish per-symbol freshness. It can alert and force-close the ticker to initiate reconnect.
+Ensure no summary implies that:
+- a first-tick timeout exists;
+- every subscribed symbol is freshness-checked;
+- stale data automatically blocks every entry;
+- forced reconnect equals a kill or position-protection action;
+- the watchdog necessarily ran in the deployed host configuration.
+Separate source default from effective configuration. If no override is established, say: “Default shown in source; effective host value UNKNOWN / NOT ESTABLISHED.”
+
+1.7 Errata A-011 E-7 and B-001 E-3 remain optional
+The proposed corrections appear supported by the described evidence, but they affect frozen manuals. Do not treat them as accepted because they are included in the working copy or cross-document checks passed.
+At final review:
+- preserve frozen originals until Rama accepts each erratum;
+- show exact old and replacement text;
+- verify adjacent claims are not changed beyond the stated correction;
+- mark ACCEPTED only after explicit approval and the required governance reference;
+- if rejected, remove the proposed replacement from the freeze package and record the rejection through governance.
+Do not rewrite dated review notes as though they were current manuals.
+
+2. MANUAL QUALITY / EVIDENCE PRESENTATION
+
+2.1 Add/retain a compact source-to-consumer matrix
+Point readers to G1–G17 startup gates, C1–C16 checks, H1–H8 health checks, pre-flight, GUI readiness, feed watchdog, kill-switch call paths, external liveness probe, durable state/heartbeat, and known consumers/non-consumers. For each, identify source path/function, input, result/action, consumer, and unresolved point. This is a navigation aid, not a substitute for detailed sections.
+
+2.2 Keep source facts, record facts, and interpretation distinct
+Apply labels consistently to control-flow conclusions such as “no path to this blocking failure was identified” and the inference that another process's database kill write may disagree with the running service's in-memory state. These should remain INTERPRETATION / AUDIT LEAD unless directly established by a test or record.
+
+2.3 Bound dated incident claims
+The 10-Aug HARD_KILL capture, 20-Jul NTP timeout, 21-Jul persisted kill, 08-Jul health-server binding, and 28-Jul absence of HARD_KILL are useful records. Keep each claim limited to what the record captured:
+- A failed unit and refused /health connection do not establish the exact startup gate/exit code.
+- Absence of HARD_KILL in a bounded log interval does not prove no kill occurred elsewhere or outside the interval.
+- A source comment saying a change was deployed is record-derived evidence, not proof about every host/version.
+
+2.4 Preserve negative findings with scope/date
+“No observed occurrence found” is appropriate; do not change it to “never happened.” Claims about alerts, endpoint polling, installed cron/systemd, paper/live parity, or order/position effects must remain UNKNOWN unless the cited record proves the specific event.
+
+2.5 Add a concise end-to-end walkthrough
+Trace the exact verified order: process start → pre-start gates → session row → startup-check report → token/broker/capital/kill gates → webhook self-check → “System Active”/composition check → health server → runtime health/feed/watchdog paths → pre-flight/GUI/external-probe consumers.
+Mark background/parallel paths and unresolved sequencing. Do not imply that starting the health server means the application is ready.
+
+3. V2 DESIGN INPUTS
+
+Keep this file separate from the legacy manual. It is correctly marked PROPOSED / OPEN and does not purport to decide V2.
+
+- Add a disclaimer that examples such as READY, ENTRIES_BLOCKED, and MANAGING_ONLY are illustrative vocabulary, not an adopted state model.
+- For each item, distinguish the observed legacy defect from the design question owned by a later agenda. Avoid presenting a candidate consideration as a settled requirement (e.g. “a worker's health is the age of its last successful cycle”).
+- Keep ownership pointers correct: B-008 owns market-open gating; shutdown/restart, alerts, monitoring, tests, and state machine remain separate topics.
+- Do not ratify VP rows or modify the decision register solely because B-007 has been reviewed. Scheduling annotations are not design decisions.
+- Keep the 15-Aug ruling attributed to Rama as RECORD-DERIVED and requiring confirmation at the owning topic.
+
+4. REVIEW NOTES / FINAL CHECKS
+
+The reported Markdown structure, ID/secret pattern scan, 226 source-line anchor checks, cross-reference checks, errata rebuild, and design-log preservation checks are useful.
+
+Before delivery:
+- list exactly which files changed and which were added;
+- verify every final manual source citation against the pinned production commit, and identify separate refs for testing/records citations;
+- rerun anchor/cross-reference checks after final edits;
+- rerun sensitive-data scans on the exact final package, including newly added notes; never include actual credential values;
+- verify the three original ChatGPT input files remain byte-identical to their recorded hashes if they will be stored unchanged;
+- ensure no text turns a proposed erratum or V2 consideration into an accepted decision;
+- keep filenames/statuses unambiguous: DRAFT / PROPOSED until Rama approves.
+
+The scan reports 13 hits in the three original files and 7 hits in the three new files, none classified as credentials. This establishes only the reported scan result, not proof that all sensitive information is absent.
+
+5. FREEZE DECISIONS FOR RAMA
+No new architectural decision is needed to finish the legacy fact manual. At freeze, Rama should explicitly confirm:
+1. Accept/reject the B-007 manual freeze.
+2. Accept/reject A-011 E-7 independently.
+3. Accept/reject B-001 E-3 independently.
+4. Confirm whether the 15-Aug readiness ruling is correctly attributed to him at the owning V2 topic.
+5. Approve the exact final file list and hashes before storing/committing/pushing.
+If an item remains unresolved, leave it OPEN; do not block all factual documentation unless it affects a material claim.
+
+6. DO NOT DO
+- Do not redesign or repair the legacy system.
+- Do not execute legacy code or contact the old VM/broker.
+- Do not infer host/runtime state from repository code.
+- Do not claim endpoint, monitor, alert, cron, or systemd behavior actually ran without evidence.
+- Do not merge B-005 or B-006 into B-007 or silently settle their sequence here.
+- Do not freeze or commit/push on Rama's behalf.
+- Do not turn V2 considerations into decisions.
+
+RECOMMENDED NEXT ACTION
+Claude should make only the targeted wording and consistency corrections above, rerun all final checks, and return the revised B-007 manual, V2 design inputs, review notes, and exact proposed errata package. ChatGPT can then perform one final focused review. Rama retains the freeze and commit/push decision.
+
+END OF REVIEW

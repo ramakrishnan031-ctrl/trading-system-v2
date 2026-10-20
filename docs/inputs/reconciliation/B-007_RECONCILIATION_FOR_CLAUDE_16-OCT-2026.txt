@@ -1,0 +1,93 @@
+B-007 READINESS / HEALTH GATING
+INDEPENDENT RECONCILIATION FOR CLAUDE / RAMA
+Prepared: 16-Oct-2026 (IST)
+Status: WORKING RECONCILIATION — NOT FROZEN
+
+1. GOVERNANCE / EVIDENCE BOUNDARY
+- Rama's returned B-007 sheet is a recollection/AI-assisted lead set, not verified fact. The sheet itself says this (Q886-Q888 and its caution block).
+- Legacy is DEAD / REFERENCE ONLY. This document records observed source behavior only; it does not repair, revive, or design V2.
+- B-005 Startup Reconciliation remains PARKED. B-006 Worker Initialization remains a separate draft. Do not settle their sequence through B-007.
+- Checked public GitHub files in trading-system-prod-snapshot and relevant V2 governance manuals as available. Code excerpts below are from the fetched repository file contents; blob SHA is recorded where available. This pass did NOT establish the exact checked-out commit/tree identity for every repository, host-installed configuration, or live execution. Do not treat repository code as proof of VM state.
+- Production/sandbox parity was NOT comprehensively diffed. Claims about test mocks, paper/live runtime, external monitoring, or incidents require their own artifacts.
+- No secrets or credentials are reproduced.
+
+2. HIGH-IMPACT CORRECTIONS / CONTRADICTIONS TO GEMINI ANSWERS
+
+A. “No HTTP health endpoint” (Q4, Q21) — CONTRADICTED BY REPOSITORY SOURCE
+- `scripts/healthcheck_server.py` contains a Flask `/health` route (file blob SHA c094b5eb402353be5c74b569620aae0943cfad8b; relevant route around lines 67-125).
+- `main.py` imports `start_healthcheck_server` (line 91 in fetched file) and calls it in the runtime assembly around lines 4056-4078, configured on port 8080, with DB/token/kill-switch and daemon-liveness providers.
+- The endpoint returns JSON `status` “healthy” or “degraded” and HTTP 200 or 503, based on its check set. This is a source fact about the fetched tree, not proof the server successfully started on a host.
+- Therefore “no endpoint existed” must not appear as a legacy fact unless the actual source baseline being documented is shown to differ. Identify which repository ref/commit is intended and resolve provenance.
+
+B. “No tick-staleness watchdog / connection-only freshness” (Q3, Q9, Q23, Q26) — CONTRADICTED / QUALIFIED
+- `data/live_feed.py` has `tick_stale_threshold_sec` (default shown in constructor around line 49), watchdog startup, tick-age checks and forced reconnect behavior (watchdog region around lines 680-780; blob SHA 10ebd00ee728c449c6df4dcc5e576a92f3361e10).
+- The code comments describe watchdog as live-mode only, armed only after a tick has been observed, and scoped to market-entry windows when market windows are wired. Thus it does NOT establish freshness before first tick or all-symbol freshness; but it does contradict “no watchdog at all.”
+- Need inspect constructor/config wiring, `_last_tick_at` update semantics, market-window wiring, and callback effect to determine actual threshold and resulting state/action. Avoid calling it a global readiness gate unless proven.
+
+C. “No global health state / fragmented status only” (Q1-Q5) — NEEDS NARROWING
+- Source includes a health endpoint aggregate with named checks and healthy/degraded output. That is a status aggregation/report, but it may not be a unified application readiness state machine or trading permission gate.
+- Distinguish: endpoint health verdict; startup report; kill-switch/trading gate; market-data watchdog; thread liveness; actual ability to submit orders. They are not interchangeable.
+
+D. “Fail-fast all startup checks / no advisory checks” (Q5-Q6, Q13) — CONTRADICTED / OVERSTATED
+- `utils/startup_checks.py::run_all_startup_checks` documents and implements a collected `StartupReport`: blocking failures are accumulated; several checks are warnings (config hash, holiday, scanner connectivity, holiday-calendar issues, temporary config values); optional checks are skipped when inputs absent. It does not itself call `sys.exit`; caller decides terminal action.
+- Relevant fetched region around lines 1508-1685; blob SHA 61ff67676d8230640a2aafb6bd6d75d7a185fbb6.
+- Therefore “every failure immediately exits” is not accurate as a blanket statement. Need trace caller branches and identify check-by-check severity and exit code. Startup-check result collection is not synonymous with process abort.
+
+E. “No worker liveness supervision / health consumption” (Q8, Q14, Q20, Q22-Q23) — CONTRADICTED / QUALIFIED
+- `main.py` builds a daemon-liveness snapshot for order monitor, order reconciler, EOD scheduler, and live feed; health endpoint treats core daemon liveness as gating, while live-feed connectivity is reported non-gating (around lines 4056-4078).
+- `scripts/healthcheck_server.py` merges provider results into overall status; a failed check can yield HTTP 503.
+- This is application-level visibility/monitoring. Whether a separate external monitor polls it, whether systemd acts on it, and whether it blocks entries are NOT ESTABLISHED by these excerpts.
+
+F. “No automated health-driven trading disable / kill switch” (Q14, Q18) — UNSUPPORTED AS WRITTEN
+- `main.py` imports/constructs `KillSwitch`; startup scenario and stale-state handling are present. Live-feed reconnect exhaustion and critical conditions include kill-switch calls in `data/live_feed.py` (around lines 426-500).
+- This disproves the categorical “no health-related kill-switch integration.” It does NOT, by itself, establish whether each event disables entries, manages existing orders, closes positions, or terminates process. Trace `KillSwitch` methods and every caller before stating effects.
+
+G. “No alerts / log-only” (Q14, Q20, Q24-Q26) — CONTRADICTED / NEEDS SCOPE
+- `main.py` imports alert delivery and Telegram notifier; startup strategy-config failures send best-effort Telegram/email sentinel alerts (source comments and code around lines 200-240). Live-feed reconnect paths also include alert hooks (source around lines 378-500).
+- Do not assert “no external alerts” without enumerating all alert paths and checking actual host delivery configuration/logs. Source wiring proves intended attempt, not successful delivery.
+
+H. “OrderReconciler 30–60 seconds” (Q7, Q15, Q26) — NOT VERIFIED; likely stale
+- `orders/order_reconciler.py` exposes configurable `poll_interval_sec`; startup reconciliation and daemon poll thread are visible around lines 425-470 (blob SHA beef3e1584c9ad665dec4d1e1498bde001326c70).
+- No fixed 30–60 sec claim supported by this excerpt. Read actual config value and poll loop before reporting cadence. Source contains startup reconcile call; the exact B-005/B-006 orchestration boundary remains to be checked against frozen manuals and exact `main.py` call order.
+
+I. “No durable heartbeat/status” (Q4, Q24) — MUST DISTINGUISH
+- `core/state_store.py` contains `cron_heartbeat` insert/read helpers (around lines 3302-3346; blob SHA 11866117801b9329773a1be605448faef3c96f8d), and reconciliation/audit storage helpers. This establishes some durable job/reconciliation records, not necessarily a single global readiness ledger or worker heartbeat.
+- Exact table schema, callers, and scope require follow-up. Do not extrapolate cron heartbeat to application readiness.
+
+J. Paper/live/sandbox, incidents, host supervisor, and broker order-path assertions (Q12, Q16-Q18, Q22, Q25, Q28-Q30)
+- The returned sheet provides recollection but no incident logs, deployed-unit capture, sandbox comparison, or test artifact attached here.
+- Treat these as HISTORICAL (Rama/Gemini-derived) or UNKNOWN, not source-confirmed. Repository source cannot establish installed systemd `Restart=`, actual cron, live webhook/health polling, broker OMS acceptance, positions protected during outage, or successful alert delivery.
+- B-004 frozen manual may bound broker auth facts; do not overwrite it or silently infer B-005/B-006 ordering.
+
+3. CLAIM STATUS SUMMARY
+SOURCE-VERIFIED IN THIS PASS (bounded to fetched repository files):
+- Application contains an HTTP `/health` route and startup wiring for health server.
+- Health route aggregates DB, token, kill-switch and optional daemon/TGT-retry checks; returns healthy/degraded and 200/503 according to checks.
+- `main.py` supplies liveness for selected daemon threads; live-feed connectivity is reported non-gating in that provider.
+- `run_all_startup_checks` aggregates blocking failures and warnings; caller determines action.
+- Live-feed code contains a tick-age watchdog with arming/market-window qualifications and reconnect action path.
+- OrderReconciler has startup reconcile and configurable poll interval.
+- StateStore contains cron heartbeat helpers and reconciliation persistence helpers.
+
+NOT ESTABLISHED:
+- Exact source commit/ref corresponding to the intended dead-legacy baseline for every checked file.
+- Installed production service, endpoint reachability/polling, systemd restart policy, cron state, and runtime health.
+- Effective config values for polling, watchdog threshold, market windows, modes, and strategy set.
+- Whether endpoint verdict gates order submission or entry evaluation.
+- Precise kill-switch effects on new entries, existing orders/positions, and process lifecycle.
+- Whether live and sandbox/paper paths are equivalent or what they did in specific incidents.
+- Actual alert delivery, external monitor, historical incident timestamps, and tests proving live behavior.
+- Full per-symbol data freshness, queue lag, and strategy-level stale-data guards.
+
+4. REQUIRED NEXT SOURCE CHECKS BEFORE FINAL MANUAL REVIEW
+1. Establish the exact production snapshot commit/tree intended for legacy documentation; record repo, ref/commit, retrieval date, and file hashes. Compare relevant files to baseline `970aabf3c78d777d9d34549e021f7c8e756c7bdb` if that is still the authorized baseline.
+2. Trace `main.py` startup caller around `run_all_startup_checks`: report handling, exit codes, ordering, and when health server starts.
+3. Trace `scripts/healthcheck_server.py` complete checks, bind host/port, auth, startup/failure semantics, and all consumers (including webhook endpoint vs health endpoint distinction).
+4. Trace `data/live_feed.py`: tick timestamp source/update, watchdog default/config override, arm conditions, per-symbol vs aggregate coverage, callback action, reconnect exhaustion and kill-switch semantics; inspect caller wiring.
+5. Trace `capital/kill_switch.py` and callers: state transitions, persistence, entry/exit/order management effects, reset/clear behavior.
+6. Trace OrderMonitor/OrderReconciler config values, exception handling, `is_alive`, and status consumers. Keep startup reconciliation (B-005) separate; verify B-006 independently.
+7. Inspect sandbox at a pinned ref and compare these same files; do not infer mocks/parity from directory labels.
+8. Obtain dated records for host-installed systemd/cron, endpoint polls, logs, incidents, tests, and paper/live observations; label each as RECORD-DERIVED or HISTORICAL.
+
+5. DRAFTING RULE
+For the B-007 manual, state only bounded source facts and mark host/runtime behavior NOT ESTABLISHED unless dated records support it. Preserve Rama’s recollections in a separate “Historical / uncorroborated reports” subsection; do not silently rewrite them as facts. No V2 recommendations or design decisions.

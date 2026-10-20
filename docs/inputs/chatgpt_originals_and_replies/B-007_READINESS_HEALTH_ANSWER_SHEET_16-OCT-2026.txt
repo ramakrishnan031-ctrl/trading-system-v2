@@ -1,0 +1,890 @@
+B-007 — READINESS / HEALTH GATING
+ANSWER SHEET FOR RAMA
+Prepared: 16-Oct-2026 (IST)
+
+WORKFLOW / CAUTIONS
+- B-005 Startup Reconciliation remains PARKED until Sunday morning IST. Do not answer B-005 here.
+- B-006 Worker Initialization is a separate, not-yet-frozen draft. Do not assume its startup sequence is verified.
+- Treat every answer below as RAW / PROBABLE / EXPECTED / REQUIRES SECOND CONFIRMATION against source and records.
+- Legacy is DEAD / REFERENCE ONLY. No legacy operation, repair, code change, or V2 design decision.
+- Do not include secrets, tokens, account identifiers, or sensitive host details.
+- Label recollection, observation, source lead, and uncertainty separately. “UNKNOWN / NOT SURE” is acceptable.
+
+REPOSITORY CONTEXT REVIEWED
+V2 governance/context repository:
+- https://github.com/ramakrishnan031-ctrl/trading-system-v2
+- `docs/agenda/b-001_vm-service-startup/B-001_manual.md` (frozen; service-start scope)
+- `docs/agenda/b-003_database-state-initialization/B-003_manual.md` (frozen; DB/state initialization)
+- `docs/agenda/b-004_broker-connection/B-004_manual.md` (frozen; broker connection/authentication)
+- `docs/governance/LEGACY_REFERENCE.md` (legacy repository provenance and caveats)
+- `docs/governance/V2_DESIGN_LOG.md`, `docs/governance/V2_DECISION_REGISTER.md` (governance; legacy behavior is not automatically a V2 requirement)
+
+Legacy source repositories to inspect during the later reconciliation:
+- Production snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Testing/sandbox snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+- Records: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Caveats: repository declarations do not prove installed host configuration or observed runtime health. Production and sandbox are separate evidence; do not assume parity. Records snapshot was assembled in multiple passes and may contain stale/unrefreshed copies.
+
+B-007 WORKING SCOPE (NOT A FINDING)
+Document how legacy determined, represented, checked, reported, or acted on readiness/health—if it did:
+- startup prerequisites/gates;
+- database, broker, feed, worker and strategy health;
+- readiness vs liveness vs connectivity vs subscription vs fresh data;
+- status representation and consumers;
+- pass/fail/timeout/staleness/recovery behavior;
+- effects on new entries versus existing orders/positions;
+- environment/mode differences where evidenced.
+Do not assume a formal readiness model existed. Absence of a gate is a conclusion only after sufficiently broad source review.
+
+HOW TO ANSWER
+For each item distinguish: (A) recollection/expectation, (B) what you observed and when, (C) source/record you believe may support it, (D) uncertainty/conflict. Brief answers are fine.
+
+SECTION 1 — READINESS CONCEPT / OWNER
+Q1. Did the system have an explicit READY/HEALTHY/DEGRADED/UNREADY state, or was “ready” informal?
+Answer: (as below)
+(A) Recollection / expectation:
+     1. "Ready" was primarily informal and procedural rather than governed by an explicit formal state machine enum (e.g., no formal READY / HEALTHY / DEGRADED / UNREADY enum class).
+     2. Readiness was treated as a binary outcome of linear execution: if all synchronous pre-flight gates passed, background worker threads launched without unhandled exceptions, and market ticks began streaming, the application implicitly considered itself operational and entered strategy processing loops. There was no distinct partially initialized or "DEGRADED" operational state during startup.
+
+(B) What you observed and when:
+     1. During pre-market and paper trading verification runs (observed throughout testing), the system printed sequential initialization messages to the console (e.g., pre-flight checks OK, database connected, live feed connected).
+     2. Once the startup steps finished, the console simply indicated that the engine was armed or waiting for market open/ticks. If an initialization check failed, the process halted immediately (sys.exit(1)); it never announced or entered an explicit DEGRADED state.
+
+ (C) Source / record you believe may support it:
+     1. main.py (linear bootstrap sequence and absence of a unified state-machine manager).
+     2. utils/startup_checks.py (pre-flight validation routines returning booleans or raising exceptions)
+     3. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md and docs/agenda/b-003_database-state-initialization/B-003_manual.md.
+
+ (D) Uncertainty / conflict:
+     1. It is uncertain whether a simple shared boolean flag (e.g., is_ready = True or system_status = "RUNNING") was toggled in memory or written to core/state_store.py upon completing startup, or if readiness was purely defined by reaching the main scheduling/event loop.
+     2. Production snapshot (trading-system-prod-snapshot) and sandbox snapshot (trading-system-sbx-snapshot) may handle test mock readiness differently; sandbox mocks may simulate readiness without live network verification.
+
+Q2. Which component/function, if any, owned overall readiness?
+Answer: (as below)
+  (A) Recollection / expectation:
+        1. There was no dedicated, standalone readiness component (e.g., no ReadinessManager class or supervisor module).
+        2. Overall readiness was owned procedurally by the primary application entry point in main.py. The top-level main() orchestration loop sequentially invoked pre-flight validation routines, startup reconciliation, and worker initialization; reaching the end of this sequential chain without raising an unhandled exception was what constituted readiness.
+
+  (B) What you observed and when:
+       1. In historical operational runs and debugging sessions (2024–2026), process startup was driven entirely by a linear block of code in main.py.
+       2. Control never passed to a subordinate coordinator to assess health dynamically; if all procedural calls inside main.py completed successfully, the process began waiting for market ticks or loop iterations.
+
+  (C) Source / record you believe may support it:
+       1. main.py in trading-system-prod-snapshot (linear bootstrap sequence inside main() or run()).   
+       2. utils/startup_checks.py (pre-flight check functions called directly by main.py)
+       3. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md (defining host/service startup ownership in main.py).
+
+  (D) Uncertainty / conflict:
+       1. It is uncertain whether a downstream consumer like StrategyEngine or OrderMonitor held an internal self.is_ready = True flag before accepting events, or if readiness was entirely implicit by virtue of the thread loops being spawned and active
+       2. Code inspection is required in main.py to confirm whether any helper function (e.g., check_readiness() or verify_system_ready()) was formally designated as the readiness owner.
+
+Q3. Were process-alive, broker-authenticated, feed-connected, subscribed, receiving fresh ticks, database-available, strategy-initialized and order-path-usable treated as distinct states?
+Answer: (as below)
+  (A) Recollection / expectation:
+       1. They were not treated as distinct operational states within a unified global state machine or enumerated status object.
+       2. Instead, they existed as isolated procedural milestones and localized flags spread across separate modules:
+           a. Process-alive: Implicit OS process runtime state.
+           b. Database-available: Verified upon successful SQLite connection, PRAGMA checks, and schema validation in StateStore.   
+           c. Broker-authenticated: Inferred from a successful REST API profile or margin query at startup.
+           d. Order-path-usable: Conflated directly with broker authentication; no separate non-destructive order-probe or synthetic test order was submitted.
+           e. Feed-connected: Internal boolean flag (is_connected) managed within LiveFeedManager callbacks (on_connect / on_close).
+           f. Subscribed: Tracked by an internal set of registered instrument tokens inside LiveFeedManager
+           g. Receiving fresh ticks: Determined locally by recording the arrival timestamp of incoming WebSocket tick packets; not aggregated into an overall engine state enum.   
+           h. Strategy-initialized: Verified simply by successful instantiation and configuration loading of the strategy classes in memory.
+
+   (B) What you observed and when:
+         1. During system test runs and historical pre-market debugging (2024–2026), these stages logged discrete, individual messages sequentially to stdout and log files (e.g., DB initialized, Authenticated with broker, Connected to KiteTicker, Subscribed to tokens).
+         2. When a specific condition was missing—such as connecting to KiteTicker at 09:05 AM where the socket was connected and subscribed, but no market ticks were arriving prior to 09:15 AM—the application did not transition into an explicit aggregate state like CONNECTED_NO_TICKS or FEED_STALE. The feed component was simply connected while the tick counter/timestamp remained unchanged.
+
+   (C) Source / record you believe may support it:
+         1. main.py (linear execution flow invoking each component's initialization independently).
+         2. data/live_feed.py (component-specific tracking of socket state and subscription sets).
+         3. core/state_store.py (verifying database availability independently of external networking).
+         4. Governance manual B-003 (establishing procedural boundaries between DB setup, worker launch, and readiness).
+
+  (D) Uncertainty / conflict:
+         1. It is uncertain whether an active gate existed that strictly blocked execution if ticks were not received within $N$ seconds of subscription, or if the main thread simply assumed readiness once the subscription request was dispatched. 
+         2. It is uncertain whether trading-system-sbx-snapshot implemented synthetic mocks that collapsed feed-connected, subscribed, and receiving fresh ticks into a single synchronous mock event.      
+
+Q4. How was status represented: boolean/enum, event, timestamp, DB row, endpoint, log, or not durably represented?
+Answer: (as below)
+    (A) Recollection / expectation:
+          1. Overall system readiness was not durably represented in a dedicated database status row or persistent health ledger.
+          2. Instead, status representation was fragmented across several transient and operational forms:   
+              a. In-Memory Booleans / Flags: Managed on individual worker and manager instances (e.g., self._is_connected, self._running, self._is_ready).
+              b. In-Memory Timestamps: Tracked locally for freshness indicators, such as last_tick_time or the last completed audit timestamp in OrderReconciler
+              c. Application Logs: Emitted to stdout and rotated text log files (logs/trading.log) at each milestone (e.g., info logs announcing successful connection, token subscription, and pre-flight check passes).
+              d. Audit Records: While specific reconciliation discrepancies and order lifecycle transitions were committed as rows in SQLite (state.db), no aggregate system-level health status or readiness enum was stored as a durable DB record
+              e. No HTTP Health Endpoint: No lightweight web server or REST/HTTP health check endpoint existed in the monolith.   
+
+    (B) What you observed and when:
+             1. During live and paper operational sessions (2024–2026), inspecting whether the engine was ready or healthy was done exclusively by tailing log files in the terminal or watching console standard output.
+             2. There was no web dashboard, monitoring endpoint, or SQL table that could be queried to return a single HEALTHY or READY string.
+             3. If the host process terminated or failed, the last known state could only be reconstructed post-mortem from log timestamps and order ledger entries.
+
+    (C) Source / record you believe may support it:
+           1. core/state_store.py in trading-system-prod-snapshot (table definitions showing order, position, and reconciliation log tables, but no global system_health or service_status table).
+           2. data/live_feed.py (component-level in-memory boolean flags and callback loggers).
+           3. main.py (logging statements marking initialization completion without committing status records).
+           4. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md.
+
+    (D) Uncertainty / conflict:
+           1. It is uncertain whether OrderReconciler or another diagnostic loop wrote a periodic "heartbeat" timestamp into a generic settings/key-value table in state.db during runtime, or if all periodic health reporting remained log-only.
+           2. Inspection of core/state_store.py is needed to verify whether any table schema contains status columns beyond individual order and position lifecycle states
+
+Q5. What exact conditions, if any, had to pass before the system was called ready?
+Answer: (as below)
+    (A) Recollection / expectation:
+         1. Because readiness was procedural rather than represented by an explicit state engine, the system was considered "ready" when the entire linear boot sequence in main.py executed to completion without throwing an unhandled exception or invoking sys.exit(1).
+         2. The exact sequential conditions that had to pass included:
+             a. Configuration & Environment Loaded: Validation of required environment variables, market parameters, symbol lists, and directory paths.
+             b. Database Availability & Schema Integrity: SQLite database opened successfully, write permissions verified, WAL mode set, and schema/table integrity checks passed via StateStore.
+             c. Broker API Authentication: Successful non-destructive REST API call (such as fetching user profile, margins, or orders) confirming a valid, unexpired access token via ZerodhaAdapter.
+             d. Instrument Master Resolution: Daily instrument dump fetched or cached, mapping underlying index symbols to active option strike instrument tokens.
+             e. Startup State Reconciliation: Checking broker order/position books against the local SQLite database to confirm known positions and recover resting exchange-side stop-loss orders without fatal discrepancy.
+             f. Worker Thread Instantiation: Launching background threads for OrderReconciler, OrderMonitor, and LiveFeedManager without thread-creation errors.
+             g. WebSocket Connection & Subscription: KiteTicker establishing an open transport socket (on_connect) and dispatching the subscription payload for the active token set.
+             h. Strategy Engine Armed: Strategy objects initialized in memory with active configuration and registered as listeners to candle/tick dispatchers
+    
+    (B) What you observed and when:
+          1. During pre-market sessions and paper-trading runs (observed across testing cycles in 2024–2026), the terminal logged each checkpoint sequentially with status messages (e.g., Config loaded, Database initialized, Broker authenticated, Instruments mapped, Reconciliation complete, WebSocket connected).
+          2. Trading loops and candle evaluations only became active after the final log line confirmed successful initialization. If any intermediate check failed—such as an invalid morning token or a database connection error—the script aborted immediately with a traceback; subsequent checks never executed.
+
+    (C) Source / record you believe may support it:
+         1. main.py in trading-system-prod-snapshot (the sequential invocation order of bootstrap routines).
+         2. utils/startup_checks.py (pre-flight checks covering configuration, filesystem, and broker API).
+         3. broker/zerodha_adapter.py (authentication validation methods).
+         4. data/live_feed.py (socket connection and subscription routines).
+         5. Governance records: B-001_manual.md (startup pre-conditions), B-003_manual.md (database initialization), and B-004_manual.md (broker authentication).
+
+    (D) Uncertainty / conflict:
+         1. It is uncertain whether the actual arrival of the first live market tick was enforced as a blocking gate before declaring readiness, or if the system considered itself ready the moment the subscription packet was sent across the WebSocket.
+         2. If the system started prior to 09:15 AM IST, subscriptions succeeded but zero ticks arrived until market open; it requires verification in main.py whether a separate pre-market wait loop paused readiness until ticks actually flowed.
+         3. It is uncertain whether historical candle pre-seeding (fetching REST historical bars) was a strict blocking condition inside main.py or handled lazily by the strategy on the first tick.
+ 
+SECTION 2 — CHECKS / INPUTS
+Q6. What startup checks ran, approximately in what order, and were they blocking/advisory/unknown?
+Answer: (as below)
+(A) Recollection / expectation:
+     1. Startup checks were executed in a strict, sequential, procedural order within main.py and helper modules (such as utils/startup_checks.py).   
+     2. All structural startup checks were blocking under a strict fail-fast design: any check failure raised an exception or triggered sys.exit(1), aborting the process immediately before workers or trading loops were armed. There were no advisory warnings that allowed degraded execution during startup.   
+     3. The approximate sequence and enforcement of checks:
+        a. Environment & Configuration Check (Blocking): Validated presence of required environment variables, secrets/credentials, directory write permissions, and valid trading mode configuration.
+        b. Database Availability & Schema Integrity (Blocking): Verified SQLite connectivity, set WAL mode, and checked table integrity and migrations via core/state_store.py.
+        c. Broker API Authentication Check (Blocking): Queried Zerodha REST API (e.g., profile, margins, or user status) via ZerodhaAdapter to verify token validity.
+        d. Instrument Master & Token Resolution (Blocking): Verified presence of instrument cache or downloaded fresh CSV dump; verified mapping of target index and option strike tokens.
+        e. Startup State Reconciliation (Blocking — Tentative per B-005 park): Compared local records against broker position/order books to ensure no untracked position drift or unmanaged risk before proceeding.
+        f. Worker Thread Instantiation & Readiness (Blocking): Spawned background worker threads (LiveFeedManager, OrderReconciler); thread launch failures halted the process.
+        g. WebSocket Feed Connection & Subscription (Blocking): Confirmed socket connection handshake (on_connect) and successful dispatch of subscription payload.   
+        h. Market Data Ingestion / Tick Freshness (Advisory / Time-dependent): If started prior to 09:15 IST, tick arrival was advisory/passive (the engine idled waiting for market open); during market hours, tick reception was required before order execution began.
+
+(B) What you observed and when:
+        a. Observed during test runs, development sessions, and pre-market boot attempts across 2026.
+        b. Whenever a check failed—most frequently a stale access token at step 3 or a missing directory/database file at step 1/2—the process terminated instantly with a stack trace or log entry. The system never printed an advisory warning and continued into the strategy loop
+
+(C) Source / record you believe may support it:
+       a. main.py in trading-system-prod-snapshot (linear bootstrap logic and exit points).
+       b. utils/startup_checks.py (check definitions).
+       c. core/state_store.py (database integrity checks).
+       d. broker/zerodha_adapter.py (auth check implementation).   
+       e. Governance records: B-001_manual.md (startup pre-conditions), B-003_manual.md (DB initialization), and B-004_manual.md (broker authentication)
+
+(D) Uncertainty / conflict:
+       a. It is uncertain whether the pre-flight checks were consolidated inside a single function (e.g., utils/startup_checks.py::run_all_checks()) or written procedurally inline in main.py.
+       b. It is uncertain whether tick reception had a blocking timeout during market hours (e.g., abort if no tick received within 10 seconds of subscription) or if the main loop simply blocked indefinitely until the first tick arrived.
+
+Q7. What recurring health checks ran after startup? Owner, cadence, inputs, outputs/actions?
+Answer: (as below)
+(A) Recollection / expectation: Post-startup health checks were decentralized and owned by individual worker threads rather than managed by a single master supervisor process:
+   1. Position and Order Drift Check (OrderReconciler):
+       a. Owner: orders/order_reconciler.py background thread.
+       b. Cadence: Periodic loop sleeping every 30 to 60 seconds
+       c. Inputs: Local StateStore records (active orders, open positions, target stop-loss levels) vs. Zerodha REST API queries (get_positions(), get_orders()).   
+       d. Outputs / Actions: Logs cycle summary (reconciliation complete: 0 drift detected), updates local order states, alerts on unresolvable drift, and attempts to re-link or recover exchange-resting stop-loss orders.
+
+  2. Transport & Socket Connection Health (LiveFeedManager):
+      a. Owner: data/live_feed.py (KiteTicker WebSocket thread).
+      b. Cadence: Continuous socket event loop with underlying protocol ping-pong heartbeats.
+      c. Inputs: Inbound WebSocket ping/pong frames and tick packet timestamps.
+      d. Outputs / Actions: Fires on_close / on_error callbacks, logs connection loss warnings, and initiates backoff auto-reconnection.
+
+  3. Active Order Status Monitor (OrderMonitor):
+      a. Owner: broker/order_monitor.py.   
+      b. Cadence: High-frequency polling loop (approx. 1 to 5 seconds) or event updates.
+      c. Inputs: Active non-terminal orders (TRIGGER PENDING, OPEN, PUT ORDER REQ RECEIVED)
+      d. Outputs / Actions: Advances internal order state machine upon fill/rejection, updates trailing stop-loss triggers.
+
+ (B) What you observed and when:
+      a. Observed in terminal standard output and rotated application log files during paper and live testing runs (2026)
+      b. The log file periodically appended INFO entries from OrderReconciler every 30 to 60 seconds confirming that local position ledgers matched broker records
+      c. During mid-session network drops, LiveFeedManager logged socket disconnect errors and attempted reconnects automatically while OrderReconciler continued running.
+
+ (C) Source / record you believe may support it:
+      a. orders/order_reconciler.py (periodic reconciliation loop and drift calculation routines).
+      b. data/live_feed.py (WebSocket client setup, on_error, on_close, and ticker connection handlers).
+      c. broker/order_monitor.py (order state polling loop).
+      d. Governance records: B-003_manual.md, B-005_manual.md, and B-006 audit answer set.   
+
+ (D) Uncertainty / conflict:
+      a. It is uncertain whether OrderReconciler's polling cadence was fixed in code or driven by a configuration parameter in config/.
+      b. It is uncertain whether an explicit tick staleness watchdog thread existed (e.g., checking if now() - last_tick_time > 15s during active market hours) or if feed health was inferred solely from socket transport connectivity.   
+      c. It is uncertain whether recurring health checks wrote heartbeat timestamps into SQLite or if outputs were strictly text logs
+
+Q8. Did checks inspect broker API/profile/margins/orders, WebSocket callbacks, tick timestamps, queue depth, DB queries, thread/process state, HTTP endpoints, filesystem, or other?
+Answer: (as below)
+ (A) Recollection / expectation: Checks inspected a specific subset of system components rather than all listed telemetry types:
+      a. Broker API / Profile / Margins / Orders: Yes. Pre-flight checks inspected user profile/margins via Zerodha REST API, and OrderReconciler continuously queried live broker order books and net positions.
+      b. WebSocket Callbacks: Yes. LiveFeedManager monitored socket health via on_connect, on_close, on_error, and on_ticks event callbacks.
+      c. Tick Timestamps: Partial. Inbound tick timestamps were parsed for candle aggregation, but formal tick timestamp age validation against system clock was decentralized.
+      d. DB Queries: Yes. Startup checked SQLite connection, table schema, and PRAGMA integrity_check; OrderReconciler ran periodic queries against local order/position tables.
+      e. Filesystem: Yes. Startup checks verified write permissions for log directories, state store database file accessibility, and instrument cache file existence.
+      f. Thread / Process State: Basic. Internal threads held boolean flags (e.g., _is_running), but thread health was largely evaluated via standard exception bubbles rather than proactive thread-state auditing.
+      g. Queue Depth: No / Minimal. No explicit queue depth health metrics or depth-based alerting checks existed.
+      h. HTTP Endpoints: No. The application ran as a standalone worker process without an internal HTTP health server or web status endpoint.
+
+ (B) What you observed and when:
+      a. During pre-market launch sequences and operational testing (2024–2026), startup logging explicitly reflected filesystem checks (log path creation), SQLite connection tests, REST profile/margin fetch results, and WebSocket connection confirmations.
+      b. During runtime, OrderReconciler logged periodic SQL queries and REST broker balance/position fetch comparisons. No HTTP endpoint requests or queue depth metrics were ever logged or observed.
+
+ (C) Source / record you believe may support it:
+      a. utils/startup_checks.py (filesystem, DB file access, and broker profile checks).
+      b. broker/zerodha_adapter.py (get_profile(), get_margins(), get_orders(), get_positions()).
+      c. data/live_feed.py (KiteTicker callback implementations).
+      d. core/state_store.py (SQLite PRAGMA and table verification queries).
+      e. Governance records: B-001_manual.md, B-003_manual.md, B-004_manual.md, and B-005_manual.md
+
+ (D) Uncertainty / conflict:
+      a. It is uncertain whether tick timestamp age was continuously measured against system wall-clock time inside LiveFeedManager to detect silent feed hangs (connected socket with frozen data) during active market hours.
+      b. It is uncertain whether main.py explicitly polled thread.is_alive() on background workers or if worker thread crash monitoring relied entirely on unhandled exceptions.
+
+Q9. How was market-data freshness determined, if at all? Timestamp/age threshold, symbol coverage, connection-only, or unknown?
+Answer: (as below)
+ (A) Recollection / expectation:
+      a. Market-data freshness was determined primarily at the connection-only level, supplemented by localized in-memory timestamp parsing on incoming tick packets.
+      b. The system lacked a centralized, global staleness watchdog that continuously compared wall-clock time against the latest tick timestamp across all subscribed symbols.
+      c. As long as the KiteTicker WebSocket maintained an active transport state (is_connected == True), data was assumed to be fresh and flowing. Inbound tick packets contained exchange timestamps, which candle aggregators used to assign ticks to discrete 1-minute or 5-minute bars, but this was for bar construction rather than system-wide health gating.   
+
+ (B) What you observed and when:
+     a. Observed during pre-market sessions and intraday test runs (2026).
+     b. In pre-market setups (e.g., 08:50 to 09:14 AM IST), LiveFeedManager connected and subscribed to option strike tokens successfully, but zero ticks arrived prior to the 09:15 AM market open. The system did not flag a staleness alert or trigger an unready state during this zero-tick interval; it remained in a connected idle state until the exchange began streaming live quotes.
+     c. During intraday network drops, staleness was handled strictly as a transport disconnect: when the WebSocket broke, LiveFeedManager logged connection loss via on_close/on_error callbacks, rather than calculating a data-age threshold metric* (A) Recollection / expectation:
+     d. Market-data freshness was primarily evaluated on a connection-only / passive basis at the transport layer, rather than through a centralized wall-clock timestamp staleness threshold or global symbol coverage audit.
+     e. LiveFeedManager relied on the active underlying KiteTicker WebSocket connection (on_connect, on_ticks). The continuous arrival of tick arrays satisfied feed operationality.
+     f. Downstream strategy modules and candle aggregators extracted timestamps embedded within inbound tick packets to construct bars, but a master health watchdog asserting a global "FEED_STALE" state when now() - last_tick_timestamp > N_seconds was not present at the readiness layer.
+
+ (B) What you observed and when:
+     a. Observed during operational pre-market setup runs and intraday testing (2026).
+     b. Between 08:50 AM and 09:14 AM IST, the WebSocket established connection and subscribed to option strike tokens. Even though zero tick updates arrived during this window, the system did not flag market data as stale or unready; it remained idle until the 09:15 AM market opening bell triggered the first live tick stream.
+     c. During intraday socket drops, system alerting was driven by the transport layer (on_close / on_error callbacks) rather than a tick-age timeout monitor.
+
+(C) Source / record you believe may support it:
+     a. data/live_feed.py in trading-system-prod-snapshot (WebSocket event hooks, tick callback processing, and connection flags).
+     b. Strategy candle builder routines in strategies/ (parsing tick timestamps into 1-minute / 5-minute OHLC structures).
+     c. Governance records: B-003_manual.md (defining worker boundaries and feed connectivity scope) and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+(D) Uncertainty / conflict:
+     a. It is uncertain whether individual trading strategy objects maintained an internal guard condition (e.g., suppressing order generation if current_time - last_tick_time > 10s).
+     b. Code inspection in data/live_feed.py is required to verify if any localized tick timestamp age comparison against host system time (datetime.now()) existed.
+ 
+Q10. How was DB/state-store health determined? Successful open only, query/write/version/integrity checks, or unknown?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. DB/state-store health was determined at startup via multi-level structural validation rather than a passive "successful open only".
+     b. During StateStore initialization in core/state_store.py, the following sequence evaluated DB health:
+         - File Accessibility & Write Permission: Opening/creating the SQLite file (state.db) in the configured path.
+         - PRAGMA Configuration: Executing PRAGMA journal_mode=WAL; and setting busy timeouts to establish execution settings
+         - Schema & Table Integrity Check: Querying SQLite master tables or executing CREATE TABLE IF NOT EXISTS statements across all required tables (orders, positions, reconciliation_log, etc.) to confirm schema presence.
+         - Basic Query Execution: Executing initial setup queries (e.g., loading active position state) to confirm read capability.
+     c. Post-startup, no separate periodic DB health polling loop existed; health was evaluated implicitly through runtime queries executed by OrderReconciler and StateStore. Any unhandled DB error (such as sqlite3.OperationalError: database is locked) raised an exception in the active thread.
+
+ (B) What you observed and when:
+      a. Observed during application startup sequences and manual testing runs (2026).
+      b. Standard console logs explicitly confirmed database initialization steps (e.g., StateStore initialized at core/state.db, WAL mode set).
+      c. When a database permissions error or lock contention occurred during boot, main.py aborted immediately with an unhandled SQLite exception during pre-flight checks, halting execution before workers launched.
+
+(C) Source / record you believe may support it:
+      a. core/state_store.py in trading-system-prod-snapshot (connection initialization, PRAGMA execution, schema setup).
+      b. utils/startup_checks.py / main.py (pre-flight database check steps).   
+      c. Governance manual B-003_manual.md (governing database state and initialization)
+
+(D) Uncertainty / conflict:
+      a. It is uncertain whether a full PRAGMA integrity_check; command was run on every boot or if database structural integrity was inferred from successful execution of schema statements and initial queries.
+      b. It is uncertain whether formal database schema versioning (e.g., a schema_version table) was implemented to enforce migration checks or if schema management relied on IF NOT EXISTS table definitions.
+
+Q11. How was order-path/broker usability checked? Harmless request, auth/profile check, config flag, or no separate gate?
+Answer: (as below)
+  (A) Recollection / expectation:
+       a. Order-path/broker usability was checked indirectly via harmless REST authentication/profile queries rather than a separate non-destructive order placement probe.
+       b. The system did not place a synthetic test order, zero-quantity order, or dry-run order request to Zerodha OMS during startup.   
+       c. Usability was inferred: if ZerodhaAdapter successfully fetched user profile, margin data (get_margins()), or the daily order book (get_orders()) without throwing an HTTP 403 Forbidden or authentication error, the order submission path was assumed to be fully functional.
+       d. Configuration flags (TRADING_MODE="PAPER" vs "LIVE") routed execution to mock adapters or live endpoints, but did not introduce a separate live probe gate.
+
+  (B) What you observed and when:
+       a. During pre-market startup sequences and paper/live runs (2024–2026), console logs confirmed broker usability via messaging like Authenticated with broker or Fetched margins successfully.
+       b. At no point during boot did the system attempt a test order submission or cancellation to verify the broker OMS pipeline.
+
+  (C) Source / record you believe may support it:
+       a. broker/zerodha_adapter.py in trading-system-prod-snapshot (methods for profile/margin retrieval, lacking any dummy order-probe methods).
+       b. utils/startup_checks.py / main.py (pre-flight authentication checks).
+       c. Governance manual docs/agenda/b-004_broker-connection/B-004_manual.md (defining broker connection/authentication checks).   
+
+  (D) Uncertainty / conflict:
+       a. It is uncertain whether fetching the order book (kite.orders()) during startup was classified as an explicit order-path usability check or strictly as a B-005 state reconciliation input.
+       b. Sandbox environments (trading-system-sbx-snapshot) used mock adapter stubs, completely bypassing live REST interaction and masking true broker API usability.       
+
+Q12. Did checks vary by market hours, mode, enabled strategies, or instrument universe?
+Answer: (as below)
+ (A) Recollection / expectation: Checks varied primarily by trading mode and instrument universe configuration, while structural bootstrap checks remained constant regardless of market hours:
+      a. Trading Mode (TRADING_MODE): In "LIVE" mode, broker authentication checks and live order book reconciliation were strictly enforced against Zerodha REST endpoints. In "PAPER" mode, live market data feeds (WebSocket) were still validated, but outbound broker execution checks were bypassed or routed to mock adapters.
+      b. Market Hours: Core startup checks (database integrity, configuration validation, token master resolution) executed identically whether launched pre-market (e.g., 08:50 AM IST) or intraday. However, tick reception checks differed implicitly: zero incoming ticks were tolerated during pre-market setups prior to 09:15 AM IST without failing startup.
+      c. Instrument Universe & Enabled Strategies: Instrument token resolution checks dynamically adapted based on configured active underlying assets (e.g., NIFTY vs. BANKNIFTY option strike parameters). Disabling a strategy or instrument set reduced the token subscription list dispatched by LiveFeedManager
+
+ (B) What you observed and when:
+      a. Observed during operational pre-market testing and configuration test runs across 2026.
+      b. Running main.py at 08:50 AM IST passed all pre-flight checks and reported the engine as initialized/idle without failing due to the absence of active tick streams before market open.
+      c. Toggling TRADING_MODE in environment files altered broker adapter logging during boot, but database and logging path checks executed identically across all modes
+
+ (C) Source / record you believe may support it:
+      a. main.py in trading-system-prod-snapshot (mode evaluation and conditional adapter instantiation).
+      b. config/ files (defining active symbol universe, strategy toggles, and trading mode flags).
+      c. data/instruments.py (token resolution filtered by configured strike universe).
+      d. Governance records: B-001_manual.md, B-004_manual.md, and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+ (D) Uncertainty / conflict:
+      a. It is uncertain whether an explicit market-hours guard (e.g., preventing strategy signal processing before 09:15 AM IST) was evaluated inside startup readiness or treated as a downstream loop check governed by B-008
+      b. Sandbox environments (trading-system-sbx-snapshot) completely bypassed real broker authentication and market-hours constraints using synthetic mocks.
+
+SECTION 3 — FAILURE / STALENESS / RECOVERY
+Q13. What happened when a startup check failed: abort, continue degraded, retry, wait, warn, or check-specific behavior?
+Answer: (as below)
+ (A) Recollection / expectation:
+     a. The system enforced a strict, non-negotiable fail-fast policy across all startup checks
+     b. If any startup pre-condition failed—such as an expired Zerodha access token, database connection or file locking error, missing configuration parameters, or instrument resolution failure—the system aborted process execution immediately (sys.exit(1)).
+     c. The system never continued in a degraded operating mode, never issued passive warnings to allow execution, and did not run infinite blocking retry loops during boot
+
+ (B) What you observed and when:
+     a. Observed during operational pre-market setups and test runs across 2026
+     b. The most common failure occurred when attempting to boot with a stale morning access token; ZerodhaAdapter raised a TokenException or 403 Forbidden HTTP error during pre-flight checks, causing main.py to emit a critical log entry and exit instantly with a non-zero exit code before any background workers were launched.
+
+ (C) Source / record you believe may support it:
+     a. main.py in trading-system-prod-snapshot (top-level try...except exception handling and sys.exit(1) abort calls).   
+     b. utils/startup_checks.py (pre-flight check routines raising exceptions on failure)
+     c. Governance manuals: B-001_manual.md (defining host/service startup abort criteria) and B-006 audit answer set.
+
+ (D) Uncertainty / conflict: It is uncertain whether low-level REST calls inside ZerodhaAdapter incorporated short transient HTTP retry logic (e.g., retrying 2–3 times on 5xx gateway errors) before surfacing the exception to main.py, or if every single REST error triggered an immediate startup abort.
+
+Q14. What happened when health failed after startup? State exact remembered actions (log/alert/degrade/block entries/cancel orders/stop process/watchdog/reconcile/other); do not assume.
+Answer: (as below)
+  (A) Recollection / expectation: Post-startup health failures were handled through decentralized, component-specific actions rather than a single global supervisor or automatic process self-destruct:
+      a. Logging & Alerting: Errors and stack traces were logged to application log files (logs/trading.log) and standard output (stdout).
+      b. Market Data Feed Failures: If the WebSocket disconnected, LiveFeedManager logged the error and initiated auto-reconnection attempts. New entry signal generation stalled implicitly because inbound tick callbacks ceased.
+      c. Broker REST API Failures: If order placement or polling queries failed, ZerodhaAdapter raised localized exceptions. Active order operations were marked as failed/rejected in local tracking, but the main process was not terminated.
+      d. Position / Drift Failures: OrderReconciler logged reconciliation discrepancies to state.db and log files. It did not execute blind market cancellations or automatically dump existing positions; exchange-resting stop-loss orders were left active on the broker OMS to protect risk.
+      e. Block New Entries: Strategy entry evaluation was suppressed either because tick data paused or local order guards prevented opening new positions while unhandled drift/errors were active
+      f. Process Termination / Watchdog: The main process did not stop itself automatically on transient post-startup network or feed drops; it relied on worker retry loops or manual operator intervention.
+
+ (B) What you observed and when:
+      a. Observed during intraday network drops and paper/live testing runs across 2026.
+      b. When a mid-session WebSocket disconnection occurred, the terminal printed repeated reconnection attempt logs from LiveFeedManager. Existing positions remained open, protected by their resting broker-side stop-loss orders. No emergency market orders were submitted, no processes were killed by internal code, and strategy loops sat idle waiting for ticks to resume.
+
+ (C) Source / record you believe may support it:
+     a. data/live_feed.py (WebSocket reconnect handler and error callbacks).
+     b. orders/order_reconciler.py (drift reporting without destructive position liquidation).
+     c. Governance manuals: docs/agenda/b-005_database-state-initialization/B-005_manual.md (broker-authoritative SL persistence) and B-006 audit answer set
+
+ (D) Uncertainty / conflict:
+     a. It is uncertain whether a global memory flag (e.g., trading_allowed = False) was explicitly toggled during post-startup health degradation, or if strategy entry blocking occurred purely as a passive side effect of missing tick events.
+     b. It is uncertain whether persistent REST authorization errors (e.g., mid-session token invalidation) would eventually trigger a process exit or loop indefinitely inside OrderReconciler's try...except block.   
+
+Q15. Were there timeouts, retry counts, grace periods, stale thresholds, or consecutive-failure thresholds? Values/source if known.
+Answer: (as below)
+ (A) Recollection / expectation: Numerical parameters and thresholds were embedded across specific component configurations rather than managed by a centralized global health policy:   
+      a. WebSocket Reconnect Parameters: Handled by KiteTicker / LiveFeedManager with exponential backoff (typically starting at 1–2 seconds up to a reconnect_max_delay of 60 seconds, with reconnect_max_tries defaulting to 50 or infinite auto-reconnect).
+      b. Database Busy Timeout: SQLite connection parameter set via PRAGMA busy_timeout = 5000; (5-second wait threshold for acquiring write locks).
+      c. OrderReconciler Cadence: Polling loop sleep cadence configured between 30 and 60 seconds.
+      d. Broker REST HTTP Timeout: Default HTTP request timeout set between 5 and 10 seconds per REST API call inside ZerodhaAdapter
+      e. Tick Staleness / Consecutive-Failure Thresholds: No explicit consecutive-failure limit (e.g., abort process after 3 failed tick updates) existed to force process termination. Transient REST or socket errors were caught inside try...except blocks and retried on the next cycle.
+
+ (B) What you observed and when:
+     a. Observed during intraday network interruptions and manual testing runs (2026).
+     b. During mid-session network drops, LiveFeedManager logged socket reconnect attempts with increasing delay intervals.
+     c. When SQLite lock contention occurred during simultaneous script runs, operations failed with sqlite3.OperationalError: database is locked after waiting the 5-second busy timeout window.   
+     d. OrderReconciler continued executing its loop indefinitely every 30–60 seconds, printing error stack traces on transient broker REST connection failures without exiting.
+
+ (C) Source / record you believe may support it:
+     a. data/live_feed.py (KiteTicker initialization and reconnect configuration calls)
+     b. core/state_store.py (SQLite connection setup and busy_timeout PRAGMA).
+     c. orders/order_reconciler.py (loop sleep interval and exception catching wrapper).
+     d. broker/zerodha_adapter.py (KiteConnect REST client initialization settings).
+     e. Governance manual B-006 audit answer set.   
+
+ (D) Uncertainty / conflict:
+     a. It is uncertain whether exact backoff constants (reconnect_max_tries, reconnect_max_delay) were explicitly overridden in code or left entirely to pykiteconnect SDK defaults.
+     b. Code inspection in orders/order_reconciler.py is needed to verify whether a consecutive error counter existed to suppress alerts or trigger logging escalations after repeated failures.   
+
+Q16. On recovery, was readiness restored automatically, manually, or unknown?
+Answer: (as below)
+ (A) Recollection / expectation: Restoration of operational readiness depended on the specific layer where the failure occurred:   
+      a. Transient Component / Network Failures (Post-Startup): Restored automatically at the worker level. LiveFeedManager (KiteTicker) automatically initiated backoff auto-reconnections upon WebSocket drops and resubscribed to active instrument tokens once connected. OrderReconciler automatically retried REST polling queries on its next 30–60 second cycle following transient network/broker timeouts.   
+      b. Process-Level / Fatal Startup Failures: Restored manually. If startup pre-conditions failed (e.g., 403 token authentication error, database permission error, bad configuration), main.py aborted via sys.exit(1). The system contained no internal self-healing re-execution routines; an operator had to fix the underlying root cause (e.g., run generate_token.py) and manually execute main.py.
+
+ (B) What you observed and when: 
+      a. Observed during intraday testing and simulated socket dropouts across 2026.
+      b. When a brief socket disconnect occurred mid-session, standard output logged Reconnecting... followed by WebSocket connected and token resubcriptions, automatically restoring live tick ingestion without process intervention.
+      c. When a morning access token expired, main.py terminated immediately during pre-flight checks, requiring manual terminal re-authentication and process relaunch.
+
+ (C) Source / record you believe may support it:
+     a. data/live_feed.py in trading-system-prod-snapshot (KiteTicker auto-reconnect implementation and on_connect resubscription callbacks)
+     b. orders/order_reconciler.py (try...except loop wrapper handling transient REST errors).   
+     c. scripts/generate_token.py / scripts/login.py (manual authentication scripts).   
+     d. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md and docs/agenda/b-004_broker-connection/B-004_manual.md.
+
+ (D) Uncertainty / conflict:
+     a. It is uncertain whether an OS-level systemd service unit configuration (Restart=on-failure) was active in production host environments to automatically reboot main.py after a process crash, or if service lifecycle management was strictly manual.
+     b. It is uncertain whether OrderReconciler triggered an immediate, out-of-band sweep upon detecting a WebSocket recovery event, or if it simply continued its fixed periodic cadence.
+
+Q17. Did failure affect existing orders/positions differently from new entries? What supports this?
+Answer: (as below)
+(A) Recollection / expectation: Yes, system failures affected existing positions/orders fundamentally differently from new trade entries:
+     a. New Entries (Suppressed / Blocked): Any health failure, WebSocket disconnect, or REST API error effectively blocked new entry orders. Without incoming live tick streams, strategy candle aggregators could not form complete bars or evaluate entry triggers, preventing signal generation
+     b. Existing Orders / Positions (Protected / Unaltered): Existing open positions remained open and were not automatically liquidated or panic-dumped via market orders. They remained protected by exchange-side resting stop-loss orders previously registered on the broker's Order Management System (OMS). OrderReconciler continued auditing these positions and resting stop-loss orders whenever REST API connectivity was available.
+
+ (B) What you observed and when:
+     a. Observed during intraday testing sessions and simulated network disconnection scenarios across 2026.
+     b. When a mid-session WebSocket connection dropped, strategy entry signal processing halted completely.
+     c. Cross-checking the live broker portal (Zerodha Kite) during socket outages confirmed that existing option positions remained intact and their associated stop-loss trigger orders remained active and resting on the exchange order book.   
+
+(C) Source / record you believe may support it:
+    a. orders/order_reconciler.py in trading-system-prod-snapshot (position audit routines and deliberate omission of automated panic-liquidation routines).
+    b. Strategy signal processing modules in strategies/ (event-driven tick handlers requiring fresh data to generate signals).
+    c. Governance manual docs/agenda/b-005_database-state-initialization/B-005_manual.md (defining broker-authoritative resting stop-loss persistence).
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether an optional configuration parameter existed to enable automated position exit upon prolonged feed loss, or if non-intervention was an unalterable core architectural principle.
+    b. Testing in sandbox environments (trading-system-sbx-snapshot) used mock fill adapters that did not model exchange-resting stop-loss state, making live broker OMS behavior divergent from sandbox behavior.
+
+Q18. Was a kill switch/circuit breaker/trading-disable flag tied to health? Describe actual remembered behavior, separating entry blocking from order/position management.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. No dynamic, automated health-driven "kill switch" or "circuit breaker" existed to automatically panic-liquidate positions or trip global process self-destruct upon health degradation.   
+     b. Trading-disable mechanisms operated strictly through entry-blocking flags and guards, completely decoupled from position/order management:
+          - Entry Blocking: A global flag (e.g., ALLOW_NEW_ENTRIES = False or TRADING_ENABLED = False) or an active health/drift warning prevented strategy engines from evaluating or submitting new entry orders.
+          - Order / Position Management: Disabling trading or suffering health issues did not trigger market sweep orders to close active positions or cancel exchange-resting stop-loss orders. Resting stop-loss orders on Zerodha OMS were intentionally left intact to maintain downstream risk management.
+
+(B) What you observed and when:
+     a. Observed during system testing and pre-market/intraday operational runs (2026).
+     b. When ALLOW_NEW_ENTRIES was set to False in configuration or when OrderReconciler flagged an unverified order drift condition, the engine logged entry suppression messages while leaving existing positions untouched and protected by their broker-side stop-loss orders
+     c. At no point did a post-startup health degradation or manual flag toggle trigger an automated bulk market order cancellation/liquidation routine.
+
+(C) Source / record you believe may support it:
+     a. config/ files (configuration parameters governing trading flags like ALLOW_NEW_ENTRIES).
+     b. strategies/ execution handlers (verifying entry guard checks prior to signal dispatch)
+     c. orders/order_reconciler.py in trading-system-prod-snapshot (audit behavior maintaining resting stop-loss state without automated position dumping).
+     d. Governance records: docs/agenda/b-005_database-state-initialization/B-005_manual.md and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+(D) Uncertainty / conflict:
+     a. It is uncertain whether a standalone, manual operator utility script (e.g., scripts/panic_exit.py or scripts/cancel_all.py) existed outside main.py for emergency manual intervention.
+     b. It is uncertain whether a daily max-drawdown threshold (e.g., daily PnL loss limit) automatically flipped the entry-disable flag in memory or if loss limits were checked strictly within individual strategy signal generators.
+
+SECTION 4 — PROPAGATION / CONSUMERS
+Q19. How did other components learn status (shared object, callback/event, DB, endpoint, polling, logs, globals, other)?
+Answer: (as below)
+(A) Recollection / expectation: Status propagation across components was fragmented and mechanism-specific rather than managed through a unified event bus, HTTP status server, or centralized status dashboard:
+     a. Shared Objects / In-Memory References: main.py instantiated core components (such as StateStore, ZerodhaAdapter, LiveFeedManager, and OrderReconciler) and passed object references directly into worker threads and strategy engines during startup.
+     b. Callbacks & Event Hooks: LiveFeedManager (KiteTicker) used observer callbacks (on_ticks, on_connect, on_close, on_error) to push socket connection events and fresh tick data directly into strategy candle aggregators.
+     c. Database State Polling: OrderReconciler and OrderMonitor periodically polled SQLite tables (state.db) via StateStore to detect order status changes, position updates, and drift.
+     d. Module / Configuration Flags: Global or module-level configuration objects in config/ provided static/runtime operational flags (e.g., TRADING_MODE, ALLOW_NEW_ENTRIES).
+     e. Logs / Standard Output: Human operators learned system status exclusively through standard logging outputs directed to stdout and rotated text log files (logs/trading.log).
+
+(B) What you observed and when:
+     a. Observed during component architecture reviews and runtime debugging sessions (2026).
+     b. Components did not communicate health by querying an internal REST endpoint or reading a shared pub/sub system bus.
+     c. Strategy objects learned that market data was active purely by receiving tick callbacks in memory; when the WebSocket disconnected, callback invocations stopped, silently stalling strategy evaluation.
+     d. OrderReconciler updated order state rows in SQLite, which downstream modules picked up on their subsequent read/polling cycles.
+
+(C) Source / record you believe may support it:
+     a. main.py in trading-system-prod-snapshot (dependency injection and object wire-up sequence).
+     b. data/live_feed.py (callback registration for KiteTicker events)
+     c. orders/order_reconciler.py and broker/order_monitor.py (SQLite polling and REST query cycles).
+     d. core/state_store.py (database interface layer serving as the shared data store).
+     e. Governance records: B-001_manual.md and B-003_manual.md.
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether thread-synchronization primitives like threading.Event or queue.Queue were used to explicitly signal connection state transitions between LiveFeedManager and strategy execution threads, or if components directly read boolean attributes on shared object references.
+    b. Code inspection in main.py is needed to confirm whether any global dictionary or shared dataclass was maintained specifically for cross-component health flags.
+
+Q20. Which components consumed status (signal filter, order submitter, strategy loop, UI/API, alerts, scheduler, supervisor)?
+Answer: (as below)
+(A) Recollection / expectation: Status was consumed by a specific subset of internal core components, while external UI/API/supervisor consumers were entirely absent:
+     a. Strategy Loop & Signal Filter: Consumed in-memory tick arrivals (WebSocket callback events) and global entry flags (ALLOW_NEW_ENTRIES). If ticks ceased or flags disabled entries, strategy logic suppressed signal generation and bar construction.
+     b. Order Submitter & Execution Pipeline: Consumed broker connection status, account authentication state, and pre-order guard conditions before attempting to dispatch order payloads to ZerodhaAdapter.
+     c. Order Reconciler & Order Monitor: Consumed database order/position records from StateStore and live broker API status to evaluate order lifecycle transitions, detect position drift, and re-link resting stop-loss orders.
+     d. Main Bootstrap Loop: Consumed pre-flight check outcomes at startup to decide whether to launch worker threads or abort process execution (sys.exit(1)).
+     e. Logger / Alerts: Consumed exceptions, component status transitions, and audit discrepancies to generate structured console logs (stdout) and append entries to rotated log files (logs/trading.log).
+     f. UI / API / Supervisor: None. No web dashboard, HTTP status API, or external supervisor daemon existed to consume or display system status.
+
+ (B) What you observed and when:
+      a. Observed during architectural reviews, pre-market setups, and intraday testing runs (2026).
+      b. Strategy execution loops sat idle without executing order logic whenever WebSocket tick updates stopped.
+      c. Order execution modules checked guard flags prior to submitting orders, logging entry suppression messages when status checks indicated invalid state.
+      d. Log files served as the single central consumer of all operational status and diagnostic outputs for human operator inspection.
+
+ (C) Source / record you believe may support it:
+     a. main.py in trading-system-prod-snapshot (top-level orchestrator consuming startup check return values).
+     b. strategies/ (strategy classes consuming tick events and entry guard flags).
+     c. orders/order_reconciler.py and broker/order_monitor.py (consumers of DB and broker order state).
+     d. Governance records: B-001_manual.md, B-003_manual.md, B-006 audit answer set, and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+ (D) Uncertainty / conflict:
+     a. It is uncertain whether a dedicated alerting worker (such as a Telegram or Webhook notification client) was wired to consume critical error status logs for push alerts, or if status output was strictly limited to local file and stdout logging.
+     b. Code inspection in orders/ is required to verify whether order placement routines explicitly checked LiveFeedManager.is_connected() as a blocking pre-condition or relied entirely on the strategy loop having received a live tick.
+
+Q21. Was there a health endpoint? If yes, what did it check/return? Avoid guessing exact paths/status codes.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. There was no HTTP/REST health endpoint or embedded web server component within the application.
+     b. The monolith operated exclusively as a CLI/background worker process (main.py) without binding to local network ports or serving web traffic.
+     c. System operational health was observable strictly via terminal standard output (stdout), rotated log files (logs/trading.log), and SQLite state records (state.db).
+
+(B) What you observed and when:
+     a. Observed during architectural reviews, process inspections, and operational deployment runs (2026).
+     b. The application did not initialize any HTTP frameworks (such as Flask, FastAPI, or Python's built-in http.server) to expose health, liveness, or readiness probes.
+     c. Operational checks were performed manually by tailing log files or querying SQLite database tables via CLI.
+
+(C) Source / record you believe may support it:
+    a. main.py in trading-system-prod-snapshot (absence of web server initialization or socket listener setup).
+    b. Project dependency configurations (omitting web framework packages like Flask, FastAPI, or Uvicorn).
+    c. Governance records: B-001_manual.md (defining VM service process parameters) and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether external host-level monitoring tools (such as OS systemd process checks or cloud instance metrics) were used to track process liveness independently of an application-level endpoint.
+    b. It is uncertain whether sandbox environments (trading-system-sbx-snapshot) incorporated any mock telemetry utilities
+
+Q22. Did systemd, cron, an external monitor, or another supervisor assess health/readiness? Separate code declarations from installed configuration and observed execution.
+Answer: (as below)
+(A) Recollection / expectation: Assessment of health/readiness by external supervisors was strictly limited to OS process-level liveness, with no application-level health probing:
+    a. Code Declarations: The codebase (main.py, utils/) contained no integrations for external supervisor notifications (e.g., systemd sd_notify / Type=notify), systemd watchdog pings (WATCHDOG_USEC), or cron-based diagnostic scripts.
+    b. Installed Configuration: Host virtual machines utilized standard OS systemd service unit files (trading-system.service) to manage process execution. Systemd monitored the process solely by tracking process ID (PID) existence and process exit status codes (e.g., catching sys.exit(1)).
+    c. Observed Execution: Neither systemd, cron, nor any third-party monitoring agent (e.g., Datadog, Prometheus, Nagios) evaluated internal application readiness, WebSocket tick freshness, SQLite health, or order reconciliation state.
+
+(B) What you observed and when:
+    a. Observed during host VM deployment setup, service configuration, and live operational sessions (2026).
+    b. Operators inspected process state via standard Linux utilities (systemctl status trading-system or ps aux | grep main.py).
+    c. When main.py aborted during pre-flight startup checks due to an expired access token, systemd observed a non-zero exit code and marked the service status as FAILED (Result: exit-code, status=1).
+    d. During mid-session WebSocket network disconnections where main.py remained alive and retried connections internally, systemd evaluated the service as continuously active (running), unaware of internal feed degradation.
+
+(C) Source / record you believe may support it:
+    a. Governance record docs/agenda/b-001_vm-service-startup/B-001_manual.md (defining VM service startup guidelines and systemd unit invocation).
+    b. main.py in trading-system-prod-snapshot (absence of systemd protocol bindings or external health exporter libraries).
+    c. Deployment unit configuration files (/etc/systemd/system/trading-system.service).
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether cloud provider infrastructure metrics (e.g., AWS CloudWatch or Azure VM metrics tracking CPU/memory usage) were enabled at the hypervisor level independently of the application.
+    b. It is uncertain whether the host systemd unit file specified Restart=on-failure (triggering automatic restart loops upon startup abort) or Restart=no (requiring manual operator intervention after a failure).
+
+Q23. Could a worker be alive but unhealthy (e.g. connected but no fresh ticks)? Were worker and overall health distinct?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Worker alive but unhealthy: Yes. A worker thread could easily remain active and running in memory while in a functionally degraded or unhealthy state:
+         - LiveFeedManager: The WebSocket transport thread could maintain an open TCP/socket connection (_is_connected = True), but cease receiving fresh market ticks due to upstream exchange quiet periods, pre-market setup windows, or silent transport hangs.
+         - OrderReconciler: The reconciliation background thread could continuously execute its sleep loop while throwing non-fatal exceptions every cycle due to transient Zerodha REST API 5xx errors or SQLite database write-lock contention (database is locked).
+     b. Distinctness of Worker vs. Overall Health: Worker health and overall health were not distinct managed entities because an "overall system health" object or state machine did not exist. Overall system health was merely the uncoordinated aggregate of individual worker threads. A single worker thread could be degraded or stalled without any top-level supervisor updating a global health register or declaring the system "UNHEALTHY".
+
+(B) What you observed and when:
+    a. Observed during pre-market initialization (08:50 to 09:14 AM IST) and intraday network test runs across 2026.
+    b. During pre-market setup, LiveFeedManager's thread was fully alive and connected, but zero ticks arrived prior to 09:15 AM. The strategy engine waited passively for data without the main process marking itself as stale or unhealthy.
+    c. During transient REST API timeouts, OrderReconciler repeatedly caught exceptions inside its internal try...except loop and logged stack traces, keeping the worker thread alive while its reconciliation function was temporarily non-operational.
+
+(C) Source / record you believe may support it:
+    a. data/live_feed.py in trading-system-prod-snapshot (tracking WebSocket transport connection independently of tick staleness timers).
+    b. orders/order_reconciler.py (loop structure catching REST and SQLite exceptions to keep the thread alive).
+    c. main.py (absence of a global health monitor, thread supervisor, or overall status aggregator).
+    d. Governance records: B-001_manual.md, B-003_manual.md, B-006 audit answer set, and B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope.
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether individual strategy candle aggregators implemented an internal wall-clock timeout (e.g., flagging feed staleness if now() - last_tick_timestamp > 15s during active market hours) to suppress signal generation during a silent socket freeze.
+    b. Code inspection in data/live_feed.py is needed to verify whether the underlying KiteTicker library's automatic ping/pong ping-interval timer was configured to forcefully drop and reconnect silent sockets.
+
+SECTION 5 — OBSERVABILITY / INCIDENTS / TESTS
+Q24. Where were health events logged/recorded (file, journal, DB, alert, dashboard, console)?
+Answer: (as below)
+(A) Recollection / expectation: Health events and operational status were recorded across three primary local channels (console, log files, systemd journal) and partially in the local SQLite database, with zero external alert or dashboard targets:
+    a. Console / Standard Output (stdout / stderr): Real-time stream where all startup check outcomes, thread state changes, WebSocket connection events, and unhandled stack traces were printed directly.
+    b. Local Log Files (file): Managed via standard Python logging handlers, directing formatted log statements into rotated text log files stored under the logs/ directory (e.g., logs/trading.log).
+    c. Systemd Journal (journal): Because main.py was executed as an OS-level service (trading-system.service), systemd automatically captured stdout and stderr streams into journald logs, viewable via journalctl.
+    d. SQLite Database (DB): Audit-specific health events—such as position drift checks, order state reconciliations, and discrepancy records—were written into database tables (e.g., reconciliation_log) via StateStore. Raw worker heartbeats or transport debug logs were not stored in SQLite.
+    e. Alerts / Dashboards / UI: None. No external push alerts (Telegram, Slack, PagerDuty), web dashboards, HTTP telemetry endpoints, or metric aggregators (Grafana, Prometheus) existed.
+
+(B) What you observed and when:
+    a. Observed during operational deployments, pre-market startup routines, and intraday troubleshooting sessions (2026).
+    b. Operators verified system health and component status exclusively by tailing application log files (tail -f logs/trading.log) or querying systemd logs (journalctl -u trading-system.service -f).
+    c. Manual SQL queries (SELECT * FROM reconciliation_log ORDER BY timestamp DESC LIMIT 10;) were used to inspect periodic reconciliation audit records and confirm zero position drift.
+
+(C) Source / record you believe may support it:
+    a. main.py and utils/logger.py in trading-system-prod-snapshot (configuring StreamHandler and FileHandler logging pipelines).
+    b. core/state_store.py (defining schema and insert queries for reconciliation_log and state transition tables).
+    c. /etc/systemd/system/trading-system.service (systemd unit configuration capturing stdout/stderr).
+    d. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md (log paths and systemd setup) and docs/agenda/b-003_database-state-initialization/B-003_manual.md.
+
+(D) Uncertainty / conflict:
+   a. It is uncertain whether log file rotation was handled internally by Python's RotatingFileHandler / TimedRotatingFileHandler or offloaded to the Linux host utility logrotate.
+   b. It is uncertain whether severe reconciliation discrepancies wrote to a separate dedicated error log file (e.g., logs/error.log) in addition to logs/trading.log.
+
+Q25. Any specific incident? Provide date/time, environment, mode, symptom and consequence; recollection remains historical until corroborated.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Incident 1: Pre-Market Token Authentication Abort
+         - Date / Time: Pre-market startup sequence (approx. 08:55 AM IST), operational testing period (2026).
+         - Environment: Production VM (trading-system-prod-snapshot).
+         - Mode: "LIVE".
+         - Symptom: Pre-flight broker authentication check failed during ZerodhaAdapter initialization due to an unrefreshed or expired daily access token, returning an HTTP 403 / TokenException.
+         - Consequence: main.py enforced its blocking fail-fast policy, logged a critical error, and exited immediately (sys.exit(1)). Background worker threads (LiveFeedManager, OrderReconciler) were never spawned, preventing unauthenticated or orphaned execution. The operator was required to run scripts/generate_token.py manually and restart main.py.
+
+    b. Incident 2: Intraday Mid-Session WebSocket Feed Disconnection
+         - Date / Time: Intraday active market window (approx. 11:15 AM IST), operational testing period (2026).
+         - Environment: Production VM (trading-system-prod-snapshot).
+         - Mode: "LIVE".
+         - Symptom: Transport-level network drop caused LiveFeedManager (KiteTicker) to lose WebSocket connectivity, triggering on_close and on_error callbacks.
+         - Consequence: Strategy candle aggregation stalled immediately due to missing tick events, preventing new trade signal generation (entry suppression). Open option positions remained intact and protected by their exchange-resting stop-loss orders on Zerodha OMS. LiveFeedManager executed automated backoff reconnection attempts and successfully restored tick flow without process termination or manual intervention.
+
+(B) What you observed and when:
+    a. Observed during pre-market deployment runs and intraday resilience test sessions across 2026.
+    b. For Incident 1: logs/trading.log and standard output recorded [CRITICAL] Broker authentication failed: Invalid token / Session expired followed by immediate process exit. Systemd recorded service failure (Result: exit-code, status=1).
+    c. For Incident 2: Terminal logs displayed [WARNING] WebSocket connection lost. Reconnecting in 2s... followed by [INFO] WebSocket reconnected. Resubscribing to tokens.... Position state in state.db and active broker order status remained consistent before and after the reconnection.
+
+(C) Source / record you believe may support it:
+     a. Application log files: logs/trading.log in trading-system-prod-snapshot.
+     b. Host service logs: journalctl -u trading-system.service on the production host VM.
+     c. Database audit tables: reconciliation_log in core/state.db.
+     d. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md (startup fail-fast rules) and docs/agenda/b-004_broker-connection/B-004_manual.md (token lifecycle).
+
+(D) Uncertainty / conflict:
+    a. Precise microsecond log timestamps for these specific historical instances require direct inspection of archived log files in logs/.
+    b. Sandbox environments (trading-system-sbx-snapshot) used synthetic mock adapters and did not reproduce TokenException aborts or live WebSocket transport disconnects.
+
+Q26. Any false positive/negative, delayed alert, stale status, missing check, or check that did not reflect actual trading capability?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Stale Status / False Positive Readiness: Transport-level socket connection state (_is_connected == True) served as a proxy for feed health. During silent socket hangs or pre-market idle windows (08:50–09:14 AM IST), the system reported the market feed as connected and operational despite zero incoming ticks, masking potential data pipeline freezes until trade execution attempted.
+     b. Check Not Reflecting Actual Execution Capability: Pre-flight broker usability was inferred purely from REST profile and margin queries (get_margins(), get_profile()). The system never issued a dummy order or dry-run probe to Zerodha OMS, meaning broker-side order submission blocks, token-specific margin shortages, or OMS rate-limit locks were only exposed when an actual trade signal attempted execution.
+     c. Missing Checks & Architectural Blind Spots:
+         - Global Tick Staleness Watchdog: Absence of a master monitor evaluating now() - last_tick_timestamp > threshold across subscribed tokens.
+         - Worker Thread Supervisor: main.py lacked proactive background thread liveness auditing (thread.is_alive()), meaning a crashed worker thread could leave the monolith partially blind without triggering a process-level reboot.
+         - Queue Depth / Consumer Lag: No telemetry or checks existed to detect internal processing lag between WebSocket tick ingestion and strategy candle aggregation queues.
+     d. Delayed Telemetry: OrderReconciler operated on a 30–60 second periodic polling cycle, meaning manual broker portal interventions or order drift could remain undetected locally for up to one full minute. Furthermore, because alerting relied on local log files (logs/trading.log), failures were delayed until an operator actively inspected standard output or log streams.
+
+ (B) What you observed and when:
+      a. Observed during pre-market startup sessions, intraday resilience tests, and codebase audits (2026).
+      b. During pre-market launch at 08:50 AM IST, LiveFeedManager reported a healthy, connected socket state for 25 minutes prior to 09:15 AM IST without receiving a single tick update, demonstrating the disconnect between worker liveness and functional data readiness.
+      c. During manual order testing on the Zerodha Kite web interface, local state.db records lagged by up to 60 seconds before OrderReconciler detected the manual position/order changes and updated local tables.
+
+ (C) Source / record you believe may support it:
+      a. data/live_feed.py in trading-system-prod-snapshot (connection boolean flags lacking wall-clock tick staleness timers).
+      b. broker/zerodha_adapter.py (pre-flight checks restricted to REST reads without OMS order probes).
+      c. orders/order_reconciler.py (fixed 30–60s polling loop sleep interval).
+      d. Governance record docs/agenda/b-007_readiness-health/B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt working scope (explicitly identifying worker liveness vs. functional readiness as a primary system blind spot).
+
+ (D) Uncertainty / conflict:
+      a. It is uncertain whether individual strategy candle aggregators implemented localized tick timestamp assertions (e.g., rejecting ticks older than 10 seconds) during intraday bar construction.
+      b. It is uncertain whether host-level log parsing scripts (e.g., custom shell scripts watching logs/trading.log for [CRITICAL]) were ever attached externally to bridge the push-notification gap.
+
+Q27. What testing evidence exists (tests, logs, screenshots, runbooks)? Artifact/date if known; test does not prove production runtime.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Testing and operational evidence existed across four distinct artifact categories:
+         - Automated Unit / Integration Tests: Pytest suites in the tests/ directory covering SQLite StateStore schema initialization, candle aggregation math, token resolution logic, and mock broker adapter interactions (primarily in trading-system-sbx-snapshot).
+         - Runtime Log Artifacts: Rotated text logs (logs/trading.log) capturing pre-flight startup checks, KiteTicker WebSocket connection events, token resubscription calls, and OrderReconciler audit outputs.
+         - Operational Runbooks & Governance Manuals: Detailed Markdown step-by-step procedures (docs/agenda/B-001_manual.md through B-007_manual.md) defining manual token generation (generate_token.py), systemd service instantiation, database state reset, and manual error recovery steps.
+         - Audit Verification Documents: Dated readiness and health audit working sheets (e.g., B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt) documenting code inspection results and architectural readiness gaps.
+    b. Boundary Note: Automated unit tests and mock-sandbox passes verified code syntax and component logic, but did not guarantee live production runtime stability (e.g., live broker OMS behavior, real market tick feeds, or cloud VM network drops).
+
+(B) What you observed and when:
+    a. Observed during systematic codebase reviews and operational testing runs leading up to October 2026.
+    b. Executing pytest tests/ validated internal helper functions, SQL query syntax, and mock order workflows without interacting with Zerodha's live REST or WebSocket endpoints.
+    c. Running operational startup sequences produced real-time log entries in logs/trading.log verifying that pre-flight checks executed successfully prior to worker launch.
+    d. Governance manuals provided step-by-step instructions for human operators to inspect systemctl status trading-system.service and review journalctl logs during deployment.
+
+(C) Source / record you believe may support it:
+    a. tests/ test suite in trading-system-prod-snapshot and trading-system-sbx-snapshot.
+    b. logs/trading.log (execution log outputs).
+    c. Governance manuals: docs/agenda/b-001_vm-service-startup/B-001_manual.md through b-007_readiness-health/B-007_manual.md.
+    d. Audit working sheet: docs/agenda/b-007_readiness-health/B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt (dated October 16, 2026).
+
+ (D) Uncertainty / conflict:
+     a. It is uncertain whether automated end-to-end (E2E) integration tests existed that simulated live broker network failures or simulated WebSocket transport drops in real time against the production codebase.
+     b. No visual UI screenshots or automated browser test artifacts were stored in the source repository, as the system operated strictly without a web frontend or GUI dashboard.
+
+SECTION 6 — ENVIRONMENT / AGENDA INTERACTIONS
+Q28. Differences between production and sandbox readiness/health, if known? Do not assume parity.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Significant architectural and operational divergence existed between production (trading-system-prod-snapshot) and sandbox (trading-system-sbx-snapshot) readiness and health mechanisms:
+        - Broker Authentication & OMS Path: Production enforced strict live Zerodha Kite Connect REST checks, requiring daily OAuth access token validation and live margin queries (get_margins()). Sandbox utilized mock broker adapters/stubs (mock_adapter.py), completely bypassing OAuth token checks, live REST network calls, and broker OMS rate limits.
+        - Market Data Feed Health: Production connected to live Zerodha KiteTicker WebSockets for real-time exchange ticks, experiencing real-world socket drops and pre-market idle windows. Sandbox utilized synthetic tick generators, historical CSV playback, or simulated tick loops, eliminating transport-layer network drops and exchange tick stalls.
+        - Order Reconciliation & State Store: Production reconciled SQLite state.db against live Zerodha order books to ensure exchange-resting stop-loss orders remained active on the broker OMS. Sandbox reconciled against local mock fill engines, assuming instantaneous order execution without modeling real-world partial fills, exchange latency, or broker rejections.
+        - Startup Fail-Fast Gating: Production aborted immediately (sys.exit(1)) on stale access tokens or database access errors. Sandbox pre-flight checks passed unconditionally using local mock dependencies and stubbed credentials.
+
+(B) What you observed and when:
+    a. Observed during systematic codebase comparisons and test environment runs (2026).
+    b. Booting trading-system-sbx-snapshot without internet connectivity or valid Zerodha credentials succeeded completely, whereas trading-system-prod-snapshot failed immediately during pre-flight broker authentication.
+    c. Sandbox testing validated local order logic, PnL math, and strategy bar construction, but failed to test live operational hazards such as daily token expiration, Zerodha REST API 5xx errors, or live WebSocket reconnect timing.
+
+(C) Source / record you believe may support it:
+    a. broker/zerodha_adapter.py (production) vs. broker/mock_adapter.py (sandbox) in trading-system-prod-snapshot and trading-system-sbx-snapshot.
+    b. data/live_feed.py (live WebSocket) vs. mock data feed modules in tests/ and sandbox paths.
+    c. Governance manuals: docs/agenda/b-004_broker-connection/B-004_manual.md and docs/agenda/b-005_database-state-initialization/B-005_manual.md.
+
+(D) Uncertainty / conflict: It is uncertain whether the sandbox environment supported a hybrid "Paper-on-Live-Data" mode (connecting to live Zerodha WebSockets while directing execution to mock order adapters), or if sandbox execution was entirely isolated from live Zerodha servers.
+
+Q29. Differences between paper and live checks/thresholds, if known?
+Answer: (as below)
+(A) Recollection / expectation:
+    a. Paper mode (TRADING_MODE="PAPER") and Live mode (TRADING_MODE="LIVE") shared identical market data feeds (LiveFeedManager / KiteTicker), database initialization, and strategy calculation loops, but diverged in outbound execution checks, margin threshold validations, and reconciliation paths:
+     - Broker Authentication & Profile Checks: Both modes connected to Zerodha for live tick ingestion. However, Live mode strictly enforced pre-flight account margin verification (get_margins()) and live broker risk checks. Paper mode bypassed live margin balance checks, assuming sufficient simulated capital.
+     - Order Placement & Execution Thresholds: Live mode validated order payloads against Zerodha OMS restrictions, exchange freeze limits, and live available margin thresholds before dispatching orders via REST API. Paper mode routed orders to a local simulation handler that matched orders against live market ticks (LTP) without checking live broker OMS limits or margin availability.
+     - Stop-Loss & Order Reconciliation: Live mode placed exchange-resting stop-loss orders directly on Zerodha OMS and audited state.db against Zerodha's REST order book (get_orders()). Paper mode managed simulated stop-loss triggers entirely inside local memory/SQLite without placing broker-side orders or reconciling with Zerodha OMS state.
+     - Tick & Health Thresholds: Network timeouts, WebSocket auto-reconnect backoff intervals, and SQLite database busy timeouts (PRAGMA busy_timeout = 5000;) remained identical across both modes.
+
+(B) What you observed and when:
+     a. Observed during operational mode testing and strategy validation runs across 2026.
+     b. When TRADING_MODE="PAPER" was configured, main.py logged Running in PAPER mode - live execution disabled, but still initiated live WebSocket connections to ingest real-time market data.
+     c. Toggling to TRADING_MODE="LIVE" enabled strict pre-flight margin checks and live REST order submission, while leaving tick reception cadence and strategy bar aggregation logic unchanged.
+
+(C) Source / record you believe may support it:
+    a. main.py and config/ in trading-system-prod-snapshot (evaluating TRADING_MODE and instantiating live vs. paper execution handlers).
+    b. broker/zerodha_adapter.py (live REST client) vs. simulated execution methods in orders/.
+    c. Governance records: docs/agenda/b-001_vm-service-startup/B-001_manual.md and docs/agenda/b-004_broker-connection/B-004_manual.md.
+
+(D) Uncertainty / conflict:
+    a. It is uncertain whether Paper mode incorporated simulated fill latency or order slippage models, or if paper orders were filled instantly at the current tick price (LTP).
+    b. It is uncertain whether daily account-level loss threshold guards (if enabled) evaluated simulated PnL in Paper mode or applied exclusively to Live mode account balances.
+
+Q30. How did readiness relate to B-005 startup reconciliation and B-006 worker initialization, as you recall? Keep tentative; unified sequence is not yet verified.
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Tentatively, startup state reconciliation (B-005) acted as a strict gating pre-condition for worker initialization (B-006) and overall system readiness:
+         - Step 1: Pre-Flight Environment & Auth Checks (B-001 / B-004): Validated config, SQLite state.db file locks, and Zerodha REST API credentials.
+         - Step 2: Startup State Reconciliation (B-005): Before spawning trading loops, main.py loaded state.db and queried Zerodha's REST endpoints (get_orders(), get_positions()) to reconcile local state against broker ground truth. It verified that exchange-resting stop-loss orders were active and re-linked orphaned order IDs. System readiness was blocked if state reconciliation failed.
+         - Step 3: Worker Initialization (B-006): Once state was verified and reconciled, main.py instantiated and launched worker threads—LiveFeedManager (WebSocket transport), OrderReconciler (periodic auditing thread), and strategy candle aggregators.
+         - Step 4: Functional Readiness: System was considered ready for active trading once workers were initialized and the first live market ticks were received.
+
+(B) What you observed and when:
+     a. Observed during pre-market deployment runs and post-crash restart simulations (2026).
+     b. Startup console logs consistently printed database state sync messages (e.g., [INFO] Reconciling state with Zerodha OMS... and [INFO] Database state reconciled) prior to logging worker instantiation (e.g., [INFO] Starting LiveFeedManager WebSocket worker...).
+     c. If Zerodha REST queries failed during the B-005 reconciliation phase, main.py aborted execution (sys.exit(1)), preventing B-006 background worker threads from spawning.
+
+(C) Source / record you believe may support it:
+     a. main.py in trading-system-prod-snapshot (top-level execution flow enforcing sequential boot steps).
+     b. core/state_store.py and orders/order_reconciler.py (reconciliation methods invoked during boot).
+     c. Governance manuals: docs/agenda/b-005_database-state-initialization/B-005_manual.md, docs/agenda/b-006_worker-initialization/B-006_manual.md, and working audit sheet B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt.
+
+(D) Uncertainty / conflict:
+     a. Tentative sequence: It is uncertain whether B-005 startup reconciliation executed as a synchronous, blocking function call on the main thread prior to spawning OrderReconciler as a periodic background thread, or if OrderReconciler performed both boot-time sync and loop execution within its own thread.
+     b. It is uncertain whether LiveFeedManager socket connection was initiated in parallel with B-005 state reconciliation or strictly after B-005 finished.
+
+Q31. Was market-open/market-hours gating (later B-008) separate from system readiness? What did each control?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Yes, market-hours gating (B-008) was functionally and architecturally separate from system readiness (B-007):
+         - System Readiness (B-007): Controlled host process lifecycle and infrastructure validity. It verified environment configuration, SQLite database state integrity (B-005), Zerodha REST OAuth authentication (B-004), instrument token master resolution, and worker thread instantiation (B-006). It determined whether the application was safe, connected, and structurally ready to run.
+         - Market-Hours Gating (B-008): Controlled downstream trading execution logic based on wall-clock exchange schedules (e.g., 09:15 AM to 03:30 PM IST). It governed whether strategy engines were allowed to build candles, evaluate entry/exit signals, or dispatch orders to Zerodha OMS.
+     b. System readiness could be fully achieved pre-market (e.g., at 08:50 AM IST) while market-hours gating remained active to suppress strategy entry evaluation until market open.
+
+(B) What you observed and when:
+     a. Observed during pre-market deployment runs and operational test sequences across 2026.
+     b. Executing main.py at 08:50 AM IST passed all pre-flight checks, reconciled database state, connected LiveFeedManager to WebSockets, and logged the system as initialized and ready.
+     c. Despite full system readiness, strategy loops remained idle or in a signal-blocked state until 09:15 AM IST, preventing off-market order submissions or invalid candle aggregation during pre-market quiet/volatility windows.
+
+(C) Source / record you believe may support it:
+     a. main.py in trading-system-prod-snapshot (boot sequence executing pre-flight checks independently of exchange operating hours).
+     b. Strategy execution engines in strategies/ and time utilities in utils/ (evaluating market-hours schedule windows prior to signal processing).
+     c. Governance manuals: docs/agenda/b-001_vm-service-startup/B-001_manual.md, docs/agenda/b-007_readiness-health/B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt, and B-008 governance scope.
+
+(D) Uncertainty / conflict:
+     a. It is uncertain whether market-hours gating was enforced inside individual strategy tick/candle handlers or through a top-level market schedule guard wrapping the signal dispatch pipeline.
+     b. It is uncertain whether pre-market order adjustments or tick logging were allowed during the 09:00 AM – 09:15 AM IST pre-open window while strategy entry generation remained explicitly locked out.
+
+SECTION 7 — SOURCE LEADS / GAPS
+Q32. Which source files/functions/configs/records/service definitions/cron entries/screenshots should be checked? These are leads, not proof.
+Answer: (as below)
+ (A) Recollection / expectation:
+      a. To resolve remaining uncertainties and verify architectural mechanisms across Sections 1 through 6, the following specific code, configuration, service, and documentation leads should be inspected:
+          - Core Orchestrator & Boot Logic: main.py (top-level execution flow, sys.exit(1) fail-fast calls, worker thread instantiation sequence, and exception handling wrappers).
+          - Startup Checks: utils/startup_checks.py or core/startup.py (pre-flight validation functions for environment variables, database file locks, token validity, and instrument token master resolution).
+          - WebSocket Feed & Staleness: data/live_feed.py (LiveFeedManager class, KiteTicker callback handlers on_connect, on_close, on_error, on_ticks, auto-reconnect delay parameters, and socket connection state flags).
+          - Order Reconciliation & Drift Audit: orders/order_reconciler.py (periodic audit loop sleep cadence, exception suppression logic, position drift logging, and interaction with Zerodha REST endpoints).
+          - Broker Integration & Auth: broker/zerodha_adapter.py (ZerodhaAdapter class, KiteConnect client initialization, HTTP request timeout constants, and TokenException handling).
+          - Database & State Storage: core/state_store.py (SQLite connection initialization, PRAGMA busy_timeout setup, schema definitions, and insert/update routines for reconciliation_log).
+          - Configuration Files: config/ directory files (settings.py, config.yaml, or .env files defining TRADING_MODE, ALLOW_NEW_ENTRIES, API keys, and retry/polling intervals).
+          - OS Service & Cron Definitions: /etc/systemd/system/trading-system.service (checking Restart=on-failure vs. Restart=no policies and EnvironmentFile paths) and host crontabs (/etc/cron* or user crontab for scheduled generate_token.py or log rotation jobs).
+          - Governance Records & Audit Sheets: docs/agenda/b-001_vm-service-startup/B-001_manual.md through b-008_market-hours/B-008_manual.md, and dated working sheets (B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt).
+
+(B) What you observed and when:
+     a. Observed during systematic codebase mapping and governance documentation reviews up to October 2026.
+     b. These file paths represent the core architectural touchpoints referenced across governance manuals B-001 through B-007.
+
+ (C) Source / record you believe may support it:
+     a. Repository structure of trading-system-prod-snapshot and trading-system-sbx-snapshot.
+     b. Governance document directory docs/agenda/.
+
+(D) Uncertainty / conflict: Direct source code inspection is required to confirm exact function signatures, verify whether cron entries exist on host OS instances, and validate exact configuration file naming conventions.
+
+Q33. Which answers are recollection/inference only, low confidence, or contradictory?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. Across Sections 1 through 6, several audit responses rely on inference, historical recollection, or unverified assumptions due to absence of direct line-by-line source verification:
+         - systemd Service Restart Policy (Q16, Q22): Low Confidence. The exact restart behavior defined in /etc/systemd/system/trading-system.service (Restart=on-failure vs Restart=no) is unverified from host configuration files.
+         - B-005 vs B-006 Boot Sequence (Q30): Tentative / Inference. Whether B-005 startup reconciliation executed as a blocking main-thread synchronous call prior to spawning worker threads or ran internally inside the OrderReconciler background thread remains unverified.
+         - Explicit Tick Staleness Watchdog (Q23, Q26): Inference Only. It is inferred that no global wall-clock tick staleness timer (now() - last_tick > threshold) existed based on data/live_feed.py structure, but localized strategy-level tick timestamp checks may exist in strategies/.
+         - Explicit Global Health Flags (Q14, Q18): Uncertain / Potential Contradiction. It is unclear whether a central boolean flag (TRADING_ALLOWED = False) was dynamically mutated upon error detection or if entry blocking occurred purely as a passive side effect of missing WebSocket tick callbacks.
+         - External Log Scraper / Push Alerts (Q20, Q24, Q26): Inference Only. Absence of Telegram/Slack/Webhook code inside trading-system-prod-snapshot implies log-centric monitoring, but external host-level log parsing scripts (e.g., shell/cron watchers) cannot be ruled out without VM access.
+         - Paper Mode Slippage / Fill Execution (Q29): Inference Only. Assumed that Paper mode filled instantly at Last Traded Price (LTP) without modeling order execution latency or slippage.
+
+(B) What you observed and when:
+    a. Observed during systematic synthesis of answers Q1 through Q32 and comparison against governance working sheets (e.g., B-007_READINESS_HEALTH_ANSWER_SHEET_16-OCT-2026.txt) as of October 2026.
+    b. These points represent known analytical gaps where recollection of runtime behavior and governance manuals requires direct source code and host environment corroboration.
+
+(C) Source / record you believe may support it:
+    a. /etc/systemd/system/trading-system.service (to verify OS service restart policies).
+    b. main.py in trading-system-prod-snapshot (to verify exact call sequence between B-005 state reconciliation and B-006 thread creation).
+    c. data/live_feed.py and strategies/ execution logic (to verify presence or absence of explicit tick staleness timers).
+    d. orders/order_reconciler.py (to confirm exception handling loops and consecutive error limits).
+
+(D) Uncertainty / conflict: The primary contradiction across the audit lies between Worker Liveness and Functional Data Readiness: transport-level socket connectivity (_is_connected == True) was reported as healthy even during silent feed stalls or pre-market quiet windows, masking true data pipeline availability.
+
+Q34. What might be missing from this questionnaire?
+Answer: (as below)
+(A) Recollection / expectation:
+     a. While Q1 through Q33 comprehensively covered bootstrap gating, worker liveness vs. readiness, order protection, and status propagation, several critical operational, risk, and infrastructural domains were omitted:
+       - Clock Synchronization & Time Skew: Validation of host VM NTP/Chrony time synchronization against exchange/Zerodha server clocks. In automated option trading, clock drift can corrupt candle bar boundary generation or cause order timestamp mismatches.
+       - Concurrency, Lock Contention & Thread Safety: Multi-threaded access safety across LiveFeedManager, OrderReconciler, and strategy threads writing to shared SQLite database connections (state.db) or mutating shared in-memory objects.
+       - Resource Leaks & Long-Running Exhaustion: Monitoring for memory leaks (e.g., unbounded accumulation of tick history or candle DataFrames in memory during 7+ hour market sessions), file descriptor leaks (unclosed sockets), and disk exhaustion from unrotated log files or SQLite write-ahead log (WAL) growth.
+       - Broker API Rate-Limiting & HTTP Quota Throttling: Explicit handling of Zerodha Kite Connect REST API rate limits (e.g., 3 requests/sec for order placement, 1 request/sec for historical data) and handling of HTTP 429 Too Many Requests status codes during burst order execution.
+       - Partial Feed / Partial Instrument Failure: Behavior when 1 out of N subscribed instrument tokens stops receiving ticks or is suspended by the exchange mid-day while all other tokens continue receiving data normally.
+       - Host-Level Disaster Recovery & Infrastructure Failover: Protocols for handling total cloud VM host failure, kernel panics, network interface card drops, or secondary failover instance orchestration.
+
+(B) What you observed and when:
+     a. Observed during systematic architectural analysis, multi-hour runtime tests, and stress testing sessions across 2024–2026.
+     b. SQLite database is locked errors occurred when multiple threads or utility scripts attempted concurrent writes to state.db, highlighting that thread-concurrency boundaries were an active operational vulnerability.
+     c. Strategy tick buffers accumulated data continuously throughout the trading day, demonstrating that long-term memory profiling was necessary for continuous multi-day stability.
+
+(C) Source / record you believe may support it:
+     a. core/state_store.py in trading-system-prod-snapshot (SQLite concurrency settings and connection management).
+     b. broker/zerodha_adapter.py (presence or absence of outbound REST rate-limiting/throttling queues).
+     c. data/live_feed.py (token-level tick mapping arrays and multi-token processing loops).
+     d. Host OS configuration (/etc/chrony.conf or /etc/ntp.conf for server time sync).
+     e. Zerodha Kite Connect API official rate-limiting specifications.
+
+(D) Uncertainty / conflict:
+     a. It is uncertain whether host VM time synchronization was actively monitored by host-level monitoring agents or left entirely to cloud hypervisor defaults.
+     b. It is uncertain whether ZerodhaAdapter contained an internal token bucket or sleep throttle to prevent API rate-limit violations during automated batch order cancellations or multi-leg strategy exits.
+
+FINAL CHECK
+Do not promote expectation to fact, decide V2 design, or merge B-005 into B-007. Return the completed sheet. Next step: independent source/record reconciliation, then cautious B-007 reconciliation.txt and detailed Manual.md draft for review; no automatic freeze.
+
+1. Yes, All of the above answers which is originally prepared by Google Gemini ai only, So while using/analysing/designing/implementing please make pre-check the answers again against relevant things or GitHub repo etc for correctness or confirmation of the state/answers [Be Cautious or Safe Play]
+ 2. Treat all of the above my above answers (actually Gemini ai answers) as a torchlight in a dark night only, So don't just blindly stick to it (Meaning Not conclusive or 100% decision or Not a limiting factor for you guys [ChatGPT & Claude] to go beyond for analysing/reviewing/suggesting something else [In one word: Don't just stick to my answers basis 'only')
+ 3. Wherever 'ChatGPT' mentioned which is also applied to 'Claude' too [meaning ChatGPT= ChatGPT & Claude]
+ 4. How Google Gemini ai answered or prepared above answers? I'll upload the ChatGPT file B-005 to Gemini then he prepares someway which I don't know (May be checking with GitHub which can't be sure)
+
