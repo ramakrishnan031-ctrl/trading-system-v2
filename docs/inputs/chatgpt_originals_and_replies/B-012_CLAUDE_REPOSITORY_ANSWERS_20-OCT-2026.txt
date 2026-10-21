@@ -1,0 +1,327 @@
+B-012 RESTART AND RECOVERY: CLAUDE REPOSITORY ANSWERS
+Date: 20-Oct-2026 (IST)
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (all line numbers at this commit; blob IDs shortened to 8 characters)
+Method, file list, search scopes and checks: B-012_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt
+
+Labels: SOURCE = FACT (SOURCE-VERIFIED). CONFIG = FACT (CONFIG), a checked-in declaration, not proof of installation. TEST = FACT (TEST-SOURCE), read, never run. RECORD = FACT (RECORD-DERIVED), scoped to its own date and commit. INTERP = INTERPRETATION / AUDIT LEAD. DEFECT = KNOWN DEFECT. DRIFT = KNOWN DOC DRIFT. UNKNOWN = UNKNOWN / NOT ESTABLISHED. EXTERNAL = documented behaviour of a third-party tool, not verified here.
+
+Frozen chapters already settle much of this topic. This file cites them instead of restating them, and verifies the cited points at the source where B-012 depends on them:
+- B-002 section 6 is the authoritative exit-code matrix (rows M1 to M37) and supervisor legend.
+- B-001 sections 6 to 10 cover the units, the token watcher, supervision drift and host boot.
+- A-011 sections 5 to 8 and 14 cover start-up scenarios, kill states and HALT.
+- B-003 covers the database, WAL, backups and the drill schedule; B-004 the token and broker connection; B-005 the startup reconcile (rows SR1 to SR21, W1 to W9); B-007 readiness, the liveness probe and the pre-flight; B-011 shutdown.
+No contradiction with a frozen chapter was found (section H4, B12-R0).
+
+======================================================================
+I1. STATUS TABLE (every ID once)
+======================================================================
+| ID | Verdict | Status |
+|---|---|---|
+| B12-A1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-A2 | ESTABLISHED | SOURCE-ANSWERED (inventory file) |
+| B12-A3 | ESTABLISHED | SOURCE-ANSWERED (inventory file) |
+| B12-B1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-B2 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-B3 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-B4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-B5 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-B6 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-C1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-C2 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-C3 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-D1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-D2 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-D3 | ESTABLISHED | SOURCE-ANSWERED (B-002 M10 to M13, B-004) |
+| B12-D4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-D5 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-E1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-E2 | ESTABLISHED | SOURCE-ANSWERED (B-005) |
+| B12-E3 | ESTABLISHED | SOURCE-ANSWERED (B-005) |
+| B12-E4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-E5 | PARTLY ESTABLISHED | PARTIALLY ANSWERED (B-003, B-011) |
+| B12-E6 | ESTABLISHED | SOURCE-ANSWERED (B-005) |
+| B12-F1 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-F2 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-F3 | PARTLY ESTABLISHED | PARTIALLY ANSWERED (B-007) |
+| B12-F4 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-F5 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-G1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-G2 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-G3 | PARTLY ESTABLISHED | PARTIALLY ANSWERED |
+| B12-G4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H1 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H2 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H3 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H5 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-H6 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-I1 | ESTABLISHED | SOURCE-ANSWERED (this table) |
+| B12-I2 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-I3 | ESTABLISHED | SOURCE-ANSWERED (inventory file) |
+| B12-I4 | ESTABLISHED | SOURCE-ANSWERED |
+| B12-I5 | ESTABLISHED | SOURCE-ANSWERED |
+Count: 43 (A3, B6, C3, D5, E6, F5, G4, H6, I5).
+
+======================================================================
+A. BASELINE AND SCOPE
+======================================================================
+B12-A1. ESTABLISHED. The pinned commit exists in the existing production clone (HEAD = 970aabf; commit metadata of that commit only). Only the production snapshot was used. No other repository or ref was opened for B-012. Tree inventory: the saved `git ls-tree -r` listing of 970aabf made at the start of this project's research (no new tree-wide command). This is a selected-path audit, not a full repository audit.
+B12-A2, B12-A3. In the inventory file (sections 2 to 7).
+
+======================================================================
+B. SUPERVISION AND RESTART POLICY
+======================================================================
+B12-B1. ESTABLISHED. CONFIG, deploy/systemd/trading-system.service (3d97c92c), 50 lines.
+- [Unit] After= and Wants= network-online.target (3-4).
+- [Service] Type=simple; User/Group are a named service user (8-9).
+- WorkingDirectory: the project folder (10).
+- Environment: PATH set (11) and one flag variable (12, masked).
+- EnvironmentFile: the project's .env (13; values not read).
+- ExecStart: the venv's Python running main.py --mode live (18-19); StandardInput=null (20).
+- KillSignal=SIGINT (24), TimeoutStopSec=30 (25), Restart=on-failure (33), RestartSec=10 (34), RestartPreventExitStatus=3 4 5 (35).
+- Journal output (38-40); hardening NoNewPrivileges, ProtectSystem=full, PrivateTmp=true (43-46).
+- [Install] WantedBy=multi-user.target (48-49).
+- No StartLimit setting in the unit; under systemd's defaults the 10 s RestartSec keeps restarts below the default start-limit rate (EXTERNAL; B-002 legend calls this an audit lead).
+- Installed state: UNKNOWN at the end; dated drift records in B-001 section 9 (the prevent list read "3 4" on the VM on 05-Jul and 28-Jul).
+
+B12-B2. ESTABLISHED. SOURCE, main.py (445fb0d8). Authoritative row-by-row matrix: B-002 section 6 (M1 to M37). Verified return sites at 970aabf:
+| Condition | Code | Source | Unit (3 4 5 prevented) | Token watcher (deploy/token_watcher.sh) |
+|---|---|---|---|---|
+| --version; holiday/weekend; outside start window; --status; passing --dry-run; clean end of session (B-011) | 0 | 2096; 2101-2150; 2157-2176; 2299-2302; 2476-2482; 4278 | Not restarted | Inactive, exit dated today: no start that day; earlier day: start if token fresh and hour 08-15 |
+| Bad CLI argument (argparse) | 5 | 2089-2092 | Not restarted | Unit "failed": crash branch, up to 3 starts per rolling hour |
+| Config load failure | 5 | 2197-2201 | Not restarted | As above |
+| Instance lock refused | 1 | 2183-2186 | Restarted every 10 s | Sees "activating": waits |
+| StateStore refuses a pending migration while the market is open (raised, not caught in main) | 1 or 2 via wrapper | 2233-2237; 4288-4293 (B-003) | Restarted | Waits |
+| HALT without --resume | 4 | 2283-2290 | Not restarted | Exited today: no start, one Telegram a day; earlier day: start if token fresh and hour 08-15 |
+| Live pre-load: FileNotFoundError (handler message names the token file) or a missing API-key variable / access_token key (KeyError) | 6 | 2364-2374 (B-002 M10, M12; a missing token file itself goes to exit 2, M11) | Restarted | Waits |
+| Live pre-load: unreadable token file (load_token returns None, TypeError) | 2 | 2362-2363 (B-002 M11) | Restarted | Waits |
+| accounts.csv load failure (paper path; live path raises earlier) | 3 | 2413-2423 (B-002 M8/M9) | Not restarted | Same-day: no start; earlier day: one start |
+| Failing --dry-run | 3 | 2482 | n/a (operator run) | - |
+| Start-up checks blocking | 3 | 2484-2502 | Not restarted | As exit 3 |
+| Non-interactive live token not valid | 6 | 2547-2552 | Restarted | Waits |
+| Broker column not zerodha | 9 | 2561-2572 | Restarted | Waits |
+| Other start-up check sites | 3 | 2778, 2825, 2889, 3443, 3465 (log lines: ef7 check, capital state inconsistent, kill switch missing in live, auditor blocks) | Not restarted | As exit 3 |
+| Return 1 at 3899 | 1 | 3899 (not traced in detail) | Restarted | Waits |
+| Uncaught TradingSystemError / other exception | 1 / 2 | 4288-4293 | Restarted | Waits |
+| SIGINT/SIGTERM | 0 (handler sets the event; clean shutdown) | 1570-1579 (B-011) | Not restarted | As exit 0 |
+| SIGKILL, OOM kill, power loss | Killed by signal / no exit | - | Restart=on-failure restarts an unclean signal death (EXTERNAL); power loss: host boot path (B-001 section 10) | Waits while activating |
+- Codes 7 and 8: no return or exit with these values found in main.py (inspected: every `return <n>` after line 2190 and main() 2085-2190).
+- DRIFT: the unit's comment block (27-32) explains 0, 1/2, 3, 4 only; 5 is only in the directive (B-001 section 5, A-011 E-1); 6 and 9 are not explained. utils/instance_lock.py docstring (7-10) still says the prevent list is "3 4" (B-001 section 14 item 9).
+- 2552 returns 6 without store.close(), unlike its neighbours (SOURCE; effect: process exit closes the connection; INTERP).
+
+B12-B3. PARTLY ESTABLISHED. Search: every checked-out .py and .sh outside tests/ for "systemctl" (12 files), plus all unit files and the crontab.
+| Actor | Source | Trigger | Action | Guard / failure |
+|---|---|---|---|---|
+| systemd, main unit | CONFIG unit (above) | Process exit | Restart after 10 s unless 0, 3, 4, 5 or a clean signal | No cap found in the unit |
+| systemd at host boot | CONFIG WantedBy=multi-user.target; enabled by deploy/install_vm_services.sh 29 | Host boot | Starts main.py | main.py's guards (B-001 section 10) |
+| Token watcher | deploy/token_watcher.sh (000a3769) 1-191, unit token-watcher.service (ce815bea, Restart=always, RestartSec=10, root) | Poll every 30 s | `systemctl start trading-system.service` (114-121) by the decision table 140-188 | Fresh token, hour 08-15, crash cap 3/h, exit-date rules |
+| resume.sh | deploy/resume.sh (7954c2d8) | Operator | stop, reset-failed, scripts/clear_kill_switch.py (--force for HARD_KILL), start | Exits with the clear's code without starting on failure (32-35) |
+| Installer | deploy/install_vm_services.sh (16dd4f02) | Operator | Copies three units, enables them, restarts token-watcher | Does not start trading-system (49-50) |
+| Pre-flight Phase A | scripts/preflight/checks/services.py (f73a2630) 44-46, 85-94 | Cron 08:30 Mon-Fri | `sudo -n systemctl start` for alert-watcher, token-watcher, security-watcher, cron, fail2ban, auditd when down | Never the trading service ("token-watcher owns the lifecycle", 61-63). INTERP: restarting a stopped token watcher can lead to a trading start |
+| Watchman unit | trading-watchman.service (ba988eec) BindsTo=trading-system.service | Follows main unit | Stops with it; not a starter of the main unit by BindsTo alone | B-001 section 6 on Wants= drop-in |
+| main.py self-exit | main.py 1329-1563 (B-011) | 17:35 IST, flat | Sets the shutdown event | B-011 |
+| Operator runbooks | DEPLOYMENT.md (f372bed2) 85-87, 151-160, 191, 232; docs/03_daily_operations_runbook.md (135aa048) 27, 147-148, 177-198 | Manual | status, start, restart, crontab install | Historical instructions only (F5) |
+| Liveness probe, cron officer, cron watchdog, alert watcher, monitoring canary | scripts/* | Cron / timer / loop | Read state, alert | No start/stop call found (they call systemctl show/is-active or crontab -l only) |
+- Not searched: ops_dashboard actions beyond the systemctl readers found (host_reader.py, system_health.py read-only per their headers); scripts outside the checked-out set; the records repository (out of scope).
+
+B12-B4. ESTABLISHED. CONFIG deploy/systemd/alert-watcher.service (5ebf7bc2): a --loop daemon (24-25), Restart=on-failure, RestartSec=10, StartLimitIntervalSec=300 / StartLimitBurst=5 (9-10), no After=/Requires= on trading-system. SOURCE scripts/alert_watcher.py (fa81fc72): no systemctl or subprocess restart call found. It watches alert sentinel files and emails them; it neither starts nor restarts the trading service. RECORD (unit comment): it ran as a one-pass process under Restart=always until 16-Jul with "101,570+ restarts" (5-8).
+
+B12-B5. ESTABLISHED (per supervisor; host state UNKNOWN).
+- Main unit: 0 no; 1, 2, 6, 9 yes after 10 s; 3, 4, 5 no; 7, 8 not produced by main.py.
+- Token watcher: acts only when the unit is not active or activating. Unit "failed" (prevented codes 3, 4, 5, or a start-limit stop): 4 and 3 by the exit-date rule; 5 and every other code by the crash branch (168-178: fresh token, hour 08-15, fewer than 3 starts in the last hour). Unit "inactive": exit 0 today = nothing; otherwise start if fresh token and hour 08-15 (181-187).
+- Alert watcher, liveness probe, cron officer, cron watchdog, pre-flight: no reaction to the main unit's exit code beyond reporting (pre-flight Phase B reports a down trading service; B-007).
+- Watchman: stopped with the main unit by BindsTo.
+
+B12-B6. ESTABLISHED.
+- Application, same process: auto_refresh_token network retries 3 with exponential backoff and one TOTP retry (scripts/auto_refresh_token.py 71, 181-207, 248-275); order monitor stops itself after 3 consecutive BrokerAuthError (broker/order_monitor.py 640-654) and calls the HARD_KILL callback (main.py 3006); live feed reconnects up to its max and then SOFT_KILL (data/live_feed.py 426-482).
+- Process restart: systemd every 10 s with no cap found for 1, 2, 6, 9 (INTERP: an instance-lock refusal or a mid-session migration refusal loops while its cause persists; B-001 section 7.3, B-003); token watcher capped at 3 per rolling hour (crash file in /tmp/ts_watcher_state, 105-112), then one Telegram a day and 300 s sleeps.
+- After exhaustion: the watcher keeps polling every 300 s and resumes when the hour window slides; nothing escalates further. Historical occurrence: B-001 section 8 (HALT loop before FIX-188, 18-Jun; RECORD).
+
+======================================================================
+C. INSTANCE LOCK
+======================================================================
+B12-C1. ESTABLISHED. SOURCE utils/instance_lock.py (f73345ed).
+main.py 2183 acquire_instance_lock() → layer 1: os.open of /tmp/trading-system.lock and fcntl.flock(LOCK_EX|LOCK_NB) (150-166; 88-104); PID written for messages only (168-174); fd kept open (176) → layer 2: a socket bound to loopback port 5001 and listened (178-200); a bind failure closes the socket and releases layer 1 (188-200) → main logs CRITICAL "Instance lock failed" and returns 1 (2184-2186). Release: main()'s finally calls release_instance_lock (2187-2190; 220-238), which closes the socket and unlocks/closes the fd, leaving the file in place (205-217).
+B12-C2. PARTLY ESTABLISHED.
+- SOURCE (mechanism): the kernel drops flock and reclaims the socket when the process dies by any means, so a crash, SIGKILL, OOM kill or power loss leaves no lock that blocks the next start (docstring 15-24, 91-93; release docstring 224-226). The PID in the file is informational only (no branch on it).
+- INTERP: the release in main()'s finally runs when _main_locked returns. If the non-daemon HARD_KILL flatten worker outlived B-011's 15 s drain, the process is still alive after the lock is released. A second instance started by hand in that window would not be refused. systemd and the watcher would not start one, because the unit is still active. Not tested; conditional.
+- INTERP (B-001 section 7.3): PrivateTmp=true gives the service its own /tmp, so an instance started outside the unit meets only the port layer.
+- SOURCE: check_port_available (241-257) exists but main.py does not call it (search of main.py).
+B12-C3. PARTLY ESTABLISHED.
+- TEST tests/unit/test_instance_lock.py (not run): second concurrent instance refused (139); restart after crash not blocked (150); restart after clean exit (191); live unrelated PID in file does not block (198); port conflict releases the file lock (241); stale dead PID and garbage file accepted (282, 289); release idempotent (316).
+- RECORD docs/audit/instance_lock_flake_mechanism_27jul2026.md (27-Jul-2026; branch commit d3fa5b8 named): a test-side flake from an orphaned 120 s holder child; one LATENT production finding (a second acquire in one process would strand the first fd), unreachable because main.py calls acquire once (its section 4; the record cites line numbers of its own commit).
+- RECORD (B-001 section 7.3, A-011 section 14): 18-Jun a standalone --resume competed with the service for the lock. PID reuse in production: UNKNOWN.
+
+======================================================================
+D. TOKEN AND AUTHENTICATION
+======================================================================
+B12-D1. ESTABLISHED. CONFIG deploy/cron/trading-system.cron (f8399b40), generated from config/cron_registry.yaml:
+- token_cleanup 05:00 daily: `rm -f` of the token file, then a marker in data_store/cron_marks (42-43).
+- auto_refresh_token 08:15 Mon-Fri: sources .env, runs the script, appends to logs/cron-auto-token.log, no marker (51-52). Heartbeat from the script itself (B12-D2).
+- Order: delete at 05:00, refresh at 08:15, token watcher starts the service on the first poll that sees today's token in hours 08-15.
+- Gaps visible in source: (a) 08:00 to 08:15 a host-boot start has no token (B-001 section 10, exit 2 per erratum E-2); (b) a refresh that fails leaves no token, so the watcher never starts the service and nothing retries the refresh until the next cron run (INTERP); (c) the token watcher's 08-15 hour window means a token produced after 15:59 never triggers a start.
+- DRIFT: the script's docstring says "Runs daily at 08:00 IST" (scripts/auto_refresh_token.py 6); the crontab says 08:15.
+- Configured schedule does not prove it ran.
+
+B12-D2. PARTLY ESTABLISHED. SOURCE scripts/auto_refresh_token.py (57c71f49).
+- Credentials by variable name only: account-specific names from accounts.csv first, then generic fallbacks for user ID, password, TOTP seed, API key and secret (23-30; _resolve_env 97-113).
+- Flow (9-21): login, TOTP 2FA with one retry on rejection (181-207), request-token redirect (115-151), exchange and save in the canonical format by reusing scripts/zerodha_login.py's functions.
+- run_refresh (248-275): network/HTTP errors retried 3 times with exponential backoff; _AuthError is fatal.
+- main (332-387): missing account or credentials → heartbeat FAILED, exit 1 (344-345, 366-367); a failure → heartbeat FAILED, exit 1 (380-381); success → heartbeat SUCCESS, exit 0 (386-387). Telegram INFO or CRITICAL per the docstring (32-34); _alert is best-effort (280-291).
+- _cron_main (390-415): skips non-trading days through skip_if_non_trading_day; on a calendar error it runs (fail-open).
+- No supervisor reacts to its exit code: it is a one-shot cron job. The cron officer and drift check see its heartbeat (F3). Lines 373 (an early return 0) not traced in detail.
+B12-D3. ESTABLISHED. Settled in B-002 section 6 rows M10 to M13 and B-004 (BC1 to BC6); verified here: main.py 2355-2375 (pre-load), 2544-2554 (token gate is_token_valid → 6). Module-level side effect: main.py imports scripts.zerodha_login, whose module-level load_dotenv runs in the service process (A-010 erratum E-2). Effect on restarts: exits 6 and 2 are restarted every 10 s by the unit until a valid token is present (B12-B2).
+B12-D4. ESTABLISHED.
+- Token monitor: main.py 3388-3400 wires on_expiry to kill_switch.soft_kill(reason="token_expired", triggered_by="token_monitor"); profile check every 1,800 s inside market hours (B-004 section 8). broker/token_monitor.py header: no hard_kill (13, 23). No restart or login call in it.
+- Auth flag and rename: main.py 117-172. _mark_auth_failed's only caller is _make_critical_failure_cb (657-685, line 667, when the reason contains "BrokerAuthError"). That callback's only production wiring is the live feed (2927-2932). The live feed's three reasons ("feed gap", "KiteTicker max reconnect", "tick-age watchdog"; data/live_feed.py 421-424, 476-480, 772-777) never contain "BrokerAuthError". The order monitor's auth stop is wired to the HARD_KILL callback (3006), which does not set the flag. So the rename at shutdown (1678-1679) has no trigger in the inspected path. This agrees with A-011 section 15 and A-010 erratum E-1; B-012 adds nothing new.
+- TEST tests/unit/test_fix062_token_invalidation.py and test_h11_invalidate_token_path.py call the callback and _shutdown directly; they do not prove production wiring.
+B12-D5. PARTLY ESTABLISHED.
+| Event | Next (source and declared supervisors) | Host outcome |
+|---|---|---|
+| Refresh fails (exit 1) | No token; watcher never starts the service; liveness probe from 09:00 alarms on an inactive unit with no kill set (B-007) | UNKNOWN |
+| Token missing at a start | Exit 6 or 2, restarted every 10 s until a token appears, then start (classified CRASH because the session row was written; B-001 section 10) | UNKNOWN |
+| Token from another day present | Rejected at the clock check (exit 3) or the gate (exit 6) per B-002 M13, B-004 BC5 | UNKNOWN |
+| Revoked mid-session | Token monitor → SOFT_KILL (token_expired); order monitor after 3 auth errors → HARD_KILL; process keeps running; no rename (D4) | UNKNOWN |
+| Restart the same day after either kill | detect_startup_scenario → HALT (utils/startup_checks.py 242-270) → exit 4 → not restarted; watcher: one Telegram, no start (B12-E4) | UNKNOWN |
+
+======================================================================
+E. STARTUP AFTER INTERRUPTION
+======================================================================
+B12-E1. ESTABLISHED. SOURCE main.py 2226-2314; utils/startup_checks.py 192-270 (61ff6767); A-011 section 6.
+Order: StateStore open (refuses migration while market open) → KillSwitch built → clear_stale_state (prior-day kills cleared, audited KILL_AUTO_CLEARED; capital/kill_switch.py 315-364) → auto_clear_scheduled_kill (366-420) → detect_startup_scenario: no session row = COLD; HARD_KILL = HALT; same-day SOFT_KILL = HALT; session date not today = COLD; same day with today's SHUTDOWN event = WARM, without = CRASH (writes CRASH_DETECTED, 2275-2282) → HALT exits 4 unless --resume (kill_switch.resume, 2283-2292) → config hash check (2295) → --status returns (2299-2302) → session row written early (2308-2314).
+Bypasses: --status, --dry-run, --interactive, --resume and TS_IGNORE_MARKET_WINDOW=1 skip the start-window guard (2157-2160); only --resume clears HALT. --interactive ends with NameError at the baseline (B-002 M27). The unit uses none of them.
+B12-E2. ESTABLISHED by cross-reference: B-005 sections 3 to 6 (S1 to S18, R1 to R20, SR1 to SR21). The in-flight recovery is coded but not wired (W1 to W9, A-011 E-4). Not re-derived.
+B12-E3. ESTABLISHED by cross-reference to B-005 section 6.2:
+| State at restart | Startup action (B-005 row) |
+|---|---|
+| OPEN / PARTIAL | Rehydrated; SL gap repaired by G5b when no SL row exists (SR6) |
+| PENDING_FILL / PENDING with a broker fill | WARNING "fill path will adopt", no action (SR9) |
+| Pending ENTRY orders | Not re-placed; cancelled at a clean shutdown only (B-011 C5); order monitor rehydrate (B-005) |
+| SL/TGT legs at broker | Preserved; matched by the reconcile |
+| Orphan broker position (no local trade) | Human-order path: not adopted, protected or flattened; logged, WARNING Telegram under conditions (SR7) |
+| UNKNOWN_IN_FLIGHT | Stays; nothing drains the queue (W6) |
+Periodic runtime reconcile and EOD reconcilers: B-005 section 11, B-010.
+B12-E4. ESTABLISHED. SOURCE capital/kill_switch.py (3eb2ece0): state persisted in the DB (_persist_state, 934-); prior-day kills of any type cleared at every start (315-364); same-day SOFT_KILL with a scheduled reason ("circuit_breaker_force_close_15:15", "EOD_SQUAREOFF", 122-125) cleared only when no open positions (366-420); HARD_KILL and emergency SOFT_KILL never auto-cleared the same day. --resume: main.py 2283-2292; operator script scripts/clear_kill_switch.py through deploy/resume.sh (HARD_KILL needs --force). TEST tests/integration/test_q9_post_restart_capital_wired.py: same-day kill stays armed after restart (397); prior-day kill auto-cleared (432). A process restart is therefore not a kill reset on the same day.
+INTERP: if the process stays up overnight (missed self-exit), clear_stale_state never runs, so the 15:15 SOFT_KILL carries into the next day (main.py 1377-1389 comment; B-011 H7).
+B12-E5. PARTLY ESTABLISHED. B-003 (schema, versions, migration refusal, per-thread connections) and B-011 C7 (PASSIVE checkpoint, main-thread close). WAL recovery after a crash is SQLite's own behaviour on the next open (EXTERNAL, not verified here). No explicit startup checkpoint found in main.py's start path (search "checkpoint" in main.py: only the shutdown call and EOD).
+B12-E6. ESTABLISHED by cross-reference: B-005 section 7 and W1 to W9: no adoption of broker positions into local trades at start (RC5's "ORPHAN_ADOPTION" adopts nothing); A-008 E-3. Scope: B-005's search of the 330 non-test Python files.
+
+======================================================================
+F. CRON, WATCHERS, NEXT DAY
+======================================================================
+B12-F1. PARTLY ESTABLISHED. config/cron_registry.yaml (47 jobs, 46 enabled; A-011 section 9) → core/cron_registry.py (loader, not read line by line) → scripts/generate_crontab.py (87da2a32) composes each line from cron_expression, env_wrapper, command, log_target, marker_name, enabled (16-22); `schedule` is documentation only (17); modes --generate, --selftest, --bootstrap, --check (24-28) → deploy/cron/trading-system.cron ("GENERATED ARTIFACT. DO NOT HAND-EDIT", 1-11). Installation: the post-receive hook installs the crontab (B-001 section 9). Generated file and registry do not prove the installed crontab.
+B12-F2. ESTABLISHED (CONFIG schedules, deploy/cron/trading-system.cron lines):
+| Job | Schedule | Restart role |
+|---|---|---|
+| token_cleanup | 05:00 daily (42-43) | Removes the token; indirectly gates starts |
+| auto_refresh_token | 08:15 Mon-Fri (51-52) | Produces the token that lets the watcher start the service |
+| monitoring_canary | 08:20 daily (54-55) | Reports (alert watcher, GUI); no start |
+| preflight A / B / C | 08:30, 09:14, 09:15 Mon-Fri (57-64) | A starts support services only; B reports the trading service |
+| cron_officer briefing / eod | 09:20 daily / 18:50 Mon-Fri (45-46, 141-142) | Reports |
+| liveness_probe | */5 09-15 Mon-Fri (78-79) | Alerts only |
+| wal_checkpoint | 16:00 Mon-Fri (108-109) | DB maintenance |
+| check_cron_drift | 18:00 Mon-Fri (138-139) | Reports |
+| db_backup / analytics_backup / evidence_backup | 01:00 / 01:05 / 01:10 daily (18-28) | Backups |
+| backup_retention / sentinel / output / db_retention | 02:00, 02:05, 02:10, 02:30 (24-40) | Retention |
+| backup_restore_drill | 03:00 on the 1st (150-151) | Drill |
+| cron-watchdog | systemd timer 19:30 (cron-watchdog.timer 9; header "NOT installed by default") | Reports |
+No cron job starts or stops trading-system.service (search of the crontab for systemctl: none).
+B12-F3. PARTLY ESTABLISHED. Liveness probe: B-007 section (scripts/liveness_probe.py, 35be05bf): reads `systemctl show` of the unit (211-212) and the kill row; alerts once per incident; no corrective action (B-001 E-3 on its silence under any kill). Cron officer (40532012): reads heartbeats, markers and `crontab -l` (557, 890); reports; no restart. Cron watchdog (adb771fa): asserts cron_officer_eod and check_cron_drift ran today; CRITICAL sentinel for the alert watcher (unit header). Grace windows and dedup of the officer not read in detail.
+B12-F4. PARTLY ESTABLISHED. scripts/check_cron_drift.py (ef206bb1): pass 1 heartbeat-miss for monitored due-today jobs (WARNING); pass 2 live `crontab -l` against generate(registry), bidirectional (missing canonical line CRITICAL, unknown live line RAN_UNVERIFIED, unparsable CRITICAL) (5-22, 136); records its own heartbeat; exits 0 only when severity OK (223). generate_crontab.py --selftest/--check compare against a crontab file given on the command line. Pass means the live crontab equals the registry's generated lines at that run, nothing about whether jobs succeeded.
+B12-F5. PARTLY ESTABLISHED (historical runbook text, not executed).
+- DEPLOYMENT.md: diff of the live crontab against the canonical (54); daemon-reload and status (85-87); crontab install by replacing the whole user crontab (151-160); a manual `systemctl start trading-system.service` (191); "PC: zerodha_login.py -> SCP via .bat -> ssh + manual systemctl start" (232).
+- docs/03_daily_operations_runbook.md: status (27); resume.sh (147-148); a struck `systemctl restart` anti-pattern (177); restart safe when INACTIVE (189); clear the kill first (192).
+- DRIFT: DEPLOYMENT.md's manual start (191, 232) conflicts with the token watcher as the starter (installer 8-10; B-001 section 14 item 9).
+
+======================================================================
+G. BACKUP AND RESTORE
+======================================================================
+B12-G1. ESTABLISHED. CONFIG crontab:
+- main DB: sqlite3 ".backup" at 01:00 into data_store/backups (same disk, 18-19); exit code to a marker.
+- analytics DB: the same at 01:05 (21-22).
+- evidence: scripts/backup_evidence.py at 01:10 (27-28; destination not traced).
+- Retention: backup_retention.py --apply at 02:00 (count-based per B-003).
+- No off-box job in the crontab.
+RECORD: 25-Jul "0 offsite cron jobs", single volume (backup_items_decide_ready_25jul2026.md 43-48). 27-Jul a manual copy to an operator PC folder, with integrity_check ok on both databases and the first copy of the forward-shadow file (operator_backup_and_ssh_27jul2026.md 11-48). Later copies: UNKNOWN. No error alert in the two sqlite3 lines beyond the marker.
+B12-G2. ESTABLISHED. SOURCE scripts/backup_restore_drill.py (fe12a5ef):
+- Selects the newest trading_system-*.db by mtime (100-106) and copies it to a temp file (109-110, 226-232).
+- Checks: PRAGMA integrity_check; schema version equal to the code's EXPECTED_SCHEMA_VERSION; expected tables and row counts; foreign keys ON with violations listed; sample queries; WAL clean (113-190, 238-303).
+- Writes a report to docs/backup_drill_<date>.md by default (339-342, 356-361); removes the temp files (312-325).
+- Records a heartbeat with the default status SUCCESS, whether it passed or failed (329-334; utils/cron_heartbeat.py 55-62).
+- Exit: sys.exit(0 if ok else 1) (370-377).
+- Analytics DB not drilled.
+- DRIFT: the docstring's "2 -- no backups found" (20-23) is not implemented; that path returns False, exit 1, and records no heartbeat (210-217).
+- DEFECT candidate: a failed drill still records a SUCCESS heartbeat, so a heartbeat-based monitor would see success (INTERP on the consumer).
+- INTERP: a backup taken before a schema migration would fail the version check after the code moved on.
+B12-G3. PARTLY ESTABLISHED. Search: the tree listing for backup_drill_ (0 matches) and the four checked-out backup records. No drill report or dated drill result in the production tree (also B-003). Dated evidence: 25-Jul measurement; 27-Jul manual off-box copy with integrity_check ok (verification of copies, not a restore drill). "Never ran" is NOT concluded; that is UNKNOWN.
+B12-G4. ESTABLISHED (by backup scope). Backed up: main DB, analytics DB, evidence files (backup_evidence.py scope not traced). Not in any backup job found: the token/session file (deleted daily by design), .env and secrets, config and unit files (in git), the installed crontab (regenerable from the registry), logs, data_store/cron_marks, /tmp watcher state. Broker orders and positions are external; a restored DB would be reconciled against the broker at the next start (B-005). Restoring a DB is not a step in any script found (the drill only copies to a temp file).
+
+======================================================================
+H. MATRIX, WALKTHROUGHS, FINDINGS
+======================================================================
+B12-H1. Restart and recovery matrix (SOURCE unless marked; host outcome UNKNOWN in every row):
+| Case | Detection | Supervisor action | Next start gate | Orders / positions | Alert / evidence |
+|---|---|---|---|---|---|
+| Normal exit 0 (self-exit) | B-011 | None; watcher: no start today | Next day: fresh token 08:15 | Flat by the gate | INFO "EOD Clean Shutdown"; SHUTDOWN event |
+| Unexpected exception | Wrapper exit 1/2 | systemd restart 10 s | Same day: CRASH scenario (or HALT if a same-day kill was set) | Startup reconcile (B-005) | CRITICAL log; CRASH_DETECTED event |
+| Blocking start-up check | Exit 3 | Not restarted; watcher no start today | Next day one start | n/a | CRITICAL log; one watcher Telegram |
+| HALT | Exit 4 | Not restarted; watcher no start today | --resume or resume.sh; prior-day kills auto-clear next day | Unmanaged by the process while down; broker SL legs as left | Watcher Telegram once a day |
+| Missing/invalid token | Exit 6 or 2 | Restart every 10 s | Fresh token | n/a | CRITICAL log, no alert call (B-001 7.5) |
+| Auth failure mid-session | Token monitor / order monitor | Process continues in SOFT_KILL / HARD_KILL | Same-day restart: HALT | HARD_KILL flattens (B-011 D3) | CRITICAL alerts per kill path |
+| Duplicate instance | Exit 1 | Restart every 10 s while the holder lives | Holder exits | n/a | CRITICAL log |
+| DB / schema failure | Migration refused in market hours | Restart every 10 s (B-003) | After hours or code revert | n/a | Log |
+| Killed while flat | Signal / no SHUTDOWN marker | systemd restart (unclean signal, EXTERNAL) | CRASH | Nothing to recover | CRASH_DETECTED |
+| Killed with open position | As above | As above | CRASH (or HALT) | Reconcile; SL repair G5b; orphans not adopted | CRASH_DETECTED; alerts per reconcile |
+| Killed during HARD_KILL flatten | As above | systemd restart | HARD_KILL persisted → HALT exit 4 | Flatten stops mid-way; positions at broker UNKNOWN | B-011 H4 CRITICAL if it came through _shutdown |
+| Token refresh failure | Script exit 1, heartbeat FAILED | None | Watcher never starts | n/a | CRITICAL Telegram (script); liveness probe from 09:00 |
+| Host reboot / power loss | Host boot | Unit enabled: starts at boot, guards apply | B-001 section 10 table (00:00-07:59 boot loses the day: KNOWN DEFECT, conditional) | Reconcile at start | B-001 |
+B12-H2. Normal next trading day (each stage SOURCE; that it ran: UNKNOWN): 05:00 token deleted → 08:15 refresh writes today's token → watcher (hour 08-15, unit inactive with an earlier-day exit 0) starts the unit → main(): holiday guard, start window, lock → config → StateStore → kill clears (prior-day all; scheduled same-day if flat) → scenario COLD (session date not today) → config hash → session row → start-up checks (exit 3 on failure) → live pre-load and token gate → broker check → components → startup reconcile (B-005) → threads, webhook, readiness (B-007) → entries eligible once the entry window opens (B-008/B-009) → self-exit 17:35 (B-011).
+B12-H3. Crash and restart: exception → exit 1/2 → systemd restart after 10 s (watcher waits) → same day, no SHUTDOWN event → CRASH, CRASH_DETECTED written → same-day kills persist (HALT exit 4 if one was set: no further restart) → otherwise start continues, reconcile, rehydrate. Restart with an open position: as above; the position is rehydrated from the DB and reconciled against the broker; SL gap repair G5b; a broker position with no local trade is not adopted (SR7); in-flight entries not recovered (W6). INTERP: during the 10 s gap and the start-up time, nothing in the process manages the position; broker-side SL legs remain.
+B12-H4. Findings (stable IDs):
+- B12-R0 (no conflict): every frozen point checked (B-001 sections 7-10, B-002 section 6, A-011 sections 6 and 15, B-005, B-011) agrees with the source at 970aabf. No erratum proposed.
+- B12-R1 KNOWN DEFECT (already frozen; A-011 section 15, A-010 E-1): the FIX-062 token-rename guard has no trigger in the inspected path (D4).
+- B12-R2 DRIFT: restore drill docstring exit 2 not implemented (G2).
+- B12-R3 KNOWN DEFECT candidate: a failed restore drill records a SUCCESS heartbeat (G2).
+- B12-R4 DRIFT: auto_refresh_token docstring 08:00 vs crontab 08:15 (D1).
+- B12-R5 DRIFT: unit comments omit exits 5, 6 and 9; instance-lock docstring says "3 4" (B2; already B-001 section 14).
+- B12-R6 INTERP, conditional: the instance lock is released in main()'s finally while a non-daemon flatten worker may still run (C2; B-011 A3).
+- B12-R7 INTERP: exit 5 is not restarted by the unit but is restarted up to 3 times an hour by the watcher (B5; B-002 legend).
+- B12-R8 INTERP: no process-restart cap for exits 1, 2, 6, 9 under the unit (B6).
+- B12-R9 RECORD: backups on the same volume; one manual off-box copy on 27-Jul; later copies UNKNOWN (G1).
+- B12-R10 INTERP: a token produced after 15:59 never triggers a watcher start (D1).
+- B12-R11 SOURCE: pre-flight Phase A auto-starts the token watcher and alert watcher, an indirect start path for trading (B3).
+- B12-R12 INTERP: the drill does not cover the analytics DB or restoring into place (G2, G4).
+B12-H5. Cite, do not duplicate: B-011 (shutdown order, drain, exit 0 always; sections 5-7); B-005 (startup reconcile rows S, R, SR, W); B-003 (DB open, migration refusal, WAL, backups and drill schedule); B-004 (token, BC rows, token monitor section 8); B-006 (worker start and stop); B-007 (readiness, liveness probe, pre-flight); B-009 (in-session order monitor and auth stop); B-010 (EOD square-off, MIS). Also B-001 (units, watcher, host boot), B-002 section 6 (exit matrix), A-011 (scenarios, kills), A-010 (secrets, FIX-062).
+B12-H6. Source-to-consumer table:
+| Component | Source | Input | Logic / guard | Output | Storage / handoff | Next consumer | Status |
+|---|---|---|---|---|---|---|---|
+| Main unit | trading-system.service | Exit code | on-failure, prevent 3 4 5 | Restart or stop | systemd state | Token watcher | CONFIG |
+| Token watcher | token_watcher.sh 125-191 | ActiveState, ExecMainStatus, exit date, token file | Decision table, cap 3/h, hours 08-15 | systemctl start | /tmp state, log | Main unit | SOURCE |
+| Instance lock | instance_lock.py 129-238 | Lock file, port 5001 | flock + bind | Proceed or exit 1 | Kernel | systemd | SOURCE |
+| Kill clears | kill_switch.py 315-420 | Persisted kill row, date | Prior-day / scheduled-and-flat | INACTIVE + audit event | DB | Scenario detector | SOURCE |
+| Scenario | startup_checks.py 192-270 | Session row, kill, SHUTDOWN event | COLD/WARM/CRASH/HALT | Scenario | Event rows | main (exit 4 or continue) | SOURCE |
+| Token refresh | auto_refresh_token.py 332-415 | Credentials (names), calendar | Retries, auth fatal | Token file, heartbeat | File, DB | Token watcher, cron officer | SOURCE |
+| Token monitor | main.py 3388-3400 | Profile call | Expiry classification | SOFT_KILL | DB kill row | Next start (HALT) | SOURCE |
+| Backups | crontab 18-28 | DB files | sqlite3 .backup | Same-disk copies | data_store/backups | Drill, retention | CONFIG |
+| Drill | backup_restore_drill.py | Newest backup | Integrity, version, tables, FK | Report, heartbeat, exit | docs/ on host, DB | Cron officer | SOURCE |
+| Installed supervisor state | - | - | - | - | - | - | UNKNOWN |
+| Installed crontab | - | - | - | - | - | - | UNKNOWN |
+| Actual host restarts | - | - | - | - | - | - | UNKNOWN |
+| Actual broker state at any restart | - | - | - | - | - | - | UNKNOWN |
+| Successful restore | - | - | - | - | - | - | UNKNOWN (no in-repo record) |
+End-to-end: B12-H2 and B12-H3 above.
+
+======================================================================
+I. COMPLETENESS
+======================================================================
+B12-I2. Summary.
+- SOURCE FACTS: two independent supervisors (systemd unit, token watcher); exit codes 0, 1, 2, 3, 4, 5, 6, 9 only; kernel-owned lock; prior-day kills always cleared, same-day kills persist (except scheduled and flat); token monitor only SOFT_KILLs; no adoption at start; drill copies to a temp file and checks.
+- CONFIG: unit policies; crontab schedules; backups same-disk; cron-watchdog not installed by default.
+- RECORD: 16-Jul alert-watcher restart storm; 17-Jul S4 (B-011); 25-Jul no off-site; 27-Jul manual off-box copy; 27-Jul lock flake (test-side).
+- DEFECT / DRIFT: R1, R2, R3, R4, R5.
+- INTERP: R6, R7, R8, R10, R11, R12.
+- UNKNOWN: installed units and crontab, actual restarts and loops, drill runs and results, broker state at restarts, off-box copies after 27-Jul.
+B12-I3. Inventory file.
+B12-I4. No code, tests or scripts were run; no host, VM, broker, database, service manager, crontab or external account was contacted; no file in any repository was changed; nothing was committed, pushed or deployed. One process note: `git log -1` was used for the pinned commit's own metadata only (allowed under the clone rule as named-commit metadata); no other history or tree-wide command.
+B12-I5. Exactly two files returned.

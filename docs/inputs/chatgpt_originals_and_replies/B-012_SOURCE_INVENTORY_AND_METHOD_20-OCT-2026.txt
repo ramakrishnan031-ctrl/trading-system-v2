@@ -1,0 +1,75 @@
+B-012 RESTART AND RECOVERY: SOURCE INVENTORY AND METHOD
+Date: 20-Oct-2026 (IST)
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Companion: B-012_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt
+
+1. CLONE AND READ METHOD
+- The existing blob-less, non-cone sparse clone at the pinned commit; new paths added with explicit, anchored patterns only (every pattern starts with "/"), in two batches.
+- Never-open check (sensitive_check.py) matches never-open patterns against the path field of the saved tree listing; it reports 102 never-open paths, the root .env.example among them (class '.*': 1).
+- Checks:
+  | When | Local objects | Never-open blobs present |
+  |---|---|---|
+  | Session start | 8,110 | 0 |
+  | After batch 1 (34 paths: units, scripts, cron, records, docs) | 8,116 | 0 |
+  | After batch 2 (5 test files) | 8,121 | 0 |
+  | Before delivery | 8,121 | 0 |
+- Every read and content search went through mask_read2.py (masks seen: host tokens, IPv4, client-ID-like tokens, base32-like tokens; values not reproduced). Host paths in the unit files and crontab are replaced by descriptions in the answers.
+- Commands on the partial clone: sparse-checkout add, count-objects, and `git log -1` for the pinned commit's own metadata (named-commit metadata, allowed). No tree-wide or history command; the tree listing used is the one saved earlier in this project.
+- Plain grep -n was used for line numbers of function names and short identifiers in checked-out source files; content was then read through the filter.
+- Outputs scanned with scan_ids.py before delivery: 0 hits.
+
+2. FILES READ (970aabf; blob, ranges)
+Primary source:
+- main.py (445fb0d8): 117-200, 640-690, 2085-2376, 2410-2424, 2470-2503, 2535-2573, 2920-2940, 3388-3400; return sites 2201-3899 by search.
+- utils/instance_lock.py (f73345ed): whole file (257 lines).
+- utils/startup_checks.py (61ff6767): 192-270.
+- capital/kill_switch.py (3eb2ece0): 118-142, 315-420.
+- broker/order_monitor.py (c4f4aaa5): 640-665.
+- data/live_feed.py (10ebd00e): 415-482, 768-778.
+- broker/token_monitor.py (15102f24): function list and header lines by search.
+- scripts/auto_refresh_token.py (57c71f49): 1-60 and control points by search (71-415).
+- scripts/backup_restore_drill.py (fe12a5ef): 1-45, 100-112, 210-238, 300-377 and function list.
+- scripts/check_cron_drift.py (ef206bb1): 1-40 and exit lines.
+- scripts/generate_crontab.py (87da2a32): 1-30 and exit lines.
+- scripts/preflight/checks/services.py (f73a2630): whole file.
+- utils/cron_heartbeat.py (f6819c0d): 55-62, 176-179.
+- deploy/token_watcher.sh (000a3769), deploy/resume.sh (7954c2d8), deploy/install_vm_services.sh (16dd4f02): whole files.
+Config and unit declarations:
+- deploy/systemd/trading-system.service (3d97c92c), token-watcher.service (ce815bea), alert-watcher.service (5ebf7bc2), cron-watchdog.service (99e18ff4), cron-watchdog.timer (f73ecfc5), security-watcher.service (d4a4fece), trading-watchman.service (ba988eec): whole files.
+- deploy/cron/trading-system.cron (f8399b40): 1-30 and restart-relevant lines by search.
+Tests (read, not run):
+- tests/unit/test_instance_lock.py, tests/unit/test_fix062_token_invalidation.py, tests/unit/test_h11_invalidate_token_path.py, tests/integration/test_q9_post_restart_capital_wired.py, tests/unit/test_clear_kill_switch.py: test names; assertions as named.
+Records (RECORD-DERIVED):
+- docs/audit/instance_lock_flake_mechanism_27jul2026.md (23b50ada): 1-40, 109-122, 149-158.
+- docs/audit/operator_backup_and_ssh_27jul2026.md (bf5036cb): 1-60.
+- docs/audit/backup_items_decide_ready_25jul2026.md (52066602): 1-12, 40-70.
+- docs/audit/backup_retention_and_telegram_delivery_22jul2026.md, docs/audit/capital_snapshot_and_backup_retention_24jul2026.md: headers and drill/restore/offsite search only.
+Docs (runbook text, searched):
+- DEPLOYMENT.md (f372bed2), docs/03_daily_operations_runbook.md (135aa048): lines with systemctl, crontab, --resume, resume.sh.
+Frozen V2 manuals cited (V2 repository at f54c992): A-010, A-011, B-001, B-002, B-003, B-004, B-005, B-007, B-011.
+
+3. SEARCHES (scope and terms)
+- systemctl: every checked-out .py and .sh outside tests/ (12 files matched; start/stop/restart calls only in token_watcher.sh, resume.sh, install_vm_services.sh, preflight services.py; read-only calls elsewhere).
+- _mark_auth_failed, _broker_auth_failed, invalidate_token, on_critical_failure: all 330 non-test .py files (one caller of _mark_auth_failed).
+- return codes: `return <n>` in main.py after line 2190 plus main() 2085-2190.
+- backup_drill_ in the saved tree listing: 0.
+- check_port_available in main.py: not called.
+- checkpoint in main.py's start path: none found.
+- Negative findings hold only for these scopes.
+
+4. FILES NOT READ (and why)
+- core/cron_registry.py and config/cron_registry.yaml line by line (counts and fields settled in A-011 section 9; generator fields read).
+- scripts/alert_watcher.py, cron_officer.py, cron_watchdog.py, liveness_probe.py, monitoring_canary.py beyond the restart-call search (B-007, B-001 cover them).
+- scripts/backup_evidence.py and backup_retention.py beyond the crontab lines (destination of evidence backup not traced).
+- scripts/clear_kill_switch.py beyond its printed hint (test names read).
+- tests: test_backup_retention, test_check_cron_drift_content, test_cron_officer*, test_cron_registry, test_f3_cron_drift_markers, test_fix128_token_monitor, test_generate_crontab, test_h13_token_monitor_relatch, test_liveness_probe, test_zerodha_login, and tests/crash_test/* (inventoried by name only).
+- deploy/security/*, deploy/hooks/*, deploy/zerodha_morning.* and scripts/copy_token_to_vm.bat (security or operator-PC material, not needed; hooks covered in B-001).
+- docs/web_claude/* (never-open; not fetched).
+- docs/audit/q9_batch5_post_restart_capital_18jul2026.md (checked out, not read).
+
+5. PROCESS EXCEPTIONS
+- None in B-012. The B-011 sparse-pattern lesson was applied (all patterns anchored).
+
+6. CONFIRMATION
+No code, tests or scripts were run. No VM, host, broker, database, service manager, installed crontab, log or external account was contacted. No file in any repository was changed; nothing was committed, pushed or deployed.

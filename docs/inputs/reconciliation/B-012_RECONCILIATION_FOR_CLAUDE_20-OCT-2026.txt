@@ -1,0 +1,76 @@
+B-012 RECONCILIATION FOR CLAUDE
+Restart and Recovery | 20-Oct-2026
+Baseline: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+STATUS
+The Claude answer sheet is a strong source-research return and covers all 43 listed question IDs. The source inventory is explicit about partial reads, negative-search scope, tests not run, and no host contact. The pinned production source was independently re-opened for a focused second-pass check of the central restart, token-watcher, startup-state, and backup-drill claims. No repository changes, tests, or scripts were made/run.
+
+RECONCILIATION VERDICT
+Proceed to the B-012 manual draft with bounded clarifications below. Do not call the manual frozen until the normal review/approval stage. The cited frozen chapters remain authoritative where B-012 cross-references them; do not duplicate or silently amend them.
+
+1. CONFIRMED FROM PINNED SOURCE
+
+1.1 Main service unit
+`deploy/systemd/trading-system.service` at the pinned commit declares `Restart=on-failure`, `RestartSec=10`, and `RestartPreventExitStatus=3 4 5`; it declares no explicit `StartLimitIntervalSec` or `StartLimitBurst`. The checked-in unit is a declaration, not evidence of the currently installed unit. Preserve the distinction between “no explicit cap in this unit” and “unlimited in every systemd environment”: systemd manager defaults and any drop-ins remain external/host-state questions.
+
+1.2 Token watcher
+`deploy/token_watcher.sh` confirms a 30-second polling loop by default, a 300-second long sleep, crash-count threshold 3 per rolling hour, fresh-token requirement, and the service window 08:00 inclusive to 16:00 exclusive IST. Therefore “08:00–15:59” is a readable clock-time rendering, not a separately configured end time. Its state table treats same-day exit 4 (HALT) and exit 3 (startup-check failure) as no-restart cases; prior-day cases may be retried when the token and time guards pass. Exit 1/2/other failed-state codes use the watcher’s capped recovery branch. Inactive state has separate clean-exit/date handling.
+
+Important qualification: the watcher’s three-per-hour limit is not the same mechanism as systemd’s own `Restart=on-failure`. The source does not establish that the watcher cap limits every automatic systemd restart attempt while the unit itself is repeatedly restarting. Describe each supervisor independently and leave actual host behaviour unknown.
+
+1.3 Main exit codes and startup scenario
+The inspected `main.py` confirms the broad exit-code branches in the answer sheet, including exit 5 for CLI/config failures, exit 1 for instance-lock refusal, exit 4 for HALT without `--resume`, and wrapper exits 1/2 for uncaught exceptions. The frozen B-002 exit matrix remains the detailed authority; B-012 should reference it rather than replace it. `utils/startup_checks.py` and `capital/kill_switch.py` support the stated distinction between prior-day kill clearing and same-day HALT persistence, with scheduled SOFT_KILL clearing subject to its separate reason/open-position conditions.
+
+1.4 Backup/restore drill
+` scripts/backup_restore_drill.py` (remove leading space in path when cited: `scripts/backup_restore_drill.py`) confirms:
+- No backup found: report is written and `run_drill()` returns `False`; command-line wrapper exits 1. The docstring’s “exit 2 -- no backups found” is not implemented.
+- On the normal drill path, `record_heartbeat("backup_restore_drill")` is called without a status argument after the report is written, regardless of `passed`. The helper’s default status is `SUCCESS`. A failed drill can therefore emit a SUCCESS execution heartbeat; this is a source-confirmed defect in the recorded execution-status signal, subject to the consumer’s interpretation. Do not claim that the drill itself passed.
+- The drill copies the newest backup to a temporary location, checks it, writes a report, cleans temporary files, and does not restore the production database in place. The analytics DB is not covered by this drill.
+- The source does not establish that the monthly drill actually ran or that a successful restore has ever occurred.
+
+1.5 Token refresh schedule and drift
+The checked-in cron artifact declares `auto_refresh_token` at 08:15 on weekdays, while the script docstring says 08:00. This is source/config documentation drift. The declared schedule does not prove the cron job ran. The token watcher’s time window is 08:00–15:59:59 IST (hour 8 through hour 15); a token appearing at/after 16:00 does not satisfy that watcher time guard.
+
+1.6 Backups and host state
+The checked-in cron artifact declares same-disk database backup jobs and a monthly restore-drill job. The 25-Jul and 27-Jul findings are records scoped to their own dates: no off-box cron was found in the inspected crontab record; one manual operator-PC copy was documented on 27-Jul. Later off-box copies, installed crontab, installed units, actual restart loops, actual drill execution, and actual broker state during any restart remain UNKNOWN / NOT ESTABLISHED.
+
+2. WORDING / SCOPE ADJUSTMENTS REQUIRED IN THE MANUAL
+
+A. Do not write “systemd restarts forever/unlimited” as an unconditional fact. Write: “The unit declares on-failure restart after 10 seconds and has no unit-local StartLimit directives; effective manager defaults/drop-ins and installed state are not established by this source snapshot.”
+
+B. Do not collapse the systemd restart policy and token-watcher cap into a single cap. The token watcher has a three-per-rolling-hour branch for its own start decisions; systemd has a separate on-failure policy. The interaction under repeated crash loops is conditional and depends on service state, systemd rate limiting, and installed configuration.
+
+C. “The watcher restarts at most three times per hour” should be narrowed to “the watcher records/limits its own crash-branch start attempts to three per rolling hour.” Its source checks `ActiveState`; if systemd itself is already restarting the unit, the watcher can see `activating` and wait. Do not infer a global restart ceiling from the watcher constant alone.
+
+D. The drill’s SUCCESS heartbeat defect is confirmed in source. Keep the result and execution status distinct: report verdict / return code indicates drill result; default heartbeat status does not. Whether a particular monitor raises or suppresses an alert depends on consumer logic and should not be asserted unless separately source-verified.
+
+E. Use exact 08:00–16:00 IST window, with 16:00 excluded. “Only between 08:00 and 15:59” is equivalent for minute-resolution prose but less exact.
+
+F. Do not imply backups contain the complete recoverable system. The checked-in jobs cover main DB, analytics DB and evidence-job invocation; evidence destination was not traced. The records show same-volume backups and one dated manual off-box copy, not a verified current offsite recovery point. Token/session file, `.env`/secrets, logs, marks, and installed host state are not shown as part of the database backup jobs.
+
+G. “Restart after a kill is blocked until the next day” needs the exact state distinctions:
+- Same-day HARD_KILL -> HALT; manual `--resume`/operator recovery required.
+- Same-day emergency SOFT_KILL -> HALT unless the separately coded scheduled-kill/no-open-position condition applies.
+- Prior-day kill clearing is performed on startup; it is not evidence that the service starts successfully.
+- If the process remains alive past the expected self-exit, the ordinary new-process startup clear path has not run; cross-reference B-011.
+
+H. A successful `--check` / cron drift pass verifies the installed crontab’s lines against the generated registry lines at that moment, not job success. Keep configuration, monitoring evidence, and actual execution as separate evidence classes.
+
+3. PARTIAL / UNKNOWN ITEMS THAT MUST STAY OPEN
+
+- Installed systemd unit contents, overrides/drop-ins, enablement and current manager state.
+- Installed crontab and whether declared jobs ran on any specific day.
+- Whether a restore drill ran, its actual result, and whether a successful recovery/restore has been demonstrated.
+- Current off-box backup status after the dated 27-Jul record.
+- Actual restart-loop history, current token state, and broker positions/orders during any restart.
+- Negative findings only cover the paths and searches named in the source inventory. Do not generalize them to unsearched scripts, dashboards, repositories, host state, or the entire historical system.
+- The inventory says `core/cron_registry.py` and `config/cron_registry.yaml` were not read line-by-line; state registry-derived details as cross-reference/previously established where applicable, not as newly exhaustively verified here.
+
+4. EVIDENCE / METHOD
+
+The source inventory states: pinned production commit only; selected-path sparse clone; sensitive paths were not opened; reads/searches passed through masking; test files were read but tests were not run; no code/scripts were executed; no VM, broker, database, service manager, installed crontab, logs, or external account was contacted; no repository was changed, committed, pushed, or deployed. This is consistent with the work performed for this reconciliation.
+
+5. DISPOSITION
+
+B-012 is suitable for drafting a detailed manual with the clarifications above. This reconciliation is not a V2 design decision and does not authorize any legacy operation or code change. Preserve the source-backed facts, record-derived historical events, interpretations, known defects, and unknown runtime state as separate labels. Freeze only after the established review/approval process.

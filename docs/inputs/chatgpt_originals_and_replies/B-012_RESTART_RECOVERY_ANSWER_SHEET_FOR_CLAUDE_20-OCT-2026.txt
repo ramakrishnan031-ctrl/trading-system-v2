@@ -1,0 +1,178 @@
+B-012 — RESTART AND RECOVERY
+REPOSITORY ANSWER SHEET FOR CLAUDE
+Prepared by ChatGPT after an independent read of the pinned production snapshot
+Date: 20-Oct-2026
+
+PURPOSE
+Establish what the DEAD legacy system's checked-in source and repository records say about process restart, supervisor behaviour, recovery after process/host interruption, startup after a prior session, lock handling, token refresh/recovery, database/backup restoration, and scheduled restart-related jobs.
+
+This is a source-research worksheet, not a manual and not a V2 design document.
+
+EVIDENCE BASELINE
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Use this exact commit throughout. Do not silently switch to main/head or another repository.
+
+SCOPE BOUNDARY
+- Production snapshot only. Do not use sandbox/testing or records repository for this agenda.
+- Read source and records inside the pinned production snapshot only.
+- Do not execute application code, tests, scripts, migrations, restore drills, login flows, or broker requests.
+- Do not contact any VM, host, database, broker, service manager, installed crontab, external account, or live endpoint.
+- Do not edit files, create commits, push, deploy, or operate/revive the legacy system.
+- Do not draft the B-012 manual. ChatGPT will independently reconcile your findings first.
+- Never print or reproduce credential values, account/client identifiers, tokens, hostnames, IPs, SSH aliases/key names/fingerprints, or other secrets. Describe their type/location category only.
+- Follow the established sparse-clone and masking workflow. Never use tree-wide/history Git commands on a partial clone. Anchor non-cone sparse patterns with a leading slash. Search only checked-out files and route every content read/search/diff through the masking filter. Check object count and never-open paths before/after Git operations and before delivery.
+- No absolute negative (“never”, “no path exists”) unless the search scope is exhaustive and stated. Prefer “not found in the inspected scope”.
+- Code/config declarations do not prove installed host state or a historical execution.
+
+EVIDENCE LABELS
+For each answer, classify as one or more:
+FACT (SOURCE-VERIFIED) — implementation at pinned commit.
+FACT (CONFIG) — checked-in configuration/unit/cron declaration, not proof of installation.
+FACT (TEST-SOURCE) — assertion in test source; tests not run.
+FACT (RECORD-DERIVED) — repository record, scoped to its date, commit, and stated evidence.
+HISTORICAL (Rama-reported) — only if the source of the statement is explicitly Rama.
+INTERPRETATION / AUDIT LEAD — inference from code or a partial search.
+KNOWN DEFECT / KNOWN DOC DRIFT — supported mismatch or defect, not a proposed fix.
+UNKNOWN / NOT ESTABLISHED — source does not settle the question.
+OPEN QUESTION — evidence or a decision is still missing.
+
+ANSWER FORMAT — REQUIRED FOR EVERY ID
+- Verdict: ESTABLISHED / PARTLY ESTABLISHED / UNKNOWN / NOT APPLICABLE.
+- Evidence label(s).
+- Exact path, function/class, and line range at the pinned commit.
+- Describe SOURCE → INPUT → LOGIC/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER where applicable.
+- Cite caller/callee and constructor wiring, not only the component’s own implementation.
+- For negative findings, state the exact search scope and search terms.
+- Keep code, config comments/docstrings, tests, repository records, and installed-host state distinct.
+- Do not claim tests were run; do not infer that a configured schedule ran.
+
+STARTING POINTS TO VERIFY (NOT PRE-ACCEPTED FINDINGS)
+The independent ChatGPT spot-check found these files in the pinned repository:
+- main.py
+- deploy/systemd/trading-system.service
+- deploy/systemd/alert-watcher.service (verify exact path from tree)
+- scripts/auto_refresh_token.py
+- scripts/zerodha_login.py
+- scripts/generate_crontab.py
+- core/cron_registry.py
+- config/cron_registry.yaml
+- utils/instance_lock.py
+- utils/startup_checks.py
+- orders/order_reconciler.py
+- core/state_store.py
+- scripts/backup_restore_drill.py
+- DEPLOYMENT.md
+These are starting points only. Trace all relevant callers, wrappers, watchers, cron definitions, tests and in-repository records before concluding.
+
+QUESTIONS
+
+A. REPOSITORY BASELINE AND SCOPE
+
+B12-A1. Confirm the exact repository, pinned commit, tree inventory method, and whether the pinned commit exists. State whether you inspected any other repo/ref. Do not claim a full repository audit if only selected paths were read.
+
+B12-A2. Provide the complete B-012-specific source inventory: all files read, line ranges, blob SHA where available, files searched but not read, and why each file is relevant. Separate primary source, config/unit declarations, tests, and historical records.
+
+B12-A3. Describe the research workflow and safeguards: sparse paths, never-open check counts, object counts before/after, masking method, and any process exception. State whether any code/test was run or any external system contacted (expected: no).
+
+B. PROCESS SUPERVISION AND RESTART POLICY
+
+B12-B1. Trace the checked-in main service unit: ExecStart, working directory/environment declarations (do not disclose values containing secrets), KillSignal, TimeoutStopSec, Restart, RestartSec, RestartPreventExitStatus, dependencies and install target. Explain each only as a declaration; installed unit state remains UNKNOWN unless a dated in-repo record establishes it.
+
+B12-B2. Trace every exit-code path in main.py and relevant entry wrappers. Produce a table: condition → returned/raised code → whether the checked-in systemd policy would restart/prevent restart → evidence/qualification. Include early exits, holiday/weekend, shutdown, startup-check failures, HALT, config/arguments, token errors, runtime exceptions, and signal exits. Reconcile header/docstring comments against actual return paths.
+
+B12-B3. Identify every in-repository mechanism that can start, restart, stop, or supervise the main process: systemd units, watchers, cron jobs, shell/Python scripts, self-exit/watchdog, token refresh workflow, deployment/runbooks, operator paths recorded in the repo. For each: source → trigger → command/action → guard → handoff → failure/retry behaviour. State search scope; do not treat a unit file alone as proof of installation.
+
+B12-B4. Read the relevant alert-watcher unit and implementation, and trace whether it starts/restarts the trading service or only watches alert artifacts/another service. Identify exact unit relationships and conditions. Distinguish a declared dependency from a recorded event.
+
+B12-B5. Explain how a process exit 0, 1, 2, 3, 4, 5, 6, 7, 8 (and any other actual code) is handled by each identified supervisor. If a supervisor does not cover a code, say so. Do not assume the main unit is the only supervisor.
+
+B12-B6. Trace restart loops and retry caps: which failures are retried by application code, cron, a watcher, or systemd; the counter/window and stop condition; whether retries are same-process or process restart; and what happens after retry exhaustion. Keep code path separate from historical occurrence.
+
+C. INSTANCE LOCK AND PROCESS IDENTITY
+
+B12-C1. Trace the single-instance lock from main.py caller to acquisition, lock resource, release, and error path. Explain OS lock/socket/PID roles at source level. Identify exact errors/exit codes on contention or lock acquisition failure.
+
+B12-C2. Identify stale-lock/crash recovery behaviour after clean exit, uncaught exception, SIGKILL, OOM-kill, or power loss as implemented/documented. Separate implementation mechanism from measured tests/records. Do not repeat a docstring’s guarantee without checking the actual lock implementation and callers.
+
+B12-C3. Inspect tests and historical records relevant to duplicate instances, stale lock, PID reuse, and restart refusal. State which assertions exist in test source (not run), which events are record-derived, and what remains unknown.
+
+D. TOKEN/AUTHENTICATION RECOVERY AND STARTUP RE-ENTRY
+
+B12-D1. Trace the scheduled token cleanup and token-refresh jobs from registry to generated cron declaration, including time/cadence/enabled flags/wrapper/marker/logging/heartbeat. Explain the intended order and any race or gap visible in source. Configured schedule does not prove the job ran.
+
+B12-D2. Trace scripts/auto_refresh_token.py end-to-end: credentials resolution by variable name only, network retry vs definitive auth failure, token exchange/save, exit codes, alerts/heartbeat, and any supervisor that responds to its exit. Never disclose credential values or account/client identifiers.
+
+B12-D3. Trace the main startup token path: module imports/module-level side effects, token file load/validity check, broker request(s) before/after local metadata checks, exception mapping, exit code, and the effect on subsequent restart attempts. Check the callee’s actual return/raise behaviour rather than relying on handler names/docstrings.
+
+B12-D4. Trace the token monitor, broker-auth failure flag, token invalidation/rename path, every callback registration/caller and reason value, and any restart trigger. State if a trigger is absent or not found in the inspected path; do not infer that the token monitor itself logs in or restarts the process unless its call path proves it.
+
+B12-D5. After token refresh failure, missing token, expired/revoked token, or auth rejection, what can happen next according to source and declared supervisors? Provide separate branches and mark host outcomes UNKNOWN where not proven.
+
+E. STARTUP AFTER INTERRUPTION: STATE, ORDERS, POSITIONS
+
+B12-E1. Trace startup scenario detection and startup checks when a process starts after a prior run, crash, or HALT. Include session/day markers, prior state, kill-switch state, config hash, DB state, and any --resume/interactive/status/dry-run/environment bypasses. Explain each bypass’s actual reachability and effect.
+
+B12-E2. Trace startup reconciliation of local orders/trades/positions against broker state. Include exact call sites, constructor dependencies, gates, query scope, writes, and error handling. Confirm whether optional recovery dependencies are actually wired at the production call site; tests constructing the component alone are not proof of wiring.
+
+B12-E3. What happens to OPEN, PARTIAL, PENDING_FILL, pending ENTRY, SL/TGT, orphan broker positions, unknown orders, and mismatched local/broker state on restart? Make a state/action table. Separate startup logic from periodic runtime reconciliation and from EOD logic (B-005/B-010 cross-references).
+
+B12-E4. Trace recovery of HARD_KILL/SOFT_KILL/HALT state after restart: persistence source, loading path, permitted --resume path, guards, alerting, and whether any state is cleared automatically. State exact scope; do not equate process restart with kill-state reset.
+
+B12-E5. Trace database initialization/reopen and WAL handling relevant to restart: connection setup, schema/version check, migrations/refusal, startup recovery/checkpoint, thread connections and close semantics. Cross-reference B-003 and B-011 rather than duplicating unrelated detail.
+
+B12-E6. Identify any startup path that adopts/recreates local trade records from broker positions or reconstructs order state. Search all relevant code and callers. Distinguish a component named “reconciler” from actual adoption logic. If none found, state the exact inspected scope and result.
+
+F. CRON, WATCHERS, AND NEXT-DAY RECOVERY
+
+B12-F1. Trace config/cron_registry.yaml → core/cron_registry.py → scripts/generate_crontab.py → deploy/cron/trading-system.cron. Identify generation fields vs documentation fields, enabled handling, wrappers, logs, markers, and any drift/self-check. Do not treat generated file or registry as proof of installed crontab.
+
+B12-F2. Inventory every restart-relevant scheduled job (token cleanup/refresh, liveness probe, cron officer, monitoring canary, preflight, backups, retention, instrument refresh, and any job that starts/stops the main service). For each provide exact schedule and source; note jobs that merely report liveness and do not restart anything.
+
+B12-F3. Trace the liveness probe and cron officer: what service/job they inspect, what timestamp/heartbeat/marker is consumed, grace windows, deduplication, alerts, and whether they take corrective action or only notify. Follow the call path and consumer.
+
+B12-F4. Trace the repository’s generated cron drift checks and any “check live crontab” or bootstrap/selftest tools. Explain exactly what input they read and what a pass/fail means; never contact the live crontab.
+
+B12-F5. Inspect deployment docs for commands that enable/disable/reload/restart services or install cron. Record these as historical runbook instructions only; do not execute them. Flag conflicting/outdated statements against pinned source/config without silently resolving them.
+
+G. BACKUP, RESTORE, AND RECOVERY EVIDENCE
+
+B12-G1. Inventory checked-in backup jobs for the main DB, analytics DB, evidence files, retention, and any external/off-box copy. State source path, destination category (do not expose host-specific paths unnecessarily), schedule, error/alert behaviour, and whether the copy is same-disk or off-box.
+
+B12-G2. Trace scripts/backup_restore_drill.py: expected schema/tables, integrity checks, foreign-key checks, sample queries, restore/copy behaviour, verification outputs, failure handling and exit code. It is a script declaration; do not run it or claim a successful drill occurred unless a repository record proves that event.
+
+B12-G3. Search for backup/restore records and dated drill evidence within the production snapshot. For each record, state date, commit/version, exact claim and limits. If no execution evidence is found in the inspected scope, say so; do not infer “never ran” globally.
+
+B12-G4. Explain what is and is not recovered by a database backup/restore: DB state versus token/session files, logs, config, cron, unit files, secrets, analytics DB, external broker orders/positions. Only describe actual backup script scope; mark unestablished dependencies.
+
+H. FAILURE MATRIX AND END-TO-END WALKTHROUGHS
+
+B12-H1. Build a restart/recovery matrix for at least: normal exit 0; unexpected exception; blocking startup check; HALT; invalid/missing token; auth failure; duplicate-instance lock; DB/schema failure; process killed while flat; process killed with an open position; process killed during HARD_KILL flatten; cron/token refresh failure; host reboot/power loss. For each: detection → process/supervisor action → next start gate → order/position recovery → alert/evidence → UNKNOWNs.
+
+B12-H2. Trace a normal next-market-day startup end to end from scheduled jobs and service start through token, config, DB, kill switch, startup reconciliation, worker start, readiness, and first entry eligibility. Do not assume each stage runs simply because it is declared.
+
+B12-H3. Trace a crash-and-restart scenario and a restart-with-open-position scenario separately. Use only supported source behaviour; distinguish possible consequences from recorded events.
+
+B12-H4. Identify known defects, doc drift, conditional risks and unresolved questions discovered during the trace. Give each a stable B12-ID, exact evidence, scope, and cross-reference to frozen manuals/errata where applicable. Do not silently fix anything.
+
+B12-H5. State which parts of B-011 (shutdown), B-005 (startup reconciliation), B-003 (DB/state), B-004 (broker connection), B-006 (worker initialization), B-007 (readiness), B-009 (intraday operation), and B-010 (EOD/MIS) this chapter must cite rather than duplicate.
+
+B12-H6. Provide a final source-to-consumer table and an end-to-end restart/recovery walkthrough. Include explicit “UNKNOWN / NOT ESTABLISHED” rows for installed supervisor state, actual crontab, actual host restart, actual broker state, and successful restore unless evidence inside the pinned repository establishes a specific dated event.
+
+I. COMPLETENESS AND DELIVERY CHECK
+
+B12-I1. Provide a status row for every question ID B12-A1 through B12-H6. No omitted IDs. If a point is covered elsewhere, answer with the relevant path/lines and cross-reference rather than leaving blank.
+
+B12-I2. Include a concise findings summary split into SOURCE FACTS, CONFIG DECLARATIONS, RECORD-DERIVED EVENTS, KNOWN DEFECT/DOC DRIFT, INTERPRETATIONS/AUDIT LEADS, and UNKNOWN/NOT ESTABLISHED.
+
+B12-I3. List every file read, every file searched but not read, search terms/scope, line ranges, blob SHAs where available, and any omitted paths with reasons. Note any sparse-checkout exception and its handling.
+
+B12-I4. Confirm no code/tests/scripts ran, no live systems were contacted, no files were changed, and no commit/push/deploy occurred. If any exception happened, disclose it plainly and describe its containment.
+
+B12-I5. Return two files only at this stage:
+1. B-012_CLAUDE_REPOSITORY_ANSWERS_20-OCT-2026.txt
+2. B-012_SOURCE_INVENTORY_AND_METHOD_20-OCT-2026.txt
+
+Do not create the manual or propose V2 decisions.
+
+END OF ANSWER SHEET

@@ -1,0 +1,39 @@
+B-012 RESTART AND RECOVERY — CHATGPT REVIEW
+Date: 20-Oct-2026
+Review scope: B-012_manual.md, B-012_reconciliation_addendum.md, B-012_review_notes.md, B-012_v2_design_inputs.md
+Baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+VERDICT
+Revision 0 is acceptable for the established freeze workflow. No substantive correction is required from this review. This is a review disposition, not a Git commit/push and not a claim that host/runtime state was verified.
+
+1. REVIEW QUESTIONS
+
+1) Section 16 additions correctly labelled?
+ACCEPTED, with the bounded wording already present:
+- Exit 5: `RestartPreventExitStatus=3 4 5` prevents systemd's declared on-failure restart for exit 5, but the token watcher's `failed`-state case `1|2|*` includes exit 5. Its own crash branch can issue up to three recorded start attempts per rolling hour when the fresh-token and 08:00–16:00 IST guards pass. This is not a global restart cap; systemd's separate policy remains separate.
+- Liveness: `*/5 9-15 * * 1-5` includes 15:55. The manual now states 09:00–15:55.
+- Migration refusal: the manual carefully attributes the refusal exit to the cited B-001/B-002/B-003 path and describes the unit's declared restart eligibility, not an observed runtime restart. Retain the qualification that effective manager limits and installed host state are unknown.
+- The cited two line-range updates are consistent with the supplied revision notes. No contradictory claim identified.
+
+2) Remaining line/scope issues?
+No blocking issue identified in the four supplied files. The manual preserves the key scope boundaries:
+- checked-in unit/cron declarations are not proof of installation or execution;
+- systemd and token-watcher are distinct supervisors;
+- watcher restart cap is not a global cap;
+- the backup/restore drill's default SUCCESS heartbeat can disagree with its failed verdict;
+- actual restore success, current off-box backup status, installed crontab/unit, restart history, and broker state remain UNKNOWN / NOT ESTABLISHED;
+- negative searches are scoped and no tests were run.
+The revision-0 addendum appropriately records the reconciliation points as accepted and does not propose errata to B-001–B-011.
+
+3) Are V2 inputs decision-neutral?
+YES. `B-012_v2_design_inputs.md` explicitly labels the items PROPOSED / OPEN and phrases them as owner questions, not requirements. It says no VP row is opened or changed. It does not choose a V2 architecture or silently convert legacy findings into design decisions.
+
+2. GOVERNANCE / DELIVERY
+- B-001 through B-011 remain FROZEN per the supplied addendum; no change is requested.
+- B-012 revision 0 is suitable to move to the established freeze/approval step.
+- Keep source inputs, reconciliation addendum, review notes, manual, and V2 inputs as distinct artifacts; do not overwrite the original reconciliation.
+- Preserve the supplied SHA-256 values for input artifacts. The final stored/pushed file hashes must be computed from the exact files actually staged by Rama.
+- No repository write, commit, push, deployment, test, or legacy operation was performed or authorized by this review.
+
+FINAL DISPOSITION
+ChatGPT review: ACCEPT revision 0 for freeze processing; no blocking correction. Rama retains the approval and repository storage/commit/push actions under the project workflow.
