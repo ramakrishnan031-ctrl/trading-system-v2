@@ -1,0 +1,305 @@
+C-001 — CHARTINK STRATEGY / SCANNER
+SOURCE INVENTORY AND METHOD
+Date of work: 21-Oct-2026 (IST); clone, reading and checks between about 13:20 and 14:15 IST
+Companion file: C-001_CLAUDE_REPOSITORY_ANSWERS_21-OCT-2026.txt (the answers; IDs F-, R-, D-, L-, U-, O- and B- refer to it)
+Method required by: C-001_CLAUDE_RESEARCH_PROMPT_21-OCT-2026.txt and V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md (sections 4, 5 and 8)
+Security: counts, paths, blob IDs and helper hashes only. No credential, identifier, host, address or record content is reproduced.
+
+
+1. BASELINE VERIFICATION
+  Repository: github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (public), production snapshot only.
+  Required pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+  Clone: git clone --filter=blob:none --no-checkout into a fresh directory outside any other work; branch main.
+  HEAD after the clone: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (git rev-parse HEAD) = the pin. Branch: main.
+  HEAD after the re-clone (exception E-1): identical. HEAD before delivery: identical.
+  Commit metadata: taken for the named commit only (git log -1 --format with hash, committer date and subject), written to a
+    scratch file and read through the filter: committer date 2026-09-11T02:05:13+05:30; the subject is an evidence checkpoint
+    message and carries no host or account text.
+  Tree listing: git ls-tree -r HEAD saved once (1,438 entries) outside the clone; used for every path and blob ID. A second
+    listing taken after the re-clone was byte-identical. No tree-wide or history command was run on the partial clone (no git
+    grep with a revision, no git ls-tree -l, no git log -p, no git show, no git log on a path, no git status).
+  Sparse checkout: non-cone mode from an explicit list of anchored paths (every pattern starts with "/", one path per pattern,
+    no globs; a check found no path with glob or special characters). Final list: 1,262 paths.
+
+
+2. HELPER SCRIPTS
+  2.1 Handover helpers (section 8 of the handover), extracted from the handover text into /home/claude/tools/ and compared
+      byte for byte with the copies attached to the chat: all five attached copies identical (check_md.py has no attached copy).
+      SHA-256:
+        mask_read_lib.py    ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8
+        mask_read2.py       bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7
+        sensitive_check.py  e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337
+        scan_ids.py         8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16
+        cite_check.py       15711e5bc6041a74273ed029adfcb48aefc1ee513a076dc0027ba557d9ea5c48
+        check_md.py         763dbacdeef6399dc614bc6bc4e4b0f66b47478b25a4901dac3b9fa9bff8e3bb
+      All were run with python3 -I, options before file names (one exception, E-3).
+  2.2 Session additions (stricter or derived steps; none replaces a handover helper)
+        mr.py               b0bd3d87cf51d1cbab4fe09f868f1bacc082e684afe4155515c37788969f4f48
+                            stage-2 wrapper: runs mask_read2.py with the same arguments, then also masks mixed- and lower-case
+                            client-ID shapes (one to three letters followed by three to seven digits, word-bounded; only
+                            "sha" and "fix" plus three digits exempt). Used for every content read after exception E-2.
+        count_grep.py       31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b
+                            runs mask_read2.py --grep over a file list and prints per-file match counts parsed from the
+                            filter's output (used for all inventory searches in section 5).
+        verify_cfg.py       7c598f5870d7572fa9d6d3939be45a22cc3f857b9df77b9de7b48fef344941a3
+                            computes key sets, duplicates, URL structure, identity mapping and direction agreement from the
+                            filter's output of the scanner files, the registry and the strategy YAMLs (answers F-03, F-05,
+                            F-08, F-11, F-12).
+        content_checks.py   c3389081a24a26f6adecafe21699a16df00206dd2957e31aab1e26220970bc5b
+                            re-reads each load-bearing cited range through mr.py and requires an expected pattern (section 9).
+        lcid_check.py       a893695e573828683af6e6071bbbca42ce417ab124e6cdd939626e24b8b2d0ea
+                            value-blind scan of the outputs for the same lower-case shape; tokens that occur in the tree's
+                            path names are treated as benign; hits are printed by shape only (section 10).
+      Small one-off scripts read only the saved tree listing (path classification, exclusion counts, the shared-blob check of
+      E-1) or, for the files-read table below, counted line feeds (line counts only, as cite_check.py does). The E-1 diagnosis
+      read one blob's size with git cat-file -s; no blob content.
+
+
+3. SAFETY-CHECK LOG (sensitive_check.py on the clone; its safe summary only)
+  # | point                                              | local objects                    | never-open paths in tree       | present locally
+  1 | after the first clone (no checkout)                | 7,663 (1,537 commits, 6,126 trees) | 102 (.*: 1, config: 21, docs: 80) | 0
+  2 | after the first sparse list was set, before checkout | 7,663                          | 102                            | 0
+  3 | after the first checkout (1,263 paths)             | 8,921                            | 102                            | 1  -> stopped; exception E-1
+  4 | after deleting the clone and cloning again         | 7,663                            | 102                            | 0
+  5 | after the second checkout (1,262 paths)            | 8,920 (1,257 blobs)              | 102                            | 0
+  6 | before delivery                                    | 8,920                            | 102                            | 0
+  The root-level .env.example is among the 102 found (class ".*": 1), as the 2026-10-09 lesson requires before relying on "0
+  present". The object count did not change between rows 5 and 6.
+
+
+4. PROCESS EXCEPTIONS (disclosed)
+  E-1 Shared-blob fetch at the first checkout (row 3).
+      What happened: the sparse list contained docs/v2_design_spec.md, a permitted path whose blob ID is identical to the blob of
+      one path under docs/web_claude/ (a never-open folder). Checking out the permitted path therefore placed that blob in the
+      local store, and the never-open check reported 1.
+      What was and was not done: the diagnosis used the tree listing and the blob's size only; the blob was not opened, the file
+      was not read, and nothing from it reached any output. The clone was deleted, cloned again, and checked out with that path
+      removed; a tree-only check first confirmed that no other listed path shares a blob with a never-open path. The check then
+      read 0 (rows 4 to 6). docs/v2_design_spec.md was not used as evidence.
+      Lesson candidate (for the design log; not applied here): before a checkout, remove every permitted path whose blob ID
+      equals a never-open path's blob ID, and treat such a path as never-open.
+  E-2 Working-output exposure of an account tag.
+      What happened: the masked read of signals/webhook_receiver.py, range 1-190, printed in working output only the lower-case
+      form of the production account tag, which sits in a docstring at signals/webhook_receiver.py line 122.
+      mask_read_lib.py's CLIENTID pattern matches upper-case identifiers only.
+      What was and was not done: nothing was written to any file, and the value is not repeated anywhere. From the next read on,
+      every content read went through mr.py (section 2.2), which masked such shapes in later output (for example seven in the
+      WR4b tests). Both outputs were scanned for the shape (section 10).
+      Lesson candidate (for the design log; not applied here): make the filter's client-ID pattern case-insensitive, and add the
+      same shape to scan_ids.py.
+  E-3 Option order. One call put --grep after a file name; mask_read2.py took "--grep" as a file name and stopped with an error
+      after printing the requested masked range. Nothing unmasked was printed. Disclosed for completeness (no safety effect).
+  Not exceptions: mask_read2.py reads docs/SYSTEM_MAP.md and DEPLOYMENT.md internally on every call to build its host-token
+  mask (by design; nothing from them was printed). Two calls with a misplaced regex flag failed before printing anything.
+
+
+5. INVENTORY EXPANSION METHOD (all searches through the filter; scopes as defined in answers section 0.3)
+  Scopes: S-ALL 1,262 checked-out files; S-PY 734 .py; S-RT 281 .py outside tests/ and ops_dashboard/tests/; S-CODE 869 code and
+  configuration files (734 .py, 63 .yaml, 39 .html, 9 .sh, 7 .service, 4 .bat, 3 .js, 2 .sql, 1 .timer, 1 .ps1, 1 .cron and 5
+  extension-less deploy scripts).
+  #  | pattern (Python regex)                                                        | scope  | result
+  1  | (?i)chartink                                                                  | S-ALL  | 127 files, 478 lines
+  2  | (?i)scanner, scan_webhook, scan_name, alert_name                             | S-CODE | 240 files, 2,002 lines
+  3  | imports of the signals package (from/import signals; signals.<module>; import_module) | S-PY | 27 files, 56 lines; outside tests only main.py and signals/signal_processor.py
+  4  | scan_webhook_map_path or _validate_scan_webhook_map                           | S-ALL  | 8 files: strategies/loader.py, 2 tests, 5 records
+  5  | INSERT [OR ...] INTO signals                                                  | S-PY   | 92 files; outside tests/ directories: core/state_store.py (docstring examples), signals/webhook_receiver.py, scripts/t2_cnc_gtt_realtest.py
+  6  | writers of signals.strategy (UPDATE signals ... strategy; SET strategy =)     | S-RT   | 0
+  7  | symbol_aliases, _alias_map, alias                                             | S-RT   | 12 files; readers of the alias file: the receiver and main.py's paper quote provider; tool: scripts/find_symbol_aliases.py
+  8  | NSE literal forms ("NSE:", exchange = "NSE")                                  | S-RT   | 8 files, 25 lines
+  9  | preflight_scanner                                                             | S-ALL  | 5 files (no scheduler or caller)
+  10 | test_webhook.py, find_symbol_aliases, strategy_registry_officer, load_test_signals, replay_signals | S-ALL | 29 files; none refers to scripts/test_webhook.py
+  11 | strategy_direction_registry                                                   | S-PY   | 4 files
+  12 | imports of core.strategy_direction                                            | S-PY   | 4 files (orders/eod_squareoff.py, the officer, 2 tests)
+  13 | load_all_strategies(                                                          | S-RT   | 8 files: 7 calls in 6 files, none passing the map path; the definition (strategies/loader.py); a docstring example (signals/signal_processor.py)
+  14 | load_all(                                                                     | S-RT   | 23 files (definition included)
+  15 | reload(, hot reload, SIGHUP                                                   | S-RT   | 5 files; none reloads a scanner file
+  16 | AppConfig scanner-section access (.scan_webhook_map, .chartink_scanners)      | S-RT   | 3 files
+  17 | playbook_scanner                                                              | S-ALL  | 4 files (schema, config, 2 records)
+  18 | chartink.com                                                                  | S-CODE | 10 files
+  19 | parse_chartink_payload                                                        | S-ALL  | 1 file (a document)
+  20 | premarket_healthcheck                                                         | S-ALL  | 19 files (records, the pre-flight package, tests)
+  21 | preflight or strategy_registry_officer                                        | cron file and cron registry | entries in answers B-4 and B-14
+  22 | scanner, chartink, connectivity, preflight_scanner                            | the 20 .py files of scripts/preflight/ and scripts/preflight/checks/ | comments and file names only
+  23 | per-file greps (definitions, test names, wiring terms)                        | the files in section 6 | as listed there
+  Classification: each hit file was placed in the answers' inventory (I-01 to I-33) by role; downstream label consumers were
+  grouped (I-30) without full reads.
+
+
+6. FILES READ (content printed through the filter at 970aabf)
+  Columns: path | blob ID (from the saved tree listing) | line count | what was read | why (answers reference).
+  "grep" = matching lines only; "range a-b" = mask_read2.py --range a:b (through mr.py after E-2); "full" = every line.
+  Count-only searches (section 5) touched the whole scope but printed no content and are not repeated here.
+  config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | 84 | full (1 to 84) | I-01 scanner registry
+  config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | 32 | full (1 to 32) | I-02 screener URLs
+  config/strategy_direction_registry.yaml | b03f4ed0c90043840f339fc9b5dac6cca93bf736 | 154 | full (1 to 154) | I-04 registry seed
+  config/symbol_aliases.yaml | 09f1ff37a59ae464dc249be3bb32fe8efca76668 | 10 | full (1 to 10) | I-05 aliases
+  config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 753 | grep; ranges 100-140, 318-345, 612-626, 745-753 | I-06 settings
+  config/cron_registry.yaml | 42ff638145ba8c05eba907a33d5b391ae3fc6910 | 767 | grep; range 612-628 | I-29 schedules
+  config/strategies/first_pullback_long.yaml | bba1441d7cc33e295d738397238d751a7d5c06bf | 54 | grep of identity fields | I-03
+  config/strategies/first_pullback_short.yaml | d946da39a9c53a105b43573b6121d6784ec8f65c | 54 | grep of identity fields | I-03
+  config/strategies/gap_fade_long.yaml | 6e0c95d5191d0cf2788f9d81c2f26a74ec6fdb6a | 56 | grep of identity fields | I-03
+  config/strategies/gap_fade_short.yaml | a78b93440fe5c18522ff5796f72b5dad7aaf9505 | 55 | grep of identity fields | I-03
+  config/strategies/gap_go_long.yaml | 6e6656fbc6ed80f9dd749bb4837562a3e0dfdb65 | 56 | grep of identity fields | I-03
+  config/strategies/gap_go_short.yaml | 7e53d31871d6efb65a6d452ed70c25fb0c444442 | 56 | grep of identity fields | I-03
+  config/strategies/open_high_breakdown_short.yaml | 96b354653687a2f36d450688552e5cd906372dcd | 55 | grep of identity fields | I-03
+  config/strategies/open_low_breakout_long.yaml | 48012d053f3335e45feec688d3a157961469f5cb | 54 | grep of identity fields | I-03
+  config/strategies/pb01_breakout_retest.yaml | eedf5cac5ed5132665160a1aac9cce30cf4a38ed | 79 | grep; ranges 1-30, 60-79 | I-03
+  config/strategies/positional_momentum_long.yaml | 7a46596fac63e73dc56949da04212b8d6dffa002 | 55 | grep of identity fields | I-03
+  config/strategies/positional_sector_rotation.yaml | b110bd594203692317aa68b3c60915d4224e2a20 | 55 | grep of identity fields | I-03
+  config/strategies/positional_swing_long.yaml | 597193f8076a8c7b3d9c1234e55e09ee8502696f | 55 | grep of identity fields | I-03
+  config/strategies/range_breakout_long.yaml | ddee444cade6dd2d911de428a70130647ceb2770 | 55 | grep of identity fields | I-03
+  config/strategies/range_breakout_short.yaml | 2f99b1dd5f155bb458b0ddfe3e50366f5892f3ca | 54 | grep of identity fields | I-03
+  config/strategies/vwap_bounce_long.yaml | e279719f9e5d75b545cb1f89011cee0ced78d63b | 54 | grep of identity fields | I-03
+  config/strategies/vwap_rejection_short.yaml | a62177d49e35bba977750f22c9eaf64bf440c0d3 | 54 | grep of identity fields | I-03
+  core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 2516 | grep; ranges 617-645, 1516-1540, 2020-2030, 2338-2517 | I-07 schemas and load_all
+  main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4293 | grep (imports, wiring, modes, defs); ranges 218-300, 480-540, 619-636, 2193-2215, 2262-2320, 2370-2400, 2425-2560, 2652-2680, 3150-3185, 3400-3460, 3570-3625, 3708-3760, 3978-4030 | I-08 call sites
+  utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 1692 | grep; ranges 1-90, 116-145, 192-384, 581-636, 638-880, 1260-1300, 1505-1693 | I-09 checks
+  strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | 213 | full (1 to 213) | I-10 loader and S10
+  signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1207 | full (1 to 1207, four ranges) | I-11 receiver
+  signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 2703 | grep; ranges 255-275, 555-590, 867-1010, 1600-1615 | I-12 processor Step 2
+  signals/entry_throttle.py | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | 125 | range 1-40; grep | I-13 throttle
+  signals/__init__.py | e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 | 0 | size only (empty blob) | I-14
+  core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 1654 | grep; ranges 30-90, 574-606 | I-15 tables
+  core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 3355 | grep only | I-16 signal writers
+  core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | 360 | grep; range 250-300 | I-17 primary tag
+  core/instrument_cache.py | 2bff50f7657fd9600e99d3663791e4d134f01d08 | 297 | grep; ranges 1-30, 86-100, 215-240 | I-18 Q-20 evidence
+  v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | 244 | ranges 1-40, 80-180; grep | I-19 EOD consumer
+  scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | 235 | full (1 to 235) | I-20 CLI
+  scripts/preflight/checks/signals.py | 1a0d5d5793455a3057fc44bcee5f794e28890c70 | 89 | full (1 to 89) | I-21 scheduled checks
+  scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | 247 | grep; range 15-60 | I-21
+  scripts/preflight/checks/config_sanity.py | d684fc610b8afd7a70eefeea1630737fd6e8e2cc | 133 | grep; range 35-41 | I-21, D-01
+  scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | 252 | ranges 1-20, 52-80 | I-22
+  scripts/test_webhook.py | 048ac3c0f5d9aadd430ee31d6d747df468af6205 | 13 | full (1 to 13) | I-23
+  scripts/find_symbol_aliases.py | 24258c1ef2a157b267b5bd2ee7ee144d15cc3c03 | 109 | full (1 to 109) | I-24
+  scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | 305 | grep; ranges 1-30, 98-170 | I-25
+  core/strategy_direction.py | 0e6f8b6686f393dcf38ddf036e565190cec0863a | 142 | grep | I-25, F-08
+  scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 243 | ranges 1-40, 40-125, 186-190; grep | I-26, D-05
+  scripts/load_test_signals.py | 47d74e172b3539120a971004b73d4ad49e14fcbc | 332 | ranges 1-45, 50-95; grep | I-26
+  tests/crash_test/signal_injector.py | b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125 | 247 | range 1-30 | I-26
+  ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | 748 | full (1 to 748) | I-27 Screen 21
+  ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | 336 | grep; ranges 88-118, 245-297 | I-28
+  ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | 4205 | grep; ranges 147-170, 640-740, 1651-1675, 2072-2110, 2267-2295 | I-28
+  ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | 482 | range 85-140 | I-28
+  ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | 665 | range 490-600 | I-28
+  ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | 690 | grep | I-28
+  ops_dashboard/backend/services/system_health.py | b15f5dff44ac13a2345b441405629c5a38110120 | 1124 | grep; range 405-432 | I-28, F-26
+  ops_dashboard/backend/config/gui_config.yaml | e33333ddb8bc117e34fff2327cdcd36689418797 | 109 | grep (config_dir, paths, local) | I-28, F-16
+  ops_dashboard/backend/services/system_logs.py | 773006336224f33ac8b3a7edc0e4e54969284c0e | 632 | grep (Chartink) | I-28 context
+  ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | 732 | grep (Chartink) | I-28 context
+  ops_dashboard/frontend/templates/services.html | 3974b89ec71e892a4d48b11b7d1c017df54b6ab8 | 796 | grep (Chartink) | I-28 context
+  deploy/cron/trading-system.cron | f8399b40bfa71e35e27746e46cd463171615477a | 151 | grep (preflight, registry officer) | I-29
+  deploy/install_vm_services.sh | 16dd4f024ec5a7be1342441674c8baa6acc45028 | 65 | grep (chartink, scanner) | context
+  requirements.txt | 3b26e2f5ebe5616edd52720d07d7b9aa8483703c | 15 | grep (pins) | F-13, F-23
+  ops/control_tower/aggregator.py | ab479cea9880deb13c8065593f34bfdc58bd1629 | 323 | grep; range 154-160 | D-01
+  orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | 1887 | grep | F-08
+  broker/zerodha_adapter.py | 0c85d2d254aa5015bf98072ec5abf88c88cce133 | 2520 | grep (NSE literal) | I-31
+  orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 4706 | grep (NSE literal, chartink) | I-31
+  core/exceptions.py | 1eeac584208493425bef34c4d80b1f78413342e5 | 422 | grep | I-30 context
+  core/evidence_contract.py | 29fb84bc690d05b832625fb55a496f3f8d4d18d7 | 700 | grep | I-30
+  allocation/models.py | f2712028549147f1d14809f4f84760a2fb44111c | 103 | grep | I-30
+  screening/entry_gate.py | 46b173171bdfeba48af641b67a361618e5acba58 | 537 | grep | I-30
+  screening/secondary_screener.py | b6f8ff7223ad803869e976f92d794dfc7c811b59 | 705 | grep | I-30
+  screening/step_executor.py | d83b04860f0ff97b33ca60faa20230004d04ae5e | 423 | grep | I-30
+  reports/daily_report.py | ad40268a655b7c2860c8e31da4b7f2c0ff85d168 | 1946 | grep | I-30
+  v3_chain/models.py | 159e319d8c91ead43e286613b6dfc58ed8ef9ab9 | 129 | grep | I-30
+  v3_chain/runner.py | a782f91f2f4f1afe12c75072708e2a26316eed3f | 425 | grep | I-30
+  v3_chain/pb01_runner.py | e87a5aa964643f1eae5fad90eeb1e0993b5829e0 | 296 | grep | I-30
+  scripts/v3_shadow_soak_report.py | f4e59d87274c35831649c01f6be61b1c23ec78bd | 426 | grep | I-30 context
+  tests/unit/test_preflight_scanner.py | 9e089d81ca7630d12c36a4620c36453bd08df292 | 408 | test list; ranges 1-84, 109-160, 284-340 | 8.1
+  tests/unit/test_startup_checks.py | bd92db4a856ed4c9fff6c141d2fdb6adbb3ac054 | 1606 | test list; ranges 520-620, 1104-1150, 1205-1216 | 8.1
+  tests/unit/test_config_loader.py | 8f245c35a047794c00ffe21e53c178b5928af890 | 1419 | ranges 590-605, 1030-1065 | 8.1
+  tests/unit/test_strategies.py | a17ae20faa67a7abd7d4d7fb07f30dbbdb7423f5 | 685 | ranges 350-400 | 8.1
+  tests/unit/test_pb01_registration.py | 80f63d22be64667c1315aad6653caf50c164fa2e | 100 | full (1 to 100) | 8.1
+  tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | 129 | grep (asserts, scanner_type, eod) | 8.1
+  tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2042 | test list; ranges 60-133, 218-245, 1836-1935 | 8.1
+  tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 2500 | grep; ranges 380-400, 585-612, 1915-1965 | 8.1
+  tests/unit/test_c2_webhook_lockdown.py | a136dfbb56a9300e02ad069c59808308e2a9689e | 91 | range 1-25; test list | 8.1
+  tests/unit/test_s4_webhook_degrade.py | 59f31e2e2e226bf3d7d2ddae6a34d99c1608256d | 115 | ranges 1-20, 20-75; test list | 8.1
+  tests/unit/test_preflight_signals.py | 21d5baddcc4aed05cc4b5157fff8d20c5da82269 | 78 | test list | 8.1
+  tests/unit/test_signal_status_classification.py | fd05297f4fea7814297172c7e5c605ccee210698 | 212 | range 1-22; test list | 8.1
+  tests/unit/test_fix133_replay_signals.py | dd8123e31fb1648ad89d61bf009723d3bf294a8a | 207 | test list | 8.1
+  tests/unit/test_load_test_signals.py | 72ffa6861dfebc050c4c4ba1e4ac72835a285f93 | 172 | test list | 8.1
+  tests/unit/test_strategy_registry_officer.py | 0e2f9f33a96bbda393d88755b940abfa8a7cb800 | 137 | test list | 8.1
+  tests/integration/test_full_signal_flow.py | 376a2ee815f798d84857cb777f87617bf5b545c9 | 633 | range 1-30; grep | 8.1
+  tests/integration/conftest.py | a6180190235f3a6cc39a88728ac04b9815168aad | 414 | grep | 8.1
+  ops_dashboard/tests/test_screen21_scanner_attribution.py | 67e64047b4650b0964aa30be8a541e37f24e689b | 1133 | ranges 1-104; test list | 8.1
+  docs/locked_decisions.yaml | 2908b09fb546949774c0c6737a31855f7fc34ce5 | 3074 | narrow grep (P17, S10, S14, S15, scanner terms) | 8.2 record
+  docs/CONFIG_GUIDE.md | 1e4f7ee174405fbbac753420cea75043fe1ec92f | 818 | narrow grep; range 648-664 | 8.2 record
+  docs/SYSTEM_ASSUMPTIONS.md | 80a105f7bbf4bdf3b0f9026bb179b4d165976dca | 34 | narrow grep (Chartink) | 8.2 record
+  docs/chatgpt_project_clarification.md | b6d392880887720a9f8524aa30dded9ebceb80e9 | 549 | narrow grep (Chartink) | context record
+  docs/02_strategy_yaml_guide.md | ba662a5c14312085974a700afb090078c6b2eec0 | 157 | narrow grep (Chartink) | context record
+  docs/audit/integrity_audit_2026.md | 25a738f2a9a77ed37374dce367e5fd8e848efd8a | 4593 | narrow greps; ranges 17-29 (grep), 55-66, 78-100, 112-160, 186-212, 3750-3760 (grep) | 8.2 record
+  docs/audit/audit_05jul2026.md | a6074fe7fa054310f4fe278c26b753f52c5eb7bb | 821 | narrow grep (S10, P17, placeholder, chartink_scanners) | 8.2 record
+  docs/audit/c2_chartink_ip_investigation_03jul2026.md | 86fa405ff6ef0679c8fac62b0948d74f84b93aa9 | 55 | narrow greps (headings; lines 1-16 and 35-56 filtered) | 8.2 record (host-bearing)
+  docs/audit/bk1_long_short_scanner_analysis_17jul2026.md | 19d21462119917252c3b46183a69786284e6419b | 161 | narrow greps (headings; 1-23, 78-114 filtered); range 144-162 | 8.2 record
+  ops_dashboard/docs/G2b1_strategy_attribution.md | 55a9f8cbc1d7186df3c70084de2c41c8f2f40b52 | 42 | narrow grep | 8.2 record
+  docs/audit/strategy_direction_investigation_17jul2026.md | 6082b5d79929cfa5b9ba354c048b9acc3bfa4fff | 186 | narrow grep (2 lines) | context record
+
+
+7. FILES CONSIDERED BUT NOT OPENED, AND WHY
+  - The 102 never-open paths (classes .*: 1, config: 21, docs: 80): excluded by rule; 0 present locally at delivery.
+  - docs/v2_design_spec.md: its blob is shared with a never-open path (E-1).
+  - tests/fixtures/reference_data/ (5 files): permitted by the never-open pattern (which is anchored at config/), but left out as
+    a precaution because of the name; not needed for C-001.
+  - 36 image files and 32 dot files: not text evidence.
+  - docs/SYSTEM_MAP.md and DEPLOYMENT.md: host records; read only inside mask_read2.py for its host-token mask; no C-001 claim
+    needs them.
+  - deploy/security/ (6 files, checked out): hardening configuration; searched by counts only; no hit in searches 1 and 2.
+  - Records with Chartink mentions not read, with reason: docs/audit/refused_posts_403_investigation_23jul2026.md and
+    docs/audit/receiver_auth_c6_scoping_2026-07-25.md (C-002 and C-003 material); docs/audit/f2_auth_separation_25jul2026.md,
+    docs/audit/f2_injection_scoping_25jul2026.md and docs/audit/f2_surface_recheck_25jul2026.md (C-003);
+    docs/audit/signal_mortality_census_19jul2026.md (outcome census, C-006 to C-009; arrival counts superseded by the 31-Jul
+    integrity audit); docs/audit/boot_path_pair_design_20jul2026.md and docs/audit/monday_preboot_readiness_19jul2026.md (start
+    sequence, B-007); docs/audit/pre_receive_hook_investigation_20jul2026.md (deployment hooks); the MASTER_PENDING lists, the
+    June architecture and crash-test notes, and the ops_dashboard G5 design notes (no C-001 fact beyond those read). Their
+    claims may be needed by later topics.
+  - Tests that only import signals modules for later-stage behaviour (found by search 3), for example the evidence-contract,
+    event-loop, one-trade-per-symbol, scoped-daily-gate, exit-safety and S&R tests: listed, not read.
+  - Candidate paths of the sheet: all 20 were read (signals/__init__.py by size: empty).
+  - Not available to this step: the frozen V2 manuals (A-004, A-007, A-008, A-009, A-011, B-002, B-006, B-007, B-009). Cross-
+    references to them use the supplied register and design-log rows, labelled SUPPLIED RECORD (INDIRECT); answers O-04 and
+    10.9 item 1 list what the reconciliation should check in them.
+
+
+8. EXCLUSIONS AND RULES FOLLOWED
+  - Only the production snapshot at the pin was used; the testing snapshot and the records repository were not used.
+  - No live service, VM, broker API, database, webhook or external account was contacted. The only network operation was the
+    git clone of the public repository from GitHub (done twice, E-1).
+  - No repository test or script was run; only the helper scripts of section 2.
+  - No repository file was changed, and nothing was written into the clone (the tree listing and all scratch files are outside
+    it). No governance record was changed. Nothing was committed or pushed.
+  - Python was run in isolated mode (-I) for every helper and every script that handled legacy-derived data.
+  - Records that may name hosts (the C2 IP investigation, the audits) were read by narrow searches only.
+  - No session link is present in either output (section 10).
+
+
+9. CITATION CHECKS
+  9.1 cite_check.py (tree listing at 970aabf; checked-out files)
+      Answers file: 489 citations extracted across 81 legacy files; out of range 0; cited files not checked out 0; path tokens
+      not resolved 0; unattributed "line(s)" references 0.
+      This method file: 12 citations extracted across 12 legacy files (the "full (1 to N)" entries of section 6 and one line
+      reference in E-2); out of range 0; cited files not checked out 0; unattributed 0. The 11 path tokens reported as not
+      resolved are the helper-script names of section 2, not legacy paths.
+  9.2 Content spot-check (content_checks.py): 337 cited ranges from the answers file were re-read through mr.py and each had to
+      match an expected pattern (for example the class, function, key or phrase the answer cites): 337 passed, 0 failed. They
+      include every catalogue citation (16 entries, 5 checks each) and the load-bearing citations of sections 2 to 9.
+  9.3 Limit: cite_check.py checks that a cited line exists in the cited file; the content check covers the load-bearing
+      citations, not every one.
+
+
+10. VALUE-BLIND SCANS OF THE OUTPUTS
+  Files scanned: the two output files. Rules: scan_ids.py (client-ID shape, IPv4, e-mail, credential assignment, Telegram token,
+  long token, private key); lcid_check.py (mixed- and lower-case client-ID shape, path tokens benign); a search for the same
+  session-link URL pattern that the push checks use, and for the session trailer name used in commit messages.
+  Answers file: scan_ids.py 0 hits; lcid_check.py 0 hits; session-link pattern 0; session trailer name 0.
+  This file: scan_ids.py 116 hits, all long_token: 105 of length 40 (the blob IDs in section 6) and 11 of length 64 (the helper
+  SHA-256 values in section 2); the baseline commit hash is on the scanner's allow list. All are known benign classes (hashes and
+  blob IDs; handover section 4). lcid_check.py 0 hits; session-link pattern 0; session trailer name 0.
+  A pattern scan does not prove that nothing else sensitive exists (lesson 2026-10-10).
+
+
+11. STATE AT DELIVERY
+  HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb (= pin); local objects 8,920; never-open blobs present locally 0. The partial clone
+  is kept in this session's workspace for the revision-0 step; it holds no never-open blob.
+
+END — C-001 SOURCE INVENTORY AND METHOD

@@ -1,0 +1,934 @@
+C-001 — CHARTINK STRATEGY / SCANNER
+CLAUDE REPOSITORY ANSWERS
+Date of work: 21-Oct-2026 (IST)
+Answers: C-001_ANSWER_SHEET_FOR_CLAUDE_21-OCT-2026.txt, following C-001_CLAUDE_RESEARCH_PROMPT_21-OCT-2026.txt
+Governance inputs: V2_DECISION_REGISTER.md and V2_DESIGN_LOG.md as supplied from trading-system-v2 main; V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md
+Source: production snapshot trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (commit dated 2026-09-11 IST). HEAD was verified equal to this pin before any reading and again before delivery.
+Companion file: C-001_SOURCE_INVENTORY_AND_METHOD_21-OCT-2026.txt (files read, blob IDs, ranges, method, safety-check results, disclosed process exceptions).
+Status: RESEARCH INPUT for ChatGPT's reconciliation and manual draft. Legacy fact only. Not a manual, not frozen, no V2 decision. Proposal (VP) and question (Q) references are carried exactly as they stand on main.
+Security: no credential values, account or client identifiers, host or IP addresses, mailbox addresses, or person names other than Rama's. Full screener URLs are not reproduced; their structure is described (they carry no query string or token).
+
+
+==============================================================================
+0. READING GUIDE
+==============================================================================
+
+0.1 Evidence labels (claim-specific, W-7)
+  FACT (SOURCE-VERIFIED)       read in the pinned source or configuration at 970aabf.
+  FACT (RECORD-DERIVED)        stated by a dated record inside the pinned repository (docs/, or a code or
+                               config comment that records a measurement); true only for that record's
+                               date and scope.
+  SUPPLIED RECORD (INDIRECT)   stated by the supplied V2 register or design log; not re-verified here.
+  HISTORICAL (Rama)            Rama's own account. None was collected in this research step.
+  INTERPRETATION / AUDIT LEAD  inferred from code or records; not measured.
+  KNOWN DEFECT / AMBIGUITY     a defect or ambiguity visible in source or records. "KNOWN DOC DRIFT" marks a
+                               comment, docstring, decision record or document that the code contradicts
+                               (the code wins; design-log lesson 2026-10-07).
+  UNKNOWN / NOT ESTABLISHED    not establishable from the inspected evidence.
+  OPEN QUESTION                for reconciliation or for Rama; not answered here.
+
+0.2 Terms used in this file (the legacy code uses some of these words loosely)
+  scanner definition   an entry in config/scan_webhook_map.yaml (and its twin entry in config/chartink_scanners.yaml).
+  scanner key          the YAML key of a scanner definition; at runtime the URL path segment of POST /webhook/<scanner key>.
+  Chartink alert/scan  the screener and its alert configured on Chartink's side; not in the repository.
+  alert name           the optional scan_name field in a webhook body.
+  connectivity check   an outbound HTTP GET of a configured screener URL; it says nothing about scan results, alert arming or delivery.
+  scanner evaluation   Chartink running the scan; external, not observable in the repository.
+  webhook delivery     a POST arriving at /webhook/<scanner key>; recorded in webhook_audit whatever the response code.
+  webhook acceptance   a per-symbol ACCEPTED result in the receiver (signals row inserted as QUEUED and the tuple put on the queue).
+  signal persistence   the signals row and its later status updates.
+  signal processing    SignalProcessor._process_one and later stages.
+
+0.3 Search scopes behind every negative statement (all at 970aabf, searched through the masking filter,
+    counts only; method file section 5)
+  S-ALL   the 1,262 files checked out: every tree path except the 102 never-open paths, 36 image files,
+          32 .gitkeep/.gitignore/.gitattributes files, the 5 files under tests/fixtures/reference_data/ and
+          docs/v2_design_spec.md (excluded because its blob is shared with a never-open path).
+  S-PY    the 734 .py files in S-ALL (tests included).
+  S-RT    the 281 .py files in S-ALL that are not under a tests/ directory (tests/ and ops_dashboard/tests/ excluded).
+  S-CODE  the 869 code and configuration files in S-ALL (.py, .yaml, .html, .sh, .service, .bat, .js, .sql,
+          .timer, .ps1, .cron and five extension-less deploy scripts).
+  A negative is worded "not found in <scope>". A pattern search cannot exclude behaviour reached by dynamic
+  names, by external processes, or by installed files that differ from the repository.
+
+0.4 Citation format: "path lines A to B" at 970aabf, with the path on the same line as its range. The
+    line-citation checker was run before delivery (summary in the method file, section 9).
+
+
+==============================================================================
+1. INVENTORY AND BOUNDARIES  (sheet Q1)
+==============================================================================
+
+1.1 How the inventory was built (not from the candidate list alone)
+  (a) Started from the 20 candidate paths in the sheet.
+  (b) Expanded by masked content searches: "chartink" over S-ALL (127 files); scanner terms over S-CODE
+      (240 files); imports of the signals package over S-PY (27 files, of which only main.py and
+      signals/signal_processor.py are outside tests); attribute access to the AppConfig scanner sections over
+      S-RT (3 files); callers of load_all_strategies (8 runtime files); the S10 argument scan_webhook_map_path;
+      readers of symbol_aliases, playbook_scanner and the direction registry; references to the two candidate
+      scripts; chartink.com URL literals over S-CODE; writers of signals rows; schedulers (the cron file, the
+      cron registry, the systemd units).
+  (c) Each file found was classified by role. Files that only carry scanner_name or scanner as a label further
+      downstream are grouped in row I-30 (searched, not read in full).
+
+1.2 Inventory table
+  Kind: R = runtime code in the trading process; C = configuration; S = standalone or operator script
+  (separate process); D = operations dashboard (separate process); T = test; H = historical record.
+  "Read" = extent read through the filter (details and blob IDs in the method file).
+
+  ID   | Path(s) | Role | Kind | Why in scope | Read
+  I-01 | config/scan_webhook_map.yaml | scanner registry: 16 keys to strategy, chartink_url, optional scanner_type | C | routing table read by receiver, processor, boot check, CLI and dashboard | full
+  I-02 | config/chartink_scanners.yaml | 16 keys to screener URL (fallback URL source) | C | scanner URL twin file | full
+  I-03 | config/strategies/ (16 YAML files) | strategy definitions (name, direction, intent, enabled, v3_playbook, window) | C | a scanner key resolves to a strategy by name | identity fields of all 16; PB-01 file ranges
+  I-04 | config/strategy_direction_registry.yaml | seed registry mirroring direction, with evidence.scanner | C | names every scanner | full
+  I-05 | config/symbol_aliases.yaml | Chartink-to-Zerodha symbol aliases (2) | C | applied at the webhook edge (Q-20 evidence) | full
+  I-06 | config/system_config.yaml | signal_queue, excluded_symbols, webhook, watchlist, scanner_check_delay_sec, service_window_end | C | settings on the scanner and receiver path | ranges
+  I-07 | core/config_loader.py | ScannerEntry, ScanWebhookMapConfig, ChartinkScannersConfig, AppConfig, load_all | R | loads and validates both scanner files | ranges
+  I-08 | main.py | config load, scenario, start-up checks, _http_fetch, receiver and processor construction, EOD wiring, server | R | production call sites | ranges
+  I-09 | utils/startup_checks.py | check_scanner_connectivity, run_all_startup_checks, detect_startup_scenario, presence and hash checks | R | boot connectivity check | ranges
+  I-10 | strategies/loader.py | load_all_strategies, _validate_scan_webhook_map (S10) | R | map-to-strategy cross-check | full
+  I-11 | signals/webhook_receiver.py | ingress: auth, scanner-key gate, EOD route, gates, alert-name check, alias, exclusion, insert, queue | R | the scanner-key consumer | full
+  I-12 | signals/signal_processor.py | Step 2 scanner-to-strategy resolution | R | next consumer | ranges
+  I-13 | signals/entry_throttle.py | entry-rate limiter keyed by symbol only | R | candidate path | ranges
+  I-14 | signals/__init__.py | empty file (0 bytes) | R | candidate path | size check
+  I-15 | core/schema.sql | signals (scanner, strategy) and webhook_audit tables | R | storage of scanner identity | ranges
+  I-16 | core/state_store.py | signal status updates | R | writer check for signals.strategy | grep
+  I-17 | core/account_registry.py | primary_account_tag (used by the alert-name rule) | R | WR4b prefix strip | ranges
+  I-18 | core/instrument_cache.py | symbol-keyed instrument lookups | R | Q-20 evidence | ranges
+  I-19 | v3_chain/watchlist_capture.py | EOD scanner consumer (pb01_watchlist rows) | R | the eod route's consumer | ranges
+  I-20 | scripts/preflight_scanner_check.py | operator CLI connectivity check | S | candidate path | full
+  I-21 | scripts/preflight/checks/signals.py, scripts/preflight/checks/config_integrity.py, scripts/preflight/checks/config_sanity.py | scheduled pre-flight checks | S | what the scheduled pre-flight checks and does not | full / ranges
+  I-22 | scripts/premarket_healthcheck.py | deprecated presence check | S | lists both scanner files | ranges
+  I-23 | scripts/test_webhook.py | standalone Flask app with a static /health | S | candidate path | full
+  I-24 | scripts/find_symbol_aliases.py | operator alias-suggestion tool | S | alias evidence (Q-20) | full
+  I-25 | scripts/strategy_registry_officer.py, core/strategy_direction.py | daily direction-registry officer; direction accessor | S/R | reads signals.scanner and signals.strategy | ranges
+  I-26 | scripts/replay_signals.py, scripts/load_test_signals.py, tests/crash_test/signal_injector.py | replay, load test and crash injector | S/T | alternative signal sources and tools | ranges
+  I-27 | ops_dashboard/backend/services/scanner_attribution.py | Screen 21 (scanner attribution) build | D | candidate path | full
+  I-28 | ops_dashboard/backend/readers/config_reader.py, ops_dashboard/backend/readers/db_reader.py, ops_dashboard/backend/services/strategy_tower.py, ops_dashboard/backend/services/analytics_period.py, ops_dashboard/backend/api/analytics2.py, ops_dashboard/backend/services/system_health.py, ops_dashboard/backend/config/gui_config.yaml | attribution data sources, endpoints, Chartink dependency card, dashboard config | D | consumers of the map and the signal tables | ranges / grep
+  I-29 | deploy/cron/trading-system.cron, config/cron_registry.yaml | declared schedules | C | scheduler search for the scanner scripts | grep
+  I-30 | screening/entry_gate.py, screening/secondary_screener.py, screening/step_executor.py, reports/daily_report.py, v3_chain/models.py, v3_chain/runner.py, v3_chain/pb01_runner.py, allocation/models.py, core/evidence_contract.py | carry scanner_name or scanner as a label | R | downstream consumers; no scanner-definition logic found | grep only
+  I-31 | broker/zerodha_adapter.py, orders/order_placer.py | literal exchange "NSE" in quote keys and order calls | R | Q-20 audit lead | grep only
+  I-32 | tests (section 8.1) | unit, integration and dashboard tests | T | what is and is not proved | ranges / test lists
+  I-33 | records (section 8.2) | decision record, guides, audits | H | dated evidence | narrow greps
+
+1.3 Boundaries
+  C-001 establishes: the scanner definitions and their files; loading and validation; the connectivity checks;
+  the scanner-key interface at the receiver (route, 404, EOD route, alert-name check); the scanner-to-strategy
+  resolution step; the scanner attribution displays; scanner-related tests and records.
+  C-001 documents but does not settle: arming and delivery of Chartink webhooks (C-002); authentication
+  (C-003); payload and symbol validation (C-004); deduplication (C-005); queue, persistence, processing and
+  expiry (C-006 to C-009); the scanner-to-strategy mapping design (C-010); EOD and daily routing (C-011).
+  Readiness and start-up check classes belong to B-007 (frozen); the instrument lookup key is Q-20 (OPEN, area
+  "A-004 / C").
+
+
+==============================================================================
+2. SCANNER DEFINITIONS AND STRATEGY CATALOGUE  (sheet Q2)
+==============================================================================
+
+2.1 What the two files define
+  F-01 FACT (SOURCE-VERIFIED). The map defines one mapping, "scanners", with 16 entries; each has "strategy"
+       and "chartink_url"; only pb01_breakout_retest also sets scanner_type: eod.
+       Evidence: config/scan_webhook_map.yaml lines 16 to 84 (entries); config/scan_webhook_map.yaml line 84 (scanner_type).
+       Evidence: config/scan_webhook_map.yaml lines 3 to 14 (header claims; see D-01, D-02).
+  F-02 FACT (SOURCE-VERIFIED). The twin file defines one mapping, "scanners", with 16 entries of the form key: URL.
+       Evidence: config/chartink_scanners.yaml lines 15 to 32 (entries); config/chartink_scanners.yaml lines 1 to 13 (header).
+       Evidence: config/chartink_scanners.yaml lines 12 to 13 ("URLs are placeholders"; see D-03, U-02).
+  F-03 FACT (SOURCE-VERIFIED, computed from the masked contents of both files). Every one of the 16 URLs, in both
+       files, is "https://chartink.com/screener/" followed by the scanner key with "_" replaced by "-"; for each
+       key the two files hold the identical string; no URL has a query string, token or numeric screener ID.
+       Caveat: whether any of these addresses is a live Chartink screener is UNKNOWN (U-02).
+  F-04 FACT (SOURCE-VERIFIED). The repository holds no Chartink scan conditions. In S-CODE the chartink.com literal
+       occurs only in the two configuration files (16 lines each), one dashboard docstring, the load-test payload
+       builder and test or crash-test tools. The conditions recorded in A-008 came from Rama's supplied file
+       (SUPPLIED RECORD (INDIRECT): DR-023; VP-44).
+
+2.2 Catalogue (FACT (SOURCE-VERIFIED); direction, intent and enabled are the strategy YAML fields)
+  Each entry: number, scanner key (= strategy name), scanner type, direction, intent, enabled; then its evidence.
+   1 open_low_breakout_long      type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 17 to 19; config/chartink_scanners.yaml line 16
+     config/strategies/open_low_breakout_long.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 83 to 90
+   2 first_pullback_long         type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 21 to 23; config/chartink_scanners.yaml line 17
+     config/strategies/first_pullback_long.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 27 to 34
+   3 vwap_bounce_long            type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 25 to 27; config/chartink_scanners.yaml line 18
+     config/strategies/vwap_bounce_long.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 139 to 146
+   4 gap_go_long                 type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 29 to 31; config/chartink_scanners.yaml line 19
+     config/strategies/gap_go_long.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 59 to 66
+   5 gap_fade_long               type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 33 to 35; config/chartink_scanners.yaml line 20
+     config/strategies/gap_fade_long.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 43 to 50
+   6 range_breakout_long         type intraday (default) | LONG  | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 37 to 39; config/chartink_scanners.yaml line 21
+     config/strategies/range_breakout_long.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 123 to 130
+   7 open_high_breakdown_short   type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 41 to 43; config/chartink_scanners.yaml line 22
+     config/strategies/open_high_breakdown_short.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 75 to 82
+   8 first_pullback_short        type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 45 to 47; config/chartink_scanners.yaml line 23
+     config/strategies/first_pullback_short.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 35 to 42
+   9 vwap_rejection_short        type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 49 to 51; config/chartink_scanners.yaml line 24
+     config/strategies/vwap_rejection_short.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 147 to 154
+  10 gap_go_short                type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 53 to 55; config/chartink_scanners.yaml line 25
+     config/strategies/gap_go_short.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 67 to 74
+  11 gap_fade_short              type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 57 to 59; config/chartink_scanners.yaml line 26
+     config/strategies/gap_fade_short.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 51 to 58
+  12 range_breakout_short        type intraday (default) | SHORT | INTRADAY | enabled true
+     config/scan_webhook_map.yaml lines 61 to 63; config/chartink_scanners.yaml line 27
+     config/strategies/range_breakout_short.yaml lines 4 to 10; config/strategy_direction_registry.yaml lines 131 to 138
+  13 positional_momentum_long    type intraday (default) | LONG  | DELIVERY | enabled true
+     config/scan_webhook_map.yaml lines 65 to 67; config/chartink_scanners.yaml line 28
+     config/strategies/positional_momentum_long.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 99 to 106
+  14 positional_sector_rotation  type intraday (default) | LONG  | DELIVERY | enabled true
+     config/scan_webhook_map.yaml lines 69 to 71; config/chartink_scanners.yaml line 29
+     config/strategies/positional_sector_rotation.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 107 to 114
+  15 positional_swing_long       type intraday (default) | LONG  | DELIVERY | enabled true
+     config/scan_webhook_map.yaml lines 73 to 75; config/chartink_scanners.yaml line 30
+     config/strategies/positional_swing_long.yaml lines 5 to 11; config/strategy_direction_registry.yaml lines 115 to 122
+  16 pb01_breakout_retest        type eod (explicit)     | LONG  | INTRADAY | enabled false; v3_playbook true
+     config/scan_webhook_map.yaml lines 77 to 84; config/chartink_scanners.yaml lines 31 to 32
+     config/strategies/pb01_breakout_retest.yaml lines 24 to 30; config/strategies/pb01_breakout_retest.yaml line 67; config/strategy_direction_registry.yaml lines 91 to 98
+  Notes:
+  - "type" is ScannerEntry.scanner_type, a routing type, not the strategy's product intent: entries 13 to 15
+    are DELIVERY strategies on intraday-type scanners. Default: core/config_loader.py lines 2352 to 2357.
+  - Totals over the 16 strategy YAMLs: 10 LONG and 6 SHORT; 13 INTRADAY (12 enabled, 1 disabled) and 3 DELIVERY
+    (enabled). Consistent with A-007 and A-008 (SUPPLIED RECORD (INDIRECT): DR-022, DR-023).
+  - Record-derived arrival evidence per scanner: R-01 to R-04 (section 10.2).
+
+2.3 Relationship of scanner keys, strategy names, directions and webhook identifiers (Q2b)
+  F-05 FACT (SOURCE-VERIFIED). In all 16 entries the map's strategy value equals the scanner key, and the 16
+       strategy values are distinct. The schema allows several scanners to name one strategy (N:1): the map is a
+       dict of ScannerEntry with no uniqueness rule on strategy values.
+       Evidence: config/scan_webhook_map.yaml lines 17 to 84; core/config_loader.py lines 2347 to 2377.
+  F-06 FACT (SOURCE-VERIFIED). The webhook identifier is the URL path segment: the route is
+       POST /webhook/<scanner_name>, and the segment must be a key of AppConfig.scan_webhook_map.scanners or the
+       request gets HTTP 404. No other webhook identifier exists in the repository.
+       Evidence: signals/webhook_receiver.py lines 406 to 408 (route); signals/webhook_receiver.py lines 551 to 554 (404).
+       Comment claim: config/scan_webhook_map.yaml lines 77 to 80 say the routing key must equal the path "Rama pastes into Chartink".
+       Caveat: the webhook URLs actually configured on Chartink are UNKNOWN (U-01).
+  F-07 FACT (SOURCE-VERIFIED). The webhook carries no side. The receiver reads only stocks, trigger_prices,
+       triggered_at and the optional scan_name; direction is taken at processing time from the mapped strategy
+       object. Matches DR-023 ("the webhook carries no side", SUPPLIED RECORD (INDIRECT)).
+       Evidence: signals/webhook_receiver.py lines 608 to 674 (fields read).
+       Evidence: signals/signal_processor.py lines 933 to 953 (strategy lookup); signals/signal_processor.py lines 997 to 1004 (direction=strategy_obj.direction).
+  F-08 FACT (SOURCE-VERIFIED). The name suffix agrees with the declared direction for all 14 names that end in
+       _long or _short; positional_sector_rotation and pb01_breakout_retest carry no suffix (both LONG). The
+       registry's direction equals the YAML direction for all 16. The registry header states that direction is
+       never read from it to place a trade; in S-PY its seed file is read only through core/strategy_direction.py
+       by the registry officer and two tests, and the EOD square-off uses build_direction_map, which reads the
+       strategy YAMLs.
+       Evidence: config/strategy_direction_registry.yaml lines 26 to 154; config/strategy_direction_registry.yaml lines 6 to 10 (header claim).
+       Evidence: core/strategy_direction.py lines 43 to 52; orders/eod_squareoff.py lines 695 to 696.
+       Caveat: bounded to S-PY.
+  F-09 FACT (SOURCE-VERIFIED). The alert name is a cross-check only. If scan_name is present it is lower-cased,
+       spaces become "_", a leading "<primary account tag>-" or "_" is removed, and the remainder must equal the
+       path segment, else HTTP 400; if scan_name is absent the check is skipped. The tag is the primary
+       account_id read from the accounts file, cached, with fallback "UNKNOWN", which disables the strip. Other
+       characters (for example hyphens) are not normalised.
+       Evidence: signals/webhook_receiver.py lines 617 to 633 (check); signals/webhook_receiver.py lines 111 to 138 (_strip_account_prefix).
+       Evidence: core/account_registry.py lines 273 to 299 (primary_account_tag).
+       Caveat: signals/webhook_receiver.py lines 115 to 123 state that production alerts carry no account prefix and testing-VM alerts do: a dated (09-Sep-2026) comment claim.
+       Caveat: the alert names configured on Chartink in production are UNKNOWN; VP-45 records Rama's statement that production names had no account ID (SUPPLIED RECORD (INDIRECT)).
+
+2.4 Enabled, disabled, missing, duplicated and apparently unused definitions (Q2c)
+  (a) Enabled / disabled
+  F-10 FACT (SOURCE-VERIFIED). 15 strategy YAMLs have enabled: true; pb01_breakout_retest has enabled: false and
+       v3_playbook: true. No enabled flag exists on a scanner definition itself.
+       Evidence: config/strategies/pb01_breakout_retest.yaml lines 24 to 30; config/strategies/pb01_breakout_retest.yaml lines 4 to 17 (header); config/strategies/pb01_breakout_retest.yaml line 67.
+       Caveat: "enabled" is the per-strategy switch only; trading also depends on the strategy-control gate (strategies/control.py not read here).
+       Evidence: signals/signal_processor.py lines 955 to 972 (gate call).
+       Caveat: the three DELIVERY strategies are dormant at that gate while force_intraday_only is true (A-007 erratum E-1, SUPPLIED RECORD (INDIRECT): DR-023); R-03 measures it for 24 to 31-Jul.
+  (b) Missing
+  F-11 FACT (SOURCE-VERIFIED, computed). None at the baseline: every map entry names an existing strategy YAML
+       (16 of 16), every strategy YAML is named by a map entry (0 without one), the two scanner files hold the
+       same 16 keys, and the registry holds the same 16 names.
+       Caveat: this is the repository's state; nothing on the boot path enforces it (D-01).
+  (c) Duplicated
+  F-12 FACT (SOURCE-VERIFIED, computed). No duplicate key in either scanner file (16 key lines and 16 distinct
+       names in each); the 16 strategy names are distinct and equal their file stems.
+  F-13 FACT (SOURCE-VERIFIED). Nothing on the load path detects a duplicate scanner key: the files are parsed with
+       yaml.safe_load (pinned pyyaml 6.0.3 in requirements.txt), and the A-009 library test recorded that this
+       version keeps the last of two duplicate keys without error (SUPPLIED RECORD (INDIRECT): DR-024, A-008
+       erratum E-1). The strategy loader keys strategies by name without a duplicate check.
+       Evidence: core/config_loader.py lines 2490 to 2494; strategies/loader.py lines 134 to 149.
+       INTERPRETATION: a second strategy YAML with an existing name would silently replace the first (not tested here).
+  S-01 SUPPLIED RECORD (INDIRECT). Scanner-condition duplicates and subsets (POSITIONAL SWING LONG and OPEN LOW
+       BREAKOUT LONG with identical conditions feeding different strategies; GAP FADE LONG and FIRST PULLBACK
+       LONG matches as subsets of VWAP BOUNCE LONG, mirrored on the short side) are recorded in A-008 from Rama's
+       supplied Chartink conditions (DR-023; VP-08). The repository cannot confirm them (F-04).
+  (d) Apparently unused or orphaned
+  L-01 INTERPRETATION / AUDIT LEAD. The URLs in config/chartink_scanners.yaml have no effect identified in the
+       inspected path: the connectivity check iterates the map and uses this file only when an entry has no
+       chartink_url, while ScannerEntry requires chartink_url, so on the AppConfig path the fallback is not reached.
+       Evidence: utils/startup_checks.py lines 764 to 776 (fallback); core/config_loader.py lines 2350 to 2351 (required field).
+       Other uses found: utils/startup_checks.py lines 833 to 843 (presence); scripts/preflight/checks/config_integrity.py lines 16 to 24 (presence).
+       Other uses found: tests/unit/test_pb01_registration.py lines 47 to 49 (presence test); the hash diff (B-13). Scope: S-RT and S-PY.
+  D-04 KNOWN DEFECT / AMBIGUITY (orphan setting; KNOWN DOC DRIFT in its comment). watchlist.playbook_scanner has no
+       reader in S-ALL other than two records; the EOD binding is made by scanner_type, not by this setting, so
+       its schema comment ("binds the eod route") does not describe the code.
+       Evidence: config/system_config.yaml line 621; core/config_loader.py lines 1533 to 1535; signals/webhook_receiver.py lines 562 to 564.
+  R-01 FACT (RECORD-DERIVED, integrity audit measured 31-Jul-2026 over data from 12-Jun). range_breakout_long and
+       range_breakout_short received no webhook at all from 12-Jun to 31-Jul (0 POSTs in 127,272 webhook_audit
+       rows of every response code, 0 signals, 0 trades; 404s all-time 0).
+       Evidence: docs/audit/integrity_audit_2026.md lines 126 to 160; docs/audit/integrity_audit_2026.md lines 84 to 99.
+       Caveat: the record's period only; the cause (conditions never true, alert never armed, wrong webhook path) is UNKNOWN.
+       Caveat: the legacy database is gone, so it cannot be re-measured (design-log lesson 2026-10-05, SUPPLIED RECORD (INDIRECT)).
+  R-02 FACT (RECORD-DERIVED). pb01_breakout_retest received 5 POSTs from 27 to 31-Jul, one per night; a config
+       comment of 25-Jul records that the earlier triggers since 13-Jul hit a refused connection because the
+       service had already stopped, which is why service_window_end became 17:35.
+       Evidence: docs/audit/integrity_audit_2026.md lines 84 to 88; config/system_config.yaml lines 105 to 112.
+  D-01 (section 3.3): the S10 map-to-strategy check exists and is not invoked by any production caller.
+
+2.5 Counts and their scope (Q2d)
+  - Repository-declared scanner definitions: 16 keys in the map at 970aabf (15 intraday-type by default, 1 eod);
+    the same 16 keys in the twin file. FACT (SOURCE-VERIFIED).
+  - Strategies: 16 YAMLs; 15 enabled; 12 enabled INTRADAY. FACT (SOURCE-VERIFIED).
+    The record measured a "currently-tradeable population = 12 strategies" for 24 to 31-Jul: FACT (RECORD-DERIVED, that week only).
+    Evidence: docs/audit/integrity_audit_2026.md lines 89 to 97.
+  - Chartink side: the number of alerts configured or armed in the Chartink account is not in the repository:
+    UNKNOWN. Record-derived arrivals: 14 scanner keys posted at least once between 12-Jun and 31-Jul (13
+    intraday-type keys with 4,941 to 12,005 POSTs each, plus PB-01 from 27-Jul); 2 never posted (R-01); two keys
+    started on 15-Jun, the others on 12-Jun.
+    Evidence: docs/audit/integrity_audit_2026.md lines 84 to 99. After 31-Jul up to the baseline: UNKNOWN.
+  - Therefore no single "active production scanner count" is established. Each count above names its level
+    (definition, strategy, Chartink alert, observed arrival) and its period.
+
+
+==============================================================================
+3. CONFIGURATION LOADING AND VALIDATION  (sheet Q3)
+==============================================================================
+
+3.1 Load path (Q3a)
+  F-14 FACT (SOURCE-VERIFIED). main._main_locked loads all eight AppConfig files at Phase 0b through load_all,
+       which walks _CONFIG_FILES (scan_webhook_map and chartink_scanners among them): it reads the raw bytes,
+       records SHA-256, parses with yaml.safe_load and validates with the schema class; the result is AppConfig.
+       A failure raises ConfigMissingError or ConfigSchemaError; main logs CRITICAL and returns 5. Exit-5
+       supervision is recorded in A-009 and A-011 (SUPPLIED RECORD (INDIRECT): DR-024, DR-026).
+       Evidence: main.py lines 2196 to 2202; main.py lines 2197 to 2201 (exit 5).
+       Evidence: core/config_loader.py lines 2457 to 2516 (load_all); core/config_loader.py lines 2441 to 2450 (_CONFIG_FILES); core/config_loader.py lines 2447 to 2448 (the two scanner files).
+       Evidence: core/config_loader.py lines 2420 to 2434 (AppConfig).
+  F-15 FACT (SOURCE-VERIFIED). In the trading process the loaded scanner sections go to run_all_startup_checks,
+       to WebhookReceiver (as the whole AppConfig) and to SignalProcessor (as the map's scanners dict, which the
+       processor copies at construction). In S-RT only three files access the AppConfig scanner sections. The
+       name load_all occurs in 23 S-RT files (its definition included); each script process loads both scanner
+       files at its own start.
+       Evidence: main.py lines 2458 to 2460; main.py lines 3407 to 3415; main.py line 3585; signals/signal_processor.py lines 207 to 208.
+       Evidence (the three files): main.py lines 2458 to 2459; scripts/preflight_scanner_check.py lines 208 to 214; signals/webhook_receiver.py line 552.
+  F-16 FACT (SOURCE-VERIFIED). The dashboard reads config/scan_webhook_map.yaml directly, on each call, from its own
+       configured config_dir, with yaml.safe_load and no schema; a missing or unparsable file gives an empty
+       result without an error. The repository's dashboard config points config_dir at a Windows development path;
+       the production value sits in a never-open local override file.
+       Evidence: ops_dashboard/backend/readers/config_reader.py lines 92 to 115; ops_dashboard/backend/readers/config_reader.py lines 249 to 287.
+       Evidence: ops_dashboard/backend/config/gui_config.yaml lines 8 to 13.
+       Caveat: which file the production dashboard read is UNKNOWN.
+  F-17 FACT (SOURCE-VERIFIED). config/symbol_aliases.yaml is not part of AppConfig. The receiver reads it once, at
+       construction, from the relative path config/symbol_aliases.yaml, with keys and values upper-cased; a
+       missing file logs a warning and an unreadable one logs an error, and both give an empty map (fail-open).
+       It is not hashed and not in the config-diff alert.
+       Evidence: signals/webhook_receiver.py lines 222 to 227; signals/webhook_receiver.py lines 258 to 292.
+
+3.2 Schema, types, defaults, missing keys, invalid values, duplicates, normalisation, failure (Q3b)
+  All rows FACT (SOURCE-VERIFIED) unless marked.
+  - ScannerEntry: strategy str required; chartink_url str required, must start "http://" or "https://"; scanner_type str default "intraday", must be "intraday" or "eod"; extra keys forbidden. Evidence: core/config_loader.py lines 2347 to 2371.
+  - ScanWebhookMapConfig: scanners is a dict of ScannerEntry; extra keys forbidden; an empty dict is valid. Evidence: core/config_loader.py lines 2374 to 2377; tests/unit/test_config_loader.py lines 594 to 602.
+  - ChartinkScannersConfig: scanners is a dict of str to str; its URLs are not validated. Evidence: core/config_loader.py lines 2385 to 2388.
+  - Defaults applied at the baseline: scanner_type on 15 entries (A-009's "15 scanner_type defaults": SUPPLIED RECORD (INDIRECT), DR-024). Evidence: config/scan_webhook_map.yaml line 84 (the only explicit one).
+  - Missing key, wrong type, bad URL scheme or bad scanner_type: ValidationError raised as ConfigSchemaError; the start ends with exit 5. Evidence: core/config_loader.py lines 2506 to 2514; main.py lines 2197 to 2201.
+  - Missing file: ConfigMissingError (exit 5); the later presence check would also block. Evidence: core/config_loader.py lines 2483 to 2488; utils/startup_checks.py lines 833 to 872.
+  - YAML syntax error: ConfigSchemaError (exit 5). Evidence: core/config_loader.py lines 2493 to 2500.
+  - Duplicate keys: not detected (F-13). Evidence: core/config_loader.py lines 2490 to 2494.
+  - Map key set against the twin file's key set: no comparison found in S-RT. Evidence: utils/startup_checks.py lines 680 to 688 (the only place both are read together).
+  - A map strategy with no YAML: load succeeds; each signal is later rejected as REJECTED_UNKNOWN_STRATEGY. Evidence: signals/signal_processor.py lines 948 to 953.
+  - A strategy YAML with no scanner: no check (S10 is one-directional even when called). Evidence: strategies/loader.py lines 194 to 213.
+  - Several scanners on one strategy: allowed by the schema; none at the baseline (F-05).
+  - Normalisation: none for keys (exact, case-sensitive path match); alert-name normalisation in the receiver (F-09); alias keys and values upper-cased (F-17). Evidence: signals/webhook_receiver.py lines 551 to 554.
+
+3.3 Start-up and pre-flight checks: what each inspects, fetches or calls (Q3c; none executed here)
+  - Schema load (Phase 0b): validates both scanner files (3.2); no network; exit 5 on failure. FACT.
+    Evidence: main.py lines 2196 to 2202.
+  - Config hash diff: compares raw-file SHA-256 of the 8 AppConfig files with the previous session's stored hashes; no network; CONFIG_DIFF system event and a WARN alert naming the changed files; does not block. FACT.
+    Evidence: main.py lines 2295 to 2296; main.py lines 2656 to 2675; utils/startup_checks.py lines 581 to 634.
+  - Presence (run_all step 1): both scanner files must exist; no network; blocking, main returns 3. FACT.
+    Evidence: utils/startup_checks.py lines 833 to 872; utils/startup_checks.py lines 1550 to 1553; main.py lines 2484 to 2502.
+  - Scanner connectivity (run_all step 7): one GET per map entry's chartink_url after a configured delay (section 4); outbound to the configured screener addresses; warning "scanner_unreachable" only; no notifier call found; main reads report.warnings only under --dry-run. FACT.
+    Evidence: utils/startup_checks.py lines 1587 to 1597; utils/startup_checks.py lines 652 to 745; main.py lines 235 to 261; main.py lines 2476 to 2482.
+  - Strategy validation (run_all step 10): loads the strategy YAMLs without the map path; no network; blocking, with the strategy-config alert. FACT.
+    Evidence: utils/startup_checks.py lines 1266 to 1293; utils/startup_checks.py lines 1615 to 1618; main.py lines 2494 to 2500.
+  - S10 map cross-check: every map strategy must have a YAML; NOT invoked by production callers (D-01). FACT.
+    Evidence: strategies/loader.py lines 151 to 153; strategies/loader.py lines 169 to 213.
+  - Local webhook self-check: GET of the local /health (not Chartink); degrades and alarms (owner B-007). FACT.
+    Evidence: main.py lines 4002 to 4006; utils/startup_checks.py lines 783 to 826.
+  - Scheduled pre-flight Phases A, B, C (declared 08:30, 09:14 and 09:15 on weekdays): file presence (CRITICAL); webhook /health (CRITICAL; 200 or 401 counts as up); /metrics signals_received of at least 1 (WARN); queue depth (WARN); local only, no screener address fetched (owner B-007). FACT (repository declaration; installed crontab UNKNOWN).
+    Evidence: deploy/cron/trading-system.cron lines 57 to 64; scripts/preflight/checks/config_integrity.py lines 16 to 50; scripts/preflight/checks/signals.py lines 1 to 89.
+  - Operator CLI: load_all, then the same connectivity check with requests.get and retries; console exit code only (5.1). FACT.
+    Evidence: scripts/preflight_scanner_check.py lines 173 to 231.
+  - Deprecated pre-market check: presence only; "Kept (NOT cron'd)" per its docstring; not in the cron file. FACT.
+    Evidence: scripts/premarket_healthcheck.py lines 1 to 9; scripts/premarket_healthcheck.py lines 54 to 72.
+
+  F-19 FACT (SOURCE-VERIFIED). The COLD skip of the start-up connectivity check is not reached on the main.py path
+       except when run_all's own date differs from the session date main has just written. run_all re-runs
+       detect_startup_scenario and skips the scanner check only if that result is COLD. Before calling it,
+       main.py has already written today's session row (after its own scenario detection). With today's row
+       present, detection returns WARM or CRASH, never COLD, so the check runs at every start that reaches
+       Phase 0d. The docstring's "skipped on COLD scenario" holds only for a call made with no same-date session
+       row, as in the test that seeds a previous-day session (for example a start that straddles midnight).
+       Evidence: utils/startup_checks.py lines 1560 to 1565 (internal detection); utils/startup_checks.py lines 1587 to 1589 (COLD skip).
+       Evidence: main.py lines 2268 to 2292 (main's detection); main.py lines 2304 to 2314 (today's session row written).
+       Evidence: utils/startup_checks.py lines 289 to 382 (COLD only for an earlier session date); utils/startup_checks.py lines 1531 to 1545 (docstring).
+       Evidence: tests/unit/test_startup_checks.py lines 1205 to 1215 (previous-day session gives COLD).
+       Caveat: code path only; how often the check ran and what it returned is UNKNOWN (no logs). Owner of start-up check classes: B-007 (frozen); see 10.9 item 1.
+  D-01 KNOWN DEFECT / AMBIGUITY. The S10 map-to-strategy check is not run by any production caller: every runtime
+       call of load_all_strategies omits scan_webhook_map_path (scope S-RT; the mention at
+       signals/signal_processor.py lines 142 to 143 is a docstring example). Only tests pass the path. Even when
+       called, S10 checks map-to-strategy only and has no duplicate check. This confirms A-008 erratum E-1 at the
+       same baseline (SUPPLIED RECORD (INDIRECT): DR-024) and the 05-Jul and 31-Jul records (R-05, R-06).
+       Evidence: main.py lines 3157 to 3162; utils/startup_checks.py lines 1283 to 1284.
+       Evidence: scripts/preflight/checks/config_integrity.py lines 155 and 173; scripts/preflight/checks/config_sanity.py lines 37 to 40.
+       Evidence: ops/control_tower/aggregator.py lines 156 to 158; scripts/replay_signals.py lines 187 to 188.
+       Evidence (tests that pass it): tests/unit/test_strategies.py lines 357 to 368; tests/unit/test_pb01_registration.py lines 31 to 36.
+       Evidence (S10 logic): strategies/loader.py lines 169 to 213.
+  D-02 KNOWN DOC DRIFT. The map header says the map is "Validated at startup (P17, S10)" and that duplicate names
+       cause a "CRITICAL startup failure"; neither holds (D-01, F-13). The same claim is repeated in a guide, a
+       dashboard design note, a later section of the integrity audit (contradicting that record's own finding),
+       and the registry officer's comment "S10 boot-check owns the config gap".
+       Evidence: config/scan_webhook_map.yaml lines 3 to 6; docs/CONFIG_GUIDE.md lines 648 to 653; ops_dashboard/docs/G2b1_strategy_attribution.md line 9.
+       Evidence: docs/audit/integrity_audit_2026.md line 4374 (later section); docs/audit/integrity_audit_2026.md lines 56 to 63 (the same record's finding).
+       Evidence: scripts/strategy_registry_officer.py lines 126 to 136.
+  D-03 KNOWN DOC DRIFT. The twin file's header says the CLI "sends an HTTP HEAD request to each URL and fails
+       CRITICAL if any is unreachable at startup"; the code sends GET, reads the map URLs rather than this file's
+       (L-01), and at start-up the result is a warning only. The locked decision P17 (HEAD; all 15 URLs; map
+       validation; duplicate check; CRITICAL on any failure) and the configuration guide ("HEAD-checks") describe
+       the same unimplemented design.
+       Evidence: config/chartink_scanners.yaml lines 3 to 5; scripts/preflight_scanner_check.py line 101; main.py lines 246 to 250.
+       Evidence: docs/locked_decisions.yaml lines 370 to 376; docs/CONFIG_GUIDE.md lines 655 to 660.
+
+3.4 When configuration is loaded, and reloads (Q3d)
+  F-20 FACT (SOURCE-VERIFIED). The trading process loads AppConfig once per start, the strategies once ("loaded
+       ONCE; no hot reload"), the aliases once at receiver construction (F-17), and the processor holds its own
+       copy of the map. No reload path for the scanner files was found in S-RT (the reload found is for instrument
+       data). A change to a scanner file therefore takes effect in the trading process at the next start, where
+       the hash diff reports it (3.3). Each script process loads its own copy at its start; the dashboard
+       re-reads the map file on every request (F-16).
+       Evidence: main.py lines 2196 to 2202; main.py lines 3157 to 3162; strategies/loader.py lines 91 to 95; signals/signal_processor.py lines 207 to 208.
+       Evidence: core/instrument_cache.py lines 1 to 29 (the instrument cache, whose reload is unrelated).
+  L-02 INTERPRETATION / AUDIT LEAD. Because the dashboard re-reads the map file and the trading process does not,
+       an edit made during the day could make the dashboard's mapping and KPI panels describe a map the running
+       process is not using. Not observed; occurrence UNKNOWN.
+
+
+==============================================================================
+4. SCANNER URL AND REQUEST CONSTRUCTION  (sheet Q4)
+==============================================================================
+
+4.1 Declarations versus executions
+  F-21 FACT (SOURCE-VERIFIED). Screener URLs are declared twice (F-01, F-02). They are fetched only by
+       check_scanner_connectivity, called by run_all_startup_checks at start-up and by the operator CLI. The
+       dashboard displays the map's URLs and never fetches them. No code that pulls Chartink scan results was
+       found in S-CODE: the system only receives pushed webhooks.
+       Evidence: utils/startup_checks.py lines 652 to 745; utils/startup_checks.py lines 1587 to 1597; main.py lines 2451 to 2474.
+       Evidence: scripts/preflight_scanner_check.py lines 203 to 214; ops_dashboard/backend/services/scanner_attribution.py lines 660 to 682.
+
+4.2 Request construction (both callers use check_scanner_connectivity; the fetcher is injected)
+  Property: start-up check (main.py fetcher) | operator CLI (script fetcher) | evidence
+  - URL selection: entry.chartink_url from the map; the twin file only if an entry has none | same | utils/startup_checks.py lines 764 to 776
+  - Construction: none; the configured string as it is; no query parameters added | same | utils/startup_checks.py lines 687 to 702
+  - Method: GET (urllib Request without data) | GET (requests.get) | main.py lines 246 to 250; scripts/preflight_scanner_check.py line 101
+  - Headers: User-Agent "TradingSystem/2.0 startup-check" | User-Agent "TradingSystem/2.0 preflight-check" | main.py lines 246 to 248; scripts/preflight_scanner_check.py line 64
+  - Authentication: none | none | main.py lines 235 to 261; scripts/preflight_scanner_check.py lines 95 to 118
+  - Timeout: 10 s (the check's default; run_all passes none) | --timeout, default 10 s | utils/startup_checks.py lines 652 to 659; utils/startup_checks.py lines 1592 to 1595; scripts/preflight_scanner_check.py lines 50 to 56
+  - Delay before the first request: scanner_check_delay_sec = 5.0 | none | config/system_config.yaml lines 752 to 753; core/config_loader.py line 2026; utils/startup_checks.py lines 675 to 678
+  - Retry: none | up to 2 retries, 1 s back-off, on network errors and 5xx, none on 4xx | scripts/preflight_scanner_check.py lines 67 to 118
+  - Rate limiting: none; one request at a time, in map order | same | utils/startup_checks.py lines 687 to 742
+  - Response handling: first 256 bytes read; HTTP error codes returned as codes; other exceptions give None | first 300 characters kept for --verbose | main.py lines 249 to 261; scripts/preflight_scanner_check.py lines 101 to 117
+  - Reachable rule: status 200 to 299 only; response_has_content = non-empty body | same | utils/startup_checks.py lines 701 to 730
+  - Parsing: none ("Does NOT parse Chartink HTML -- reachability only") | none | utils/startup_checks.py lines 660 to 672
+  - Logging: first None per scanner at WARNING, repeats at DEBUG (module-level set); other non-2xx at WARNING | stderr WARNING logger and a stdout table | utils/startup_checks.py lines 641 to 649; utils/startup_checks.py lines 704 to 722
+  - Result use: warning only (3.3) | exit 0 if all reachable, else 1 | utils/startup_checks.py lines 1596 to 1597; scripts/preflight_scanner_check.py lines 222 to 231
+  - Empty map: vacuously all reachable | same | utils/startup_checks.py line 744
+
+  U-03 UNKNOWN / NOT ESTABLISHED. What Chartink returns for these GETs (for an existing screener, a missing slug, or
+       a blocked client) is external behaviour not represented in the source. The FIX-184 docstring claims that
+       Chartink's edge answered urllib's default User-Agent with 403 and "any non-urllib UA returns 200", and the
+       configuration guide calls a 403 "cosmetic". These are claims in code and documentation, not checked against
+       Chartink here (no live contact; W-5). A 2xx proves only that the configured address answered, not that a
+       scanner with those conditions exists behind it.
+       Evidence (claims): main.py lines 238 to 244; docs/CONFIG_GUIDE.md lines 658 to 660.
+  L-03 INTERPRETATION / AUDIT LEAD. Worst-case duration of the start-up check from the code: the 5 s delay plus 16
+       sequential requests with a 10 s timeout each. Actual durations UNKNOWN.
+
+
+==============================================================================
+5. SCANNER PRE-FLIGHT, HEALTH AND ATTRIBUTION  (sheet Q5)
+==============================================================================
+
+5.1 scripts/preflight_scanner_check.py and its callers (Q5a)
+  F-22 FACT (SOURCE-VERIFIED). A standalone CLI ("Standalone CLI that operator runs BEFORE market open") with
+       --config (default "config"), --verbose and --timeout (default 10). It checks that the config directory
+       exists, runs load_all, runs check_scanner_connectivity with its own requests-based fetcher, prints a table
+       and returns 0 if every scanner is reachable, else 1. It sends no alert and writes nothing.
+       Evidence: scripts/preflight_scanner_check.py lines 4 to 7 (docstring); scripts/preflight_scanner_check.py lines 34 to 57 (arguments).
+       Evidence: scripts/preflight_scanner_check.py lines 183 to 187 (directory); scripts/preflight_scanner_check.py lines 189 to 200 (load_all).
+       Evidence: scripts/preflight_scanner_check.py lines 202 to 214 (check); scripts/preflight_scanner_check.py lines 127 to 166 (table); scripts/preflight_scanner_check.py lines 216 to 231 (summary and exit).
+  F-23 FACT (SOURCE-VERIFIED). No caller or scheduler was found in S-ALL. The file name occurs only in a config
+       comment, the locked-decision record, a comment in requirements.txt (the requests pin), the script itself and
+       its unit test; it is absent from the cron file, the cron registry and the deploy/systemd/ units.
+       Evidence: config/chartink_scanners.yaml line 4; docs/locked_decisions.yaml line 376; tests/unit/test_preflight_scanner.py lines 1 to 13.
+       Caveat: whether Rama ran it, and how often, is UNKNOWN (not asked in this step; O-03).
+
+5.2 What scanner attribution measures (Q5b)
+  F-24 FACT (SOURCE-VERIFIED). Screen 21 (GET /api/scanner-attribution/screen and its XLSX export) is built by
+       build_scanner_attribution_screen from one strategy_tower build for today, the scanner registry read from the
+       map file, per-strategy daily signal counts, and today's rejections by status. Per strategy it shows: signals
+       stored today, grouped by signals.strategy into accepted, rejected, duplicated and expired buckets; the
+       webhook intake count ("received") from webhook_audit by scanner_name, mapped to strategies through the map;
+       orders and trades from the trades table by strategy; a four-part quality score; KPI "total scanners" = map
+       entries; and a mapping panel with each scanner's URL as written in the map.
+       Evidence: ops_dashboard/backend/api/analytics2.py lines 626 to 651 (endpoints); ops_dashboard/backend/services/scanner_attribution.py lines 275 to 423 (build).
+       Evidence: ops_dashboard/backend/services/strategy_tower.py lines 91 to 116 (tower inputs); ops_dashboard/backend/readers/config_reader.py lines 249 to 287 (registry).
+       Evidence: ops_dashboard/backend/readers/db_reader.py lines 659 to 704 (stored-signal buckets by strategy); ops_dashboard/backend/readers/db_reader.py lines 707 to 725 (webhook_audit by scanner).
+       Evidence: ops_dashboard/backend/services/scanner_attribution.py lines 228 to 267 (quality); ops_dashboard/backend/services/scanner_attribution.py lines 476 to 507 (KPIs); ops_dashboard/backend/services/scanner_attribution.py lines 652 to 682 (mapping panel).
+  F-25 FACT (SOURCE-VERIFIED). The older endpoint GET /api/scanner-attribution is built per scanner by
+       build_scanner_attribution over a chosen period: webhook_audit per scanner_name, signals per scanner, trades
+       attributed through trades.signal_id to signals.scanner, a three-factor product score, and "scanner-level
+       (shared)" as the linked strategy for an unmapped scanner.
+       Evidence: ops_dashboard/backend/api/analytics2.py lines 96 to 101; ops_dashboard/backend/services/analytics_period.py lines 500 to 549.
+       Evidence: ops_dashboard/backend/readers/db_reader.py lines 2267 to 2281 (webhook_audit); ops_dashboard/backend/readers/db_reader.py lines 2072 to 2090 (signals); ops_dashboard/backend/readers/db_reader.py lines 1651 to 1666 (trades to scanner).
+  Limitations (each FACT (SOURCE-VERIFIED) unless marked)
+  A-L1 Read-only displays of a separate process; they show what the tables held, not what happened outside them.
+       Display code shows what would be displayed, not what was displayed (design-log lesson 2026-10-19).
+  A-L2 Screen 21 is today-only by design, and no per-source state history is stored.
+       Evidence: ops_dashboard/backend/services/scanner_attribution.py lines 282 to 287; ops_dashboard/backend/services/scanner_attribution.py lines 409 to 418.
+  A-L3 Strategy attribution uses signals.strategy, which the receiver writes as the scanner key, not the mapped
+       strategy (D-05). Identical at the baseline (F-05); it diverges under any N:1 or renamed mapping.
+  A-L4 webhook_audit's accepted and rejected counts are taken from a response only when it is HTTP 200. Any request
+       answered 401, 403, 404, 429 or 503 records 0 and 0, so "received" (accepted plus rejected) excludes every
+       symbol in such a request; a 503 batch caused by one QUEUE_FULL or STORE_ERROR symbol records 0 accepted
+       although other symbols in it were queued. KNOWN DEFECT / AMBIGUITY (D-06).
+       Evidence: signals/webhook_receiver.py lines 510 to 517; signals/webhook_receiver.py lines 730 to 745.
+  A-L5 EOD alerts answer 200 with accepted = number of symbols, so webhook_audit counts them as accepted although no
+       signals row is created. Recorded as IA-P1-03: FACT (RECORD-DERIVED), matching the source.
+       Evidence: signals/webhook_receiver.py lines 799 to 804; docs/audit/integrity_audit_2026.md lines 187 to 209.
+  A-L6 The dashboard's "accepted" bucket means "stored and not in a rejected, duplicate or expired family"; it is
+       not the receiver's ACCEPTED, not processed, and not traded.
+       Evidence: ops_dashboard/backend/readers/db_reader.py lines 659 to 681.
+  A-L7 Symbols rejected at the receiver before insertion (INVALID_SYMBOL, INVALID_PRICE, EXPIRED, IN_PROCESS, cache
+       DUPLICATE, REJECTED_EXCLUDED_SYMBOL) never become signals rows, so they are invisible to the stored-signal
+       panels and visible only as webhook_audit rejected counts (when the request answered 200).
+       Evidence: signals/webhook_receiver.py lines 708 to 717; signals/webhook_receiver.py lines 904 to 947.
+  A-L8 The dashboard's map file location in production is UNKNOWN (F-16).
+  A-L9 FACT (RECORD-DERIVED). The signals table was pruned on 16-Jul of pre-09-Jul REJECTED*, EXPIRED and DUPLICATE
+       rows, so arrival claims rest on webhook_audit, which was not pruned. The legacy database no longer exists
+       (design-log lesson 2026-10-05, SUPPLIED RECORD (INDIRECT)).
+       Evidence: docs/audit/integrity_audit_2026.md lines 17 to 29.
+
+5.3 The dashboard's "Chartink" dependency card
+  F-26 FACT (SOURCE-VERIFIED). Its status is the worse of the pre-flight checks webhook_responsive and
+       signals_arrived, that is the local /health answer and "at least one signal today". It does not measure
+       screener reachability, per-scanner arrival or scan results. The card reads pre-flight result tables for
+       which B-007 found no writer in its inspected scope (design-log lesson 2026-10-19, SUPPLIED RECORD (INDIRECT)).
+       Evidence: ops_dashboard/backend/services/system_health.py lines 407 to 427.
+
+5.4 Connectivity, scanner result, delivery, acceptance and processing are different things (Q5c)
+  Level: what shows it | what it does not show | evidence
+  1 Screener connectivity: 2xx to a GET of the configured URL (start-up warning or CLI exit code) | that the scan exists, has these conditions, has an alert, or will post | utils/startup_checks.py lines 701 to 730
+  2 Scanner evaluation and alert: nothing in the repository (Chartink side) | - | F-04; U-01
+  3 Webhook delivery: a webhook_audit row for the POST (any response code; scanner key from the path) | that any symbol was taken | signals/webhook_receiver.py lines 477 to 534; signals/webhook_receiver.py lines 1126 to 1154
+  4 Webhook acceptance: per-symbol ACCEPTED (signals row inserted as QUEUED and tuple queued) | that processing will pass | signals/webhook_receiver.py lines 956 to 1072
+  5 Signal persistence: the signals row and its status changes | an order or a trade | core/schema.sql lines 42 to 79; core/state_store.py line 1424
+  6 Signal processing: statuses written by the processor and screener (REJECTED_*, PASSED, TRADED and others) | fills | signals/signal_processor.py lines 867 to 1004
+  7 Trade: trades rows | - | outside C-001
+  Local endpoint health: /health 200 or 401 (start-up self-check, pre-flight Phase C) | anything about Chartink | scripts/preflight/checks/signals.py lines 20 to 42
+
+
+==============================================================================
+6. RELATIONSHIP TO THE SIGNAL LIFECYCLE  (sheet Q6)
+==============================================================================
+
+6.1 Verified handoff, only as far as the C-001 boundary (FACT (SOURCE-VERIFIED))
+  1. Chartink posts to /webhook/<scanner key> (external; arming and URL: C-002); the server is waitress on the configured host and port. Evidence: main.py lines 3979 to 4000.
+  2. _handle_webhook: shutdown 503, per-IP limit 429, then _process_request; one webhook_audit row in every case. Evidence: signals/webhook_receiver.py lines 477 to 534.
+  3. _process_request, in this order (all in signals/webhook_receiver.py):
+     3a authentication 401 (C-003). Evidence: signals/webhook_receiver.py lines 547 to 549.
+     3b scanner key must be a map key, else 404. Evidence: signals/webhook_receiver.py lines 551 to 554.
+     3c an "eod" scanner leaves for the EOD route here, before the kill-switch, backpressure and entry-window gates. Evidence: signals/webhook_receiver.py lines 556 to 564.
+     3d kill switch 403; backpressure 503; entry window 403. Evidence: signals/webhook_receiver.py lines 566 to 583.
+     3e JSON, numeric cast and required fields, each 400 on failure. Evidence: signals/webhook_receiver.py lines 585 to 615.
+     3f alert-name check, 400 on mismatch (F-09). Evidence: signals/webhook_receiver.py lines 617 to 633.
+     3g triggered_at parse; stocks and trigger_prices split. Evidence: signals/webhook_receiver.py lines 635 to 674.
+  4. Per symbol: alias, exclusion list, then _process_signal (empty symbol, price, expiry, in-flight claim, cache dedup, fingerprint), INSERT INTO signals with scanner = strategy = the scanner key, queue tuple (signal_id, scanner key, symbol, price, triggered_at).
+     Evidence: signals/webhook_receiver.py lines 696 to 728; signals/webhook_receiver.py lines 892 to 1072.
+  5. SignalProcessor._process_one Step 2: map lookup by scanner key, strategy name from the entry, strategy object by name; each failure gives REJECTED_UNKNOWN_STRATEGY. From here the strategy object (direction, intent, controls) drives processing (C-008 and later).
+     Evidence: signals/signal_processor.py lines 930 to 953.
+  6. EOD branch: _handle_eod parses the body, applies aliases and submits (scanner key, symbol, triggered_at) to the capture worker, or records a fail-safe miss when none is wired; the worker writes pb01_watchlist rows with source = scanner key; wired when watchlist.enabled (owner C-011).
+     Evidence: signals/webhook_receiver.py lines 751 to 804; v3_chain/watchlist_capture.py lines 106 to 178.
+     Evidence: main.py lines 3712 to 3755; config/system_config.yaml lines 619 to 621.
+
+6.2 What C-001 establishes, and what belongs to later topics
+  C-001: steps 3b, 3c and 3f (scanner-key gate, EOD routing by type, alert-name rule), step 4's stored and queued
+  identity, and step 5 (resolution of a scanner key to a strategy).
+  C-002: Chartink alert arming, webhook URL, delivery and retries. FACT (RECORD-DERIVED) that "Chartink retries on
+  503" was an untested assumption; the behaviour itself is UNKNOWN. Evidence: docs/SYSTEM_ASSUMPTIONS.md line 20.
+  C-003: token and HMAC. Evidence: signals/webhook_receiver.py lines 298 to 354.
+  C-004: payload and symbol validation. C-005: dedup layers. C-006 to C-009: queue, persistence, processing,
+  expiry. C-010: mapping design (VP-45). C-011: EOD route.
+
+6.3 Findings at the boundary (findings, not corrections)
+  D-05 KNOWN DEFECT / AMBIGUITY (latent). The receiver stores the scanner key in both signals.scanner and
+       signals.strategy, while processing resolves the strategy through the map. No runtime writer updates
+       signals.strategy later (S-RT; the state store updates status and rejection_reason only). Consumers that
+       treat signals.strategy as the strategy: the replay tool, the dashboard's per-strategy funnel and counts,
+       and the registry officer. No effect at the baseline because every key equals its strategy name (F-05); any
+       N:1 or renamed mapping would make these consumers attribute to the scanner key. The processor test that
+       uses a key different from its strategy inserts the mapped name itself, so no test covers the production
+       insert.
+       Evidence: signals/webhook_receiver.py lines 963 to 980 (insert); signals/signal_processor.py lines 933 to 953 (resolution).
+       Evidence: core/state_store.py lines 1424, 2996 and 3057 (status updates only).
+       Evidence: scripts/replay_signals.py lines 91 to 95; ops_dashboard/backend/readers/db_reader.py lines 684 to 704; ops_dashboard/backend/readers/db_reader.py lines 2093 to 2101; scripts/strategy_registry_officer.py lines 53 to 60.
+       Evidence: tests/unit/test_signal_processor.py lines 1933 to 1964.
+  Q-20 evidence (Q-20 stays OPEN; not decided here)
+  E-Q20-1 FACT (SOURCE-VERIFIED). The symbol comes from the comma-separated "stocks" field; the receiver reads no
+       exchange field. Evidence: signals/webhook_receiver.py lines 664 to 674.
+  E-Q20-2 FACT (SOURCE-VERIFIED). Aliases are looked up by the upper-cased raw symbol; a hit returns the upper-cased
+       alias, a miss keeps the raw symbol unchanged, including its case. Two aliases exist. The exclusion list
+       (five symbols) is compared case-insensitively after aliasing and gives REJECTED_EXCLUDED_SYMBOL without a
+       signals row.
+       Evidence: signals/webhook_receiver.py line 701; config/symbol_aliases.yaml lines 9 to 10.
+       Evidence: config/system_config.yaml lines 130 to 136; signals/webhook_receiver.py lines 708 to 717.
+  E-Q20-3 FACT (SOURCE-VERIFIED). The receiver does not look the symbol up in the instrument cache; its only symbol
+       test is non-empty. The stored and queued symbol is the aliased one.
+       Evidence: signals/webhook_receiver.py lines 904 to 906; signals/webhook_receiver.py lines 963 to 980; signals/webhook_receiver.py line 1047.
+  E-Q20-4 FACT (SOURCE-VERIFIED). The instrument cache is keyed by the exact symbol string and raises
+       InstrumentNotFoundError on a miss; its rows carry an exchange column, NSE or BSE.
+       Evidence: core/instrument_cache.py lines 13 to 18; core/instrument_cache.py line 93; core/instrument_cache.py lines 219 to 236; core/instrument_cache.py lines 62 to 64.
+       INTERPRETATION: if two rows shared a symbol, the later row would win the symbol index (core/instrument_cache.py line 93); not checked against the instrument file, which A-004 covered (SUPPLIED RECORD (INDIRECT): DR-019).
+  E-Q20-5 INTERPRETATION / AUDIT LEAD. The adapter builds quote keys as "NSE:" + symbol and passes exchange "NSE"
+       literally in three calls; the order placer builds "NSE:" quote keys. Contexts beyond these lines were not
+       read; on these paths the exchange appears fixed in code, not taken from Chartink.
+       Evidence: broker/zerodha_adapter.py lines 1759 to 1760; broker/zerodha_adapter.py lines 641, 743 and 792.
+       Evidence: orders/order_placer.py lines 4051 to 4054; orders/order_placer.py lines 4078 to 4081.
+  E-Q20-6 FACT (SOURCE-VERIFIED). Unknown-symbol handling after the receiver was not traced in C-001 (its owners are
+       the validation and processing topics). The operator tool scripts/find_symbol_aliases.py suggests aliases for a
+       list of failed symbols against the instrument file; no scheduler or caller was found in S-ALL.
+       Evidence: scripts/find_symbol_aliases.py lines 1 to 105.
+  Other boundary findings
+  F-27 FACT (SOURCE-VERIFIED). No direction ambiguity exists at the baseline (F-07, F-08). The entry throttle is
+       keyed by symbol only, across all scanners.
+       Evidence: signals/entry_throttle.py lines 1 to 19; signals/entry_throttle.py line 65; signals/signal_processor.py lines 262 to 268.
+  D-07 KNOWN DEFECT / AMBIGUITY. The alert-name rule normalises only case, spaces and the account prefix (F-09). An
+       alert whose name differs from the key in any other character (for example a hyphen) gets 400; an alert with
+       no scan_name is accepted on the path alone. Whether production alert names ever hit this is UNKNOWN; the
+       mismatch log line exists but no logs survive.
+       Evidence: signals/webhook_receiver.py lines 627 to 632.
+
+
+==============================================================================
+7. PAPER / LIVE DIFFERENCES  (sheet Q7)
+==============================================================================
+
+  Item: paper | live | evidence | label
+  - Scanner definitions and load: same files, same load_all | same | main.py lines 2196 to 2202 (no mode branch in it) | FACT
+  - Start-up connectivity check: called the same way | same | main.py lines 2451 to 2474 (mode not passed); utils/startup_checks.py lines 652 to 745 (no mode) | FACT
+  - Operator CLI: no mode | no mode | scripts/preflight_scanner_check.py lines 34 to 57 | FACT
+  - Receiver and scanner-key gate: constructed without a mode argument | same | main.py lines 3407 to 3415 (no paper or live branch found in signals/webhook_receiver.py) | FACT
+  - Webhook secret required: yes (C-2, 02-Jul) | yes | main.py lines 219 to 232 | FACT
+  - Scanner-to-strategy resolution: identical; mode used only in alert titles | same | signals/signal_processor.py lines 930 to 953; signals/signal_processor.py line 227 | FACT
+  - EOD route and watchlist: one flag for both modes | same | core/config_loader.py lines 1516 to 1531 | FACT
+  - Symbol aliases: receiver at the edge, plus the paper quote provider translating quote symbols | receiver only | main.py lines 473 to 538; main.py line 2394 (provider built only when is_paper) | FACT
+  - Attribution: no mode split in the queries read; the tower reads the session's mode | same | ops_dashboard/backend/services/strategy_tower.py lines 95 to 98 | FACT
+  - Tests: the integration fixture runs in paper mode | not exercised | tests/integration/test_full_signal_flow.py lines 1 to 21 | FACT
+
+  Conclusion (limited): within the inspected scope (the inventory files at 970aabf), no paper/live difference was
+  found in scanner selection, start-up connectivity, request construction, scanner-key routing,
+  scanner-to-strategy resolution or attribution. The one mode-dependent consumer of scanner-adjacent configuration
+  is the paper quote provider's second use of the alias file. This is not a claim of universal parity, and it says
+  nothing about the installed configuration of either environment. Environment differences (production versus the
+  testing VM) are separate: the WR4b strip depends on each machine's accounts file (F-09).
+
+
+==============================================================================
+8. TESTS AND RECORDS  (sheet Q8; nothing was run)
+==============================================================================
+
+8.1 Tests: what each asserts | what it does not prove
+  - tests/unit/test_preflight_scanner.py lines 68 to 157: CLI exit 0 when all reachable and 1 when one is not, with load_all and check_scanner_connectivity patched | real reachability; that the production config loads; anything about scheduling.
+  - tests/unit/test_preflight_scanner.py lines 284 to 394: the CLI fetcher returns status and snippet, None on a network error, honours the timeout, retries network errors and 5xx but not 4xx (requests mocked) | Chartink's real responses.
+  - tests/unit/test_startup_checks.py lines 544 to 620: connectivity classification with injected fetchers (2xx reachable; 404 and exceptions unreachable; empty map vacuously true) | urllib behaviour of main.py's fetcher; the real network.
+  - tests/unit/test_startup_checks.py lines 1104 to 1139: an unreachable scanner gives ok True with "scanner_unreachable" in warnings (same-day session seeded) | what main does with the warning (nothing; 3.3).
+  - tests/unit/test_startup_checks.py lines 1205 to 1215: a previous-day session gives COLD and no scanner result | that main.py's path can reach COLD (F-19).
+  - tests/unit/test_config_loader.py lines 594 to 602: empty scanner dicts are valid | -
+  - tests/unit/test_config_loader.py lines 1036 to 1065: the real map validates, each strategy file exists, URLs are https, at least 10 entries | that production starts run S10; duplicate keys (safe_load collapses them).
+  - tests/unit/test_strategies.py lines 357 to 396: S10 passes on the real map (15 live strategies) and raises for a missing strategy, when the test passes the map path | that any production caller passes it (D-01).
+  - tests/unit/test_pb01_registration.py lines 31 to 92: PB-01 is in both scanner files, loads as v3_playbook with enabled false, and is refused by strategy control under every trade_type and flag combination | the EOD route at runtime.
+  - tests/unit/test_v3_eod_route.py lines 39 to 119: an eod scanner is captured with no intraday queueing and no entry-window gate; an intraday scanner stays window-gated; fail-safe miss without a worker; late binding; 400 on a bad body (receiver built with no secret) | production wiring (main.py lines 3712 to 3755); authentication.
+  - tests/unit/test_webhook_receiver.py lines 63 to 133: the test config is a plain dict map (key presence only) | ScannerEntry objects; the production config.
+  - tests/unit/test_webhook_receiver.py lines 220 to 242: unknown path gives 404; scan_name mismatch gives 400 | -
+  - tests/unit/test_webhook_receiver.py lines 1864 to 1935: WR4b prefix stripped with "-" or "_"; genuine mismatch still 400; absent scan_name skips; the "UNKNOWN" tag never strips (tag patched) | the real accounts file or real alert names.
+  - tests/unit/test_signal_processor.py lines 585 to 611: an unmapped scanner, or a mapped strategy that is not loaded, gives REJECTED_UNKNOWN_STRATEGY | the receiver's insert of signals.strategy (D-05).
+  - ops_dashboard/tests/test_screen21_scanner_attribution.py lines 85 to 102: the real map is 1:1 (distinct strategies); skipped if the file is absent | duplicate keys; the production dashboard's file.
+  - tests/integration/test_full_signal_flow.py lines 1 to 21: end to end in paper mode with one scanner and a mocked broker | live mode; real map objects; Chartink payload realism.
+  - tests/integration/conftest.py lines 106 to 117: the receiver's integration map checks key presence only | as above.
+  - tests/unit/test_c2_webhook_lockdown.py lines 1 to 85: per-IP limiter and the always-required secret | scanner definitions (C-002, C-003).
+  - tests/unit/test_s4_webhook_degrade.py lines 1 to 73: a source-text check of main.py's self-check branch | runtime behaviour (B-007).
+  - tests/unit/test_preflight_signals.py lines 22 to 70: the pre-flight Signals checks with patched HTTP | real endpoints (B-007).
+  - tests/unit/test_signal_status_classification.py lines 1 to 19: status families for reports | runtime scanner routing.
+  - tests/unit/test_fix133_replay_signals.py lines 85 to 167: replay skips a strategy not in config and writes its CSV | the map (replay does not use it; D-05).
+  - tests/unit/test_load_test_signals.py lines 35 to 170: load-test plans and pass criteria | real traffic.
+  - tests/unit/test_strategy_registry_officer.py lines 22 to 132: registry reconciliation | trading behaviour (the registry has no trading consumer; F-08).
+  Test inventory scope: tests found in S-PY by the scanner, chartink, signals-import and map-path searches (method
+  file section 5); 404 .py files exist under tests/. Tests that only import signals modules for later-stage
+  behaviour were listed, not read.
+
+8.2 Records (narrow masked greps; a record is not proof of current source behaviour)
+  - docs/locked_decisions.yaml lines 370 to 376 (P17): HEAD check of all 15 URLs, map validation, own /health, no duplicates, CRITICAL on any failure. FACT (RECORD-DERIVED) for what was decided; the code differs (D-01, D-03).
+  - docs/locked_decisions.yaml lines 2724 to 2732 (S10): map cross-validation at start-up. FACT (RECORD-DERIVED); not invoked (D-01).
+  - docs/locked_decisions.yaml lines 2771 to 2791 (S14, S15): file formats "populated with placeholder Chartink URLs" for 15 scanners. FACT (RECORD-DERIVED).
+  - docs/locked_decisions.yaml lines 2616 to 2618: one YAML per Chartink scanner, 15 files. FACT (RECORD-DERIVED); PB-01 was added later.
+  - docs/audit/audit_05jul2026.md lines 446 and 457: S10 "confirmed dead in production"; no twin-file cross-check; placeholder URLs UNCERTAIN. FACT (RECORD-DERIVED, 05-Jul-2026); its line numbers refer to the code of that date (R-05).
+  - docs/audit/audit_05jul2026.md line 466: stale comments, including the placeholder note. FACT (RECORD-DERIVED).
+  - docs/audit/integrity_audit_2026.md lines 17 to 29: Phase 1 measurement window 31-Jul-2026, data from 12-Jun, signals pruned on 16-Jul. FACT (RECORD-DERIVED).
+  - docs/audit/integrity_audit_2026.md lines 84 to 99: per-scanner POSTs, signals and trades, 12-Jun to 31-Jul. FACT (RECORD-DERIVED) (R-01 to R-04).
+  - docs/audit/integrity_audit_2026.md lines 126 to 160: IA-P1-01, two scanners never posted; placeholder note never verified. FACT (RECORD-DERIVED) (R-01, R-06).
+  - docs/audit/integrity_audit_2026.md lines 187 to 209: IA-P1-03, accepted-count conflation by the EOD route. FACT (RECORD-DERIVED), matching the source (A-L5).
+  - docs/audit/bk1_long_short_scanner_analysis_17jul2026.md lines 1 to 19: 155 closed trades, 15-Jun to 16-Jul; small-sample warning. FACT (RECORD-DERIVED); A-008 already used this dataset (DR-023).
+  - docs/audit/bk1_long_short_scanner_analysis_17jul2026.md lines 83 to 95: per-scanner table with 11 scanners. FACT (RECORD-DERIVED).
+  - docs/audit/bk1_long_short_scanner_analysis_17jul2026.md lines 146 to 161: short fill gap; explicit limits. FACT (RECORD-DERIVED).
+  - docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 8 to 17: webhook_audit.source_ip as the only inbound-IP source; 58,507 webhook requests over 15 trading days from 12-Jun. FACT (RECORD-DERIVED, 03-Jul-2026); no address reproduced; the IP verdict (docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 35 to 39) belongs to C-003.
+  - docs/CONFIG_GUIDE.md lines 648 to 660: a missing strategy makes "startup fail CRITICAL"; the twin file is "HEAD-checked". KNOWN DOC DRIFT (D-02, D-03).
+  - docs/SYSTEM_ASSUMPTIONS.md line 7: A1 cites a function parse_chartink_payload that has no definition in S-ALL. KNOWN DOC DRIFT (D-09).
+  - docs/SYSTEM_ASSUMPTIONS.md line 20: A14 "Chartink retries on 503", NOT_TESTED_YET. FACT (RECORD-DERIVED) that it was untested.
+  - ops_dashboard/docs/G2b1_strategy_attribution.md line 9: duplicate names cause a CRITICAL startup failure. KNOWN DOC DRIFT (D-02).
+  - config/system_config.yaml lines 105 to 112 (comment, 25-Jul-2026): PB-01 alerts since 13-Jul hit a refused connection. FACT (RECORD-DERIVED) (R-02).
+
+
+==============================================================================
+9. END-TO-END EVIDENCE MAP  (sheet Q9)
+==============================================================================
+
+  Format: SOURCE -> INPUT -> CONFIG/LOGIC -> VALIDATION/GUARD -> OUTPUT -> STORAGE/HANDOFF -> NEXT CONSUMER.
+  Every step FACT (SOURCE-VERIFIED) at 970aabf unless marked; MISSING marks a link the repository cannot show.
+
+  B-1 Scanner configuration load
+    SOURCE: config/scan_webhook_map.yaml lines 16 to 84; config/chartink_scanners.yaml lines 15 to 32
+    INPUT: raw file bytes from the config directory (default "config" under the working directory)
+    LOGIC: core/config_loader.py lines 2457 to 2516 (load_all)
+    GUARD: core/config_loader.py lines 2347 to 2388 (schema only; no duplicate, cross-file or S10 check)
+    OUTPUT: AppConfig.scan_webhook_map, AppConfig.chartink_scanners, file_hashes
+    STORAGE/HANDOFF: memory; hashes into the session row (main.py lines 2304 to 2314)
+    NEXT CONSUMER: main.py lines 2451 to 2474; main.py lines 3407 to 3415; main.py line 3585
+    MISSING: the configuration installed on the production VM (UNKNOWN).
+
+  B-2 Start-up screener connectivity check
+    SOURCE/INPUT: map entries' chartink_url, passed in at main.py lines 2458 to 2460
+    LOGIC: utils/startup_checks.py lines 1587 to 1597; utils/startup_checks.py lines 652 to 745; fetcher main.py lines 235 to 261
+    GUARD: runs unless the internal scenario is COLD (F-19); 5 s delay; 2xx rule
+    OUTPUT: ScannerPreflightResult; warning "scanner_unreachable"
+    STORAGE/HANDOFF: log lines; StartupReport.scanners
+    NEXT CONSUMER: none that acts on it (main.py lines 2476 to 2502)
+    MISSING: what Chartink answered (U-03); the logs (gone).
+
+  B-3 Operator CLI connectivity check
+    SOURCE/INPUT: --config directory, then load_all (scripts/preflight_scanner_check.py lines 183 to 200)
+    LOGIC: scripts/preflight_scanner_check.py lines 202 to 214; fetcher scripts/preflight_scanner_check.py lines 78 to 120
+    GUARD: retries; 2xx rule
+    OUTPUT: console table; exit 0 or 1 (scripts/preflight_scanner_check.py lines 216 to 231)
+    STORAGE/HANDOFF: none
+    NEXT CONSUMER: the operator
+    MISSING: any record of runs (UNKNOWN).
+
+  B-4 Scheduled pre-flight (no screener check)
+    SOURCE: deploy/cron/trading-system.cron lines 57 to 64 (declared)
+    LOGIC: scripts/preflight/checks/config_integrity.py lines 39 to 50; scripts/preflight/checks/signals.py lines 20 to 82
+    OUTPUT: check results (presence, /health, signals_received, queue depth)
+    NEXT CONSUMER: pre-flight report and alerts; the dashboard card (F-26)
+    MISSING: the installed crontab (UNKNOWN); the result-table writer (B-007).
+
+  B-5 Webhook receipt and scanner-key gate
+    SOURCE: Chartink POST /webhook/<scanner key> (external)
+    INPUT: path segment, body, source address
+    LOGIC: signals/webhook_receiver.py lines 406 to 408; signals/webhook_receiver.py lines 477 to 564
+    GUARD: shutdown, per-IP limit, authentication, map-key membership (404), scanner_type routing
+    OUTPUT: HTTP response; branch to the EOD route or the intraday gates
+    STORAGE/HANDOFF: webhook_audit row (signals/webhook_receiver.py lines 1126 to 1154; core/schema.sql lines 581 to 593)
+    NEXT CONSUMER: B-6 to B-8, or B-10
+    MISSING: the Chartink-side URL and alert set (U-01).
+
+  B-6 Alert-name cross-check
+    INPUT: the optional scan_name
+    LOGIC: signals/webhook_receiver.py lines 617 to 633; signals/webhook_receiver.py lines 111 to 138; core/account_registry.py lines 277 to 299
+    GUARD: exact equality after normalisation
+    OUTPUT: pass, or 400 with a warning log line
+    NEXT CONSUMER: the triggered_at parse (signals/webhook_receiver.py lines 635 to 662)
+    MISSING: production alert names (UNKNOWN).
+
+  B-7 Symbol edge handling (Q-20 evidence)
+    INPUT: the "stocks" field
+    LOGIC: signals/webhook_receiver.py lines 696 to 717; aliases loaded at signals/webhook_receiver.py lines 258 to 292
+    GUARD: exclusion list (config/system_config.yaml lines 130 to 136); non-empty symbol
+    OUTPUT: aliased symbol, or REJECTED_EXCLUDED_SYMBOL
+    NEXT CONSUMER: B-8
+    MISSING: the downstream unknown-symbol path (Q-20; later topics).
+
+  B-8 Per-symbol acceptance and persistence
+    LOGIC: signals/webhook_receiver.py lines 892 to 1072
+    GUARD: price, expiry, in-flight claim, cache dedup, unique fingerprint (C-005)
+    OUTPUT: ACCEPTED, DUPLICATE, EXPIRED, IN_PROCESS, INVALID_*, QUEUE_FULL or STORE_ERROR
+    STORAGE/HANDOFF: signals row with scanner = strategy = key (core/schema.sql lines 42 to 79); queue tuple
+    NEXT CONSUMER: B-9; webhook_audit counts (A-L4)
+
+  B-9 Scanner-to-strategy resolution
+    INPUT: queue tuple (signals/signal_processor.py line 78; signals/signal_processor.py lines 867 to 887)
+    LOGIC: signals/signal_processor.py lines 930 to 953, on the processor's map copy (signals/signal_processor.py lines 207 to 208)
+    GUARD: REJECTED_UNKNOWN_STRATEGY on any miss; then strategy control (signals/signal_processor.py lines 955 to 972)
+    OUTPUT: strategy object (direction, intent)
+    NEXT CONSUMER: screening and later stages (C-008)
+
+  B-10 EOD scanner route
+    INPUT: an eod-type scanner (config/scan_webhook_map.yaml line 84)
+    LOGIC: signals/webhook_receiver.py lines 751 to 804; worker v3_chain/watchlist_capture.py lines 106 to 178
+    GUARD: watchlist enabled and wired (main.py lines 3712 to 3755); settled-session rule (v3_chain/watchlist_capture.py lines 143 to 151)
+    OUTPUT: pb01_watchlist row with source = key; heartbeat "pb01_capture" (signals/webhook_receiver.py lines 806 to 834)
+    NEXT CONSUMER: the PB-01 entry stage (C-011)
+
+  B-11 Screen 21 attribution
+    SOURCE: signals, webhook_audit, trades; the map file
+    LOGIC: ops_dashboard/backend/services/scanner_attribution.py lines 275 to 423
+    OUTPUT: JSON and XLSX views (ops_dashboard/backend/api/analytics2.py lines 626 to 651)
+    NEXT CONSUMER: the operator
+    MISSING: the production dashboard config (A-L8); limitations A-L1 to A-L9.
+
+  B-12 Older attribution endpoint
+    LOGIC: ops_dashboard/backend/services/analytics_period.py lines 500 to 549
+    OUTPUT: per-scanner rows (ops_dashboard/backend/api/analytics2.py lines 96 to 101)
+
+  B-13 Configuration change detection
+    INPUT: file_hashes against the session's stored hashes
+    LOGIC: main.py lines 2295 to 2296; utils/startup_checks.py lines 581 to 634
+    OUTPUT: CONFIG_DIFF system event and WARN alert (main.py lines 2656 to 2675)
+    MISSING: content validation of the change.
+
+  B-14 Direction registry officer
+    SOURCE: strategy YAMLs and distinct signals.scanner and signals.strategy (scripts/strategy_registry_officer.py lines 53 to 60)
+    LOGIC: scripts/strategy_registry_officer.py lines 98 to 167
+    OUTPUT: runtime registry state (outside the repository) and notifications; schedule declared at deploy/cron/trading-system.cron lines 126 to 127
+    NEXT CONSUMER: the operator (no trading consumer; F-08)
+
+  B-15 Replay tool
+    SOURCE: signals rows (scripts/replay_signals.py lines 41 to 51)
+    LOGIC: strategy taken from signals.strategy, no map (scripts/replay_signals.py lines 91 to 95)
+    OUTPUT: a CSV report (scripts/replay_signals.py lines 12 to 13)
+
+
+==============================================================================
+10. FINDINGS AND UNRESOLVED ITEMS  (sheet Q10)
+==============================================================================
+
+10.1 FACT (SOURCE-VERIFIED): F-01 to F-27 above. The load-bearing ones for the manual:
+  - 16 scanner definitions, identity-mapped to 16 strategy YAMLs; keys equal webhook path segments; no missing or
+    duplicate entries at the baseline (F-01, F-05, F-06, F-11, F-12).
+  - The webhook carries no side; direction comes from the strategy YAML (F-07, F-08).
+  - The alert name is an optional cross-check with a case, space and account-prefix normalisation (F-09).
+  - Loading is schema-only; no duplicate, cross-file or S10 check runs (F-13, 3.2, D-01).
+  - Screener URLs are fetched only by the start-up check (warning only; runs at every start that reaches Phase 0d,
+    F-19) and the manual CLI; GET, no retry at start-up, 2xx rule (F-21, section 4).
+  - No scheduler runs the CLI; the scheduled pre-flight fetches no screener address (F-23, 3.3).
+  - Attribution is a separate read-only process with the limitations A-L1 to A-L9 (F-24 to F-26).
+
+10.2 FACT (RECORD-DERIVED)
+  R-01 range_breakout_long and range_breakout_short: no webhook ever, 12-Jun to 31-Jul (IA-P1-01).
+  R-02 PB-01: 5 POSTs, 27 to 31-Jul; earlier triggers refused (config comment of 25-Jul).
+  R-03 24 to 31-Jul: every day's REJECTED_STRATEGY_CONTROL rows belonged to the 3 positional scanners; "currently-tradeable population = 12".
+       Evidence: docs/audit/integrity_audit_2026.md lines 89 to 97.
+  R-04 Per-scanner volumes 12-Jun to 31-Jul: 13 intraday-type keys with 4,941 to 12,005 POSTs each; signals rows per scanner 488 to 20,666; 13 strategies traded.
+       Evidence: docs/audit/integrity_audit_2026.md lines 84 to 99.
+  R-05 05-Jul audit: S10 dead; no twin-file-to-map check; placeholder URLs UNCERTAIN.
+       Evidence: docs/audit/audit_05jul2026.md lines 446 and 457.
+  R-06 31-Jul audit: S10 still unwired; the placeholder note "has never been verified against the live Chartink account".
+       Evidence: docs/audit/integrity_audit_2026.md lines 56 to 63; docs/audit/integrity_audit_2026.md lines 145 to 149.
+  R-07 03-Jul: 58,507 webhook requests over 15 trading days from 12-Jun.
+       Evidence: docs/audit/c2_chartink_ip_investigation_03jul2026.md line 17.
+  R-08 17-Jul BK-1: 155 closed trades, 15-Jun to 16-Jul; 11 scanners in the per-scanner table.
+       Evidence: docs/audit/bk1_long_short_scanner_analysis_17jul2026.md lines 1 to 19; docs/audit/bk1_long_short_scanner_analysis_17jul2026.md lines 83 to 95.
+
+10.3 HISTORICAL (Rama): none collected in this step; items needing his account are in 10.7.
+     SUPPLIED RECORD (INDIRECT) used: DR-019, DR-022, DR-023, DR-024, DR-026, DR-031; VP-08, VP-44, VP-45; Q-17
+     (CLOSED), Q-20 (OPEN), Q-34 (OPEN); design-log lessons of 2026-10-05, 2026-10-07, 2026-10-08 and 2026-10-19.
+
+10.4 INTERPRETATION / AUDIT LEAD
+  L-01 The twin file's URLs: no effect identified in the inspected path.
+  L-02 The dashboard's map and the running process's map can diverge after an intra-day edit.
+  L-03 Worst-case start-up check duration from the code.
+  L-04 R-01 is new evidence for Q-34 (d) (range-breakout scanners): the dataset shows no webhook at all, which is
+       consistent with the self-defeating-conditions lead but equally with an unarmed alert or a wrong webhook
+       path; the cause stays UNKNOWN.
+  E-Q20-4 and E-Q20-5: possible instrument-index collision; "NSE" fixed in the adapter and placer paths.
+
+10.5 KNOWN DEFECT / AMBIGUITY (including KNOWN DOC DRIFT)
+  D-01 S10 never invoked in production; one-directional; no duplicate check.
+  D-02 The map header, the configuration guide, the dashboard design note, a later integrity-audit section and the
+       registry officer's comment claim the start-up map validation and duplicate failure (doc drift).
+  D-03 The twin file's header, P17 and the configuration guide describe a HEAD check with CRITICAL failure; the code
+       does GET on the map URLs and only warns (doc drift).
+  D-04 watchlist.playbook_scanner has no reader (orphan setting; doc drift in its comment).
+  D-05 signals.strategy stores the scanner key; consumers treat it as the strategy (latent).
+  D-06 webhook_audit accepted and rejected counts are zero for every non-200 response, including mixed 503 batches;
+       EOD acceptances are counted as accepted (A-L4, A-L5).
+  D-07 Alert-name normalisation covers case, spaces and the prefix only; scan_name is optional.
+  D-08 The "skipped on COLD" branch of the start-up scanner check is reachable from main.py only when the dates
+       differ (F-19); the docstring and its test describe a case the production path does not reach on a normal start.
+  D-09 docs/SYSTEM_ASSUMPTIONS.md line 7 cites a function that does not exist (doc drift).
+
+10.6 UNKNOWN / NOT ESTABLISHED
+  U-01 The Chartink account's scanners, alerts, alert names, webhook URLs (and the token in them), alert frequency and
+       duplicate-notification settings; whether all 16 were ever configured (Q-34 (g)).
+  U-02 Whether the 16 committed screener URLs are the live screeners (placeholder note; never verified per R-06).
+  U-03 Chartink's responses to the connectivity GETs (FIX-184 claim unverified).
+  U-04 Installed state on the production VM: configuration files, crontab, dashboard config; whether the baseline's
+       receiver (WR4b, 09-Sep) was deployed.
+  U-05 How often the start-up check and the CLI ran, and their results (logs gone).
+  U-06 Arrivals after 31-Jul-2026 up to the baseline.
+  U-07 Whether Chartink retries on 503 (C-002).
+
+10.7 OPEN QUESTIONS (for reconciliation or for Rama; not answered, not numbered as Q rows)
+  O-01 For Rama (HISTORICAL): were the two range-breakout alerts ever created and armed on Chartink, with webhook paths
+       ending /webhook/range_breakout_long and /webhook/range_breakout_short (the record's OQ-P1-1)? Relevant to Q-34 (d)
+       and R-01.
+  O-02 For Rama (HISTORICAL): did the committed screener URLs ever match the real screeners, or were the real screeners
+       at other addresses (U-02; Q-34 (g))?
+  O-03 For Rama (HISTORICAL): was scripts/preflight_scanner_check.py run before market open during the live period, and
+       was any failure acted on?
+  O-04 For reconciliation: do the frozen B-002, B-007, A-009 or A-011 manuals describe the start-up scanner check as
+       skipped at the daily (COLD) start? If so, F-19 is an erratum candidate (10.9 item 1).
+  O-05 For reconciliation: should D-05 and D-06 be recorded in the C-001 manual or left to C-008 and the attribution
+       topic? (Placement only; no V2 decision.)
+
+10.8 Proposal and question references carried (status exactly as on main; nothing decided here)
+  - VP-08 (strategy model): count DECIDED by DR-031 (six strategies for the time being: four intraday, two long and
+    two short, and two delivery); every other part PROPOSED. Ratify at: C-001, D-003, D-009 to D-017, J. C-001
+    evidence: 16 identity-mapped definitions (2.2); no conditions in the repository (F-04).
+  - VP-44 (earlier signals; scanner redesign): PROPOSED / OPEN. Ratify at: C-001, D-001, D-013 to D-016, E-002. C-001
+    evidence: the repository carries no conditions; R-01 and R-08 are arrival and result data for their periods only.
+  - VP-45 (Chartink identity; uniform naming): PROPOSED / OPEN. Ratify at: C-001, C-002, C-010, configuration design
+    (build phase). C-001 evidence: identity is the path segment (F-06); the alert name is an optional cross-check with
+    the WR4b prefix rule (F-09); no start-up gate on duplicate or unmapped keys (D-01, F-13).
+  - Q-20 (signal-to-instrument lookup key and path; unknown symbols): OPEN. Evidence E-Q20-1 to E-Q20-6.
+  - Q-34 (A-008 audit leads, DR-016): OPEN. New evidence for (d): R-01, L-04; for (g): R-05, R-06, U-01, U-02.
+  - Q-17: CLOSED (06-Oct); consistent with 2.2.
+
+10.9 Potential C-001 manual content, reconciliation points and dependencies (not corrections applied)
+  1. If a frozen manual states that the start-up scanner check is skipped at the daily start, F-19 supports an erratum
+     through governance; this file does not assert what those manuals say (they were not supplied to this step).
+  2. A-008 erratum E-1 (DR-024) is confirmed at the same baseline; this research adds the list of production callers
+     that omit the map path (D-01) and the documents that repeat the claim (D-02).
+  3. The C-001 manual can state the kinds of scanner count separately (2.5) and the levels of 5.4, so that a
+     connectivity pass, a delivery and a traded signal are never merged.
+  4. Dependencies: C-002 (U-01, U-07; delivery evidence R-01, R-02, R-07); C-003 (authentication order, step 3a);
+     C-004 (E-Q20-1 to E-Q20-3, D-07); C-005 (cache and fingerprint dedup in B-8); C-008 (B-9, D-05); C-010 (F-05,
+     VP-45); C-011 (B-10, D-04, R-02); B-007, owner of start-up check classes (F-19, D-08); Q-20's owners for
+     E-Q20-4 to E-Q20-6.
+
+END — C-001 RESEARCH ANSWERS (no implementation, no V2 decision)

@@ -1,0 +1,59 @@
+C-001 — CHARTINK STRATEGY / SCANNER
+CLAUDE RESEARCH PROMPT
+Date: 21-Oct-2026
+Read together with C-001_ANSWER_SHEET_FOR_CLAUDE_21-OCT-2026.txt and the current V2_DESIGN_LOG.md and V2_DECISION_REGISTER.md supplied from trading-system-v2 main.
+
+TASK
+Answer the C-001 answer sheet with source-backed facts from the pinned production legacy snapshot only. Produce the two required research files. Do not draft/freeze the final manual yet; that is ChatGPT's next reconciliation/drafting stage.
+
+SOURCE PIN
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Required baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Verify HEAD exactly matches. If not, stop and report the mismatch. Do not switch to another commit silently.
+
+EXCLUDE
+Do not use the sandbox/testing snapshot or records repository as evidence for production behavior. Do not contact live services, VMs, broker APIs, databases, webhooks, or external accounts. Do not run tests or scripts. Do not change any repository file or governance record. Never expose secrets or identifiers. Never open any never-open path listed in the answer sheet or handover.
+
+REQUIRED METHOD
+Follow docs/governance/V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md's safe legacy-reading process:
+- sparse, blob-less clone and explicit anchored paths;
+- preserve and inspect the full tree listing for inventory/call-graph expansion;
+- run sensitive_check.py at the prescribed checkpoints and report only its safe summary;
+- read code and records through mask_read2.py, with options before filenames; use Python isolated mode where specified;
+- narrow masked reads for sensitive audit records;
+- run cite_check.py before delivery;
+- run scan_ids.py on each output and investigate hits without printing values.
+If any helper is unavailable or the required method cannot be followed, stop and disclose the exception instead of silently substituting an unsafe method.
+
+RESEARCH DISCIPLINE
+- Read each candidate path only if permitted, and expand the inventory by finding all imports, callers, callees, and consumers. Candidate paths are not the complete inventory.
+- Comments, docstrings, check names, and config comments are claims, not proof.
+- Reading a function is not reading its call path; inspect callbacks, flags, injected dependencies, and production call sites.
+- State exact search scope for negative findings.
+- Keep evidence labels claim-specific: FACT (SOURCE-VERIFIED at 970aabf), FACT (RECORD-DERIVED), SUPPLIED RECORD (INDIRECT), HISTORICAL (Rama), INTERPRETATION / AUDIT LEAD, KNOWN DEFECT / AMBIGUITY, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION.
+- Distinguish scanner configuration, connectivity/preflight, scanner evaluation, webhook delivery, webhook acceptance, signal persistence, and signal processing.
+- Do not assume paper/live parity.
+- Do not infer installed production state from repository files.
+- Do not decide VP-44, VP-45, Q-20, or any V2 design question. Carry proposal references as open/decided exactly as the supplied main-branch records state.
+- Keep C-001 bounded; cross-reference later agenda topics rather than deciding them.
+- Do not copy secrets, full sensitive URLs, hostnames/IPs, email addresses, account/client identifiers, or any forbidden record content into outputs.
+
+OUTPUT 1
+C-001_CLAUDE_REPOSITORY_ANSWERS_21-OCT-2026.txt
+Answer every numbered section in the answer sheet, with a compact inventory table and a SOURCE → INPUT → LOGIC → GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER trace for each significant behavior. Every fact must include path, symbol/config key, line range, evidence label, and caveat.
+
+OUTPUT 2
+C-001_SOURCE_INVENTORY_AND_METHOD_21-OCT-2026.txt
+Record baseline verification, all files actually read and why, blob IDs where available, line ranges, inventory expansion method, safety-check summaries, citation-check summary, scan summary, exclusions, and any method exceptions. List candidates not read and why. No sensitive values.
+
+STOP CONDITIONS
+Stop and report without producing a misleading answer if:
+- the pinned baseline cannot be verified;
+- a prohibited file/blob may have been opened or is locally present contrary to the required zero-count check;
+- evidence needed for a claim cannot be read safely;
+- citations cannot be verified;
+- any output scan raises an unresolved sensitive-data concern.
+Do not print sensitive matches while diagnosing.
+
+COMPLETION MESSAGE
+Briefly state the two output filenames and any blocking issue. Do not include a session link. Do not commit or push anything.

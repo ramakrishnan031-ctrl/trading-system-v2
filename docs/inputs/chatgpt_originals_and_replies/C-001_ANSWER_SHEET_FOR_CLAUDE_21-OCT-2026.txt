@@ -1,0 +1,149 @@
+C-001 — CHARTINK STRATEGY / SCANNER
+ANSWER SHEET FOR CLAUDE REPOSITORY RESEARCH
+Prepared: 21-Oct-2026
+Project: Trading System V2 — Design & Build
+Scope: factual legacy-system research only; no implementation or V2 design.
+
+PURPOSE
+Research how the production legacy repository actually defines, configures, checks, receives, attributes, and uses Chartink strategies/scanners. Establish the evidence needed for the C-001 legacy manual and reconciliation. Do not infer behavior from comments or test names alone.
+
+SOURCE BASELINE
+Repository: trading-system-prod-snapshot
+Pinned baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Research only this production snapshot. Do not use the sandbox/testing repository or records repository as evidence for legacy behavior. Do not contact a VM, broker, webhook endpoint, live service, database, or external account.
+
+GOVERNANCE CONTEXT
+- Legacy system is DEAD / REFERENCE ONLY.
+- Manual content is legacy fact only. Any V2 suggestion belongs separately in a PROPOSED / OPEN input file and must not be represented as a decision.
+- Section A and Section B are frozen/closed. Do not reopen or rewrite them.
+- C-001 is the current agenda topic: Chartink strategy / scanner.
+- Carry these existing proposal references without deciding them: VP-08 (count already DECIDED under DR-031; other parts remain open), VP-44, VP-45.
+- Q-20 remains an open question concerning the signal-to-instrument lookup key/path and unknown symbols. Record any C-001 evidence relevant to it, but do not decide it unless the decision register explicitly assigns that decision to C-001.
+- C-001 does not settle C-002 scanner-to-webhook, C-003 authentication, C-004 validation, C-005 deduplication, or C-010 scanner-to-strategy mapping beyond documenting a verified interface or dependency.
+
+SAFETY — NON-NEGOTIABLE
+Never open, fetch, read, or print:
+- .env or .env.*
+- config/accounts.csv or config/accounts_multi_example.csv
+- config/security.yaml
+- config/reference_data/
+- docs/web_claude/ anywhere
+- token/session files
+- gui_config.local.yaml
+- database files (*.db, *.sqlite, *.sqlite3, WAL/SHM)
+- logs
+Do not expose credential values, access tokens, TOTP seeds, webhook secrets, account/client identifiers, hostnames/IP addresses, mailbox addresses, person names, bot/SSH key names, or PC username/hostname.
+Use the supplied safe-reading workflow and masking helpers from the handover note. Do not print raw sensitive records. Use narrow masked reads for any audit records that may contain host/key data. No live interaction.
+
+RESEARCH QUESTIONS — ANSWER EACH WITH EVIDENCE
+For every answer, label it FACT (SOURCE-VERIFIED at pinned baseline), FACT (RECORD-DERIVED), SUPPLIED RECORD (INDIRECT), HISTORICAL (Rama), INTERPRETATION / AUDIT LEAD, KNOWN DEFECT / AMBIGUITY, or UNKNOWN / NOT ESTABLISHED. Cite exact repository path, symbol, and line range. State the searched scope for negative claims.
+
+1. Inventory and boundaries
+   a. Identify every production file that defines, configures, validates, checks, attributes, receives, or consumes Chartink scanners/signals relevant to C-001.
+   b. Build the inventory from imports/callers/callees, not just the likely-path list in the handover.
+   c. Include configuration files, scripts, tests, operational/dashboard consumers, and records only where relevant.
+   d. For each file state its role, why it is in scope, evidence read, and whether it is direct runtime code, config, test, or historical record.
+
+2. Scanner definitions and strategy catalogue
+   a. What scanner definitions exist in config/chartink_scanners.yaml at the pinned baseline? Record identifiers/names and non-sensitive structural fields needed to explain behavior; do not copy full URLs if they contain tokens or sensitive query material.
+   b. What is the relationship between scanner identifiers, strategy names, directions (long/short), and webhook identifiers?
+   c. Which strategy/scan definitions are enabled, disabled, missing, duplicated, or apparently unused? Prove each claim from the relevant code/config and call path.
+   d. Record the actual scope of any counts. Do not infer the total active production scanner count from one file or from a comment alone.
+
+3. Scanner configuration loading and validation
+   a. Trace the config loading path for scanner definitions and scan_webhook_map.yaml.
+   b. Identify schema/type/default behavior, missing-key handling, invalid values, duplicate handling, normalization, and failure behavior.
+   c. Identify the exact startup/preflight checks and whether they merely inspect config, fetch scanner URLs, or call other services. Do not execute them.
+   d. State what is known and unknown about when configuration is loaded and whether later reloads occur.
+
+4. Scanner URL and request construction
+   a. Trace how a scanner URL is selected or constructed, including any query parameters, headers, authentication, timeout, retry, rate-limit, and response parsing logic.
+   b. Do not reproduce full URLs containing sensitive query material. Describe structure and redact secrets.
+   c. Distinguish URL declarations from actual request execution. Identify callers and injected dependencies.
+   d. If exact behavior depends on an injected HTTP client or external Chartink behavior not represented in source, mark it UNKNOWN / NOT ESTABLISHED.
+
+5. Scanner preflight / health / attribution
+   a. Trace scripts/preflight_scanner_check.py and any caller/scheduler if found.
+   b. Establish what scanner attribution in ops_dashboard/backend/services/scanner_attribution.py measures, its data source, and its limitations.
+   c. Distinguish a connectivity check, a scanner result, a webhook delivery, and an accepted/processed trading signal; do not treat them as equivalent.
+
+6. Relationship to the signal lifecycle
+   a. Trace the verified handoff from scanner/configuration to webhook receiver and downstream processing only far enough to establish the C-001 boundary and its consumers.
+   b. Identify what C-001 can establish and what belongs to C-002/C-003/C-004/C-010.
+   c. Record any scanner-to-strategy mapping conflicts, unknown symbols, direction ambiguity, naming mismatch, or orphaned definitions as findings, not as silently corrected facts.
+
+7. Paper/live differences
+   a. Establish whether scanner selection, preflight, request, attribution, or signal path differs between paper and live.
+   b. Cite the exact branch/call path. If no difference is established in inspected scope, state that limited conclusion without claiming universal parity.
+
+8. Tests and records
+   a. Inventory relevant unit/integration/security/replay/load tests.
+   b. Explain exactly what each relevant test asserts and what it does not prove.
+   c. Read historical records only within the handover safety rules. A historical note is not proof of current source behavior.
+   d. Do not run tests or scripts.
+
+9. End-to-end evidence map
+   For each significant scanner behavior, provide:
+   SOURCE → INPUT → CONFIG/LOGIC → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER.
+   Include exact file/function/line references and relevant dependencies.
+   Identify missing links explicitly.
+
+10. Findings and unresolved items
+   Separate:
+   - FACT (SOURCE-VERIFIED)
+   - FACT (RECORD-DERIVED)
+   - HISTORICAL
+   - INTERPRETATION / AUDIT LEAD
+   - KNOWN DEFECT / AMBIGUITY
+   - UNKNOWN / NOT ESTABLISHED
+   - OPEN QUESTION
+   Include potential C-001 manual corrections, reconciliation disagreements, and dependencies for later topics. Do not propose implementation changes as if approved.
+
+DELIVERABLES
+Create these files with the names exactly as shown, dated 21-OCT-2026:
+1. C-001_CLAUDE_REPOSITORY_ANSWERS_21-OCT-2026.txt
+   - Answer all numbered questions.
+   - Each factual answer includes file path, function/class/config key, exact line range, evidence label, and caveat.
+   - Include a compact inventory table and source-to-consumer trace.
+2. C-001_SOURCE_INVENTORY_AND_METHOD_21-OCT-2026.txt
+   - List every file actually read, baseline commit, blob ID where available, line ranges, tool/method used, why it was read, and findings.
+   - Record files considered but not opened, with reason.
+   - Record all safety checks and their results, counts only; never print sensitive values.
+   - Disclose any deviation from the prescribed method.
+3. Brief completion message only, naming the two files and any blocking issue.
+
+QUALITY GATES BEFORE DELIVERY
+- Confirm repository HEAD equals the pinned baseline commit.
+- Build the actual inventory from import/call relationships; do not stop at the likely-path list.
+- Confirm citations against the pinned source and use the line-citation checker.
+- Record negative claims with their exact searched scope.
+- Keep source facts, historical records, inference, defects, and unknowns distinct.
+- Do not include session links in any output.
+- Run the value-blind sensitive identifier scan on every output. Investigate any hit without revealing matched values.
+- Do not edit the repository, write into the repository, commit, push, or change any project register.
+- Do not answer Rama's future design decisions.
+
+CANDIDATE PATHS TO CHECK — NOT A COMPLETE INVENTORY
+Use these as starting points, then expand through imports/callers/callees:
+- signals/webhook_receiver.py
+- signals/signal_processor.py
+- signals/entry_throttle.py
+- signals/__init__.py
+- config/chartink_scanners.yaml
+- config/scan_webhook_map.yaml
+- scripts/preflight_scanner_check.py
+- scripts/test_webhook.py
+- ops_dashboard/backend/services/scanner_attribution.py
+- tests/unit/test_webhook_receiver.py
+- tests/unit/test_signal_processor.py
+- tests/unit/test_c2_webhook_lockdown.py
+- tests/unit/test_s4_webhook_degrade.py
+- tests/unit/test_preflight_signals.py
+- tests/unit/test_signal_status_classification.py
+- tests/unit/test_fix133_replay_signals.py
+- tests/unit/test_load_test_signals.py
+- tests/integration/test_full_signal_flow.py
+- docs/audit/bk1_long_short_scanner_analysis_17jul2026.md
+- docs/audit/c2_chartink_ip_investigation_03jul2026.md (narrow masked reads only)
+
+END — C-001 RESEARCH ONLY
