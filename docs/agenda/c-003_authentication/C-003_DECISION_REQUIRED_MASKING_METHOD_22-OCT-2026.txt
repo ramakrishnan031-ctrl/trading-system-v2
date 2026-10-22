@@ -1,0 +1,93 @@
+C-003 - DECISION REQUIRED: HOW HOST RECORDS MAY BE READ (P-1 AND P-2)
+Date: 22-Oct-2026 (IST)
+Owner: Rama. Status: DECIDED by Rama at about 12:50 IST (section 6). Before that, the stage-3 line-range method was
+NOT APPROVED for any further host-record reading, and no host record was read at all, not even value-blind.
+Sources: C-003 source inventory section 4 (E-1, D-1); C-003 notes section 6 (P-1, P-2); ChatGPT's review, section A.
+Security: classes and locations only; no value of any kind.
+
+
+1. WHAT HAPPENED (facts)
+- The 2026-10-21 lesson (V2_DESIGN_LOG.md line 105) says host records are read "only through narrow pattern matches,
+  never by line range, and never print a matching line of such a record in full: test it value-blind (counts, or the
+  presence of probe words in the filter's output) until the filter itself masks hexadecimal fragments next to" three
+  words (sha256, secret and token).
+- For C-003 a new stage-3 mask (mr3.py) masked every hexadecimal run of four or more, mixed letter-digit parts and
+  other shapes, and a residual counter (mr3_risk.py) let a range print only when it counted 0 hexadecimal runs,
+  0 mixed parts, 0 IPv4 and 0 e-mail shapes. The records agent printed 17 records in full and 22 by ranges and greps
+  this way (inventory D-1).
+- Three items passed both the mask and the counter in the agent's working output (inventory E-1): a vendor API host
+  name in a quoted log line, a short SSH public-key fragment with its key comment, and the alert bot's account
+  username. The agent reported their locations only (three record lines, listed in E-1, plus two lines that name the
+  operator's mobile internet providers). Claude has not read those lines. No value is in any delivered file
+  (value-blind scans, inventory 13.3). None is a webhook credential; they concern the deleted legacy VM and the
+  legacy alert bot, whose token is already treated as exposed (VP-50).
+- Where the values still exist: in the records themselves (pinned, in the clone) and in the records agent's own
+  session transcript, which is in this session's private workspace. That transcript is not a deliverable and is in no
+  repository; Claude has not opened it. Whether the session platform keeps other copies is not known to Claude.
+- Since 10:46 IST no host-record content has been printed; value-blind presence tests ran until 11:47 IST; since
+  ChatGPT's review arrived (12:40 IST) no host record has been read.
+
+
+2. Q-A (P-1): HOW MAY HOST RECORDS BE READ FROM NOW ON?
+Option 1 - value-blind only (the lesson's own method).
+  Host records are read only through narrow patterns whose results are counts or the presence of probe words (PASS or
+  FAIL and line numbers). No host-record line is printed.
+  - For C-003: enough. The independent final QA can test every record statement and every quoted phrase this way,
+    and the manual needs no new record reading.
+  - Cost: a paraphrase can be checked only through its probe words; record research in later topics is slower and
+    depends on well-chosen probe words.
+  - Risk: the lowest of the three (nothing from a host record is printed).
+Option 2 - test an extended filter first; then printing through it, gated.
+  Before any host-record line is printed again: extend the stage-3 mask and the residual counter for (a) host and
+  domain names in quoted text, (b) SSH public-key material and key comments, (c) account and user names that are not
+  e-mail addresses, and (d) other identifier-like values; test them on synthetic fixtures only (no real value),
+  reporting class-level pass/fail counts; Rama approves the result; the method and the test result go into the design
+  log. Printing then goes only through the tested filter and the gate.
+  - For C-003: not needed, since option 1 covers the QA; it would delay the QA by the build and the test.
+  - Cost: helper work in the scratch folder (research tooling, not V2 code) and a review of the test.
+  - Risk: lower than now, not zero: a pattern scan does not prove that nothing else sensitive exists (lesson
+    2026-10-10), and a class nobody listed can still pass.
+Option 3 - keep the current stage-3 method as it is.
+  Not recommended: E-1 showed three classes it misses.
+Claude's recommendation, for Rama to decide: option 1 for the rest of C-003, the final QA included; option 2 only if
+a later topic needs printed host-record text, decided at that point.
+
+
+3. Q-B (P-2): A LESSON FOR THE DESIGN LOG?
+Proposed row, to be added only if Rama approves it, with the C-003 push (W-2):
+  | 2026-10-22 | During C-003's research, the new stage-3 mask and its residual counter let three classes through in a
+  records agent's working output (a host name in a quoted log line, an SSH key fragment with its comment, a
+  non-e-mail account name); nothing reached a file. | Read host records value-blind only (counts, or the presence of
+  probe words) unless a filter has passed a synthetic-fixture test for host names in quoted text, key material and
+  comments, non-e-mail account names and other identifier shapes, and Rama has approved it; never print a host-record
+  line through an untested filter. |
+Options: approve as written; approve with changes; no lesson row.
+
+
+4. Q-C: THE RECORDS AGENT'S TRANSCRIPT IN THIS WORKSPACE
+Options:
+  (a) Leave it. It goes when this session's container is reclaimed.
+  (b) Claude deletes that one file now, without opening it. This cannot be undone. Nothing delivered depends on it:
+      the agent's report and the record read log keep the audit trail without values; only resuming that finished
+      agent would no longer be possible.
+Claude's recommendation: (b), as hygiene; the decision is Rama's.
+
+
+5. WHAT FOLLOWS EACH CHOICE
+- Option 1: the final QA starts after the approved corrections, with value-blind record checks only.
+- Option 2: the filter work and its synthetic-fixture test come first; the QA follows once Rama approves the test.
+- Either way: the decision and any lesson row are recorded only as Rama decides them; Claude writes no governance file
+  and commits nothing.
+
+
+6. DECISIONS (Rama, 22-Oct-2026, about 12:50 IST)
+- Q-A (P-1): option 1. Host records are read value-blind only (counts, or the presence of probe words; PASS or FAIL
+  and line numbers); no host-record line is printed. The stage-3 line-range method is not approved for further
+  reading.
+- Q-B (P-2): the lesson row of section 3 is approved as written, to be added to the design log with the C-003 push.
+- Q-C: (b). The records agent's session transcript was deleted unopened at 12:52 IST; nothing delivered depended on
+  it. The agent's report and the record read log, which hold no value (value-blind scans), are kept.
+- With the same answer Rama approved the seven corrections PC-1 to PC-7 of the response file; the final QA follows.
+
+
+END - C-003 DECISION REQUIRED: MASKING METHOD

@@ -1,0 +1,605 @@
+C-003 - LEGACY WEBHOOK AUTHENTICATION AND SECRET VALIDATION
+INDEPENDENT FINAL QA OF THE THREE RESEARCH FILES
+Date: 22-Oct-2026 (IST)
+Reviewer: an independent agent that did not draft the files
+Status: QA findings only, for Rama's review. Nothing here is a decision, an erratum or a V2 statement.
+
+Files reviewed. Each SHA-256 was computed with sha256sum before reading and equals the stated value; these exact
+bytes were reviewed:
+  1. C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt (912 lines)
+     SHA-256 abcd4ad4a78fc199f0a08cf47dede4a34f1176f54d62a0b1ac8de1cf4441fd5e
+  2. C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt (258 lines)
+     SHA-256 80267175d63fc1802f048b8811cfbe8947f7879695dbe2107e959115c7717456
+  3. C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt (497 lines)
+     SHA-256 48a49c447a5918efa1f257bb101dc541a9a9e8406ea5c96b59fe450d7e5009b0
+Short names below: ANS (file 1), NOTES (file 2), INV (file 3); "s." = section.
+
+
+==============================================================================
+1. METHOD
+==============================================================================
+1.1 What was read, and how
+  - The three files: read in full with the Read tool.
+  - Legacy code, configuration and tests (clone at 970aabf3c78d777d9d34549e021f7c8e756c7bdb): only through the
+    logged helper qaread.py ("range" and "grep" only). 70 calls: 56 ranges, 14 greps. The whole receiver was read
+    (7 ranges, lines 1 to 1208); every other cited code, configuration and test range of ANS was read as a range.
+  - Dated records (docs/, PATHS.md): only value-blind presence tests through qavb.py, with probe words taken from
+    each claim. About 404 calls: about 398 ran (PASS or FAIL), 5 stopped before searching because of my own
+    pattern error (see 1.3) and 1 was refused by the helper as value-shaped. No record text was printed.
+  - V2 governance copy (outside sim/docs/inputs/): the cited lines of A-006 (a count only), A-008, A-009, A-010,
+    B-007, C-001 and C-002 manuals and the C-002 addendum; decision-register rows DR-001, DR-002, DR-008, DR-037,
+    DR-053, DR-054 and DR-055; design-log lessons (lines 89 to 113, 105), W-7, Q-36, VP-50, VP-55, VP-56; the
+    agenda's line 274. Git blob IDs of 41 V2 files (25 manuals, 8 addenda, 2 decision papers, 6 governance files)
+    were recomputed in Python (no git command).
+  - Library sources (scratch environment of C-002): SHA-256 of the five files of INV 8.5; waitress channel.py
+    lines 430 to 440, task.py and server.py logger calls, parser.py split_uri, flask app.py lines 870 to 880;
+    the dist-info versions.
+  - Probe folder: the three probe scripts and their three saved outputs (read in full; scripts hashed).
+  - Search folder: T01.txt to T27.txt (per-file counts) read in full.
+  - Read logs (metadata only): code_read_log.tsv (153 rows), read_log.tsv (400 rows), claude_late_read_log.tsv
+    (41 rows); grep patterns shown only for selected code-log rows.
+  - The three request files (research prompt, answer sheet, inventory template).
+  - Scanners: /home/claude/tools/scan_ids.py and the scratch scan_outputs.py on each of the three files.
+1.2 Not opened: anything inside the clone other than through the two helpers; never-open paths; independent_check.md
+    (until phase 1 was written); any other file of the scratch c003 folder; other attachments.
+1.3 My own deviations (disclosed)
+  - Five qavb.py patterns had (?i) after the first alternative; the helper stopped at compile time, searched
+    nothing and printed nothing. Each was re-run with (?i) at the start.
+  - Two early qavb.py patterns on the 02-Jul security audit carried the well-known all-interfaces and loopback
+    addresses as alternatives beside words (no hidden value; the classes the files already name). Both FAILED.
+    No address pattern was used after that.
+  - One Python traversal of the V2 copy (to compute blob IDs) enumerated and stat-ed paths under inputs/ while
+    filtering them out; no file there was opened, read or printed.
+  - sha256sum was run on the two scanners I was told to run (to compare with INV 2); no other scratch helper was
+    hashed or opened.
+
+
+==============================================================================
+2. PHASE 1 RESULTS (blind)
+==============================================================================
+Format: ID | file and section | result
+          evidence checked
+          required correction
+Severity of each FAIL: ERROR (wrong), IMPRECISE (needs tightening), SUGGESTION.
+
+2.1 Passing areas (summary rows)
+
+P-01 | all three files | PASS
+       sha256sum of the three files equals the stated values; plain ASCII; no carriage returns.
+       correction: none
+P-02 | ANS s. 2 (secret, wiring, start-up checks), s. 3 (require_hmac) | PASS (except F-05)
+       receiver 13-14, 152-200, 326-354; main.py 100-111, 219-232, 2415-2510, 3398-3420; startup_checks 783-832,
+       1066-1092, 1536-1562; system_config 322-348; config_loader 612-646, 1987-2004, 2420-2440; unit file 1-50;
+       zerodha_login 26-41 (load_dotenv at 32 and 36; main.py has no dotenv call); requirements 1-16 (pins at
+       7, 10, 12, 14; no Werkzeug pin); premarket_healthcheck 44-84; config_integrity 24-64; test_webhook_receiver
+       1100-1300 (BL-18 comment "CONSTRUCTOR-ONLY"); test_fix134 222-245 (quote "LATENT when written ...").
+       correction: none
+P-03 | ANS s. 4 (branch order, predicates, decision table rows 1 to 9, replay) | PASS
+       receiver 298-354 (B0 to B4 and the four messages exactly as stated), 387, 480, 511, 547, 751-804, 916-954;
+       test_c6 40-460 (row isolation claims: 184-194 runs require_hmac False; 262-280 both non-empty bodies);
+       test_webhook_receiver 1269-1287 and test_fix134 315-322 (require_hmac True); probe outputs.
+       correction: none
+P-04 | ANS s. 5 (POST route, stage order, answers, audit, logs, next consumer) | PASS
+       receiver 66, 251, 406-408, 477-745 (incl. the four own-WARNING 400s and the 500 path), 857-886, 892-1072,
+       1126-1154; core/logger 96-106, 238-262, 396-424 and a grep (INFO cap at 351; no redaction); unit 37-40;
+       test_c6 361-394; T23 (4 lines, the two warnings), T25 (3 files).
+       correction: none
+P-05 | ANS s. 6 (/health) and s. 7 (error answers) | PASS (except F-26)
+       receiver 250, 316-324, 364-413; main.py 3970-4090; startup_checks 783-832 (2xx or 401; comment 799-806);
+       healthcheck_server 84-88, 295-327 ("(unauth) payload"; loopback default, masked); test_c6 283-334;
+       Flask probe output (500 handler; "Exception on /raise [GET]").
+       correction: none
+P-06 | ANS s. 8 (token outside the check) and s. 9 (transport) | PASS (except F-04, F-10, F-27)
+       receiver 334, 681-690, 857-886, 518-523, 585-593, 757-760; db_reader 2236-2250; analytics_period 626-640;
+       test_webhook_receiver 1712-1845 (four S-1B.1 tests, placeholder token); installer 30-50 (tcp/5000 ACCEPT,
+       no source); main.py 3979-4000; waitress split_uri and channel.py 434-437; flask app.py 875-876.
+       correction: none
+P-07 | ANS s. 10 R-01 to R-06, R-10 to R-12, R-15 to R-18; 7.2; 8.3; 9.2; NOTES U-02, U-06, U-08, C-01, C-02, C-04,
+       C-07, C-12 | PASS (presence tests; except F-11 to F-14, F-25)
+       probe words, all PASS in the cited lines: deliberate (C6 scoping 117); deliberate anti-oracle (189); keeps
+       all four distinct messages (collapse 42); C-1, WEBHOOK_SECRET, example, history, commit (02-Jul audit
+       15-21); rotated + synced to VM+PC (C1 inventory 83); 03-Jul, VM-only, exposed in chat, twice, verified
+       value-blind, 15, shared, 08:15, Monday, Rama (system map 452); 23:03 (05-Jul audit 170); secret rotated
+       03-Jul (187); rotated dead 02-Jul, six (199); S-1A, GATE B, GATE C, staged, hash, natural, Chartink URL
+       updated by Rama, C.4, drop-in, shadow, Sunday (system map 1365); GATE D, 86, 309, passive proof, market
+       hours, only 401 = webhook auth/token failure, deferred (1364); S-1B.2, 95,431, scrub, 21, 85,765, shred,
+       Both historical secrets already DEAD (401 at GATE D), 18:11 (1362); rollback, anchor, no secret-bearing
+       artifacts remain (1351); webhook_url, echo, 95,431 (1366); one shared secret (VM .env only) (paths 185);
+       the same shared token (15-Jul 181); WEBHOOK_SECRET: 0 hits in logs (16-Jul 208); 132, .env, 0 (17-Jul
+       79-85); G.1 and 25-Apr (scoping 119, collapse 21); UFW + ngrok, sign, false (01-Jun 483-487); HMAC, raw
+       body, CORRECT (15-Jun 12-25); plaintext HTTP, require_hmac, only (02-Jul 19-21), paper and not required
+       (85-89); phase, allowlist, TLS, HMAC, deployed, both modes, Rama (remediation 17-67); nginx, reverse proxy,
+       58,507, 12-Jun, 403/200/503, 99.99, pool (03-Jul 13-39), not an auth or IP problem (26), deferred (51), no
+       401 anywhere; NOT safe to flip, cannot sign, every POST, 401, proxy (20-Jul 178-212); 104,911, 89,794,
+       15,117, 15:29, 401, unauth (23-Jul 115-121); every outcome incl. 401 and a change since 5-Jul (31-Jul 43);
+       all-time 401 zero (380); UNCERTAIN (392); Chartink-side URL Rama pasted (394); unauth, insert, every
+       (04-Jul 141); 20,461 and auth-rejects (05-Jul 748); loopback, S3, proxy, exempt (17-Jul 85); KEEP FALSE,
+       verified, night (28-Jul 376); 20, live, production, WEBHOOK_SECRET (28-Jul 285-286); cannot place an order,
+       PC, VM (integrity 4286-4295); bind, require_hmac, weekday (4354); 15, sed -i, disabling an auth control,
+       live webhook (01-Aug 992-1009). Arithmetic: 89,794 + 15,117 = 104,911.
+       correction: none
+P-08 | ANS s. 11, 12 (tests inspected, not executed), 14, 16, 17 | PASS (except F-28)
+       test files read as above; test_hardening 18-36, 284-329 (quotes and "main.py:3238", "3240-3242", "3242");
+       integration conftest 150-162, 376-401; test_c2 1-14, 80-92; test_s4 test list; answer-sheet questions Q1 to
+       Q12 match the request file's wording (Rama's answers themselves are in no file and were not checkable).
+       correction: none
+P-09 | ANS s. 13 negatives and INV s. 5 search table | PASS (except F-03, F-08, F-09, F-10, F-24)
+       all 27 per-file count files: every files/lines total in INV s. 5 equals T01 to T27; scopes 1,262 / 281 /
+       869 equal "files searched"; N-1 (T08 0), N-2 (T07: receiver 1 line, main.py 2 urlopen lines, verified by
+       grep), N-5 (T04 S-RT subset: main.py 4, receiver 2, two pre-flight lists; T26 8 files), N-7 (T02 code
+       files: receiver and three tests), N-9 (T24: receiver docstring line 148; scripts/test_webhook.py is a
+       14-line standalone app), N-10 (T09), N-11 (logger grep).
+       correction: none
+P-10 | NOTES s. 2 to 7; ANS s. 15 (frozen-manual cross-references) | PASS (except F-16 to F-19, F-30)
+       B-007 lines 52, 85, 127, 270 (quotes exact); A-008 line 279 (exact); A-006: no "webhook" at all; A-009 line
+       251; A-010 lines 36 (the commit ID is correctly elided), 113, 114, 133, 135 and 238-252 (E-2, DR-037);
+       C-001 line 263; C-002 lines 77 and 95 (exact), s. 4.3 (Rama's VM statement), 5, 9 rows 1, 2 and 7, 10.3
+       (NR-1, NR-2), 10.6, 14 (R2, R4, R5, R7), 18 (K-5, K-6, K-8, K-9), 19 (U-4, U-6), 20, 22 (NC-3, NC-5); next
+       free errata A-008 E-6, A-010 E-5, B-007 E-1, C-002 E-1 confirmed from the erratum headings; DR-001, DR-002,
+       DR-008, DR-037, DR-055, W-7, Q-36 (j), VP-50, VP-55, VP-56 say what is cited; design-log lesson quoted in
+       INV D-1 and NOTES P-1 matches line 105; agenda line 274 "C-003  Authentication".
+       correction: none
+P-11 | INV s. 1, 6, 9.2 (identities) | PASS
+       the 28 code files of s. 6: every listed blob ID equals the logged blob ID and every logged row says "match";
+       the 35 blob IDs of s. 9.2 and the three governance blob IDs of s. 1 equal my Python recomputation; file line
+       counts equal the helper's count minus its trailing empty line (receiver 1207, helper 1208).
+       correction: none
+P-12 | INV s. 6, 7.1, 4 D-1 (read-log counts) | PASS (except F-15, F-22)
+       code log 153 rows = 87 (10:17:03 to 10:31:33 IST) + 66 (10:59:13 to 11:14:26); late log 41 rows = 36 ranges
+       + 5 greps from 11:17:29, matching the re-read list (three end-of-file ranges are capped at the file length);
+       record log 400 rows, 10:11:55 to 10:46:38 IST, 144 PRINTED and 256 COUNT-ONLY, no non-zero residual count,
+       39 distinct records, 17 read in full; rows 395, 396 (two C6 records) and 400 (03-Jul investigation) are greps.
+       correction: none
+P-13 | INV s. 8 and ANS 0.5 (probes, library sources) | PASS (except F-01, F-04)
+       probe outputs show every behaviour INV 8.2 to 8.4 states (first repeated value from auth_probe2, not from
+       auth_probe's annotation); the five library SHA-256 values and the versions (Flask 3.1.3, Werkzeug 3.1.9,
+       waitress 3.0.2, pydantic 2.13.0) are equal; probe hashes equal INV 2.3; probes are described as the probed
+       versions only.
+       correction: none
+P-14 | sensitive content, all three files | PASS (except F-32)
+       scan_ids.py: ANS 6 hits (1 x 40-char = the V2 commit ID; 5 x 6-char = the hash-algorithm name), NOTES 0,
+       INV 160 (119 x 40, 39 x 64, 2 x 6); scan_outputs.py: credential pattern 0, session link 0, non-ASCII 0, CR 0,
+       user@host 3 (the literal phrase), bot name 2 (certbot), equal to INV 13.3; scanner hashes equal INV 2.
+       Manual read: no credential, token-derived value, address, mailbox, SSH detail or other person's name found;
+       INV 4 E-1 gives locations only.
+       correction: none
+P-15 | check 4 (tests and probes) | PASS (except F-30)
+       tests are labelled "inspected, not executed" (ANS 0.1, s. 12); probes are bound to the probed versions
+       (ANS 0.5, 4.2, 8.2; INV 8.6); the serving path through waitress is stated as not probed.
+       correction: none
+P-16 | check 7 (decisions, instructions, V2 statements) | PASS (except F-18, F-19, F-21)
+       no V2 design statement (ANS 11.3 restates DR-001 only); erratum candidates are marked undecided; the three
+       "DECIDED by Rama" status lines (NOTES P-1, P-2; INV E-1, D-1) are attributed to Rama with time and source.
+       correction: none
+
+2.2 Findings (FAIL)
+
+F-01 | ANS 0.5 | FAIL (ERROR)
+       "(companion section 7)" for the probes and library sources; INV s. 7 is "DATED RECORDS READ" and the
+       probes and sources are INV s. 8.
+       correction: "(companion section 8)".
+F-02 | ANS header, Security line | FAIL (ERROR)
+       "The legacy token stays treated as exposed (DR-053, VP-50)": the DR-053 row (C-001 freeze) has no such
+       statement; the DR-055 row says "the legacy token stays treated as exposed (VP-50)".
+       correction: "(DR-055, VP-50)".
+F-03 | ANS 4.1 (T01) and INV s. 5 T01 row | FAIL (ERROR, low impact)
+       ANS: "a function of the same name in the dashboard's own auth module". T01 is a substring search: the
+       dashboard module's 3 hits are a differently named function (is_authenticated, grep lines 256, 263, 279)
+       and the 4 integration-conftest hits are a fixture name (wired_system_authenticated). INV's row also leaves
+       out the dashboard's test file. The "no other caller" conclusion stands.
+       correction: "a differently named function whose name contains the string, its test file, and a fixture
+       name in the integration tests; none calls the receiver's method".
+F-04 | ANS 8.2; INV 8.5 (task.py row) | FAIL (IMPRECISE)
+       "the logger calls of its server, channel and task modules are errors and warnings, none per request":
+       channel.py line 434 logs "Client disconnected while serving %s" at INFO, per request (named in the same
+       bullet); server.py logs the listen address (lines 162, 354) and the connection-limit recovery (285) at INFO.
+       None carries the query string, so the conclusion holds.
+       correction: "errors, warnings and INFO lines (listen address, connection-limit recovery, client
+       disconnected); the per-request lines name the path only".
+F-05 | ANS 2.3 | FAIL (IMPRECISE)
+       python-dotenv 1.2.2's rule is labelled CURRENT EXTERNAL FACT, which ANS 0.1 defines as checked on
+       2026-10-22; A-010 E-2 dates that check 2026-10-12, and INV s. 8 lists no dotenv source or probe.
+       correction: "(CURRENT EXTERNAL FACT as recorded in A-010 E-2, checked 2026-10-12; not re-checked in C-003)".
+F-06 | ANS 0.4 | FAIL (IMPRECISE)
+       "Every line number was taken from a filter output of this session (companion section 6)": record lines
+       come from the records agent's gated output and the presence tests (INV s. 7), frozen-manual lines from
+       direct reading (INV 9.3), library lines from the library files (INV 8.5).
+       correction: cite INV s. 6, 7, 8.5 and 9.3 and say which lines were read directly.
+F-07 | ANS 9.3 | FAIL (IMPRECISE)
+       "(C-002 K-5, N-4)": C-002's own N4 is the X-Forwarded-For negative; the proxy and tunnel negative is ANS
+       N-4 (C-002's is N3).
+       correction: "(C-002 K-5 and N3; N-4 of this file)".
+F-08 | ANS 13 N-6, ANS 2.4, ANS 1 (first bullet) | FAIL (IMPRECISE)
+       N-6 and 2.4 say no "length, format or strength" check in S-CODE (T27), but T27's pattern covers length and
+       strength words only; the summary bullet "Nothing checks its length, format or strength" drops the scope.
+       correction: N-6 "no length or strength check in S-CODE (T27); no format check on the code path read
+       (2.2, 2.4)"; the bullet "none found in S-CODE (N-6)".
+F-09 | ANS 13 N-8; INV s. 5 T16 row | FAIL (IMPRECISE)
+       "the other code hits are the configuration snapshotter and the pre-commit scanner": T16.txt also lists the
+       dashboard's logs template and its test (one line each) and the snapshotter's test.
+       correction: name them as hits off the request path.
+F-10 | ANS 9.1; INV s. 5 T18 row | FAIL (IMPRECISE)
+       "outbound https URLs of client libraries": the inspected hits are an alert API URL and two HTTPS adapter
+       mounts (main.py 273, 389, 504), a data-file download URL (system_config 749; config_loader 1834) and a
+       URL-scheme validator for scanner URLs (config_loader 2362). None is a server TLS setting.
+       correction: "outbound URLs and one URL-scheme validator; none a server TLS setting".
+F-11 | ANS 10.1 R-08 | FAIL (IMPRECISE)
+       cited line 13 holds "present and unchanged on the VM" only; the rotation, the bot token and the two keys
+       are on line 11 (probes: rotat, bot|telegram, exactly two|two keys) and the structural check on line 12
+       (probe: structur).
+       correction: "docs/audit/f2_auth_separation_25jul2026.md lines 11 to 13".
+F-12 | ANS 10.1 R-09 (04-Aug) | FAIL (IMPRECISE)
+       "the PC holds 20 keys and the VM 24" cites ledger11 line 50, which holds the two numbers only; the machine
+       names are on lines 46 and 48 (probes PC ... 20 and VM ... 24 pass across lines 46 to 50).
+       correction: "ledger11_secrets_surface_measurement_04aug2026.md lines 46 to 50".
+F-13 | ANS 10.2 R-13 | FAIL (IMPRECISE)
+       1.7's "no limiter" and the halt and queue state are on line 169 (probes: limit, kill|halt, queue), not on
+       cited line 166; 1.8's "pending C-2 Phase 3" is on line 190 (probes: C-2, phase), outside cited 182 to 188.
+       correction: "lines 166 to 169" and "lines 182 to 190".
+F-14 | ANS 10.2 R-14 | FAIL (IMPRECISE)
+       statements on lines not cited: "About 02:00" (sweep_done line 54, S4 outage line 19; not sweep_done 121);
+       the 08:15 start, the 401 and "unreachable" (S4 outage lines 20 to 22; cited line 23 has only 08:16:09 and
+       exit 0); 0 trades (line 24); the fix counting 401 as reachable (lines 115 and 127); "a read-only probe"
+       (fixture_blindness lines 160 to 161, outside cited 164 to 174).
+       correction: add those lines to R-14's evidence.
+F-15 | INV 7.1, PATHS.md row | FAIL (IMPRECISE)
+       "dated entries (03 to 12-Jul used)", but R-15 and C-04 use PATHS.md line 113, a 17-Jul entry (probe:
+       17-Jul).
+       correction: "dated entries (03 to 17-Jul used)".
+F-16 | NOTES C-03 and U-05 (against ANS R-09) | FAIL (IMPRECISE)
+       C-03's "the PC with 5 keys" (01-Aug) and U-05's reading of the "live keys" count are pointed at ANS R-09,
+       whose text has neither; both are in integrity_audit lines 4289 to 4295 (probes: 5 ... keys; live keys at
+       4295).
+       correction: add both details to R-09, or cite the lines in C-03 and U-05.
+F-17 | NOTES C-05, C-10, C-11 | FAIL (IMPRECISE)
+       record statements with no evidence pointer and not in ANS's R items, against NOTES s. 1's rule (file and
+       lines): C-05's 05-Jul paths entry on ufw and the host firewall (PATHS.md line 263; probes ufw, nft,
+       inactive) and its "two records assume nginx" (unnamed); C-10's "inject signals" (02-Jul audit lines 21, 81,
+       87; 05-Jul audit line 187; probe inject); C-11's allowlist listed as a future fix (16-Jul audit line 192,
+       20-Jul record line 213; probe allowlist) and the 05/06-Jul entries (system map 1364 to 1365).
+       correction: add the pointers (and name the two nginx records).
+F-18 | NOTES header, Status line | FAIL (IMPRECISE)
+       "Nothing here is decided", while P-1 and P-2 carry "Status: DECIDED by Rama (22-Oct, about 12:50 IST)".
+       correction: "Nothing here is decided by Claude; P-1 and P-2 record two process decisions Rama made on
+       22-Oct".
+F-19 | NOTES U-06 | FAIL (IMPRECISE)
+       "No clean-up is proposed (C-002's decision of 22-Oct)": the decision was Rama's ("Close: not needed",
+       quoted in C-002 s. 4.3; recorded in DR-055), not the manual's.
+       correction: "(Rama's decision of 22-Oct, recorded in C-002 section 4.3 and DR-055)".
+F-20 | INV 13.1 against NOTES CE-5 and P-1 | FAIL (IMPRECISE)
+       NOTES cite C-003_ERRATUM_DECISION_TABLE_22-OCT-2026.txt (CE-5) and
+       C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt (P-1, INV E-1); INV 13.1 says only "the three files of
+       this delivery" were created, and neither file is listed anywhere in INV. Not checkable in this review.
+       correction: list both files (author, location) in INV 13.1.
+F-21 | INV 2.3 (edits_review.py row) against INV s. 12 and 13 | FAIL (IMPRECISE)
+       "applies the seven corrections Rama approved after ChatGPT's review": that review, the seven corrections
+       and the sections they changed are recorded nowhere else; s. 12.5 records only the first independent check,
+       and the files' status lines still present ChatGPT's review as pending.
+       correction: add a dated entry to s. 12 (or 13) listing the seven corrections and where they apply.
+F-22 | INV 4 D-2 | FAIL (IMPRECISE)
+       "auth_probe.py (re-run at 10:26 IST, its output saved)": the saved output is time-stamped 10:21:46 IST
+       (as is auth_probe2's); 10:26:40 IST is the pydantic probe's output.
+       correction: "re-run at about 10:21 IST".
+F-23 | INV 2.3 and s. 5 (T27) | FAIL (IMPRECISE)
+       T27 (saved 10:26:54 IST) is attributed to no listed script: run_searches.py covers T01 to T22 and
+       run_searches2.py the T16 re-run and T23 to T26.
+       correction: name the script (or command) that ran T27.
+F-24 | ANS 13 N-4; INV s. 5 (searches reused from C-002) | FAIL (SUGGESTION)
+       "C-002 S04, S25" for the proxy and tunnel negative; the frozen C-002 manual (5.4; s. 20 N3) cites S04 and
+       S19. S25's content is not in the V2 copy and could not be checked.
+       correction: cite C-002 N3 (S04, S19), or describe S25 from the C-002 inventory.
+F-25 | ANS 10.1 R-07 | FAIL (SUGGESTION)
+       section number 1.10 is on line 202 (probe 1.10); the quote is on cited line 208.
+       correction: "lines 202 to 208".
+F-26 | ANS 6.3 | FAIL (SUGGESTION)
+       the quoted "/health audits nothing" is the test file's docstring (line 25); the evidence cites 382 to 394.
+       correction: add tests/unit/test_c6_auth_collapse.py line 25.
+F-27 | ANS 8.3 | FAIL (SUGGESTION)
+       the quoted code comment drops the backticks the source puts around webhook_url (receiver line 684).
+       correction: keep them, or unquote.
+F-28 | ANS 12.5 | FAIL (SUGGESTION)
+       "a placeholder secret": the source comment calls it "the prod-like secret" (conftest line 154); its value is
+       masked, so "placeholder" cannot be checked.
+       correction: use the source's words.
+F-29 | ANS 6.6 (evidence ranges) | FAIL (SUGGESTION)
+       scripts/load_test_signals.py lines 81 to 99 and tests/crash_test/signal_injector.py lines 24 to 29 were
+       read only by greps (INV s. 6; both logs). My range reads confirm the claims (the load-test script takes the
+       token from a --token argument, the injector from WEBHOOK_SECRET).
+       correction: mark them as grep reads, or cite the matching lines.
+F-30 | NOTES s. 7 | FAIL (SUGGESTION)
+       "tested (test evidence only)" can be read as run.
+       correction: "pinned by tests (inspected, not run)".
+F-31 | INV header (Request line) | FAIL (SUGGESTION)
+       "filled in the order of" the template: INV puts the security register (s. 3) and exceptions (s. 4) before
+       the searches, files and records, unlike the template.
+       correction: "covers every item of the template".
+F-32 | INV s. 1 (lines 10 and 21) against INV and ANS security lines | FAIL (SUGGESTION)
+       the two repository URLs carry the code-hosting site's host name and the owner's account name, while INV's
+       security line says no identifier or host is reproduced. The values are public and are in the request
+       prompt; this is a consistency point, not a leak.
+       correction: for Rama: shorten to repository names (as ANS does) or except public repository URLs in the
+       security line.
+F-33 | INV 12.3 | FAIL (SUGGESTION)
+       "each of the 263 double-quoted phrases": not reproducible here (simple pairing gives 275 occurrences, 206
+       unique per file); the counting rule is not stated.
+       correction: state the rule.
+
+End of phase 1 (written before independent_check.md was opened).
+
+
+==============================================================================
+3. PHASE 2: THE EARLIER CHECK (independent_check.md, 299 lines)
+==============================================================================
+Read only after phase 1 was written. It checked review copies of an earlier version (its line numbers are theirs);
+its header gives 28 findings (2 ERROR, 14 IMPRECISE, 12 SUGGESTION), as INV 12.5 states.
+Format: earlier finding | status | evidence in the final files (file, section, what I checked)
+
+ 1 | RESOLVED | ANS 1 (first bullet), 2.2, 2.3, 2.6, N-5 and 14.1 now name the import-time load_dotenv (main.py 106;
+     zerodha_login 32 and 36, read), the name-list reads (2.4, 2.5) and the name-search limit; 14.1 shows
+     os.environ.get(name). Related residual: F-05 (the dotenv rule's check date).
+ 2 | RESOLVED | 2.7 cites receiver 298-354, 360-413, 536-745 and test_c6 425-438; 5.3 cites 676-745 and line 66;
+     7.5 cites 379-393 (the 429 body is line 380); 12.5 cites conftest 154-162 and 380-401 (None at 396). Read.
+ 3 | RESOLVED | ANS 3.4: "construction without a secret is accepted" (receiver 177-182; test 1170-1175, read).
+ 4 | RESOLVED | ANS 4.2 B1: one test isolates the rule (test_c6 184-194, require_hmac False); two do not
+     (test_webhook_receiver 1269-1287, test_fix134 315-322, require_hmac True). Read.
+ 5 | RESOLVED | ANS 4.2 states the test-client scope and that the serving path through waitress was not probed.
+ 6 | RESOLVED | ANS 4.3 row 1 has R False, with the BL-18 note (3.4).
+ 7 | RESOLVED | ANS 4.3: "Rows 3 and 7 are for ASCII values; a non-ASCII value is rows 4 and 8."
+ 8 | RESOLVED | ANS 1 (fifth bullet), 4.3, 4.4 (empty-body bullet), 6.4 and L-01, and NOTES L-01, state that the
+     constant /health signature authenticates an empty-body POST; checked against receiver 336-342, 387, 480, 547
+     and test_c6 262-280 (both tests use a non-empty body).
+ 9 | RESOLVED | ANS 4.4 limits the repeat checks to the intraday path and describes the EOD route (receiver
+     751-804, read); NOTES L-01 says the same.
+10 | RESOLVED | ANS 5.3 "Order": the shutdown gate and the limiter run before authentication; kill, backpressure
+     and window after it (receiver 485-583).
+11 | RESOLVED | ANS 5.3 row 8 and note (b): four 400s leave two lines (receiver 602-606, 611-615, 628-633,
+     659-662); the others the raw-body WARNING only.
+12 | RESOLVED | ANS 5.6: "for each symbol that reaches the INSERT"; the early returns and the QUEUE_FULL re-mark
+     are named (receiver 708-717, 904-945, 1046-1068).
+13 | RESOLVED | ANS 1, 6.3 and 14.3 now include the 500 handler's CRITICAL line (receiver 410-413).
+14 | RESOLVED | ANS 8.4, ANS L-04 and NOTES L-04 are conditional on the reader and view having existed then.
+15 | RESOLVED | ANS 8.5: two lines on the intraday path only, the EOD malformed-JSON 400 logs none of its own
+     (receiver 757-760); the producers include a valid signature and the constant /health signature.
+16 | RESOLVED | ANS 9.4 cites deploy/install_vm_services.sh lines 33 to 47, "re-read in this step"; INV 6 lists
+     the read (late log, 30-50, 11:29:45 IST); content checked (P-06).
+17 | RESOLVED | ANS 14.1 now says the two raw-body WARNINGs log unsanitised bytes that could hold the token.
+18 | RESOLVED | ANS 14.2: "Flask rule (404/405 before the view)"; the 413 at get_data(), before authentication
+     and any audit write (receiver 251, 480).
+19 | RESOLVED | ANS K-06 lists "main.py:226", 3238, 3240-3242, 3241, 3242, ":410-432" and the two pre-C6 test
+     comments, with evidence (receiver 328, 330, 343, 687, 865; startup_checks 799-802; test_hardening 293-325;
+     test_fix134 358, 373; test_webhook_receiver 1111, 1721), all read.
+20 | RESOLVED | ANS 14.4 and 17 send U-09 to U-12 to the notes; the NOTES header says U-01 to U-08 are the
+     answers' and defines U-09 to U-12.
+21 | RESOLVED | L-01 to L-07 with no gap in both files; ANS 0.6 names the families and separates C-01 to C-13 from
+     C-1 to C-3 and C-001 to C-003; the NOTES header names its references; K- and L- items are tagged in the body
+     (3.5, 5.2, 5.5, 6.3, 7.3, 8.5, 2.6, 6.6).
+22 | RESOLVED | ANS 8.5's window ("to 23-Jul 15:29") matches NOTES U-09's; ANS 9.1 names the loader as INV T18
+     does (wording: F-10); ANS 15.1 says which 36 files (25 manuals, 8 addenda, 2 papers, the design log's rows).
+23 | RESOLVED | INV 6 now lists Claude's final re-reads, matching the late log (P-12); ANS 12.3 cites 277 to 402;
+     N-11 says "a grep and three ranges"; the receiver row names all masked classes. Related residual: F-29
+     (two other grep-only ranges, not in the earlier list).
+24 | RESOLVED | NOTES CE-4 offers two options, and says neither settles U-03.
+25 | RESOLVED | NOTES CE-3 says line 36's "rotated 02-Jul" would need the same addition.
+26 | RESOLVED | NOTES P-2 and INV E-1 phrase the lesson as "whether ..." for Rama, and record Rama's decision of
+     22-Oct with time and source. Related residual: F-18 (the NOTES header's "Nothing here is decided").
+27 | RESOLVED | INV 4's closing note now says three rows (395, 396, 400), as 7.1 does; the record log agrees.
+28 | RESOLVED | INV 12 and 13.3 are filled; 13.3's scan counts equal my scanner runs (P-14).
+Totals: RESOLVED 28, STILL PRESENT 0, NOT APPLICABLE 0.
+
+
+==============================================================================
+4. SUMMARY
+==============================================================================
+Phase 1: 16 PASS summary rows and 33 FAIL findings:
+  ERROR 3 (F-01 to F-03), IMPRECISE 20 (F-04 to F-23), SUGGESTION 10 (F-24 to F-33).
+  - The three errors are a wrong section number (F-01), a wrong decision-row ID (F-02) and a wrong description of
+    a search hit (F-03). None changes a conclusion about the legacy authentication behaviour.
+  - Every code, configuration and test claim checked holds at 970aabf. The IMPRECISE items are record citation
+    ranges (F-11 to F-14), scope and label wording (F-04 to F-10), evidence pointers and attribution in the notes
+    (F-16 to F-20) and gaps in the inventory's own process record (F-15, F-21 to F-23).
+Phase 2: RESOLVED 28, STILL PRESENT 0, NOT APPLICABLE 0.
+
+Could not be checked, and why:
+  - Rama's answers Q1 to Q12: they are in no file (the answer sheet carries placeholders only).
+  - Record content beyond the presence of probe words (value-blind only, by Rama's decision of today); in F-12
+    the machine for each number was inferred from proximity only.
+  - INV 9.1 and ANS 15.1's sweep counts (203 statements; 77, 35, 20, 16; the 491-line report), INV 12.1 to 12.3's
+    tool results (citation checker, content checks, quote checker) and INV 2's helper hashes other than the two
+    scanners and the three probes: they rest on scratch files I was not permitted to open.
+  - INV 1 and 3's git and object-store facts (ls-remote, HEAD, commit time, tree, never-open counts, object
+    counts): they need git or the clone.
+  - C-002's searches S03, S04, S09, S19, S20, S21 and S25: the C-002 source inventory is not among the allowed
+    sources; the frozen C-002 manual was used instead (F-24).
+  - Masked values (the constructor annotation and parameter, the bind host, the self-check URL, the health
+    server's host): not unmasked, by rule; the files' value-blind confirmations are accepted as stated.
+  - The two decision notes named in NOTES (F-20) and ChatGPT's C-003 review with its seven corrections (F-21):
+    not among the allowed sources.
+  - Scope-wide searches were not re-run; their saved per-file outputs were compared instead.
+
+Not re-reviewed: no part of the three files was skipped; only the items listed just above were beyond reach.
+
+
+==============================================================================
+5. RE-CHECK OF THE REVISED FILES
+==============================================================================
+Date: 22-Oct-2026 (IST). Same reviewer and the same rules; sections 1 to 4 above are unchanged.
+Revised files (read-only copies in qa_input2/). Each SHA-256 was computed with sha256sum before reading and equals
+the value given in the re-check request:
+  1. C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt (926 lines)
+     SHA-256 547a2250edfb0b078b9ec568d7f4c58bdce40fc93ee942fcbf2cd7b9a696e8b9
+  2. C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt (273 lines)
+     SHA-256 eebddcbdb081f6713fbd1e5832cec8bb58f9566f9e743367210590c1fcb9c32e
+  3. C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt (536 lines)
+     SHA-256 496edb0ec6bbc513e28526f0e6ff1ea2cb9a5a653fcda7909350e72291ef2d37
+
+5.1 Method
+  - Diff: the supplied qa_recheck_diff.txt (42 hunks) equals, line for line, my own diff -u of the bytes reviewed in
+    phase 1 (qa_input/, hashes unchanged) against the revised files (17, 7 and 18 hunks). Every hunk was read.
+  - Code: 2 qaread.py ranges (ops_dashboard/backend/auth.py 254-258; tests/unit/test_c6_auth_collapse.py 22-27);
+    the other code behind the changes had been read in phase 1.
+  - Records: 31 qavb.py presence tests on the new or changed pointers; no address pattern; none refused or failed
+    to compile.
+  - Also: claude_late_read_log.tsv (now 48 rows) and the row counts of the other two logs (153, 400, unchanged);
+    sha256sum of qaread.py and qavb.py (the two helpers I run); both scanners on the three revised files; the
+    phrase and legacy-path counts recomputed under the rule INV 12.3 now states; searches of all three revised
+    files for stale counts, times and references.
+
+5.2 The 33 phase-1 findings
+Format: F-ID | status | evidence
+F-01 | RESOLVED | ANS 0.5: "(companion section 8)".
+F-02 | RESOLVED | ANS security line: "(DR-055, VP-50)"; the DR-055 row says it (checked in phase 1).
+F-03 | RESOLVED | ANS 4.1 names the substring hits (is_authenticated, its test file, a fixture name) and cites
+       ops_dashboard/backend/auth.py line 256 (read: the def of is_authenticated); INV T01 row agrees; late-log row
+       42 is that grep (blob match). The dashboard's test file itself was not read (outside my list).
+F-04 | RESOLVED | ANS 8.2 and the INV 8.5 task.py row now name the INFO lines; they match channel.py 434 and
+       server.py 162, 285 and 354.
+F-05 | RESOLVED | ANS 2.3: "checked on 2026-10-12 (not re-checked in C-003)", as A-010 E-2 dates it.
+F-06 | RESOLVED | ANS 0.4 names the four sources of line numbers (INV 6, 7, 9.3 and 8.5).
+F-07 | RESOLVED | ANS 9.3: "(C-002 K-5 and N3; this file's N-4)".
+F-08 | RESOLVED | ANS 1 (first bullet), 2.4 and N-6 limit the T27 negative to length and strength in S-CODE and
+       scope "format" to the code path read; the INV T27 row adds "not a format check".
+F-09 | RESOLVED | N-8 and the INV T16 row now name every code file of T16.txt (snapshotter and its test, pre-commit
+       scanner, the dashboard's logs template and its test).
+F-10 | RESOLVED | ANS 9.1 and the INV T18 row: outbound URLs and one URL-scheme validator, none a server TLS
+       setting; matches main.py 273, 389, 504, system_config 749 and config_loader 1834, 2362.
+F-11 | RESOLVED | R-08 cites lines 11 to 13 (phase-1 probes on 11, 12, 13).
+F-12 | RESOLVED | R-09 cites ledger11 lines 46 to 50.
+F-13 | RESOLVED | R-13 cites lines 166 to 169 and 182 to 190.
+F-14 | RESOLVED | R-14 adds sweep_done 54, S4 outage 19-24 and 115-127, and fixture_blindness 139-174. The wider
+       start is right: the record's read-only probe begins at line 139 (probes read-only at 139; probe at 139,
+       141, 144, 148; require_hmac at 142, 148, 150, 157; /health at 144, 152).
+F-15 | RESOLVED | INV 7.1 PATHS.md row: "03 to 17-Jul used".
+F-16 | RESOLVED | NOTES C-03 cites integrity_audit line 4289 (probes PC and 5 within 80 characters on that line);
+       U-05 cites line 4295 (probes live keys, VM).
+F-17 | RESOLVED (see N-04) | C-05 cites fixture_blindness 133 and f2_injection_scoping 104 (probes nginx and log
+       on each) and PATHS 263 (ufw, nft); C-10 cites the 02-Jul audit 21, 81 and 87 and the 05-Jul audit 187
+       (inject) and integrity 4286-4295; C-11 cites the system map 1364-1365, the 16-Jul audit line 192 (allowlist
+       and a fix-type word; the record's 1.9 starts at line 195, so 192 is still in 1.8) and the 20-Jul line 213.
+F-18 | RESOLVED (see N-03) | NOTES header: "Nothing here is decided by Claude ...; P-1 and P-2 record two process
+       decisions Rama made on 22-Oct".
+F-19 | RESOLVED | NOTES U-06: "(Rama's decision of 22-Oct, recorded in C-002 section 4.3 and DR-055)".
+F-20 | RESOLVED (see N-02) | INV 13.1 lists the four Claude files and the QA report.
+F-21 | RESOLVED (see N-01) | new INV 12.7 records ChatGPT's review, Rama's decisions and PC-1 to PC-7 with their
+       sections; every PC item is present in the bytes reviewed in phase 1 (ANS 0.1, 1, 6.4, 6.6, K-03; NOTES CE-5,
+       P-1, P-2; INV D-1, E-1, 12.5).
+F-22 | RESOLVED | INV D-2: "re-run at about 10:21 IST" (saved output 10:21:46 IST).
+F-23 | RESOLVED | INV T27 row: run by count_grep.py over the S-CODE list at 10:26 IST (T27.txt saved 10:26:54 IST;
+       count_grep.py is in INV 2.2).
+F-24 | RESOLVED | N-4 cites C-002 N3 (S04, S19) and names S25 as the ngrok search; S25's content stays uncheckable
+       (the C-002 source inventory is not among my sources).
+F-25 | RESOLVED | R-07 cites lines 202 to 208.
+F-26 | RESOLVED | ANS 6.3 adds test_c6 line 25 (read: "/health audits nothing").
+F-27 | RESOLVED | ANS 8.3 keeps the backticks of receiver line 684.
+F-28 | RESOLVED | ANS 12.5 quotes "the prod-like secret" (conftest line 154) and notes that the value is masked.
+F-29 | RESOLVED | both ranges were re-read as ranges (late-log rows 47 and 48, blob match) and are listed in INV 6.
+F-30 | RESOLVED | NOTES 7: "pinned by tests (inspected, not run)".
+F-31 | RESOLVED | INV Request line: "covering every item ... in its own section order".
+F-32 | RESOLVED | both repository URLs shortened to repository names; no host name or owner name is left in any of
+       the three files (case-insensitive search); scanners clean.
+F-33 | RESOLVED | INV 12.3 states the rule; under it I count 264 phrases (178, 59, 27) and 70 legacy files, as
+       stated; 156 + 97 + 11 = 264.
+Totals: RESOLVED 33, STILL PRESENT 0.
+
+5.3 Other changed or added passages
+  - INV 12.8 (the final QA) agrees with my report: the scope, 70 code calls, 28 earlier findings RESOLVED, 33
+    findings by severity and the three disclosed slips. Its "403 logged calls" is the helper log's count, against
+    my own tally of "about 404"; I cannot open that log. Claude's 61 cvb.py tests and Rama's approval at about
+    13:43 IST are not checkable here.
+  - INV 12.7 agrees with NOTES P-1 and P-2 and INV D-1 and E-1 (12:50 and 12:52 IST). ChatGPT's review itself
+    was not opened (not among my sources).
+  - INV 2.3: the qaread.py and qavb.py hashes equal the files I ran. cvb.py, edits_qa.py and the two changed
+    hashes (content_checks_c003.py, gen_checks.py) were not checked (not openable).
+  - INV 6: the header's 48 rows equal the late log; its seven new rows (13:37 to 13:39 IST) match the list, every
+    row "match".
+  - INV 12.1: the new counts (217 citations across 49 files; 34 across 15; 50 unresolved tokens) agree with the
+    citations and helper names added. 12.2's 206 checks were not re-run.
+  - INV 13.3: reproduced exactly (ANS 6 hits; NOTES 0; INV 168: 123 of 40 characters, 43 of 64, 2 of 6).
+  - Times: the three headers and INV 3.2 now end at 13:46 IST; "12:55" is left only in 12.8, where it is right.
+  - Stale counts and references searched in all three files: none left except N-01.
+
+5.4 New findings
+N-01 | INV 12.5 (last sentence) against the new 12.8 | FAIL (IMPRECISE)
+       "This file does not report a second independent review of the revised files; that review is a separate
+       deliverable": 12.8 now reports that review (method, result, slips).
+       correction: "The second independent review (the final QA) is summarised in 12.8; its report is a separate
+       deliverable."
+N-02 | INV 13.1 | FAIL (SUGGESTION)
+       the QA report is listed among files created "in Claude's workspace output folders", but it was written in
+       the session's scratch folder (c003/), which the same paragraph gives as the place of "the agents' reports".
+       correction: say where the report is, or that a copy goes to the output folder at delivery.
+N-03 | NOTES header, Status line | FAIL (SUGGESTION)
+       the inserted P-1/P-2 clause now stands before the parenthetical on the terminated VMs, which gave the reason
+       for "no operational step is proposed".
+       correction: put the P-1/P-2 clause after that parenthetical.
+N-04 | NOTES C-11 (20-Jul pointer) | FAIL (SUGGESTION)
+       line 213, the pointer my F-17 proposed, holds the allowlist mention (probes allowlist; IP|source|address)
+       but not the "future fix" framing: fix-type or option words are on lines 200, 201, 204 and 214, proxy or
+       signer on 211 to 213.
+       correction: "docs/audit/pre_receive_hook_investigation_20jul2026.md lines 211 to 214".
+N-05 | INV 6, final re-read list | FAIL (SUGGESTION)
+       headed "Claude's final re-reads", but ops_dashboard/backend/auth.py (late-log row 42) was read for the first
+       time there.
+       correction: "Claude's final reads and re-reads".
+New findings by severity: ERROR 0, IMPRECISE 1, SUGGESTION 4.
+
+Re-reviewed: all 42 hunks, F-01 to F-33 and new pointers; not re-reviewed: unchanged text, beyond 5.3's searches.
+
+
+==============================================================================
+6. CONFIRMATION OF N-01 TO N-05
+==============================================================================
+Date: 22-Oct-2026 (IST). Same reviewer and the same rules; sections 1 to 5 above are unchanged.
+Revised files (read-only copies in qa_input3/). Each SHA-256 was computed with sha256sum before reading and equals
+the value given in the confirmation request:
+  1. C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt (926 lines)
+     SHA-256 86efed418f12ce1a2c2fe923d3cad39ea9c595d757fbffe3aad72dd5228fb71f
+  2. C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt (273 lines)
+     SHA-256 388e32aad158da6c85fa9e7624c1ae522962b637d3b0ae68008f7d989a5f2b82
+  3. C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt (540 lines)
+     SHA-256 49788a07169a6458af12fc4e745bd660b01b6a4a1f3cbb28c289483148667e92
+Method: the supplied qa_confirm_diff.txt (14 hunks) equals, line for line, my own diff -u of the qa_input2 copies
+(hashes unchanged) against these files (1, 3 and 10 hunks); every hunk was read. Records: 5 qavb.py presence tests,
+for N-04 only, with no address pattern. No code read was needed. Both scanners were run on the three files, and the
+INV 12.3 phrase and legacy-path counts were recomputed.
+
+6.1 The five re-check points
+Format: N-ID | status | evidence
+N-01 | RESOLVED | INV 12.5 now ends: "The second independent review (the final QA) is summarised in 12.8; its
+       report is a separate deliverable". No sentence saying the review is not reported is left in the three files.
+N-02 | RESOLVED | INV 13.1: the QA report was "written by the final QA agent in the scratch folder, with a copy in
+       Claude's output folder for delivery". The copy itself is outside my sources (see the note in 6.2).
+N-03 | RESOLVED | NOTES header: the parenthetical on the terminated VMs again follows "no operational step is
+       proposed", and "P-1 and P-2 record two process decisions Rama made on 22-Oct" is its own sentence.
+N-04 | RESOLVED | NOTES C-11 cites docs/audit/pre_receive_hook_investigation_20jul2026.md lines 211 to 214.
+       Presence tests in that range: allowlist (213); a fix-type or option word (214); proxy|signer (211 to 213);
+       unless|until|instead (211); require_hmac (211).
+N-05 | RESOLVED | INV 6 header and list heading read "Claude's final reads and re-reads"; the same wording is
+       carried to the qread.py row of INV 2.3 and to NOTES P-3. The list's column label is unchanged (S-01).
+Totals: RESOLVED 5, STILL PRESENT 0.
+
+6.2 Other changed lines
+  - Times: the three headers and INV 3.2 (point 3) now end at 14:02 IST, consistently; "12:55" (12.8, the bytes
+    of phase 1) and "13:43" (12.8, Rama's approval of the 33 corrections) remain, both historical.
+  - INV 2.3: the new edits_recheck.py row; its hash was not checked (not openable).
+  - INV 12.8: the added sentences match sections 5 and 6 of this report (five points, no error, sent back for
+    confirmation). Rama's approval of N-01 to N-05 is not checkable here.
+  - INV 12.1: unresolved path tokens 51 (was 50) = the one new helper name; the other counts are unchanged, as no
+    citation was added (C-11's pointer changed from one line to a range).
+  - INV 13.3: 44 tokens of 64 characters (was 43) = the new helper hash; my scan gives 123, 44 and 2, with lcid 10;
+    ANS (6 hits, lcid 11) and NOTES (0) are unchanged and equal 13.3.
+  - INV 12.3 (unchanged) still holds: 264 phrases and 70 legacy files under its stated rule.
+  - Re-wrapped lines (NOTES P-3; INV 6 header and list heading; INV 13.1): no wording change beyond the above. The
+    inventory grew from 536 to 540 lines: the helper row, one header line and two lines in 12.8.
+  - No host name or owner name in any of the three files; credential pattern, session link, non-ASCII bytes and
+    carriage returns all 0.
+  - Note (not a finding): this report has changed since the delivery copy of N-02 could have been made; the copy
+    should be taken from this final version, with section 6.
+
+6.3 New findings
+S-01 | INV 6, final read list, column label | FAIL (SUGGESTION, optional)
+       the label "ranges re-read (lines, inclusive)" stays, while load_test_signals 81-99 and signal_injector 24-29
+       were first read as ranges there (both had only been grepped before).
+       correction: "ranges read (lines, inclusive)", or leave as is.
+New findings by severity: ERROR 0, IMPRECISE 0, SUGGESTION 1 (optional).
+
+Re-reviewed: the 14 hunks and N-01 to N-05, plus whole-file scans and counts; not re-reviewed: any other line.

@@ -1,0 +1,88 @@
+C-003 — CLAUDE RESEARCH PROMPT
+Topic: Legacy Webhook Authentication and Secret Validation
+Prepared: 22-Oct-2026
+
+REPOSITORIES
+Primary: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Governance/context: https://github.com/ramakrishnan031-ctrl/trading-system-v2
+Required legacy baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+MISSION
+Research the DEAD legacy system's authentication and secret-validation behaviour as it actually existed in the pinned production repository. Produce repository answers, a complete source inventory/method record, and unresolved questions for review. This is research, not V2 design and not permission to operate legacy infrastructure.
+
+EVIDENCE PRIORITY
+1. Pinned production source/config at the stated baseline.
+2. Dated records in that repository, each only for its own date and scope.
+3. Frozen V2 manuals for cross-reference only.
+4. Rama's answer sheet as HISTORICAL context.
+Keep source code, configuration declaration, tests, records, external facts and installed/runtime state separate. Do not silently reconcile conflicts.
+
+RESEARCH SCOPE
+Trace both `POST /webhook/<scanner_name>` and `GET /health`, including:
+- Secret name/type, process wiring, environment acquisition, start-up presence checks, missing/empty behaviour and any mode-specific checks.
+- Actual pinned `require_hmac` declaration versus comments/defaults/tests; do not equate repository config with installed runtime.
+- `_authenticate` branch order and exact predicates: `X-Webhook-Signature`, `sha256=` form, signed bytes, digest, constant-time comparison, query `token` fallback, missing/invalid/malformed credentials, and whether a query token can rescue an invalid HMAC signature.
+- Order relative to rate limiting, scanner key validation, payload parsing, EOD branch, kill-switch, backpressure/window/body checks, audit writes and logs. Trace each route separately.
+- HTTP status/response body by branch; audit-row attempted/written and its contents; logs/redaction; whether error details reveal auth mode.
+- `/health` semantics: the empty body used for HMAC, replay implications, response data after authentication, and rate-limit ordering.
+- Token in URL/query and Chartink's echoed `webhook_url`; stored payloads; raw-body warning logs and their byte truncation; sanitisation/redaction; dates and limits of records.
+- HTTP vs TLS, reverse-proxy/tunnel/firewall claims: distinguish code comments, config, dated records and unknown installed state.
+- Secret rotation/exposure history only where supported. Never reproduce a secret.
+- Paper/live differences only when evidenced. Tests are tests, not proof of production behaviour.
+- Negative searches: state exact scope and limitations.
+
+STARTING LEADS — VERIFY AT PINNED SOURCE
+- C-002 records plain HTTP, query-token auth, and a Chartink payload field that echoed the token-bearing URL.
+- `signals/webhook_receiver.py` defines `_authenticate`, HMAC-header handling, a query-token path, `require_hmac`, and use by `/webhook` and `/health`.
+- `config/system_config.yaml` appears to declare `require_hmac: false`; verify pinned lines and distinguish config from runtime/installed state.
+- `main.py` requires `WEBHOOK_SECRET`; verify exact checks and start-up behaviour without printing values.
+- C-002 states raw-body warning lines may contain `webhook_url` only if that field falls inside the logged byte prefix. Do not claim every 400 log contained the token.
+- C-002 records token-bearing stored payloads through 05-Jul-2026 and a rotation on that date. Reconcile date/scope.
+- The legacy token remains EXPOSED and must never be copied or reused. Rama said on 22-Oct that both legacy VMs were terminated/deleted and the Chartink subscription expired; clean-up was closed as not needed, not recorded as done. Do not visit endpoints or contact Chartink.
+
+FILES TO READ FIRST (NOT AN EXHAUSTIVE INVENTORY)
+Pinned production:
+- `signals/webhook_receiver.py`: `_authenticate`, `/health`, `/webhook`, `_handle_webhook`, request ordering, logging, audit and sanitisation.
+- `main.py`: environment read, start-up guard, receiver construction and server start.
+- `config/system_config.yaml`: webhook declarations.
+- `core/config_loader.py`, `utils/startup_checks.py`, relevant preflight/config-integrity readers.
+- `tests/unit/test_webhook_receiver.py`, `tests/unit/test_c2_webhook_lockdown.py`, `tests/unit/test_c6_auth_collapse.py`, `tests/integration/test_hardening_scenarios.py` as test evidence only.
+- Targeted dated records cited by C-002/A-010: security audit, token exposure/rotation records, `docs/SYSTEM_MAP.md`, refused-posts/integrity audit. Read only necessary bounded passages and do not dump host records.
+Frozen context (read only): C-002 manual/addendum/V2 inputs, A-010 manual, A-011 manual and relevant B manuals. Do not edit them.
+
+SECURITY AND REPOSITORY RULES
+- Prefer direct pinned reads or a sparse/blob-less clone of explicitly allowed paths.
+- Never open/fetch/checkout/print `.env` files with real values, `config/accounts.csv`, account examples with values, `config/security.yaml`, `config/reference_data/`, `docs/web_claude/`, token/session files, databases, logs, or other never-open/credential-bearing paths unless Rama explicitly authorises a separately safe procedure.
+- Before checkout/read, compare planned blob IDs with never-open paths; run the never-open-object check before any content read. Required count: zero. If a forbidden blob is fetched, do not read it; stop, disclose, rebuild safely and re-check.
+- Mask every read; never print secret values, token-bearing URLs, account/client identifiers, host/IP addresses, email addresses, SSH details/fingerprints or sensitive record contents.
+- No former endpoint requests, DNS/HTTP tests, legacy VM access, broker calls, Chartink contact, deployment, token rotation, service commands or database mutation.
+- If the masking tool loops or fails, stop it; do not repeatedly invoke it. Record the exception and use a safe alternative.
+- No source/config change, manual freeze, repository write, commit or push.
+
+DELIVERABLES
+1. `C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt`
+   Exact paths, pinned blob IDs, line ranges, functions, callers/callees, branch-by-branch predicates/status/body, audit/log/storage effects, and next consumer. Include separate route flow and an auth decision table. Label every claim FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (RECORD-DERIVED), HISTORICAL (Rama), INTERPRETATION / AUDIT LEAD, KNOWN DEFECT / AMBIGUITY, or UNKNOWN / NOT ESTABLISHED.
+2. `C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt`
+   Actual baseline/tree identity; every file truly read with blob ID, line range and reason; caller/consumer tracing; exact searches/scopes and negative-search limits; records and dates; tests; excluded files; masking method; object-store security checks; exceptions/deviations. This must be an actual inventory, not a guessed list.
+3. `C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt`
+   Unresolved historical/runtime questions, evidence conflicts and candidate errata only, each with evidence pointer and review destination. Do not decide errata or edit frozen manuals.
+Do NOT draft `C-003_manual.md` yet. Research outputs go to Rama for review/reconciliation first.
+
+REQUIRED TRACE
+SOURCE -> INPUT -> CALCULATION / LOGIC -> VALIDATION / GUARD -> OUTPUT -> STORAGE / HANDOFF -> NEXT CONSUMER.
+For every auth branch also record route, stage order, exact comparison, HTTP status/body, audit result, log/redaction behaviour and what remains unknown.
+
+FINAL SELF-CHECK
+- Every code claim pinned to baseline with exact line range.
+- Tests not described as production proof.
+- Config declaration not described as deployed runtime.
+- `/webhook` and `/health` traced separately.
+- HMAC described over raw bytes as coded, not parsed/reserialized JSON.
+- No assumption that Chartink signs or retries.
+- No credentials/URLs/hosts/account IDs in outputs.
+- Every read and search actually performed is recorded; no invented blob IDs, lines, counts or negative claims.
+- Frozen manuals are cross-referenced, not silently changed.
+- Unknowns remain unknown; defects are not silently corrected.
+- No V2 decisions, operational actions, writes, commits or pushes.
+
+Return the three files and a short delivery note with the pinned source, key unknowns and any security/process exceptions. Wait for Rama/ChatGPT review before drafting the manual.

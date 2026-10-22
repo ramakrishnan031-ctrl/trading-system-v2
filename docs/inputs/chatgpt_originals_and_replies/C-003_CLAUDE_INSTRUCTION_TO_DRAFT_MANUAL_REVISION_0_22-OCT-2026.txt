@@ -1,0 +1,83 @@
+C-003 — AUTHORISED NEXT STEP: DRAFT MANUAL REVISION 0
+Date: 22-Oct-2026
+Purpose: Instruction for Claude based on the latest C-003 response and erratum decision table reviewed by ChatGPT.
+
+DECISION
+The C-003 research and decision stage is complete for purposes of beginning the manual draft. The latest response file and erratum decision table record that the CE-3 source-attribution point was approved and applied: the 03-Jul entry now attributes the .env modification-time detail to “the 05-Jul audit” as well as the system map and paths records. The erratum table is marked final for the decision stage.
+
+Proceed with the C-003 manual, revision 0, following the established C-002 manual workflow and the project instructions. This is authorisation to DRAFT only—not to freeze, commit, push, or change other project files.
+
+AUTHORITATIVE INPUTS
+Use the exact current versions of:
+1. C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt
+2. C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt
+3. C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt
+4. C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt
+5. C-003 corrections file
+6. C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt
+7. C-003_ERRATUM_DECISION_TABLE_22-OCT-2026.txt — latest 15:40 revision
+8. C-003_CLAUDE_RESPONSE_TO_CHATGPT_REVIEW_22-OCT-2026.txt — latest 15:40 revision
+9. The pinned legacy production snapshot and the relevant frozen manuals/registers only as already identified in the evidence inventory.
+
+Before drafting, confirm the exact file versions/hashes available in the working folder against the delivery notes. Do not silently use earlier copies or the withdrawn ChatGPT follow-up review.
+
+MANUAL SCOPE
+Create a detailed, evidence-backed technical booklet titled:
+C-003 — LEGACY WEBHOOK AUTHENTICATION AND SECRET VALIDATION
+
+Document the pinned legacy system as it existed. Cover the complete source-to-consumer trace for startup secret validation, webhook authentication branches, /webhook and /health behaviour, response/status handling, audit/logging/storage effects, historical rotation records and conflicts, health-check interpretation, test/probe evidence, known defects, unknowns, and operational boundaries. Follow the established manual structure and style used for C-002.
+
+For every important claim, distinguish:
+- FACT (SOURCE / CONFIGURATION / TEST SOURCE / RECORD-DERIVED, with the exact scope)
+- HISTORICAL
+- INTERPRETATION
+- KNOWN DEFECT
+- UNKNOWN / NOT ESTABLISHED
+- OPEN QUESTION
+
+For calculations or decision paths, document INPUT → SOURCE → LOGIC → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER where applicable. Give exact file paths, function/class names, configuration keys, source line ranges, dependencies, callers/callees, and test references only when verified against the pinned source. A test inspected is not a test run; a probe applies only to the probed version; repository code does not establish what a VM actually ran.
+
+MANDATORY EVIDENCE AND GOVERNANCE RULES
+1. Keep the production snapshot pinned to commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb. Do not infer runtime configuration from repository configuration.
+2. Keep the installed value of require_hmac on either VM UNKNOWN / NOT ESTABLISHED unless evidence in the approved research files establishes otherwise. Do not infer testing/production parity.
+3. Preserve U-01 to U-12 and C-01 to C-13, including unresolved rotation-count/date conflicts. The accepted errata do not resolve those unknowns.
+4. Keep the legacy webhook token classified as EXPOSED. Never print, reconstruct, hash-to-value, or otherwise disclose any secret/token, token-derived value, credential-bearing URL, host, account identifier, or other sensitive identifier.
+5. The host-record method decision is value-blind only. Do not read host-record content or run line-range reads. Do not widen the method or inspect the deleted transcript. No synthetic test or additional host-record work is authorised by this drafting instruction.
+6. No endpoint, VM, broker, Chartink, database, or log may be contacted. Do not run the legacy system.
+7. Do not repair, tune, revive, or redesign the legacy system. Do not propose a V2 design, remediation plan, or recommendation to change require_hmac.
+8. No edits to source code or any frozen manual during drafting. Do not apply errata directly to A-008, A-010, B-007, or C-002 now.
+9. The accepted errata must be reproduced accurately in a clearly labelled “Accepted errata to be applied at freeze” / corrections section of the C-003 draft, using the exact accepted wording and unchanged-before/unchanged-after anchors from the latest erratum decision table. Clearly state that these are approved for application at the C-003 freeze and that the frozen manuals remain unchanged until then. Preserve the approved numbers:
+   - B-007 E-1 (CE-1)
+   - A-008 E-6 (CE-2)
+   - A-010 E-5 (CE-3)
+   - C-002 E-1 (CE-4)
+   - CE-5: no change, no erratum number.
+   Reconfirm numbers against the live register immediately before actual freeze/application; do not assume today's number check remains valid indefinitely.
+10. Include the approved lesson row as a pending push-time item only; do not write it to the design log now.
+11. README.md, register/index updates, SAVE list, lesson row and any other push-time records remain pending until the approved C-003 freeze/push workflow.
+12. Do not commit, push, store into the Project, or modify the V2 repository. Do not claim any such action has happened.
+
+DRAFT QUALITY CHECKLIST
+- Match the detailed technical-booklet standard, not a short summary.
+- Include architecture/sequence diagrams and an end-to-end walkthrough where supported by evidence.
+- Keep source/configuration facts separate from record-derived historical statements and inferences.
+- Explain the empty-secret/startup distinction exactly as evidenced; do not call the production endpoint “open.”
+- Explain /health and /webhook authentication branches separately; avoid conflating the webhook receiver with any separate health server.
+- Distinguish HTTP status outcomes (401, 403, 404, 405, 413, 429, 500) and their different evidence sources; do not relabel 403s as authentication failures unless the evidence supports that.
+- State what is stored sanitized versus what may appear in warning/log prefixes, with the precise conditions and no overgeneralisation.
+- Preserve the distinction between source-derived/probe-derived behaviour and observed incidents; K-03 is an interpretation from source and a library probe, not an observed historical incident, and the serving path through waitress was not probed.
+- Explain that a passive zero-401 count does not prove that an old token was rejected.
+- Include the CE-3 source attribution exactly as approved: “system map and paths records; the 05-Jul audit” for the 03-Jul entry's source. Keep the 02-Jul, 03-Jul and 05-Jul records in conflict where specified; “how many rotations, not established.”
+- Use only citations and line ranges verified against the pinned commit. No unsupported claims or invented line references.
+- Include a complete source/evidence list and cross-references to A-010, C-002, B-007 and A-008 as relevant.
+- Do not describe the manual as final/frozen until review and explicit freeze approval.
+
+DELIVERABLES AND STOP POINT
+Return:
+A. C-003 manual revision 0 in Markdown.
+B. A concise drafting/traceability report listing the inputs used, any input version/hash mismatches, sections completed, all open unknowns preserved, and any unresolved source/citation gaps.
+C. A list of accepted errata reproduced in the draft and the manuals/register/index items deliberately left untouched for freeze.
+
+Then STOP and return the files for ChatGPT's review. Do not start final QA, freeze, commit, push, or perform any additional investigation unless separately authorised. If any authoritative input is missing or hash/version conflicts exist, stop and report the exact missing/mismatched item rather than guessing.
+
+END OF INSTRUCTION

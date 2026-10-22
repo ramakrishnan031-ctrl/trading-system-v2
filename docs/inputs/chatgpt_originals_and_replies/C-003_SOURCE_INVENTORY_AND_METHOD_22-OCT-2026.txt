@@ -1,0 +1,540 @@
+C-003 - LEGACY WEBHOOK AUTHENTICATION AND SECRET VALIDATION
+SOURCE INVENTORY AND METHOD
+Date of work: 22-Oct-2026 (IST); research, reading and checks between about 10:00 and 14:02 IST
+Request: C-003_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 2), covering every item of C-003_SOURCE_INVENTORY_AND_METHOD_TEMPLATE_22-OCT-2026.txt in its own section order (per file: repository and ref, path, blob ID, ranges, reason, claims, callers, sensitive class, masking, full or excerpt; per search; per record; the security register).
+Companion files: C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt (sections, K-, L-, U- and N- items) and C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt.
+Security: paths, blob IDs, counts and helper hashes only. No credential, token-derived value, identifier, host, address or record content value is reproduced. Times in the read logs are kept as the tools wrote them: the code read log in IST, the record read log in UTC (IST = UTC + 5:30); both are given here in IST.
+
+
+1. BASELINE AND GOVERNANCE VERIFICATION
+  Legacy repository: trading-system-prod-snapshot (public), production snapshot only
+    (Rama, Q12 (a) and (c), 22-Oct: "Confirm all four (Recommended)").
+  Required pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb. git rev-parse HEAD equalled it at the start (about 10:00
+    IST) and before delivery (section 14).
+  Clone: the partial clone made for C-001 (blob-less, non-cone sparse checkout of 1,262 anchored paths; C-001 source
+    inventory sections 1 and 7), kept through C-002. C-003 made no new clone, no checkout and no change to the sparse
+    list; nothing was written into the clone.
+  Tree identity: the saved C-001 tree listing (1,438 entries) for paths; for each file read in this step, the blob ID
+    was also taken fresh from git ls-tree HEAD -- <path> (tree objects only) and the working file's blob ID from git
+    hash-object --no-filters (a hash only); every pair matched (section 6). No tree-wide or history command was run on
+    the clone, other than the never-open check's own listing (section 3).
+  V2 governance repository: trading-system-v2 (public), main at
+    d89164d9933e6cfdda8cf6a9c3e097afd9d88d42 (commit time 2026-10-22T09:24:50+05:30, tree
+    aa2b13e36e97e06c1a5c15cbec4d3d56c607423b; the C-002 freeze). Verification: git ls-remote at about 10:23 IST
+    (HEAD and refs/heads/main both showed it); the scratch copy's HEAD equals it with a clean working tree. Read only.
+    Files read (blob ID; what was read):
+      docs/governance/V2_DECISION_REGISTER.md                              8918e92daf03f9282091d8d9a1edf3dee3e90f03  DR-054 by grep; DR-053 to DR-055 earlier in this session
+      docs/governance/V2_DESIGN_LOG.md                                     75e72d2285739a182d17f957cae2e1b7d6a9b8f4  lessons of 20 to 21-Oct (lines 89 to 113); session notes of 21 and 22-Oct; rows Q-36, VP-50, VP-55, VP-56 in full
+      docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt  a9b7bbf2b0020282d9c3cfa844daca6db6e503cf  the C-003 entry (line 274, "C-003  Authentication")
+      the frozen manuals: section 9
+  No Project document is cited as evidence in these files; the attached Project's instructions applied.
+
+
+2. HELPER SCRIPTS (SHA-256)
+  2.1 Handover helpers, unchanged since C-001 (the same hashes as the C-002 source inventory, section 2.1):
+        mask_read_lib.py    ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8
+        mask_read2.py       bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7
+        sensitive_check.py  e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337
+        scan_ids.py         8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16
+        cite_check.py       15711e5bc6041a74273ed029adfcb48aefc1ee513a076dc0027ba557d9ea5c48
+        check_md.py         763dbacdeef6399dc614bc6bc4e4b0f66b47478b25a4901dac3b9fa9bff8e3bb
+  2.2 Earlier session additions, unchanged:
+        mr.py               b0bd3d87cf51d1cbab4fe09f868f1bacc082e684afe4155515c37788969f4f48  (stage 2: client-ID shapes in any case)
+        count_grep.py       31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b  (per-file match counts from the filter's output)
+        lcid_check.py       a893695e573828683af6e6071bbbca42ce417ab124e6cdd939626e24b8b2d0ea  (lower-case identifier shapes in outputs)
+  2.3 New in C-003 (each refuses any option it does not handle and exits non-zero; lesson of 2026-10-21):
+        mr3.py              74ff5e67c240c6d8d302bf12e56539ddec653199a61d42541a25c0a39e4b7cfc  (stage 3, for host and credential records: masks hexadecimal runs, mixed letter-digit parts, long mixed-case words outside an allowlist of code names, quoted strings without spaces, and the word after "prefix", "starts with", "ends with", "suffix", "first" or "last")
+        mr3_risk.py         26d9c83538187d4db6a9dd0a00d75f4d1dfa290f27afcf55734dcf56886bf8b3  (value-blind residual counter on mr3.py's output: hexadecimal runs, mixed parts, IPv4 and e-mail shapes; prints counts only)
+        gate.py             92fc6e889a38677a674a2e1a267830830ec2d3d6e530563c35879bf7eeb8d569  (prints mr3.py's output only when all four residual counts are 0, splitting a range into risk-checked halves; logs every check to the record read log)
+        cread.py            1a7671df03a826a727c5fed3b4c122c81fd5e200172326ce41a01beb14959cd4  (logged read of code and configuration through mr.py, with the fresh and working blob IDs)
+        blobs.py            3fa0357ca40e8edfa5c681375c2d5c3bb127632f5e6fbb5e1fc796354bc493cf  (looks up planned record paths in the saved tree listing)
+        run_searches.py     d0ca17a80431a809dd2bbab5471e7b6f458bef04cd721983bd7b71bd375ae600  (searches T01 to T22, count-only)
+        run_searches2.py    1e78fbc240c2d853a77d24209ecac7432c466db9ba831398d15804d050066b82  (T16 re-run, T23 to T26)
+        content_checks_c003.py  2856bc3eccdafa2b8a30c9631b89b53d699373aec8c7dee18e8e1ced3f63e02f  (section 12)
+        auth_probe.py       54435deffa4fd0d08d24f4af665fe5a4902c4844d14d5a5ff829d06726c87add  (section 8)
+        auth_probe2.py      b0b48d4984efc8ec301753e9573ca354dfc14432a9afaf080fa31465b211de36  (section 8)
+        pydantic_probe.py   9ce3f6cd6cc9cc0cddce5c6d7adfe042807d3963026be78d8bb9efee53c5b4e2  (section 8)
+        probe_records.py    334838650503586b86788d5b44d076ee72c040a974fa8503da3574b721d61346  (section 7.2: value-blind presence tests of record statements)
+        probe_records2.py   6f86c195d7dceeb56073b95dd6b1b5ab849b6b722397a7ed1e815f034648b6a9  (section 7.2)
+        probe_records3.py   7eeb4e13004852fe49d370b0716214168d9b5b6aca40b28be64075128c296b33  (section 7.2)
+        probe_records4.py   12fe11e511b2da94b9afe1d2cbb34254c0a66935b483062fe0ec53daa96f4cba  (section 7.2)
+        probe_records5.py   824cbf25d4ce99f5d9b5f1256437bbe4c51c56063ce4d6ec5fac199b26b1bea2  (section 7.2: exact-phrase tests)
+        probe_quotes.py     8b5a7fe7e23b0fef6b3af4efc91a1607b5580f9f0bf18c21191c3754ac59e17a  (section 12.3: every quoted phrase of the three files looked up in its sources)
+        scan_outputs.py     163dec1abfe319e516b1e51c1deb25721dacf4ebb32ea98d7630515c992c6d3b  (section 13: value-blind shape scans, counts and classes only)
+        gen_checks.py       47d3f80d5740c0ba04d8f08757fc70b33699239181c26f4bd5e0af40ac8d375f  (writes section 12 from the tool runs)
+        gen_scans.py        1c52182bd98a98271e6ec1a38af833a757a9a1e7fdd6731c74661c58c5c8ccee  (writes section 13.3 from the scans)
+        qread.py            289be508b5ef326a111f25b8588c3a4fcb07b0324f718881b2ce105ff84d08a3  (cread.py with a log of its own, for Claude's final reads and re-reads while the independent checker wrote the code read log)
+        reflow.py           654896cc36600231f2b98a73838aa7e03e487297d092a334052bdd0a97326de8  (re-wraps a draft paragraph, keeping each path-and-range citation on one line)
+        edits_check.py      8d7886defb1e225f9aee9911408ff240b4b421ecee60ec2d69747ee512e71075  (applies the accepted findings of section 12.5 to the drafts by exact replacement)
+        edits_review.py     061821252af0f2efbf792485d25f0374cbd4dc63c12bca7609b03be856dfea37  (applies the seven corrections Rama approved after ChatGPT's review, by exact replacement)
+        qaread.py           663c77305792de88432be9b13f2f636e697755093691eaf09b39afcbaf9349a0  (cread.py with a log of its own, for the final QA agent; refuses record paths)
+        qavb.py             a1c8d15382162e85d1b9083a75a33ff0a648ed6d61d6beae8924d52fec4bcdb6  (value-blind presence test on a record for the final QA agent: PASS or FAIL and line numbers only; refuses value-shaped patterns)
+        cvb.py              9784bb50cfa18c29c83ee43dee44fda2bbaff9a5c75a70e86d864941e5db1768  (qavb.py with a log of its own, for Claude's value-blind checks of the final QA's record findings)
+        edits_qa.py         d13f23c18e9d8c79a765e438c345827db29f5b7eba01d92e6b363f7795a85a47  (applies the 33 corrections Rama approved after the final QA, by exact replacement)
+        edits_recheck.py    6beb05377e4a7f66777a49ded86f7300c50c6c8eb4532a74698dcfbf32f3e2bd  (applies the five re-check points Rama approved, by exact replacement)
+        assemble_c003.py    1e0b207435a882fffb178533535cfbe3b3cbc07d4cb0324e432c01f42539593d  (joins the drafts into the three files and fills the computed fields; refuses on a leftover placeholder, a split path or range, a non-ASCII byte or a carriage return)
+  Every helper and probe ran with python3 -I (the probes with the scratch environment's interpreter and -I), options
+  before file names.
+
+
+3. SECURITY CHECK REGISTER
+  3.1 Planned paths against never-open paths. No checkout was needed (all planned paths were already checked out). The
+      planned record paths were looked up in the saved tree listing before any read (blobs.py; 39 paths; each a blob
+      of the listing, none under a never-open class).
+  3.2 sensitive_check.py on the clone (its safe summary only):
+      # | point                                   | local objects | never-open paths in tree          | present locally
+      1 | start of C-003 (about 10:00 IST)        | 8,922         | 102 (.*: 1, config: 21, docs: 80) | 0
+      2 | mid-research (10:16 IST)                | 8,922         | 102                               | 0
+      3 | before delivery (14:02 IST)             | 8,922         | 102                               | 0
+      git count-objects -v after the blob-verification test (10:22 IST): count 0, in-pack 8,922, packs 5, so no object
+      was fetched by git ls-tree or git hash-object.
+  3.3 Masking. Code, configuration and tests: mask_read2.py and the stage-2 mask (mr.py), through cread.py from 10:17
+      IST. Records: the stage-3 mask (mr3.py) through gate.py, which prints a range or a grep only when the residual
+      counter reports 0 hexadecimal runs, 0 mixed letter-digit parts, 0 IPv4 and 0 e-mail shapes, and otherwise splits
+      the range or skips it; count-only checks print nothing. Value-blind confirmation of masked lines: a narrow
+      pattern matched against the raw line by the filter (only the masked line and its number are printed), used for
+      the two masked receiver lines, the bind address, the self-check URL and the health server's default host.
+  3.4 Unexpected fetches, filter failures or loops: none. One search pattern stopped the filter before it searched
+      (section 4, D-3). No forbidden blob was fetched or read.
+
+
+4. PROCESS EXCEPTIONS AND DEVIATIONS (DISCLOSED)
+  E-1 Working-output exposure in the records agent's context (no file affected).
+      What happened: the stage-3 mask left three items unmasked in lines the records agent printed through gate.py
+      (all residual counts were 0, because none of the three has the shapes the counter tests): a vendor API host name
+      in a quoted log line (docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md line 45), a short fragment of
+      an SSH public key with its key comment (docs/audit/q8_vm_security_breach_forensics_14jul2026.md line 116,
+      printed by a grep), and the alerting bot's account username
+      (docs/audit/security_items_scoped_25jul2026.md line 66). The agent also noted that line 46 of the forensics
+      record and line 1367 of the system map name the operator's mobile internet providers.
+      What was and was not done: the agent reported locations only; Claude scanned its report value-blind before
+      reading it (no SSH key, user@host, bot-name, IPv4, e-mail, credential or session-link shape; section 13) and did
+      not read those lines. Nothing from them is in any delivered file. None is a webhook credential; they concern
+      the deleted legacy VM and the legacy alert bot, whose token is already treated as exposed (VP-50).
+      Lesson candidate, for Rama to decide (not applied): whether, before any further host-record read, the
+      stage-3 mask and the residual counter should also cover the word after "ssh-", key-material runs, "@" tokens
+      without a dot, bot-style account names and host names in quoted log lines.
+      Status: DECIDED by Rama (22-Oct, about 12:50 IST; C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt):
+      host records are read value-blind only from then on; the lesson row is approved for the design log at the
+      C-003 push; the records agent's session transcript was deleted unopened at 12:52 IST.
+  D-1 Host records read by line range. The records agent printed 17 records in full and 22 by ranges and greps,
+      each through mr3.py and only after the residual counter reported 0 on all four keys (no range had to be split
+      and none was skipped). The 2026-10-21 lesson reads: host records "only through narrow pattern matches, never
+      by line range, and never print a matching line of such a record in full ... until the filter itself masks
+      hexadecimal fragments next to" three words (sha256, secret and token). The stage-3 mask masks every
+      hexadecimal run of four or more, which meets that condition, but it still let three other kinds of value
+      through (E-1), so these reads are disclosed as a deviation from the lesson's wording.
+      Claude's own record reads in this step: two narrow greps through gate.py (one pattern over the two 25-Jul C6
+      records, read log rows 395 and 396; and the 03-Jul investigation's decision lines, row 400); value-blind
+      presence tests (section 7.2); and, before the read log existed, one range read of
+      docs/SYSTEM_MAP.md lines 1364 to 1366 through mr3.py with residual counts 0. For the review: notes file, P-1.
+      Status: DECIDED by Rama (22-Oct, about 12:50 IST; the decision note, option 1): the line-range method is not
+      approved for further host-record reading; from then on host records are read value-blind only.
+  D-2 Context compaction. The session's context was compacted at about 10:12 IST, and its list of commands before that
+      is not retained. Reads before 10:17 IST (the start of the code read log) were made through the same filters but
+      are not listed one by one; they covered the files of section 6, the system map's three lines of D-1, the
+      searches T01 to T22 (whose saved outputs are their record) and auth_probe.py (re-run at about 10:21 IST, its
+      output saved). Every claim of the answers file rests on a read logged after that point or on a saved output. A
+      second compaction at about 11:06 IST and a container restart at about 11:10 IST lost no record: the session
+      transcript from about 10:12 IST, the read logs, the drafts and the outputs were intact, and the clone was
+      unchanged (HEAD and object count re-checked); the independent checker, stopped by the restart, was resumed from
+      its saved transcript.
+  D-3 Search T16's first pattern placed its global flag mid-expression, so the filter stopped before searching
+      (0 files searched; nothing printed). It was re-run with the flag first (run_searches2.py; section 5). Same class
+      as the two calls C-002 recorded.
+  D-4 The records agent, as it reported, checked the 39 records' presence and size with test -f and stat, ran wc -l
+      on one record and ran the residual counter by hand before its wrapper existed; all value-blind (counts only).
+      Claude took the line counts of section 7 with wc -l (counts only).
+  Not exceptions: mask_read2.py reads docs/SYSTEM_MAP.md and DEPLOYMENT.md on every call to build its host-token mask,
+  by design, and prints nothing from them. Three rows of the record read log (rows 395, 396 and 400: Claude's greps
+  of D-1) were written by Claude in the agent's shared log; the agent excluded rows 395 and 396, written while it
+  ran, from its own table.
+
+
+5. SEARCHES (count-only, through the filter, in the scopes of the answers' 0.3; each per-file list saved)
+  Columns: # | pattern (Python regex) | scope | result | supports / cannot establish. A count is of lines matching in
+  the filter's input; no content was printed by a search. "Not found" holds for the stated scope only.
+  T01 | _authenticate | S-ALL | 17 files, 59 lines | the decision's callers: the receiver and tests; records; substring hits elsewhere (a differently named dashboard function, its test file, an integration-test fixture name) / no dynamic call
+  T02 | (?i)X-Webhook-Signature|sha256= | S-ALL | 14 files, 48 lines | in code, only the receiver and three test files (N-7) / not what a sender outside the repository sent
+  T03 | require_hmac | S-ALL | 51 files, 306 lines | the declaration, schema, receiver and tests; 41 record or document files / not the installed value
+  T04 | WEBHOOK_SECRET | S-ALL | 44 files, 84 lines | the name's readers and documents (N-5) / not the value or its installed state
+  T05 | secret_token | S-ALL | 18 files, 40 lines | the constructor argument's wiring and tests
+  T06 | compare_digest | S-ALL | 12 files, 22 lines | in the receiver only inside _authenticate (two lines); the dashboard's auth module separately
+  T07 | request\.(args|url|full_path|query_string|base_url) | S-RT | 13 files, 62 lines | the receiver reads request.args once; main.py's hits are urllib.request.urlopen (N-2)
+  T08 | (?i)TransLogger|access.?log|log_request|paste\.translogger | S-RT | 0 files | no access-log middleware (N-1) / not the installed libraries' logging
+  T09 | WebhookReceiver\( | S-ALL | 11 files, 18 lines | construction in main.py only outside tests (N-10)
+  T10 | (?i)\?token=|token=<|token param|query.?(param|string).{0,30}token | S-ALL | 37 files, 110 lines | the query-token mentions (code, tests, tools, records)
+  T11 | (?i)rotat.{0,60}(secret|token|webhook)|(secret|token|webhook).{0,60}rotat | S-ALL | 22 files, 53 lines | the rotation records to read (section 7)
+  T12 | (?i)webhook.{0,20}secret|secret.{0,20}webhook | S-ALL | 64 files, 153 lines | the record set to read
+  T13 | (?i)\bhmac\b | S-ALL | 36 files, 130 lines | as T12
+  T14 | (?i)\b401\b | S-ALL | 72 files, 285 lines | as T12; the 401 answer in code, tests and records
+  T15 | (?i)signature|signed\b | S-ALL | 261 files, 674 lines | broad (most hits are broker order and function signatures); used only to confirm T02
+  T16 | first run: _sanitize_payload_for_storage|<REDACTED>|(?i)redact | S-ALL | 0 files searched (the global flag stood mid-pattern; deviation D-3)
+  T16 | re-run: (?i)_sanitize_payload_for_storage|<REDACTED>|redact | S-ALL | 21 files, 76 lines | the sanitiser and its tests, the configuration snapshotter and its test, the pre-commit scanner, the dashboard's logs template and its test, records (N-8)
+  T17 | (?i)(secret|token).{0,40}expos|expos.{0,40}(secret|token) | S-ALL | 18 files, 37 lines | the exposure records (section 7)
+  T18 | (?i)\b(tls|https|ssl|certificate|certbot|letsencrypt)\b | S-CODE | 38 files, 108 lines | inspected hits (main.py, the system configuration, the configuration loader) are outbound URLs and one URL-scheme validator, none a server TLS setting; the rest not classified; the server-TLS negative rests on C-002's S19
+  T19 | /health | S-ALL | 106 files, 441 lines | the two /health routes and their callers
+  T20 | (?i)authentication required|Missing auth|Invalid token|HMAC signature | S-ALL | 21 files, 46 lines | the 401 messages' users: the receiver, its tests, records; other hits are broker or dashboard messages
+  T21 | (?i)\bC6\b|auth.?collapse|\bC-2\b|webhook.?lockdown|\bG\.1\b|AB-910|\bS4\b | S-ALL | 156 files, 634 lines | the change labels' records (broad; "S4" and "C-2" are also other labels)
+  T22 | (?i)check_required_secrets|missing_secrets|required_startup_secrets | S-ALL | 10 files, 34 lines | the presence check's wiring and tests
+  T23 | (?i)raw_body\[:\d+\]|raw\[:\d+\]|raw_body=%r|raw=%r | S-RT | 1 file, 4 lines | the raw-body logging is the receiver's only (its two warnings)
+  T24 | (?i)app\.run\(|werkzeug\.serving|run_simple | S-RT | 2 files, 2 lines | no development server on the runtime path (N-9)
+  T25 | (?i)webhook_payload | S-RT | 3 files, 9 lines | the stored copy's consumers: the dashboard's reader and analytics service
+  T26 | os\.environ(\.get)?[\(\[]\s*["']WEBHOOK_SECRET | S-ALL | 8 files, 8 lines | main.py line 3414, three crash-test tools, four records (N-5)
+  T27 | (?i)len\(\s*(self\._secret|secret_token|secret\b|os\.environ)|WEBHOOK_SECRET.{0,60}(len\(|length|entropy|strength|min_len) | S-CODE | 0 files | no length or strength check (N-6) / not a check by another name; not a format check (run by one command, count_grep.py over the S-CODE list, at 10:26 IST; output saved)
+  Reused by citation from C-002 (C-002 source inventory, section 5): S03 (remote_addr, X-Forwarded, trusted_proxy,
+  ProxyFix), S04 and S25 (nginx, ngrok, reverse proxy), S09 (webhook_url), S19 (server TLS settings: 0 files in
+  S-CODE), S20 and S21 (no socket in the webhook test files; Flask's test client).
+  Per-file greps (definitions, request reads, log calls, mentions in one file): listed with each file in section 6.
+
+
+6. FILES READ: CODE, CONFIGURATION AND TESTS (through cread.py and mr.py at 970aabf; code read log: 87 rows of
+   Claude's reads, 10:17 to 10:31 IST, and 66 rows of the independent checker's re-reads from 10:59 IST,
+   section 12.5; Claude's final reads and re-reads of cited passages: 48 rows, through qread.py, in a log of
+   their own)
+  Columns: path | blob ID (git ls-tree HEAD, equal to the working file's in every row) | lines | read | why (answers
+  section) | sensitive class. "grep" = matching lines only; "range a-b" = the filter's --range. Masking: mr.py for all.
+  Callers and consumers found are in the answers' sections 2, 5, 6 and 14.
+  signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1207 | full (1 to 1207, in seven ranges); greps (request reads, log calls, _secret, WEBHOOK_SECRET, two value-blind patterns) | 2 to 8 | none; masked by the filter: the two constructor lines of 2.1, identifier-shaped text in the WR4b docstring and address-shaped text in two comments
+  main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4293 | ranges 210-262, 2415-2510, 3398-3420, 3960-4110; greps (environment reads, dotenv, WEBHOOK_SECRET, request reads, logging set-up, the self-check URL value-blind) | 2, 6.6, 9 | addresses masked
+  utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 1692 | ranges 783-830, 1071-1090, 1536-1560, 1598-1612; grep | 2.4, 6.6 | none
+  config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 753 | range 324-346; greps (the bind host value-blind; TLS words) | 3, 9 | bind address masked
+  core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 2516 | ranges 612-646, 1987-2004, 2420-2440; greps | 3.2 | none
+  deploy/systemd/trading-system.service | 3d97c92caf363da0f98d1bec693e3c21631eeb5c | 49 | greps (environment file; journal) | 2.3, 5.5 | path names only
+  requirements.txt | 3b26e2f5ebe5616edd52720d07d7b9aa8483703c | 15 | full (1 to 15) | 0.5 | none
+  core/logger.py | 8b79114a49b46b8dc28881aca60e53646cc9cba9 | 472 | ranges 80-110, 236-262, 380-432; grep | 5.5, N-11 | none
+  scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | 252 | range 40-60; greps | 2.5 | names only
+  scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | 247 | range 20-70 | 2.5 | names only
+  scripts/healthcheck_server.py | c094b5eb402353be5c74b569620aae0943cfad8b | 326 | greps (interface, auth words; default host value-blind) | 6.6 | addresses masked
+  ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | 4205 | grep; range 2236-2250 | 8.4 | none
+  ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | 665 | grep; range 618-640 | 8.4 | none
+  tests/unit/test_c6_auth_collapse.py | b5ac355e9af35cb48afcb83fbe6124de3bf6603d | 612 | ranges 1-40, 86-455; test list | 4, 6, 7, 12.1 | test constants masked
+  tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2042 | ranges 60-150, 284-360, 1105-1143, 1176-1300, 1700-1860; greps | 3.4, 4, 8.4, 12.2 | test constants masked
+  tests/unit/test_fix134_backpressure.py | 463f7af7922f5e5f30543c0d0a94d508b3eafb10 | 402 | ranges 144-165, 225-243, 354-366; test list | 3.5, 12.3 | test constants masked
+  tests/unit/test_c2_webhook_lockdown.py | a136dfbb56a9300e02ad069c59808308e2a9689e | 91 | full (1 to 91) | 12.4 | identifiers masked
+  tests/integration/test_hardening_scenarios.py | d87da7ab9ed64792eed017c4d17fa23888b0c85e | 328 | ranges 18-36, 240-256, 284-329; grep | 12.5 | none
+  tests/integration/conftest.py | a6180190235f3a6cc39a88728ac04b9815168aad | 414 | grep (fixture and secret wiring) | 12.5 | test constants masked
+  tests/conftest.py | 65cb2ea313c651351826b1dbab6dab4e98841938 | 487 | range 125-160; greps (secret wiring: no match; network guard) | 12 | addresses masked
+  tests/unit/test_s4_webhook_degrade.py | 59f31e2e2e226bf3d7d2ddae6a34d99c1608256d | 115 | grep (test list) | 12.6 | none
+  tests/crash_test/signal_injector.py | b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125 | 247 | grep | 6.6 | none
+  tests/crash_test/ct143_afternoon_inject.py | 225fce0708d7355e91b8b8be8c4a6407cd29e9d0 | 59 | grep | 6.6 | identifiers masked
+  tests/crash_test/ct145_rapid_crash.py | 0e05883af498c1f2d7a573c3e08af8dafe2f941a | 110 | grep | 6.6 | identifiers masked
+  scripts/load_test_signals.py | 47d74e172b3539120a971004b73d4ad49e14fcbc | 332 | grep | 6.6 | none
+  scripts/refresh_instruments.py | 2002a24b1e7dbf1ae585df220272739dc1aba6fd | 446 | grep (a T10 hit: instrument tokens, unrelated) | none | none
+  Claude's final reads and re-reads, after the independent check and the final QA (qread.py: the same filter and blob
+  check as cread.py, in a log of their own; from 11:17 IST). By file: path | blob ID | ranges re-read (lines,
+  inclusive) | greps.
+  Blob IDs from git ls-tree HEAD, equal to the working file's in every row.
+    scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | 24-33 | no grep
+    signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 64-68, 170-201, 312-326, 324-333,
+      336-355, 358-415, 385-394, 470-540, 524-530, 540-680, 549-556, 680-689, 680-806, 888-985, 1040-1072 | 2 greps
+    config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 328-336 | 1 grep
+    tests/unit/test_fix134_backpressure.py | 463f7af7922f5e5f30543c0d0a94d508b3eafb10 | 144-176, 236-243, 277-402
+      | 1 grep
+    tests/unit/test_c6_auth_collapse.py | b5ac355e9af35cb48afcb83fbe6124de3bf6603d | 22-27, 98-108, 182-196, 260-282,
+      380-396 | no grep
+    utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 797-808 | no grep
+    scripts/zerodha_login.py | ff6e8745e5877b33f4d445d0686f67866aea857e | 26-41 | 1 grep
+    main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 100-111 | 1 grep
+    tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 1104-1180, 1266-1290 | 1 grep
+    tests/integration/test_hardening_scenarios.py | d87da7ab9ed64792eed017c4d17fa23888b0c85e | 286-328 | no grep
+    tests/integration/conftest.py | a6180190235f3a6cc39a88728ac04b9815168aad | 150-162, 376-401 | no grep
+    scripts/healthcheck_server.py | c094b5eb402353be5c74b569620aae0943cfad8b | 84-88, 295-326 | no grep
+    requirements.txt | 3b26e2f5ebe5616edd52720d07d7b9aa8483703c | 1-15 | no grep
+    deploy/install_vm_services.sh | 16dd4f024ec5a7be1342441674c8baa6acc45028 | 30-50 | no grep
+    ops_dashboard/backend/auth.py | 4d6fd01c01c7a36071d94df00d8b7fa8df32581f | no range | 1 grep
+    core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | no range | 1 grep
+    scripts/load_test_signals.py | 47d74e172b3539120a971004b73d4ad49e14fcbc | 81-99 | no grep
+    tests/crash_test/signal_injector.py | b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125 | 24-29 | no grep
+
+
+7. DATED RECORDS READ (the records agent through gate.py and mr3.py; Claude's checks in 7.2)
+  7.1 The 39 records, chosen before reading (39 planned paths, each a blob of the saved listing, none never-open,
+      none sharing a blob with a never-open path; section 3.1). Columns: path | blob ID | lines (wc -l) | lines
+      printed through the risk gate, besides the matching lines of the agent's printed greps | record date.
+      Re-runnable: none (the VMs and their databases are gone). Conflicts between them: notes file, section 3.
+      Read log: 400 rows from 10:11 to 10:46 IST (397 the agent's and 3 Claude's, section 4 D-1): 144 printed and
+      256 count-only; every residual count 0; nothing split or skipped.
+  docs/SYSTEM_MAP.md | c251f7c7a29383d817e75673c93ba36c4f5a9285 | 2065 | 191, 193, 303 to 305, 452, 467, 470 to 477, 894 to 899, 1345, 1351, 1356, 1362 to 1367, 2058 to 2065 | dated change-log entries (2 to 17-Jul used)
+  PATHS.md | e6a1ba7c1cb65b199f0d0460e846c6fbc75b9de8 | 655 | 185, 244, 258 to 264, 462 to 472 | dated entries (03 to 17-Jul used)
+  DEPLOYMENT.md | f372bed2bcf227c115a17be66074747dc9ca706d | 403 | 1 to 6, 108 to 118, 296 to 312, 378 to 403 | F.1, about 21 to 25-Apr
+  docs/06_deployment_guide.md | 4984ee557a22372f3615623f9a08ec65799c8753 | 244 | 1 to 6, 170 to 182 | undated guide
+  docs/CONFIG_GUIDE.md | 1e4f7ee174405fbbac753420cea75043fe1ec92f | 818 | 1 to 6, 352 to 362 | created 19-Jun
+  docs/first_day_live_runbook.md | 781e75c76929e7f7f73d3a15141bb72b52401553 | 153 | 1 to 20 | 03-Jun
+  docs/audit/system_security_audit_02jul2026.md | bb702ab267706da71fe47a1c8466ac9aba61dfa1 | 210 | full (1 to 210) | 02-Jul
+  docs/audit/audit_remediation_status_02jul2026.md | 7a2ebb92ac53c173e8275c1f9e73c65f29dbe91f | 70 | full (1 to 70) | 02-Jul
+  docs/audit/c1_credential_exposure_inventory_02jul2026.md | 09ae82e68cb7d333da8404f3208574d01bc1ec4d | 108 | full (1 to 108) | 02-Jul
+  docs/audit/c1_history_purge_runbook_02jul2026.md | d44b9b54fe953f7ab0d1bc7cdd63a250f61381c7 | 128 | full (1 to 128) | 02-Jul
+  docs/audit/c2_chartink_ip_investigation_03jul2026.md | 86fa405ff6ef0679c8fac62b0948d74f84b93aa9 | 55 | full (1 to 55) | 03-Jul
+  docs/audit/full_system_audit_04july2026.md | fafb3babdda40faae1f4bf426653af6a99a72022 | 274 | 1 to 12, 186 to 216 | 04-Jul
+  docs/audit/audit_05jul2026.md | a6074fe7fa054310f4fe278c26b753f52c5eb7bb | 820 | 1 to 14, 160 to 200, 214 to 228, 312 to 320, 426 to 432, 444 to 452, 470 to 480 | 05-Jul
+  docs/audit/q8_vm_security_breach_forensics_14jul2026.md | fadfd47e0076321507255a6fbf578c1b91ee458b | 133 | 1 to 10, 84 to 112 | 14-Jul
+  docs/audit/followup_investigation_15jul2026.md | 01008d209aff7a5c65c34207e0b3e84a06ba65c9 | 215 | 1 to 8, 168 to 192 | 15-Jul
+  docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md | 6454c632ba7120f2bb6fd1f26f9deea33fba5bc1 | 364 | full (1 to 364) | 16-Jul
+  docs/audit/batch_classification_16jul2026.md | 270cae06cff5dc2b89ee771b25aee39a36348072 | 236 | 1 to 10, 136 to 146, 156 to 168, 210 to 222 | 16-Jul
+  docs/audit/p1_health_require_hmac_done_17jul2026.md | dda90979c7ec4640c247d76ae4df2b9e31029c39 | 163 | full (1 to 163); lines 1 to 3 first by hand, before the wrapper | 17-Jul
+  docs/audit/s4_boot_outage_17jul2026.md | da56ad3c1f5c0cac9097c928ee94271ec640c1d2 | 185 | full (1 to 185) | 17-Jul
+  docs/audit/fixture_blindness_investigation_17jul2026.md | bb5e450fd99f72b4c1e063e6e4ddf9b9ccc145ba | 322 | full (1 to 322) | 17-Jul
+  docs/audit/sweep_done_17jul2026.md | 71b5770daf255cda8b85334de1b21b7739a5fdab | 287 | full (1 to 287) | 17-Jul
+  docs/audit/batch2_done_17jul2026.md | ff8242c0a365fb62105f995d754bf117e8d63bf6 | 308 | 1 to 30, 74 to 92, 176 to 200 | 17-Jul
+  docs/audit/liveness_alarm_17jul2026.md | a73ab154f9d0d7f88c772b08005c5aea58185dc6 | 284 | 1 to 6 | 17-Jul
+  docs/audit/pre_receive_hook_investigation_20jul2026.md | 5931dbb8f5c8411621799cccc388caf858b189c1 | 240 | 1 to 30, 176 to 240 | 20-Jul
+  docs/audit/f2_surface_enumeration_24jul2026.md | ea98c809571b046f746ca458e05dc5ef277fc25a | 28 | full (1 to 28) | 24-Jul
+  docs/audit/f2_auth_separation_25jul2026.md | 90f737b13057c3b06c2f3e69675d9641dbbf2471 | 126 | full (1 to 126) | 25-Jul
+  docs/audit/f2_surface_recheck_25jul2026.md | 4779ce0abb9784a074ec45a687568cbf7e4868e4 | 163 | full (1 to 163) | 25-Jul
+  docs/audit/f2_injection_scoping_25jul2026.md | 73023598f137aab9fa70962f0abdf46ecc8bd4f0 | 113 | 1 to 6, 66 to 113 | 25-Jul
+  docs/audit/receiver_auth_c6_scoping_2026-07-25.md | 25c1ddb480685a73d1eef0728ad5b2dcc5927c1b | 214 | full (1 to 214) | 25-Jul
+  docs/audit/c6_auth_collapse_25jul2026.md | 4c01b1db5751b599539afe9146f8f66d4e61bca4 | 106 | full (1 to 106) | 25-Jul
+  docs/audit/security_items_scoped_25jul2026.md | 67f4701e8fc1786f96d085ecb18b99b1477f8519 | 188 | full (1 to 188) | 25-Jul
+  docs/audit/integrity_audit_2026.md | 25a738f2a9a77ed37374dce367e5fd8e848efd8a | 4593 | 1 to 50, 96 to 140, 196 to 232, 360 to 400, 3020 to 3036, 4228 to 4240, 4268 to 4300, 4340 to 4360, 4404 to 4412 | 31-Jul to 01-Aug (by phase)
+  docs/audit/refused_posts_403_investigation_23jul2026.md | 6c96c81a7f782fc4693a34200e3a863ad8d6d442 | 244 | 1 to 16, 40 to 126, 214 to 226 | 23-Jul
+  docs/audit/ledger11_secrets_surface_measurement_04aug2026.md | 0cfb24a6947a3f2e83364f314ab296fd49172f1b | 157 | full (1 to 157) | 04-Aug
+  docs/MASTER_PENDING_28-Jul-2026.txt | eea6d0bf66d95847686f7c19989b4f07085d5266 | 743 | 1 to 12, 278 to 290, 368 to 384 | 28-Jul
+  docs/MASTER_PENDING_30-Jul-2026.md | 9cdb7b697a2ff67aeed56569a9cbea4d7683a8a3 | 723 | 1 to 4 | 30-Jul
+  docs/MASTER_PENDING_01-Aug-2026.md | 9ec017e3fd7c00ce81eb345562c961d9ad5bc6b9 | 2476 | 1 to 4, 638 to 646, 975 to 1012 | 01-Aug, with a 04-Aug addendum
+  docs/architectural_audit_2026-06-01.md | 6a3a4b017d320445426a027cd5deaac89602286a | 489 | 1 to 8, 476 to 489 | 01-Jun
+  docs/audit/system_flow_review_15jun2026.md | 80f7dd814e8f967c4703b9ab9a3702980ffd7499 | 114 | 1 to 30 | 15-Jun
+  7.2 Claude's value-blind checks of the records' load-bearing statements (each a presence test of a pattern in the
+      filter's output for a stated range; PASS or FAIL and the matching line numbers only; nothing printed):
+        probe_records.py   93 tests, 87 passed; the 6 failures were pattern details (Markdown quoting, a line
+                           one off), each re-tested by probe_records2.py: 14 tests, 14 passed
+        probe_records3.py  31 tests, 28 passed; the 3 failures concern details not used in the answers
+        one-off test       5 tests, 3 passed; the 2 failures concern a detail not used (the 03-Jul investigation's
+                           option names, then read by the narrow grep of D-1)
+        probe_records4.py  23 tests, 23 passed
+        probe_records5.py  37 exact-phrase tests (case kept), one for each phrase then quoted from a record: 31
+                           passed; the 6 failures were Claude's wording, not the record's (a paraphrase inside
+                           quotation marks, or a word's case)
+        inline tests       34 more through the same filter with the same output rule (their counts recovered from
+                           the session transcript): 25 shorter variants of the 6 failed phrases, 5 further quoted
+                           phrases (each exact and case-insensitive; 4 found) and 4 words of a paraphrased sentence
+                           (3 found)
+      Eight quotes were then changed: the 6 that failed, the 1 not found and 1 not yet tested now give the record's
+      wording or an unquoted paraphrase. The answers file cites, for each record statement, the lines these tests
+      matched. The final check of every quoted phrase in the three files is section 12.3. Hashes: section 2.
+
+
+8. LIBRARY PROBES AND EXTERNAL SOURCES (CURRENT EXTERNAL FACT, 2026-10-22)
+  8.1 Environment: the scratch virtual environment of C-002 (outside every repository): Python 3.13.16, Flask 3.1.3,
+      Werkzeug 3.1.9, waitress 3.0.2; pydantic==2.13.0 added from PyPI for this step. No legacy code imported, no
+      socket opened, no network used by any probe; Flask's test client only. Outputs saved next to the probes.
+  8.2 auth_probe.py: hmac.compare_digest on two equal ASCII str gives True; a non-ASCII str raises TypeError
+      ("comparing strings with non-ASCII characters is not supported"); str against bytes raises TypeError. Through
+      Flask: ?token=%C3%A9 arrives as a non-ASCII str and its comparison raises; a header value "sha256=" followed by a
+      byte above 0x7F arrives as a non-ASCII str and its comparison raises; "SHA256=" in upper case does not match the
+      "sha256=" prefix.
+  8.3 auth_probe2.py: with ?token=first&token=second, request.args.get returns the first; ?token= gives ""; with
+      TESTING False and a registered 500 handler, a TypeError raised in a GET view is answered 500 with the handler's
+      body; Flask's own log line for it is "Exception on /raise [GET]" (the path, no query); HMAC-SHA256 of b"" under
+      one key is the same value each time.
+  8.4 pydantic_probe.py (pydantic 2.13.0): for a model with extra="forbid" and no field "webhook", getattr(model,
+      "webhook", None) returns None; the nested model's require_hmac resolves as declared (false gives False); a model
+      without the required field fails validation.
+  8.5 Library source read (pinned versions in the scratch environment; SHA-256 of each file):
+        waitress/parser.py   f3c294637d49ced327b97238e8f38714be72607b89e5909ccd5f008fa510b633  (split_uri: path and query kept apart)
+        waitress/channel.py  6b44713fd38f8917e6d29a5ab35d1579299d582980bcf5d390df7b70e8018215  (lines 434 to 437: log lines with request.path)
+        waitress/task.py     fc30d7eb4fde61349094420ef83a6575ddf1532f34ee5b2253edec86eaa984a0  (its logger calls, with those of server.py and channel.py: errors, warnings and INFO lines; the per-request INFO line names the path only)
+        waitress/server.py   93fa60086cb5b979d176bfea7a390e67903d8f1745468abb84d043322d23e6c0  (its logger calls: the listen address at start, the connection-limit warning and its recovery, accept errors)
+        flask/app.py         93bb56f0b1d14a57548baccab0528aec0c5afd62f8ceed5edb03cdb6122cbbba  (line 876: "Exception on {request.path} [{request.method}]"; handle_exception's propagation rule)
+  8.6 No web page was fetched and no vendor page was read for C-003; Chartink's article is cited from C-002 section
+      4.4. The probes show the probed versions only (answers 0.5).
+
+
+9. FROZEN V2 MANUALS SEARCHED
+  9.1 Method. One separate agent (DR-002: at most two at a time; the other was the records agent of section 7)
+      searched, read only, the 25 frozen manuals, the 8 reconciliation addenda that exist and the two section-end
+      decision papers in the scratch copy of the V2 repository at d89164d (clean working tree), with the Q and VP rows
+      of the design log by filter. Its rules: nothing under docs/inputs/, no access to the legacy clone, no network,
+      no write except its report, no value in its report. Output: a 491-line report in the scratch folder listing 203
+      statements in 14 files by subject (mechanism, order, the token outside the store, change of the secret, network
+      controls, wording), the errata on these subjects, near-misses and the sensitive passages it withheld; it reports
+      that every quote was checked by script against its line. Claude scanned the report value-blind (one hit, the V2
+      main commit ID) and then re-read in the manuals themselves every line that the notes file cites (9.3).
+  9.2 The files (blob IDs from git ls-tree of d89164d):
+        A-001_manual.md  765f2e03642d65a8e24068d9e71687b5c33c3fa0    B-004_manual.md  85a681176013e1e705930aceac44897c26561f30
+        A-002_manual.md  4dedfea7cbe2b191d795ca1d5ac315861b66888b    B-005_manual.md  9a673df0fbed3d719b3a931d9c527a4b5dfce88c
+        A-003_manual.md  9939654756f0185ce2492194b5bb0df2f44d71d3    B-006_manual.md  41bcbaf99ad424f1744e5ce2e952e454f76db156
+        A-004_manual.md  095ba91b1803bba54b181fb7fe3c8d4e17f88454    B-007_manual.md  9d479692742450310307bbdda1875099a7f5781a
+        A-005_manual.md  a288dbed53c4d2de7915dfc3f9340b8b67290656    B-008_manual.md  b7799f98bd333bbef52470bfae342982b818e2b2
+        A-006_manual.md  a481c4dae0c104eee4531c3dfea7734bd2bd738f    B-009_manual.md  4b3c19767e34b7d1543af241b16357b078d7a662
+        A-007_manual.md  68d25a466d5bd573c94aca1ad371c5278cfa521a    B-010_manual.md  c8dd8f2250df408327eb78da853ef7594fa93461
+        A-008_manual.md  4c53a1a6fbbd9c37b1ad1cfba583bda3beb52af1    B-011_manual.md  f4ad89ae47c77684306b6b206b052bf56496f1c8
+        A-009_manual.md  1cfd385d3a28f02a103510d834ad8c008db5958b    B-012_manual.md  4170a73ae51f3d806abbb58fc1ce6c70a1395a86
+        A-010_manual.md  092a711ebbb86bf2029065ea150d2ac2b5700d56    C-001_manual.md  4cb68c9d4fe37127b52bcd0803833993532c78e8
+        A-011_manual.md  afa3f0cb8011ff8ce3d1d4522eca6696c0f160de    C-002_manual.md  1caf4e1050787255bb38616df3e1cc391a2e7b28
+        B-001_manual.md  48b04e751e26f5d60abb6793d95f655e2a3126d2
+        B-002_manual.md  32c7061d968b9638e5085804f09697248465dcd7
+        B-003_manual.md  0ce56be550506bb7101d7c4c91513644b7a7147b
+        Addenda: B-001 50bf04db831a39d0b8f0db44c917ed99daa6c1ac; B-008 662430b290d39eae6c70747bc9ef076b52de7b80;
+          B-009 cd09512737c7d38f9167f8a6d1b18005ed545159; B-010 844ab2bd9c1815c9c0c4253b313a90711ab9b76a;
+          B-011 c1d82bd79a731084b324d77369d6fc3c6172f44b; B-012 c66341ded0c1f2fe5a1fc57d2fccd55b3b076444;
+          C-001 a1ae690268aa6f91f20f80b699d25f362d083a3d; C-002 1bec9628b493b373bf930fdffc810b70e0b70fb8.
+        Papers: SECTION-A_END_decision_paper.md 05e0bce251427d5cc59e16e1401d7c9cdc7c8498;
+          SECTION-B_END_decision_paper.md a63aaad97d4ee5b182b4204060c3c0fe414de0c3.
+  9.3 Lines re-read by Claude in the manuals: A-008 line 279; A-009 line 251; A-010 line 36, lines 60 to 64,
+      lines 113 to 115, lines 130 to 140 and lines 236 to 250 (erratum E-2, for the answers' 2.3), with its section
+      headings; B-007 lines 52, 85, 127 and 270, and the erratum heading list; C-001 line 263; C-002 lines 73 to 81
+      (section 4.2), 95, 98 to 122 (section 5), 165 to 167 (7.4), 188 to 242 (sections 9 and 10), 357 (K-8) and 527
+      (NC-5), and the section headings; the C-002 addendum's lines 65 and 74; the existing erratum
+      headings of A-008, A-009 and A-010. The notes file cites these as "<manual> line N"; cite_check.py does not
+      check frozen-manual lines (they are not legacy paths), so they were checked by this reading.
+
+
+10. CALLER AND CONSUMER TRACING (how each chain was found; results in the answers' sections 2, 5, 6, 8 and 14)
+  - The secret: T04, T05, T22 and T26, then the code of each hit in S-RT (main.py, the receiver, the two pre-flight
+    lists) and the unit file; the start-up order from main.py's ranges. A name search cannot find a generic loader:
+    the import-time load_dotenv() (main.py line 106; scripts/zerodha_login.py line 36) was added from the
+    independent check (section 12.5) and A-010 erratum E-2, and re-read.
+  - The decision: T01 and T06 for callers and comparisons; the two call sites read in full.
+  - The routes: the route registration read in full; the 8080 server located through main.py lines 4073 to 4082 and
+    its own file, only to tell the two /health routes apart.
+  - The stored copy: the INSERT's column, then T25 for its readers (the dashboard's reader and analytics service).
+  - The logs: the receiver's log calls (grep of every logger call), core/logger.py's sinks, the unit's journal lines,
+    and the library sources for waitress and Flask (8.5).
+  - Constructors: T09 (main.py and tests only).
+
+
+11. EXCLUSIONS AND RULES FOLLOWED
+  - Only the production snapshot at the pin was used for legacy facts; the testing snapshot and the records
+    repository were not used (Q12 (c)).
+  - Never opened, fetched or read: .env files, config/accounts*, config/security.yaml, config/reference_data/,
+    docs/web_claude/, token or session files, databases, logs (never-open check 0 at every point; section 3).
+  - No live service, former endpoint, VM, broker API, database, webhook, Chartink screen or external account was
+    contacted; no DNS or HTTP test was made. The network operations of this step were git ls-remote of the public V2
+    repository and pip install of pydantic 2.13.0 from PyPI into the scratch environment; no web page is used as
+    evidence in these files (Chartink's article is cited from C-002).
+  - No repository test or script was run; the probes are minimal programs written for this step that import no
+    legacy code.
+  - Every legacy content read went through mask_read2.py: code through mr.py (stage 2), records through mr3.py
+    (stage 3) behind the residual gate; options before file names; only the options each helper handles. Derived
+    checks took their input from the filters' output; only line counts and hashes were taken directly from files.
+  - Python ran in isolated mode (-I) for every helper and probe.
+  - Two subagents at most at any time (DR-002): the frozen-manual sweep and the records reader, run together, and,
+    after both had finished, the independent checker (section 12.5) and later the final QA agent (section 12.8),
+    each run alone; each was told the never-open list and the masking rule and to write nothing outside the scratch
+    folder.
+  - No source, configuration or test change; no manual draft; no V2 decision; no repository write, commit or push;
+    no Project document and no memory file written.
+  - No session link is present in any output (section 13).
+
+
+12. CITATION AND CONTENT CHECKS
+  12.1 cite_check.py (the saved tree listing at 970aabf; the checked-out files):
+       Answers file: 217 citations across 49 legacy files; out of range 0; cited files not checked out 0; path tokens
+         not resolved 3; free line references without a legacy path 6.
+       Notes file: 34 citations across 15 legacy files; out of range 0; cited files not checked out 0; path tokens not
+         resolved 1; free line references without a legacy path 11.
+       This file: 30 citations across 23 legacy files; out of range 0; cited files not checked out 0; path tokens not
+         resolved 51; free line references without a legacy path 12.
+       The unresolved tokens are not legacy paths: the library files of section 8, the helper scripts of section 2,
+       the independent check's report (12.5) and the V2 file names of sections 1 and 9. The free line references are
+       of four kinds, each checked another way: lines of the two .txt records and of requirements.txt, whose extension
+       the checker's path pattern does not cover (checked by the record presence tests of 7.2 and by the content
+       checks); lines of the library files (read in the scratch environment, section 8.5); lines of V2 files (re-read,
+       section 9.3); and, in this file, lines named in prose beside a record's name or a path given earlier in the
+       same paragraph.
+  12.2 content_checks_c003.py: 206 checks, each re-reading a cited range of code, configuration or tests
+       through mr.py against an expected pattern (the identifier, message or comment the files cite): 206 passed,
+       0 failed. One pattern first failed on a doubled space in the module docstring ("WR8  --"); the
+       cited text was right, and the pattern was corrected.
+  12.3 Record statements: the value-blind presence tests of section 7.2; the answers cite, for each record
+       statement, the lines those tests matched.
+       Quoted phrases (probe_quotes.py on the delivered files; its output is saved in the scratch folder). A phrase
+       is the text between two successive ASCII double quotation marks, paired in order through each file (the
+       regular-expression class of search T26 set aside), empty spans such as b"" skipped and each occurrence
+       counted. Each of the 264 phrases was looked up, whitespace collapsed, in the 70 legacy files the three
+       files name (read through mr.py with the output captured; each read logged) and in 99 other sources (the V2
+       copy's governance and agenda files, the C-003 inputs, the probe outputs and the library files of section
+       8.5). Verbatim in a file cited within 15 lines: 156. Verbatim, but only in a source not cited that close:
+       97; on review each belongs to that source, cited elsewhere in its item or section (most are the code's own
+       messages and identifiers, Rama's answers, which recur in V2 files, and frozen-manual phrases cited by line).
+       Two receiver messages exist only as built at run time (an implicit string concatenation at
+       signals/webhook_receiver.py lines 348 to 349, and a repr at signals/webhook_receiver.py line 554), so they
+       match the records that quote them, not the code's literals. Case-insensitive only: 0. Not found:
+       11, all of three kinds: Rama's answers in this session, which are in no file (4); Claude's candidate
+       wording for errata, notes section 5 (5); and Claude's citation notation (2).
+  12.4 Frozen-manual lines: re-read by Claude in the V2 copy (section 9.3).
+  12.5 Independent check. A separate agent, which had not drafted the files, checked review copies of the three
+       files (assembled at 10:58 IST) against the pinned source through cread.py: code, configuration and tests
+       only; no record, no git command, no network; its reads are the code read log's rows from 10:59 IST (counted
+       in section 6). It also checked the notes' quoted frozen-manual passages in the V2 copy. The container
+       restart at about 11:10 IST stopped it, and it was resumed from its saved transcript. Its report (scratch
+       folder, independent_check.md, 299 lines) was scanned value-blind before it was read: 3 SHA-256 values (of
+       the files it checked) and 6 identifier-shaped words, all benign (the topic ID, a test file's name, the
+       algorithm name).
+       Findings: 28 (2 ERROR, 14 IMPRECISE, 12 SUGGESTION). The two errors: the answers said that a /health
+       signature never passes /webhook, which is false for an empty POST body (now in 4.3 and 4.4 and in L-01); and
+       section 14.1 said that the secret is never written to any log, against section 8.5's raw-body warnings
+       (corrected). Among the imprecise points: the import-time .env load, which a name search cannot see (2.2,
+       2.3, N-5); replay limits that hold on the intraday path only (4.4); /health's 500 path, which does log (1,
+       6.3, 14.3); the EOD route's warnings (8.5); the trade-detail lead, now conditional (8.4, L-04); CE-4's first
+       candidate, which would have settled U-03 (now two options that leave it open); the U- lists of the two
+       files; and cited ranges outside the listed reads (now re-read, section 6).
+       Claude re-checked each finding against the source (qread.py, section 6) before changing the files. All 28
+       were accepted: 27 changed the drafts, and the last (sections 12 and 13.3 still pending in the review copies)
+       is met by this assembly. Not checked by the agent, by its brief: the record-derived claims, the probes, the
+       scope-wide searches and the masked-address confirmations; those rest on sections 7.2, 8, 5 and 3.3.
+       The second independent review (the final QA) is summarised in 12.8; its report is a separate deliverable
+       (C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt).
+  12.6 Limits: cite_check.py proves that a cited line exists in the cited file, not that it says what is
+       claimed; the content checks and the presence tests cover the load-bearing citations, not every one.
+  12.7 After ChatGPT's review. ChatGPT's value-added review (received from Rama at 12:40 IST) asked for a response
+       matrix, a decision on the host-record method and an independent final QA; Claude answered with three files
+       (13.1). Rama decided at about 12:50 IST: host records value-blind only from then on (the decision note,
+       option 1); the lesson row approved for the design log at the C-003 push; the records agent's session
+       transcript deleted unopened (done at 12:52 IST); and the seven corrections PC-1 to PC-7 approved. They were
+       applied by edits_review.py: PC-1 answers 0.1 (what a record proves); PC-2 answers 1 and 6.4 (the empty-body
+       case labelled INTERPRETATION); PC-3 answers 6.6 (the boot check's 401 rule as a reachability test); PC-4 the
+       answers' K-03 (the serving path not probed); PC-5 notes CE-5 (the wording options in the erratum table);
+       PC-6 notes P-1 and P-2 and inventory D-1 and E-1 (status lines that record the decisions); PC-7 inventory
+       12.5 (no second review reported there).
+  12.8 Independent final QA. A new agent, not the earlier checker, reviewed the exact bytes assembled at 12:55 IST
+       (their SHA-256 values are in its report), blind first and then against the 28 earlier findings: code through
+       qaread.py (70 logged calls), records only through value-blind presence tests (qavb.py, 403 logged calls; no
+       record text printed), the V2 copy and the library sources directly. Report:
+       C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt. Result: the 28 earlier findings RESOLVED; 33 new findings (3
+       ERROR, 20 IMPRECISE, 10 SUGGESTION), none changing a conclusion about the legacy authentication. Its own
+       disclosed slips: five patterns that failed to compile (nothing searched); two early patterns that carried the
+       well-known all-interfaces and loopback addresses as alternatives (both FAILED; the helper's guard missed the
+       escaped dots and has since been tightened in qavb.py and cvb.py); and a walk of the V2 copy that listed names
+       under the inputs folder without opening any file. Claude re-checked all 33 (logged code reads, and 61
+       value-blind record tests through cvb.py) and Rama approved all 33 corrections at about 13:43 IST, with the
+       two repository URLs of section 1 shortened to their names (F-32). They were applied by edits_qa.py. The
+       changed passages then went back to the same agent for a re-check (section 5 of its report). The five small
+       points that re-check raised (N-01 to N-05, no error) were approved by Rama, applied by edits_recheck.py and
+       sent back to the same agent for confirmation (section 6 of its report).
+
+
+13. CHANGE SUMMARY AND VALUE-BLIND SCANS
+  13.1 Created, in Claude's workspace output folders only: the three files of this delivery; after ChatGPT's review,
+       in a separate folder, C-003_CLAUDE_RESPONSE_TO_CHATGPT_REVIEW_22-OCT-2026.txt,
+       C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt (with Rama's decisions, its section 6),
+       C-003_ERRATUM_DECISION_TABLE_22-OCT-2026.txt and C-003_PROPOSED_CORRECTIONS_AFTER_FINAL_QA_22-OCT-2026.txt; and
+       C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt, written by the final QA agent in the scratch folder, with a copy in
+       Claude's output folder for delivery. Scratch files (the read logs, saved search results, probes and their
+       outputs, the agents' reports, drafts and check scripts) are in the session's scratch folder, outside every
+       repository. The README.md update Rama asked for is a separate file for him to keep (notes file, P-4).
+  13.2 Not modified, staged, committed or pushed: no file of the legacy clone (nothing written into it; no checkout
+       or sparse change); no file of the V2 repository (the scratch copy was read; nothing committed or pushed); no
+       Project document and no memory file. The register, the design log and every frozen manual are unchanged.
+  13.3 Scans of the three outputs:
+       The answers file: scan_ids.py 5 client id shape of 6 characters; 1 long token of 40 characters. lcid_check.py
+         (any letter case; path tokens benign): 11 a hash-algorithm name. Credential pattern 0; session link 0;
+         non-ASCII bytes 0; carriage returns 0; other shapes: none.
+       The notes file: scan_ids.py 0 hits. lcid_check.py (any letter case; path tokens benign): 0. Credential pattern
+         0; session link 0; non-ASCII bytes 0; carriage returns 0; other shapes: none.
+       This file: scan_ids.py 2 client id shape of 6 characters; 123 long token of 40 characters; 44 long token of 64
+         characters. lcid_check.py (any letter case; path tokens benign): 3 the topic ID in a scratch path; 6 a
+         hash-algorithm name; 1 a regex word boundary. Credential pattern 0; session link 0; non-ASCII bytes 0;
+         carriage returns 0; other shapes: user@host 3 (3 the phrase user@host); bot name 2 (2 the word certbot).
+       Classes: the 40-character tokens are blob, commit and tree IDs (the V2 main commit ID in the answers file); the
+         64-character tokens are the SHA-256 values of sections 2 and 8; the upper-case client-ID shapes are the
+         hash-algorithm name in upper case. All hits are of the benign classes of the handover's section 4.
+       A pattern scan does not prove that nothing else sensitive exists (lesson 2026-10-10).
+
+
+14. STATE AT DELIVERY
+  HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb (= pin); local objects 8,922; never-open blobs present locally 0.
+  The partial clone is kept in this session's workspace for the next C-003 steps; it holds no never-open blob.
+
+END - C-003 SOURCE INVENTORY AND METHOD

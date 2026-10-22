@@ -1,0 +1,926 @@
+C-003 - LEGACY WEBHOOK AUTHENTICATION AND SECRET VALIDATION
+CLAUDE REPOSITORY ANSWERS
+Date of work: 22-Oct-2026 (IST); research, reading and checks between about 10:00 and 14:02 IST
+Request: C-003_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 1), with C-003_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt (Rama's answers: section 16) and C-003_SOURCE_INVENTORY_AND_METHOD_TEMPLATE_22-OCT-2026.txt; names as received (DR-008).
+Source: production snapshot trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb, the partial clone kept from C-001 and C-002 (HEAD equal to the pin at the start and before delivery). Only the production snapshot was used (Rama, Q12 (a) and (c)).
+Governance (read only): trading-system-v2 main at d89164d9933e6cfdda8cf6a9c3e097afd9d88d42 (the C-002 freeze, DR-055; git ls-remote showed HEAD and refs/heads/main at it at about 10:23 IST).
+Companion files: C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt (every read, search and check, with blob IDs and line ranges); C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt (unknowns, conflicts and erratum candidates, each with its review destination).
+Status: RESEARCH INPUT for Rama's and ChatGPT's review. Legacy fact only; the legacy system is dead and reference only (Q12 (b)). No manual drafted, no V2 decision, no frozen manual changed, nothing written to any repository.
+Security: no credential, token or token-derived value, token-bearing URL, account or client identifier, host or IP address, mailbox, SSH detail or person name other than Rama's is reproduced. Two well-known addresses are named by their class only (the all-interfaces address and the loopback address), each confirmed value-blind. The legacy token stays treated as exposed (DR-055, VP-50) and is never repeated.
+
+
+==============================================================================
+0. READING GUIDE
+==============================================================================
+
+0.1 Evidence labels (claim-specific, W-7; the prompt's seven, plus the dated external class used since C-002)
+  FACT (SOURCE-VERIFIED)       read in the pinned code at 970aabf through the masking filter. For a test file it
+                               means what the test code says; no test was run, and a test is not evidence of
+                               production behaviour.
+  FACT (CONFIG)                declared in a configuration or unit file at 970aabf; not the installed file on a VM.
+  FACT (RECORD-DERIVED)        stated by a dated record inside the pinned repository; true for its own date and
+                               scope only. It shows what the record says, not independent proof that the event
+                               happened as described. Code line numbers quoted inside a record refer to the code of
+                               its date.
+  HISTORICAL (Rama)            Rama's own account, attributed and dated.
+  CURRENT EXTERNAL FACT        checked on 2026-10-22 outside the legacy repository: a library's source or a local
+                               probe of the pinned library versions (no legacy code, no socket, no network).
+                               Not evidence of what the VMs ran on any past date.
+  INTERPRETATION / AUDIT LEAD  reasoned from code, configuration or records; not observed.
+  KNOWN DEFECT / AMBIGUITY     a defect, an inconsistency or documentation drift visible in source or records
+                               (drift is marked "doc drift"; where code and a comment disagree, the code is what ran).
+  UNKNOWN / NOT ESTABLISHED    the inspected evidence does not establish the claim.
+
+0.2 States kept apart. (a) pinned source; (b) pinned configuration declaration; (c) tests, inspected only;
+  (d) dated records; (e) the installed and runtime state of the two VMs, never observed (both terminated and
+  deleted, Rama, 22-Oct; C-002 section 4.3); (f) library behaviour of the probed versions. A statement about (a)
+  or (b) says nothing of (e) unless a record of (d) says so for its own date.
+
+0.3 Search scopes behind every negative (C-002's scope lists, reused unchanged; companion section 5):
+  S-ALL = the 1,262 checked-out files; S-RT = the 281 .py files outside tests/ and ops_dashboard/tests/;
+  S-CODE = the 869 code and configuration files. A negative reads "not found in <scope>". A text search cannot
+  exclude behaviour reached by dynamic names, by other processes, or by installed files that differ from the
+  repository; nothing outside the checked-out paths was searched.
+
+0.4 Citation format: "path lines A to B" or "path line N" at 970aabf, the path and its range on one line. Every
+  line number comes from this session: code, configuration and tests from the filter's output (companion section
+  6); records from the records agent's gated output and the value-blind presence tests (section 7); frozen-manual
+  lines read directly in the V2 copy (section 9.3); library lines from the library files (section 8.5).
+
+0.5 Library facts. requirements.txt pins flask==3.1.3, waitress==3.0.2 and pydantic==2.13.0 and does not pin
+  Werkzeug (requirements.txt lines 7 to 12). Library behaviour below comes from three local probes run under
+  Python 3.13.16 with Flask 3.1.3, Werkzeug 3.1.9 and pydantic 2.13.0, and from the waitress 3.0.2 and Flask 3.1.3
+  source (companion section 8). Which versions the VMs ran is UNKNOWN (C-002 U-6).
+
+0.6 Item IDs used below: K- (known defect, ambiguity or doc drift), L- (audit lead), U- (unknown), R- (record),
+  N- (negative search), and the notes file's C-01 to C-13 (conflicts between sources) and CE-1 to CE-5 (erratum
+  candidates). The two-digit C-01 to C-13 are not the legacy change labels C-1, C-2 and C-3 or the topic IDs C-001
+  to C-003. The notes file carries each open item with its review destination.
+
+
+==============================================================================
+1. SUMMARY
+==============================================================================
+- One secret, the environment variable WEBHOOK_SECRET, from the unit's environment file or the .env file that is
+  loaded when main.py imports the login script (2.3). The start-up presence check, given a list of names, requires
+  it to be set and non-empty in every mode (since C-2, 02-Jul, by the comments); a missing or empty value is a
+  blocking failure and main returns 3 before the receiver exists. main.py then reads it once, when it constructs
+  the receiver, and passes it as secret_token. No check of its length or strength was found in S-CODE, nor of its
+  format on the code path read (section 2, N-6).
+- One decision, WebhookReceiver._authenticate, called by both routes since C6 (25-Jul): no secret means open
+  (a test-only path); a header X-Webhook-Signature starting "sha256=" is checked against HMAC-SHA256 of the
+  route's bytes and is final either way; otherwise require_hmac=True refuses; otherwise a non-empty ?token= is
+  compared with the secret; otherwise "Missing auth". Both comparisons are hmac.compare_digest (section 4).
+- require_hmac is declared false in the pinned system configuration ("Chartink cannot sign payloads; use ?token=
+  auth"), so at the repository level the query token is the accepted Chartink method and a signature is optional.
+  The installed value on either VM is not established (sections 3 and 16).
+- POST /webhook/<scanner_name>: body read first, then shutdown 503, per-address 429, authentication 401 (one of
+  four messages), unknown scanner 404, the EOD route, kill 403, backpressure 503, window 403, parse 400s. The
+  signature covers the raw request bytes as received. Every request that reaches the handler and whose body is
+  read attempts a webhook_audit row, 401s included; the row holds no credential, query, header or reason, and no
+  log line is written for a 401 (section 5).
+- GET /health (the receiver's, on the webhook port): per-address 429 first, then the same decision over an EMPTY body,
+  so its valid signature is a constant for a given secret and replayable, and (INTERPRETATION from the source, not
+  run) it also authenticates a POST to /webhook whose body is empty (4.4, L-01); one uniform 401 message; 200 returns
+  the kill-switch state and queue depth. No shutdown gate and no audit row; no log line on 429, 401 or 200, and on the
+  500 path the app's 500 handler logs CRITICAL (section 6). The boot self-check calls it with no credential and counts
+  401 as reachable (the fix after the 17-Jul outage).
+- /webhook's 401 bodies name the failing branch, so an unauthenticated caller can tell whether the token
+  fallback is open; /health was made uniform for exactly that reason (records of 25-Jul) (section 7, L-02).
+- The token outside the check: in the URL's query (the receiver, waitress and Flask log the path only); echoed
+  by Chartink inside the body's webhook_url; held by every stored payload to 05-Jul (record) and redacted from the
+  stored copy after that (S-1B.1); not redacted from the 400 and malformed-JSON warnings, which keep the first
+  1,000 or 500 bytes of the raw body (section 8).
+- Transport: plain HTTP; no TLS, proxy or tunnel configuration in the repository; comments that speak of nginx
+  and of require_hmac=true are drift (C-002 K-5, K-6).
+- Records (FACT (RECORD-DERIVED), section 10): rotations recorded on 02-Jul and on 03-Jul and a staged rotation on
+  05-Jul, with the dates in conflict; a passive check on 06-Jul (zero 401; the old token not actively tested); the
+  stored payloads scrubbed on 06-Jul; the then-current secret with 0 hits in the VM logs on 16 and 17-Jul; zero
+  401 recorded on every recorded day to 31-Jul; a 20-Jul correction that require_hmac is "NOT safe to flip".
+- Not established: the installed require_hmac and secret on either VM (the records support False only by
+  inference, 10.3); whether Chartink ever sent a signature (nothing in the repository says it could); whether a
+  retired token was ever refused after its rotation; the contents of the legacy logs and database (never opened);
+  anything after the last record (04-Aug).
+
+
+==============================================================================
+2. THE SECRET: NAME, TYPE, WIRING AND START-UP CHECKS
+==============================================================================
+
+2.1 Name and type. FACT (SOURCE-VERIFIED). The receiver's constructor takes secret_token, an optional string
+    defaulting to None, and stores it unchanged as self._secret (both lines confirmed value-blind: the masked
+    parts are the parameter's type annotation and the parameter name). WR3 lists secret_token=None as a
+    constructor argument.
+    Evidence: signals/webhook_receiver.py lines 152 to 162; signals/webhook_receiver.py line 190;
+    signals/webhook_receiver.py lines 13 to 14.
+
+2.2 Process wiring. FACT (SOURCE-VERIFIED). main.py constructs the receiver once, with
+    secret_token=os.environ.get("WEBHOOK_SECRET"): the value is read from the process environment at that moment
+    and never re-read; a change to the environment after start-up has no effect until the next start.
+    Outside tests, the only literal environment read of WEBHOOK_SECRET is main.py line 3414 (search T26 in S-ALL
+    also finds three crash-test sender tools and four records); the start-up check and the two pre-flight checks
+    read it through lists of names (2.4, 2.5). No runtime code assigns it by name (the WEBHOOK_SECRET lines of S-RT
+    files are main.py's four, the receiver's two and the two pre-flight lists; search T04; N-5), but a name search
+    cannot see a generic loader: the import-time load of 2.3 can add it.
+    Evidence: main.py lines 3406 to 3415.
+
+2.3 How the value reaches the environment. FACT (CONFIG): the repository's systemd unit names an EnvironmentFile,
+    the deployment's .env file. FACT (SOURCE-VERIFIED): main.py has no dotenv call of its own (filter grep), but it
+    imports scripts.zerodha_login at module level, and that module calls load_dotenv() at module level, so the
+    service process also loads .env as it starts, before the presence check and the construction. A-010 erratum
+    E-2 (accepted, DR-037) records this, with python-dotenv 1.2.2's rule as CURRENT EXTERNAL FACT checked on
+    2026-10-12 (not re-checked in C-003): the call keeps
+    every variable already set and adds any that is not. Whether that ever supplied WEBHOOK_SECRET when the unit had
+    not is NOT ESTABLISHED (A-010 section 5). The installed unit and the .env contents were not inspected (.env is
+    never-open).
+    Evidence: deploy/systemd/trading-system.service line 13; main.py line 106;
+    scripts/zerodha_login.py lines 32 to 36; requirements.txt line 14.
+
+2.4 Start-up presence check. FACT (SOURCE-VERIFIED).
+    - required_startup_secrets(primary_account_id) returns the two account API names, TELEGRAM_BOT_TOKEN and
+      WEBHOOK_SECRET, with no mode parameter; its docstring dates WEBHOOK_SECRET's inclusion "in EVERY mode" to C-2,
+      02-Jul ("paper previously omitted it"; a claim in a comment, not checkable at the pin).
+      Evidence: main.py lines 219 to 232.
+    - main builds the list and passes it to run_all_startup_checks; check_required_secrets counts a name as
+      missing when os.environ.get(name) is falsy (unset or empty), logs the name only, and the caller adds the
+      blocking failure "missing_secrets".
+      Evidence: main.py lines 2425 to 2430; main.py lines 2451 to 2474; utils/startup_checks.py lines 1071 to 1086;
+      utils/startup_checks.py lines 1555 to 1558.
+    - A blocking failure makes main log CRITICAL and return 3 before the receiver is constructed (--dry-run returns
+      0 or 3 after the checks and never constructs it). The exit code's handling by the unit is B-001's subject.
+      Evidence: main.py lines 2476 to 2502.
+    - INTERPRETATION (from the predicate): presence means non-empty only; a value of spaces would pass. No check of
+      length or strength was found in S-CODE (search T27, N-6), and no format check on the code path read.
+
+2.5 Two pre-flight presence checks. FACT (SOURCE-VERIFIED). scripts/premarket_healthcheck.py and the pre-flight
+    check RequiredSecretsCheck each test that WEBHOOK_SECRET (with two Telegram names) is set and non-empty, by name
+    only; the second's comment reads "Ported 1:1 from premarket_healthcheck.REQUIRED_SECRETS". They run as their own
+    processes; whether they ran on a given day is a pre-flight record question (B-007).
+    Evidence: scripts/premarket_healthcheck.py lines 46 to 51; scripts/premarket_healthcheck.py lines 75 to 81;
+    scripts/preflight/checks/config_integrity.py lines 26 to 31;
+    scripts/preflight/checks/config_integrity.py lines 53 to 63.
+
+2.6 Missing or empty at run time. FACT (SOURCE-VERIFIED). If the receiver is built with no secret (None or ""),
+    _authenticate returns success for every request on both routes. Its comment calls this "Unreachable in
+    production ... so this is a test-only path"; on the code path that holds, because main constructs the receiver
+    only after the presence check passed, and no code assigns the name between the two reads (the import-time load
+    of 2.3 runs before both; 2.2, 2.4, N-5). The comment's "main.py:226" is an old line number (K-06).
+    INTERPRETATION: the guarantee is a code-path property of main.py; it does not cover a receiver built by any
+    other entry point (none found in S-ALL: search T09 lists main.py as the only non-test construction).
+    Evidence: signals/webhook_receiver.py lines 326 to 331.
+
+2.7 Mode-specific behaviour. FACT (SOURCE-VERIFIED): no mode branch in _authenticate, the route registration or
+    _process_request (inspected; a test asserts the absence of four mode words in the three functions); the
+    presence check has no mode parameter (2.4). See section 11.
+    Evidence: signals/webhook_receiver.py lines 298 to 354; signals/webhook_receiver.py lines 360 to 413;
+    signals/webhook_receiver.py lines 536 to 745; tests/unit/test_c6_auth_collapse.py lines 425 to 438.
+
+
+==============================================================================
+3. require_hmac: DECLARATION, RESOLUTION AND THE CONSTRUCTOR GUARD
+==============================================================================
+
+3.1 Declaration. FACT (CONFIG). The webhook section declares require_hmac: false with the comment "Chartink cannot
+    sign payloads; use ?token= auth (WEBHOOK_SECRET required in BOTH modes as of C-2 02-Jul)". The installed file's
+    value on either VM is UNKNOWN (U-01).
+    Evidence: config/system_config.yaml line 336.
+
+3.2 Schema. FACT (SOURCE-VERIFIED). WebhookConfig (extra="forbid") has require_hmac: bool with no default, so the
+    YAML must declare it; SystemConfig.webhook is a required WebhookConfig; AppConfig, which main passes to the
+    receiver, holds system and has no webhook field.
+    Evidence: core/config_loader.py lines 617 to 621; core/config_loader.py line 2002;
+    core/config_loader.py lines 2420 to 2434.
+
+3.3 Resolution in the receiver. FACT (SOURCE-VERIFIED). The constructor looks for config.webhook, then
+    config.system.webhook, and takes bool(getattr(..., "require_hmac", False)): an absent section or key means
+    False ("Absent -> treated as non-strict"). It keeps the result as self._require_hmac for request time (G.1,
+    25-Apr). CURRENT EXTERNAL FACT (pydantic 2.13.0 probe of the same model shape): getattr on the AppConfig shape
+    for "webhook" returns the default None, and the nested value resolves as declared (false gives False).
+    INTERPRETATION: a receiver that main.py builds from the pinned configuration resolves _require_hmac to False;
+    the installed configuration is U-01.
+    Evidence: signals/webhook_receiver.py lines 163 to 176; signals/webhook_receiver.py lines 196 to 200.
+
+3.4 The constructor guard (BL-18). FACT (SOURCE-VERIFIED). If require_hmac resolves True and secret_token is falsy,
+    the constructor raises ValueError naming WEBHOOK_SECRET; with require_hmac False, construction without a secret is
+    accepted (tests pin both). The guard runs at construction only; request-time enforcement is _authenticate (4.2).
+    The unit tests' own comment says the BL-18 tests are "CONSTRUCTOR-ONLY" and do not exercise request-time
+    enforcement.
+    Evidence: signals/webhook_receiver.py lines 177 to 182; tests/unit/test_webhook_receiver.py lines 1106 to 1114;
+    tests/unit/test_webhook_receiver.py lines 1144 to 1175.
+
+3.5 Comments, defaults and tests that disagree with the declaration (the declaration is what the pinned files say;
+    the code acts on the resolved value):
+    - KNOWN DEFECT / AMBIGUITY (K-02; doc drift; C-002 K-6, recorded there): the bind comment two lines above says the
+      all-interfaces bind "relies on require_hmac=true plus firewall/security-group restrictions".
+      Evidence: config/system_config.yaml lines 328 to 334.
+    - KNOWN DEFECT / AMBIGUITY (K-02; doc drift; C-002 K-5, recorded there): the G.1 comments say tokens in the URL
+      are "logged by nginx"; no nginx is configured in the repository and a 03-Jul record found none on the VM (C-002
+      section 5.4). Evidence: signals/webhook_receiver.py lines 196 to 199;
+      signals/webhook_receiver.py lines 307 to 310.
+    - FACT (SOURCE-VERIFIED; a test comment, 17-Jul): "LATENT when written (require_hmac: false in prod)", and "this
+      arms the moment that flag flips, which is an open operator action." A test comment's claim about production, not
+      a record of the installed file; and an intent (a flip) that the configuration's own comment ("Chartink cannot
+      sign payloads") argues against. INTERPRETATION: on the code path, a flip to true with Chartink sending no
+      signature would have answered every Chartink POST 401 ("HMAC signature required ...") (L-03).
+      Evidence: tests/unit/test_fix134_backpressure.py lines 239 to 241.
+    - KNOWN DEFECT / AMBIGUITY (K-01; doc drift, minor): the module docstring's WR8 says "Optional HMAC validation via
+      X-Webhook-Signature header" and does not mention the query token, the method the configuration names.
+      Evidence: signals/webhook_receiver.py line 19.
+
+
+==============================================================================
+4. THE AUTHENTICATION DECISION (_authenticate)
+==============================================================================
+
+4.1 Location and callers. FACT (SOURCE-VERIFIED). WebhookReceiver._authenticate(hmac_payload: bytes) returns
+    (True, "") or (False, reason). Since C6 (25-Jul) it is the only place either comparison is made: /webhook calls
+    it with the raw body, /health with b"". No other caller in S-ALL (search T01: the receiver, its tests and
+    records, and, because the search matches part of a word, a differently named dashboard function
+    (is_authenticated), its test file and an integration-test fixture name; none calls the receiver's method, and
+    the dashboard's authentication is not C-003's subject).
+    Evidence: signals/webhook_receiver.py lines 298 to 325; signals/webhook_receiver.py line 387;
+    signals/webhook_receiver.py line 547; ops_dashboard/backend/auth.py line 256.
+
+4.2 Branch order and exact predicates. FACT (SOURCE-VERIFIED) unless marked.
+    B0  not self._secret (None or "")              -> (True, ""). No header or query is read. Test-only path (2.6).
+    -   reads sig_header = request.headers.get("X-Webhook-Signature", "") and
+        token_param = request.args.get("token", "").
+    B1  sig_header.startswith("sha256=")           -> expected = HMAC-SHA256(key = self._secret.encode() [UTF-8],
+        message = hmac_payload).hexdigest() (lower-case hex); compare_digest(sig_header[7:], expected):
+        unequal -> (False, "HMAC signature mismatch"); equal -> (True, ""). Terminal: the token is not consulted, so
+        a valid ?token= cannot rescue a wrong signature. The code comment says the same; one test isolates it, with
+        require_hmac False (the C6 test below); two tests run with require_hmac True, where B2 would refuse the token
+        anyway, so they do not isolate it (the G.1 test and its /health mirror below).
+    B2  self._require_hmac (no "sha256=" header)   -> (False, "HMAC signature required (require_hmac=True); token
+        param is not accepted"). The token is not consulted.
+    B3  token_param non-empty                      -> compare_digest(token_param, self._secret): unequal ->
+        (False, "Invalid token"); equal -> (True, "").
+    B4  otherwise                                   -> (False, "Missing auth: provide X-Webhook-Signature header or
+        ?token= param").
+    Evidence: signals/webhook_receiver.py lines 326 to 354; tests/unit/test_c6_auth_collapse.py lines 184 to 194;
+    tests/unit/test_webhook_receiver.py lines 1269 to 1287;
+    tests/unit/test_fix134_backpressure.py lines 315 to 322.
+    Predicate details:
+    - The prefix test is case-sensitive: "SHA256=..." is not a signature and falls to B2, B3 or B4 (CURRENT
+      EXTERNAL FACT, probe: Python's str.startswith). The hex must be lower case to match hexdigest().
+    - A header present without the prefix is ignored: with require_hmac False it is the token (B3) or B4 that
+      decides.
+    - An empty ?token= gives "" and falls to B4; when the parameter repeats, request.args.get returns the first
+      value (CURRENT EXTERNAL FACT, probe of Werkzeug 3.1.9).
+    - What is signed: on /webhook the exact bytes request.get_data() returned (the raw body as received, read
+      before any parsing; not parsed or re-serialised JSON); on /health the empty byte string. Neither the path,
+      the method, the query, a time stamp nor a nonce is covered.
+      Evidence: signals/webhook_receiver.py line 480; signals/webhook_receiver.py line 511;
+      signals/webhook_receiver.py line 387.
+    - Both comparisons are hmac.compare_digest on two str values. CURRENT EXTERNAL FACT (probe, Python 3.13.16):
+      compare_digest raises TypeError ("comparing strings with non-ASCII characters is not supported") when either
+      string has a non-ASCII character; through Flask's test client, a query value such as %C3%A9 arrives as a
+      non-ASCII str, and so does a header byte above 0x7F (Werkzeug decodes headers as latin-1). On the serving path
+      waitress parses the request first; that path was not probed. _authenticate does not catch the error.
+      What each route then answers: 5.3 row 10 and 6.2 row 5 (K-03).
+
+4.3 Decision table (S = secret configured; R = require_hmac as resolved; H = the X-Webhook-Signature header;
+    T = the token query parameter). "Pass" means _authenticate returned True; what follows depends on the route.
+
+    #  | S   | R     | H                              | T                      | Branch | Result                          | /webhook             | /health
+    1  | no  | False | any                            | any                    | B0     | pass (test-only path)           | continues (5.3)      | 200 with state
+    2  | yes | any   | "sha256=" + correct hex        | any                    | B1     | pass                            | continues            | 200 with state
+    3  | yes | any   | "sha256=" + anything else      | any (valid or not)     | B1     | "HMAC signature mismatch"       | 401, that message    | 401 uniform
+    4  | yes | any   | "sha256=" + a non-ASCII char   | any                    | B1     | TypeError raised                | 500 (audited)        | 500 (handler)
+    5  | yes | True  | absent or other form           | any                    | B2     | "HMAC signature required ..."   | 401, that message    | 401 uniform
+    6  | yes | False | absent or other form           | non-empty, equal       | B3     | pass                            | continues            | 200 with state
+    7  | yes | False | absent or other form           | non-empty, unequal     | B3     | "Invalid token"                 | 401, that message    | 401 uniform
+    8  | yes | False | absent or other form           | non-ASCII              | B3     | TypeError raised                | 500 (audited)        | 500 (handler)
+    9  | yes | False | absent or other form           | absent or empty        | B4     | "Missing auth: ..."             | 401, that message    | 401 uniform
+    In the table, correct hex is the lower-case HMAC-SHA256 of the route's bytes: the raw body on /webhook, b"" on
+    /health. A signature over a non-empty body does not pass /health, and the /health signature does not pass
+    /webhook when the body is non-empty (two tests, both with a non-empty body); for an empty POST body the two
+    routes sign the same bytes, so the same signature passes both (INTERPRETATION from the source, not run; 4.4).
+    Rows 3 and 7 are for ASCII values; a non-ASCII value is rows 4 and 8. Row 1 has R False: BL-18 refuses
+    require_hmac True without a secret at construction (3.4). Rows 4 and 8 are INTERPRETATION from the source and
+    the probe (the legacy code was not run). The pinned configuration gives R = False (3.3), so rows 6 to 9 were
+    the token rows at the repository level.
+    Evidence: signals/webhook_receiver.py lines 326 to 354; signals/webhook_receiver.py lines 177 to 182;
+    signals/webhook_receiver.py line 480; signals/webhook_receiver.py line 387;
+    tests/unit/test_c6_auth_collapse.py lines 262 to 280.
+
+4.4 Replay and binding. INTERPRETATION / AUDIT LEAD (L-01), from 4.2:
+    - /health: the valid signature is HMAC-SHA256(secret, b""), a constant; whoever saw one header could reuse it
+      indefinitely (the docstring says so: "a CONSTANT for a given secret and indefinitely replayable").
+    - /webhook: a signature binds the body, not the path, so a captured signed body would pass auth on any
+      /webhook/<key> path. On the intraday path, scan_name in the body, when present, must still match the path
+      after auth (C-002 section 8.3), and repeats are limited after auth by the expiry check, the dedup cache and the
+      fingerprint, not by the auth decision. The EOD route checks none of these: it parses the body, checks three
+      fields and triggered_at and hands each symbol to the capture worker, so a captured body with those fields is
+      accepted again on any "eod" path (the capture worker's own handling was not read).
+    - Empty body: the constant /health signature also authenticates a POST to /webhook whose body is empty (4.3). Such
+      a request gets whichever answer after authentication applies (the unknown-scanner 404, which tells whether a
+      name is a configured scanner; the EOD route; the kill-switch 403; the backpressure 503 with its queue-depth
+      header; the window 403), and otherwise ends with a 400 for malformed JSON (two WARNINGs on the intraday path,
+      one on an "eod" path, each holding the empty body); no signal can be accepted this way. The docstring's
+      "body-bound" has this exception.
+    - Query token: a static bearer value; anyone holding the URL could authenticate any body to any path and read
+      /health's state. Whether anyone other than Chartink and the operator's tools held it is UNKNOWN (U-06).
+    Evidence: signals/webhook_receiver.py lines 318 to 321; signals/webhook_receiver.py lines 547 to 593;
+    signals/webhook_receiver.py lines 617 to 633; signals/webhook_receiver.py lines 916 to 954;
+    signals/webhook_receiver.py lines 751 to 804.
+
+
+==============================================================================
+5. POST /webhook/<scanner_name>: STAGE ORDER, ANSWERS, AUDIT AND LOGS
+==============================================================================
+
+5.1 Route and hand-off. FACT (SOURCE-VERIFIED). The rule /webhook/<scanner_name> (POST) calls _handle_webhook,
+    which reads the source address and the body, applies the shutdown and per-address gates, then calls
+    _process_request inside try/except/finally; the finally clause writes the audit row. C-002 section 9 gives
+    the whole gate table; this section adds what concerns authentication.
+    Evidence: signals/webhook_receiver.py lines 406 to 408; signals/webhook_receiver.py lines 477 to 534.
+
+5.2 Before authentication. FACT (SOURCE-VERIFIED) unless marked.
+    - The framework's own answers (a wrong path, method or slash form; a body over 1 MiB, raised as 413 when the
+      body is read at signals/webhook_receiver.py line 480) come before authentication and before any audit write
+      (C-002 section 9 rows 1 and 2; C-002 section 10.3, NR-1 and NR-2).
+    - Shutting down: 503 {"error": "Service shutting down; retry later"}, audited (503, 0, 0); no credential read.
+    - Per-address limit (enabled by the pinned configuration: burst 60, refill 5 per second): 429 {"error":
+      "Rate limit exceeded; slow down"}, audited (429, 0, 0), and a WARNING naming the scanner and the source
+      address. The limiter instance is shared with /health and keyed by request.remote_addr (6.1), so unauthenticated
+      requests to either route spend the same address's tokens (INTERPRETATION from the shared attribute; L-05).
+    - Line 537 reads the queue configuration before authentication (no request data involved).
+    Evidence: signals/webhook_receiver.py lines 477 to 504; signals/webhook_receiver.py line 537;
+    config/system_config.yaml lines 340 to 342.
+
+5.3 From authentication on (FACT (SOURCE-VERIFIED) unless marked; bodies are JSON).
+    #  | Stage                                        | Answer                                                         | Audit row
+    1  | _authenticate(raw_body) fails (4.3)          | 401 {"error": <the branch's message>}; no log line             | (401, 0, 0)
+    2  | unknown scanner (after auth)                 | 404 {"error": "Unknown scanner: '<path segment>'"}             | (404, 0, 0)
+    3  | an "eod" scanner (after auth)                | the EOD route: 400s or 200 (C-002 section 9 row 7)             | as answered
+    4  | kill switch active                           | 403 {"error": "Kill switch active; signals rejected"}          | (403, 0, 0)
+    5  | backpressure                                 | 503, header X-Queue-Depth                                      | (503, 0, 0)
+    6  | outside the entry window                     | 403 {"error": "Outside entry window"}                          | (403, 0, 0)
+    7  | malformed JSON                               | 400 {"error": "Malformed JSON: <parser message>"}; two WARNINGs | (400, 0, 0)
+    8  | other parse and field checks                 | 400 {"error": ...}; the raw-body WARNING (b)                   | (400, 0, 0)
+    9  | the batch                                    | 200, or 503 if a symbol is QUEUE_FULL or STORE_ERROR           | (200, a, r) or (503, 0, 0)
+    10 | an exception from _process_request, incl. a  | 500 {"error": "Internal server error"}; one CRITICAL line (a)   | (500, 0, 0)
+       | TypeError from compare_digest (4.3 rows 4, 8)|                                                                 |
+    (a) The CRITICAL line reads "Unhandled exception processing /webhook/<name>: <exception text>".
+    (b) Four of these 400s (type cast, missing field, scan_name mismatch, invalid triggered_at) also log a WARNING of
+    their own, without the raw body, so they leave two lines; the others leave the raw-body WARNING only. Rows 7
+    and 8 are the intraday path; the EOD route's 400s (row 3) log no line of their own (8.5).
+    Order: authentication runs before the unknown-scanner check and the EOD route (their comment: "so neither can be
+    reached unauthenticated"; two tests), and before the kill-switch, backpressure and entry-window gates; the
+    shutdown gate and the per-address limiter, which also depend on state, run before it (5.2).
+    Evidence: signals/webhook_receiver.py lines 539 to 583; signals/webhook_receiver.py lines 585 to 674;
+    signals/webhook_receiver.py lines 676 to 745; signals/webhook_receiver.py line 66;
+    signals/webhook_receiver.py lines 510 to 528; tests/unit/test_c6_auth_collapse.py lines 361 to 379.
+    INTERPRETATION (row 10): a non-ASCII credential is answered 500 and recorded as a 500, not as a 401, and the
+    critical line carries the library's message, which holds no credential (K-03).
+
+5.4 The audit row. FACT (SOURCE-VERIFIED). _write_audit inserts ts, scanner_name (the path segment, unknown
+    names included), source_ip, payload_size_bytes, response_code, signals_accepted, signals_rejected and
+    duration_ms. It stores no query string, header, credential, failure reason or body; a 401 row therefore shows
+    that authentication failed but not which branch. A failed insert logs an error and the answer is unchanged, so
+    the row is attempted, not guaranteed. A test pins this
+    (test_d4_webhook_audits_a_401_but_health_does_not; test evidence only).
+    Evidence: signals/webhook_receiver.py lines 1126 to 1154; signals/webhook_receiver.py lines 529 to 534;
+    tests/unit/test_c6_auth_collapse.py lines 382 to 394.
+
+5.5 Logs on this route that touch credentials. FACT (SOURCE-VERIFIED). Logger "webhook_receiver" (named at
+    main.py line 3413); sinks: the daily system log (INFO and above, JSON), the daily debug log (DEBUG and above)
+    and stdout (WARNING and above), which the repository unit sends to the journal.
+    - No line is logged for any 401: _authenticate logs nothing and the 401 is returned directly (the receiver's
+      log calls, filter grep; L-05).
+    - The 429 WARNING names the source address.
+    - The 400 WARNING logs repr(raw_body[:1000]) and the malformed-JSON WARNING repr(raw_body[:500]): the raw,
+      unsanitised bytes, after authentication passed (section 8.5). Four field-check 400s log a WARNING of their own
+      that holds no raw body (5.3 note b).
+    - The CRITICAL of row 10 logs the exception's text.
+    - No receiver code reads request.url, full_path or query_string (search T07 in S-RT: the receiver's one hit is
+      request.args.get("token")), so no receiver log line carries the query.
+    Evidence: signals/webhook_receiver.py lines 495 to 504; signals/webhook_receiver.py lines 518 to 528;
+    signals/webhook_receiver.py lines 585 to 593; core/logger.py lines 399 to 421;
+    deploy/systemd/trading-system.service lines 37 to 40.
+
+5.6 Next consumer. FACT (SOURCE-VERIFIED). After authentication and the gates, for each symbol that reaches the
+    INSERT: a signals row (status QUEUED, webhook_payload = the sanitised copy; re-marked QUEUE_FULL if the queue is
+    full) and a tuple on the in-memory queue for SignalProcessor (C-004 to C-009). Excluded, invalid, expired,
+    in-process and duplicate symbols return before the INSERT. An eod scanner goes to the capture worker (C-011).
+    webhook_audit is read by the shutdown census and the dashboard (C-001 section 8; C-002 section 10.7).
+    Evidence: signals/webhook_receiver.py lines 688 to 728; signals/webhook_receiver.py lines 904 to 954;
+    signals/webhook_receiver.py lines 963 to 980; signals/webhook_receiver.py lines 1046 to 1068.
+
+
+==============================================================================
+6. GET /health (THE RECEIVER'S, ON THE WEBHOOK PORT): STAGE ORDER, ANSWERS, AUDIT AND LOGS
+==============================================================================
+
+6.1 Stage order. FACT (SOURCE-VERIFIED).
+    1. source_ip = request.remote_addr or "unknown".
+    2. Per-address limit, the same _ip_limiter instance as /webhook, "BEFORE auth, exactly as /webhook does":
+       429 {"error": "rate limit exceeded"} (a different text from /webhook's 429).
+    3. _authenticate(b""): any failure -> 401 {"error": "authentication required"}; the reason is discarded
+       ("naming it here would tell an anonymous caller whether require_hmac is on").
+    4. Success -> 200 {"status": "ok", "kill_switch_active", "queue_size", "queue_capacity", "queue_depth"}.
+    There is no shutdown check (the route reads no _shutting_down) and no try block.
+    Evidence: signals/webhook_receiver.py lines 364 to 404.
+
+6.2 Answers by branch.
+    #  | Case                                             | Answer
+    1  | over the per-address limit                       | 429 {"error": "rate limit exceeded"}
+    2  | 4.3 rows 3, 5, 7, 9 (any refusal)                | 401 {"error": "authentication required"}, identical for every branch
+    3  | 4.3 rows 1, 2, 6 (pass)                          | 200 with the kill-switch state and queue depth
+    4  | during shutdown                                  | as rows 1 to 3 (INTERPRETATION: no shutdown gate on this route)
+    5  | 4.3 rows 4, 8 (TypeError)                        | 500 {"error": "Internal server error"} from the app's 500 handler,
+       |                                                  | which logs CRITICAL "Unhandled exception in webhook handler: ..."
+    Row 5 is INTERPRETATION from the source and a probe: CURRENT EXTERNAL FACT (Flask 3.1.3 probe, TESTING False
+    as the receiver sets it): an exception raised in a view is passed to the registered 500 handler, and Flask's
+    own log line reads "Exception on <path> [GET]", the path without the query (K-03).
+    Evidence: signals/webhook_receiver.py lines 410 to 413; signals/webhook_receiver.py line 250.
+
+6.3 Audit and logs. FACT (SOURCE-VERIFIED). The route writes no webhook_audit row and logs nothing on 429, 401 or
+    200 (L-05); a test pins "/health audits nothing". On those answers a /health request is visible only as whatever
+    waitress and Flask record; on the 500 path the app's 500 handler also logs CRITICAL through the receiver's
+    logger (6.2 row 5; section 8.2).
+    Evidence: signals/webhook_receiver.py lines 364 to 404; tests/unit/test_c6_auth_collapse.py lines 382 to 394;
+    tests/unit/test_c6_auth_collapse.py line 25.
+
+6.4 The empty-body signature. FACT (SOURCE-VERIFIED). The signed bytes are b"" because "a GET carries no body";
+    the docstring states the consequence (a constant, indefinitely replayable signature) and that /webhook's is
+    body-bound, which, by INTERPRETATION from the source (not run), does not hold for an empty POST body (4.4,
+    L-01).
+    Evidence: signals/webhook_receiver.py lines 316 to 324; signals/webhook_receiver.py lines 382 to 387.
+
+6.5 What a 200 discloses. FACT (SOURCE-VERIFIED): the kill-switch state, the queue size and capacity. Before
+    AB-910 section 1.7 the route gave these to any caller (its comment); the dates of the change are records
+    (section 10). Evidence: signals/webhook_receiver.py lines 366 to 375.
+
+6.6 The callers in the repository. FACT (SOURCE-VERIFIED).
+    - The boot self-check: two seconds after starting waitress, main calls http://<loopback address>:<bind_port>
+      /health with no credential through check_webhook_endpoint, which counts 2xx or 401 as reachable; the check's
+      comment says a 401 "proves the one thing this check exists to prove: Flask is listening", so the rule is a
+      reachability test, not a health verdict. On anything else main logs CRITICAL with the URL (which carries no
+      token) and degrades instead of stopping (27-Jul). The check's comment says passing the token "would put the
+      secret into a URL that main.py ... logs on failure" (its main.py line numbers are old ones, K-06).
+      Evidence: main.py lines 4002 to 4036; utils/startup_checks.py lines 783 to 826;
+      utils/startup_checks.py lines 803 to 804.
+    - The repository's sender tools: the crash-test injectors and the load-test script add ?token= taken from
+      WEBHOOK_SECRET or an argument; none sends X-Webhook-Signature (filter greps). Test tools, not production
+      traffic.
+      Evidence: tests/crash_test/signal_injector.py lines 24 to 29;
+      tests/crash_test/ct143_afternoon_inject.py line 25; tests/crash_test/ct145_rapid_crash.py line 16;
+      scripts/load_test_signals.py lines 81 to 99.
+    - Not this route: the separate health server on port 8080 (FIX-132), whose GET /health binds the loopback
+      address by default and carries no webhook authentication (its comment: "(unauth) payload"). It is B-007's
+      subject; named here only so that the two /health routes are not confused.
+      Evidence: scripts/healthcheck_server.py line 86; scripts/healthcheck_server.py lines 297 to 325;
+      main.py lines 4073 to 4082.
+
+
+==============================================================================
+7. WHAT ERROR ANSWERS REVEAL
+==============================================================================
+7.1 FACT (SOURCE-VERIFIED). /webhook returns the branch's own message to any caller: "HMAC signature mismatch",
+    "HMAC signature required (require_hmac=True); token param is not accepted", "Invalid token", or "Missing auth:
+    provide X-Webhook-Signature header or ?token= param"; a test pins that the four stay distinct. /health returns
+    one message for all four; a test pins that too.
+    Evidence: signals/webhook_receiver.py lines 336 to 354; signals/webhook_receiver.py lines 547 to 549;
+    tests/unit/test_c6_auth_collapse.py lines 283 to 327.
+7.2 FACT (RECORD-DERIVED, 25-Jul): the C6 scoping notes call the difference in failure messages deliberate and
+    /health's uniform 401 message a "deliberate anti-oracle"; the done note records that "`/webhook` keeps all four
+    distinct messages".
+    Evidence: docs/audit/receiver_auth_c6_scoping_2026-07-25.md line 117;
+    docs/audit/receiver_auth_c6_scoping_2026-07-25.md line 189; docs/audit/c6_auth_collapse_25jul2026.md line 42.
+7.3 INTERPRETATION / AUDIT LEAD (L-02): the posture /health hides is shown by /webhook: an unauthenticated POST
+    with no credential to any /webhook path answers "Missing auth: ..." when require_hmac is False and "HMAC
+    signature required (require_hmac=True) ..." when it is True (K-04). The records give the reason for /health
+    only; why /webhook kept granular messages on the same port is not stated in the passages read (U-07).
+7.4 FACT (SOURCE-VERIFIED). The 404 for an unknown scanner and the EOD route run after authentication, so neither
+    answers an unauthenticated caller (tests pin both). An authenticated caller learns whether a path segment is a
+    configured scanner.
+    Evidence: signals/webhook_receiver.py lines 551 to 564; tests/unit/test_c6_auth_collapse.py lines 361 to 379.
+7.5 FACT (SOURCE-VERIFIED). /health's 401 and 429 carry no system state (a test checks the four state names are
+    absent from the 401 body).
+    Evidence: signals/webhook_receiver.py lines 379 to 393; tests/unit/test_c6_auth_collapse.py lines 329 to 334.
+
+
+==============================================================================
+8. THE TOKEN OUTSIDE THE CHECK: URL, ECHOED webhook_url, STORED PAYLOADS, LOGS
+==============================================================================
+
+8.1 In the URL's query. FACT (SOURCE-VERIFIED): the token is read from the query string (4.2). The URL form given
+    to Chartink (plain HTTP, /webhook/<key>, ?token=) is recorded in C-002 section 4.2 (a 15-Jul specification
+    and Rama's account); not repeated here.
+    Evidence: signals/webhook_receiver.py line 334.
+
+8.2 Who logs the query. FACT (SOURCE-VERIFIED) for the receiver; CURRENT EXTERNAL FACT for the libraries.
+    - The receiver reads no full URL, path with query or query string (5.5).
+    - waitress 3.0.2 splits the request target into path and query, and its own log lines name request.path only
+      ("Client disconnected while serving %s", "Exception while serving %s"); the logger calls of its server,
+      channel and task modules are errors, warnings and a few INFO lines (the listen address, the connection-limit
+      recovery and, per request, a client disconnect), and the per-request lines name the path only; and no
+      access-log middleware was found in S-RT (search T08, N-1).
+    - Flask 3.1.3 logs an unhandled view exception as "Exception on <request.path> [<method>]" (6.2).
+    - INTERPRETATION: on the repository's serving path, with the probed library versions, no log line written by
+      the receiver, waitress or Flask carries the query string. The URL itself existed in plain text on the network
+      path (section 9), in Chartink's alert configuration (C-002 section 4.3) and in the request line; what the VMs'
+      installed libraries and any network device logged is UNKNOWN (U-04).
+    Evidence: waitress/parser.py split_uri and waitress/channel.py lines 434 to 437 (waitress 3.0.2; hashes in the
+    companion file); flask/app.py line 876 (Flask 3.1.3).
+
+8.3 Echoed in the body. FACT (RECORD-DERIVED, 05-Jul; C-002 section 4.2): Chartink echoed the configured URL,
+    token included, in the body's webhook_url field, and every stored payload to that day held it (95,431 of
+    95,431 rows). The code's own comment says the same ("Chartink echoes the configured URL (incl.
+    ?token=<SECRET>) inside the body's `webhook_url` field"), and a unit-test helper builds such a body.
+    Evidence: docs/SYSTEM_MAP.md line 1366 (cited from C-002); signals/webhook_receiver.py lines 681 to 687;
+    tests/unit/test_webhook_receiver.py lines 1730 to 1742.
+
+8.4 The stored copy (S-1B.1). FACT (SOURCE-VERIFIED).
+    - After authentication and after the body has been parsed, _process_request makes stored_payload =
+      _sanitize_payload_for_storage(raw_body decoded as UTF-8 with replacement) and passes it to every symbol's
+      INSERT into signals.webhook_payload. The parsed body used for processing is not changed.
+    - The sanitiser, applied in order to the stored string: (a) replaces the literal secret wherever it appears
+      with <REDACTED>, when a secret is configured; (b) replaces token=<value> (the value runs to the next &, quote,
+      apostrophe, white space or the end) with token=<REDACTED>; (c) replaces the whole value of a JSON
+      "webhook_url" string with "<REDACTED>".
+    - Not sanitised: the warnings of 8.5 (they log raw_body itself); webhook_audit stores no body; the EOD route
+      stores no payload (it hands each symbol, the scanner and the time to the capture worker).
+    - Four unit tests pin the behaviour with a placeholder token (test evidence only).
+    Evidence: signals/webhook_receiver.py lines 681 to 690; signals/webhook_receiver.py lines 857 to 886;
+    signals/webhook_receiver.py lines 963 to 980; signals/webhook_receiver.py lines 790 to 796;
+    tests/unit/test_webhook_receiver.py lines 1717 to 1838.
+    - Next consumer of the stored copy: FACT (SOURCE-VERIFIED) the dashboard's trade-detail reader selects
+      webhook_payload with the signal, and the analytics service returns it as "raw_payload". INTERPRETATION /
+      AUDIT LEAD (L-04): rows stored before the fix held the token (8.3) until the 06-Jul scrub of the 95,431 rows
+      (FACT (RECORD-DERIVED), R-05). If the reader and the view existed in that period (only the pinned version was
+      read), the trade-detail view could have shown a token-bearing payload for a trade of that period. Whether
+      they existed then, and whether anyone viewed one, is not established.
+      Evidence: ops_dashboard/backend/readers/db_reader.py lines 2244 to 2247;
+      ops_dashboard/backend/services/analytics_period.py line 636.
+
+8.5 The raw-body warnings (L-06). FACT (SOURCE-VERIFIED). Every 400 answer from _process_request (the intraday
+    checks and the EOD route's own 400s) makes _handle_webhook log a WARNING with repr(raw_body[:1000]); on the
+    intraday path a malformed-JSON body also logs its own WARNING with repr(raw_body[:500]), so it leaves two lines
+    (the EOD route's malformed-JSON 400 logs no line of its own). Both are after authentication, so only a request
+    that had passed it could produce them: on the pinned configuration, one with the right token or a valid
+    signature, including the constant /health signature on an empty body (4.4), whose warnings hold an empty body.
+    INTERPRETATION (C-002 section 10.6, recorded there): such a line held the token only when webhook_url fell
+    within the bytes logged. FACT (RECORD-DERIVED; C-002 section 14, R5 and R7): no 400 answer is recorded from
+    12-Jun to 23-Jul 15:29 or on any day from 24 to 31-Jul. The logs were never opened (never-open).
+    Evidence: signals/webhook_receiver.py lines 518 to 523; signals/webhook_receiver.py lines 585 to 593;
+    signals/webhook_receiver.py lines 757 to 760.
+
+8.6 Other places in the repository that build or hold the token. FACT (SOURCE-VERIFIED): the crash-test injectors
+    and the load-test script build ?token= URLs from the environment or an argument (6.6); the boot self-check
+    deliberately sends none (6.6). The records' own content: section 10.
+
+
+==============================================================================
+9. TRANSPORT: HTTP, TLS, PROXY, TUNNEL, FIREWALL (by state)
+==============================================================================
+C-002 section 5 (frozen) is the full account; the points that bear on authentication:
+9.1 FACT (SOURCE-VERIFIED and CONFIG): waitress serves plain HTTP on the configured bind host and port 5000; the
+    bind host is the all-interfaces address (confirmed value-blind). No server TLS setting was found in S-CODE
+    (C-002 search S19); the hits of this step's wider search T18 that were inspected (main.py, the system
+    configuration and the configuration loader) are outbound URLs (an alert API, two HTTPS adapter mounts and a
+    public data-file URL) and one URL-scheme validator, none a server TLS setting.
+    Evidence: main.py lines 3979 to 4000; config/system_config.yaml lines 327 to 335.
+9.2 INTERPRETATION: over plain HTTP the query token, the body's echoed webhook_url and any X-Webhook-Signature
+    header crossed the network unencrypted; an HMAC would have protected integrity and the secret itself, not the
+    request's confidentiality. FACT (RECORD-DERIVED): on 02-Jul the token travelled "over plaintext HTTP"; on 06-Jul
+    TLS was "deferred" (C-002 section 5.3).
+9.3 Reverse proxy and tunnel: none configured in the repository; the nginx and ngrok mentions are comments and
+    runbook steps (C-002 K-5 and N3; this file's N-4); a 03-Jul record found no nginx on the VM (C-002 section 5.4).
+9.4 Firewall: the installer inserts an iptables rule accepting tcp/5000 with no source restriction (FACT
+    (SOURCE-VERIFIED), re-read in this step; C-002 section 5.2); a single-address allowlist applied by Rama on
+    05-Jul (FACT, RECORD-DERIVED); its later state NOT ESTABLISHED (C-002 section 5.2, U-4).
+    Evidence: deploy/install_vm_services.sh lines 33 to 47.
+    HISTORICAL (Rama, Q7, 22-Oct): "Don't know / never checked" for any TLS, proxy, tunnel or network restriction
+    beyond C-002's record.
+
+
+==============================================================================
+10. SECRET ROTATION AND EXPOSURE HISTORY (FACT (RECORD-DERIVED); each for its own date and scope)
+==============================================================================
+Read by a separate records agent through the stage-3 mask and checked by Claude value-blind (companion sections 4
+and 7). Each line: date, what the record says, evidence. The records conflict on several points; they are listed
+side by side, not reconciled (the notes file, section 3). Nothing here was re-measured: the VMs and their databases
+are gone.
+
+10.1 Where the secret was and how it changed.
+  R-01 02-Jul. The 02-Jul security audit's C-1: live credentials, WEBHOOK_SECRET included, committed in a tracked
+       example file and in history (A-010 section 11 records the commits). C-1's inventory then lists the
+       webhook secret "rotated + synced to VM+PC".
+       Evidence: docs/audit/system_security_audit_02jul2026.md lines 15 to 21;
+       docs/audit/system_security_audit_02jul2026.md lines 80 to 82;
+       docs/audit/c1_credential_exposure_inventory_02jul2026.md line 83.
+  R-02 03-Jul. The system map and paths record: the secret rotated on 03-Jul, VM-only, the old token having been
+       "exposed in chat" twice; old rejected and new accepted "verified value-blind" (the method is not recorded);
+       one shared token for the 15 scanners; it loads at the Monday 08:15 start, and Rama is to update the token in
+       all 15 Chartink URLs. The 05-Jul audit lists the VM's .env as modified on 03-Jul at 23:03 and says "secret
+       rotated 03-Jul"; the same audit elsewhere says all six exposed secrets were "rotated dead 02-Jul".
+       Evidence: docs/SYSTEM_MAP.md line 452; PATHS.md line 238; docs/audit/audit_05jul2026.md line 170;
+       docs/audit/audit_05jul2026.md line 187; docs/audit/audit_05jul2026.md line 199.
+  R-03 05-Jul (Sunday). S-1A: GATE B, a single-address allowlist for the webhook port, applied by Rama; GATE C
+       staged: WEBHOOK_SECRET rotated (old and new identified by hashes only), the new secret to load at the next
+       natural start, "Chartink URL updated by Rama"; its C.4 sweep found a single environment source and no drop-in
+       shadow. Whether GATE C is the 03-Jul rotation or a further one is not stated (U-03).
+       Evidence: docs/SYSTEM_MAP.md line 1365; PATHS.md lines 262 to 263.
+  R-04 06-Jul (Monday). GATE D PASS: that day's rows were 86 answered 200 and 309 answered 403, zero 401, all from
+       Chartink's address; the record calls this a "passive proof" that Chartink moved to the new token, records
+       that the active test of the old token was not run in market hours, and sets the rule "only 401 = webhook
+       auth/token failure"; TLS deferred.
+       Evidence: docs/SYSTEM_MAP.md line 1364.
+  R-05 06-Jul (about 18:11). S-1B.2: the 95,431 stored rows scrubbed (token count 0), 21 secret-bearing database
+       backups and a further artifact holding 85,765 token rows shredded; the entry says "Both historical secrets
+       already DEAD (401 at GATE D)", which R-04 does not show (notes, conflict C-02). 07-Jul: the rollback anchor
+       shredded, "no secret-bearing artifacts remain".
+       Evidence: docs/SYSTEM_MAP.md line 1362; docs/SYSTEM_MAP.md line 1351.
+  R-06 12-Jul and 15-Jul. PB-01's alert: authentication by the query token, "one shared secret (VM .env only)";
+       the 15-Jul specification gives it "the same shared token" as the other scanners (C-002 section 4.2).
+       Evidence: PATHS.md line 185; docs/audit/followup_investigation_15jul2026.md line 181.
+  R-07 16 and 17-Jul. AB-910 section 1.10: "WEBHOOK_SECRET: 0 hits in logs"; on 17-Jul every value of the VM's
+       .env was counted, value-blind, against all 132 VM log files, with 0 hits for WEBHOOK_SECRET. INTERPRETATION:
+       the values counted were those in the VM's .env at the time, by the record's description, so the retired
+       values were not among them.
+       Evidence: docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md lines 202 to 208;
+       docs/audit/batch2_done_17jul2026.md lines 79 to 85.
+  R-08 25-Jul. The bot-token rotation changed two keys; WEBHOOK_SECRET "present and unchanged on the VM", checked
+       structurally. Evidence: docs/audit/f2_auth_separation_25jul2026.md lines 11 to 13.
+  R-09 28-Jul, 01-Aug and 04-Aug. 28-Jul: the register says the test environment holds 20 live production keys,
+       WEBHOOK_SECRET among them. 01-Aug: WEBHOOK_SECRET on both the PC's and the VM's .env; a PC compromise yields it
+       "but cannot place an order"; a weekday re-check of the bind and require_hmac is owed. 04-Aug: 15 entries of the
+       assistant's permission list post to the live webhook and one sed -i edit comments out WEBHOOK_SECRET
+       ("disabling an auth control"), left open; the PC holds 20 keys and the VM 24.
+       Evidence: docs/MASTER_PENDING_28-Jul-2026.txt lines 285 to 286;
+       docs/audit/integrity_audit_2026.md lines 4286 to 4295; docs/audit/integrity_audit_2026.md line 4354;
+       docs/MASTER_PENDING_01-Aug-2026.md lines 992 to 1009;
+       docs/audit/ledger11_secrets_surface_measurement_04aug2026.md lines 46 to 50.
+       INTERPRETATION (from 2.4 and 2.6): on the code path, commenting out WEBHOOK_SECRET would have stopped the next
+       start with "missing_secrets" (return 3), not opened the receiver (notes, conflict C-09).
+  HISTORICAL (Rama, Q5, 22-Oct): "Don't know / never checked" when the secret was rotated; Q9: "Don't know / never
+  checked" whether the old token was used after rotation or confirmed invalid.
+
+10.2 The authentication changes, by their records.
+  R-10 25-Apr. G.1 (require_hmac disables the token fallback on /webhook): dated by the source comment and, after
+       the event, by the 25-Jul C6 records; no record of that date was found among the records read.
+       Evidence: signals/webhook_receiver.py line 196; docs/audit/receiver_auth_c6_scoping_2026-07-25.md line 119;
+       docs/audit/c6_auth_collapse_25jul2026.md line 21.
+  R-11 01-Jun to 02-Jul. 01-Jun: require_hmac still false, acceptable because Chartink cannot sign, the surface
+       limited by "UFW + ngrok" (notes, C-05). 15-Jun: a flow review describes the intake as HMAC over the raw body
+       and rates it CORRECT (C-06). 02-Jul C-2: all-interfaces bind, require_hmac false, the URL token over
+       plaintext HTTP as the only live control, and in paper mode the secret not required. 02-Jul evening: C-2's
+       Phase 2 deployed (the secret required in both modes, the per-address limit); Phase 3 (loopback bind,
+       allowlist, a TLS proxy or HMAC) left to Rama.
+       Evidence: docs/architectural_audit_2026-06-01.md lines 483 to 487;
+       docs/audit/system_flow_review_15jun2026.md lines 12 to 25;
+       docs/audit/system_security_audit_02jul2026.md lines 19 to 21;
+       docs/audit/system_security_audit_02jul2026.md lines 85 to 89;
+       docs/audit/audit_remediation_status_02jul2026.md lines 17 to 67.
+  R-12 03-Jul. The source-address investigation: no nginx, no reverse proxy in front of the receiver; 58,507
+       requests from 12-Jun with codes 403, 200 and 503 only, the 403s "not an auth or IP problem"; 99.99% from one
+       address, pool variation not excluded; and, in its own words, no verdict between an IP allowlist and a reverse
+       proxy with HMAC, the decision deferred. C-001 line 263 left "the investigation's verdict" to C-003: the record
+       gives none; the next recorded step is R-03's allowlist.
+       Evidence: docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 5 to 6;
+       docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 13 to 39;
+       docs/audit/c2_chartink_ip_investigation_03jul2026.md line 51.
+  R-13 16-Jul. AB-910 section 1.7: the receiver's /health had no authentication and no limiter and returned the halt
+       and queue state; section 1.8: require_hmac false accepted pending C-2 Phase 3, the shared query token
+       described as exposed to intermediaries, shoulder-surfable and replayable.
+       Evidence: docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md lines 166 to 169;
+       docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md lines 182 to 190.
+  R-14 17-Jul. About 02:00, S4 shipped (/health behind the secret, the limiter before auth). At the 08:15 start the
+       self-check called /health with no credential, got 401, treated it as unreachable and the service stopped at
+       08:16:09 with exit 0; 0 trades. The fix counted 401 as reachable; sending the token in the check was rejected
+       because the checker logs URLs. The fixture-blindness record lists among the tested branches a bad HMAC with a
+       valid token refused 401 ("no fall-through"); /health did not then honour require_hmac (a read-only probe), and
+       the flip is recorded as an open action for Rama; /health's signature is a constant. Evening: P1 deployed (the
+       require_hmac refusal on /health), "inert" while the flag is false, loading at the 20-Jul start.
+       Evidence: docs/audit/sweep_done_17jul2026.md line 54; docs/audit/sweep_done_17jul2026.md line 121;
+       docs/audit/s4_boot_outage_17jul2026.md lines 19 to 24; docs/audit/s4_boot_outage_17jul2026.md line 84;
+       docs/audit/s4_boot_outage_17jul2026.md lines 115 to 127;
+       docs/audit/fixture_blindness_investigation_17jul2026.md line 72;
+       docs/audit/fixture_blindness_investigation_17jul2026.md lines 139 to 174;
+       docs/audit/p1_health_require_hmac_done_17jul2026.md lines 48 to 149.
+  R-15 20-Jul. Correction: "require_hmac is NOT safe to flip": Chartink cannot sign, so a flip makes every POST 401;
+       it stays false unless a different signer or a signing proxy exists. The pinned system map and paths record
+       still carry the earlier wording (C-04).
+       Evidence: docs/audit/pre_receive_hook_investigation_20jul2026.md lines 178 to 212;
+       docs/SYSTEM_MAP.md line 191; PATHS.md line 113.
+  R-16 23-Jul and 31-Jul. 23-Jul: zero 401 rows in 104,911 POSTs (89,794 to 16-Jul and 15,117 from 17-Jul to 23-Jul
+       15:29), which the record reads as no unauthenticated POST reaching the receiver. 31-Jul: zero 401 answers
+       all-time; the audit table records "every outcome incl. 401", "a change since 5-Jul" (U-08); whether anything
+       fronts the receiver is still UNCERTAIN.
+       Evidence: docs/audit/refused_posts_403_investigation_23jul2026.md lines 115 to 121;
+       docs/audit/integrity_audit_2026.md line 43; docs/audit/integrity_audit_2026.md line 380;
+       docs/audit/integrity_audit_2026.md line 392.
+  R-17 25-Jul. C6: one call site; the uniform /health 401 deliberate, /webhook keeping four messages; a brute force
+       against /health leaves no audit row; the change loads at the next Monday start.
+       Evidence: docs/audit/receiver_auth_c6_scoping_2026-07-25.md lines 115 to 121;
+       docs/audit/c6_auth_collapse_25jul2026.md line 42; docs/audit/c6_auth_collapse_25jul2026.md lines 104 to 106.
+  R-18 28-Jul. require_hmac "KEEP FALSE", verified that night (what was verified, code or VM, is not stated in the
+       passage tested). Evidence: docs/MASTER_PENDING_28-Jul-2026.txt line 376.
+
+10.3 What the records establish about the installed require_hmac (INTERPRETATION / AUDIT LEAD, L-07). No record
+     read quotes the VM's installed file. But Chartink sent the token in the query (C-002 section 4.2), no record or
+     source shows a Chartink signature, the 20-Jul record says a flip would make every POST fail with 401 (R-15),
+     and the recorded 401 count is zero on every recorded day to 31-Jul (R-04, R-16). On the code path that is
+     consistent only with require_hmac resolving False at the running receiver on those days (or with a signature
+     nobody recorded). It rests on the audit covering 401s on those days (U-08).
+
+
+==============================================================================
+11. PAPER AND LIVE
+==============================================================================
+11.1 FACT (SOURCE-VERIFIED): the authentication code has no mode branch (2.7), and the presence check has no mode
+     parameter (2.4). The code comments date "required in BOTH paper and live" to C-2, 02-Jul.
+11.2 HISTORICAL (Rama, A-010, corrected 09-Oct; VP-56): the testing VM used different alert and broker API
+     credentials "to avoid collision". Whether it used the same authentication mode as production: Rama, Q3:
+     "Don't know / never checked". The testing snapshot was not used (Q12 (c)), so its configuration is not
+     established here (U-05).
+11.3 V2 is live-only (DR-001); this section records legacy fact only.
+
+
+==============================================================================
+12. TESTS INSPECTED, NOT EXECUTED (test evidence; not proof of production behaviour)
+==============================================================================
+All use Flask's test client (no socket, no network; C-002 searches S20 and S21 for the webhook test files).
+12.1 tests/unit/test_c6_auth_collapse.py: every branch on both routes; the four divergences (signed bytes per
+     route, /health's uniform 401, the EOD early return after auth, /webhook audits a 401 and /health nothing);
+     compare_digest only inside _authenticate, both routes call it, no mode words.
+     Evidence: tests/unit/test_c6_auth_collapse.py lines 1 to 35;
+     tests/unit/test_c6_auth_collapse.py lines 166 to 252; tests/unit/test_c6_auth_collapse.py lines 262 to 394;
+     tests/unit/test_c6_auth_collapse.py lines 403 to 438.
+12.2 tests/unit/test_webhook_receiver.py: HMAC absent, mismatch, valid and no-secret cases; BL-18 (constructor
+     only, by its own comment); G.1 (require_hmac=True refuses token-only, accepts a valid signature, keeps the
+     token when False, no fall-through); S-1B.1 (four tests). The default factory builds the receiver with no
+     secret, so most tests in this file run with authentication open.
+     Evidence: tests/unit/test_webhook_receiver.py lines 79 to 107;
+     tests/unit/test_webhook_receiver.py lines 134 to 145; tests/unit/test_webhook_receiver.py lines 288 to 349;
+     tests/unit/test_webhook_receiver.py lines 1106 to 1287; tests/unit/test_webhook_receiver.py lines 1717 to 1838.
+12.3 tests/unit/test_fix134_backpressure.py: TestHealthAuth (AB-910; its own comment says all its tests run with
+     require_hmac False), TestHealthRequireHmac (P1, 17-Jul: /health honours require_hmac), and the S4 guard
+     (the no-credential /health stays 401 under both settings and the boot check maps it to reachable).
+     Evidence: tests/unit/test_fix134_backpressure.py lines 144 to 175;
+     tests/unit/test_fix134_backpressure.py lines 225 to 241; tests/unit/test_fix134_backpressure.py lines 277 to 402.
+12.4 tests/unit/test_c2_webhook_lockdown.py: the per-address limiter and WEBHOOK_SECRET in the required list.
+     Evidence: tests/unit/test_c2_webhook_lockdown.py lines 1 to 13;
+     tests/unit/test_c2_webhook_lockdown.py lines 84 to 91.
+12.5 tests/integration/test_hardening_scenarios.py and tests/integration/conftest.py: the wired fixture builds the
+     receiver with secret_token=None; a second fixture, added 17-Jul, builds it with what its comment calls "the
+     prod-like secret" (its value masked) for the S4 boot-seam test. The file's own docstring: "Every other wired case
+     here passes secret_token=None, which is precisely why the 401 that took prod down cannot occur anywhere else in
+     this suite."
+     Evidence: tests/integration/test_hardening_scenarios.py lines 21 to 27;
+     tests/integration/test_hardening_scenarios.py lines 285 to 328; tests/integration/conftest.py lines 154 to 162;
+     tests/integration/conftest.py lines 380 to 401.
+     KNOWN DEFECT / AMBIGUITY (K-05, test design): authentication was open in most receiver fixtures, so a green
+     run says little about authenticated behaviour outside the dedicated tests; the 17-Jul records found this
+     ("fixture blindness") (section 10).
+12.6 tests/unit/test_s4_webhook_degrade.py: the degrade decision of 27-Jul (not authentication itself).
+
+
+==============================================================================
+13. NEGATIVE SEARCHES AND THEIR SCOPES (each "not found in" its scope only; companion section 5)
+==============================================================================
+N-1  No access-log middleware or request logger (TransLogger, access log, log_request) in S-RT (T08: 0 files).
+N-2  No receiver read of request.url, full_path, query_string or base_url in S-RT (T07: the receiver's one hit is
+     request.args.get("token"); main.py's two are urllib.request.urlopen).
+N-3  No server TLS configuration in S-CODE (C-002 S19: 0 files).
+N-4  No reverse-proxy or tunnel configuration in S-CODE; comments and runbooks only (C-002 N3, searches S04 and S19;
+     C-002 search S25 for ngrok, C-002 source inventory section 5).
+N-5  No runtime code other than main.py reads WEBHOOK_SECRET from the environment by its literal name, and none
+     assigns it by name (T26 in S-ALL: main.py line 3414, three crash-test tools and four records; T04's S-RT hits
+     are main.py, the receiver's error message and comment, and the two pre-flight lists). Not covered: reads
+     through lists of names (2.4, 2.5) and generic loaders such as the import-time load_dotenv() of 2.3, which a
+     name search cannot see.
+N-6  No length or strength check of the secret in S-CODE (T27: 0 files); no format check on the code path read
+     (2.2, 2.4).
+N-7  No code outside tests computes an X-Webhook-Signature (T02: in code, the receiver and three test files only);
+     the repository's own sender tools use ?token= (6.6).
+N-8  No redaction on the request path other than S-1B.1 (T16 in S-ALL: the other code hits, all off the request path,
+     are the configuration snapshotter and its test, the pre-commit scanner, and the dashboard's logs template and
+     its test; the first two are A-010's subjects, and none is imported by the receiver).
+N-9  No Werkzeug development server on the runtime path (T24 in S-RT: the receiver's usage docstring and the
+     standalone scripts/test_webhook.py).
+N-10 No construction of WebhookReceiver outside main.py and tests (T09 in S-ALL).
+N-11 No redaction filter in core/logger.py (read by a grep and three ranges, companion section 6: its filters route
+     by level, trade IDs and logger name, and it caps third-party HTTP loggers at INFO); not a scope search.
+Evidence for N-11: core/logger.py lines 98 to 104; core/logger.py lines 240 to 259.
+
+
+==============================================================================
+14. END-TO-END TRACE (SOURCE -> INPUT -> LOGIC -> GUARD -> OUTPUT -> STORAGE OR HAND-OFF -> NEXT CONSUMER)
+==============================================================================
+Source wiring at the baseline, not host execution.
+14.1 The secret: process environment (the unit's EnvironmentFile and the import-time load_dotenv() of 2.3; A-010)
+     -> os.environ.get(name) for each name of the required list in the start-up check (presence, non-empty) ->
+     blocking "missing_secrets", return 3 -> os.environ.get("WEBHOOK_SECRET") at construction -> self._secret ->
+     _authenticate on every request of both routes; the S-1B.1 sanitiser (a). The code never logs self._secret, the
+     start-up check logs names only, the stored copy is sanitised and the audit row holds no body; but the two
+     raw-body WARNINGs log unsanitised body bytes, which held the token whenever the echoed webhook_url fell inside
+     the logged prefix (8.3, 8.5).
+14.2 POST /webhook/<scanner_name>: Chartink (or any caller) -> waitress -> Flask rule (404/405 before the view) ->
+     remote_addr, get_data() (413 for a body over the limit, before authentication and any audit write) -> shutdown
+     503 -> per-address 429 (audited, address logged) -> _authenticate(raw body): header, require_hmac, token -> 401
+     with the branch's message, audited (401, 0, 0), no log; or 500 on a non-ASCII credential -> unknown scanner 404
+     -> EOD route or kill / backpressure / window / parse gates -> sanitised copy -> signals rows and the queue ->
+     SignalProcessor; webhook_audit -> census and dashboard; signals.webhook_payload -> dashboard trade detail
+     ("raw_payload"); 400 warnings -> the system and debug logs and the journal.
+14.3 GET /health: the boot self-check (no credential) or any caller -> waitress -> Flask -> remote_addr ->
+     per-address 429 -> _authenticate(b"") -> uniform 401, or 200 with kill state and queue depth, or 500 on a
+     non-ASCII credential (CRITICAL from the 500 handler) -> no audit, and no log line on 429, 401 or 200 -> the boot
+     self-check's reachable decision (2xx or 401 reachable; otherwise CRITICAL, sentinel, degrade).
+14.4 What remains unknown along each chain: section 17's U- items (U-01 to U-08 here; U-09 to U-12 in the notes
+     file).
+
+
+==============================================================================
+15. FROZEN MANUALS: CROSS-REFERENCE (read only; nothing changed)
+==============================================================================
+15.1 The sweep (companion section 9) found 203 statements on the subject in 14 of the 36 files searched (25 manuals,
+     8 addenda, the 2 decision papers and the design log's Q and VP rows); the largest sets are
+     C-002 (77), A-010 (35), B-007 (20) and C-001 (16). The source and records above agree with them except for the
+     candidates in the notes file, section 5: B-007's "signature" for the webhook control and A-008's pointer to
+     A-006 (both C-002 NC-5, carried here); A-010's rotation history, which has 02-Jul and not 03-Jul (R-01, R-02);
+     C-002's "rotated on 05-Jul" against R-02 and R-03; and A-010's "unauthenticated requests get 401" against 4.3
+     rows 4 and 8 (low).
+15.2 Already recorded and not repeated as new: C-002 K-5 (nginx comments), K-6 (the bind comment), K-8 (the
+     sanitiser's old line numbers), K-9 (the runbook's /health check); A-010 E-4 (which outcomes reach
+     webhook_audit; ACCEPTED, DR-055); NC-3 (A-010's "by 27-Jul" for the allowlist).
+15.3 Statements confirmed by this step (no change): the gate order (A-008, A-011, B-008, B-009, C-001, C-002); the
+     start-up presence check and exit 3 (A-010, B-002); the pre-flight's name checks (A-009, A-010); the 17-Jul
+     outage (A-011, B-001, B-007); /health's limiter, 401 and state (B-007, C-002); WEBHOOK_SECRET's 0 log hits on
+     16-Jul (A-010; R-07 adds the 17-Jul count).
+
+
+==============================================================================
+16. RAMA'S ANSWERS (HISTORICAL; answer sheet of 22-Oct, answered through Claude's questions after 09:50 IST)
+==============================================================================
+Q1 (query token intended rather than HMAC)              "Don't know / never checked"
+Q2 (require_hmac changed in production)                  "Don't know / never checked"
+Q3 (testing used the same authentication mode)           "Don't know / never checked"
+Q4 (a production rejection for a bad credential)         "Don't know / never checked"
+Q5 (when the secret was rotated)                         "Don't know / never checked"
+Q6 (a manual check of webhook authentication or health)  "No manual check I recall"
+Q7 (TLS, proxy, tunnel or network restriction)           "Don't know / never checked"
+Q8 (a token seen in logs, payloads, alerts, screenshots) "Don't know / never checked"
+Q9 (the old token used after rotation, or invalidated)   "Don't know / never checked"
+Q10 (other local records)                                "None"
+Q11 (a C-001 or C-002 statement to check)                "None"
+Q12 (scope: (a) the pin, (b) dead legacy, (c) no other   "Confirm all four (Recommended)"
+     snapshot, records repository, Chartink or VM, (d) no V2 work)
+How they relate to the records (stated, not reconciled): the records attribute the 05-Jul allowlist and the
+Chartink URL update to Rama (R-03; Q5, Q7), describe operator checks in runbooks (C-002 K-9; Q6) and record no
+401 to 31-Jul (R-16; Q4). A recollection that is unavailable does not contradict a record; neither is treated as
+proof of the other (notes, C-13).
+
+
+==============================================================================
+17. LABEL INDEX
+==============================================================================
+K-01 doc drift (minor): WR8 names only the header, not the query token (3.5).
+K-02 doc drift (recorded in C-002 as K-5 and K-6): the nginx and require_hmac=true comments (3.5).
+K-03 defect / ambiguity: a non-ASCII credential raises TypeError inside _authenticate, answered 500 on both routes
+     instead of 401, audited and logged as a 500 on /webhook (4.2, 5.3, 6.2; INTERPRETATION from source and probe;
+     the serving path through waitress was not probed).
+K-04 ambiguity: /webhook's granular 401 messages disclose the posture /health hides (7.3; L-02).
+K-05 test design: authentication open in most receiver fixtures (12.5).
+K-06 doc drift (minor): comments cite old line numbers: "main.py:226" (the list item is at line 231); "main.py:3238",
+     "main.py:3240-3242", "main.py:3241" and "main.py:3242" (the self-check and its log are at lines 4002 to 4036);
+     and ":410-432" (C-002 K-8). Two test comments from before C6 also describe branches that no longer exist: a
+     request-time "elif self._require_hmac" (now an if inside _authenticate, signals/webhook_receiver.py line 343)
+     and S4's "if receiver._secret:" (now if not self._secret, signals/webhook_receiver.py line 330).
+     Evidence: signals/webhook_receiver.py line 328; utils/startup_checks.py lines 799 to 802;
+     tests/integration/test_hardening_scenarios.py lines 293 to 325; tests/unit/test_fix134_backpressure.py line 358;
+     tests/unit/test_fix134_backpressure.py line 373; signals/webhook_receiver.py line 687;
+     signals/webhook_receiver.py line 865; tests/unit/test_webhook_receiver.py line 1111;
+     tests/unit/test_webhook_receiver.py line 1721.
+L-01 replay: the constant /health signature, which also authenticates an empty-body POST to /webhook; /webhook's
+     body-only signature, with repeats limited on the intraday path only; the static query token (4.4).
+L-02 posture disclosure through /webhook's 401 bodies (7.3).
+L-03 a require_hmac flip would have refused every Chartink POST (3.5; the 20-Jul record agrees, R-15).
+L-04 the dashboard's raw_payload: token-bearing payloads stored before the 05-Jul fix stayed in the database until
+     the 06-Jul scrub (R-05), so the trade-detail view, if it existed then, could have shown one in that period
+     (8.4).
+L-05 failures that leave little trace: no log line for a 401 on either route; /health writes no audit row, so a
+     guessing attack on it leaves none (R-17); the limiter is shared by both routes (5.2, 6.1).
+L-06 the warnings' raw bodies: unsanitised, after authentication (8.5); no 400 recorded to 31-Jul (C-002 R5, R7)
+     and the then-current secret had 0 hits in the VM logs on 16 and 17-Jul (R-07).
+L-07 the installed require_hmac, inferred (10.3).
+U-01 the installed require_hmac and secret on either VM (3.1; 10.3).
+U-02 whether Chartink ever sent X-Webhook-Signature (no record or source shows one).
+U-03 the number and dates of rotations (02-Jul, 03-Jul, the 05-Jul GATE C) and whether a retired token was ever
+     refused after its rotation (R-02 to R-05).
+U-04 what the installed libraries, the cloud network and any device on the path logged.
+U-05 the testing VM's authentication mode and secret (11.2; the test environment of R-09).
+U-06 who else held the token or a token-bearing URL (chat, the PC, the permission list, a pasted URL; R-02, R-09).
+U-07 why /webhook kept granular messages (7.3).
+U-08 when the audit table began recording 401s, which bounds what a zero count of 401s proves before that date
+     (R-16).
+U-09 to U-12: defined in the notes file, section 2 (whether a non-ASCII credential ever arrived; the 04-Aug
+     permission items; the deploy time of the 17-Jul fix; TLS after 06-Jul).
+N-1 to N-11: section 13.
+R-01 to R-18: section 10.
+
+
+END - C-003 CLAUDE REPOSITORY ANSWERS

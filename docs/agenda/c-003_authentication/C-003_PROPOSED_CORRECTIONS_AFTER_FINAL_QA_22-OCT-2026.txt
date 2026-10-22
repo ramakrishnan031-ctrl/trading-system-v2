@@ -1,0 +1,158 @@
+C-003 - PROPOSED CORRECTIONS AFTER THE INDEPENDENT FINAL QA
+Date: 22-Oct-2026 (IST), 13:42
+In reply to: C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt (an independent agent; 33 findings: 3 ERROR, 20 IMPRECISE,
+10 SUGGESTION; the 28 earlier findings all RESOLVED)
+Status: APPROVED by Rama and APPLIED: section 1 at about 13:43 IST (F-32 as option (a)), section 3 at about 14:00 IST;
+both rounds re-checked by the same QA agent (its report, sections 5 and 6: all RESOLVED, no new error). Written as
+proposals for approval, against the bytes the QA reviewed:
+  answers   abcd4ad4a78fc199f0a08cf47dede4a34f1176f54d62a0b1ac8de1cf4441fd5e
+  notes     80267175d63fc1802f048b8811cfbe8947f7879695dbe2107e959115c7717456
+  inventory 48a49c447a5918efa1f257bb101dc541a9a9e8406ea5c96b59fe450d7e5009b0
+Security: no value of any credential, address, host, account or identifier.
+
+
+==============================================================================
+0. SUMMARY
+==============================================================================
+- Claude re-checked all 33 findings before proposing anything: code through the logged filter, records value-blind
+  only (presence of probe words; Rama's decision of 12:50 IST), frozen manuals and library files directly. All 33
+  are confirmed. None changes a conclusion about how the legacy authentication worked.
+- After approval: apply all corrections by exact replacement, reassemble, re-run every check (citations, content,
+  quotes, scans), then send the changed passages back to the same QA agent for a re-check, and report what was and
+  was not re-reviewed.
+- One choice is Rama's alone (F-32): shorten the two repository URLs in the inventory, or keep them and add an
+  exception to the security line.
+
+
+==============================================================================
+1. THE 33 FINDINGS: CLAUDE'S CHECK AND THE PROPOSED CHANGE
+==============================================================================
+A = answers file, N = notes file, I = inventory (section numbers).
+
+ERROR
+F-01 A 0.5 points to "companion section 7" for the probes and library sources; they are in I 8.
+     Check: I 7 is DATED RECORDS READ; I 8 is LIBRARY PROBES AND EXTERNAL SOURCES. Change: "companion section 8".
+F-02 A header: "treated as exposed (DR-053, VP-50)". Check: the DR-053 row has no such statement; the DR-055 row
+     says "the legacy token stays treated as exposed (VP-50)". Change: "(DR-055, VP-50)".
+F-03 A 4.1 and I 5 (T01): "a function of the same name in the dashboard's own auth module". Check: T01 is a
+     substring search; the dashboard function is is_authenticated (ops_dashboard/backend/auth.py lines 256, 263,
+     279); the other non-receiver hits are its test file and the integration fixture name wired_system_authenticated.
+     Change: A 4.1 "a differently named dashboard function, its test file and an integration-test fixture, matched
+     because the search finds part of a word; none calls the receiver's method"; I 5 T01 row to match.
+
+IMPRECISE
+F-04 A 8.2 and I 8.5: waitress logs "errors and warnings, none per request". Check: channel.py line 434 logs
+     "Client disconnected while serving %s" at INFO, per request; server.py logs the listen address (lines 162, 354)
+     and the connection-limit recovery (line 285) at INFO. None carries the query. Change: "errors, warnings and a
+     few INFO lines (the listen address, the connection-limit recovery and, per request, a client disconnect); the
+     per-request lines name the path only".
+F-05 A 2.3: python-dotenv's rule labelled CURRENT EXTERNAL FACT, which A 0.1 defines as checked today. Check:
+     A-010 E-2 dates it 2026-10-12. Change: "CURRENT EXTERNAL FACT as recorded in A-010 E-2 (checked 2026-10-12;
+     not re-checked in C-003)".
+F-06 A 0.4: "Every line number was taken from a filter output of this session (companion section 6)". Check:
+     records, frozen manuals and libraries were read other ways. Change: name each source of line numbers: code
+     (I 6), records (the records agent's gated output and the presence tests, I 7), frozen manuals read directly
+     (I 9.3), library files (I 8.5).
+F-07 A 9.3: "(C-002 K-5, N-4)". Check: C-002's N4 is the X-Forwarded-For negative; its proxy and tunnel negative is
+     N3. Change: "(C-002 K-5 and N3; this file's N-4)".
+F-08 A 1, 2.4 and 13 N-6: "no length, format or strength check". Check: T27's pattern covers length and strength
+     words only. Change: "no length or strength check in S-CODE (T27); no format check on the code path read".
+F-09 A 13 N-8 and I 5 (T16): the other code hits named as the snapshotter and the pre-commit scanner. Check:
+     T16 also hits the dashboard's logs template and its test, and the snapshotter's test. Change: name them, as
+     hits off the request path.
+F-10 A 9.1 and I 5 (T18): "outbound https URLs of client libraries". Check: the inspected hits are an alert API URL
+     and two HTTPS adapter mounts (main.py lines 273, 389, 504), a public data-file URL (system configuration line
+     749; configuration loader line 1834) and a URL-scheme validator (configuration loader line 2362). Change:
+     "outbound URLs and one URL-scheme validator; none a server TLS setting".
+F-11 A R-08: the 25-Jul record cited at line 13 only. Check (value-blind): the rotation and the two keys are on line
+     11, the structural check on line 12. Change: "lines 11 to 13".
+F-12 A R-09 (04-Aug): ledger line 50 holds the two counts only. Check: the machine names are on lines 46 and 48.
+     Change: "lines 46 to 50".
+F-13 A R-13: Check: section 1.7's limiter and state words are on line 169; section 1.8's "pending C-2 Phase 3" on
+     line 190. Change: "lines 166 to 169" and "lines 182 to 190".
+F-14 A R-14: statements outside the cited lines. Check: "About 02:00" on sweep_done line 54 and outage line 19;
+     the 08:15 start, the 401 and the reachable decision on outage lines 20 to 22; 0 trades on line 24; the fix on
+     lines 115 to 127; the read-only probe on fixture_blindness line 139. Change: add sweep_done line 54; outage
+     "lines 19 to 24" (for line 23) and "lines 115 to 127"; fixture_blindness "lines 139 to 174" (for 164 to 174).
+F-15 I 7.1, PATHS.md row: "dated entries (03 to 12-Jul used)". Check: line 113 (used by R-15 and C-04) is a 17-Jul
+     entry. Change: "(03 to 17-Jul used)".
+F-16 N C-03 and U-05: two details pointed at A R-09, which lacks them. Check: "5 keys" on integrity_audit line 4289;
+     "live keys" on line 4295. Change: cite those lines in C-03 and U-05.
+F-17 N C-05, C-10, C-11: record statements without a file and line. Check: nginx assumed in fixture_blindness line
+     133 and f2_injection_scoping line 104; ufw inactive and iptables-nft on PATHS.md line 263; "inject" in the
+     02-Jul audit lines 21, 81, 87 and the 05-Jul audit line 187; the allowlist as a future fix on the 16-Jul audit
+     line 192 and the 20-Jul record line 213; the 05/06-Jul allowlist on the system map lines 1364 to 1365. Change:
+     add these pointers (and name the two nginx records).
+F-18 N header: "Nothing here is decided", against P-1 and P-2's decided status. Change: "Nothing here is decided by
+     Claude; P-1 and P-2 record two process decisions Rama made on 22-Oct."
+F-19 N U-06: "(C-002's decision of 22-Oct)". Check: the decision is Rama's, quoted in C-002 4.3 and recorded in
+     DR-055. Change: "(Rama's decision of 22-Oct, recorded in C-002 section 4.3 and DR-055)".
+F-20 I 13.1 lists only the three files, though N cites the decision note and the erratum table. Change: list the
+     files written after ChatGPT's review (the response, the decision note, the erratum table, the final QA report
+     and this file), with their folder.
+F-21 I has no record of ChatGPT's review or the seven corrections. Change: add I 12.7 (ChatGPT's review at 12:40
+     IST; Rama's decisions at about 12:50 IST; PC-1 to PC-7 and where each applies) and I 12.8 (the final QA: its
+     method, counts and disclosed slips; these corrections; the re-check).
+F-22 I 4 D-2: "auth_probe.py (re-run at 10:26 IST ...)". Check: its saved output is time-stamped 10:21:46 IST; 10:26
+     is the pydantic probe. Change: "re-run at about 10:21 IST".
+F-23 I 2.3 and 5 (T27): no listed script ran T27. Check: one command ran count_grep.py over the S-CODE list at
+     10:26 IST and saved T27.txt. Change: say so in the T27 row.
+
+SUGGESTION
+F-24 A 13 N-4: "(C-002 S04, S25)". Check: the frozen C-002 manual's N3 cites S04 and S19; S25 (ngrok) is in the
+     C-002 source inventory, section 5. Change: "(C-002 N3, searches S04 and S19; C-002 search S25 for ngrok)".
+F-25 A R-07: section 1.10 is on line 202, the quote on line 208. Change: "lines 202 to 208".
+F-26 A 6.3: "/health audits nothing" is the test file's docstring. Check: tests/unit/test_c6_auth_collapse.py line 25.
+     Change: add that line to the evidence.
+F-27 A 8.3: the quoted comment drops the backticks around webhook_url (receiver line 684). Change: keep them.
+F-28 A 12.5: "a placeholder secret". Check: the source calls it "the prod-like secret" (conftest line 154); the value
+     is masked. Change: use the source's words.
+F-29 A 6.6: two evidence ranges were grep-only reads. Check: Claude has now re-read both ranges (logged; they will
+     appear in I 6's final re-reads). Change: none to the text.
+F-30 N 7: "tested (test evidence only)" can be read as run. Change: "pinned by tests (inspected, not run)".
+F-31 I header: "filled in the order of" the template. Change: "covers every item of" the template, in its own order.
+F-32 I 1, two repository URLs carry the code host's name and the owner's account name, against I's security line.
+     The values are public and appear in the request prompt. Options (Rama): (a) shorten to the repository names,
+     as the answers file does (Claude's recommendation); (b) keep them and except public repository URLs in the
+     security line.
+F-33 I 12.3: "263 double-quoted phrases" with no counting rule. Change: state it (each span between successive
+     pairs of ASCII double quotation marks, per file, empty spans such as b"" skipped, each occurrence counted).
+
+
+==============================================================================
+2. PROCESS NOTES FROM THE QA (disclosed; for the record)
+==============================================================================
+- The agent's own slips (its report, 1.3): five value-blind patterns failed to compile and searched nothing; two
+  early patterns on the 02-Jul security audit carried the well-known all-interfaces and loopback addresses as
+  alternatives beside words (no hidden value; both FAILED); a Python walk of the V2 copy listed names under the
+  inputs folder while skipping them (nothing opened).
+- The second slip passed the helper's address guard because the dots were escaped. Claude has tightened the guard
+  in both value-blind helpers (dotted quads now refused, escaped or not) and tested it: both forms are refused.
+- Claude's own record checks for this file were value-blind only (61 logged presence tests, plus one tool test at
+  12:59 IST); no record text was printed.
+- Not checkable by the QA, by its rules: Rama's answers (in no file), the sweep and earlier tool counts (scratch
+  files it was not allowed to open), git facts, the C-002 inventory's searches, masked values. These rest on the
+  inventory's own sections and on the checks Claude re-runs after the corrections.
+
+
+==============================================================================
+3. AFTER THE RE-CHECK (QA report, section 5): FIVE SMALL POINTS, FOR APPROVAL
+==============================================================================
+Rama approved all 33 corrections at about 13:43 IST; they were applied and the same agent re-checked every changed
+passage: F-01 to F-33 all RESOLVED; five new points, none an error. Claude's check and the proposed change:
+N-01 (IMPRECISE) I 12.5 still says the file does not report a second review, but 12.8 now summarises it. Change:
+     "The second independent review (the final QA) is summarised in 12.8; its report is a separate deliverable."
+N-02 I 13.1 lists the QA report among files in Claude's output folders; the agent wrote it in the scratch folder.
+     Change: "written by the final QA agent in the scratch folder, with a copy in Claude's output folder for
+     delivery".
+N-03 N header: the new P-1/P-2 clause stands before the note on the terminated VMs, which explains why no operational
+     step is proposed. Change: move the clause after that note.
+N-04 N C-11: the 20-Jul pointer line 213 holds the allowlist word; the conditional framing is on lines 211 to 214
+     (Claude's value-blind check: allowlist on 213; fix-type and condition words on 211; proxy or signer on 211 to
+     213). Change: "lines 211 to 214".
+N-05 I 6: the list is headed "final re-reads", but the dashboard's auth file was read there for the first time.
+     Change: "Claude's final reads and re-reads".
+After approval: apply, re-run every check, and have the same agent confirm these five passages only.
+
+
+END - C-003 PROPOSED CORRECTIONS AFTER FINAL QA

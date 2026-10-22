@@ -1,0 +1,323 @@
+C-003 - MANUAL REVISION 0: DRAFTING AND TRACEABILITY REPORT
+Date: 22-Oct-2026 (IST); drafting from about 15:50 to 17:08 IST; finalised as a review draft at 18:44 IST (B8)
+Status: delivered with the draft, for ChatGPT's review, on its instruction of 22-Oct-2026
+  (C-003_CLAUDE_INSTRUCTION_TO_DRAFT_MANUAL_REVISION_0_22-OCT-2026.txt; deliverables B and C), and updated on the
+  instruction C-003_FINALISE_REVISION_0_FOR_CHATGPT_REVIEW_22-OCT-2026.txt, which Rama sent at about 18:28 IST
+  (deliverable B; B8). This finalises the review draft only, not a freeze. Nothing has been stored in the Project,
+  staged, committed or pushed; no frozen manual, register, design-log row or V2 file has changed.
+Security: no credential, token or token-derived value, token-bearing URL, address, host, account identifier, mailbox,
+  SSH detail or person name other than Rama's.
+
+
+A. THE DRAFT
+  C-003_manual.md: 799 lines, sha256 26362c9bb94c47831581f47603418e7646b27d086dc7a8fa1ddb0018c543d6e4.
+  Markdown, ASCII only. The title is the instructed one with its dash written as an ASCII hyphen ("C-003 - LEGACY
+  WEBHOOK AUTHENTICATION AND SECRET VALIDATION"), as every C-003 file is ASCII-only.
+
+
+B. DRAFTING AND TRACEABILITY
+
+B1. Inputs used: exact versions, checked before drafting against the hashes the delivery notes give (references:
+  r1 = the QA-confirmed values in the response file, section 5.0, and in the QA report; r2 = the 15:40 value in the
+  response file, section 7; r3 = Claude's delivery notes in this chat, which no file records)
+  | # | Input (the instruction's list)                                | sha256 (of the copy used)                                        | Lines | Result   |
+  | 1 | C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt               | 86efed418f12ce1a2c2fe923d3cad39ea9c595d757fbffe3aad72dd5228fb71f |   926 | match r1 |
+  | 2 | C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt             | 49788a07169a6458af12fc4e745bd660b01b6a4a1f3cbb28c289483148667e92 |   540 | match r1 |
+  | 3 | C-003_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt       | 388e32aad158da6c85fa9e7624c1ae522962b637d3b0ae68008f7d989a5f2b82 |   273 | match r1 |
+  | 4 | C-003_INDEPENDENT_FINAL_QA_22-OCT-2026.txt                    | 22d38fc8e71a066ae2a67b0dfc5e8173fb9411f9537e746a5317fd28023e82dd |   605 | match r3 |
+  | 5 | C-003_PROPOSED_CORRECTIONS_AFTER_FINAL_QA_22-OCT-2026.txt     | ca3454d90d62722f553ec2af30f79dba22bcf9fc825c52962f3baf14650926e7 |   158 | note a   |
+  | 6 | C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt        | 391f995ce9715ad94ad1fc93a09da19efc00cb9ef75b543b3a99affd660c1c8e |    93 | note a   |
+  | 7 | C-003_ERRATUM_DECISION_TABLE_22-OCT-2026.txt                  | 708272d2f6d3d99326458c0acfcc65648bbca5c2c279d4dbccfa727d77bac120 |   241 | match r2 |
+  | 8 | C-003_CLAUDE_RESPONSE_TO_CHATGPT_REVIEW_22-OCT-2026.txt       | 79d44321eccd55648b1df92b9e81dc0619fb31c751d57c78da93983a04f36ec2 |   387 | match r3 |
+  Files 7 and 8 are their 15:40 revisions, as the instruction requires.
+  Note a: delivery-note hash not supplied / not verifiable in this session. No delivery note gives a hash for files
+    5 and 6, so there was nothing to compare; the sha256 shown is that of the one copy in the working folder, the
+    version Rama approved (file 6 at about 12:50 IST; file 5's corrections at about 13:43 and 14:00 IST). Not a
+    mismatch. Files 4 and 8 (r3): their reference hashes are in chat delivery notes only, so they can be compared
+    again from the chat, not from a file.
+  9. The pinned legacy snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (the partial clone; every code read
+     checks the file's blob ID against the pinned tree listing) and the V2 copy at
+     d89164d9933e6cfdda8cf6a9c3e097afd9d88d42 (frozen manuals, register and design log; read only). The V2 remote's
+     main was d89164d at the read-only checks of about 14:28, 15:21, 15:48, 17:05 and 18:44 IST.
+  Also used (manual section 26.4): ChatGPT's drafting instruction (sha256
+    a21f67e5228cdaa888722fedb2edbd9b978bba2efb85f19440fd525145beaed6), decision reply
+    (0fffbc4fbde525ea6979fa3a6f390e1a7e30373fc46409f6de70e9a2d53f86be), final review
+    (fd9a68d7b449379dea98c08f871b27bb9606c577979f2f2a8b571e8b328c1475) and first review
+    (035e8d450d7ff3720ab739c94e8795c6c763994f4181000c71e0f708a7b26741); the research prompt, the answer sheet and the
+    inventory template of 22-Oct. Not used: ChatGPT's withdrawn follow-up review (sha256
+    87d130fcabb0cc9fc9d5838239329a3f5e7350208531be8bd0b1ff7e8f156033) and the earlier backup copies of the review
+    files in the scratch folder.
+  Mismatches: none. Missing inputs: none.
+
+B2. Sections completed: all 28
+  1 Purpose and boundary; 2 Evidence; 3 Terms; 4 The secret (name, wiring, start-up and pre-flight checks, the
+  missing-or-empty paths, no mode branch); 5 require_hmac (declaration, schema, resolution, the BL-18 guard, the
+  comments and tests that disagree); 6 _authenticate (callers, branch order and predicates, the decision table and
+  flow, replay and binding); 7 POST /webhook (stage order, answers, audit row, logs, next consumer, sequence); 8 the
+  receiver's GET /health (stage order, answers, audit and logs, the empty-body signature, what a 200 discloses, its
+  callers and the boot self-check, sequence); 9 HTTP status codes of the two routes; 10 what the error answers
+  reveal; 11 the token outside the check (URL, echoed webhook_url, stored copy, warnings, summary); 12 transport;
+  13 rotation and exposure records R-01 to R-18; 14 paper and live, declared and installed; 15 tests (inspected, not
+  run); 16 the source-to-consumer trace (architecture, trace table, walkthrough, the three chains); 17 known defects
+  K-01 to K-06; 18 audit leads L-01 to L-07; 19 unknowns U-01 to U-12; 20 conflicts C-01 to C-13; 21 negative
+  claims N-1 to N-11; 22 the answer sheet Q1 to Q12 and the research scope; 23 the frozen-manual cross-reference;
+  24 the accepted errata; 25 the process record; 26 cross-references and the evidence list; 27 the final statement;
+  28 revision 0.
+  Structure: C-002's order, with four sections C-002 does not have (18, 20, 23 and 25). Added beyond the research
+  files, as the manual's section 28 lists them: the status table and its two closing bullets (9); the token summary
+  (11.7); the decision flow (6.4), the two sequences (7.7, 8.7), the architecture sketch (16.1), the trace table
+  (16.2) and the walkthrough (16.3); section 15's "Does not prove" column; section 22's "Cited in" column and its
+  research-scope table; three sentences written for the instruction's checklist (4.6, 8.6, 13.3); from C-002, the
+  framework's OPTIONS answer (7.2, 7.7, 9, 16.3) and, for the 413, the 1 MiB limit's source line and C-002's probe
+  (9); the labels FACT (TEST SOURCE) and OPEN QUESTION; the terms for the process IDs (3); the erratum texts with
+  their anchors (24); the process record (25); the evidence list (26).
+  Not made: C-002's review-notes, V2-design-inputs and reconciliation-addendum files; the instruction asks for A to C.
+
+B3. Open unknowns preserved
+  - U-01 to U-12 (section 19), all open: U-01 the installed require_hmac and secret on either VM; U-02 whether
+    Chartink ever sent a signature header; U-03 how many rotations, on which dates, and whether a retired token was
+    ever refused; U-04 what the installed libraries, network or devices logged; U-05 the testing VM's mode and secret;
+    U-06 who else held the token; U-07 why /webhook kept four 401 messages; U-08 when 401s began to be audited;
+    U-09 whether a non-ASCII credential ever arrived; U-10 the 04-Aug permission items; U-11 the deploy time of the
+    17-Jul fix; U-12 whether TLS was ever added.
+  - C-01 to C-13 (section 20), stated side by side and not reconciled.
+  - Held throughout: require_hmac's installed value UNKNOWN (only the pinned declaration is FACT (CONFIG)); no
+    testing/production parity inferred (14; U-05); the legacy token EXPOSED (DR-055; VP-50); K-03 an interpretation
+    from the source and a library probe, not observed, with the serving path through waitress not probed (6.4, 9,
+    17, 27; U-09); a passive zero-401 count does not show that an old token was refused (13.3; U-03); the production
+    endpoint is not called "open", and the claim is scoped to main.py's code path at the baseline (4.6; C-09); the
+    errata settle neither U-03 nor C-01 (24).
+  - Every research ID is present and defined once as a row or bullet: R-01 to R-18, K-01 to K-06, L-01 to L-07,
+    U-01 to U-12, C-01 to C-13, N-1 to N-11, Q1 to Q12 and B0 to B4. The U and C items were compared word by word with
+    the notes file: the differences are the references re-pointed from answers sections to manual sections, the
+    notes' own destination remarks carried into the item, and the narrowings of B5.
+
+B4. Citation and traceability checks (re-run on the delivered bytes)
+  - cite_check.py against the tree listing at 970aabf: 336 citations across 52 legacy files; none out of range. The
+    tool flags 26: all are the audit row's values written "(503, 0, 0)" and the like, on 12 lines, which it reads as
+    line lists (two zero "lines" each); they are not citations. Its 21 free line references are lines of frozen V2
+    manuals (and legacy line numbers inside B-007's text quoted as anchors), of the library files and of two .txt
+    files whose extension it does not cover (docs/MASTER_PENDING_28-Jul-2026.txt line 376 and lines 285 to 286;
+    requirements.txt line 14), checked against their line counts (743 and 15; counts only).
+  - Traced to the research files: 296 citations of legacy files (222 distinct); 220 occur, exactly, in the research
+    files. The 2 new ones were read while drafting: main.py lines 4002 to 4054 (16.2, step 10) and
+    signals/webhook_receiver.py line 251 (section 9, the 413 row).
+  - Claude's reads while drafting: 11 through the masking filter (Claude's late read log; every row "match" against
+    the pinned blob): in main.py a grep and lines 3979 to 4004 (the waitress thread count of 16.1 and the two-second
+    wait) and lines 4026 to 4056 (the sentinel write); in signals/webhook_receiver.py lines 249 to 252 (the 1 MiB
+    limit), lines 1036 to 1062 (the queue tuple) and greps for S-1B.1 (11.4's date, line 681) and for
+    webhook_payload; four greps of the two test files of section 15. Also one test call of the checker's code
+    wrapper (main.py line 3994).
+  - Quoted phrases: 277 (the anchor lines set aside; they are checked in C), looked up in the code, configuration and
+    tests the manual names (no host record), the V2 copy's governance and agenda files and the C-003 inputs: 124
+    verbatim in a file cited nearby, 143 verbatim elsewhere, 1 in another case only (the manual's own column name
+    "Cited in", quoted in section 28), 9 not in those sources, each accounted for: "I accepted your views", "C-003
+    R-01" and "CE-3 AND CE-4 RECONCILED" are in the erratum decision table, which the checker does not search; "Added
+    by erratum E-n:" is the route's form (A-011 line 124 reads "Added by erratum E-2:"); the other five are the new
+    erratum texts (C).
+  - Value-blind scans: credential pattern 0; session link 0; non-ASCII bytes 0; carriage returns 0; SSH-key,
+    user@host and bot-name shapes 0. The draft: 7 upper-case client-ID shapes, all the hash-algorithm name SHA256; 29
+    any-case shapes, 17 of them that name and 12 file-name tokens of the legacy tree; one 40-character token, the
+    baseline commit ID; no commit pointer other than 970aabf and d89164d; no IPv4 address or mailbox; one URL, in
+    placeholder form.
+    This report: the same zero counts, except one hit of the user-at-host pattern, which is that pattern's own name in
+    the list above; 1 upper-case and 12 any-case client-ID shapes, all the hash-algorithm name; twenty 64-character
+    values, all hashes of the files named; three 40-character values: the baseline and V2 commit IDs and the README's
+    blob ID.
+  - Never-open check: 8,922 local objects and 0 never-open blobs at the start of drafting and at 17:05 IST; the
+    clone's HEAD 970aabf.
+
+B5. Changes from the research files' wording, beyond re-pointed references and the manual's order
+  - Labels: statements about test code carry FACT (TEST SOURCE), as the instruction asks; OPEN QUESTION marks the
+    tracking-only items (U-03 and U-06: VP-50; U-05: VP-56; U-10: Q-36 (j)).
+  - Three research statements narrowed to what their sources show: section 15's "All use Flask's test client"
+    (answers 12): two of the listed files use no test client (IC-04, re-read by Claude); C-09's "none exists in S-ALL
+    (N-10)": "outside tests", as N-10 and the answers' 2.6 state; L-06's "no 400 recorded to 31-Jul": "in the windows
+    of C-002's R5 and R7", as 11.5 states (IC-08).
+  - U-07 keeps the notes' quotation marks around "on purpose"; 7.2's queue-configuration bullet names its file (the
+    research's own citation); 11.4's heading dates S-1B.1 by its code comment.
+  - No source fact, count or date of the research files was otherwise changed.
+
+B6. Unresolved gaps
+  - Carried from the research unchanged: scripts/test_webhook.py, a search hit named in N-9, not read; 12 records and
+    2 code files read but not cited (26.2); everything either VM installed, ran or logged (U-01, U-04).
+  - The decision table gives the accepted wording and the line numbers, not the anchors; its ACCEPTED WORDING
+    provides that the manual carries them. They were computed from the frozen manuals at d89164d and verified (C).
+  - Disclosed deviation from the instruction's rule 5 ("No ... additional host-record work"): while setting up the
+    checker's tools, Claude ran one value-blind presence test of a host record through the test copy of the QA's
+    wrapper (a plain word over lines 1 to 5 of docs/audit/c1_credential_exposure_inventory_02jul2026.md; it printed
+    only PASS and two line numbers) and took one line count (docs/MASTER_PENDING_28-Jul-2026.txt, for two citations'
+    ranges). Nothing from a record was printed, and no claim rests on either. The record wrapper was then not given
+    to the checker, which read no host record. By design, and not an exception (source inventory, section 4), the
+    masking filter reads the system map and the deployment guide on each call to build its mask and prints nothing
+    from them.
+
+B7. Independent check before delivery (manual section 25.3; Rama's approval during this draft)
+  - The checker: a separate agent that had not drafted the manual; verification only. It checked the draft's bytes
+    of 16:22 IST (sha256 49c25ff634d7fa52569d6ec4494dec7e7f52f6c97e0846c1b2809f7136a6b21c), from about 16:22 to 16:55
+    IST, against the instruction, the research and review files and the frozen manuals in the V2 copy at d89164d. It
+    read code, configuration and tests only through a logged masking wrapper (62 reads, each "match" against the
+    pinned blob) and read no host record in any way; it used no network and started no subagent. Its report
+    (C-003_REV0_INDEPENDENT_CHECK_22-OCT-2026.md, 285 lines, sha256
+    c835be693cd25ebab00a6135c5a299cc99f921ab7366fd9bde49731b1427d946; kept in the scratch folder, not delivered)
+    was scanned value-blind before Claude read it: no credential, address, mailbox, session link or commit pointer
+    other than 970aabf and d89164d; its 64-hex values are the hashes of input and library files.
+  - Its confirmations: the 11 erratum texts equal the accepted wording (with the allowed re-pointing and the route's
+    marking); the 18 anchors and their counts equal the frozen lines; the four numbers hold at d89164d; U-01 to U-12
+    and C-01 to C-13 kept, none resolved; R-01 to R-18 match the answers file with their evidence; of 146 distinct
+    code, configuration and test citations, 139 read in full, 5 in part and 2 by a grep, all holding but one range
+    (IC-09); rules 1 to 12 met; the security scan clean.
+  - Findings: 17 (2 Medium, 15 Low, no High); none changes an erratum or a statement about production behaviour
+    (IC-04 corrects one about two test files). All applied; where a finding rests on the source, Claude re-read it
+    first.
+    | ID    | Sev | Where                    | Finding, in brief                                        | Disposition                    |
+    | IC-01 | M   | 27                       | K-03: "the serving path through waitress was not probed" | applied as proposed            |
+    |       |     |                          | dropped; "uncaught ... answered 500" read as a           |                                |
+    |       |     |                          | contradiction                                            |                                |
+    | IC-02 | M   | 4.7, 5.4, 7.3, 10.1,     | 8 test clauses without FACT (TEST SOURCE)                | applied                        |
+    |       |     | 10.4, 10.5               |                                                          |                                |
+    | IC-03 | L   | 27                       | "in constant time" not in the research; B0 omitted       | applied: "by hmac.compare_     |
+    |       |     |                          |                                                          | digest"; B0 added              |
+    | IC-04 | L   | 15                       | two listed test files use no test client                 | applied; Claude's greps: no    |
+    |       |     |                          | (from answers 12)                                        | test_client, socket or network |
+    |       |     |                          |                                                          | import in either               |
+    | IC-05 | L   | 7.2, 7.7, 9, 16.3        | the framework's own 200 for OPTIONS omitted              | applied, from C-002 7.3;       |
+    |       |     |                          |                                                          | /health's OPTIONS not probed   |
+    | IC-06 | L   | 9                        | C-002's R5 and R7 windows misworded; 12-Jun missing      | applied                        |
+    | IC-07 | L   | 9 (413)                  | no evidence class; the 1 MiB limit not cited             | applied: line 251 (re-read) and|
+    |       |     |                          |                                                          | C-002's probe                  |
+    | IC-08 | L   | 11.7; 18 (L-06)          | "R5 and R7" without "C-002"; L-06 without its windows    | applied                        |
+    | IC-09 | L   | 16.2 step 10             | the sentinel write outside the cited range               | applied: main.py lines 4002 to |
+    |       |     |                          |                                                          | 4054 (re-read)                 |
+    | IC-10 | L   | 16.2 step 8; 16.1; 7.6   | the queue tuple does not carry the stored copy; topic    | applied: step 8's hand-off and |
+    |       |     |                          | ranges disagree; "one per VM" unsourced                  | consumer corrected (the tuple, |
+    |       |     |                          |                                                          | re-read); SignalProcessor      |
+    |       |     |                          |                                                          | removed from step 8, so 7.6's  |
+    |       |     |                          |                                                          | research range stands; "one per|
+    |       |     |                          |                                                          | VM" removed                    |
+    | IC-11 | L   | 22                       | five "Used in" pointers wrong                            | applied; Claude's recount also |
+    |       |     |                          |                                                          | corrected Q12; the column is   |
+    |       |     |                          |                                                          | now "Cited in (section)"       |
+    | IC-12 | L   | 28                       | the list of additions incomplete                         | applied (and B2 here)          |
+    | IC-13 | L   | 4.6                      | an unscoped negative over the records; paper mode before | applied, reworded: scoped to   |
+    |       |     |                          | 02-Jul did not require the secret                        | main.py's code path at the     |
+    |       |     |                          |                                                          | baseline; whether a receiver   |
+    |       |     |                          |                                                          | ran without a secret before    |
+    |       |     |                          |                                                          | C-2 is not established; no     |
+    |       |     |                          |                                                          | negative over the records      |
+    | IC-14 | L   | 25.1, 25.3               | "every read logged" against D-2; Claude's own record     | applied; the drafting-time     |
+    |       |     |                          | greps of D-1 omitted; drafting-time claims without a     | evidence is this report (B4,   |
+    |       |     |                          | source                                                   | B7)                            |
+    | IC-15 | L   | header                   | a time for the withdrawn review in no approved file      | applied: the time removed      |
+    | IC-16 | L   | 24 (A-010 E-5)           | line 209 ("secrets rotated 02-Jul") missing from the     | applied from a wording search: |
+    |       |     |                          | checked list                                             | lines 30, 31, 34 and 209 listed|
+    |       |     |                          |                                                          | as checked; A-010 unchanged    |
+    | IC-17 | L   | 3, 16.2, 25              | process IDs that read like erratum numbers, negative     | applied: two terms rows; the   |
+    |       |     |                          | claims and searches                                      | trace steps renamed 1 to 10    |
+  - After the fixes the manual was re-assembled and every check of B4 and C was re-run on the delivered bytes.
+
+B8. Finalisation for ChatGPT's review (the instruction C-003_FINALISE_REVISION_0_FOR_CHATGPT_REVIEW_22-OCT-2026.txt,
+  sha256 b09b80961dd7c374948824f18be5bb0c6ab96bee07a366edbfd4bd3313aeffe8, sent by Rama at about 18:28 IST; its
+  Authority line records his authorisation)
+  The two Medium findings were already applied in the 17:08 bytes (B7). On this instruction they were confirmed in
+  place and tightened as it asks, an independent re-check was run, and its seven Low points were applied; the bytes
+  delivered now are those of A.
+  - Fix 1, the serving-path qualification (IC-01). Section 27's K-03 clause now carries the research's exact scope
+    (answers file 4.2; the manual's 6.3): "... answered 500 on both routes (an interpretation from the source and a
+    library probe made through Flask's test client, not observed; on the serving path waitress parses the request
+    first, and that path was not probed: 6.3, K-03)". It claims no waitress behaviour. The same qualification stands
+    in 6.3, section 9's 500 row and K-03 (17) and, after RC-03, in the sketches of 7.7, 8.7, 16.3 and 16.4.
+  - Fix 2, the FACT (TEST SOURCE) labels (IC-02). The eight clauses the checker named carry the label: 4.7 (one), 5.4
+    (two), 7.3 (one), 10.1 (two), 10.4 (one) and 10.5 (one). A scripted sweep for statements about test code found two
+    more, now labelled too: 4.6 (the receiver test fixtures) and C-04 (a test comment); the re-check found a third,
+    8.6 (the crash-test injectors, RC-02), also labelled. Each labelled clause says what a test file's code asserts,
+    inspected and not run (the label's definition in the header); none states runtime or production behaviour, and no
+    claim's scope changed. The probes stay CURRENT EXTERNAL FACT, for the probed versions only.
+  - Re-checks (the independent re-check on the 18:31 bytes; the scripted checks on the bytes of A):
+    - Independent re-check: the same separate agent, under the same rules, from about 18:32 to 18:43 IST, on the 18:31
+      bytes (sha256 16e6d10976b453e4f1cefe2b64afcbc400132bcc2ba711d0fee6b6cf7eb8af4a); 12 logged wrapper reads, each
+      "match"; no host record, no network, no subagent. Its report (C-003_REV0_RECHECK_22-OCT-2026.md, 178 lines,
+      sha256 24bfab17e7add333ef38857fbc420c181d1e2dea92ed1a483588a7bf2a328589; kept in the scratch folder, not
+      delivered) was scanned value-blind before Claude read it. It disclosed one temporary view file of its own,
+      written by mistake and deleted unread within a minute.
+    - Its verdicts: IC-01 to IC-03 and IC-05 to IC-17 CONFIRMED, both Medium items included; none NOT FIXED; IC-04's
+      new wording a NEW ISSUE (RC-01); no Medium or High finding remains. Seven Low points, all applied in the bytes
+      of A, Claude re-reading the source where a point rests on it:
+      - RC-01 (15): "import no network module" held for the two test files' own import lines only;
+        test_c2_webhook_lockdown.py imports main, which imports requests through scripts.zerodha_login. Now "send no
+        request (filter greps; importing main, ... also imports requests through scripts.zerodha_login)"; Claude
+        re-read main.py line 106, scripts/zerodha_login.py line 31 and the test's line 86.
+      - RC-02 (8.6): the crash-test injectors carried no label; now FACT (TEST SOURCE) (11.6 points to 8.6).
+      - RC-03 (7.7, 8.7, 16.3, 16.4; optional): the non-ASCII 500 was drawn on the waitress path without the
+        qualifier; "(K-03; not probed through waitress)" or "(K-03)" added, and 16.4's framework answers completed
+        (308; 200 for OPTIONS).
+      - RC-04 (28): the 18:31 bytes described the re-check as done before it ran; section 28 now states its result.
+      - RC-05 (24): "the lines around the insertion" became "the section-12 lines on the webhook secret" (a wording
+        fix; no erratum text changed).
+      - RC-06 (22): the cells of Q5, Q6 and Q7 now include section 22's paragraph, as Q4's does.
+      - RC-07 (4.6): the new "not established" sentence now names its unknown (U-01).
+    - Its other confirmations on the 18:31 bytes: section 24's texts, all 18 anchors and their counts, and the four
+      numbers; U-01 to U-12 and C-01 to C-13 unchanged but for U-07's quotation marks, C-04's label and L-06's
+      windows, none resolved; require_hmac UNKNOWN and the token EXPOSED; the changed and new citations hold; the
+      safety scan clean. It noted that the finalisation's time and its attribution cannot be checked from the files
+      (the instruction names no author and gives no time); the manual now says only that Rama sent it at about 18:28
+      IST and that its Authority line records his authorisation. It also noted that three changes the drafter had
+      listed (C-09's "outside tests", 11.4's heading, the 16.1 box) were already in the first-check bytes; they are
+      drafting changes (B5), not finalisation changes.
+    - The RC fixes were not re-checked by the agent; the scripted checks below were re-run on the bytes of A after
+      them.
+    - Citations, IDs and line ranges: cite_check 336 citations across 52 files, none out of range (the 26 flags are
+      the audit tuples of B4); 296 citations traced, 220 distinct in the research files and the 2 new ones read
+      while drafting; every research ID present.
+    - Errata: 11 of 11 texts match ACCEPTED WORDING; the anchors of the 8 passages and of the insertion exact at
+      d89164d; the numbers B-007 E-1 (CE-1), A-008 E-6 (CE-2), A-010 E-5 (CE-3) and C-002 E-1 (CE-4), and CE-5 no
+      change and no number; to be re-confirmed against the live register immediately before they are written.
+    - U-01 to U-12 and C-01 to C-13 preserved; none silently resolved (B3).
+    - require_hmac's installed value UNKNOWN / NOT ESTABLISHED (5.1, 13.3, 14, U-01, 27); the legacy token EXPOSED
+      (header, 13, U-03, 27); no secret, token, credential-bearing URL or sensitive identifier printed (scans, B4).
+    - Host records: value-blind throughout. No host-record line was printed and no claim rests on a record's
+      content beyond the research files. The line-range method was not used. The two value-blind operations of B6
+      are disclosed: the one presence test reads lines 1 to 5 inside its wrapper and prints only PASS and line
+      numbers, so "no line-range read" holds for every printed read but not for that one internal read. The checker
+      and the re-check read no host record; the quote checks read code, configuration and tests only.
+    - The source inventory and the masking-method decision: both present and named in the manual (header; 25.1 to
+      25.3; 26.4). The source inventory's hash matches r1. The masking-method decision's delivery-note hash: not
+      supplied / not verifiable in this session (B1, note a); its file hash is given, not a reference value.
+    - Nothing stored in the Project, committed, pushed or frozen; no other manual or register changed (the V2 copy
+      and the local V2 clone clean; the legacy clone unchanged; C2). Never-open check at 18:44 IST: 8,922 objects,
+      0 never-open blobs.
+
+
+C. ACCEPTED ERRATA REPRODUCED, AND WHAT WAS LEFT FOR THE FREEZE
+
+C1. Reproduced in the draft's section 24 (approved for application at the C-003 freeze; the frozen manuals unchanged)
+  | Erratum   | Row  | Decision (Rama, 22-Oct)              | Passages at d89164d                                         |
+  | B-007 E-1 | CE-1 | accepted with changes (15:14)        | lines 52, 85 (two), 127 and 270: five replacements          |
+  | A-008 E-6 | CE-2 | accepted as proposed (15:14)         | line 279: one replacement                                   |
+  | A-010 E-5 | CE-3 | accepted with changes (15:14; source | three lines added after line 133; line 36: one replacement |
+  |           |      | point about 15:35)                   |                                                             |
+  | C-002 E-1 | CE-4 | option (a) (15:14)                   | line 77: one replacement; line 95 checked, unchanged        |
+  | none      | CE-5 | option (a), no change (15:14)        | A-010 line 113 unchanged; no number                         |
+  Checks: the 11 texts match the decision table's ACCEPTED WORDING once the route's marking ("Added by erratum E-5:")
+  and the references re-pointed from the table's "C-003 R-01" form to the manual's sections, as its rule provides,
+  are mapped back: 11 of 11. The anchors of the 8 passages and of the insertion were re-checked against the frozen
+  manuals at d89164d: exact characters and the stated lengths; each struck text occurs once in its line; A-010
+  line 36's before-anchor is two characters, because the text before it names a commit pointer the C-003 files do
+  not reproduce. The CE-3 source reads "system map and paths records; the 05-Jul audit", as approved. The "checked,
+  not changed" lists now come from wording searches (IC-16). The numbers stand as the erratum-number rule gives them
+  (A-008 has E-1 to E-5, A-010 E-1 to E-4, B-007 and C-002 none; the register's last row DR-055, at d89164d) and are
+  to be re-confirmed against the live register immediately before they are written (rule 3).
+
+C2. Left untouched for the freeze, deliberately
+  - B-007, A-008, A-010 and C-002: no in-place edit, no status-line sentence, no erratum section.
+  - V2_DECISION_REGISTER.md: no row for the C-003 freeze or its errata.
+  - V2_DESIGN_LOG.md: the approved lesson row of 2026-10-22 (manual 25.4) not written.
+  - The agenda and index status rows: unchanged.
+  - README.md (sha256 b373c454a9371d46f2cf0cddf948dfea1aaf8d11a64bd281b54e2bdab4e1bdc3; 22 lines; git blob
+    27a34dfb057f61435194145f61d49293e1abd8da): held by Rama since the research delivery; not pushed.
+  - The SAVE list (W-2) and the push commands (W-8: the Co-Authored-By line only, no session link): not given; they
+    come only when the files are final.
+  - The Project and GitHub: nothing written, staged, committed or pushed.
+
+
+END - C-003 MANUAL REVISION 0: DRAFTING AND TRACEABILITY REPORT

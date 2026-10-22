@@ -1,0 +1,241 @@
+C-003 - ERRATUM DECISION TABLE (CE-1 TO CE-5)
+Date: 22-Oct-2026 (IST); revised at 14:40 after ChatGPT's final review; decisions recorded at 15:21; final at 15:40
+Status: FINAL for the decision stage. DECIDED by Rama, 22-Oct-2026, 15:14 IST (section "DECISIONS"): CE-1 accepted
+with changes, CE-2 accepted, CE-3 accepted with changes, CE-4 option (a), CE-5 option (a) (no change), and the
+erratum-number rule approved; at about 15:35 IST he approved the CE-3 source point (section "ONE POINT FOR
+REVIEW"). No frozen manual has changed. An accepted erratum is written into its manual only at the C-003 freeze, by
+the established route (the original text struck through and kept visible, the replacement once after it, the
+reason, and a register row), with its exact text in the C-003 manual's corrections section (section "ACCEPTED
+WORDING").
+Sources: C-003 notes, section 5; the answers sections named in each row; the frozen manuals in the V2 copy at d89164d,
+whose quoted passages were re-read (C-003 inventory 9.3).
+Next free erratum numbers at d89164d: A-008 E-6, A-010 E-5, B-007 E-1, C-002 E-1. Re-checked at 14:28 IST and again
+at 15:21 IST: the V2 remote's main is still d89164d (a read-only ls-remote); A-008 has E-1 to E-5, A-010 has E-1 to
+E-4, B-007 and C-002 have none; the register's last row is DR-055. Which row takes which number: section "ERRATUM
+NUMBERS".
+ChatGPT's position under each row: its final review, section 5; advice only, not a decision. Its follow-up file,
+withdrawn in its chat with Rama, is not used.
+Security: no value of any credential, address or identifier.
+Changes in each revision: the revision notes at the end.
+
+
+CE-1  B-007 (readiness and health): what the webhook control is called
+  Passages: B-007_manual.md line 52 ("Rate limiter and signature"); line 85 ("which the self-check calls without the
+    signature by design"; "a signed signal"); line 127 ("Behind the same rate limiter and signature as /webhook");
+    line 270 ("Whether a signed signal was accepted ...").
+  Evidence: C-003 answers 3.1 (the pinned configuration names the query token), 4.2 (either credential can pass) and
+    6.6 (the self-check sends no credential of either kind); carried from C-002 NC-5.
+  Proposed wording: "signature" -> "the webhook secret (the query token on the pinned configuration, or an HMAC
+    signature)"; "without the signature" -> "without any credential"; "a signed signal" -> "an authenticated signal".
+  Impact: wording only; no finding of B-007 changes.
+  Wording note (Claude, 14:40 IST): the parenthetical names an HMAC signature as the secret; the signature is made
+    with the secret as its key (answers 4.2, B1). If Rama accepts with changes: "the webhook secret (the query token
+    on the pinned configuration, or an HMAC signature made with it)". The other two replacements stand.
+  Decision (Rama, 15:14 IST): ACCEPTED WITH CHANGES, the wording note's text.     Number: B-007 E-1
+  ChatGPT's position (advice): accept; keep the claim to the pinned configuration and the inspected source.
+  Claude's reading (not a decision): accept, with the wording note; the word names a method the pinned configuration
+    does not use.
+
+CE-2  A-008 (strategy model), section 24: a cross-reference
+  Passage: A-008_manual.md line 279 ("Broker and webhook authentication: A-006, A-010.").
+  Evidence: A-006 has no webhook content (C-002 NC-5, second part; the independent check confirmed no "webhook" in
+    A-006).
+  Proposed wording: "Broker authentication: A-006, A-010. Webhook authentication: A-010, C-003."
+  Impact: a cross-reference only.
+  Decision (Rama, 15:14 IST): ACCEPTED, as proposed.                              Number: A-008 E-6
+  ChatGPT's position (advice): accept as proposed.
+  Claude's reading (not a decision): accept.
+
+CE-3  A-010 (secrets and environment): the rotation history
+  Passages: A-010_manual.md line 36 (the inventory row: "... rotated 02-Jul; unchanged on 25-Jul."); section 12,
+    line 133 (02-Jul) and line 135 (25-Jul).
+  Evidence: C-003 answers R-01 to R-04; notes C-01 (the dates conflict) and U-03 (how many rotations, not
+    established).
+  Proposed wording: in section 12, after the 02-Jul line:
+    "- 03-Jul-2026 (system map and paths records): WEBHOOK_SECRET rotated, VM-only, the old token having been exposed
+      in chat; the VM's .env modified 03-Jul at 23:03; to load at the 06-Jul start. The 02-Jul and 03-Jul records
+      conflict on where and when (C-003 R-01, R-02, C-01)."
+    "- 05-Jul-2026 (S-1A, GATE C): a WEBHOOK_SECRET rotation staged (old and new identified by hashes only) with the
+      Chartink URL update; whether it is the 03-Jul rotation or a further one is not stated (C-003 R-03, U-03)."
+    "- 06-Jul-2026 (GATE D): a passive check only: zero 401 that day; the active test of the old token was not run
+      (C-003 R-04)."
+    and in line 36: "rotated 02-Jul" -> "rotated 02-Jul and 03-Jul (records in conflict, C-003 C-01)".
+  Impact: history completeness; the conflict stays open; the token stays treated as exposed (VP-50) in every case.
+  Wording note (Claude, 14:40 IST), against ChatGPT's condition (every dated statement record-derived, the conflict
+    left open): the three new lines sit in section 12, headed "FACT, RECORD-DERIVED unless marked", and each names
+    its record; the 05-Jul line keeps U-03 open. Line 36 is a cell of section 3's table, where "rotated 02-Jul and
+    03-Jul" can read as two rotations. If Rama accepts with changes: "rotated 02-Jul and 03-Jul (records in conflict;
+    how many rotations, not established: C-003 C-01, U-03)".
+  Decision (Rama, 15:14 IST): ACCEPTED WITH CHANGES, the wording note's text; and, at about 15:35 IST, the 03-Jul
+    line's source as in section "ONE POINT FOR REVIEW".                           Number: A-010 E-5
+  ChatGPT's position (advice): accept with careful wording, only if every dated statement stays record-derived and
+    the 02-Jul, 03-Jul and 05-Jul conflict stays open; the records do not prove the event independently.
+  Claude's reading (not a decision): accept, with the wording note; the section is the manual's history and lacks two
+    dated records.
+
+CE-4  C-002 (scanner to webhook): the rotation date
+  Passages: C-002_manual.md line 77 ("after the token was rotated on 05-Jul ("Chartink URL updated by Rama")") and
+    line 95 ("the 05-Jul rotation note").
+  Evidence: C-003 answers R-02 (a rotation recorded on 03-Jul, the .env modified at 23:03, to load at the Monday
+    start) and R-03 (the 05-Jul entry: the rotation staged with the URL update); whether GATE C was a further rotation
+    is not stated (U-03).
+  Proposed wording, one of:
+    (a) keep "05-Jul" as the 05-Jul record's own date and add the 03-Jul record beside it, with U-03 left open;
+    (b) "after the rotation recorded on 03-Jul (R-02) and the GATE C entry of 05-Jul (R-03), whether one rotation or
+        two not established (U-03)".
+    Neither settles U-03.
+  Impact: dates only; C-002's finding (no 401 on 06-Jul) is unchanged.
+  Note (Claude, 14:40 IST): option (a) is described, not worded; if Rama chooses it, its exact text is drafted in the
+    C-003 manual's corrections section and reviewed there before the freeze. If CE-3 is accepted as well, the two
+    texts must give the same dates and the same U-03 wording.
+  Decision (Rama, 15:14 IST): OPTION (a). Its exact text, drafted by Claude and reconciled with CE-3, is in section
+    "ACCEPTED WORDING", for review with the manual's corrections section.        Number: C-002 E-1
+  ChatGPT's position (advice): (a): 05-Jul kept as that record's date and the separate 03-Jul record added beside it,
+    U-03 left open; the two records are not collapsed into one proven rotation.
+  Claude's reading (not a decision): (a); it keeps the record's own date and adds only what another record says.
+
+CE-5  A-010 (secrets and environment): "unauthenticated requests get 401" (low)
+  Passage: A-010_manual.md line 113.
+  Evidence: C-003 answers 4.3 rows 4 and 8 and K-03: a credential with a non-ASCII character raises an exception and
+    is answered 500, by interpretation from the source and a library probe, never observed; no 500 is recorded in
+    C-002's windows (notes U-09).
+  Proposed wording, one of:
+    (a) no change: the sentence holds for every recorded request;
+    (b) after "get 401", add: " (a credential with a non-ASCII character instead raises an exception that is answered
+        500; C-003 K-03, an interpretation from source and a library probe, not observed)".
+  Impact: (a) none; (b) one exception added, no finding changed.
+  Note (Claude, 14:40 IST): the same bullet of line 113 already carries E-4 (C-002), whose struck text follows "get
+    401"; (b) goes in between the two and leaves E-4's text as it is.
+  Decision (Rama, 15:14 IST): OPTION (a), no change. No erratum and no number; A-010 line 113 stays as it is, and
+    the C-003 manual records the non-ASCII case (K-03) as INTERPRETATION, not observed.
+  ChatGPT's position (advice): (a), no change; if Rama wants the case in A-010, (b), labelled as not observed, with
+    E-6 if CE-3 takes E-5.
+  Claude's reading (not a decision): (a), given its low weight; (b) if the reviewers want every exception in place.
+
+
+ERRATUM NUMBERS (APPROVED by Rama, 15:14 IST; ChatGPT's final review, section 4)
+The collision: CE-3 and CE-5 both change A-010, and the table gave CE-3 "A-010 E-5" and CE-5 "A-010 E-5 or E-6".
+The rule:
+  1. A number goes only to a row Rama accepts ("accept with changes" counts as accepted; for CE-5, (b) or changed
+     wording), and only once Rama has decided every row of this table that concerns the same manual.
+  2. Within one manual, numbers follow this table's order (CE-3 before CE-5), not the order of the decisions.
+  3. Just before an erratum is written, its number is confirmed against the live register: the manual's status line
+     and erratum sections, and the decision register, at the V2 remote's main of that day. If the number has been
+     taken meanwhile, the C-003 errata to that manual move to the next free numbers, keeping the order of rule 2.
+  4. A-010 on the register at d89164d (E-1 to E-4 taken):
+       CE-3 accepted, CE-5 (b) or changed   ->  CE-3 = A-010 E-5, CE-5 = A-010 E-6
+       CE-3 accepted, CE-5 (a)              ->  CE-3 = A-010 E-5; CE-5 takes no number
+       CE-3 rejected, CE-5 (b) or changed   ->  CE-5 = A-010 E-5
+       CE-3 rejected, CE-5 (a)              ->  no A-010 erratum
+  5. The other three rows cannot collide (one row each for A-008, B-007 and C-002): A-008 E-6, B-007 E-1 and C-002
+     E-1 if accepted, each confirmed under rule 3.
+Result under the decisions (CE-3 accepted, CE-5 (a)): B-007 E-1 (CE-1), A-008 E-6 (CE-2), A-010 E-5 (CE-3), C-002
+E-1 (CE-4); CE-5 takes none. Confirmed against the live register at 15:21 IST; rule 3 applies again at the freeze.
+
+
+DECISIONS (Rama, 22-Oct-2026, 15:14 IST)
+Rama's message: "I accepted your views", that is, the view Claude gave for each of the seven items, one by one, in
+its reply of 14:40 IST. ChatGPT's reply of the same afternoon recommends the same seven positions (advice). As at the
+C-001 and C-002 freezes, each erratum is decided on its own, the decisions given in one message.
+  CE-1  ACCEPTED WITH CHANGES (the wording note's text)           B-007 E-1
+  CE-2  ACCEPTED, as proposed                                      A-008 E-6
+  CE-3  ACCEPTED WITH CHANGES (the wording note's text)           A-010 E-5
+  CE-4  OPTION (a)                                                 C-002 E-1
+  CE-5  OPTION (a), no change                                      no erratum, no number
+  The erratum-number rule: APPROVED.
+  S-01 (a QA suggestion, not an erratum): left as is; recorded in the response file, section 6.
+  At about 15:35 IST, on ChatGPT's recommendation, Rama approved the CE-3 source point (section "ONE POINT FOR
+  REVIEW").
+
+
+ACCEPTED WORDING (the decisions applied to the proposals; no frozen manual changed)
+Lines are those of the V2 copy at d89164d. The C-003 manual's corrections section carries these texts with their
+unchanged-before and unchanged-after anchors, in C-002's format, and they are written into the manuals at the freeze.
+References to C-003 items (R-, C-, U-) are then pointed to the C-003 manual's sections; nothing else in the wording
+changes.
+B-007 E-1 (CE-1)
+  - line 52, section 3, the row of the webhook's /health (H8): struck "signature"; replacement "the webhook secret
+    (the query token on the pinned configuration, or an HMAC signature made with it)".
+  - line 85, section 4, G16's pass condition: struck "without the signature"; replacement "without any credential";
+    and struck "a signed signal"; replacement "an authenticated signal".
+  - line 127, section 6, row H8: struck "signature" (in "rate limiter and signature as /webhook"); replacement "the
+    webhook secret (the query token on the pinned configuration, or an HMAC signature made with it)".
+  - line 270, section 20: struck "a signed signal"; replacement "an authenticated signal".
+  - Checked: no other "signature", "signed" or "HMAC" in B-007.
+A-008 E-6 (CE-2)
+  - line 279, section 24: struck "Broker and webhook authentication: A-006, A-010."; replacement "Broker
+    authentication: A-006, A-010. Webhook authentication: A-010, C-003."
+A-010 E-5 (CE-3)
+  - section 12, three lines added after the 02-Jul line (line 133): CE-3's proposed lines, with the 03-Jul line's
+    source as approved at about 15:35 IST:
+      "- 03-Jul-2026 (system map and paths records; the 05-Jul audit): WEBHOOK_SECRET rotated, VM-only, the old
+        token having been exposed in chat; the VM's .env modified 03-Jul at 23:03; to load at the 06-Jul start. The
+        02-Jul and 03-Jul records conflict on where and when (C-003 R-01, R-02, C-01)."
+      "- 05-Jul-2026 (S-1A, GATE C): a WEBHOOK_SECRET rotation staged (old and new identified by hashes only) with
+        the Chartink URL update; whether it is the 03-Jul rotation or a further one is not stated (C-003 R-03,
+        U-03)."
+      "- 06-Jul-2026 (GATE D): a passive check only: zero 401 that day; the active test of the old token was not
+        run (C-003 R-04)."
+  - line 36, section 3, the webhook secret's row: struck "rotated 02-Jul"; replacement "rotated 02-Jul and 03-Jul
+    (records in conflict; how many rotations, not established: C-003 C-01, U-03)". Line 34's "rotated 02-Jul" (the
+    bot token's row) is not touched.
+C-002 E-1 (CE-4, option (a); text drafted by Claude at 15:21)
+  - line 77, section 4.2: struck "after the token was rotated on 05-Jul ("Chartink URL updated by Rama")";
+    replacement "after the token was rotated on 05-Jul ("Chartink URL updated by Rama"; that is the date of the GATE C
+    record, which staged the new token for the next start; a rotation is also recorded on 03-Jul, VM-only, in the
+    system map and paths records; how many rotations, not established: C-003 R-02, R-03, U-03)".
+  - line 95, section 4.5: checked, not changed; "the 05-Jul rotation note" names that record by its own date, which
+    option (a) keeps.
+CE-5: no erratum. The manual's corrections section lists A-010 line 113 as checked and not changed.
+
+
+CE-3 AND CE-4 RECONCILED (ChatGPT's reply, CE-4)
+  - Dates: both texts give 03-Jul for the system map and paths records and 05-Jul for the GATE C record. A-010 keeps
+    its 02-Jul line; C-002's bullet is about the 05-Jul and 06-Jul records and does not name 02-Jul.
+  - Labels: A-010's new lines sit under section 12's heading "FACT, RECORD-DERIVED unless marked"; C-002's bullet is
+    "FACT (RECORD-DERIVED, 05 and 06-Jul-2026)", and its added clause names the records for 03-Jul.
+  - Words: both say "how many rotations, not established", with U-03, and both call GATE C staged.
+  - Sources: A-010's 03-Jul line names the system map and paths records and the 05-Jul audit, which gives its .env
+    time; C-002's added clause states only the 03-Jul rotation and VM-only, which the system map and paths records
+    give, so it names those.
+  - Neither settles U-03 or C-01; the token stays treated as exposed (VP-50).
+
+
+ONE POINT FOR REVIEW (found while reconciling; APPROVED by Rama at about 15:35 IST, applied in "ACCEPTED WORDING")
+  CE-3's 03-Jul line names "system map and paths records" as its source, but one of its details, the VM's .env
+  modified 03-Jul at 23:03, comes from the 05-Jul audit (C-003 R-02). To name every record, as ChatGPT's condition on
+  CE-3 asks, the source would read "(system map and paths records; the 05-Jul audit)".
+  Decision (Rama, about 15:35 IST): APPROVED, on ChatGPT's recommendation (its chat with Rama, in the screenshot
+  Rama sent at 15:30 IST).
+
+
+Not proposed (checked; no change): A-009 line 251 and A-010 line 113 ("false in production"; "Production ran with
+require_hmac false"); C-001 line 263 (the source-address verdict left to C-003: answered in R-12); B-007 line 85's
+dated evidence and the 17-Jul outage statements of A-011, B-001 and B-007 (they agree with the records). C-003 notes,
+section 5.
+
+
+REVISION NOTE (22-Oct-2026, 14:40 IST; no row's decision status, passage, evidence line or proposed wording
+changed)
+- Added: the section "ERRATUM NUMBERS"; ChatGPT's position under each row; the wording notes under CE-1 and CE-3; the
+  notes under CE-4 and CE-5; the number lines under CE-3 and CE-5; the header lines on ChatGPT's positions and on the
+  re-check of 14:28 IST.
+- Changed: the header's Date and Status lines; the next-free line, which had said that numbers were given in order of
+  acceptance; CE-5's number field, which gave A-010 E-5 or E-6; Claude's reading of CE-1 and CE-3, which was "accept"
+  without the wording note.
+
+REVISION NOTE (22-Oct-2026, 15:21 IST; Rama's decisions; no passage, evidence line or proposed wording changed)
+- Changed: the header's Date, Status, next-free and revision-pointer lines; in each row, the decision line, which was
+  PENDING with the options and the number (CE-3's and CE-5's separate number lines were folded into it); the rule's
+  heading, its lead-in (it said the rule was proposed) and its decision line, which was PENDING.
+- Added: the result line under the rule; the sections "DECISIONS", "ACCEPTED WORDING", "CE-3 AND CE-4 RECONCILED"
+  and "ONE POINT FOR REVIEW".
+
+REVISION NOTE (22-Oct-2026, 15:40 IST; the CE-3 source point approved; the table final for the decision stage)
+- Changed: the header's Date and Status lines; CE-3's decision line; in "ACCEPTED WORDING", A-010 E-5's section-12
+  item, which pointed to CE-3's proposed lines and now gives them in full, with the approved source on the 03-Jul
+  line; the heading and the last sentence of "ONE POINT FOR REVIEW", which said that it was not applied.
+- Added: the approval line under "DECISIONS"; the sources bullet under "CE-3 AND CE-4 RECONCILED".
+
+
+END - C-003 ERRATUM DECISION TABLE

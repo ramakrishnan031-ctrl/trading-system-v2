@@ -1,0 +1,273 @@
+C-003 - LEGACY WEBHOOK AUTHENTICATION AND SECRET VALIDATION
+RESEARCH NOTES AND OPEN QUESTIONS
+Date of work: 22-Oct-2026 (IST); between about 10:00 and 14:02 IST
+Request: C-003_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 3): "Unresolved historical/runtime questions, evidence conflicts and candidate errata only, each with evidence pointer and review destination. Do not decide errata or edit frozen manuals."
+Companion files: C-003_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt (the answers; section numbers and the K-, L-, N- and R- references point to it, and U-01 to U-08 are its unknowns; U-09 to U-12, the conflicts C-01 to C-13 and the candidates CE-1 to CE-5 are defined here) and C-003_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt.
+Status: OPEN, for Rama's and ChatGPT's review. Nothing here is decided by Claude: no erratum is applied, no frozen manual is changed, no V2 decision is made, and no operational step is proposed (both legacy VMs are terminated and deleted and the Chartink subscription has expired, Rama, 22-Oct; C-002 section 4.3; nothing here can be re-measured on them). P-1 and P-2 record two process decisions Rama made on 22-Oct.
+Security: as the answers file. No value of any credential, token, address or identifier.
+
+
+==============================================================================
+1. HOW TO READ
+==============================================================================
+- Each item: what is open, the evidence (file and lines, or a section of the answers file), and where it should
+  be decided or carried ("destination"). Destinations name a section of the future C-003 manual (not drafted),
+  a frozen manual's erratum route (Rama decides each erratum on its own, as at every freeze), or an existing
+  design-log row (Q- or VP-), as tracking only.
+- Labels as in the answers file, section 0.1.
+- Section 2: unknowns. Section 3: conflicts between sources. Section 4: audit leads. Section 5: erratum candidates
+  in frozen manuals. Section 6: process points for the review. Section 7: what is not open (for completeness).
+
+
+==============================================================================
+2. UNKNOWNS: HISTORICAL AND RUNTIME QUESTIONS (UNKNOWN / NOT ESTABLISHED)
+==============================================================================
+None of these can be measured now: the VMs, their databases and logs are gone (Rama, 22-Oct).
+U-01 The installed require_hmac and secret on either VM on any date.
+     Evidence: the pinned declaration only (config/system_config.yaml line 336); records that state the value without
+     quoting the installed file (answers R-11, R-13, R-18); an inference from the zero-401 record (answers 10.3, L-07).
+     Rama, Q2: "Don't know / never checked".
+     Destination: C-003 manual, unknowns (with L-07 stated as interpretation).
+U-02 Whether Chartink ever sent an X-Webhook-Signature header.
+     Evidence: no code outside tests computes one (answers N-7); the configuration comment and the 20-Jul record say
+     Chartink cannot sign (config/system_config.yaml line 336;
+     docs/audit/pre_receive_hook_investigation_20jul2026.md line 181); C-002 section 4.4 (Chartink's public article
+     states no authentication). Not assumed either way.
+     Destination: C-003 manual, unknowns.
+U-03 How many rotations there were, on which dates, and whether a retired token was ever refused after its rotation.
+     Evidence: rotations recorded on 02-Jul and on 03-Jul, and a staged rotation at GATE C on 05-Jul (answers R-01 to
+     R-03); the 06-Jul check was passive and the active test of the old token was not run (R-04); the 03-Jul
+     "verified value-blind" has no recorded method (R-02); S-1B.2's "401 at GATE D" is not supported by GATE D's own
+     entry (R-05). Rama, Q5 and Q9: "Don't know / never checked".
+     Destination: C-003 manual (rotation history, with the conflict C-01 stated); A-010 erratum candidate CE-3; VP-50
+     (tracking only: the legacy token stays treated as exposed whatever the history).
+U-04 What the installed libraries, the cloud network or any device on the path logged (query strings, headers).
+     Evidence: the probed library versions log the path only (answers 8.2); the installed versions are unknown
+     (C-002 U-6); no proxy was found (answers 9.3).
+     Destination: C-003 manual, unknowns.
+U-05 The testing VM's authentication mode and secret.
+     Evidence: the testing snapshot was not used (Q12 (c)); Rama (09-Oct, VP-56): different alert and broker API
+     credentials on the testing VM; the 28-Jul record says the test environment holds 20 live production keys,
+     WEBHOOK_SECRET among them, and the 01-Aug record reads the "live keys" count as true of the VM, not the PC
+     (answers R-09; docs/audit/integrity_audit_2026.md line 4295), so which machine that test environment is, is
+     not established.
+     Rama, Q3: "Don't know / never checked".
+     Destination: C-003 manual, unknowns; VP-56 (tracking only).
+U-06 Who else held the token or a token-bearing URL, and until when.
+     Evidence: Chartink's alerts (C-002 section 4.3); the old token "exposed in chat" twice (R-02); the PC's .env
+     (R-09); 15 permission-list entries posting to the live webhook, their URLs not described (R-09); a "Chartink-side
+     URL Rama pasted" (docs/audit/integrity_audit_2026.md line 394; its location not stated).
+     Destination: C-003 manual, unknowns; VP-50 (tracking only). No clean-up is proposed (Rama's decision of 22-Oct,
+     recorded in C-002 section 4.3 and DR-055).
+U-07 Why /webhook kept its four granular 401 messages while /health was made uniform "on purpose".
+     Evidence: answers 7.2 and 7.3; the 25-Jul records give the reason for /health only.
+     Destination: C-003 manual (as a recorded design choice and its limit, L-02).
+U-08 When webhook_audit began recording 401 outcomes.
+     Evidence: the pinned code audits a 401 in its finally clause (answers 5.4); a 04-Jul record already describes a
+     database insert for every unauthenticated request; the 31-Jul audit calls "every outcome incl. 401" "a change
+     since 5-Jul"; the code before the pin is not in the snapshot (no history command is run on the clone).
+     Bearing: a zero-401 count before that change proves less than one after it (C-002 section 14 R5 counts from
+     12-Jun; answers R-16).
+     Evidence: docs/audit/full_system_audit_04july2026.md line 141; docs/audit/integrity_audit_2026.md line 43.
+     Destination: C-003 manual (the bound on the zero-401 readings); a note against C-002 section 14 R5 for the
+     reviewers (no erratum proposed: C-002 reports the recorded counts as recorded).
+U-09 Whether a non-ASCII credential ever reached the receiver (K-03).
+     Evidence: no 500 is recorded from 12-Jun to 23-Jul 15:29 or on any day from 24 to 31-Jul (C-002 section 14, R5
+     and R7); outside those windows, not established.
+     Destination: C-003 manual, with K-03.
+U-10 The 04-Aug permission items (15 webhook POST entries; a sed -i edit that comments out WEBHOOK_SECRET): resolved?
+     Evidence: answers R-09; design log Q-36 (j) asks the same.
+     Destination: Q-36 (j) (tracking only); C-003 manual, unknowns.
+U-11 The deploy time of the 17-Jul fix that made the self-check accept 401.
+     Evidence: answers R-14; B-007 section 4 records its first production run on 20-Jul.
+     Destination: none new (B-007 already records it); listed for completeness.
+U-12 Whether TLS was ever added for the webhook after it was deferred on 06-Jul.
+     Evidence: answers R-04; no later record found among the records read; no TLS in the pinned source (answers 9.1).
+     Destination: C-003 manual, unknowns.
+
+
+==============================================================================
+3. CONFLICTS BETWEEN SOURCES (stated side by side; not reconciled)
+==============================================================================
+C-01 Rotation dates. 02-Jul "rotated + synced to VM+PC" (the C-1 inventory) and "rotated dead 02-Jul" (the 05-Jul
+     audit, for the six exposed secrets) against 03-Jul "VM-only" (the system map, the paths record, the 05-Jul
+     audit's "secret rotated 03-Jul", the .env modified 03-Jul at 23:03) and the 05-Jul GATE C entry ("rotated",
+     staged). Answers R-01 to R-03.
+     Evidence: docs/audit/c1_credential_exposure_inventory_02jul2026.md line 83;
+     docs/audit/audit_05jul2026.md line 199; docs/audit/audit_05jul2026.md line 187;
+     docs/audit/audit_05jul2026.md line 170; docs/SYSTEM_MAP.md line 452; PATHS.md line 238;
+     docs/SYSTEM_MAP.md line 1365.
+     Destination: C-003 manual; candidates CE-3 and CE-4.
+C-02 Whether a retired secret was shown dead. "Both historical secrets already DEAD (401 at GATE D)" (S-1B.2, 06-Jul
+     evening) against GATE D's own entry: zero 401 observed, the active old-token test not run (06-Jul). Answers R-04,
+     R-05. Destination: C-003 manual (U-03).
+C-03 Where the secret was kept. VM and PC (02-Jul); VM-only (03-Jul; 12-Jul); a test environment with 20 live keys
+     (28-Jul); PC and VM (01-Aug, the PC with 5 keys: docs/audit/integrity_audit_2026.md line 4289); PC 20 keys and
+     VM 24 (04-Aug). Answers R-01, R-02, R-06,
+     R-09. Destination: C-003 manual (by date); A-010 sections 17 and 19 for copies and the testing machine (already
+     their subject; no erratum proposed by Claude).
+C-04 Flipping require_hmac. Pending and "safe" after P1 (17-Jul records and test comment) against "NOT safe to
+     flip" (20-Jul: Chartink cannot sign; every POST would be 401); the pinned system map and paths record keep the
+     earlier wording. Answers 3.5, R-14, R-15.
+     Evidence: docs/SYSTEM_MAP.md line 191; PATHS.md line 113;
+     docs/audit/pre_receive_hook_investigation_20jul2026.md lines 178 to 212.
+     Destination: C-003 manual (the code's consequence, L-03, and the records' correction).
+C-05 What fronted the receiver. The G.1 comments and two records assume nginx; a 01-Jun audit names "UFW + ngrok";
+     the 03-Jul investigation found no nginx and no reverse proxy; the 05-Jul paths record says ufw was inactive and
+     the host firewall iptables-nft; the 31-Jul audit keeps the question "UNCERTAIN". Answers 3.5, 9.3, R-11, R-12,
+     R-16; C-002 K-5 and section 5.
+     Evidence: docs/audit/fixture_blindness_investigation_17jul2026.md line 133 and
+     docs/audit/f2_injection_scoping_25jul2026.md line 104 (the two records that assume nginx); PATHS.md line 263
+     (ufw inactive; iptables-nft).
+     Destination: C-003 manual (by state; no new erratum: C-002 records it).
+C-06 What the intake authentication was in June. A 15-Jun flow review describes HMAC over the raw body (rated
+     CORRECT); the 01-Jun and 02-Jul audits describe require_hmac false and the URL token as the live control.
+     Answers R-11. Destination: C-003 manual (code capability against configured use).
+C-07 The 403 label. The 05-Jul audit calls 20,461 answers of 403 "auth-rejects"; the 03-Jul investigation calls the
+     403s kill-switch or window refusals, "not an auth or IP problem"; the 06-Jul rule: "only 401 = webhook
+     auth/token failure"; the code returns 403 only for the kill switch and the window (answers 5.3).
+     Evidence: docs/audit/audit_05jul2026.md line 748; docs/audit/c2_chartink_ip_investigation_03jul2026.md line 26;
+     docs/SYSTEM_MAP.md line 1364. Destination: C-003 manual (the code's meaning of 401 and 403).
+C-08 Since when 401s were audited: see U-08.
+C-09 The effect of removing the secret. The 04-Aug register calls commenting out WEBHOOK_SECRET "disabling an auth
+     control"; on the pinned code path it stops the next start with "missing_secrets" (return 3), and the receiver
+     is never built (answers 2.4, 2.6, R-09). A receiver built some other way with no secret would be open (2.6), but
+     none exists in S-ALL (N-10). Destination: C-003 manual.
+C-10 What a holder of the secret could do. 02-Jul and 05-Jul: inject signals (through the full pipeline); 01-Aug:
+     "cannot place an order" (that is, no broker access). Both can hold in their own sense; the records do not discuss
+     the other's point. Answers R-09, R-11.
+     Evidence: docs/audit/system_security_audit_02jul2026.md line 21;
+     docs/audit/system_security_audit_02jul2026.md line 81; docs/audit/system_security_audit_02jul2026.md line 87;
+     docs/audit/audit_05jul2026.md line 187; docs/audit/integrity_audit_2026.md lines 4286 to 4295.
+     Destination: C-003 manual (stated as recorded).
+C-11 The allowlist's status. The 05-Jul and 06-Jul entries record a single-address allowlist applied and seen
+     working; the 16/17-Jul AB-910 section 1.8 and the 20-Jul record still list allowlisting as a future fix.
+     Evidence: docs/SYSTEM_MAP.md lines 1364 to 1365;
+     docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md line 192;
+     docs/audit/pre_receive_hook_investigation_20jul2026.md lines 211 to 214.
+     Destination: none new (C-002 section 5.2 holds the firewall account; its later state NOT ESTABLISHED).
+C-12 The S4 loopback reasoning. The 17-Jul outage record rejects a loopback exemption for the receiver's /health
+     on a proxy argument it takes from S3; S3 concerned the dashboard behind a tailnet proxy, and the receiver saw
+     Chartink's real address (C-002 section 5.4).
+     Evidence: docs/audit/s4_boot_outage_17jul2026.md line 85.
+     Destination: C-003 manual (a record's reasoning, marked as such).
+C-13 Rama's recollections and the records. The records attribute the 05-Jul allowlist and the Chartink URL update to
+     Rama; Rama, Q5 and Q7: "Don't know / never checked". Runbooks describe /health checks; Q6: "No manual check I
+     recall". Not a contradiction of fact; neither proves the other. Destination: C-003 manual (both stated).
+
+
+==============================================================================
+4. AUDIT LEADS (INTERPRETATION / AUDIT LEAD; from the answers file)
+==============================================================================
+L-01 Replay: a /health signature is a constant, and it also authenticates a POST to /webhook whose body is empty
+     (which then reaches every answer after authentication but cannot get a signal accepted); a /webhook signature
+     binds the body only, not the path, method, time or a nonce, and repeats are limited after authentication on
+     the intraday path only (the EOD route has no expiry, dedup or fingerprint check); the query token is a static
+     bearer value (answers 4.3, 4.4). Destination: C-003 manual.
+L-02 Posture disclosure: /webhook's 401 messages tell an anonymous caller whether the token fallback is open
+     (answers 7.3). Destination: C-003 manual.
+L-03 A require_hmac flip would have refused every Chartink POST with 401 (answers 3.5; R-15). Destination: C-003
+     manual.
+L-04 Token-bearing stored payloads stayed in the database until the 06-Jul scrub (R-05); at the pin, the dashboard's
+     trade detail returns the stored payload as "raw_payload" (answers 8.4). Whether that reader and view existed
+     before the scrub (only the pinned version was read), and whether anyone viewed such a payload: not established.
+     Destination: C-003 manual; VP-55 (tracking only).
+L-05 Little trace of failed authentication: no log line for a 401 on either route; /health writes no audit row; one
+     per-address limiter for both routes (answers 5.2, 5.5, 6.1, 6.3; R-17). Destination: C-003 manual.
+L-06 The warnings' raw bodies after authentication (the right token or a valid signature): unsanitised; no 400
+     recorded to 31-Jul; the then-current secret
+     had 0 hits in the VM logs on 16 and 17-Jul (answers 8.5, R-07). C-002 section 10.6's lead is bounded by these
+     records for their dates; the retired values were not counted. Destination: C-003 manual (closing C-002's
+     forwarded lead as far as the records reach).
+L-07 The installed require_hmac inferred from zero 401s (answers 10.3). Destination: C-003 manual, with U-01 and U-08.
+K-03 (a defect, listed here for its destination) a non-ASCII credential answered 500 instead of 401 (answers 4.3,
+     5.3, 6.2). Destination: C-003 manual.
+
+
+==============================================================================
+5. ERRATUM CANDIDATES IN FROZEN MANUALS (not decided; Rama decides each on its own)
+==============================================================================
+Next free erratum numbers, for reference only: A-008 E-6, A-010 E-5, B-007 E-1, C-002 E-1.
+CE-1 B-007 calls the webhook control a "signature" (C-002 NC-5, carried to C-003).
+     Passages: B-007_manual.md line 52 ("Rate limiter and signature"); line 85 ("which the self-check calls without
+     the signature by design"; "a signed signal"); line 127 ("Behind the same rate limiter and signature as
+     /webhook"); line 270 ("Whether a signed signal was accepted ...").
+     Evidence: answers 3.1, 4.2 and 6.6: the pinned configuration names the query token, and the self-check sends no
+     credential of either kind ("calls it UNAUTHENTICATED by design", utils/startup_checks.py lines 799 to 806).
+     Candidate wording: "signature" -> "the webhook secret (the query token on the pinned configuration, or an HMAC
+     signature)"; "without the signature" -> "without any credential"; "a signed signal" -> "an authenticated signal".
+     Impact: wording only; no finding of B-007 changes.
+CE-2 A-008 section 24's pointer "Broker and webhook authentication: A-006, A-010." (A-008_manual.md line 279; C-002
+     NC-5's second part): A-006 has no webhook content.
+     Candidate wording: "Broker authentication: A-006, A-010. Webhook authentication: A-010, C-003."
+     Impact: a cross-reference only.
+CE-3 A-010's rotation history has the 02-Jul rotation and not the 03-Jul one.
+     Passages: A-010_manual.md line 36 (the inventory row: "Pre-02-Jul value in ..., rotated 02-Jul; unchanged on
+     25-Jul."); A-010_manual.md section 12 (line 133, 02-Jul; line 135, 25-Jul).
+     Evidence: answers R-02 and R-03 (03-Jul, VM-only, loading at the 06-Jul start; GATE C's staged rotation on
+     05-Jul; the 06-Jul passive check, R-04); conflict C-01.
+     Candidate: add a dated line for 03-Jul and for GATE C and D in section 12, keeping 02-Jul, with the conflict
+     stated; line 36's "rotated 02-Jul" would need the same addition.
+     Impact: history completeness; the token stays treated as exposed (VP-50) in every case.
+CE-4 C-002 dates the rotation "on 05-Jul" (C-002_manual.md line 77: "after the token was rotated on 05-Jul
+     ("Chartink URL updated by Rama")"; line 95: "the 05-Jul rotation note").
+     Evidence: R-02 places a rotation on 03-Jul (the .env modified 03-Jul at 23:03) to load at the Monday start; R-03,
+     the 05-Jul entry, records the rotation as staged with the URL update; whether GATE C was a further rotation is
+     not stated (U-03).
+     Candidate wording, either: (a) keep "05-Jul" as the 05-Jul record's own date and add the 03-Jul record beside
+     it, with U-03 left open; or (b) "after the rotation recorded on 03-Jul (R-02) and the GATE C entry of 05-Jul
+     (R-03), whether one rotation or two not established (U-03)". Neither settles U-03.
+     Impact: dates only; C-002's finding (no 401 on 06-Jul) is unchanged.
+CE-5 (low) A-010 line 113: "unauthenticated requests get 401".
+     Evidence: answers 4.3 rows 4 and 8 (a non-ASCII credential is answered 500; INTERPRETATION from the source and a
+     probe, not observed; no 500 recorded in C-002's windows, U-09).
+     Claude's reading for the review: a summary statement that holds for every recorded request; an erratum would add
+     only the exception. The wording options (no change, or add the exception) are in
+     C-003_ERRATUM_DECISION_TABLE_22-OCT-2026.txt.
+Checked and not proposed: A-009 line 251 and A-010 line 113 ("false in production"; "Production ran with require_hmac
+false"): supported by the records and the inference of answers 10.3, though no record quotes the installed file
+(U-01); C-001 line 263 (the source-address verdict left to C-003): answered in answers R-12 (the record gives no
+verdict), no change needed; B-007 line 85's dated evidence and the 17-Jul outage statements of A-011, B-001 and B-007:
+agree with the records (answers R-14).
+
+
+==============================================================================
+6. PROCESS POINTS FOR THE REVIEW
+==============================================================================
+P-1 The records were read by line range through the new stage-3 mask, each range printed only after the residual
+    counter reported zero (companion section 4, D-1). The 2026-10-21 lesson says host records are read "only through
+    narrow pattern matches, never by line range" until the filter masks hexadecimal fragments; the stage-3 mask does
+    mask them, but it let three other kinds of value through (E-1).
+    Status: DECIDED by Rama (22-Oct, about 12:50 IST; C-003_DECISION_REQUIRED_MASKING_METHOD_22-OCT-2026.txt,
+    option 1): from then on host records are read value-blind only (counts, or the presence of probe words); the
+    line-range method is not approved for further reading.
+P-2 In the records agent's working output (not in any file) the stage-3 mask left unmasked a vendor API host name in
+    a quoted log line, a short SSH public-key fragment with its comment, and the alerting bot's account username
+    (companion section 4, E-1). Lesson candidate, for Rama to decide (not applied; no design-log entry made):
+    whether the stage-3 mask and the residual counter should also cover these classes before any further
+    host-record read.
+    Status: DECIDED by Rama (22-Oct, about 12:50 IST; the decision note, Q-B and Q-C): the lesson row is approved as
+    written, to be added to the design log with the C-003 push; the records agent's session transcript, which held
+    its working output, was deleted unopened at 12:52 IST.
+P-3 The session's context was compacted at about 10:12 IST; reads before that were not logged one by one, so every
+    claim in the answers file rests on a read under a read log: the code read log from 10:17 IST, and Claude's final
+    reads and re-reads, in a log of their own, of the cited ranges the first log did not cover (companion sections 4,
+    D-2, and 6).
+P-4 Rama asked for the updated README.md with this delivery, to keep until C-003 is pushed (22-Oct, 09:50 IST); it is
+    not a research output and changes no finding.
+
+
+==============================================================================
+7. NOT OPEN (for completeness)
+==============================================================================
+- The branch order and predicates of _authenticate, both routes' stage order, the start-up presence check and the
+  sanitiser are source-verified at the pin (answers sections 2 to 8).
+- That a valid token cannot rescue a wrong signature: source-verified (answers 4.2) and pinned by tests (inspected,
+  not run).
+- C-002's forwarded items: NC-5 (CE-1, CE-2) and the token-in-logs lead (L-06) are taken up here; K-5, K-6 and K-8
+  stay as C-002 records them.
+- No V2 question is opened: V2's own authentication design is not this step's subject (DR-001, Q12 (d)); VP-50,
+  VP-55 and VP-56 are named as tracking destinations only.
+
+
+END - C-003 RESEARCH NOTES AND OPEN QUESTIONS
