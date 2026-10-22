@@ -1,6 +1,6 @@
 # B-009 INTRADAY OPERATION: LEGACY MANUAL
 
-Status: FROZEN 2026-10-20 (revision 2, DR-046). ChatGPT's value-added review and its revision-2 corrections (both 20-Oct-2026) were applied (sections 19 and 20); Rama approved the final files on 20-Oct-2026. No erratum to a frozen manual. Erratum E-1 to this manual (sections 11, 14 and 15: the 15:17 routine is not given the entry gate, so it does not clear it) added 2026-10-20 during B-010, accepted in ChatGPT's review response of 20-Oct-2026, approved by Rama on 20-Oct-2026 and recorded in DR-047 (2026-10-20) together with the B-010 freeze.
+Status: FROZEN 2026-10-20 (revision 2, DR-046). ChatGPT's value-added review and its revision-2 corrections (both 20-Oct-2026) were applied (sections 19 and 20); Rama approved the final files on 20-Oct-2026. No erratum to a frozen manual. Erratum E-1 to this manual (sections 11, 14 and 15: the 15:17 routine is not given the entry gate, so it does not clear it) added 2026-10-20 during B-010, accepted in ChatGPT's review response of 20-Oct-2026, approved by Rama on 20-Oct-2026 and recorded in DR-047 (2026-10-20) together with the B-010 freeze. Erratum E-2 to this manual (section 5: the request audit's coverage) added 2026-10-21 during C-002, accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026 and recorded in DR-055 (2026-10-22) together with the C-002 freeze.
 Date: 2026-10-20 (revision 2; revisions 0 and 1 the same day)
 Scope: legacy facts only. A legacy behaviour reaches V2 only through a row in V2_DECISION_REGISTER.md (DR-016; W-1). No VM, service, host or broker operation and no change to legacy source; this manual records a retired system, not an operating procedure.
 Working copy of: docs/inputs/manuals/B-009_INTRADAY_OPERATION_MANUAL_DRAFT_20-OCT-2026.md (ChatGPT's draft). With it come ChatGPT's reconciliation of 20-Oct, the answer sheet and prompt of 20-Oct, and Claude's repository answers of 20-Oct; all are stored unchanged at the freeze. The draft carried its source claims as "pending recheck"; this manual rechecked them at the baseline (B-009_review_notes.md section 3) and corrects two of Claude's own answer lines (B-009_reconciliation_addendum.md item 1).
@@ -133,7 +133,7 @@ sp-dispatcher -> pool of 5 workers   signals/signal_processor.py 377-399
 
 - On any REJECTED_* the reservation, if any, is released (1193-1217). The in-flight claim is released on every path, except re-queue and an allocator hand-off (1248-1271). The allocator is in shadow mode, so no hand-off happens.
 - An EXPIRED reject at the processor sends a warning at most once a minute (1221-1231).
-- The webhook's EXPIRED, IN_PROCESS and DUPLICATE answers are not signals rows. The webhook audit row is written for every request (B-008 section 3).
+- The webhook's EXPIRED, IN_PROCESS and DUPLICATE answers are not signals rows. ~~The webhook audit row is written for every request (B-008 section 3).~~ (superseded by erratum E-2) The webhook audit row is written for every request that reaches the handler and whose body is read, unless the insert fails (B-008 section 3; C-002_manual.md section 10.3).
 - The signal age limit is 600 s. The processor's constructor default of 60 (signal_processor.py 175) is overridden by main.py 3613-3614 with config 127; the webhook reads the same value (webhook_receiver.py 679).
   - The order monitor's 60 s is a different control: the unfilled-entry timeout (section 7).
 - No path parks a signal for a later window. The retest diverter is configured off (B-006 TH11).
@@ -398,3 +398,9 @@ ChatGPT's revision-2 corrections of 20-Oct-2026 (B-009_REVISION_2_REQUIRED_CORRE
 - Reason: the B-009 statement read EodSquareoff's own code, not its construction in main.py. This is the same class of error as the B-005 lesson on optional dependencies (V2_DESIGN_LOG, 2026-10-16).
 - Impact: with nothing clearing the table at the baseline, any gate_state rows left by an earlier version would persist across days; whether any existed is UNKNOWN. No V2 decision depends on the old wording.
 
+## Erratum (2026-10-21, found during C-002)
+- E-2 (section 5, the bullet on the webhook's answers). Status: ACCEPTED. Proposed during C-002 (revision 0, 2026-10-21), accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026, independently of the C-002 freeze and of the other errata, and recorded in DR-055 (2026-10-22) together with the C-002 freeze. The struck text stays visible; the replacement is the text in force. Authoritative passage: C-002_manual.md section 10.3 (NR-1 to NR-4).
+- What changed: the bullet said that the webhook audit row is written for every request. A row is written only for a request that reaches the handler and whose body is read, and only if the insert succeeds; the framework's own answers, a body over 1 MiB and a failed insert leave none (C-002_manual.md section 10.3, NR-1 to NR-4).
+- Passages checked and not changed: the same bullet's first sentence (the webhook's EXPIRED, IN_PROCESS and DUPLICATE answers are not signals rows); section 13 (the records' counts).
+- Reason: as B-008 erratum E-1, which this bullet cites.
+- Impact: wording only; no V2 decision depends on it.

@@ -1,0 +1,107 @@
+CHATGPT VALUE-ADDED REVIEW — C-002 SCANNER → WEBHOOK
+RECONCILIATION INCLUDING CLAUDE SUPPLEMENT AND SCREENSHOTS
+Date: 21-Oct-2026
+Status: Independent documentary review; proposals only. No decision, manual edit, or repository change is authorized.
+
+1. OVERALL ASSESSMENT
+
+The original C-002 research plus Claude’s supplement provides a strong factual basis for drafting C-002 revision 0, subject to the qualifications below. The supplement correctly accepts the main review’s boundaries and adds the new screenshot evidence, Rama’s explanation of the testing scan-name prefix, Chartink’s Alerts Guide, the two-system V2 requirement, and the DR-028 governance ambiguity.
+
+This review covers the two research files, the supplied screenshots as represented in the supplement, and an independent web check of Chartink’s public Alerts Guide. It is not a claim that ChatGPT independently reproduced every source-code search against the pinned repositories.
+
+2. LEGACY FACTS TO PRESERVE
+
+- At the pinned legacy snapshot, the receiver’s routing identity is the exact URL path segment, checked against the configured scanner map. The path key is the bare strategy key in the examples researched.
+- The payload can contain scan_name, scan_url, alert_name and webhook_url. According to the supplied screenshot and the code analysis, the receiver uses scan_name for an optional name cross-check and strips the configured primary account tag before comparing the remaining name with the path key. The path—not the display name—determines which route key is addressed.
+- The repository does not establish the exact Chartink URL configured for production historically. The screenshot is evidence of what one testing alert displayed on 21-Oct-2026 only.
+- The receiver source declares plain HTTP, a query-string token, and a payload field webhook_url that can repeat the token-bearing URL. The stored payload sanitiser blanks webhook_url, but Claude’s research says the original production stored payloads carried it before redaction was introduced. Raw warning logs may also have recorded unsanitised bodies on some error paths.
+- Sender retry/timeout behaviour remains UNKNOWN / NOT ESTABLISHED. Rama answered “Don’t know / never checked”; comments expecting retry do not prove that Chartink retried.
+- Audit coverage must be described narrowly: requests handled by the route and whose body is read are normally audited, subject to audit-insert failure. Framework-level responses and body-read failures can leave no row.
+- The local framework probe is evidence only for the versions tested, not for the versions installed on the historical VM.
+- Screenshot evidence must remain separated from production-era evidence. The displayed testing alert does not establish the production alert’s settings, past configuration, current enabled state, or delivery success.
+
+3. SUPPLEMENT REVIEW: NEW ITEMS
+
+K-13 — Code-comment rationale for account prefix
+Claude’s supplement says Rama typed the account tag himself. That does not support the legacy code comment’s explanation that Chartink forces the account name into alert names. Preserve the code behaviour as a source fact, but classify the explanation as KNOWN DOC DRIFT / unsupported rationale. Do not rewrite a frozen manual directly; handle any correction through the approved erratum/reconciliation process.
+
+U-9 / U-10 — Chartink rename and plan limits
+The supplement does not establish whether existing scan/alert names can be renamed or whether the current subscription limits active alerts. Keep both UNKNOWN and relevant to later V2 planning. Do not infer a plan limit from search failure.
+
+NC-7 / NC-8 — A-008 context
+The September testing scan creation dates are only a lead concerning the date of the account-prefix behaviour. They do not establish when the code behaviour first occurred or when production began using it. If included in the reconciliation, record them as dated context next to the existing UNKNOWN, not as a correction. Add Rama’s explanation beside the old code-comment rationale so readers do not mistake it for a Chartink requirement.
+
+4. CHARTINK PUBLIC GUIDE — INDEPENDENT CHECK
+
+I checked Chartink’s public Alerts Guide:
+https://chartink.com/articles/alerts/alerts-guide/
+
+The current page describes alert names as user-entered/customisable, supports the listed frequency options, explains Continue/Pause and Unique/Duplicate, and says a webhook makes an HTTP POST to the supplied URL. It describes payload-column selection. It does not document webhook retries or timeouts. This supports the supplement’s paraphrase but does not establish historical settings or the exact payload sent by a specific alert. Chartink’s webhook support article gives a sample payload with stocks, trigger_prices, triggered_at, scan_name, scan_url, alert_name and webhook_url.
+
+Sources:
+- Chartink Alerts Guide: https://chartink.com/articles/alerts/alerts-guide/
+- Chartink Webhook Support: https://chartink.com/articles/alerts/webhook-support-for-alerts/
+
+The screenshot’s “Continue”, “Duplicate”, one-minute frequency, and webhook URL are evidence of the displayed testing alert only. Do not generalise these settings to production or every scanner.
+
+5. TWO SYSTEMS / TWO VMs — V2 GOVERNANCE, NOT A LEGACY MANUAL DECISION
+
+Rama clarified that he intends two separate VMs with two separate Zerodha accounts and their own resources, while using one Chartink website/account for signal generation. He proposes adding each Zerodha client code to the front of the strategy name for identification. Record this as RAMA input, not a decided architecture.
+
+The current governance register’s DR-028 is worded as “one Zerodha account trading in production”, with development/pre-live testing left to Q-01 and VP-56. The two-system plan can be read as consistent if DR-028 applies per system, but as a scope expansion if it applies to V2 as a whole. Do not silently choose either reading or edit DR-028. A new register decision must explicitly settle this scope question; Claude recommends placing it in the Section C end-decision paper rather than treating it as a C-002 transport fact. That is a reasonable scheduling recommendation, but Rama owns the decision.
+
+The technical boundary already supported by C-002 is:
+- Each Chartink alert has one configured webhook URL.
+- The URL path selects the legacy receiver’s scanner key.
+- A display-name prefix is not the transport route and cannot by itself route an HTTP request to the other VM.
+- Therefore, for two VMs, each alert must be configured to send to the intended system’s endpoint; the naming prefix can help human identification and may support a validation rule, but it does not replace endpoint isolation.
+- One Chartink account is a shared external dependency. If Chartink or that account is unavailable, both systems may lose their common signal source. Independent VMs do not remove that shared dependency.
+
+V2 questions to carry forward, without deciding them now:
+1. Is DR-028 scoped per system or across the entire V2 deployment?
+2. Are client codes necessary in human-readable scan names, or should a non-sensitive stable system alias be used?
+3. What is the authoritative system identity: endpoint/path namespace, configuration mapping, payload check, or multiple checks?
+4. How should a system reject a scanner name/payload that indicates the other system?
+5. Must each system have separate webhook secrets and other credentials? VP-56 already proposes per-environment separation; per-system isolation must be explicitly considered.
+6. How will external scan names map to immutable internal strategy IDs and YAML/config entries?
+7. How are renames, duplicate names, case, separators and migrations handled?
+8. Can the Chartink subscription support the required number of alerts? This remains U-10.
+9. How will a common Chartink outage be detected and handled across both systems?
+
+Security recommendation for review: embedding the actual broker client code in scan names causes it to appear in the scan_name field and potentially in payloads/logs unless redacted or mapped. This is not a prohibition or a final decision; it is a privacy/security consideration for VP-45. A non-sensitive alias is an option to evaluate with Rama.
+
+6. SCREENSHOT SECURITY / PENDING ACTION
+
+The screenshots contain a token-bearing URL and account/VM identifiers. They must not be copied into manuals, handoff files, or public records. The supplement reports that a legacy webhook URL is still saved in at least one testing alert. Since the old VMs are terminated and their address may have been reassigned, do not test that URL or visit the old endpoint.
+
+C-001’s action to remove or disable old webhook URLs remains pending unless Rama confirms completion. Record it as complete only after his confirmation. Do not reproduce or reuse the token. The screenshots are not included in this review file.
+
+7. ERRATA / RECONCILIATION DISPOSITION
+
+Keep EC-1 through EC-7 and NC-1 through NC-8 as candidates, not applied edits.
+
+- EC-1, EC-4 and EC-5 should be reconciled as one consistent audit-coverage correction across the cited frozen statements and cross-references.
+- EC-2 remains a candidate: the supplement reports DR-053 accepted A-008 E-4 and B-002 E-2, while C-001 section 18 still says “proposed”. Verify against the exact frozen record and correct only through the established process.
+- EC-3 should say the receiver returns 503 intending to permit retry, while whether Chartink retries is unknown.
+- EC-6 should distinguish the webhook app’s own health route from the separate health server.
+- EC-7 should scope the kill-switch statement to the relevant intraday route where the EOD branch occurs earlier.
+- NC-7 and NC-8 are context/narrowing items, not proof that the historical UNKNOWN is resolved.
+- K-13 should be described as unsupported code-comment rationale/doc drift; preserve the actual code behaviour separately.
+
+8. SECURITY AND PROCESS EXCEPTION
+
+The original research inventory’s disclosure of a secret-derived-fragment handling exception must remain recorded, without reproducing any fragments. Preserve the proposed workflow lesson for governance review. Do not circulate raw scratch output that might contain sensitive fragments. The masked-reader unknown-option loop should likewise be recorded as a tooling lesson, not silently fixed during this documentation step.
+
+9. RECOMMENDED NEXT STEP
+
+Prepare C-002 revision 0 as a factual legacy manual, using the pinned legacy source and the two research files. Include source anchors, evidence labels, unknowns and a clear end-to-end flow. Add a separate, clearly labelled V2 input/tracking note for the two-system requirement and DR-028 scope question; do not turn it into a legacy fact or freeze a naming/routing design.
+
+Before declaring the revision complete:
+- reconcile all EC/NC candidates against the exact frozen manuals and register;
+- make no frozen-manual edits without approved errata;
+- retain the screenshot security boundary and pending removal/disable action;
+- confirm the exact V2 decision-register treatment of DR-028 scope;
+- run the agreed identifier/secret/citation checks on the draft;
+- do not store, stage, commit or push until Rama authorizes it.
+
+END OF REVIEW

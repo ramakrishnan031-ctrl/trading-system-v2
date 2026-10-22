@@ -1,6 +1,6 @@
 # B-008 MARKET-OPEN OPERATION: LEGACY MANUAL
 
-Status: FROZEN 2026-10-20 (revision 1, DR-045). ChatGPT's value-added review, final acceptance review and final value-added review (all 20-Oct-2026) were applied (B-008_review_notes.md sections 6 and 8); Rama approved the freeze on 20-Oct-2026. No erratum to a frozen manual.
+Status: FROZEN 2026-10-20 (revision 1, DR-045). ChatGPT's value-added review, final acceptance review and final value-added review (all 20-Oct-2026) were applied (B-008_review_notes.md sections 6 and 8); Rama approved the freeze on 20-Oct-2026. No erratum to a frozen manual. Erratum E-1 to this manual (section 3: the request audit's coverage at ingress) added 2026-10-21 during C-002, accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026 and recorded in DR-055 (2026-10-22) together with the C-002 freeze.
 Date: 2026-10-20 (revision 1)
 Scope: legacy facts only; a legacy behaviour reaches V2 only through a row in V2_DECISION_REGISTER.md (DR-016; W-1). No VM, service, host or broker operation and no change to legacy source; this manual records a retired system, not an operating procedure.
 Working copy of: docs/inputs/manuals/B-008_MARKET_OPEN_MANUAL_DRAFT_19-OCT-2026.md (ChatGPT's draft, with its reconciliation and Rama's answer sheet of 17-Oct; to be stored unchanged at the freeze). The draft left the pre-10:00 signal path, the strategy count and the commit unpinned; this manual traces them at the baseline.
@@ -38,7 +38,7 @@ Scope: the path of an intraday Chartink alert through /webhook/<scanner> at the 
 
 | Stage | Source (970aabf) | Input | Logic / guard | Output | Storage / hand-off | Next |
 |---|---|---|---|---|---|---|
-| Ingress | webhook_receiver.py _handle_webhook, 477 to 534 | HTTP POST from Chartink | shutdown flag, per-IP limit | 503 or 429, or on | audit row (531 to 534) on every request | _process_request |
+| Ingress | webhook_receiver.py _handle_webhook, 477 to 534 | HTTP POST from Chartink | shutdown flag, per-IP limit | 503 or 429, or on | ~~audit row (531 to 534) on every request~~ (superseded by erratum E-1) audit row (531 to 534) on every request whose body is read, unless the insert fails (C-002_manual.md section 10.3) | _process_request |
 | Door checks | _process_request, 536 to 583 | raw body | auth (549), scanner (554), EOD route (564), kill (568), queue (578), global window (583) | 401, 404, 403, 503, or on | No signal row or queue on refusal; the webhook audit row remains (lines 529 to 534) | parsing |
 | Parse and claim | _process_request to _process_signal, 585 onward and 892 to 1060 | JSON body | field checks, in-flight claim (934), duplicate check | signal row | store transaction (964 to 1053), queue.put_nowait (1049) | signal processor |
 | Pipeline | signal_processor.py _process_one, 867 onward | queued signal | kill (906), global window (911), expiry (917), strategy control (959), strategy window (977) | reject with status, or on | signal status in the store | _admit_and_place (1277) |
@@ -90,3 +90,10 @@ Rama identifies 09:15 IST as the NSE regular-session open; the inspected baselin
 
 ## Revision 1 (2026-10-20)
 ChatGPT's value-added review of 20-Oct-2026 ("REVIEW FEEDBACK — NOT A FREEZE"): applied the scope of the 403 finding and its audit row (section 3), the stage table and flow diagram, the evidence matrix (section 1.1), the qualification of 16 files against 15 rows (section 4), the schedule as preparation (section 5), the holiday wording and the frozen status of B-005 to B-007. No finding changed. ChatGPT's final acceptance review of 20-Oct-2026 ("ACCEPT WITH REQUIRED EDITS") narrowed section 8 item 3 and the final statement's evidence class (Rama's 09:15). The reconciliation's corrections are in B-008_reconciliation_addendum.md; the original stays unchanged.
+
+## Erratum (2026-10-21, found during C-002)
+- E-1 (section 3, the stage table's Ingress row). Status: ACCEPTED. Proposed during C-002 (revision 0, 2026-10-21), accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026, independently of the C-002 freeze and of the other errata, and recorded in DR-055 (2026-10-22) together with the C-002 freeze. The struck text stays visible; the replacement is the text in force. Authoritative passage: C-002_manual.md section 10.3 (NR-1 to NR-4).
+- What changed: the row gave the audit row "on every request". A row is written only for a request that reaches the handler and whose body is read, and only if the insert succeeds; the framework's own answers, a body over 1 MiB and a failed insert leave none (C-002_manual.md section 10.3, NR-1 to NR-4).
+- Passages checked and not changed: section 3's finding that an intraday alert before 10:00 is refused with 403 and that "its only trace is the webhook audit row" (the 403 is answered after the body read, so the row is written unless the insert fails); section 1's stage summary; section 9 (retries NOT ESTABLISHED). B-008_reconciliation_addendum.md item 2 stays unchanged as a record; its "the webhook audit row is written for every request (lines 529 to 534)" is superseded by this erratum.
+- Reason: a docstring's "regardless of outcome" is a claim; the body read and the framework's own answers come before or outside the audit write (V2_DESIGN_LOG lesson of 2026-10-07).
+- Impact: wording only; C-001 erratum E-1, A-010 erratum E-4 and B-009 erratum E-2 cite the same passage. No V2 decision depends on the old wording.

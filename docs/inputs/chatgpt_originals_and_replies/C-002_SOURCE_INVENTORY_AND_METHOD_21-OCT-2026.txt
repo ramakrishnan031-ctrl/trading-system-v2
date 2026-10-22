@@ -1,0 +1,332 @@
+C-002 - SCANNER TO WEBHOOK
+SOURCE INVENTORY AND METHOD
+Date of work: 21-Oct-2026 (IST); reading and checks between about 18:50 and 19:45 IST
+Companion file: C-002_CLAUDE_REPOSITORY_ANSWERS_21-OCT-2026.txt (the answers; Q-, K-, U-, R- and N- references point to it)
+Method required by: C-002_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt section 7 item 2, C-002_CLAUDE_RESEARCH_PROMPT_21-OCT-2026.txt, and V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md sections 4, 5 and 8.
+Security: counts, paths, blob IDs and helper hashes only. No credential, token-derived value, identifier, host, address or record content is reproduced.
+
+
+1. BASELINE AND GOVERNANCE VERIFICATION
+  Legacy repository: github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (public), production snapshot only
+    (Rama, 20-Oct-2026, as the handover records, and 21-Oct-2026: "Production snapshot only (Recommended)").
+  Required pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb. HEAD (git rev-parse HEAD) equalled the pin at the start of
+    C-002 and before delivery.
+  Clone: the partial clone made for C-001 (blob-less, non-cone sparse checkout of 1,262 anchored paths; C-001 source
+    inventory sections 1 and 7). C-002 made no new clone, no checkout and no change to the sparse list.
+  Tree listing: the C-001 listing (1,438 entries), used for every path and blob ID. No tree-wide or history command was
+    run on the partial clone.
+  V2 governance repository: github.com/ramakrishnan031-ctrl/trading-system-v2 (public), main at
+    75c1eb7a39d2dd14bf5b5f26433cdf5da459c7c3, commit time 2026-10-21T18:29:31+05:30. Verification basis: git ls-remote
+    (HEAD and refs/heads/main both showed it) and a fetch into a scratch copy at about 18:45 IST; read with git show from
+    origin/main, read only. Files read (blob ID; what was read):
+      docs/governance/V2_DECISION_REGISTER.md                              485f650cdeaaeb3fefa2ad7b890cbfe678a76063  searches (DR-008, DR-053, DR-054)
+      docs/governance/V2_DESIGN_LOG.md                                     9b5a7d7942703a30bb796ff2d86bce7c68bef063  section 1 lessons of 19 to 21-Oct in full; other sections by search
+      docs/governance/V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md         7dba3bd6d236be20c14ee1b63d3ce8828314bb7c  sections 1 to 5 and 7
+      docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt  a9b7bbf2b0020282d9c3cfa844daca6db6e503cf  the Section C list (C-001 to C-011)
+      docs/governance/LEGACY_REFERENCE.md                                  8853dd3e2aa4173b95c1d3cafed1ec9c8f529bc9  full
+      docs/agenda/c-001_chartink-strategy-scanner/C-001_manual.md          8def83c8836c8ff25de69b845b0469740b79f371  sections 1 to 11 in full; the rest by search
+      the other frozen manuals: section 8
+  Master Agenda entry: "C-002  Scanner" and an arrow and "webhook" (the agenda writes an arrow), between C-001 Chartink
+    strategy / scanner and C-003 Authentication. The design log's agenda table has no C-002 row yet.
+  Output names and count against the handover (the sheet's section 7 item 4; the prompt's step 3). The handover's
+    section 2 step 2 prescribes two research files, <ID>_CLAUDE_REPOSITORY_ANSWERS_<DD-MON-YYYY>.txt and
+    <ID>_SOURCE_INVENTORY_AND_METHOD_<DD-MON-YYYY>.txt; the sheet asked for four, dated 22-OCT-2026, a day ahead of the
+    date of work. Reported to Rama before any research (21-Oct, about 18:45 IST). His answers: "21-OCT-2026, today
+    (Recommended)"; "Two files, as the handover (Recommended)"; "Production snapshot only (Recommended)"; and, because
+    the set had no research prompt, "Wait I'll get prompt sheet, don't start". The research prompt (21-Oct) then gave
+    the same date and the same two files; the research began on its arrival (about 18:50 IST). The sheet's
+    open-questions file is section 9 of the answers file, and its change-summary file is section 11 here.
+  Also differing from the handover's step 1: the register and design log were not uploaded this time; they were read
+    from main directly, as the sheet's section 2 asks.
+
+
+2. HELPER SCRIPTS (SHA-256)
+  2.1 Handover helpers (section 8 of the handover), unchanged since C-001 (the same hashes as the C-001 source
+      inventory, section 2.1):
+        mask_read_lib.py    ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8
+        mask_read2.py       bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7
+        sensitive_check.py  e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337
+        scan_ids.py         8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16
+        cite_check.py       15711e5bc6041a74273ed029adfcb48aefc1ee513a076dc0027ba557d9ea5c48
+        check_md.py         763dbacdeef6399dc614bc6bc4e4b0f66b47478b25a4901dac3b9fa9bff8e3bb
+  2.2 C-001 session additions, unchanged:
+        mr.py               b0bd3d87cf51d1cbab4fe09f868f1bacc082e684afe4155515c37788969f4f48  (stage-2 mask of client-ID shapes in any case; every content read in C-002 went through it)
+        count_grep.py       31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b  (per-file match counts from the filter's output)
+        lcid_check.py       a893695e573828683af6e6071bbbca42ce417ab124e6cdd939626e24b8b2d0ea  (value-blind scan of the outputs for lower-case identifier shapes)
+  2.3 New in C-002:
+        run_searches.py     67bbafdde2abcd50c7425730e07d3c382ff84719af4d63ea81061422c60c9f75  (runs searches S01 to S18 in parallel through count_grep.py; counts only)
+        content_checks_c002.py  03112b2db9944c216cc2f82b1fdf336a6556aff2c1671cf2307c2656526bca71  (re-reads each load-bearing cited range through mr.py and requires a pattern; section 10)
+        route_probe.py      a846acf93e86daa7df8d7e48abb8e5024b294f674981ff20bb645dfe75f4203c  (the library probe of section 7; imports Flask only, no legacy code)
+  Every script was run with python3 -I (the probe with the scratch environment's interpreter and -I), options before file names.
+
+
+3. SAFETY-CHECK LOG (sensitive_check.py on the clone; its safe summary only)
+  # | point                               | local objects | never-open paths in tree        | present locally
+  1 | start of C-002 (about 18:50 IST)    | 8,922         | 102 (.*: 1, config: 21, docs: 80) | 0
+  2 | before delivery                     | 8,922         | 102                             | 0
+  The start count was two above C-001's delivery count (8,920): two .gitignore blobs fetched later in the C-001
+  session, after its inventory was written (the 2026-10-19 lesson's class: a git command reading ignore rules in a sparse
+  partial clone); neither is a never-open path, as check 1 shows. C-002 ran no git command on the clone other than
+  rev-parse, count-objects and the check itself.
+
+
+4. PROCESS EXCEPTIONS (DISCLOSED)
+  E-1 Working-output exposure of secret-derived fragments from a host record.
+      What happened: to cite the 05 and 06-Jul firewall and token-rotation entries, three long change-log lines of
+      docs/SYSTEM_MAP.md (lines 1364 to 1366; a host record, which handover section 5 rule 6 says to read by narrow
+      searches only) were read by range through mr.py. The filter masked the addresses, but the output also showed, in
+      Claude's working output only, shortened forms (a few leading and trailing hexadecimal characters) of two SHA-256
+      hashes of the rotated webhook secret and a short prefix of an older, retired secret.
+      What was and was not done: nothing from them was written to any file, message or report, and they are not
+      repeated here. They concern the terminated legacy system's secrets, and the legacy token is already treated as
+      exposed (DR-053). After this, host records were read by narrow patterns only.
+      Lesson candidate (for the design log; not applied here): never read a host record's long line by range; read
+      matching lines by a narrow pattern, and add a masking stage for hexadecimal fragments next to "sha256", "secret"
+      or "token".
+  E-2 Truncated first search run (no exposure). A first combined run of nine searches piped each per-file list through
+      tail -40, so lists of more than 40 files were cut (the totals were right). All searches were re-run without
+      truncation and saved to files (section 5); only the saved results are used.
+  Not exceptions: two mask_read2.py calls stopped before printing anything because a regex placed a global flag after
+  its start; mask_read2.py reads docs/SYSTEM_MAP.md and DEPLOYMENT.md internally on every call to build its host-token
+  mask, by design, and prints nothing from them.
+
+
+5. INVENTORY SEARCHES (count-only, through the filter; each per-file list saved; scopes as in the answers, 0.3)
+  #   | pattern (Python regex)                                                         | scope              | result
+  S01 | webhook_audit                                                                  | S-ALL              | 60 files, 177 lines
+  S02 | /webhook/                                                                      | S-ALL              | 35 files, 135 lines
+  S03 | remote_addr|X-Forwarded|trusted_proxy|ProxyFix                                 | S-ALL              | 10 files, 28 lines (the receiver's two remote_addr reads and one schema comment; otherwise the dashboard backend, its test, records and the deployment notes)
+  S04 | (?i)nginx|ngrok|reverse.proxy                                                  | S-ALL              | 23 files, 55 lines (2 code comments in the receiver, 1 config comment, 1 test, records)
+  S05 | (?i)waitress                                                                   | S-ALL              | 32 files, 65 lines
+  S06 | (?i)iptables|netfilter|ufw|security.list|security.group                        | S-ALL              | 22 files, 60 lines
+  S07 | (?i)refused                                                                    | S-ALL              | 132 files, 388 lines (mostly kill-switch and order refusals; the transport ones are read in section 6)
+  S08 | (?i)chartink.{0,40}retr|retr.{0,40}chartink|retries on 503                     | S-ALL              | 11 files, 12 lines
+  S09 | (?i)webhook_url                                                                | S-ALL              | 8 files, 40 lines
+  S10 | (?i)chartink\.com                                                              | S-CODE             | 10 files, 53 lines
+  S11 | (?i)selenium|playwright|webdriver|puppeteer                                    | S-ALL              | 1 file (a GUI layout record), 3 lines
+  S12 | (?i)chartink.{0,60}alert|alert.{0,60}chartink                                  | S-ALL              | 16 files, 22 lines
+  S13 | bind_port|bind_host|:5000\b|port 5000|5000/tcp|port=5000                       | S-ALL              | 78 files, 166 lines
+  S14 | (?i)signals_received|/metrics                                                  | S-ALL              | 39 files, 114 lines (the health server and pre-flight; B-007's)
+  S15 | (?i)X-Webhook-Signature|X-Queue-Depth|X-Queue-Warning                          | S-ALL              | 18 files, 57 lines
+  S16 | (?i)content.type|get_json|is_json|mimetype                                     | S-RT               | 16 files, 35 lines (the receiver: one get_json on its own response)
+  S17 | pb01_capture                                                                   | S-ALL              | 15 files, 29 lines
+  S18 | (?i)requests\.post|urlopen\(|http\.client|httpx|aiohttp                         | S-RT               | 9 files, 10 lines
+  S19 | (?i)certbot|letsencrypt|ssl_context|certfile|keyfile|wrap_socket|https_port|listen 443|\.pem\b|\.crt\b | S-CODE | 0 files
+  S20 | (?i)waitress|socket|\bserve\(|requests\.(post|get)|urlopen|http\.client|localhost:5000|app\.run\( | the 9 webhook test files of the answers' section 7 | 0 files
+  S21 | test_client                                                                    | the same 9 files   | 7 files, 113 lines
+  S22 | \b413\b|MAX_CONTENT_LENGTH|RequestEntityTooLarge|1 \* 1024 \* 1024|1024 \* 1024    | the 486 test files of S-ALL | 6 files, 13 lines (one asserts the limit's value; five are unrelated size constants)
+  S23 | (?i)allowlist|whitelist|/32\b|--dport 5000|dport 5000|-s [0-9]                 | the 185 files of S-ALL under deploy/, scripts/, config/, utils/, core/ and signals/ | 9 files, 23 lines; none is a source-address rule for port 5000 (the installer's two lines are the any-source rule)
+  S24 | (?i)S-1A|/32 |allowlist.{0,40}(chartink|5000|webhook)|(chartink|5000|webhook).{0,40}allowlist | S-ALL | 13 files, 17 lines (records only)
+  S25 | (?i)ngrok                                                                      | 11 files: the system configuration and 10 records | 4 files (the bind comment, two runbooks, the 01-Jun audit)
+  Searches of C-001 reused by citation: its search 10 (no reference to scripts/test_webhook.py), 15 (no reload of a
+  scanner file) and 21 (the cron file and registry).
+  Per-file greps for definitions, routes, test names, request attributes and wiring terms: as listed in section 6.
+
+
+6. FILES READ (content printed through mr.py at 970aabf)
+  Columns: path | blob ID (from the saved tree listing) | line count | what was read | why (answers reference).
+  "grep" = matching lines only; "range a-b" = mask_read2.py --range a:b through mr.py; "full" = every line.
+  Count-only searches (section 5) touched their whole scope but printed no content and are not repeated here.
+  signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1207 | full (1 to 1207, in eight ranges); greps | Q7 to Q18; the route, branches, audit
+  main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4293 | greps; ranges 215-262, 1605-1730, 3400-3420, 3960-4060 | Q2.3, Q7, Q15 (construction, server, self-check, shutdown)
+  config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 753 | greps; ranges 96-124, 326-346 | Q1.3, Q1.4, Q13, Q15 (webhook, queue, hours)
+  core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 2516 | greps; ranges 190-200, 615-645 | Q1.3, Q1.4 (schemas)
+  config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | 84 | ranges 1-16, 74-85 | Q1.1 (key comments)
+  requirements.txt | 3b26e2f5ebe5616edd52720d07d7b9aa8483703c | 15 | full (1 to 15) | 0.5, Q7.6 (pins)
+  core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 1654 | grep; range 573-604 | Q18.1 (webhook_audit)
+  core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 3355 | grep (webhook_audit; no match) | Q18 (writers)
+  utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 1692 | grep; range 783-832 | Q7.5, Q15 F3 (self-check)
+  core/logger.py | 8b79114a49b46b8dc28881aca60e53646cc9cba9 | 472 | grep; range 354-430 | Q18.4 (log routing)
+  core/market_windows.py | 25625e8cd109c935d014ad357cd6726c75737157 | 333 | grep (is_entry_allowed) | Q12 row 10
+  deploy/install_vm_services.sh | 16dd4f024ec5a7be1342441674c8baa6acc45028 | 65 | grep (firewall) | Q13.3
+  deploy/cron/trading-system.cron | f8399b40bfa71e35e27746e46cd463171615477a | 151 | grep (sender tools; no match) | Q5.2, N6
+  config/cron_registry.yaml | 42ff638145ba8c05eba907a33d5b391ae3fc6910 | 767 | grep (sender tools; no match) | Q5.2, N6
+  deploy/systemd/trading-system.service | 3d97c92caf363da0f98d1bec693e3c21631eeb5c | 49 | grep (sender tools; no match) | Q5.2, N6
+  scripts/test_webhook.py | 048ac3c0f5d9aadd430ee31d6d747df468af6205 | 13 | full (1 to 13) | Q5.2
+  scripts/load_test_signals.py | 47d74e172b3539120a971004b73d4ad49e14fcbc | 332 | grep | Q5.2, Q16.3
+  core/exceptions.py | 1eeac584208493425bef34c4d80b1f78413342e5 | 422 | grep (Chartink retries) | Q16.1
+  deploy/resume.sh | 7954c2d85e5f8bb5bd5c764a80f849a2017b2175 | 41 | grep (allowlist search) | Q13.3 (no webhook rule)
+  scripts/security_monitor.py | 42ebed04e2d678edb3fd2cbd8eaddb9d4fd9f23d | 1403 | grep (allowlist search) | Q13.3 (no webhook rule)
+  scripts/preflight/autofix.py | 3401c0b8aad53393ca12821c6583913628e5fa4b | 153 | grep (allowlist search) | Q13.3 (no webhook rule)
+  tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2042 | test list; ranges 1-147, 1007-1075, 1700-1780 | Q2.5, section 7
+  tests/unit/test_c2_webhook_lockdown.py | a136dfbb56a9300e02ad069c59808308e2a9689e | 91 | test list | section 7
+  tests/unit/test_s4_webhook_degrade.py | 59f31e2e2e226bf3d7d2ddae6a34d99c1608256d | 115 | test list | section 7
+  tests/unit/test_fix134_backpressure.py | 463f7af7922f5e5f30543c0d0a94d508b3eafb10 | 402 | test list | section 7
+  tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | 129 | test list | section 7
+  tests/unit/test_c6_auth_collapse.py | b5ac355e9af35cb48afcb83fbe6124de3bf6603d | 612 | test list | section 7, Q18.3
+  tests/unit/test_e4_event_loop_safety.py | db8cb8b39f028402ad330adc21b707e0d62f2fbe | 736 | test list | section 7
+  tests/integration/test_hardening_scenarios.py | d87da7ab9ed64792eed017c4d17fa23888b0c85e | 328 | test list | section 7, Q16.4
+  tests/integration/test_end_to_end_smoke.py | 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 799 | test list | section 7
+  tests/unit/test_phase17_batch2.py | 1ff19680f0c11af39a847eb7a046b6dfecba65d8 | 80 | grep (body limit) | section 7
+  ops_dashboard/tests/test_g2b2_screens.py | abaae2fac796192f03d6f3bf41b5c6683d7eb57c | 345 | grep (S22 hit; unrelated sizes) | section 7
+  tests/unit/test_capture_metrics_baseline.py | bd4db773a1281d1a396ce4c882c1759aeedf38d6 | 365 | grep (S22 hit; unrelated sizes) | section 7
+  tests/unit/test_control_tower_phase1b.py | 8d3856d76dbe6867ab6fe13330472df0379b0968 | 216 | grep (S22 hit; unrelated sizes) | section 7
+  tests/crash_test/resource_monitor.py | b9cc8c4935b3e80aa30d6e4bbcaf8d5517e980f0 | 399 | grep (S22 hit; unrelated sizes) | section 7
+  tests/crash_test/state_inspector.py | b018481f3333c61838b59060f7e582e1b432f443 | 245 | grep (S22 hit; unrelated sizes) | section 7
+  docs/audit/refused_posts_403_investigation_23jul2026.md | 6c96c81a7f782fc4693a34200e3a863ad8d6d442 | 244 | grep; ranges 1-36, 37-130, 130-245 | Q4.2, Q15, Q20 R5
+  docs/audit/c2_chartink_ip_investigation_03jul2026.md | 86fa405ff6ef0679c8fac62b0948d74f84b93aa9 | 55 | narrow grep (headings, proxy, counts) | Q10.4, Q20 R1 (host-bearing)
+  docs/audit/integrity_audit_2026.md | 25a738f2a9a77ed37374dce367e5fd8e848efd8a | 4593 | greps; ranges 36-50, 186-230, 300-316, 386-398, 4350-4356 | Q4.2, Q16, Q18, Q20 R7
+  docs/audit/signal_mortality_census_19jul2026.md | 9f9db37223c3cdfc256be29320075d4d3e7ed228 | 576 | grep; ranges 1-12, 36-56, 186-200 | Q17.1, Q20 R4
+  docs/audit/service_window_configurable_25jul2026.md | 41c2843b7526a5e3380c01a29030336214da2917 | 343 | grep | Q20 R6 context
+  docs/audit/service_window_extension_2026-07-24.md | 189c4f8726419232ecc64a14b94d5c3ed56c0160 | 59 | grep; range 52-60 | Q15 F1, Q20 R6
+  docs/audit/eod_capture_safety_2026-07-24.md | db5c44612170fd9732049a2f40667b477eeeb2bc | 48 | grep | context (EOD return codes)
+  docs/audit/day_reconstruction_15jul2026.md | 931fb0a9f786dfaf9edcaa2bf6a6d72ec04907ce | 157 | grep | Q20 R3
+  docs/audit/followup_investigation_15jul2026.md | 01008d209aff7a5c65c34207e0b3e84a06ba65c9 | 215 | grep; ranges 1-4, 172-196 | Q2.4, Q15 F1
+  docs/audit/audit_05jul2026.md | a6074fe7fa054310f4fe278c26b753f52c5eb7bb | 820 | grep | Q13, Q16 context
+  docs/audit/system_security_audit_02jul2026.md | bb702ab267706da71fe47a1c8466ac9aba61dfa1 | 210 | grep | Q13.2
+  docs/SYSTEM_ASSUMPTIONS.md | 80a105f7bbf4bdf3b0f9026bb179b4d165976dca | 34 | grep | Q16.1
+  docs/audit/p3s14_investigation_17jul2026.md | 960d7c5f6661809d5464977e8fb257137d1a7ea8 | 260 | grep | Q16.1
+  docs/audit/p3s14_done_17jul2026.md | dd368a441d7173ad1dc98f5c107d281b181638a1 | 274 | grep | Q16.1
+  docs/audit/silent_failure_gaps_2026-07-25.md | d4911f93211b90776147e45d0003815ac30bc7e3 | 221 | grep | Q16.1
+  docs/crash_test_info_04jun2026.md | 5ddea962749830b9f38dce42bdc3a195d4d580f4 | 1005 | grep | Q10.4, Q16.1
+  docs/audit/effect_verification_contract_01aug2026.md | 24157f5b2713c7a1d511152bf7bd555b21cdb978 | 323 | grep | context (August arrivals: no counts)
+  docs/audit/effect_telemetry_phaseB_build_01aug2026.md | c7872edcc60bdb8846c9694d0309fd822511e4fd | 166 | grep | context (census day count)
+  docs/audit/d4_matcher_measurement_04aug2026.md | 49f175c93ad9b2549d09af8726385eab081b8ef2 | 206 | grep | Q5.3
+  docs/audit/r12_allowlist_enumeration_04aug2026.md | 5ffa86be2fe1d1d239bd2b98e199a4d1a65ea1ec | 143 | grep; ranges 1-12, 70-96 | Q5.3
+  docs/audit/STOP_PROCEDURE_05-Aug-2026.md | dc6e0825c753d438eaf624842a32be3b8e61e2e9 | 350 | grep | context (August arrivals: no counts)
+  docs/audit/HANDOFF_05-Aug-EVENING.md | a362d6e6751d4cf956be3cd06f7ae513a6f48d29 | 1343 | grep | context (August arrivals: no counts)
+  docs/incident/2026-09-03_naked_position_ANANTRAJ.md | 1cf75adc49bbd8d79365b12fc0ecb293645683dd | 450 | grep | context (September: no arrival counts)
+  docs/audit/kill_drill_03aug2026.md | bae74ae7a7e0635b71eef4e4f1ea45ac9991c921 | 375 | grep | context (no webhook lines)
+  docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md | ade01ef8071729bf92c0a1d3339da1629595c171 | 271 | grep; range 1-8 | Q10.4
+  docs/audit/audit_remediation_status_02jul2026.md | 7a2ebb92ac53c173e8275c1f9e73c65f29dbe91f | 70 | grep | context (C-2 status)
+  docs/audit/pending_reconciliation_14jul2026.md | 2d7298b6368947be6be2fddf1d9c3412d4829f78 | 244 | grep | context (C-2 Option B open)
+  docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md | 6454c632ba7120f2bb6fd1f26f9deea33fba5bc1 | 364 | grep | context (fix direction)
+  docs/ops/offmarket_deploy_plan_03jul2026.md | e7cb2fc9c33b0e6b9447715e43e4bfb31f9e9a35 | 313 | grep | context (proxy plan)
+  docs/03_daily_operations_runbook.md | 135aa048bcc303829737b8d5d66560d9ad2017e4 | 199 | grep; ranges 1-8, 125-134 | Q10.5, K-9
+  docs/05_incident_response.md | a2928767318e55421ffebd1539f2c15e0cfc538e | 281 | grep; range 1-8 | Q10.5
+  docs/architectural_audit_2026-06-01.md | 6a3a4b017d320445426a027cd5deaac89602286a | 489 | grep; range 1-8 | Q10.5 context
+  docs/chatgpt_project_clarification.md | b6d392880887720a9f8524aa30dded9ebceb80e9 | 549 | grep | context (hardening list)
+  docs/SYSTEM_MAP.md | c251f7c7a29383d817e75673c93ba36c4f5a9285 | 2065 | narrow greps; lines 1364 to 1366 read by range (exception E-1) | Q2.6, Q4.3, Q13.3, Q20 R2 (host-bearing)
+  PATHS.md | e6a1ba7c1cb65b199f0d0460e846c6fbc75b9de8 | 655 | grep; range 258-266 | Q13.3
+  UNPUSHED_LEDGER.md | 376e0ab1c61f0d16ab53330f0a4de8465deee021 | 3590 | grep | context (no webhook fact)
+  docs/audit/pre_receive_hook_investigation_20jul2026.md | 5931dbb8f5c8411621799cccc388caf858b189c1 | 240 | grep | context
+  docs/audit/ledger11_secrets_surface_measurement_04aug2026.md | 0cfb24a6947a3f2e83364f314ab296fd49172f1b | 157 | grep | context (Q5.3 corroboration)
+  docs/audit/ledger6_eod_verify_measurement_03aug2026.md | 4cc491179a5aec39d10c7742fb1fd8c0a820af99 | 139 | grep | context (no webhook fact)
+  docs/MASTER_PENDING_01-Aug-2026.md | 9ec017e3fd7c00ce81eb345562c961d9ad5bc6b9 | 2476 | grep | context (D4)
+
+
+7. LIBRARY PROBE AND EXTERNAL SOURCES (CURRENT EXTERNAL FACT, 2026-10-21)
+  7.1 Environment: a scratch virtual environment outside every repository; pip install flask==3.1.3 and waitress==3.0.2
+      from PyPI. Resolved: Flask 3.1.3, Werkzeug 3.1.9, Jinja2 3.1.6, itsdangerous 2.2.0, click 8.5.0, blinker 1.9.0,
+      MarkupSafe 3.0.4, waitress 3.0.2; Python 3.13.16. Werkzeug is not pinned in the legacy requirements.txt, so the
+      probe's Werkzeug is today's resolution, not the VM's (answers U-6).
+  7.2 waitress 3.0.2 source, waitress/adjustments.py (SHA-256 f1ed00a8217a79f5d3ededad82b2cc8b426079d3167839714760ec9a3a8aea12):
+      defaults read: threads 4 (main passes 8); connection_limit 100 ("this doesn't control the maximum number of TCP
+      connections that can be waiting for processing; the backlog argument controls that"); backlog 1024;
+      channel_timeout 120 ("Maximum seconds to leave an inactive connection open"); cleanup_interval 30;
+      max_request_header_size 262144; max_request_body_size 1073741824; trusted_proxy None; trusted_proxy_headers
+      empty; clear_untrusted_proxy_headers True; url_scheme "http"; expose_tracebacks False; ident "waitress". Host and
+      port defaults are overridden by main.
+  7.3 route_probe.py: a Flask app with GET /health, POST /webhook/<scanner_name>, a 500 handler and
+      MAX_CONTENT_LENGTH = 1 MiB, the view recording whether it was entered and whether request.get_data() returned;
+      driven through Flask's test client (no socket, no network). Results:
+        POST /webhook/<key> with a JSON body                    200, view entered, body read
+        POST /webhook/<key>?token=<value>                       200, the token visible in request.args
+        POST with content type "json", or with none              200, the same bytes read
+        POST /webhook/<key>/ (trailing slash)                    404 (HTML), view not entered
+        POST /webhook//<key> (doubled slash)                     308 to /webhook/<key>, view not entered
+        POST /webhook/ and POST /webhook/a/b                     404, view not entered
+        POST /Webhook/<key> and a key with an encoded "/"        404, view not entered
+        GET /webhook/<key>                                       405, Allow: POST, OPTIONS
+        OPTIONS /webhook/<key>                                   200 (automatic)
+        POST with a body of 1 MiB plus one byte                  413 (HTML); view entered, get_data() raised
+        POST with a body of exactly 1 MiB                        200, body read
+        HEAD /health                                             200 (automatic for a GET route)
+  7.4 Chartink's public article "Webhook support for Alerts" (https://chartink.com/articles/alerts/webhook-support-for-alerts),
+      found by one web search and read once through the session's fetch tool, which returns a model's summary with
+      quotations, not the raw page; the article is dated 16-Mar-2020 and shows an update of 02-Jun-2021. The fetch
+      asked for the method, body fields, content type, timeouts, retries, response codes, limits, authentication,
+      HTTP or HTTPS, and date. No account, alert, Chartink screen or legacy URL was opened, and no request was sent to
+      any webhook. A second web search (waitress arguments) was run; its results were not used, because the pinned
+      library source was read instead (7.2).
+
+
+8. FROZEN V2 MANUALS SEARCHED (answers Q25)
+  8.1 Method. One separate agent (the only subagent of this step; DR-002 allows two) searched, read only, the 20
+      frozen manuals and the two section-end decision papers in a scratch copy of the V2 repository whose tree equals
+      main 75c1eb7's (tree 1d7928bbb8e3800a261ed9d408263a5fefce92fd). Its rules: nothing under docs/inputs/, no access
+      to the legacy clone, no network, no write, no identifier in its report. Output: a 583-line report in the scratch
+      folder (316 statements by manual and category, the errata that touch the subjects, 16 apparent
+      inconsistencies, the unknowns left for later topics, and the sub-points no manual records); the agent reports
+      that its quotes were checked by script against the manual lines. Claude then re-read, in the manuals
+      themselves, every line that the answers cite in Q7.7 and Q25 (8.3).
+  8.2 The manuals and papers (blob IDs from git ls-tree of main):
+        A-005_manual.md  a288dbed53c4d2de7915dfc3f9340b8b67290656    B-003_manual.md  0ce56be550506bb7101d7c4c91513644b7a7147b
+        A-006_manual.md  a481c4dae0c104eee4531c3dfea7734bd2bd738f    B-004_manual.md  85a681176013e1e705930aceac44897c26561f30
+        A-007_manual.md  68d25a466d5bd573c94aca1ad371c5278cfa521a    B-005_manual.md  9a673df0fbed3d719b3a931d9c527a4b5dfce88c
+        A-008_manual.md  0cbf89691823f4f9bcbf64e068a5c9772ceb765d    B-006_manual.md  41bcbaf99ad424f1744e5ce2e952e454f76db156
+        A-009_manual.md  1cfd385d3a28f02a103510d834ad8c008db5958b    B-007_manual.md  9d479692742450310307bbdda1875099a7f5781a
+        A-010_manual.md  882ffda3f189c1c8aee1b1739b2c377c92f205ac    B-008_manual.md  ed53faa4342deb47e5e57d448db1e969bb533e3c
+        A-011_manual.md  f0dd827c8500ef8f64b2835fac23d1551cc24113    B-009_manual.md  4ef64d34578cac3ef51397bf152012090b8d3771
+        B-001_manual.md  1c26665b9b2e3b4b823cc6a5c596febc283d17c5    B-010_manual.md  c8dd8f2250df408327eb78da853ef7594fa93461
+        B-002_manual.md  32c7061d968b9638e5085804f09697248465dcd7    B-011_manual.md  50c664234788a87c8d4c8cbae8ca2fed28ca9f37
+        C-001_manual.md  8def83c8836c8ff25de69b845b0469740b79f371    B-012_manual.md  4170a73ae51f3d806abbb58fc1ce6c70a1395a86
+        B-011_reconciliation_addendum.md     c1d82bd79a731084b324d77369d6fc3c6172f44b
+        SECTION-A_END_decision_paper.md      05e0bce251427d5cc59e16e1401d7c9cdc7c8498
+        SECTION-B_END_decision_paper.md      a63aaad97d4ee5b182b4204060c3c0fe414de0c3
+  8.3 Lines re-read by Claude in the manuals: C-001 sections 1 to 11 and section 18; A-011 section 5 (the boot table,
+      steps 13 to 17) and sections 10 to 12 (the passages of EC-3, EC-4 and EC-7); A-010 section 10 (the two
+      bullets of EC-5 and NC-3); B-001 section 3 (the listeners row) and the rows of EC-7 and section 14 item 10;
+      B-005 section 3 row S18; B-006 section 4 (the start order and the 26-Aug timing); B-009 section 13 (the census
+      funnel); B-011 section 6 (the shutdown rows) and its reconciliation addendum item 4; B-007 Terms. The answers
+      give these as "A-011 line N" or by section; cite_check.py exempts frozen-manual line references, so they were
+      checked by this reading, not by the script.
+
+
+9. EXCLUSIONS AND RULES FOLLOWED
+  - Only the production snapshot at the pin was used for legacy facts; the testing snapshot and the records repository
+    were not used.
+  - No live service, VM, broker API, database, webhook, Chartink screen or external account was contacted. The network
+    operations were: git ls-remote and git fetch of the public V2 repository; pip install from PyPI into the scratch
+    environment; two web searches; one fetch of Chartink's public article. The exposed legacy webhook URL was not
+    visited and no request was sent to any webhook.
+  - No repository test or script was run; the probe is a minimal app written for this step and imports no legacy code.
+  - Every legacy content read went through mr.py (mask_read2.py and the stage-2 mask), options before file names;
+    derived checks took their input from the filter's output; only line counts were taken directly from files.
+  - Host-bearing records (the system map, the paths record, the C2 investigation, the security audits) were read by
+    narrow patterns, except the range read disclosed as E-1.
+  - Python ran in isolated mode (-I) for every helper and every script that handled legacy-derived data.
+  - No session link is present in either output (section 11).
+
+
+10. CITATION AND CONTENT CHECKS
+  10.1 cite_check.py (the saved tree listing at 970aabf; the checked-out files):
+       Answers file: 213 citations extracted across 43 legacy files; out of range 0; cited files not checked out 0; path
+         tokens not resolved 0; unattributed "line(s)" references 0.
+       This file: 3 citations across 2 legacy files (the full reads of section 6); out of range 0; cited files not
+         checked out 0; unattributed 0. The path tokens it reports as not resolved are the helper scripts of section 2,
+         the V2 governance files and manuals of sections 1 and 8, and the waitress source file of section 7, none of them
+         a legacy path.
+  10.2 content_checks_c002.py: 140 cited ranges from the answers file were re-read through mr.py, each against an expected
+       pattern (the class, function, key, value or phrase the answer cites): 140 passed, 0 failed. One pattern had
+       first been written across a line break and failed; the cited text was right, and the pattern was corrected.
+  10.3 Limits: cite_check.py proves that a cited line exists in the cited file; its path pattern does not cover .txt
+       files, so the requirements.txt pins were checked by hand against the filter's output of that file (the flask and
+       waitress pins). The content check covers the load-bearing citations, not every one.
+
+
+11. CHANGE SUMMARY AND VALUE-BLIND SCANS (the sheet's section 7 item 4)
+  11.1 Created: the two files of this package, in Claude's workspace output folder only. Scratch files (governance
+       copies, scope lists, saved search results, the library probe and its environment, the check scripts) are in the
+       session's scratch folder, outside every repository.
+  11.2 Not modified, staged, committed or pushed: no file of the legacy clone (nothing was written into it; no checkout
+       or sparse change); no file of the V2 repository (the scratch copy was fetched and read; nothing was committed or
+       pushed from it); no Project document and no memory file. No C-002 manual, reconciliation addendum or design
+       inputs were drafted; the register, the design log and every frozen manual are unchanged.
+  11.3 Scans of both outputs: scan_ids.py (client-ID shape, IPv4, e-mail, credential assignment, Telegram token, long
+       token, private key): the answers file 1 hit, the V2 main commit ID in its header (a long token; the baseline commit
+       is on the scanner's allow list); this file 120 hits, all long tokens: 107 of 40 characters (the blob, commit and
+       tree IDs of sections 1, 6 and 8) and 13 of 64 characters (the SHA-256 values of sections 2 and 7).
+       lcid_check.py (identifier shapes in any letter case; tokens of the tree's path names benign): the answers file 0;
+       this file 4, all benign: the new check script's name (twice), a hash-algorithm name in E-1's lesson and a regex
+       word boundary in S22. The session-link pattern and the session trailer name: 0 in both files. The push
+       scripts' credential pattern: 0 in both. No non-ASCII byte and no carriage return in either file. All hits are
+       of the known benign classes of handover section 4.
+       A pattern scan does not prove that nothing else sensitive exists (lesson 2026-10-10).
+
+
+12. STATE AT DELIVERY
+  HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb (= pin); local objects 8,922; never-open blobs present locally 0. The
+  partial clone is kept in this session's workspace for the next C-002 steps; it holds no never-open blob.
+
+END - C-002 SOURCE INVENTORY AND METHOD

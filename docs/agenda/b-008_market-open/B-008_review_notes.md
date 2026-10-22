@@ -1,7 +1,7 @@
 # B-008 MARKET-OPEN OPERATION: REVIEW NOTES
 
 Date: 2026-10-20 (revision 1; first pass the same day)
-Status: CLOSED 2026-10-20. Revision 1 with ChatGPT's three reviews of 20-Oct applied; Rama approved the freeze on 20-Oct-2026: the B-008 legacy manual is FROZEN (revision 1, DR-045); the reconciliation addendum is frozen with it; the V2 inputs remain PROPOSED / OPEN. Rama stores and pushes the package from his PC; Claude does not commit or push.
+Status: CLOSED 2026-10-20. Revision 1 with ChatGPT's three reviews of 20-Oct applied; Rama approved the freeze on 20-Oct-2026: the B-008 legacy manual is FROZEN (revision 1, DR-045); the reconciliation addendum is frozen with it; the V2 inputs remain PROPOSED / OPEN. Rama stores and pushes the package from his PC; Claude does not commit or push. Erratum E-1 to the B-008 manual (section 3: the request audit's coverage at ingress) added 2026-10-21 during C-002 (C-002_review_notes.md section 5), accepted in principle in ChatGPT's value-added finalisation review of C-002, approved by Rama on 22-Oct-2026 and recorded in DR-055 together with the C-002 freeze. It corrects only that cell; B-008_reconciliation_addendum.md item 2, which repeats the corrected wording, stays as recorded and is read with it; the B-008 freeze (DR-045) is unchanged.
 
 ## 1. Sources
 - Inputs (Rama's upload of 20-Oct-2026; to be stored byte-identical at the freeze; byte-identical to the untracked copies already in his docs/inputs, by the hashes of the B-007 push log):

@@ -1,0 +1,803 @@
+C-002 - SCANNER TO WEBHOOK
+CLAUDE REPOSITORY ANSWERS
+Date of work: 21-Oct-2026 (IST); reading and checks between about 18:50 and 19:45 IST
+Answers: C-002_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt (its name as received, DR-008), following C-002_CLAUDE_RESEARCH_PROMPT_21-OCT-2026.txt
+Governance (read only): trading-system-v2 main at 75c1eb7a39d2dd14bf5b5f26433cdf5da459c7c3 (commit time 2026-10-21T18:29:31+05:30; ls-remote and a fetch at about 18:45 IST both showed it). The files read from it are listed in the companion file, section 1.
+Source: production snapshot trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (commit dated 2026-09-11 IST), the partial clone kept from C-001. HEAD was equal to the pin at the start and before delivery.
+Companion file: C-002_SOURCE_INVENTORY_AND_METHOD_21-OCT-2026.txt (files read, blob IDs, ranges, searches, safety checks, the disclosed exception, the no-change statement).
+Output form: two files, as the Section C handover prescribes (V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md section 2, step 2). The answer sheet asked for four. Rama chose on 21-Oct: "Two files, as the handover (Recommended)", and for the date "21-OCT-2026, today (Recommended)"; the research prompt of 21-Oct says the same. The sheet's open-questions file is section 9 of this file; its change-summary file is section 11 of the companion file.
+Status: RESEARCH INPUT for ChatGPT's independent review. Legacy fact only. No V2 decision, no proposal decided, no frozen manual changed: the erratum candidates in Q25 are for review only.
+Security: no credential, token or token-derived value, account or client identifier, host or IP address, mailbox, SSH detail or person name other than Rama's is reproduced. The webhook URL is described by its form only. The exposed legacy token is treated as exposed and is not repeated anywhere.
+
+
+==============================================================================
+0. READING GUIDE
+==============================================================================
+
+0.1 Evidence labels (claim-specific, W-7)
+  FACT (SOURCE-VERIFIED)       read in the pinned code at 970aabf through the masking filter.
+  FACT (CONFIG)                declared in a configuration file at 970aabf; not proof of runtime use.
+  FACT (RECORD-DERIVED)        stated by a dated record inside the pinned repository (docs/, or a code or
+                               configuration comment that records a measurement or event); true for its own
+                               date and scope only. Line numbers inside a record's text refer to the code of
+                               the record's date and are not repeated here.
+  HISTORICAL (Rama)            Rama's own account, attributed and dated.
+  CURRENT EXTERNAL FACT        checked on 2026-10-21 outside the legacy repository (W-5): the pinned library
+                               source, a local library probe, or a vendor's public page. Not evidence of what
+                               the legacy system or the sender did on any past date.
+  INTERPRETATION / AUDIT LEAD  reasoned from code or records; not observed.
+  KNOWN DEFECT / AMBIGUITY     a defect or ambiguity visible in the source or records.
+  KNOWN DOC DRIFT              a comment, docstring, record or document that the code contradicts (the code wins).
+  UNKNOWN / NOT ESTABLISHED    the inspected evidence does not establish the claim.
+  OPEN QUESTION                a real choice or unresolved dependency; not answered here.
+
+0.2 The states kept apart (the sheet's list; each answer says which state its evidence reaches)
+  S1 scanner configured     a definition in config/scan_webhook_map.yaml (and its twin); in the repository.
+  S2 alert configured       the Chartink alert and the webhook URL given to it; Chartink's side, not in the repository.
+  S3 alert fired            Chartink ran the scan and triggered; Chartink's side.
+  S4 request attempted      Chartink tried to send; a connection that never reached the listener leaves nothing here.
+  S5 request reached        an HTTP request accepted by waitress and routed by Flask to POST /webhook/<key>;
+                            a webhook_audit row is written for it, with the exceptions in Q18.
+  S6 receiver accepted      a per-symbol ACCEPTED in the response: the signals row inserted as QUEUED and the tuple queued.
+  S7 signal persisted       the signals row and its later status changes (C-007).
+  S8 signal processed       SignalProcessor and the stages after it (C-008).
+
+0.3 Search scopes behind negative statements: the C-001 scopes, rebuilt from C-001's saved lists (companion
+  section 5): S-ALL = the 1,262 checked-out files; S-PY = its 734 .py files; S-RT = the 281 .py files outside
+  tests/ and ops_dashboard/tests/; S-CODE = its 869 code and configuration files. A negative reads "not found in
+  <scope>". A text search cannot exclude behaviour reached by dynamic names, by external processes, or by
+  installed files that differ from the repository.
+
+0.4 Citation format: "path lines A to B" or "path line N" at 970aabf, the path and its range on one line.
+
+0.5 Library and vendor facts. requirements.txt pins flask==3.1.3 and waitress==3.0.2 and does not pin Werkzeug
+  (companion section 6). Library behaviour below comes from the waitress 3.0.2 source (its adjustments module)
+  and from a local probe: a minimal Flask app with the same route rule, methods and body limit as the receiver,
+  run through Flask's test client under Flask 3.1.3 and Werkzeug 3.1.9, with no legacy code, no socket and no
+  network (companion section 7). Which versions the VM had installed is UNKNOWN (U-6).
+
+
+==============================================================================
+1. SUMMARY
+==============================================================================
+- One HTTP server carries the webhook: waitress 3.0.2 serving WebhookReceiver's Flask app in the trading
+  process (daemon thread "webhook-server"; bind host and port 5000 from the configuration; 8 threads; connection
+  limit 100; plain HTTP). It has two routes: POST /webhook/<scanner_name> and the WEBHOOK /health (GET). A
+  separate health server on port 8080 does not carry the webhook (Q7.8).
+- Sender side: nothing in the repository holds the webhook URL that Chartink was given. The map holds the key
+  that must equal the path segment, the system configuration holds the port, and the token sits in the
+  environment (C-003). Three records outside the code give the URL form: a 15-Jul specification handed to Rama,
+  a unit-test fixture, and Rama's account of 21-Oct (C-001 section 9.2): plain HTTP to the VM's address on port
+  5000, /webhook/<key>, and a ?token= parameter.
+- Contract: POST; the body is read as raw bytes up to 1 MiB, whatever the content type, and parsed as a JSON
+  object. In order: 503 while shutting down, 429 above the per-address limit, 401 without valid authentication,
+  404 for an unknown key, the EOD route for an eod key, 403 under the kill switch, 503 under backpressure, 403
+  outside the entry window, 400 for parse, field or alert-name failures; then 200, or 503 if any symbol was
+  QUEUE_FULL or STORE_ERROR, with per-symbol results. Requests the framework answers itself (a wrong path or
+  method, or a body over the limit) never reach the audit write.
+- Hand-off: per symbol, a signals row (QUEUED) and a tuple on a bounded in-memory queue read by SignalProcessor
+  (C-005 to C-009); an eod key goes to the watchlist capture worker (C-011).
+- Arrival records (FACT (RECORD-DERIVED)): webhook_audit starts on 12-Jun-2026; 104,911 POSTs to 23-Jul and
+  127,272 rows to 31-Jul; to 23-Jul only 200, 403 and 18 x 503 were answered, with no 400, 401, 404, 429 or 500;
+  one Chartink address sent 99.99% of requests from 12-Jun to 03-Jul; Chartink posted each scanner about once a
+  minute (09-Jul). Times when the service was down left no row (the 19-Jun gap; PB-01's 17:00 alerts of 13 to
+  24-Jul). From 05-Jul the VM's firewall admitted port 5000 from that one address only (recorded on 05 and 06-Jul;
+  its later state is not established).
+- Not established: Chartink's configuration, retries and timeouts; whether any alert was attempted when the port
+  was closed, beyond the PB-01 record; the VM's later network state; installed library versions; anything after
+  the last record (31-Jul, with one 03-Aug note).
+
+
+==============================================================================
+2. PART A - SENDER-SIDE DECLARATION AND CONFIGURATION (Q1 to Q6)
+==============================================================================
+
+Q1. Which files and exact keys declare the scanner-to-webhook relationship?
+  1.1 FACT (CONFIG). config/scan_webhook_map.yaml, mapping "scanners": each key is a scanner name, each value
+      holds strategy, chartink_url and, for one entry, scanner_type: eod (16 entries; C-001 section 4.1). Its
+      header calls the key "<scanner_name_as_registered_in_chartink>"; the PB-01 comment says the key "MUST equal
+      the /webhook/<scanner_name> URL path Rama pastes into Chartink". (S1)
+      Evidence: config/scan_webhook_map.yaml lines 8 to 13; config/scan_webhook_map.yaml lines 77 to 84.
+  1.2 FACT (SOURCE-VERIFIED). The receiver uses that mapping on every request: the path segment must be a key of
+      config.scan_webhook_map.scanners, else 404, and an entry whose scanner_type is "eod" takes the EOD route.
+      Evidence: signals/webhook_receiver.py lines 551 to 564.
+  1.3 FACT (CONFIG). The receiver's server and edge settings are the "webhook" section of config/system_config.yaml:
+      bind_host (an address that the filter masks; its comment says "bind all interfaces"), bind_port 5000,
+      require_hmac false ("Chartink cannot sign payloads; use ?token= auth"), dedup_window_seconds 300,
+      per_ip_rate_limit_enabled true, per_ip_burst 60, per_ip_refill_per_sec 5.0. WebhookConfig validates them;
+      bind_host, bind_port and require_hmac have no default in the schema.
+      Evidence: config/system_config.yaml lines 327 to 342; core/config_loader.py lines 617 to 642.
+  1.4 FACT (CONFIG). Queue settings used at the edge: capacity 300, backpressure_pct 0.80 (the 503 threshold is
+      240 queued), expiry_sec 600 ("Chartink triggered_at is scan time, not delivery time"), warning_pct 0.60
+      (the warning header from 180 queued).
+      Evidence: config/system_config.yaml lines 124 to 128; core/config_loader.py lines 192 to 197.
+  1.5 config/chartink_scanners.yaml (the twin file) holds the same 16 keys with screener URLs and has no part in the
+      webhook route (C-001 sections 4.1 and 6.2; its L-01).
+
+Q2. Which files hold the URL or path, scanner name, webhook URL or sender-side metadata?
+  2.1 FACT (SOURCE-VERIFIED; negative bounded to S-ALL). No file holds the webhook URL that was configured in
+      Chartink. The chartink_url values in both scanner files are screener-page addresses of the form
+      https://chartink.com/screener/<key with hyphens>, not webhook URLs (C-001 section 4.1). The text "webhook_url"
+      occurs in 8 files of S-ALL (search S09): variable names in main.py and utils/startup_checks.py (the local
+      self-check), the receiver's payload sanitiser, tests and crash-test tools, and two change-log lines of the
+      system map about the payload redaction; none configures the sender's URL.
+  2.2 FACT (SOURCE-VERIFIED). The parts of the URL that the system itself defines: the port (bind_port 5000), the
+      path rule "/webhook/<scanner_name>" and the query parameter "token" that the receiver reads. The address a
+      sender uses is not in the code: bind_host names the interface to listen on.
+      Evidence: config/system_config.yaml line 335; signals/webhook_receiver.py lines 406 to 408.
+      Evidence: signals/webhook_receiver.py lines 333 to 334.
+  2.3 The token, by location and type only: the WEBHOOK_SECRET environment variable, passed to the receiver as
+      secret_token and required at every start (detail: C-003; location: A-010).
+      Evidence: main.py lines 3407 to 3415; main.py lines 219 to 232.
+  2.4 FACT (RECORD-DERIVED, 15-Jul-2026). A specification "for Rama to wire" the PB-01 alert gives the URL form
+      http://<VM address>:5000/webhook/pb01_breakout_retest?token=<WEBHOOK_SECRET>, with the same shared token as
+      the other 15 scanners; authentication by the ?token= query parameter, because require_hmac is false and
+      Chartink cannot sign payloads; the "Chartink standard JSON" fields; and a firing time before the 16:00
+      self-exit. It is a specification handed over, not proof of what was entered in Chartink. (S2, as instructed)
+      Evidence: docs/audit/followup_investigation_15jul2026.md lines 173 to 192.
+  2.5 FACT (SOURCE-VERIFIED; a test's assumption, not evidence of production bodies). A unit-test helper builds "A
+      realistic Chartink body that echoes the configured URL (incl. ?token=<secret>) in webhook_url": stocks,
+      trigger_prices, triggered_at, scan_name, scan_url, alert_name and webhook_url of the form
+      http://<address>:5000/webhook/<key>?token=<secret>.
+      Evidence: tests/unit/test_webhook_receiver.py lines 1730 to 1742.
+  2.6 FACT (RECORD-DERIVED, 05-Jul-2026). The system map's change log records that every stored webhook payload
+      held the token (95,431 of 95,431 rows), because Chartink echoed the configured URL, token included, in the
+      body's webhook_url field, and that the redaction of the stored copy was added that day. So production bodies
+      did carry webhook_url with the token in that period. Evidence: docs/SYSTEM_MAP.md line 1366.
+  2.7 HISTORICAL (Rama, 21-Oct-2026; C-001 section 9.2): plain HTTP to the legacy VM's address on port 5000, the
+      paths /webhook/range_breakout_short and /webhook/range_breakout_long, a ?token= parameter, and "every
+      strategy name only differs".
+  2.8 CURRENT EXTERNAL FACT (Chartink's public article "Webhook support for Alerts", dated 16-Mar-2020, updated
+      02-Jun-2021, read 2026-10-21 through a summarising fetch; not evidence of the legacy period). An HTTP POST is
+      made "to the URL you have specified along with the data corresponding to the alert"; the sample body has the
+      fields stocks, trigger_prices, triggered_at, scan_name, scan_url, alert_name and webhook_url. The article
+      states no timeout, retry, expected response code or authentication. Support replies under it, as the fetch
+      returned them: the request header is set to "content-type: json" (22-May-2020); one webhook is allowed per
+      scan and alert (28-May-2024); "Our webhooks start from 9:16am" (26-Feb-2024).
+
+Q3. Are there distinct map and URL files? What reads each, and where?
+  3.1 Two files, as C-001 records (sections 4.1 and 5.1): the map and the twin file. Readers at the baseline: main's
+      load_all at Phase 0b (both files, hashed), the start-up checks (the map's entries; the twin file's presence),
+      the receiver (the loaded AppConfig), the processor (its copy of the map's scanners), the operator script and
+      the dashboard (the map file, read directly). The C-001 citations stand.
+      Evidence: main.py lines 2196 to 2202; signals/webhook_receiver.py line 552; signals/signal_processor.py lines 207 to 208.
+  3.2 FACT (SOURCE-VERIFIED). For the transport, the receiver reads: the map at request time (Q1.2); the webhook
+      section at construction (require_hmac, the dedup window, the limiter) and at server start (host, port); the
+      queue section at request time. There is no reload: a change applies at the next start (C-001 section 5.1).
+      Evidence: signals/webhook_receiver.py lines 171 to 176; signals/webhook_receiver.py lines 229 to 247.
+      Evidence: main.py lines 3979 to 3996; signals/webhook_receiver.py lines 537 and 570 to 579.
+
+Q4. Does the code establish that the configured URL was the URL entered in Chartink?
+  4.1 UNKNOWN / NOT ESTABLISHED. No code or configuration records the URL entered in Chartink (Q2.1). (S2)
+  4.2 INTERPRETATION / AUDIT LEAD (from records). For the 14 keys that posted (C-001 section 4.5), the alerts'
+      requests reached this receiver with path segments equal to map keys (404 rows: none at any time to 31-Jul)
+      and with an accepted token (401 rows: none to 23-Jul). So, on the recorded days, each of those alerts
+      pointed at this receiver with the right port, path and token. This says nothing of the URL text itself, of
+      the two range-breakout keys (0 POSTs), or of dates outside the records.
+      Evidence: docs/audit/integrity_audit_2026.md lines 126 to 135; docs/audit/refused_posts_403_investigation_23jul2026.md lines 113 to 122.
+  4.3 FACT (RECORD-DERIVED, 05 and 06-Jul-2026). After the token was rotated on 05-Jul ("Chartink URL updated by
+      Rama"), the first trading-day POSTs on 06-Jul were 86 answered 200 and 309 answered 403, with no 401, all
+      from the Chartink address; the record reads this as Chartink having moved to the new token.
+      Evidence: docs/SYSTEM_MAP.md lines 1364 to 1365.
+
+Q5. Does the source contain automation that creates, updates, verifies or deploys Chartink alerts?
+  5.1 FACT (SOURCE-VERIFIED; negative bounded). None found. In S-CODE the chartink.com literal occurs only in the
+      two scanner files, a dashboard reader's docstring, the load-test payload builder and test or crash-test
+      tools (search S10: 10 files). Browser-automation names occur only in one GUI layout record (S11: 1 file). In
+      S-RT, nine files match HTTP-client patterns (S18); the only one that also names chartink.com is the load-test
+      sender, whose target is the webhook, not Chartink (the pattern search counts matches; it does not prove a
+      call is made). The only Chartink-facing code is the screener GET
+      connectivity check, which reads screener pages and sends no alert data (C-001 section 6).
+      Evidence: utils/startup_checks.py lines 652 to 745.
+  5.2 FACT (SOURCE-VERIFIED). Sender simulators exist, with no scheduler entry or caller found (the cron file, the
+      cron registry and the service unit hold no reference to them): scripts/load_test_signals.py posts synthetic
+      payloads to a target (default http://localhost:5000), adds ?token= when given one, and warns "Do NOT run
+      against production VM during market hours"; scripts/test_webhook.py is a stub Flask server answering only
+      /health on port 5000; tools under tests/crash_test/ post synthetic signals for the crash-test harness
+      (C-001 source inventory, section 6).
+      Evidence: scripts/load_test_signals.py lines 16 to 28; scripts/load_test_signals.py lines 96 to 110.
+      Evidence: scripts/test_webhook.py lines 1 to 13.
+  5.3 FACT (RECORD-DERIVED, 04-Aug-2026). Test POSTs to the live webhook were pre-authorised on the development PC:
+      15 entries of the coding assistant's PC-local permission list "POST a hand-written payload to the live
+      webhook" (the record's example posts to http://localhost:5000/webhook/<key>), and a record of the same day
+      calls the webhook POST "a real diagnostic, used repeatedly in this campaign". INTERPRETATION: such POSTs
+      would arrive from a local address; how many were sent, and when, is not recorded (Q20 R5 shows one 403 from a
+      local address to 16-Jul, which that record labels "localhost (self/health)").
+      Evidence: docs/audit/r12_allowlist_enumeration_04aug2026.md lines 1 to 8; docs/audit/r12_allowlist_enumeration_04aug2026.md lines 73 to 93.
+      Evidence: docs/audit/d4_matcher_measurement_04aug2026.md line 59.
+  5.4 HISTORICAL (Rama, 21-Oct-2026; C-001 sections 6.4 and 9.2): Rama set up the alerts in Chartink himself; the
+      operator scanner check was never run.
+
+Q6. What C-001 already establishes (cited, not repeated)
+  - The 16 definitions; key = strategy name = path segment; one eod entry, PB-01 (C-001 sections 4.1 to 4.3).
+  - The twin file's URLs: loaded, hashed and checked for presence; no effect identified (C-001 L-01).
+  - The key gate (404), the alert-name rule (400; its D-07) and routing by scanner_type (C-001 sections 7.1, 7.5, 7.6).
+  - The screener GETs prove only that a screener address answered (C-001 section 6.6).
+  - Arrivals per key, 12-Jun to 31-Jul: 14 of 16 keys posted; the two range-breakout keys never did (C-001
+    sections 4.2, 4.5 and 9.1, R-01 to R-04).
+  - Rama's account of the URL form (C-001 section 9.2) and the unknowns U-01 to U-07; U-07, Chartink's retries,
+    was left to C-002 (answered here as still UNKNOWN, Q16).
+  - New at C-002 that bears on C-001: the audit-row coverage and the zero count of 400 responses (Q18, Q20, Q25).
+
+
+==============================================================================
+3. PART B - RECEIVER ENDPOINT AND TRANSPORT CONTRACT (Q7 to Q14)
+==============================================================================
+
+Q7. The Production HTTP server and the route declaration
+  7.1 FACT (SOURCE-VERIFIED). The app: WebhookReceiver.__init__ creates a Flask app, sets TESTING False and
+      MAX_CONTENT_LENGTH to 1 MiB ("FIX-077: 1MB hard limit prevents OOM") and registers the routes.
+      Evidence: signals/webhook_receiver.py lines 249 to 252.
+  7.2 FACT (SOURCE-VERIFIED). The routes, in _register_routes: GET /health, the WEBHOOK /health of Q7.8 (the
+      per-address limit, then authentication, then a status body with the kill-switch state and queue depth); POST
+      /webhook/<scanner_name>, which calls _handle_webhook; and a 500 error handler that logs CRITICAL and answers
+      {"error": "Internal server error"}. No blueprint, URL prefix, before-request or after-request hook exists in
+      the file. Evidence: signals/webhook_receiver.py lines 360 to 413.
+  7.3 FACT (SOURCE-VERIFIED). The server: main builds the queue (maxsize = capacity) and the receiver (queue,
+      store, AppConfig, market windows, kill switch, logger "webhook_receiver", secret_token from the
+      environment). After the processor, entry gate and target workers have started, it runs
+      waitress.serve(app, host=webhook.bind_host, port=webhook.bind_port, threads=8, connection_limit=100) in the
+      daemon thread "webhook-server". The comment explains waitress replaced Flask's development server because
+      "Werkzeug's app.run drops connections under burst load".
+      Evidence: main.py lines 3402 to 3415; main.py lines 3972 to 4000.
+  7.4 FACT (SOURCE-VERIFIED). Other wiring: the processor is given the receiver's release_in_flight; the EOD
+      capture worker is bound late with set_eod_capture when the watchlist is enabled (C-001 section 7.5).
+      Evidence: main.py line 3612; main.py line 3747.
+  7.5 FACT (SOURCE-VERIFIED). Two seconds after the thread starts, main GETs the WEBHOOK /health on a literal
+      address (masked by the filter) at the bind port; check_webhook_endpoint's docstring calls it the local webhook endpoint, the
+      same as a local curl of /health on port 5000, and the check counts 200 to 299 or 401 as reachable. If it is not reachable, main
+      logs CRITICAL, writes a sentinel for the alert watcher and keeps running without entries ("DEGRADE, do not
+      block the boot", 27-Jul). The start-up checks run earlier with webhook_url=None ("Flask not started yet").
+      Evidence: main.py lines 4002 to 4054; utils/startup_checks.py lines 783 to 826; main.py lines 2451 to 2461.
+  7.6 FACT (SOURCE-VERIFIED). Shutdown: the handler calls webhook_receiver.stop() before signal_processor.stop(), so
+      new webhook requests get 503 while the server thread lives on until the process exits; stop() sets the flag
+      and stops the in-flight sweeper. Evidence: main.py lines 1681 to 1692; signals/webhook_receiver.py lines 1166 to 1176.
+  7.7 When the port is open (frozen manuals, cited; C-002 adds only the transport consequence):
+      - The daily start: a cron job at 08:15 writes the token file and the token watcher starts the unit (B-001
+        section 6, RECORD-DERIVED 05-Aug); the start-window guard refuses starts outside [08:00, 18:15) (A-009 section
+        5). The webhook server is step 15 of the start, after the startup reconcile and the processor (A-011 section 5;
+        B-005 row S18: "Signals can arrive only from here"); the start takes about 11 seconds (B-006 section 4,
+        RECORD-DERIVED 26-Aug; B-003 section 7).
+      - The day's end: the self-exit gate from service_window_end, 17:35 since 25-Jul and 16:00 before (A-011 section
+        10; B-011 section 3.1; B-001 section 7.2); before 25-Aug a carried delivery position could hold the service
+        open past it (A-011 section 10).
+      - So the receiver listens from step 15 of a start (the whole start takes about 11 seconds) until the process
+        exits; at any other time a Chartink POST meets a closed port (Q15 F1 and F2; INTERPRETATION of the cited
+        order and records).
+  7.8 Two HTTP servers run in the trading process, and only one carries the webhook. The port-8080 health server
+      (scripts/healthcheck_server.py, loopback by default since 08-Jul; B-006 row TH25, B-007 section 6) is separate
+      from the webhook app. This file follows B-007's terms: "WEBHOOK /health" is the receiver's own route on port
+      5000; "/health" alone would mean the port-8080 route.
+      Evidence: main.py lines 4073 to 4082; scripts/healthcheck_server.py lines 297 to 301.
+
+Q8. Expected method, route pattern and how the key appears in the path
+  8.1 FACT (SOURCE-VERIFIED). POST only, on the rule "/webhook/<scanner_name>" with Flask's default converter (one
+      path segment, no "/"). The segment is used as given: an exact, case-sensitive membership test against the map
+      keys (C-001 section 5.2). Evidence: signals/webhook_receiver.py lines 406 to 408; signals/webhook_receiver.py lines 551 to 554.
+  8.2 CURRENT EXTERNAL FACT (local probe, 0.5). With the same rule and methods: GET answers 405 (Allow: POST,
+      OPTIONS); OPTIONS answers 200 by itself; "/webhook/", "/webhook/a/b", "/Webhook/<key>" and a key with an
+      encoded "/" answer 404; none of them enters the view. These hold for the probed versions.
+
+Q9. A path per scanner, a common path, or another form?
+  9.1 FACT (SOURCE-VERIFIED). One route with a variable segment: each scanner is addressed by its own path value,
+      and that segment is the only identity the receiver takes at the edge; the body's scan_name is an optional
+      cross-check (C-001 section 4.3). There is no common path.
+      Evidence: signals/webhook_receiver.py lines 406 to 408; signals/webhook_receiver.py lines 617 to 633.
+
+Q10. Prefix, URL joining, trailing slash, query string, reverse proxy
+  10.1 FACT (SOURCE-VERIFIED). No prefix, mount point or URL joining: waitress is given the Flask app itself.
+       Evidence: main.py lines 3987 to 3996.
+  10.2 FACT (SOURCE-VERIFIED). The only query parameter read is "token", inside _authenticate (C-003).
+       Evidence: signals/webhook_receiver.py lines 333 to 334.
+  10.3 CURRENT EXTERNAL FACT (local probe, 0.5). A trailing slash ("/webhook/<key>/") answers 404 without entering
+       the view; a doubled slash ("/webhook//<key>") answers 308 with the merged path as Location; a query string
+       does not affect routing. Whether Chartink follows a 308: UNKNOWN.
+  10.4 Reverse proxy.
+       FACT (SOURCE-VERIFIED): the receiver takes request.remote_addr as the source (no X-Forwarded-For), and
+       waitress is started without trusted_proxy. Evidence: signals/webhook_receiver.py line 479; main.py lines 3988 to 3996.
+       CURRENT EXTERNAL FACT (waitress 3.0.2 source): trusted_proxy defaults to None, clear_untrusted_proxy_headers to
+       True and url_scheme to "http".
+       FACT (RECORD-DERIVED): on 04-Jun a crash-test note describes the receiver as direct internet-facing with no
+       nginx or reverse proxy; on 02-Jul the dashboard backend investigation found no reverse-proxy or TLS
+       configuration in the repository, only a recommendation; on 03-Jul the source-address investigation records
+       that /etc/nginx does not exist on the VM, that no reverse proxy sits in front of the receiver, and that
+       request.remote_addr is the raw TCP peer; on 31-Jul the question is carried as open ("5-Jul left it UNCERTAIN").
+       Evidence: docs/crash_test_info_04jun2026.md line 323; docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md lines 38 to 39.
+       Evidence: docs/audit/c2_chartink_ip_investigation_03jul2026.md line 13; docs/audit/integrity_audit_2026.md lines 392 to 394.
+       No proxy, tunnel or TLS configuration was found in S-CODE (searches S04 and S19).
+  10.5 KNOWN DOC DRIFT. Two receiver comments (G.1, 25-Apr) say that a token in the URL is logged by nginx; no nginx
+       configuration exists in S-ALL and the 03-Jul record found none on the VM. The bind comment names a route
+       "via ngrok/external", and the runbooks say "Check ngrok/tunnel is active"; S-ALL code holds no tunnel, and
+       from 12-Jun the recorded TCP peer was Chartink's own address (Q20), which a tunnel would have replaced
+       (INTERPRETATION).
+       Evidence: signals/webhook_receiver.py lines 196 to 199; signals/webhook_receiver.py lines 307 to 310.
+       Evidence: config/system_config.yaml lines 328 to 334; docs/03_daily_operations_runbook.md lines 128 to 132; docs/05_incident_response.md line 248.
+
+Q11. Request fields and headers that matter for the transport
+  11.1 FACT (SOURCE-VERIFIED). What the receiver takes from a request: the method and path (routing), the path
+       segment, request.remote_addr (the limiter and the audit row), the raw body (request.get_data(); its length
+       is audited), the query parameter token and the header X-Webhook-Signature (both only in _authenticate,
+       C-003). It reads no Content-Type, User-Agent or other header itself.
+       Evidence: signals/webhook_receiver.py lines 477 to 481; signals/webhook_receiver.py lines 333 to 334.
+  11.2 FACT (SOURCE-VERIFIED). The body is parsed with json.loads from the raw bytes, whatever the Content-Type; it
+       must be a JSON object; stocks, trigger_prices and triggered_at are required and scan_name is optional; other
+       fields (scan_url, alert_name, webhook_url) are not read, and webhook_url is blanked in the stored copy.
+       Field rules belong to C-004.
+       Evidence: signals/webhook_receiver.py lines 585 to 615; signals/webhook_receiver.py lines 857 to 886.
+  11.3 CURRENT EXTERNAL FACT (local probe). A non-standard content type ("json") or none at all does not change the
+       bytes the view receives (compare Q2.8: Chartink's reply says it sends "content-type: json").
+  11.4 Size. FACT (SOURCE-VERIFIED): MAX_CONTENT_LENGTH is 1 MiB (signals/webhook_receiver.py line 251).
+       CURRENT EXTERNAL FACT (local probe): a body of 1 MiB plus one byte answers 413 when request.get_data() is
+       called, after the view is entered; a body of exactly 1 MiB is read. waitress 3.0.2's own limits, not set in
+       the code: headers 262,144 bytes, body 1,073,741,824 bytes.
+
+Q12. The response contract at the transport boundary
+  Each row: trigger | status and body | audit row | evidence. "Audit row" gives (response_code, accepted, rejected).
+  Bodies are JSON (jsonify) unless marked HTML. FACT (SOURCE-VERIFIED) unless marked.
+   1 Path or method outside the two rules | 404, 405 or 308 from the framework, HTML | no row | probe (Q8.2, Q10.3)
+   2 Body over 1 MiB, or the body read fails | 413 from the framework, HTML | no row: request.get_data() runs
+     before every audit write | probe (Q11.4); the 31-Jul audit's IA-P1-04 (Q18) |
+     signals/webhook_receiver.py lines 477 to 481 (the read itself: signals/webhook_receiver.py line 480)
+   3 Shutting down | 503 {"error": "Service shutting down; retry later"} | (503, 0, 0) | signals/webhook_receiver.py lines 483 to 490
+   4 Over the per-address limit | 429 {"error": "Rate limit exceeded; slow down"}, WARNING with the address | (429, 0, 0) | signals/webhook_receiver.py lines 492 to 504
+   5 Authentication fails | 401 {"error": <one of four reasons>} (C-003) | (401, 0, 0) | signals/webhook_receiver.py lines 547 to 549
+   6 Unknown key | 404 {"error": "Unknown scanner: '<key>'"} | (404, 0, 0) | signals/webhook_receiver.py lines 551 to 554
+   7 eod key | 400 for malformed JSON, a missing field, a bad triggered_at or non-string stocks; 200
+     {"accepted": 0, "captured": 0, "detail": "watchlist disabled"} without a worker; else 200 {"accepted":
+     <symbols>, "captured": <submitted>} | yes; a 200 records accepted = the symbol count (C-001 A-L5) |
+     signals/webhook_receiver.py lines 751 to 804
+   8 Kill switch active | 403 {"error": "Kill switch active; signals rejected"} | (403, 0, 0) | signals/webhook_receiver.py lines 566 to 568
+   9 Queue at or above the threshold (240 of 300) | 503 {"error": "Signal queue at capacity; retry later"}, header X-Queue-Depth | (503, 0, 0) | signals/webhook_receiver.py lines 570 to 578
+  10 Outside the entry window (entry_start 10:00 and entry_end 15:00 in config/system_config.yaml lines 28 and 47; the
+     window rule itself is B-008's) | 403 {"error": "Outside entry window"} | (403, 0, 0) | signals/webhook_receiver.py lines 580 to 583
+  11 Malformed JSON, not an object, a failed cast, a missing field, an alert-name mismatch, a bad triggered_at,
+     non-string or unequal lists | 400 {"error": ...}; WARNING with the first 1,000 bytes of the raw body |
+     (400, 0, 0) | signals/webhook_receiver.py lines 585 to 674; signals/webhook_receiver.py lines 518 to 523
+  12 The batch | 200, or 503 if any symbol is QUEUE_FULL or STORE_ERROR; body {"accepted", "rejected",
+     "results": [{"symbol", "status"[, "signal_id"]}]}; headers X-Queue-Depth and, from 60% fill,
+     X-Queue-Warning: high | (200, accepted, rejected); a 503 batch records (503, 0, 0) (C-001 A-L4) |
+     signals/webhook_receiver.py lines 676 to 745; signals/webhook_receiver.py lines 510 to 517
+  13 An exception inside _process_request | 500 {"error": "Internal server error"}, CRITICAL | (500, 0, 0) | signals/webhook_receiver.py lines 525 to 528
+  Per-symbol statuses the code returns: ACCEPTED, DUPLICATE, EXPIRED, INVALID_SYMBOL, INVALID_PRICE, IN_PROCESS,
+  QUEUE_FULL, STORE_ERROR and REJECTED_EXCLUDED_SYMBOL (owners C-004, C-005 and C-009).
+  Evidence: signals/webhook_receiver.py lines 892 to 1072; signals/webhook_receiver.py lines 708 to 717.
+  12.1 FACT (SOURCE-VERIFIED). The audit row is written in the finally clause, before the response object goes back
+       to the framework; a row with 200 therefore records what the receiver answered, not that the sender
+       received it. Evidence: signals/webhook_receiver.py lines 529 to 534.
+  12.2 KNOWN DOC DRIFT. The module docstring's response list (WR5) omits 429, and its status list (WR10) names
+       OUTSIDE_HOURS, which the code never returns: the window gate answers the whole request with 403.
+       Evidence: signals/webhook_receiver.py lines 16 and 21 to 22; signals/webhook_receiver.py lines 580 to 583.
+
+Q13. Timeout, retry, redirect, TLS, DNS, port, proxy and network assumptions
+  13.1 Port and interface. FACT (CONFIG): port 5000; bind_host is an address the filter masks, and its comment (dated
+       2026-04-27) says the host binds all interfaces so that the VM can accept Chartink webhooks routed through
+       ngrok or from outside (B-001 section 3 records the listener as bound to all interfaces).
+       Evidence: config/system_config.yaml lines 327 to 335.
+       KNOWN DEFECT / AMBIGUITY: the same comment says the all-interfaces bind relies on require_hmac being true plus
+       firewall or security-group restrictions, while require_hmac is false on the next line.
+       Evidence: config/system_config.yaml lines 331 to 336.
+  13.2 TLS. FACT (SOURCE-VERIFIED): no TLS in the serving path; waitress serves plain HTTP; no certificate or TLS
+       setting was found in S-CODE (search S19: 0 files). FACT (RECORD-DERIVED, 02-Jul): the token travels "over
+       plaintext HTTP"; on 06-Jul TLS was "deferred". Evidence: docs/audit/system_security_audit_02jul2026.md line 19; docs/SYSTEM_MAP.md line 1364.
+  13.3 Firewall. FACT (SOURCE-VERIFIED): the installer inserts an iptables rule accepting tcp/5000 from any source
+       at INPUT position 5, before the image's REJECT, and saves it with netfilter-persistent.
+       Evidence: deploy/install_vm_services.sh lines 33 to 47.
+       FACT (RECORD-DERIVED, 05-Jul-2026; the paths record's firewall section is headed "verified 05-Jul-2026"): the
+       tcp/5000 accept was rule #6, before a catch-all REJECT (#7); that day Rama applied a single-address allowlist,
+       restricting port 5000 to one /32 source, the sole Chartink address, at runtime and persisted; on 06-Jul the
+       record reads that day's Chartink rows as proof that the allowlist admitted Chartink.
+       Evidence: PATHS.md lines 262 to 263; docs/SYSTEM_MAP.md lines 1364 to 1365.
+       The repository's installer was not changed to match; the later state of the rule is NOT ESTABLISHED (the
+       31-Jul audit could not verify firewall rules). Evidence: docs/audit/integrity_audit_2026.md lines 4351 to 4355.
+       The cloud provider's security list is outside the repository: UNKNOWN.
+  13.4 DNS. INTERPRETATION: the recorded URL forms use the VM's address, not a host name (Q2.4, Q2.7), so no name
+       lookup was involved on this path; not established for every alert.
+  13.5 Timeouts. FACT (SOURCE-VERIFIED): no request timeout in the receiver. CURRENT EXTERNAL FACT (waitress 3.0.2
+       defaults, not set in the code): channel_timeout 120 seconds of inactivity, backlog 1024; the code sets
+       threads=8 and connection_limit=100 (100 is also the default). Chartink's timeout: UNKNOWN.
+  13.6 Retries: Q16. Redirects: the receiver issues none; the framework answers 308 to a doubled slash (Q10.3).
+  13.7 Rate. FACT (SOURCE-VERIFIED): a token bucket per source address, burst 60, refill 5 per second, 429 when
+       empty; idle buckets are evicted after 60 seconds once 8,192 addresses are held.
+       Evidence: signals/webhook_receiver.py lines 69 to 108; signals/webhook_receiver.py lines 240 to 247.
+  13.8 Proxy: none recorded (Q10.4).
+
+Q14. The hand-off after an accepted request (boundary only)
+  14.1 FACT (SOURCE-VERIFIED). Intraday key, per symbol: alias and exclusion; then the checks of _process_signal;
+       then INSERT into signals (status QUEUED; scanner and strategy both set to the key; fingerprint; the stored
+       payload sanitised); then queue.put_nowait((signal_id, key, symbol, price, triggered_at)) onto the queue
+       built with maxsize = capacity (300). The symbol's in-flight claim is left for the processor to release.
+       Owners: C-004 (symbol and price), C-005 (in-flight and deduplication), C-006 (queue), C-007 (row), C-008
+       (processing), C-009 (expiry), C-010 (mapping).
+       Evidence: signals/webhook_receiver.py lines 956 to 1072; main.py lines 3402 to 3404; main.py line 3612.
+  14.2 FACT (SOURCE-VERIFIED). A full queue: the row is marked QUEUE_FULL, both claims are released and the batch
+       answers 503; a later POST with the same fingerprint re-queues that row (the M-S2 path).
+       Evidence: signals/webhook_receiver.py lines 981 to 1015; signals/webhook_receiver.py lines 1046 to 1068.
+  14.3 FACT (SOURCE-VERIFIED). eod key: eod_capture.submit(scanner_name, symbol, triggered_at) per symbol and one
+       cron_heartbeat row ("pb01_capture"; it records "queued", not "captured"), or a fail-safe miss when no worker
+       is bound (C-011). Evidence: signals/webhook_receiver.py lines 776 to 834.
+  14.4 The webhook_audit row is C-002's own record (Q18).
+
+
+==============================================================================
+4. PART C - FAILURE AND OPERATIONAL CONSEQUENCES (Q15 to Q20)
+==============================================================================
+
+Q15. Endpoint unreachable, non-success response, unknown route or key
+  Form: TRIGGER -> ACTUAL BRANCH -> RESPONSE OR STATE -> LOG OR AUDIT -> NEXT CONSEQUENCE -> UNKNOWN LIMITS.
+  F1 The process is not running (before the daily start, after the self-exit, during a halt or a restart) -> no
+     listener -> the connection is refused (or times out if dropped upstream) -> nothing in the system -> the
+     alert is lost unless the sender tries again later -> the sender's behaviour is UNKNOWN (Q16).
+     FACT (RECORD-DERIVED): on 19-Jun the service was down from 10:07:54 to 13:24:33 and "POSTs during it get
+     connection-refused, no audit row"; all ten of PB-01's 17:00 alerts from 13-Jul hit a closed port because the
+     service had exited at 16:00, while their candidates "exist in Chartink's trigger history"; the self-exit moved
+     from 16:00 to 17:35 on 25-Jul for that reason; the 15-Jul specification gives the process's hours as 08:15 to
+     16:00 IST only.
+     Evidence: docs/audit/refused_posts_403_investigation_23jul2026.md lines 152 to 156; docs/audit/service_window_extension_2026-07-24.md line 55.
+     Evidence: config/system_config.yaml lines 105 to 112; docs/audit/followup_investigation_15jul2026.md lines 188 to 191.
+     INTERPRETATION / AUDIT LEAD: the first PB-01 row in webhook_audit is from 27-Jul (C-001 R-02), although the
+     service was up on the trading days in between (intraday POSTs were recorded on them, Q20), so none of the ten
+     refused alerts was delivered later while the port was open; whether Chartink tried again while it was closed
+     is unknown.
+  F2 The port opens late in the start: waitress starts after the workers (main.py line 4000); a request before
+     that is refused like F1. The start time itself: Q7.7.
+  F3 The server thread dies or cannot bind -> no listener -> the self-check two seconds later fails -> CRITICAL log
+     and an out-of-band sentinel; the process keeps running without entries (since 27-Jul) -> F1 for the sender.
+     Evidence: main.py lines 4002 to 4054.
+     INTERPRETATION / AUDIT LEAD: the self-check accepts 200 or 401 from whatever answers GET /health on that port
+     (utils/startup_checks.py lines 797 to 809), so it shows that something answered, not that this process's
+     receiver did; it also cannot show reachability from outside the VM.
+  F4 Shutting down -> 503 and an audit row (Q12 row 3); the shutdown sequence belongs to B-011.
+  F5 Non-success answers per branch: Q12. How Chartink handles 4xx and 5xx answers: UNKNOWN. The code's comments
+     expect a retry after a 503 and none after a 200 (signals/webhook_receiver.py lines 59 to 66; signals/webhook_receiver.py lines 730 to 734).
+  F6 Unknown key: 404 with a row when authenticated; without valid authentication the answer is 401, because
+     authentication runs first (signals/webhook_receiver.py lines 539 to 554). FACT (RECORD-DERIVED): no 404 row
+     at any time to 31-Jul (docs/audit/integrity_audit_2026.md line 74).
+  F7 Wrong path form (a trailing slash, an extra segment, other letter case) -> the framework's 404 -> no row
+     (probe, Q8.2 and Q10.3). INTERPRETATION / AUDIT LEAD: an alert misconfigured in that way would leave no trace
+     in webhook_audit, as C-001 section 9.2 noted for other paths, ports or hosts.
+  F8 Body over 1 MiB, or a read cut off mid-body -> 413 or the framework's error -> no row (Q12 row 2).
+  F9 The audit insert fails -> an error log line, no row, the response unchanged
+     (signals/webhook_receiver.py lines 1137 to 1154).
+  F10 Requests waitress refuses before Flask (malformed HTTP, oversized headers, more connections than the limit
+     admits) -> handled by waitress -> no row. INTERPRETATION from the library; not exercised or recorded.
+
+Q16. Retry behaviour: sender, receiver, broker, scheduler, separate script
+  16.1 Sender (Chartink): UNKNOWN / NOT ESTABLISHED.
+       - FACT (RECORD-DERIVED): the assumptions record lists "Chartink retries on 503 (external behavior)" as
+         NOT_TESTED_YET. Evidence: docs/SYSTEM_ASSUMPTIONS.md line 20.
+       - CURRENT EXTERNAL FACT: Chartink's article says nothing about retries (Q2.8).
+       - HISTORICAL (Rama, 21-Oct-2026, his answer to the one C-002 question): "Don't know / never checked"
+         whether Chartink ever showed a failed delivery or a re-delivery.
+       - Claims, not evidence: code comments and June and July records assume a retry after a 503 and none after a 200.
+         Evidence: signals/webhook_receiver.py lines 59 to 66; core/exceptions.py line 144; docs/audit/p3s14_done_17jul2026.md line 261.
+         Evidence: docs/audit/silent_failure_gaps_2026-07-25.md line 143; docs/audit/integrity_audit_2026.md line 311; docs/crash_test_info_04jun2026.md lines 238 and 992.
+       - INTERPRETATION / AUDIT LEAD: F1's PB-01 case shows no later delivery of ten refused alerts (Q15).
+  16.2 Receiver: it sends nothing outward and retries nothing. It is built to make a sender's retry useful:
+       QUEUE_FULL and STORE_ERROR release both claims and make the batch answer 503, and a later POST with the same
+       fingerprint re-queues the QUEUE_FULL row. FACT (SOURCE-VERIFIED).
+       Evidence: signals/webhook_receiver.py lines 59 to 66; signals/webhook_receiver.py lines 981 to 1068.
+       FACT (RECORD-DERIVED, 31-Jul): 18 answers of 503 at any time, none since 01-Jul, from which the audit concludes
+       that the rollback and re-queue code of the 17-Jul era never ran in production.
+       Evidence: docs/audit/integrity_audit_2026.md lines 298 to 302.
+  16.3 Broker: not on this path. Scheduler: no cron or registry entry sends or re-sends webhooks (Q5.2).
+       Separate scripts: the load-test sender has no retry; the operator scanner script retries its screener GETs
+       (C-001 section 6.2), which are not webhook deliveries.
+  16.4 Tests simulate a sender's retry with Flask's test client (not run):
+       Evidence: tests/unit/test_webhook_receiver.py line 434; tests/integration/test_hardening_scenarios.py line 238.
+
+Q17. Can requests be sent more than once, arrive late, or arrive concurrently?
+  17.1 More than once, by design of the alerts. FACT (RECORD-DERIVED, 19-Jul): the census records that Chartink posted
+       each scanner roughly once per minute (370 POSTs between 09:20 and 15:29 on 09-Jul), so a symbol that stays in
+       a scan arrives again every minute; it reads about 80% of symbol arrivals as expected duplicates (C-005).
+       Evidence: docs/audit/signal_mortality_census_19jul2026.md lines 191 to 196.
+       By retry: UNKNOWN (Q16).
+  17.2 Late. FACT (CONFIG and SOURCE-VERIFIED): triggered_at is Chartink's scan time; a symbol older than 600
+       seconds on receipt is EXPIRED (C-009); a time-only value takes today's date (C-004).
+       Evidence: config/system_config.yaml line 127; signals/webhook_receiver.py lines 635 to 662; signals/webhook_receiver.py lines 916 to 926.
+  17.3 Concurrently. FACT (SOURCE-VERIFIED): up to eight requests are handled at once (threads=8); the same symbol
+       arriving twice at once gets IN_PROCESS from the in-flight claim (C-005, C-006).
+       Evidence: main.py line 3994; signals/webhook_receiver.py lines 928 to 935; signals/webhook_receiver.py lines 1074 to 1091.
+  17.4 Bursts. FACT (SOURCE-VERIFIED): the per-address bucket allows 60 at once; the comment calls Chartink's
+       open-bell burst "~40 signals from one IP" (a claim). FACT (RECORD-DERIVED): no 429 answer to 23-Jul (Q20).
+       Evidence: signals/webhook_receiver.py lines 69 to 77.
+
+Q18. Logging and audit records that show a request reached the receiver
+  18.1 FACT (SOURCE-VERIFIED). webhook_audit has ts, scanner_name, source_ip, payload_size_bytes, response_code,
+       signals_accepted, signals_rejected, duration_ms and a generated date column, with indexes on ts, date and
+       scanner_name. _write_audit fills it: ts at the time of writing, scanner_name from the path (an unknown key
+       included), source_ip = the TCP peer, the raw body's length, the response code, the counts (taken only from
+       a 200's JSON) and the duration.
+       Evidence: core/schema.sql lines 575 to 602; signals/webhook_receiver.py lines 1126 to 1154.
+  18.2 KNOWN DOC DRIFT (minor). The ts column's comment says "when request arrived"; the code takes the time when
+       the row is written, after handling, so arrival is about ts minus duration_ms (INTERPRETATION).
+       Evidence: core/schema.sql line 583; signals/webhook_receiver.py line 1136.
+  18.3 Coverage. FACT (SOURCE-VERIFIED with the probe): one row per request that reaches _handle_webhook and whose
+       body is read, unless the insert fails; no row for the framework's own answers (Q15 F7, F8, F10) or a failed
+       insert (F9); WEBHOOK /health requests are never audited (test name: tests/unit/test_c6_auth_collapse.py line 382).
+       KNOWN DOC DRIFT: the docstring's WR13 "webhook_audit row per POST regardless of outcome", the schema comment
+       "Written regardless of outcome" and July records say every POST; the 31-Jul audit recorded the body-read
+       hole itself as IA-P1-04 ("Measured incidence: zero").
+       Evidence: signals/webhook_receiver.py line 25; core/schema.sql lines 576 to 577; docs/audit/integrity_audit_2026.md lines 212 to 230.
+  18.4 FACT (SOURCE-VERIFIED). Log lines of the logger "webhook_receiver" (INFO and above to the daily system log,
+       DEBUG and above to the daily debug log, WARNING and above to stdout; files logs/<stem>_<date>.log): 429
+       with the source address; 400 with the first 1,000 bytes of the raw body; malformed JSON with 500 bytes; an
+       alert-name mismatch; a bad triggered_at; a missing field; EOD information and warnings; CRITICAL for an
+       unhandled exception, a store failure and a stalled in-flight claim. The logs no longer exist (C-001).
+       Evidence: signals/webhook_receiver.py lines 495 to 504; signals/webhook_receiver.py lines 518 to 528; core/logger.py lines 354 to 421.
+  18.5 INTERPRETATION / AUDIT LEAD (for C-003). The 400 and malformed-JSON warnings log the raw, unsanitised body,
+       and the bodies carried webhook_url with the token (Q2.6); so any 400 would have written the token into
+       the logs. No 400 answer is recorded to 23-Jul (Q20), so it was not observed in that window.
+       Evidence: signals/webhook_receiver.py lines 518 to 523; signals/webhook_receiver.py lines 585 to 593.
+  18.6 Other evidence, by state: the signals rows (S6, S7); the cron_heartbeat row per EOD alert (S5 and S6 for the
+       EOD route); the shutdown census's day count, taken from webhook_audit (main.py lines 1662 to 1675); the
+       WEBHOOK /health for an authenticated caller (queue depth and kill state, not arrivals); the dashboard screens built on
+       webhook_audit (C-001 section 8).
+  18.7 What each state's evidence is:
+       S1 the map (repository). S2 none in the repository; the 15-Jul specification, the 05-Jul rotation note and
+       Rama's account. S3 one record names Chartink's trigger history, for PB-01 (Q15 F1). S4 nothing in the
+       system; refused attempts appear only as gaps. S5 a webhook_audit row (with the exceptions of 18.3). S6 the
+       per-symbol result and a QUEUED signals row. S7 the signals row (C-007). S8 the processor's statuses (C-008).
+
+Q19. Negative claims and their scope (all at 970aabf)
+  N1 No configuration of the sender's webhook URL in S-ALL (Q2.1).
+  N2 No code that creates, updates, verifies or deploys Chartink alerts, in S-CODE and S-RT (Q5.1).
+  N3 No reverse-proxy, tunnel, TLS or certificate configuration in S-CODE (S04, S19).
+  N4 No use of X-Forwarded-For by the receiver; in S-ALL the forwarded-header names occur only in the dashboard
+     backend, its test, a record and the deployment notes (S03).
+  N5 No route on the webhook app other than the WEBHOOK /health (GET) and POST /webhook/<scanner_name> (the file).
+  N6 No scheduler, cron or unit entry that sends or re-sends webhooks (the cron file, the cron registry, the
+     service unit).
+  N7 No reload of the webhook or map settings in S-RT (C-001 search 15).
+  N8 No code path returning the per-symbol status OUTSIDE_HOURS (the receiver file).
+  N9 No test that exercises waitress, a socket or the network on the webhook path: the receiver tests state that
+     they use Flask's test client (tests/unit/test_webhook_receiver.py lines 1 to 11); in the nine webhook test files
+     of section 7 no server, socket or network call was found (searches S20 and S21; none was run).
+
+Q20. Historical records of scanner-to-webhook arrivals
+  All FACT (RECORD-DERIVED); each counts webhook_audit rows (S5) unless noted; none measures S2 to S4.
+  R1 C2 source-address investigation, 03-Jul-2026. Window 12-Jun to 03-Jul (15 trading days): 58,507 requests from
+     4 distinct addresses; one address sent 58,504 (99.99%) on every trading day (1,931 to 4,592 a day); two single
+     requests from the same /24 carried realistic payloads; no proxy logs exist. Addresses are not reproduced.
+     Evidence: docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 12 to 13; docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 17 and 26.
+     Evidence: docs/audit/c2_chartink_ip_investigation_03jul2026.md lines 33 to 39.
+  R2 System-map notes, 05 and 06-Jul. 38,046 POSTs from the sole Chartink source by 05-Jul; 06-Jul: 86 x 200 and
+     309 x 403, no 401, all from that address; every stored payload to 05-Jul held the token (95,431 rows).
+     Evidence: docs/SYSTEM_MAP.md lines 1364 to 1366.
+  R3 Day reconstruction, 15-Jul. 13 scanners posting 11 to 374 times each that day; no PB-01 POST had ever arrived;
+     the record then read the PB-01 alert as not yet activated (corrected by R6).
+     Evidence: docs/audit/day_reconstruction_15jul2026.md lines 28 to 29; docs/audit/day_reconstruction_15jul2026.md line 80.
+  R4 Signal-mortality census, 19-Jul. 12-Jun to 16-Jul: 89,794 POSTs, 25,960 answered 403 and 18 answered 503;
+     symbol-level 146,305 accepted and 643,402 rejected; Chartink posts each scanner about once a minute.
+     Evidence: docs/audit/signal_mortality_census_19jul2026.md lines 39 to 41; docs/audit/signal_mortality_census_19jul2026.md lines 191 to 196.
+  R5 Refused-POSTs investigation, 23-Jul. To 23-Jul 15:29: 104,911 POSTs = 76,213 x 200, 28,680 x 403, 18 x 503,
+     and 0 for 401, 404, 429, 400 and 500; the first row is 2026-06-12T09:17; the 403s fell on weekdays only, 99.99%
+     from one Chartink address, two from the same /24 and one from a local address (labelled "localhost
+     (self/health)"); 403s by hour from 09 to 15, plus 2 at 21; the 19-Jun outage left a gap with no rows. Evidence: docs/audit/refused_posts_403_investigation_23jul2026.md lines 72 to 122.
+     Evidence: docs/audit/refused_posts_403_investigation_23jul2026.md lines 131 to 169; docs/audit/refused_posts_403_investigation_23jul2026.md lines 237 to 244.
+  R6 Service-window records, 24 and 25-Jul. All ten PB-01 alerts at 17:00 from 13-Jul met a closed port; their
+     candidates are in Chartink's trigger history (S3, as the record reports it); the self-exit moved to 17:35.
+     Evidence: docs/audit/service_window_extension_2026-07-24.md line 55; config/system_config.yaml lines 105 to 112.
+  R7 Integrity audit, measured 31-Jul (with a 03-Aug note). 127,272 rows from 12-Jun; no 404 at any time; 18 x 503,
+     none since 01-Jul; the two range-breakout keys 0; PB-01 5 POSTs, 27 to 31-Jul; 24 to 31-Jul 2,853 to 3,507
+     in-window 200s a day; the IA-P1-04 hole. Evidence: docs/audit/integrity_audit_2026.md lines 28 to 29; docs/audit/integrity_audit_2026.md lines 84 to 106.
+     Evidence: docs/audit/integrity_audit_2026.md lines 126 to 135; docs/audit/integrity_audit_2026.md lines 212 to 230; docs/audit/integrity_audit_2026.md lines 298 to 302.
+  R8 04-Aug records: test POSTs to the live webhook were pre-authorised and used as a diagnostic (Q5.3); no counts.
+  Coverage and limits: the records measure database copies on their own dates; none covers 01-Aug to the baseline
+  except the 03-Aug note (C-001 U-06); refused or never-made attempts are not in any of them; the local-address
+  requests show that not every row came from Chartink (R1, R5).
+
+
+==============================================================================
+5. PART D - SOURCE MAP AND EVIDENCE QUALITY (Q21 to Q25)
+==============================================================================
+
+Q21. Files inspected: the companion file, section 6, lists every file read in this step with its blob ID, the
+  lines read and the reason, and section 5 lists every search with its scope and counts.
+
+Q22. Anchors: each conclusion above carries its path and lines. The end-to-end trace is section 6.
+
+Q23. Comments, documents and configuration that disagree with the executable path (KNOWN DOC DRIFT unless marked)
+  K-1 WR13 and the schema comment say every POST is audited; the body read and the framework's own answers come
+      before or outside the audit (Q18.3).
+  K-2 WR5's response list omits 429; WR10 names OUTSIDE_HOURS, never returned (Q12.2).
+  K-3 The class docstring shows receiver.app.run(...); production serves through waitress (main.py lines 3983 to 4000).
+      Evidence: signals/webhook_receiver.py lines 145 to 149.
+  K-4 WR11 says "each Flask request in its own thread"; under waitress requests share a pool of eight threads.
+      Evidence: signals/webhook_receiver.py line 23; main.py line 3994.
+  K-5 The nginx comments (Q10.5) and the ngrok comment and runbook steps (Q10.5).
+  K-6 KNOWN DEFECT / AMBIGUITY: the bind comment relies on require_hmac=true; require_hmac is false (Q13.1).
+  K-7 The ts column's "when request arrived" (Q18.2).
+  K-8 The sanitiser's comments cite authentication at old line numbers ("auth (:410-432)"); at the baseline the call
+      is at signals/webhook_receiver.py lines 547 to 549. Evidence: signals/webhook_receiver.py lines 687 and 865.
+  K-9 The runbook's first check, "curl http://localhost:5000/health", gets 401 since /health was put behind the
+      secret. Evidence: docs/03_daily_operations_runbook.md line 129; signals/webhook_receiver.py lines 382 to 393.
+  K-10 The queue schema comment gives expiry "default 60"; the field has no default and the configuration says 600.
+      Evidence: core/config_loader.py line 196; config/system_config.yaml line 127.
+  K-11 Records disagree: on the proxy (03-Jul "Confirmed absent"; 31-Jul still "UNCERTAIN"), and on PB-01 (15-Jul: the
+      alert "not yet saved/activated"; 24-Jul: all ten 17:00 alerts since 13-Jul met a closed port) (Q10.4, Q20 R3
+      and R6).
+  K-12 The code comments and June and July records that assume Chartink retries (Q16.1) against A14's NOT_TESTED_YET.
+
+Q24. What the repository cannot establish (UNKNOWN / NOT ESTABLISHED)
+  U-1 Chartink's side: the alerts, the URLs entered, alert names, frequency settings, and their history (beyond
+      the records' reports).
+  U-2 Chartink's timeout, retry and redirect behaviour, and how it treats 4xx and 5xx answers.
+  U-3 Requests attempted while the port was closed, other than PB-01's (R6); delivery or receipt of any response.
+  U-4 The VM's network state on any date: interfaces, the iptables rule after 05-Jul, the cloud security list, DNS.
+  U-5 The bind address value (masked; its comment says all interfaces) and the self-check's target (masked; its
+      docstring says local).
+  U-6 The installed state: library versions (Werkzeug is not pinned), the deployed configuration, whether the
+      installer ran as committed.
+  U-7 Requests that waitress or Flask answered without an audit row, and failed audit inserts: no logs survive.
+  U-8 Arrivals from 01-Aug to the baseline (C-001 U-06), and before 12-Jun-2026.
+
+Q25. Frozen manuals: directly relevant prior facts and erratum candidates
+  Method: a separate agent searched the 20 frozen manuals (A-005 to A-011, B-001 to B-012, C-001) and both
+  section-end papers at main 75c1eb7 for the C-002 subjects (read only; no legacy access; 316 statements listed);
+  Claude then re-read every manual line cited below. Companion file, section 8.
+
+  25.1 Prior facts that C-002 cites and confirms
+    - The gate order at the receiver: C-001 section 7.1, A-011 section 12 and A-008 section 8; the same order as Q12
+      (with the wording points in 25.3).
+    - The webhook server: B-006 section 3 row TH24 (waitress, 8 task threads); A-011 section 5 step 15; its
+      self-check and the degrade since 27-Jul: B-006 row F6, B-007 section 4 (200 to 299 or 401 passes).
+    - The listener and exposure: B-001 section 3 (tcp 5000, all interfaces, the installer's iptables rule, no proxy);
+      A-010 section 10 (no proxy; 58,504 of 58,507 requests from one address; plain HTTP; a single source address
+      admitted by 27-Jul); A-009 section 16 and A-010 section 10 (require_hmac false; the ?token= path).
+    - Shutdown: B-011 section 6 and A-011 section 11 (the receiver stopped first, new requests answered 503).
+    - Service hours: A-011 sections 5 and 10; B-001 sections 6 and 7.2; B-011 section 3.1 (Q7.7).
+    - The arrival records already used: C-001 section 9.1 (R-01 to R-08); A-010 section 10 (the 03-Jul
+      investigation); B-009 section 13 (the census funnel); B-008 (403 before 10:00; Chartink's retry of a 403
+      NOT ESTABLISHED).
+
+  25.2 New at C-002 (not recorded in any frozen manual searched): the per-address limit's values and key; the 1 MiB
+    body limit and its 413; the framework's answers to other methods, paths, slashes and encodings; content type not
+    read; waitress's settings; the response bodies; the webhook_audit columns and their coverage; what a POST meets
+    during the start and after the self-exit; the 05-Jul single-address rule and the 06-Jul verification; Chartink's
+    public statement of the body fields; and Rama's answer on retries.
+
+  25.3 Erratum candidates (new evidence that directly contradicts a frozen claim; for review, nothing applied)
+    EC-1 C-001 (frozen 21-Oct) on audit coverage: section 3, the term "Webhook delivery" ("one webhook_audit row
+         whatever the response"); section 6.6, level 3; section 7.1, step 2 ("it writes one webhook_audit row in every
+         case"); and section 9.2 ("the receiver records every POST that reaches it, whatever its response"). The
+         code writes no row when the body read fails (a body over 1 MiB answers 413 from
+         the framework) or the insert fails, and never for the framework's own answers (Q18.3; the 31-Jul audit's
+         IA-P1-04: C-001's read of that audit ended at the heading of IA-P1-04, before its text). Suggested bound: "for every request that
+         reaches the handler and whose body is read, unless the insert fails". C-001's R-01 reading is unaffected:
+         Chartink bodies are kilobyte-scale and the audit measured the hole's incidence at zero.
+         Evidence: signals/webhook_receiver.py lines 477 to 534; signals/webhook_receiver.py lines 1137 to 1154.
+    EC-2 C-001 section 18 (Cross-references) still says "errata E-1 and, proposed, E-4" and "erratum E-2, proposed";
+         both were accepted at the freeze (DR-053; C-001's status line and section 17). A status slip missed at the
+         freeze.
+    EC-3 A-011 line 226 (section 12), in a FACT bullet: "QUEUE_FULL or a store error makes the request answer 503 so
+         that Chartink retries". The 503 is the code's stated intent; whether Chartink retried is NOT ESTABLISHED
+         (Q16; C-001 U-07; B-008 section 3).
+    EC-4 A-011 lines 227 and 230 (section 12): refusals before parsing are recorded by "the request's webhook_audit
+         row, with accepted and rejected counts" and "the request's audit counts". For every answer but 200 the row
+         carries 0 and 0, so a kill, window or capacity refusal is recorded only by its response code; only
+         per-symbol refusals inside a 200 are counted (C-001 section 8, A-L4).
+         Evidence: signals/webhook_receiver.py lines 510 to 517.
+    EC-5 A-010 line 113 (section 10): "every /webhook outcome, 401 included, is written to webhook_audit
+         (RECORD-DERIVED, 25-Jul C6 record)". The record's claim is narrower in fact: the body-read and insert-failure
+         cases leave no row (EC-1; the 31-Jul audit's IA-P1-04).
+    EC-6 B-011 line 173 (section 6) and the B-011 reconciliation addendum, item 4: the row treats /health as
+         a route of the webhook app served by the same waitress thread, and the addendum's clarification folds the
+         separately listed "health server" into that route. main.py also starts a separate health server on port 8080 (Q7.8), as B-006
+         row TH25, B-007 section 6 and A-011 section 5 step 16 record. The webhook app's own /health is a second,
+         different route. B-011's subject; recorded here because it bears on which server carries the webhook.
+    EC-7 (minor) A-011 line 215 (section 10): under a carried SOFT_KILL "the webhook refused every signal with 403".
+         On the code path an eod-type alert leaves before the kill gate and is answered 200 (Q1.2), so the 403
+         applied to intraday-type alerts; PB-01's alerts posted from 27-Jul (C-001 R-02). B-001 line 224 (section 13)
+         summarises the same records as "refusing every signal".
+         Evidence: signals/webhook_receiver.py lines 556 to 568.
+
+  25.4 Narrowing and clarification candidates (no contradiction; for the reconciliation)
+    NC-1 C-001 section 7.6 leaves UNKNOWN whether production alert names ever met the alert-name 400. The
+         23-Jul record found no 400 answer at all from 12-Jun to 23-Jul (Q20 R5), so none did on audited requests in
+         that window; outside it the question stays open.
+    NC-2 B-009 line 270 (section 13): the census's "Arrived 165,111" is a count of signals (symbol arrivals, re-pushed
+         about once a minute), not of POSTs; the POST counts are webhook_audit's (Q20). Stating the unit would avoid a
+         misreading.
+    NC-3 A-010 line 114 (section 10) dates the single-source rule "by 27-Jul"; the system-map records give 05-Jul for
+         applying it and 06-Jul for its first verified trading day (Q13.3). B-001 sections 3 and 14 record the
+         installer's any-source rule only.
+    NC-4 Terms: B-007 reserves "/health" for the port-8080 route; A-011 section 14, B-001 section 13 and C-001
+         sections 6.5 and 6.6 use "/health" for the webhook's route. C-002 writes "WEBHOOK /health" (Q7.8).
+    NC-5 For C-003, not C-002: B-007 calls the webhook control a "signature", while production used the query token
+         (A-009 section 16; A-010 section 10); A-008 section 24 points to A-006 for webhook authentication, and A-006
+         has no webhook content.
+    NC-6 The 58,507-request record says "15 trading days" for 12-Jun to 03-Jul, which spans 16 weekdays (C-001 R-07;
+         A-010 section 10); the record does not say which day it left out.
+
+  25.5 Frozen manuals that state the opposite of a C-002 finding, beyond 25.3: none found in the lines checked.
+
+
+==============================================================================
+6. END-TO-END TRACE (SOURCE -> INPUT -> LOGIC -> GUARD -> OUTPUT -> STORAGE OR HANDOFF -> NEXT CONSUMER)
+==============================================================================
+  T1 Chartink alert (external; S2, S3) -> its scan results -> POST to the URL it holds (Q2) -> none in the system
+     -> an HTTP request (S4) -> none -> the VM's firewall, then waitress.
+  T2 waitress (main.py lines 3987 to 4000) -> a TCP connection on port 5000 -> HTTP parsing, 8 threads -> its
+     limits (Q11.4, Q13.5) -> a WSGI call -> none -> the Flask app.
+  T3 Flask routing (signals/webhook_receiver.py lines 360 to 413) -> method and path -> the rule match -> 404, 405,
+     308 or 413 from the framework (Q12 rows 1 and 2) -> the view -> none -> _handle_webhook.
+  T4 _handle_webhook (signals/webhook_receiver.py lines 477 to 534) -> address and raw body -> shutdown flag,
+     limiter -> 503 or 429 -> the webhook_audit row in every branch here -> _process_request.
+  T5 _process_request (signals/webhook_receiver.py lines 536 to 745) -> path key, body, token -> authentication,
+     key, EOD branch, kill, backpressure, window, parse, fields, alert name -> 401, 404, 403, 503 or 400, else the
+     per-symbol loop -> none -> _process_signal or _handle_eod.
+  T6 _process_signal (signals/webhook_receiver.py lines 892 to 1072) -> symbol, price, times -> validity, expiry,
+     in-flight, deduplication, the fingerprint -> a per-symbol status -> the signals row and the queue tuple ->
+     SignalProcessor (C-006 to C-008).
+  T7 _handle_eod (signals/webhook_receiver.py lines 751 to 804) -> body -> parse and fields -> 200 or 400 ->
+     eod_capture.submit and the cron_heartbeat row -> the watchlist capture worker (C-011).
+  T8 The batch answer (signals/webhook_receiver.py lines 730 to 745) -> per-symbol results -> any retryable status
+     -> 200 or 503 with headers -> the audit row (T4) -> back through waitress to the sender.
+
+
+==============================================================================
+7. TESTS INSPECTED, NOT EXECUTED (by name and scope; no test was run)
+==============================================================================
+  In these nine files no waitress, socket, network-client or app.run call was found (search S20: 0 matches), and
+  seven of them use Flask's test client (S21); so none of them exercises the server, the network, Chartink's real
+  bodies or the framework's own answers. In the 486 test files of S-ALL no test asserts a 413 answer or its missing
+  audit row (search S22); one asserts the limit's value: tests/unit/test_phase17_batch2.py lines 69 to 71.
+  - Every response branch of the route, from tests/unit/test_webhook_receiver.py line 134.
+  - The audit row for four outcomes: tests/unit/test_webhook_receiver.py lines 1007 to 1038.
+  - Five concurrent POSTs: tests/unit/test_webhook_receiver.py lines 1041 to 1071.
+  - The token redacted from the stored payload: tests/unit/test_webhook_receiver.py lines 1745 to 1776.
+  - The limiter's burst, refill, per-address independence, open-bell burst and eviction: tests/unit/test_c2_webhook_lockdown.py lines 23 to 77.
+  - The secret required in every mode: tests/unit/test_c2_webhook_lockdown.py line 85.
+  - An unreachable self-check degrades instead of stopping: tests/unit/test_s4_webhook_degrade.py lines 55 to 100.
+  - The queue-depth headers and the 503 threshold: tests/unit/test_fix134_backpressure.py lines 80 to 135.
+  - /health behind the secret and the limiter: tests/unit/test_fix134_backpressure.py lines 166 to 213.
+  - The EOD route's capture, window bypass, fail-safe miss and malformed payload: tests/unit/test_v3_eod_route.py lines 59 to 113.
+  - The EOD route after hours and under a kill, after authentication; 404 behind authentication; a 401 audited on
+    /webhook but not on /health: tests/unit/test_c6_auth_collapse.py lines 337 to 382.
+  - 503 after stop(), the receiver stopped before the processor, the in-flight claim under concurrency:
+    tests/unit/test_e4_event_loop_safety.py lines 319 to 380.
+  - A full queue, a drain and a retry: tests/integration/test_hardening_scenarios.py line 238.
+  - The self-check against an authenticated /health: tests/integration/test_hardening_scenarios.py line 301.
+  - Deduplication and the kill switch at the webhook: tests/integration/test_end_to_end_smoke.py lines 326 and 363.
+
+
+==============================================================================
+8. LABEL INDEX
+==============================================================================
+  FACT (SOURCE-VERIFIED) and FACT (CONFIG): Q1.1 to Q1.4, Q2.1 to Q2.3, Q2.5, Q3.2, Q5.1, Q5.2, Q7.1 to Q7.6,
+    Q8.1, Q9.1, Q10.1, Q10.2, the code part of Q10.4, Q11.1, Q11.2, Q11.4 (limit), Q12, Q13.1 to Q13.3, Q13.5,
+    Q13.7, Q14, Q16.2, Q17.2, Q17.3, Q18.1, Q18.3, Q18.4, N1 to N9.
+  FACT (RECORD-DERIVED): Q2.4, Q2.6, Q4.3, Q5.3, the record part of Q10.4, Q13.2, Q13.3, Q15 F1, Q16.1 (A14),
+    Q16.2 (31-Jul), Q17.1, Q17.4, R1 to R8.
+  HISTORICAL (Rama): Q2.7 and Q5.4 (21-Oct, through C-001), Q16.1 (21-Oct, this step).
+  CURRENT EXTERNAL FACT: Q2.8, Q8.2, Q10.3, Q10.4 (waitress), Q11.3, Q11.4 (probe), Q13.5 (waitress).
+  INTERPRETATION / AUDIT LEAD: Q4.2, Q10.5 (the tunnel inference), Q13.4, Q15 F1 (PB-01 not re-delivered), Q15
+    F3, F7 and F10, Q18.2 (arrival time), Q18.5.
+  KNOWN DEFECT / AMBIGUITY and KNOWN DOC DRIFT: K-1 to K-12.
+  UNKNOWN / NOT ESTABLISHED: Q4.1, U-1 to U-8.
+  Erratum candidates EC-1 to EC-7 and narrowing or clarification candidates NC-1 to NC-6: Q25.3 and Q25.4 (for
+    review; nothing applied).
+
+
+==============================================================================
+9. QUESTIONS FOR RAMA
+==============================================================================
+  Asked on 21-Oct-2026 (about 19:05 IST) and answered: whether Chartink ever showed a failed webhook delivery or a
+  re-delivery. His answer: "Don't know / never checked" (Q16.1).
+  No further Rama questions identified at this research stage. Everything else above is either established from
+  the source and records or is outside what Rama could settle from memory (Chartink's own behaviour, the VM's
+  later network state).
+
+
+==============================================================================
+10. PROPOSAL AND QUESTION REFERENCES (as on main; nothing decided here)
+==============================================================================
+  - VP-45 names C-002 as a ratification point, with C-010 and the configuration design (build phase)
+    (V2_DESIGN_LOG.md section 3; C-001 dropped from it at DR-053). This research proposes nothing for it.
+  - Q-20 (signal-to-instrument lookup) is C-004 and C-010 material; not touched.
+  - C-001's open items carried here: U-07 (Chartink retries) stays UNKNOWN (Q16); U-06 (arrivals after 31-Jul) stays
+    UNKNOWN (U-8).
+  - The exposed legacy webhook token: its removal from Chartink is Rama's separate action (DR-053, C-001); this
+    research neither used nor checked it.
+
+END - C-002 CLAUDE REPOSITORY ANSWERS

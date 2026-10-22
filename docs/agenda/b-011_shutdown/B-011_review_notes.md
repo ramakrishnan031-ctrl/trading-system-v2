@@ -4,7 +4,7 @@ Date: 2026-10-20 (revision 0, closed)
 Status: CLOSED 2026-10-20. ChatGPT's review response of 20-Oct found no blocking correction (section 7). Rama approved the final files on 20-Oct-2026 ("whenever you're required prepare final files (Approved)"):
 - the B-011 legacy manual is FROZEN (revision 0, DR-048), and the reconciliation addendum is frozen with it;
 - the V2 inputs remain PROPOSED / OPEN.
-Rama stores and pushes the package (section 8); Claude commits nothing.
+Rama stores and pushes the package (section 8); Claude commits nothing. Erratum E-1 to the B-011 manual (section 6: the webhook server and the separate health server) added 2026-10-21 during C-002 (C-002_review_notes.md section 5), accepted in principle in ChatGPT's value-added finalisation review of C-002, approved by Rama on 22-Oct-2026 and recorded in DR-055 together with the C-002 freeze. It corrects only that row; B-011_reconciliation_addendum.md item 4 stays as recorded and is superseded by it; the B-011 freeze (DR-048) is unchanged.
 
 ## 1. Sources
 - Inputs (Rama's uploads of 20-Oct-2026; to be stored byte-identical at the freeze):

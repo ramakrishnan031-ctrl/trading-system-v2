@@ -1,0 +1,96 @@
+CHATGPT INDEPENDENT REVIEW — C-002 SCANNER → WEBHOOK
+Date: 21-Oct-2026
+Project: Trading_System-v2_redesign
+Status: Review only; no manual frozen, no V2 decision, no repository changes
+
+1. EXECUTIVE REVIEW
+
+Claude’s C-002 research package is detailed and broadly well-structured. It separates scanner configuration, sender-side behaviour, request attempt/arrival, receiver acceptance, persistence and processing; uses a pinned Production snapshot; gives exact source anchors; records unknowns; and discloses a research-output handling exception. It is suitable for substantive independent review, but it should not be treated as a final C-002 manual or as approval of the erratum candidates.
+
+The key transport finding is that the legacy receiver used a per-scanner URL path segment and matched that segment against a configured scanner map. The repository did not contain proof of the actual URL entered on Chartink. A request audit row was evidence that the handler reached the request and wrote an audit record, not proof that Chartink received the response or that the signal was later processed.
+
+2. STRONG POINTS
+
+- Baseline discipline: Claude reports Production snapshot commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb and V2 governance commit 75c1eb7a39d2dd14bf5b5f26433cdf5da459c7c3. It distinguishes the repositories' roles.
+- Evidence-state discipline: the S1–S8 ladder correctly avoids conflating configuration, alert firing, attempted delivery, receiver arrival, acceptance, persistence and processing.
+- Bounded negatives: “not found” statements name the search scope rather than claiming universal absence.
+- Transport detail: route shape, HTTP method, response branches, request-audit limitations, body-size behaviour, queue hand-off, startup/shutdown availability and historical arrival records are documented with paths and line anchors.
+- Unknowns are retained: Chartink retries/timeouts and later VM network state are not guessed.
+- The research inventory documents the helper scripts, safety checks, searches, tests inspected but not executed, and process exceptions.
+- The package correctly says the erratum candidates are review-only and that nothing was changed.
+
+3. REQUIRED CAUTIONS BEFORE ACCEPTING THE PACKAGE
+
+A. Sensitive research-output exception
+The companion inventory says that Claude’s working output briefly displayed shortened fragments of hashes derived from the legacy webhook secret and a prefix of an older retired secret. The final deliverables do not reproduce them, but this is a genuine process exception. Preserve the disclosure and lesson; do not repeat the fragments, place them in a manual, or circulate raw working output. The documented legacy token is already treated as exposed. Do not test, revisit, or reuse it. The lesson should become a workflow control only through the normal governance process: never range-read long host records; use narrow filtered matches; mask secret/token/hash fragments and scan all derived outputs.
+
+B. Source verification boundary
+The package is Claude’s research with precise anchors; ChatGPT has reviewed the supplied deliverables, not independently cloned and re-run the full inventory against GitHub. Therefore describe this as an independent documentary review of the package, not a claim that ChatGPT independently reproduced every source search or line check.
+
+C. Legacy facts versus deployed runtime
+The source shows what the pinned code/config declares. It does not prove the deployed VM’s installed libraries, actual active firewall/security-list state, Chartink’s saved settings, all attempted requests, or sender receipt of responses. Retain those limits wherever findings are reused.
+
+D. Arrival audit coverage
+The proposed correction to C-001 is important. “Every POST is audited” is too broad: framework-level route/method/body-size responses and body-read failures can occur without a row, and audit insertion itself can fail. Any correction must state the bounded rule precisely and follow the approved erratum process. Do not edit a frozen manual directly.
+
+E. Historical retry claims
+A 503 response and comments expecting a retry do not establish that Chartink retries. Rama’s “don’t know / never checked” answer should remain the recorded answer; sender retry behaviour stays UNKNOWN / NOT ESTABLISHED.
+
+F. External library probe
+The local probe establishes behaviour only for the probed Flask/Werkzeug versions and the minimal test route. The deployed Werkzeug version is not established. Keep those findings labelled as probe results, not legacy-host observations.
+
+4. ERRATUM / RECONCILIATION REVIEW
+
+Treat Claude’s seven candidates as a checklist for review, not a package of approved changes:
+
+- EC-1: Audit-row coverage is a material correction candidate. The wording should be bounded to requests that reach the handler and whose body is read, subject to successful audit insertion. Check all cited frozen statements and their cross-references before proposing a single coordinated erratum.
+- EC-2: The C-001 cross-reference/status wording may be stale if the cited decision register proves the errata were accepted at freeze. Verify the precise frozen version and decision record before changing status text.
+- EC-3: Replace factual assertions that Chartink retries with “the receiver returns 503 intending to permit sender retry; whether Chartink retries is unknown.”
+- EC-4: Clarify that audit counts are zero for non-200 responses under the described code path; the response code, rather than per-symbol counts, records those request-level refusals.
+- EC-5: Narrow the claim that every outcome, including 401, is audited to reflect the known audit-coverage limitations.
+- EC-6: Distinguish the webhook app’s own health route from the separate health server. Do not silently rewrite the frozen B-011 manual or add a new conclusion without the erratum process.
+- EC-7: Scope the “every signal refused” statement under the kill switch to the relevant intraday route; the EOD route branches earlier according to the cited source.
+
+NC-1 through NC-6 are clarifications, not necessarily contradictions. Keep them separate from errata. In particular, distinguish POST counts from symbol-arrival counts, and preserve the differing historical dates as documented evidence unless the original records support a formal correction.
+
+5. ADDITIONAL USER INPUT: TWO SYSTEMS / TWO VMs USING CHARTINK
+
+The user’s proposed operational need is to distinguish alerts belonging to two separate systems while using the same Chartink account/site. One possible naming convention is to put a broker client code before the strategy name. This is a useful requirement to record, but it is a V2 design question and must not be silently decided during the legacy-documentation phase.
+
+Important legacy facts from C-002:
+- The legacy receiver’s path key was an exact, case-sensitive scanner-map key.
+- The configured key had to match the scanner name/path segment expected by the receiver.
+- The legacy payload could include scan_name and alert_name, but the receiver’s primary routing identity was the URL path segment; body metadata was not a substitute for the route key.
+- The legacy repository did not prove what scanner names or webhook URLs were actually saved in Chartink.
+- The legacy design used a shared token in a query parameter and plain HTTP. These are historical facts, not a pattern to carry forward.
+
+For later V2 governance, explicitly resolve the following questions before freezing a naming contract:
+1. Is the external scanner/alert name required to be globally unique across both systems, or only unique within each system?
+2. Which identifier is authoritative for system/tenant routing: a path namespace, a separately configured endpoint, an explicit system identifier, or a combination?
+3. How is the external Chartink scanner name mapped to an internal strategy ID? The external display name should not be assumed to be the internal strategy/config key.
+4. What happens if the path says System A but the payload says System B, or if the scanner name is unknown or mismatched?
+5. Are endpoints and authentication credentials isolated per system/VM? Avoid shared credentials across systems where independent isolation is required.
+6. How are strategy renames, duplicate names, case changes, whitespace, hyphens and migration/version changes handled?
+7. Is the broker client code actually needed for routing? Prefer a non-sensitive, stable system alias over embedding a real broker client identifier in scanner names, logs, payloads or filenames. Client identifiers should not be exposed merely for convenience.
+8. How are historical events attributed if a scanner is renamed or moved between systems?
+
+Illustrative naming only—not a decision:
+- External display name: `<SYSTEM_ALIAS>-<STRATEGY_ALIAS>`
+- Internal mapping: exact external scanner identifier → system alias + immutable strategy ID
+- Routing/authorization: independently validated system identity, not inferred from a human-readable name alone
+
+The system alias should be non-sensitive and stable. This illustration is not approval of a V2 endpoint, URL shape, authentication method, payload schema, or YAML layout. The detailed contract belongs in the later V2 design/governance phase, after Section C legacy manuals establish the facts.
+
+8. SCREENSHOT SECURITY NOTE
+
+One supplied Chartink screenshot visibly contains a token-bearing webhook URL. I have not copied the URL or token into this review. Do not forward or reuse that screenshot as a clean example. Because the legacy system is dead and its token is already treated as exposed, do not attempt a delivery test or access the old endpoint; ensure no such legacy token is reused in any active system.
+
+9. RECOMMENDED DISPOSITION
+
+- Accept C-002 as a substantial research input, subject to the cautions above; do not yet call it the final manual.
+- Keep all EC and NC items pending formal reconciliation and Rama’s approval under the established erratum process.
+- Do not make any V2 naming/routing decision now. Carry the two-system identification requirement into the later design agenda as an OPEN QUESTION.
+- Preserve the process-exception disclosure and its proposed safety lesson for governance review.
+- No code, configuration, frozen manual or repository change is authorized by this review.
+
+END OF REVIEW

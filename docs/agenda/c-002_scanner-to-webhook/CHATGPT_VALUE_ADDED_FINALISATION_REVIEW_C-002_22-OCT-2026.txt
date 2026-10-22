@@ -1,0 +1,104 @@
+C-002 SCANNER → WEBHOOK
+CHATGPT VALUE-ADDED FINALISATION REVIEW
+Date: 22-Oct-2026 (IST)
+Scope: Review of Claude's C-002 revision-0 package supplied for ChatGPT review.
+Status: REVIEW COMPLETE — CONDITIONAL ACCEPTANCE; Rama's freeze decisions remain required.
+
+1. EXECUTIVE CONCLUSION
+
+C-002 revision 0 is a substantial, evidence-conscious legacy manual draft. Its central boundary is correct: it documents the legacy receiver and the evidence available, while keeping V2 choices open. The reconciliation addendum, V2 design inputs, review notes and diffs form a coherent working package. The stated checks provide useful assurance, but they are not equivalent to ChatGPT independently reproducing all repository searches or to proving the legacy VM's deployed state.
+
+Recommendation: accept the package as READY FOR RAMA'S FINALISATION DECISIONS, not yet as FROZEN. Do not edit or store/commit/push anything as part of this review. The package says no files have been stored, committed or pushed; preserve that state until Rama explicitly approves final files and authorises storage.
+
+No new evidence justifies changing a legacy fact in the manual. The remaining work is governance, a few precision checks below, and explicit handling of the outstanding security action.
+
+2. STRONG POINTS TO PRESERVE
+
+- Evidence labels distinguish source declarations, configuration, dated records, Rama's historical account, external/library facts, interpretations, doc drift and unknowns.
+- The manual repeatedly limits source claims to the pinned production snapshot and dated record coverage; it does not present source as proof of installed or deployed state.
+- The sender-side evidence is appropriately bounded: repository configuration is not treated as proof of Chartink's saved alert URL or settings; the screenshots are limited to the one testing alert shown on 21-Oct.
+- The eight-state model prevents a configured scanner, fired alert, attempted request, received request, accepted symbol, persisted signal and processed signal from being conflated.
+- The response table, audit limitations, sender-retry UNKNOWN, service-down failure path and arrival-record windows are valuable technical detail.
+- The proposed audit-coverage errata now include the B-008 and B-009 passages and the 23-Jun restart contradiction. The manual does not silently rewrite frozen manuals.
+- The account-tag rationale is correctly treated as unsupported documentation rationale while preserving the code's actual behavior.
+- NC-6 is appropriately withdrawn after checking the holiday calendar; it should not return as an open discrepancy.
+- V2's two-system proposal and DR-028 scope are kept outside the legacy facts and routed to Q-46 / the Section C end-decision paper.
+- The review notes disclose what the checks did not cover, including searches not rerun and the screenshots not reopened.
+
+3. ERRATA AND RECONCILIATION ADDENDUM
+
+The nine proposed errata are internally coherent at the level presented:
+C-001 E-1; C-001 E-2; A-008 E-5; A-010 E-4; A-011 E-8; B-001 E-4; B-008 E-1; B-009 E-2; B-011 E-1.
+
+Recommended disposition:
+- Accept the audit-coverage corrections in principle, provided Rama accepts each erratum individually. The authoritative bounded rule in C-002 section 10.3 is a good approach: request reaches handler, body is read, and audit insert succeeds. The four non-covered cases are explicitly identified.
+- Accept the response-count clarification: non-200 responses record zero accepted/rejected counts; a 503 batch can still have per-symbol side effects that those aggregate counts do not describe.
+- Accept the retry wording correction: the receiver's 503 response is designed to invite retry; Chartink retry behavior remains UNKNOWN / NOT ESTABLISHED.
+- Accept the EOD/kill-gate correction: the EOD branch occurs before the kill/window/backpressure gates, so “every signal” is too broad.
+- Accept the 23-Jun correction: the later POSTs after the 12:26 restart mean that “every later signal was refused” is not supported for the whole day.
+- Accept B-011 E-1's two-server clarification: webhook receiver on port 5000 and separate health server on port 8080.
+- A-008 E-5 is a defensible clarification-only erratum. Keep NC-7 (the dashboard date lead) separate unless Rama explicitly chooses to combine it; it is not necessary to support the tag clarification.
+- Keep B-008_reconciliation_addendum.md item 2 and A-011_review_notes.md rows F-12/Q86 unchanged but clearly superseded by the relevant accepted errata. This preserves the historical record without leaving two competing statements of current documentary status.
+- EC-2 should only be accepted after the freeze register confirms the exact DR-053 acceptance of A-008 E-4 and B-002 E-2. The package reports that verification and cites the pinned V2 register; the final register entry must be the authority.
+
+No erratum should be treated as accepted merely because it is included in the diff. Rama's per-erratum decision remains the control point.
+
+4. IMPORTANT FINALISATION CHECKS
+
+A. Diff package / byte identity
+Claude reports that applying the diff file to the nine pinned committed files reproduces its nine working copies byte-for-byte, and removing the proposed insertions restores the pinned bytes. This is strong reported validation. Before final storage, retain the exact baseline commit and each affected file/blob reference in the final record. Do not apply the diffs to frozen manuals until Rama has accepted the individual errata.
+
+B. Design-log edits
+The design-log changes appear properly separated into lessons, Q-46, tracking notes and the C-002 row. Keep VP-45 PROPOSED. Dropping C-002 from VP-45's ratification points is a scheduling proposal, not an approved governance change until Rama accepts it at the freeze.
+
+C. Scope of independent verification
+The notes correctly say the independent checker did not re-run the research step's searches S01–S25, did not reopen screenshots, and did not independently reproduce the public-page fetch. Therefore describe the package as independently checked against cited ranges, cross-references and diffs—not as every research query independently repeated. Preserve that distinction in any status statement.
+
+D. Source inventory
+The manual says 76 files are in the source inventory, while review notes separately identify additional revision-0 reads. Confirm that the inventory and review notes together make the complete evidence set discoverable, and that the source inventory itself is retained unchanged as the research input. The current package appears to document the later reads in review notes; this is acceptable if the stored package retains both records and no claim is made that the initial inventory alone lists every revision-0 read.
+
+E. Manual section 23
+Section 23 cross-references frozen manuals and their proposed errata. At freeze, verify it agrees with the final accepted/rejected errata list and that every cited manual section/erratum exists. The review notes say the checker resolved references; do not change it without a concrete failed reference.
+
+F. Formatting / file naming
+Rama chose the repository file set with errata as diffs, so do not rename the manual to the alternative names from ChatGPT's earlier prompt. The present file names are consistent with that decision. The apparent jump from section 5 to section 8 in the earlier ChatGPT review is a numbering gap in that review file, not missing C-002 manual content. Record this only as a documentation note; do not invent sections 6 or 7 or add content to compensate.
+
+5. SECURITY ACTION — STILL PENDING
+
+The screenshot evidence showed a token-bearing legacy webhook URL still saved in at least one testing alert on 21-Oct-2026. The old endpoint was not tested or visited, and must not be tested. The legacy VMs are terminated and their old address may have been reassigned.
+
+C-001's action to remove or disable legacy webhook URLs in Chartink remains PENDING until Rama confirms completion. Do not mark it complete based on this review, the old system's death, or the fact that the endpoint was not tested. This action is operationally separate from the accuracy of the C-002 manual, but it must remain visible in the project record. Never reproduce or circulate the screenshot or the URL/token.
+
+6. V2 INPUTS AND GOVERNANCE
+
+Keep C-002_v2_design_inputs.md PROPOSED / OPEN:
+- Q-46: whether DR-028's “one Zerodha account trading in production” is scoped per system or to the V2 deployment as a whole. Rama explicitly chose the Section C end-decision paper. Do not settle it in C-002.
+- Client code versus a non-sensitive system alias in scanner names remains Rama's choice; note privacy exposure as a consideration, not as a decision.
+- Endpoint/path routing, authoritative system identity, payload cross-checks, immutable internal strategy IDs, per-system secrets, renames/duplicates, alert-count limits and shared Chartink dependency handling remain open design questions.
+- VP-45 and VP-56 remain PROPOSED. No V2 architecture or implementation decision is created by documenting these inputs.
+- The V2 two-system plan must not be written as a historical legacy behavior.
+
+7. ANSWERS TO THE QUESTIONS RAISED IN CLAUDE'S SCREENSHOT
+
+1. “When it's done, please confirm that the old webhook URLs were removed or disabled in Chartink.”
+   Not confirmed by the materials supplied. Status remains PENDING until Rama verifies and confirms. Do not visit or test the old endpoint.
+
+2. “Does ChatGPT's value-added review have sections 6 and 7? The file jumps from section 5 to section 8.”
+   The previously delivered review's numbering jumps from section 5 to section 8. This is a numbering gap in that review, not evidence that C-002 content is missing. The continuation prompt and reconciliation review cover the intended points. Do not create retroactive sections or infer content that was not there.
+
+8. FINALISATION DECISION LIST FOR RAMA
+
+At the freeze, please record explicit ACCEPT / REJECT / DEFER for:
+1. C-002 manual and reconciliation addendum as the frozen legacy record.
+2. Each of the nine errata individually: C-001 E-1, C-001 E-2, A-008 E-5, A-010 E-4, A-011 E-8, B-001 E-4, B-008 E-1, B-009 E-2, B-011 E-1.
+3. Whether NC-7 should remain only in C-002 or also be included with A-008 E-5.
+4. The proposed VP-45 scheduling change to remove C-002 from ratification points.
+5. C-002_review_notes.md closure.
+6. Storage of the source inputs byte-identically and the approved final files; Rama alone authorises storage/push.
+7. Separate confirmation when the old Chartink URLs have been removed or disabled.
+
+Do not decide Q-46 now; it is expressly reserved for the Section C end-decision paper.
+
+9. FINAL RECOMMENDATION
+
+Conditional acceptance. The C-002 revision-0 package is suitable for Rama's finalisation decisions and does not need a broad rewrite. Keep the manual factual, preserve the bounded evidence claims, keep all V2 design inputs open, and apply only those errata Rama explicitly accepts. Until those decisions are recorded, status remains DRAFT / OPEN, not FROZEN.

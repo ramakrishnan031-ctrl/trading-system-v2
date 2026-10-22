@@ -1,6 +1,6 @@
 # B-011 — Shutdown and Service Self-Exit
 
-**Document status:** FROZEN 2026-10-20 (DR-048). Revision 0 (Claude, 20-Oct-2026) of ChatGPT's draft of 20-Oct-2026, accepted unchanged by ChatGPT's review response of 20-Oct-2026 and approved by Rama. Changes from the draft: section 16.  
+**Document status:** FROZEN 2026-10-20 (DR-048). Revision 0 (Claude, 20-Oct-2026) of ChatGPT's draft of 20-Oct-2026, accepted unchanged by ChatGPT's review response of 20-Oct-2026 and approved by Rama. Changes from the draft: section 16. Erratum E-1 (section 6: the webhook server and the separate health server) added 2026-10-21 during C-002, accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026 and recorded in DR-055 (2026-10-22) together with the C-002 freeze.  
 **Evidence baseline:** `ramakrishnan031-ctrl/trading-system-prod-snapshot` at `970aabf3c78d777d9d34549e021f7c8e756c7bdb`  
 **Evidence date:** 20-Oct-2026  
 **Scope:** Factual documentation of the dead legacy system's shutdown and self-exit paths. This document does not authorize running, repairing, reviving, or redesigning the legacy system.
@@ -170,7 +170,7 @@ The source answer gives the following component-level facts. These are not all i
 | Webhook receiver | Set shutdown/sweeper flags; new requests return 503 | Flask server thread has no clean stop in the source comment |
 | Optional S&R/V3/PB-01 components | `stop()` called if non-None | Stop bodies not read; B-006 cross-reference |
 | Gate-release executor and other pools | Not completely traced | UNKNOWN / NOT ESTABLISHED |
-| Webhook and health HTTP server | `/health` is a route on the webhook Flask app (`signals/webhook_receiver.py` 364), served by waitress in a daemon thread (`main.py` 3988-4000). `_shutdown()` does not stop it; it ends at process exit | FACT (SOURCE-VERIFIED) |
+| Webhook and health HTTP server | ~~`/health` is a route on the webhook Flask app (`signals/webhook_receiver.py` 364), served by waitress in a daemon thread (`main.py` 3988-4000). `_shutdown()` does not stop it; it ends at process exit~~ (superseded by erratum E-1) Two servers: the webhook Flask app on port 5000, with its own `/health` route (`signals/webhook_receiver.py` 364; the WEBHOOK /health in B-007's terms), served by waitress in the daemon thread webhook-server (`main.py` 3988-4000), and the separate health server on port 8080, waitress in the daemon thread healthcheck-server (`main.py` 4073-4082; B-006 rows TH24 and TH25). `_shutdown()` stops neither; each ends at process exit (C-002_manual.md section 6.6) | FACT (SOURCE-VERIFIED) |
 | Pre-alert, margin-sync, EOD, self-exit threads; candle timer | Daemon threads (`main.py` 969, 1038, 1562, 4094-4099; `data/candle_store.py` 115); not joined by `_shutdown()` | FACT (SOURCE-VERIFIED) |
 
 The source answer reports the HARD_KILL flatten worker is non-daemon. If it remains alive after the 15-second drain, it can keep the process alive after “Shutdown complete”. The checked-in systemd unit declares `TimeoutStopSec=30`, but actual installation and escalation on a real host are UNKNOWN.
@@ -313,3 +313,10 @@ A raised exception in a wrapped stop is logged and the next cleanup step is atte
 - Section 13: items 4 and 6 narrowed.
 - Not done: optional component stop bodies (item A, B-006 cross-reference) and the cron registry (item C, B-012). Exit-code comment drift kept as drift (item E).
 - Supplement method: four test files added to the sparse set with anchored patterns; never-open check 0 after the checkout; all reads through the masking filter; nothing run.
+
+## Erratum (2026-10-21, found during C-002)
+- E-1 (section 6, the row "Webhook and health HTTP server"). Status: ACCEPTED. Proposed during C-002 (revision 0, 2026-10-21), accepted in principle in ChatGPT's value-added finalisation review of C-002 (22-Oct-2026), approved by Rama on 22-Oct-2026, independently of the C-002 freeze and of the other errata, and recorded in DR-055 (2026-10-22) together with the C-002 freeze. The struck text stays visible; the replacement is the text in force. Authoritative passage: C-002_manual.md section 6.6.
+- What changed: the row described one server whose `/health` route was the health endpoint. The process ran two waitress servers, the webhook app on port 5000 with its own `/health` route and a separate health server on port 8080, and `_shutdown()` stops neither (C-002_manual.md section 6.6; B-006 rows TH24 and TH25; B-007 section 6; A-011 section 5, steps 15 and 16). The row's conclusion holds for both.
+- Passages checked and not changed: section 13, item 6, and section 16, which refer to this row and read correctly with it. B-011_reconciliation_addendum.md item 4 stays unchanged as a record; its clarification, that the separately listed health server is the webhook app's route, is superseded by this erratum.
+- Reason: two servers named alike were merged into one; the code and three frozen manuals record two.
+- Impact: wording only; no V2 decision depends on it.

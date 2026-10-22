@@ -1,0 +1,203 @@
+C-002_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt
+Project: Trading_System-v2_redesign
+Topic: C-002 — Scanner → webhook
+Purpose: Answer sheet and source-research instructions for Claude
+Date: 22-Oct-2026 (IST)
+
+============================================================
+1. GOVERNANCE / CURRENT PHASE
+============================================================
+
+The legacy trading system is DEAD / REFERENCE ONLY. This task is factual documentation of the legacy Production baseline. Do not repair, revive, tune, run, deploy, or redesign the legacy system.
+
+C-001 (Chartink strategy / scanner) is frozen under DR-053. Its V2 inputs remain PROPOSED / OPEN. The Section C agenda continues with C-002 — Scanner → webhook.
+
+C-002 is a separate legacy documentation topic. Do not reopen C-001 or repeat its full scanner-condition analysis. Cite C-001 where needed and establish only the boundary facts C-002 needs.
+
+No V2 design decisions are authorised by this research. Do not turn observations into retain/reject/redesign decisions. Do not change scanners, Chartink alerts, webhook URLs, credentials, code, configuration, records, or any repository files.
+
+============================================================
+2. FIXED SOURCE BASELINE
+============================================================
+
+Primary legacy source:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Production baseline commit:
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Read only the pinned Production snapshot for legacy code/config claims. Do not substitute the sandbox/testing snapshot or infer Production behaviour from it. If a comparison is necessary, name both exact refs and keep the comparison separate from Production facts.
+
+V2 governance repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-v2
+
+Before using governance context, fetch/read the current V2 main and report the exact commit, timestamp/verification basis, and the current Master Agenda, V2_DECISION_REGISTER.md, V2_DESIGN_LOG.md and Section C handover if present. Do not assume a commit hash from an earlier chat is still current. Read them only; do not write or commit anything.
+
+Other legacy repositories:
+- Sandbox/testing snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+- Records snapshot: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+Do not use the sandbox or records repository as substitutes for the pinned Production source. Consult them only if a specific comparison/evidence question requires it, and clearly label the scope.
+
+============================================================
+3. TOPIC BOUNDARY — C-002
+============================================================
+
+Master Agenda title:
+C-002 — Scanner → webhook
+
+Section C goal:
+Establish exactly how an external signal becomes an internal trading candidate.
+
+C-002 should document the transport/hand-off from the external Chartink scanner alert to the Production webhook endpoint. Establish what is declared/configured on the sender side, what URL/path and HTTP method are expected by the receiver, what request is sent, what response is returned, and what evidence exists for actual historical arrivals.
+
+Keep boundaries clear:
+- C-001: strategy/scanner definitions, scanner identity inventory and scanner-condition facts. Cite its frozen manual rather than duplicating it.
+- C-002: scanner-to-endpoint transport and hand-off, request/response contract, URL/path construction, sender-side configuration evidence and arrival evidence.
+- C-003: authentication and secret/signature validation. C-002 may identify that authentication exists and hand off the details, but must not duplicate C-003's full analysis.
+- C-004: payload/input validation.
+- C-005: deduplication.
+- C-006: queue.
+- C-007: signal persistence.
+- C-008: signal processing.
+- C-009: signal expiry.
+- C-010: scanner-to-strategy mapping.
+- C-011: EOD/Daily routing.
+
+If a behaviour spans boundaries, describe only the C-002-facing contract and cross-reference the owning topic. Do not decide or write future V2 behaviour.
+
+============================================================
+4. RESEARCH QUESTIONS — ANSWER FROM EVIDENCE
+============================================================
+
+A. Sender-side declaration and configuration
+1. Which files and exact keys in the pinned Production source declare the scanner/webhook relationship?
+2. Which file(s), if any, hold the URL/path, scanner name, webhook URL, or sender-side metadata?
+3. Are there distinct scanner-map and URL/configuration files? What reads each one, and at which call sites?
+4. Does code establish that the configured URL was actually the URL entered in Chartink? If not, mark UNKNOWN / NOT ESTABLISHED.
+5. Does the source show any automated code that creates, updates, verifies, or deploys Chartink alerts? Search for callers and execution routes; do not infer from a helper or script's existence.
+6. What does C-001 already establish about the 16 scanner definitions and the twin URL file? Cite C-001 and avoid duplicating its entire catalogue.
+
+B. Receiver endpoint and transport contract
+7. Identify the actual Production HTTP server/app and the route declaration for scanner webhooks. Give exact file path, class/function, line range and caller/registration path.
+8. State the expected HTTP method, route/path pattern and how the scanner key/name is represented in the path.
+9. Establish whether the receiver expects a URL path per scanner, a common path, or another form. Quote the implementation, not a comment alone.
+10. Document any route registration/prefix/base-path behaviour, URL joining, trailing-slash handling, query-string use, or reverse-proxy assumptions only where source evidence exists.
+11. Identify request fields/headers relevant to the transport contract, while leaving authentication details to C-003 and field validation details to C-004.
+12. Explain the receiver's HTTP response contract at the transport boundary: status codes and response bodies relevant to acceptance/rejection/retry, with each status tied to its actual branch. Do not overclaim that a response proves the sender received it.
+13. Identify timeout, retry, redirect, TLS, DNS, port, proxy or network assumptions only if the pinned code/config explicitly establishes them. Otherwise label UNKNOWN / NOT ESTABLISHED.
+14. Trace the receiver's hand-off to the next component at the boundary only: what is called after an accepted request, and which later topic owns that behaviour?
+
+C. Failure and operational consequences
+15. What happens if the endpoint is unreachable, returns a non-success response, or the route/key is unknown? Separate sender-side behaviour (if established) from receiver-side behaviour.
+16. Is any retry behaviour implemented by the sender, receiver, broker, scheduler, or a separate script? Prove each claimed route through caller/configuration evidence; a function existing does not prove it is invoked.
+17. Can requests be sent more than once, arrive late, or arrive concurrently? State only what C-002 evidence establishes and cross-reference C-005/C-006 where appropriate.
+18. What logging/audit records show that a request reached the receiver? Identify source, fields, and scope. Keep “configured”, “alert fired”, “request attempted”, “HTTP request reached receiver”, “receiver accepted”, “signal persisted” and “signal processed” as distinct states.
+19. Which negative claims are bounded by the inspected files and commit? Use “not found in the inspected scope”, not universal “does not exist”.
+20. Are there historical records showing scanner-to-webhook arrivals? If used, identify exact records and dates, explain their coverage and limitations, and distinguish them from code/config declarations.
+
+D. Source map and evidence quality
+21. Provide a complete, topic-specific list of files inspected, including relevant code, configuration, tests, documentation, and dated records.
+22. For each important conclusion, provide exact file path, function/class, line range, and source type.
+23. Identify any mismatch between comments/docs/config and executable call paths.
+24. Identify what cannot be established from the repository: actual Chartink UI configuration, actual DNS/network reachability on a historical date, external delivery/receipt, actual sender retry settings, installed host state, or runtime outcomes unless a dated record directly establishes them.
+25. Check the frozen A-005 to A-011 and B-001 to B-012 manuals for directly relevant prior facts and errata before marking something UNKNOWN. Do not edit or reopen them; propose an erratum only if new evidence directly contradicts a frozen claim, and flag it separately for review.
+
+============================================================
+5. REQUIRED EVIDENCE LABELS
+============================================================
+
+Use these labels consistently:
+- FACT (SOURCE-VERIFIED): directly supported by code/config at the pinned Production commit.
+- FACT (RECORD-DERIVED): supported by a dated record/log/measurement, with scope stated.
+- FACT (CONFIG): declared in a configuration file; not proof of runtime use.
+- HISTORICAL (Rama-reported): user recollection or answer, attributed and dated.
+- INTERPRETATION / AUDIT LEAD: plausible mechanism/inference, not measured fact.
+- KNOWN DEFECT: demonstrated contradiction or faulty path, with impact and evidence.
+- UNKNOWN / NOT ESTABLISHED: evidence does not establish the claim.
+- OPEN QUESTION: a real choice or unresolved dependency, not a source-code lookup.
+
+Do not call a configuration entry “active”, an alert “working”, a request “delivered”, or a control “enforced” unless the relevant caller/path or dated evidence establishes it.
+
+For each important component, document:
+SOURCE → INPUT → CALCULATION / LOGIC → VALIDATION / GUARD → OUTPUT → STORAGE / HANDOFF → NEXT CONSUMER.
+
+For failures, show:
+TRIGGER → ACTUAL BRANCH → RESPONSE/STATE → LOG/AUDIT EVIDENCE → NEXT CONSEQUENCE → UNKNOWN LIMITS.
+
+============================================================
+6. SECURITY / LEGACY ACCESS RULES
+============================================================
+
+- Never print or reproduce actual passwords, API secrets, TOTP secrets, tokens, webhook secrets, full webhook URLs containing secrets, client/account IDs, VM addresses, hostnames, SSH aliases, key paths or fingerprints.
+- Use placeholders such as [REDACTED WEBHOOK URL], [WEBHOOK SECRET], [ACCOUNT ID].
+- The C-001 chat previously exposed legacy webhook URLs containing a token and a legacy address. Treat that token as exposed; do not copy it into research notes or outputs. Do not attempt to visit the exposed URL or send test requests.
+- Do not access Chartink UI or attempt to verify/update alerts. C-001 records that Rama chose not to have the Chartink URLs checked; do not reopen that choice here.
+- Never run the legacy service, invoke the webhook against any real endpoint, place broker/API calls, or run tests that could trigger external effects.
+- Follow the existing safe source-reading/masking workflow for legacy repositories. Avoid tree-wide/history Git commands on the legacy partial clone; use the exact pinned tree and checked-out files only. Route content reads/searches and derived output through the approved masking filter. Do not print raw matching lines.
+- Do not expose a value merely because a repository is public.
+
+============================================================
+7. RESEARCH METHOD / REQUIRED OUTPUTS FROM CLAUDE
+============================================================
+
+First deliver the research evidence package only. Do not draft the final C-002 manual yet.
+
+Required outputs:
+1. C-002_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt
+   - Answer questions 1–25 above.
+   - Include exact path/function/line citations for load-bearing claims.
+   - Mark each item FACT, UNKNOWN, INTERPRETATION, KNOWN DEFECT or OPEN QUESTION as appropriate.
+   - Do not leave source-code questions for Rama when the pinned source can answer them.
+   - Ask Rama only about genuinely personal historical recollection or a decision that cannot be inferred from evidence.
+
+2. C-002_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt
+   - Pinned repository URL and exact commit.
+   - V2 governance commit and exact governance files read.
+   - Complete inspected-file list with reasons.
+   - Source-reading method, masking/security checks, searches run and their scope.
+   - Tests inspected but not executed.
+   - Any accidental process deviations or output exposure, even if nothing was written.
+   - Negative-evidence boundaries and all known limitations.
+   - Do not include secret values or sensitive infrastructure identifiers.
+
+3. C-002_OPEN_QUESTIONS_FOR_RAMA_22-OCT-2026.txt
+   - Only questions that cannot be answered from code/config/records or established governance.
+   - If none, explicitly state “No Rama questions identified at this research stage.”
+   - Do not ask Rama to confirm a fact already established in the source or frozen records.
+
+4. C-002_CLAUDE_RESEARCH_DIFF_OR_CHANGE_SUMMARY_22-OCT-2026.txt
+   - State what was created and confirm no repository files were modified, staged, committed or pushed.
+   - If the existing Section C handover prescribes a different exact output filename or process, report that conflict before proceeding; do not silently override governance.
+
+Do not create or edit:
+- C-002_manual.md
+- C-002_reconciliation_addendum.md
+- C-002_v2_design_inputs.md
+- V2_DECISION_REGISTER.md
+- V2_DESIGN_LOG.md
+- any C-001 or frozen A/B manual.
+
+============================================================
+8. REVIEW CHECKLIST BEFORE RETURNING THE PACKAGE
+============================================================
+
+- Confirm all 25 research questions were answered or explicitly marked UNKNOWN / NOT ESTABLISHED / NOT APPLICABLE with a reason.
+- Re-check every path, function/class, line range, commit ID, row ID and quoted source against a tool output from this session; never type identifiers from memory.
+- Distinguish scanner configured, alert configured, alert fired, request attempted, request received, accepted, persisted and processed.
+- Confirm no claim of a running sender-side script without a proven caller/schedule or dated execution record.
+- Check comments and docstrings against executable implementation and call paths.
+- Check all retry/timeout/network claims against the actual implementation and any cited library documentation; do not guess.
+- Check cross-references to C-001 and future C-003 through C-011 boundaries.
+- Scan the outputs for secrets, URL tokens, client/account IDs, hostnames, addresses, SSH details, session links and other sensitive values.
+- Report checks as performed only if actually run; give scope and counts. A pattern scan is not proof that no sensitive material exists.
+- Do not run tests or code that can contact external systems or cause side effects.
+- Do not store files in the Project or push to GitHub. Return the research files for independent ChatGPT review first.
+
+============================================================
+9. STOP POINT
+============================================================
+
+Stop after delivering the research evidence package and any truly necessary Rama questions. Wait for ChatGPT's independent review before drafting the C-002 manual.
+
+No V2 decisions, implementation, scanner changes, Chartink changes, repository writes, commits or pushes are authorised by this task.

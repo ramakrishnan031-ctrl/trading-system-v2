@@ -1,0 +1,231 @@
+C-002 SCANNER -> WEBHOOK: CLAUDE SUPPLEMENT FOR CHATGPT'S RECONCILIATION
+Date of work: 21-Oct-2026 (IST); reading and checks between about 20:05 and 20:30 IST.
+Corrected copy, 20:40 IST: the first copy's header read "about 20:45 IST", a time after its delivery (see 9.6).
+Status: research input for the reconciliation that Rama asked ChatGPT to do before revision 0 (his choice, 21-Oct,
+about 20:15 IST). Not a manual and not final; nothing stored, staged or pushed (W-2). No V2 decision is made here.
+Baselines (both unchanged since the research files): legacy production snapshot
+970aabf3c78d777d9d34549e021f7c8e756c7bdb; V2 main 75c1eb7a39d2dd14bf5b5f26433cdf5da459c7c3.
+Companions (unchanged): C-002_CLAUDE_REPOSITORY_ANSWERS_21-OCT-2026.txt ("the answers") and
+C-002_SOURCE_INVENTORY_AND_METHOD_21-OCT-2026.txt ("the inventory"). This file answers
+CHATGPT_VALUE_ADDED_REVIEW_C-002_SCANNER_TO_WEBHOOK_21-OCT-2026.txt ("the review").
+Labels: as in the answers, section 0, plus three used in C-001's V2 design inputs for V2 material: RAMA (his words,
+quoted), DECIDED (an existing register row, quoted) and CLAUDE CONSIDERATION (a question for the owner, not a
+requirement). New item numbers continue the answers' series: K-13, U-9 and U-10, NC-7 and NC-8, plus G-1.
+
+CONTENTS
+  1. Response to the review
+  2. Rama's new answers (21-Oct)
+  3. Sender-side facts from Rama's screenshots
+  4. Chartink's Alerts Guide
+  5. How the new facts fit the repository facts
+  6. New candidates for the reconciliation
+  7. The two-system requirement (V2; OPEN) and G-1 against DR-028
+  8. Security
+  9. Method and checks for this file
+
+==============================================================================
+1. RESPONSE TO THE REVIEW
+==============================================================================
+  1.1 Accepted as written: the package is a research input, not the final manual; EC-1 to EC-7 are a review
+      checklist; NC-1 to NC-6 are clarifications, kept apart from errata; no V2 naming or routing decision; no code,
+      configuration, frozen-manual or repository change.
+  1.2 Caution A: E-1 stays disclosed in the inventory (section 4) and its fragments are repeated nowhere. The lesson
+      goes to the design log as a proposed lesson in revision 0, for the normal governance process.
+  1.3 Caution B: revision 0 will describe the review as an independent documentary review of the package.
+  1.4 Cautions C and F: kept. Source facts stay "as declared at 970aabf"; probe results stay CURRENT EXTERNAL FACT
+      (local probe, the probed versions only), never legacy-host observations.
+  1.5 Caution D: EC-1 will be proposed as one coordinated erratum over the C-001 statements it cites (sections 3,
+      6.6, 7.1 and 9.2) and their cross-references, worded as the bounded rule; EC-4 (A-011) and EC-5 (A-010), which
+      touch the same audit rule, will be checked against it so the wordings agree. No frozen manual is edited before
+      a decision.
+  1.6 Caution E: retries stay UNKNOWN / NOT ESTABLISHED, with Rama's answer ("Don't know / never checked") as the
+      recorded answer. EC-3 will use the review's wording.
+  1.7 EC-2, verified as the review asked. DECIDED: the DR-053 row in V2_DECISION_REGISTER.md reads "Errata ACCEPTED,
+      decided on their own: A-008 E-4 ... and B-002 E-2". At main 75c1eb7, C-001_manual.md section 18 still reads
+      "errata E-1 and, proposed, E-4" for A-008 and "erratum E-2, proposed" for B-002, and section 20's freeze item
+      lists what the freeze changed: "The freeze changed only the status and date lines, the errata sentence of
+      section 6.3, section 17's status and this item." Section 18 was not among them, so EC-2 stands as a candidate.
+  1.8 The review file runs from section 5 to section 8; sections 6 and 7 are absent from the copy received. Claude
+      has asked Rama whether they exist.
+
+==============================================================================
+2. RAMA'S NEW ANSWERS (21-Oct)
+==============================================================================
+  2.1 Question (answered about 20:15 IST): the testing scan names in his screenshot start with the testing
+      account's tag; who put it there? Answer: "I typed it myself".
+      HISTORICAL (Rama): Rama typed the account tag at the front of the testing scan names; Chartink did not add it.
+  2.2 Question (answered about 20:25 IST): what are the two systems in his two-VM plan, given DR-028 (one
+      Zerodha account trading in production)? RAMA, verbatim: "Simple, 2 different VM's with 2 different zerodha
+      account (So basically both VM's has their own separate resources like capital, telgram/email credentials,
+      broker accounts, API etc) but what matters means single Chartink website for singal, So identification
+      purposes I'll add zerodha client code in strategy name that's the only thing, So you can assure both system
+      will trade on its own independent to other".
+      This is V2 input, not a legacy fact: it goes to section 7 and to VP-45 tracking, not to the manual (W-1).
+
+==============================================================================
+3. SENDER-SIDE FACTS FROM RAMA'S SCREENSHOTS (supplied 21-Oct, about 20:00 IST)
+==============================================================================
+  Handling: three screenshots, not stored (DR-008). Between them they show the legacy VM's address, the full
+  webhook token and account identifiers; none is reproduced here. Placeholders: [VM ADDRESS], [WEBHOOK SECRET],
+  [testing account tag]. The third is Rama's chat with ChatGPT (section 7).
+  Label for 3.1 to 3.3: CURRENT EXTERNAL FACT (Rama-supplied screenshot of Chartink, 21-Oct-2026). They show what
+  Chartink displays today for these testing scans. They do not establish production's alerts, the settings in
+  force from 12-Jun to 04-Aug, whether an alert is enabled now, or that the displayed payload equals what was sent.
+  3.1 Dashboard: scans named "[testing account tag]-<strategy name in capitals>" (among them open low breakout long,
+      open high breakdown short, first pullback long and short, VWAP bounce long, VWAP rejection short, gap go long
+      and PB01 breakout + retest "(shadow)"), marked private and with alerts, shown as created on 9/8/2026.
+      Another entry shows 9/17/2026, so the order is month/day: 08-Sep-2026 and 17-Sep-2026 (INTERPRETATION of
+      the date format).
+  3.2 One alert, the "Modify alert" dialog of the open low breakout long scan: frequency 1 minute; minimum matches 1;
+      After trigger "Continue"; Duplicates "Duplicate"; delivery Desktop/Mobile (web); a webhook URL of the form
+      http://[VM ADDRESS]:5000/webhook/open_low_breakout_long?token=[WEBHOOK SECRET], that is plain HTTP, port 5000,
+      the bare strategy key as the path segment and the token as a query parameter; a "Test webhook" control,
+      whose use is not evidenced.
+  3.3 The payload the dialog displays: stocks, trigger_prices, triggered_at (a sample value in the form "7:53 pm"),
+      scan_name ("[testing account tag]-OPEN LOW BREAKOUT LONG"), scan_url (the same name as a lower-case
+      hyphenated slug), alert_name, and webhook_url, which repeats the full token-bearing URL.
+
+==============================================================================
+4. CHARTINK'S ALERTS GUIDE
+==============================================================================
+  CURRENT EXTERNAL FACT (Chartink's public "Alerts Guide", https://chartink.com/articles/alerts/alerts-guide/,
+  posted 02-Feb-2018 with a page date of 17-Jun-2026; read 21-Oct-2026 through a summarising fetch, so these are
+  paraphrases, not the raw page; not evidence of the legacy period):
+  4.1 Frequency: every 1, 2, 3, 5, 10, 15, 20, 30, 60, 120 or 240 minutes, or at Market Open or Market Close.
+  4.2 After trigger: "Continue" keeps monitoring and triggers whenever the conditions are met again; "Pause" stops
+      after the first successful trigger.
+  4.3 Duplicates: "Unique" gives one alert per stock for the day; "Duplicate" allows repeated notifications for the
+      same stock whenever it matches again that day.
+  4.4 Minimum stocks to alert: the alert fires only when at least that many stocks match.
+  4.5 Delivery: email, SMS, desktop/mobile (web) and WhatsApp, one or several.
+  4.6 Webhook: an HTTP POST to the URL given; a "Payload Columns" setting chooses the data fields included.
+  4.7 Retries and timeouts: not described. U-07 stays UNKNOWN (the answers, Q16).
+
+==============================================================================
+5. HOW THE NEW FACTS FIT THE REPOSITORY FACTS (INTERPRETATION unless marked)
+==============================================================================
+  5.1 Path and name. The saved URL's path is the bare key and the scan name carries the tag: the shape the WR4b
+      code expects. FACT (SOURCE-VERIFIED): _strip_account_prefix removes a leading "<primary account tag>-" or
+      "<tag>_" from the normalised scan_name before WR4 compares it with the path segment; the docstring says the
+      tag "comes from accounts.csv via AR12" (a never-open file, not opened).
+      Evidence: signals/webhook_receiver.py lines 111 to 138.
+  5.2 The token in the body. webhook_url repeating the token-bearing URL agrees with the answers' Q2.6 (the 05-Jul
+      record: every stored payload to that day held the token because Chartink echoed the configured URL) and
+      with Q11.2 (the stored copy's webhook_url is blanked). For this testing alert, today, the token travels in
+      both the query string and the body.
+  5.3 The time field. FACT (SOURCE-VERIFIED): the receiver tries "%Y-%m-%d %H:%M:%S", then "%I:%M %p", then
+      "%H:%M", and its comment reads "Chartink sends "HH:MM am/pm"".
+      Evidence: signals/webhook_receiver.py lines 635 to 657.
+      CURRENT EXTERNAL FACT (local check, Python 3.13.16): "7:53 pm" parses under "%I:%M %p" as 19:53. Field rules
+      remain C-004's (W-6).
+  5.4 Cadence. One minute, Continue and Duplicate agree with R4 ("Chartink posts each scanner about once a minute",
+      the answers, Q20). Agreement, not proof: R4 is production from 12-Jun to 16-Jul; the screenshot is testing
+      on 21-Oct.
+  5.5 The saved URL. The answers' Q4.1 (no code or configuration records the URL entered in Chartink) stays true
+      for the repository. The screenshot shows that URL for one testing alert on 21-Oct only; Q4.2's lead for
+      production is unchanged.
+  5.6 One alert, one VM. A Chartink support reply under its webhook article allows one webhook per scan and alert
+      (28-May-2024; the answers, Q2.8). So an alert cannot feed two VMs, and each system needs its own alerts
+      (section 7).
+
+==============================================================================
+6. NEW CANDIDATES FOR THE RECONCILIATION (none applied)
+==============================================================================
+  6.1 K-13, KNOWN DOC DRIFT (code comment). The WR4b docstring gives its reason as "Chartink alert names are
+      per-account on a shared Chartink login" and "The account name cannot be dropped in the Chartink UI, so the
+      receiver absorbs it." Rama's answer (2.1) does not support that reason: he typed the tag himself. The code
+      fact is unaffected. Evidence: signals/webhook_receiver.py lines 111 to 128.
+  6.2 U-9, UNKNOWN: whether Chartink lets an existing scan or alert be renamed, and whether it requires distinct
+      scan names within one login. Not needed for the legacy manual; relevant to VP-45.
+  6.3 U-10, UNKNOWN: whether Rama's Chartink plan limits the number of active alerts (two systems need one alert per
+      strategy per system). One web search found nothing on this; relevant to VP-45.
+  6.4 NC-7, a lead for A-008 section 9 ("When that outage began: UNKNOWN", A-008 line 106). The prefixed testing
+      scans shown were created on 08-Sep-2026 (month/day inferred, 3.1), one day before WR4b (09-Sep). Only a lead:
+      the date may belong to the scan rather than its alert, earlier prefixed alerts may have existed, and no record
+      of the testing VM's 400 answers was read (production snapshot only). Proposed handling: a dated note beside
+      the UNKNOWN, not a correction.
+  6.5 NC-8, a clarification for A-008 section 9 (A-008 line 105) and A-008_v2_design_inputs.md section 8. Both
+      report the WR4b comment's reason; neither is wrong, since each says what the comment says. Proposed: add
+      Rama's answer (2.1) beside them, and in the VP-45 tracking note (7.3), so the reason is not read as a
+      Chartink rule.
+
+==============================================================================
+7. THE TWO-SYSTEM REQUIREMENT (V2; OPEN) AND G-1 AGAINST DR-028
+==============================================================================
+  7.1 RAMA: his words to ChatGPT (third screenshot; paraphrased, placeholders mine): one Chartink account for two
+      systems on two VMs, identified by scan names "[CLIENT CODE 1]-<strategy name>" for one VM and "[CLIENT CODE
+      2]-<strategy name>" for the other; he asked how such names appear in the payload JSON and in the system's
+      YAML or other strategy-name files: "So ensure how we are going to deal in new system". His answer to Claude
+      is in 2.2.
+  7.2 LEGACY, for his question (the answers Q8 to Q12; A-008 section 9): the routing key was the URL path segment,
+      the bare map key and strategy name, set in each alert's URL (no automation in the repository created alerts;
+      the answers, Q5). The tagged name reached the receiver only in the payload's name fields (scan_name and
+      scan_url in the screenshot); of those the receiver read scan_name alone, stripped the primary account's tag
+      and cross-checked the rest against the path. FACT (SOURCE-VERIFIED, value-blind): no client-ID shape occurs in
+      config/scan_webhook_map.yaml or in any of the 16 config/strategies/*.yaml files (masked-reader counts 0 and
+      0). Which VM a signal reached was set by the address in the alert's URL, not by the name.
+  7.3 Tracking: VP-45 (Chartink identity) already carries Rama's uniformity requirement and names C-002 as a
+      ratification point; VP-56 already proposes per-environment credentials, a separate webhook secret per
+      environment among them (its other items concern operator alert channels); the same question now arises per
+      system. Proposed for revision 0: a VP-45 tracking note with 7.1, 2.2, 2.1 and the review's eight questions;
+      VP-45 stays PROPOSED, and C-002 is proposed to drop from its ratification points (scheduling only, as C-001
+      did at DR-053). Nothing decided.
+  7.4 G-1, a governance flag. DECIDED (DR-028, 09-Oct): "Zerodha only, with one Zerodha account trading in
+      production (development and pre-live testing are left to Q-01 and VP-56)". Its evidence (the Section A end
+      decision paper, D-2b): Rama's A-010 Q35 answer (Zerodha only, live only), the legacy registry's single primary
+      account, and Rama's account that only one account was loaded for trading. Rama's statement (2.2) describes
+      two independent systems, each trading its own Zerodha account. Read per system, the two agree; read for V2
+      as a whole, two accounts would trade in production, which DR-028's words do not cover. DR-028 is not edited
+      either way. Proposed: a new register row, referencing DR-028, that records which reading holds. Scheduling
+      options for Rama: (a) an item decided on its own in the C-002 freeze row; (b) the Section C end decision
+      paper. Claude leans (b): it is a scope matter, not a transport fact.
+  7.5 CLAUDE CONSIDERATIONS for VP-45 and VP-56 (questions for the owner, not requirements; they add to the review's
+      eight questions):
+      a. Independence rests on each alert's URL and each system's own secret (5.6, VP-56); the tag in the name is
+         for the operator, plus whatever check V2 adopts.
+      b. A misdirected alert: should each system reject a name carrying another system's tag (the review's
+         question 4)?
+      c. The real client code in scan names would arrive in every payload, so V2's logs and stored payloads would
+         hold it unless V2 maps or redacts it (VP-51: account IDs out of tracked files; VP-55: redaction). The
+         review's question 7 suggests a non-sensitive alias. Rama's stated plan is the client code; the choice
+         stays with VP-45.
+      d. One login is a shared dependency: a Chartink outage, a plan limit (U-10) or an alert edited by mistake
+         affects both systems at once.
+
+==============================================================================
+8. SECURITY
+==============================================================================
+  8.1 No value from the screenshots is reproduced: not the VM address, the token or either account tag.
+  8.2 C-001's open action (C-001_review_notes.md, section 2: remove or disable the legacy webhook URLs in the
+      Chartink alerts) is still pending as far as the screenshot shows: a token-bearing legacy URL is still saved on
+      at least one testing alert. Whether that token is the one Rama pasted for C-001 is not established (VP-56
+      records that the testing VM had its own credentials). Both legacy VMs are terminated (DR-012), so the address
+      may be reassigned. The action is recorded as done only after Rama confirms (as C-001 set).
+  8.3 Nothing here used, tested or visited the token or the old endpoint; Chartink was not opened.
+
+==============================================================================
+9. METHOD AND CHECKS FOR THIS FILE
+==============================================================================
+  9.1 V2 reads (main 75c1eb7; the scratch clone and the governance copies): the DR-053 and DR-028 rows;
+      C-001_manual.md sections 18 and 20; V2_DESIGN_LOG.md rows VP-45, VP-51, VP-55 and VP-56 (section 3) and
+      Q-01 (section 2); A-008_manual.md section 9; A-008_v2_design_inputs.md section 8; C-001_review_notes.md and
+      C-001_v2_design_inputs.md (pattern searches); the Section A end decision paper (D-2b); A-010_manual.md and
+      A-010_v2_design_inputs.md (single-account lines, pattern searches).
+  9.2 Legacy reads (masked reader only, production clone at 970aabf): signals/webhook_receiver.py lines 104 to 140;
+      signals/webhook_receiver.py lines 634 to 660; two pattern searches in that file; a count-only pass over
+      config/scan_webhook_map.yaml and the 16 config/strategies/*.yaml files (only the mask counts printed); no
+      other legacy file. Clone state afterwards: 8,922 objects, no never-open blob present, HEAD at 970aabf.
+  9.3 Web: one fetch (the Alerts Guide) and three searches (alert settings; scan naming; alert limits; the last two
+      found nothing relevant).
+  9.4 Tool note: the masked reader given an option it does not know ("--help") loops without printing anything; it
+      was stopped. Lesson candidate for revision 0: unknown options should end with an error. The tool is unchanged,
+      so its recorded hash stands.
+  9.5 Checks run on this file: the value-blind identifier scan, the lower-case client-ID check, the citation check,
+      and searches for non-ASCII characters, carriage returns and credential patterns (results in Claude's reply).
+  9.6 Correction (20:40 IST): the first copy's header gave "about 20:45 IST", an estimate written before delivery
+      (its last write was 20:30 IST). Changed in this copy: the two header lines, "answered" added to the question
+      times in 2.1 and 2.2 (their lines rewrapped), and this item; nothing else. Lesson candidate for revision 0:
+      a header records the window in which the work was done, ending at the last write, never an estimated
+      delivery time.
+
+END - C-002 CLAUDE SUPPLEMENT FOR RECONCILIATION
