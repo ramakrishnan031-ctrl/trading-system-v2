@@ -1,0 +1,43 @@
+C-004 REVISION 0 — CHATGPT INDEPENDENT REVIEW
+23-Oct-2026, review based on the four delivered files
+
+FILES REVIEWED
+1. C-004_manual.md — 822 lines
+2. C-004_v2_design_inputs.md — 30 lines
+3. C-004_REVISION_0_DRAFTING_REPORT_23-OCT-2026.txt — 352 lines
+4. C-004_REVISION_0_DELIVERY_MANIFEST_23-OCT-2026.txt — 74 lines
+
+INTEGRITY CHECK PERFORMED HERE
+I materialised the four delivered files and independently recalculated their SHA-256 hashes, line counts, ASCII status and CR presence. All four hashes and line counts match the manifest/report; all are ASCII-only, contain no carriage returns and end with a newline. This verifies byte-level consistency of these delivered copies, not every drafting-brief QA claim or every source citation.
+
+OVERALL ASSESSMENT
+The manual is detailed, traceable and appropriately scoped as a DRAFT, not frozen. It distinguishes source facts from configuration, tests inspected but not run, current external facts, interpretation, known defects, unknowns, historical testimony and open questions. The V2 companion is clearly PROPOSED / OPEN and does not purport to make a V2 decision. The report is unusually transparent about its read log, corrections, independent-check findings, security scan classes and freeze-only work.
+
+ONE MATERIAL ISSUE — PLEASE CORRECT BEFORE FREEZE
+The TVSSCS → TVSSRICHAK discussion overstates what can be inferred from the target's current public listing.
+
+Locations:
+- C-004_manual.md §7.1, K-06
+- §10.4
+- §20, C-10
+- §27 final statement / any equivalent summary wording
+- C-004_v2_design_inputs.md §3, if its wording implies that a quote is assured
+
+The source supports that the alias transforms TVSSCS to TVSSRICHAK before storage/queueing and that the later quote request uses the resolved symbol. Current public listings support that TVSSRICHAK is a listed symbol today. They do NOT establish that the broker's quote endpoint would return a quote for it at the relevant historical time. The manual itself correctly marks broker responses as UNKNOWN in U-03. Therefore phrases such as “the quote fetch would return a quote for the target”, “would not stop such a signal”, or “a ‘No such symbol’ rejection would not be expected” go beyond the evidence and conflict with that stated unknown.
+
+Suggested evidence-safe replacement:
+“Under the pinned code, the alias would cause the receiver and later quote path to use TVSSRICHAK rather than TVSSCS. Current public listings identify TVSSRICHAK as a different company's listed symbol. The code would request a quote using that resolved symbol; whether the broker would return a quote for it at the relevant time is UNKNOWN / NOT ESTABLISHED (U-03). If no quote were returned, the signal would stop at SKIPPED_QUOTE_UNAVAILABLE before sizing/order placement. No historical arrival, quote result, order, position or loss is established.”
+
+Keep the mismatch itself as the known defect. This correction does not weaken the documented alias mismatch; it narrows only the downstream inference. Update the manual's summary and C-10 consistently, then rerun the brief's required checks and update the report/manifest hashes for the changed bytes. Do not modify frozen manuals or governance files during this draft correction.
+
+OTHER REVIEW NOTES
+- The independent check is useful, but the report explicitly says the separate checker did not re-check the post-fix copies; scripted checks and Claude's own reading are the stated evidence. That limitation is honestly disclosed, not itself a blocker.
+- The companion file's treatment of Rama's quoted V2 input as PROPOSED / OPEN, and the separation between the legacy manual and V2 input, are appropriate.
+- The report correctly leaves accepted errata unapplied and lists all freeze-time register, review-note, README, packaging and manifest work as not done.
+- Do not treat this review as a freeze approval. The draft should return after the evidence-bound wording correction and final checks.
+
+PROPOSED REPLY TO CLAUDE
+“ChatGPT reviewed all four C-004 revision-0 files and independently verified the delivered copies’ SHA-256 hashes, line counts, ASCII-only status and absence of CRs against the manifest. Overall, the draft is well structured and governance-aligned. One material wording correction is required before freeze: do not infer that a current public listing guarantees the historical broker quote fetch would return a quote for TVSSRICHAK. The broker response is explicitly UNKNOWN (U-03). Please amend §7.1/K-06, §10.4, §20/C-10 and the final summary to say that the code would request the resolved symbol and that the quote result is UNKNOWN; if no quote were returned, the documented path stops at SKIPPED_QUOTE_UNAVAILABLE. Apply the same qualification to the companion if needed, rerun all required checks on final bytes, and send the four updated files plus updated report/manifest for review. Do not freeze, store, change frozen manuals/registers, commit or push. ChatGPT’s review is not freeze approval.”
+
+STATUS
+Revision 0 remains DRAFT. No project/repository file was changed by this review; no legacy code or tests were run; no host records were read.

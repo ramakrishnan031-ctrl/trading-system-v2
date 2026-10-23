@@ -1,0 +1,47 @@
+Q1. During the legacy live period, did you personally observe or investigate webhook payloads rejected because a required field was absent, empty, malformed, or the wrong type?
+Answer: UNKNOWN
+
+Q2. Did you personally observe a symbol rejected as unknown, malformed, unsupported, or absent from instrument data? Describe the event without sensitive payloads or identifiers.
+Answer: While making ordering symbols/stocks has been rejected due to some stocks not allowed in MIS order window, meaning some stocks must be in 'CNC' window
+
+Q3. Were there known differences between symbols supplied by Chartink and names expected by the trading system or Zerodha? Give only safe examples or describe the class of difference.
+Answer: Some stocks has different names (ie symbol mismatches) for that stocks one file is created here 'https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/tree/main/config/symbol_aliases.yaml, But in new system not this kind of things, Once stock has not been ordered due mismatches or CNC requirement (as per Q2) just outright reject the stock, Not to be added to 'Orders' since this is not executed at broker side, So no more complications in new system
+
+Q4. Do you recall a symbol-alias mapping or name correction being introduced, changed, or removed? Give approximate date and reason if known.
+Answer: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/tree/main/config/symbol_aliases.yaml & In new system no more such things, So if stock not ordered/cancelled then just outright reject and move on [Refer Q3]
+
+Q5. Do you recall how missing/invalid prices, trigger prices, timestamps, stock lists, or scan names were handled? Mark observed, remembered, or unknown for each; do not infer from current source.
+Answer: UNKNOWN
+
+Q6. Were webhook payloads ever manually replayed, altered, or sent with synthetic symbols/prices for testing? State environment and approximate period only. Do not contact endpoints or reproduce secrets.
+Answer: NO, nothing has been manually done anything (Meaning webhook or chartink never touched except adding/removing strategies
+
+Q7. To your knowledge, did production and testing differ in field or symbol validation? Separate direct observation from assumption.
+Answer: No such things, why? Both systems are 100% consumers of chartink only, So no such differences
+
+Q8. Do you recall the instrument master / instruments.csv being refreshed during the live period, or an incident involving stale or missing instrument data? Give date and record location if known.
+Answer: Since it is headless process, I never knew nothing
+
+Q9. Were there manual overrides, static exclusions, alias files, allowlists, or denylists affecting symbol eligibility beyond what you remember from A-004/A-008/C-001?
+Answer: System 100% headless, So nothing has been done manually
+
+Q10. Did any validation failure reject a whole webhook request while other symbols in the same payload still received individual outcomes? Answer only from an observed event or dated record.
+Answer: UNKNOWN
+
+Q11. Do you know of incidents where an apparently accepted symbol later failed because it was invalid, unavailable, or inconsistent at a later stage? C-004 should record the boundary and cross-reference later topics, not absorb their full behaviour.
+Answer: No such things, why? Once chartink signals rejected due name mismatch, it is forever same rejection only & Unless same stock is eligible from CNC > MIS in any day (refer Q@ and Q3)
+
+Q12. Do you have dated screenshots, reports, incident notes, logs, or Claude research outputs that may safely support C-004? Identify filename/location only; do not upload raw secrets or unredacted logs.
+Answer: NO
+
+Q13. Any other historical clarification specifically about webhook field validation, symbol normalization/aliasing, or symbol eligibility?
+Answer: NO or UNKNOWN for idea
+
+FINAL SCOPE CHECK
+[ ] Answers are based on personal observation or identified records.
+[ ] Recollections are labelled as such.
+[ ] UNKNOWN / NOT ESTABLISHED is used where I cannot confirm.
+[ ] No credentials, token values, account/client IDs, host details, or token-bearing URLs pasted.
+
+Do not decide what V2 should retain, reject, redesign, or implement here. Legacy facts and later V2 decisions remain separate.
+END OF ANSWER SHEET

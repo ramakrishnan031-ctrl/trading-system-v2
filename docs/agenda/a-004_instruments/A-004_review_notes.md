@@ -1,7 +1,7 @@
 # A-004 INSTRUMENTS / MARKET SEGMENTS: REVIEW NOTES
 
 Date: 2026-10-06
-Status: CLOSED 2026-10-06. ChatGPT's value-added review (06-Oct-2026, R1) applied in A-004_manual.md revision 2 (section 7). A-004 frozen under DR-017, recorded as DR-019.
+Status: CLOSED 2026-10-06. ChatGPT's value-added review (06-Oct-2026, R1) applied in A-004_manual.md revision 2 (section 7). A-004 frozen under DR-017, recorded as DR-019. Erratum E-1 to the A-004 manual (section 5, line 65: what the receiver checked for a symbol and a price) added 2026-10-23 during C-004 (C-004_review_notes.md section 5; C-004_manual.md section 24.1, CE-1), accepted by Rama on 23-Oct-2026 (option (b), line 65 only) and recorded in DR-057 together with the C-004 freeze. It corrects only that line; the A-004 freeze (DR-019) is unchanged.
 Place at: docs/agenda/a-004_instruments/A-004_review_notes.md
 Method: two layers (V2_DESIGN_LOG W-1). Legacy fact in the manual; V2 ideas in V2_DESIGN_LOG section 3.
 Security: no credential values.

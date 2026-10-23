@@ -1,0 +1,40 @@
+# C-004 FIELD AND SYMBOL VALIDATION: V2 DESIGN INPUTS (PROPOSED)
+
+Status: PROPOSED / OPEN, first pass 2026-10-23 (revision 0; its second delivery added V2-2). It stays PROPOSED / OPEN after the C-004 manual's freeze (DR-057, 2026-10-23). Changed at the freeze: this sentence and section 4. Nothing here is a V2 decision (V2_DESIGN_LOG W-1, W-6). It records Rama's V2 inputs of 22 and 23-Oct-2026 (V2-1 of the research notes, section 7, and V2-2, his direction of 23-Oct-2026), the existing rows V2-1 touches, as the research identified them, and one legacy question noted for the freeze (Q-20, section 2), and nothing more: it adds no consideration, opens no VP or Q row and changes none. Rama chose this file for V2-1 when he accepted the C-004 drafting brief (23-Oct-2026, 09:56 IST; option (a) of its open point 1); Claude recorded V2-2 in the same file after his message of 23-Oct-2026, 11:43 IST (C-004_manual.md section 25.4).
+Labels: LEGACY = what the old system did (C-004_manual.md). RAMA = his words, quoted as written. OPEN = an existing proposal or question row of V2_DESIGN_LOG.md at V2 main 970d236, quoted with its cells; its status is unchanged here.
+
+## 1. Rama's inputs (V2-1, V2-2)
+
+### 1.1 22-Oct-2026 (V2-1)
+- RAMA (his C-004 answer sheet, Q3, after his answer on the alias file): "But in new system not this kind of things, Once stock has not been ordered due mismatches or CNC requirement (as per Q2) just outright reject the stock, Not to be added to 'Orders' since this is not executed at broker side, So no more complications in new system".
+- RAMA (the same sheet, Q4, after the alias file's link): "In new system no more such things, So if stock not ordered/cancelled then just outright reject and move on [Refer Q3]".
+- Status: V2 input, PROPOSED / OPEN; not a legacy fact and not a decision. His legacy answers to Q3 and Q4 (the name mismatches and the alias file) are in C-004_manual.md section 22.1.
+
+### 1.2 23-Oct-2026 (V2-2)
+- RAMA (his message in the ChatGPT project on 23-Oct-2026, in the screenshots he forwarded to Claude at 11:41 IST): "So in new system I won't keep this kind of scrip name mismatch issues meaning only stock name mismatched between Chartink vs zerodha then outright reject move on to next stock, an simple design - no more stock name alia files, clear?"
+- The same direction in ChatGPT's rules file of that day, headed "Confirmed by Rama" (TRADING_SYSTEM_PERMANENT_WORKING_RULES_23-OCT-2026.txt, rule 6): "In the new system, if a stock symbol from Chartink does not match the accepted Zerodha symbol, reject that stock outright and continue to the next stock. Do not use symbol-alias files or alias-based name translation. This is a V2 design direction from Rama; keep it separate from factual claims about how the legacy system behaved."
+- Status: V2 direction, PROPOSED / OPEN; not a legacy fact and not a decision (no register row records it). The rows of section 2 that name the same subjects are A-009_v2_design_inputs.md line 126 (the alias file) and VP-28 (a symbol with no broker match rejected); their status is unchanged. Its legacy counterparts are the alias file and K-06 (C-004_manual.md sections 7 and 17).
+
+## 2. Existing rows V2-1 touches (OPEN; quoted at V2 main 970d236; status unchanged)
+
+| Row | Text at main | Raised in | Ratify at | Listed because (research notes, section 7) |
+|---|---|---|---|---|
+| VP-27 (V2_DESIGN_LOG.md line 205) | Remove the legacy static symbol blacklist (excluded_symbols). This does NOT mean V2 has no instrument-eligibility controls: legacy also had a separate learned MIS blocklist in screening, and V2 decides separately whether and how eligibility controls exist (for example suspended symbols, surveillance stages, broker MIS-blocked symbols). | A-004 | D-002, C-004 | a related row already open; its Ratify at cell names C-004 |
+| VP-28 (V2_DESIGN_LOG.md line 206) | Instrument master: built from the broker dump with explicit series rules; a symbol with no broker match is rejected, never given default token, lot or tick; tick and lot size always come from the broker (exchange ticks vary: 0.01 below Rs 250 since 10-Jun-2024; price-band ticks since 15-Apr-2025). (Raised by Claude from A-004 data risks; PROPOSED only.) Rama (A-006 Q37): refresh daily before market open on a schedule after boot (legacy cron principle), as a prerequisite for orders, with a Telegram and Email alert on failure; exact time and mechanism at M-002. | A-004 | E-012, K-009, M-002 | a related row already open (the instrument master; a symbol with no broker match rejected) |
+| A-009_v2_design_inputs.md line 126 | Q3, other configuration files: symbol_aliases.yaml "not required in new system" (consideration: a renamed or re-series symbol still needs one rule, taken from the broker instrument dump; C-004, Q-20, VP-28); accounts.csv and security.yaml to A-010; cron_registry.yaml to VP-25 (cron review); expected_managers.yaml had no reader identified in the inspected source (drop unless a V2 design needs it; M-006); index_universe.yaml to J-011 (regime). | A-009 | (a design-inputs line, not a VP row) | Rama's earlier "symbol_aliases.yaml not required in new system" |
+
+Also noted, though not a row the research lists as related to V2-1: Q-20 (V2_DESIGN_LOG.md line 147; area A-004 / C; OPEN), a legacy question rather than a V2 proposal, which A-009_v2_design_inputs.md line 126 names and whose tracking note the research notes list as a freeze-time item (P-3). The note says "Unknown-symbol handling after the receiver was not traced (C-004, C-008)." C-004_manual.md section 10 traces that path at the pin; updating the note is a freeze-time item, and the question's status is Rama's to set (C-004_manual.md sections 23.3 and 25.7).
+
+## 3. Legacy facts the rows touch (LEGACY; pointers to C-004_manual.md, not repeated in full)
+- The static exclusion list (VP-27): five symbols in config/system_config.yaml, compared case-insensitively after the alias and rejected at intake as REJECTED_EXCLUDED_SYMBOL with a DEBUG line, before any claim or row (section 8). The learned MIS blocklist, a separate list, is applied at the screener, in shadow mode on the pinned configuration (10.3).
+- The alias file (A-009 line 126; V2-2): two entries, one lookup, fail-open, applied before storage, claims and the queue (7.1 to 7.4); by today's public listings (CURRENT EXTERNAL FACT, not evidence of the legacy period), the TVSSCS entry maps one listed company's symbol to another's (K-06; 7.1).
+- The instrument master (VP-28): not consulted at intake (9.1); exact, case-sensitive lookups, and the consumers read in C-004 fall back on a miss (lot size 1, tick 0.05, token 0, sector "UNKNOWN") rather than reject the symbol (9.4, 9.5; the other cache users were not read); the builder writes token 0, lot size 1 and tick size 0.05 for a symbol missing from the broker dump (RI12; 9.2).
+- Orders not placed (V2-1): at the pin, a symbol for which the screener gets no quote stops at SKIPPED_QUOTE_UNAVAILABLE before sizing and order placement (10.2); an MIS block is the broker's rejection at order placement (10.3; G-007). The order path is not traced in C-004 (C-004_manual.md 3.2, B8; 23.3; G-002, G-007).
+
+## 4. Where it is settled
+- Where V2-1 is recorded was decided when the brief was accepted: this file. V2-2 is recorded here by the same rule, as Claude's placement after Rama's message of 23-Oct-2026, 11:43 IST.
+- VP-27's "Ratify at: ... C-004": not ratified at C-004. Rama left VP-27 pending for a later decision (23-Oct-2026, 12:50 IST: "I prefer Option-B decision later"; DR-057), so its Ratify-at cell is unchanged (no later review named by Rama; D-002 remains in it); the design log adds a tracking note to it.
+- The design log notes on VP-27 that V2-1 is recorded here, and on VP-28 that V2-1 and V2-2 are (tracking only; written at the freeze, C-004_manual.md section 25.7, item 2). The rows themselves stay with the owners they name.
+- Q-20: its C-004 tracking note was written at the freeze (V2_DESIGN_LOG section 2; DR-057); Q-20 stays OPEN.
+
+Status and boundary: PROPOSED / OPEN. Nothing here is a V2 decision.

@@ -1,0 +1,321 @@
+C-004 - LEGACY FIELD AND SYMBOL VALIDATION
+RESEARCH NOTES AND OPEN QUESTIONS
+Date of work: 22 to 23-Oct-2026 (IST); research from 22:29:53 IST on 22-Oct; corrections after the independent check to 23-Oct (P-6)
+Revision 1 (23-Oct-2026, from 07:43 IST): Rama's answers to QR-1 to QR-3 (chat, 07:40 IST) recorded in section 6, compared with the
+source in C-10, and noted in P-8. No finding, label or erratum text changed.
+Revision 2 (23-Oct-2026, from 08:05 IST): research closed by Rama ("Approved", 08:01 IST; by multiple choice, "close research; await
+the drafting brief"), and his decisions on CE-1 to CE-3 recorded in section 5 (P-9). No finding, label or erratum text changed.
+Request: C-004_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 3); names as received (DR-008).
+Companion files: C-004_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt ("the answers"); C-004_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt
+("the inventory").
+Status: RESEARCH INPUT, final (research closed by Rama, 23-Oct-2026). Nothing here is decided, apart from the two process choices
+that Rama left to Claude (QR-1 and QR-2, section 6) and Rama's decisions on the erratum candidates (section 5). No frozen manual was
+edited; the accepted erratum texts are applied only at the C-004 freeze.
+Security: as the answers' header. No credential, identifier, address or token-bearing text is reproduced.
+
+
+==============================================================================
+1. HOW TO READ
+==============================================================================
+- Each item says what is open, the evidence (a file and lines at 970aabf, or a section of the answers or of a frozen manual at V2
+  main 970d236), and where it should go (a later topic, Rama, or the freeze).
+- Labels as in the answers, section 0.1. K-, L- and N- items are defined in the answers (sections 12 and 17); this file adds U- (2),
+  C- (3), CE- (5), QR- (6), V2- (7) and P- (8).
+- "New" means not found in any frozen manual by the sweep (answers 15.1) or by Claude's own reading; "recorded" means a frozen
+  manual already says it.
+
+
+==============================================================================
+2. UNKNOWNS (UNKNOWN / NOT ESTABLISHED)
+==============================================================================
+Neither VM, nor its databases or logs, exists any more (both terminated and deleted), so nothing below can be measured now. QR-1 was
+answered (a) on 23-Oct (section 6): no further record work for C-004, so every "Could settle: QR-1" below is closed for this topic.
+
+U-01 Installed contents, per VM, of config/symbol_aliases.yaml, the excluded_symbols list, the mis_filter settings and the account
+     tag behind WR4b. Evidence: the pinned files (answers 5, 6, 8.3, 10.2). Narrowed for the testing VM on 17-Sep-2026: its captured
+     files (the testing snapshot, B-002 section 10 line 206) held the same alias file (A-009 section 14; B-002 section 10) and the
+     same excluded_symbols and mis_filter settings as the pin, since neither is among system_config.yaml's 18 differing settings
+     (A-009 section 14). Still unknown: production's installed files, either VM's files before 17-Sep, and the installed tag. Could
+     settle: a dated record that quotes an installed file (none found by count).
+U-02 The instrument master's actual rows: which symbols, whether TVSSRICHAK and SIGMAADV-BE were rows, which rows carried the RI12
+     fallback values. Evidence: config/instruments.csv is absent at the pin; the universe came from
+     config/reference_data/security_master_file.csv, which is never-open and was not opened (scripts/refresh_instruments.py line 52);
+     A-004 sections 4.1 to 4.3 (the testing VM's file had 2,228 rows). The builder writes the security master's symbol unchanged
+     (scripts/refresh_instruments.py lines 101 and 194 to 195) and also keeps rows whose series is blank (lines 103 to 107), so
+     SIGMAADV-BE could be a row only if the security master's own symbol field held the suffix. Could settle: nothing within the
+     rules now.
+U-03 How the broker's quote endpoint answered an instrument key it did not know, or one in lower case (left out of the answer, or an
+     error). Evidence: broker/zerodha_adapter.py lines 1759 to 1774 build and map the keys; the answer itself is external and was not
+     probed (no network, no broker). Effect: only the screener's log level (INFO or ERROR); the status SKIPPED_QUOTE_UNAVAILABLE is the
+     same either way (answers 8.2).
+U-04 Whether Chartink ever sent a symbol in another case, with a suffix or prefix, or otherwise not in the broker's form. Evidence: no
+     payload survives; the frozen records give field names and counts, not symbol forms; Rama's Q3 confirms name mismatches, and the
+     alias file shows two kinds (answers 5.1). Could settle: an unread record (QR-1), perhaps.
+U-05 When, why and by whom each alias entry was added. Evidence: FIX-032 carries no date (signals/webhook_receiver.py lines 222 to 227,
+     697 to 700); no file in S-ALL names FIX-032 except the receiver (V19); docs/symbol_logging_audit_2026-05-09.md mentions the
+     aliased names on six lines (V17; not read); git history was not inspected (prompt section 4). Could settle: QR-1, or history
+     with a method Rama approves.
+U-06 When and why each of the five exclusions was added (already UNKNOWN in A-004 section 6). Evidence: the comment "Exclude list from
+     live observation" (config/system_config.yaml line 132); docs/CONFIG_GUIDE.md has one line matching four of the names (V18 did not
+     search E2E; one line may name several; not read).
+U-07 What a NaN or +inf trigger price did after intake: the entry calculation and sizing. Evidence: it passes the receiver and is
+     queued as the float (answers 4.3; probe 1); bound into the REAL column trigger_price (signals/webhook_receiver.py lines 974 to
+     977), a NaN is stored as NULL and +inf as an infinity on SQLite 3.45.1 (probe 2; the VMs' version is not established); nothing
+     after the queue was traced. Owners: C-007, C-008, E-001 to E-004.
+U-08 How often each intake rejection happened. Evidence: no row and no log line (answers 4.4); the audit keeps only a 200's rejected
+     count, which mixes them with duplicates and claims; the frozen census record gives totals only (C-002 section 14, R4: 146,305
+     accepted and 643,402 rejected at symbol level, 12-Jun to 16-Jul). Could settle: the three records that name the statuses (V04;
+     inventory 5.1; QR-1).
+U-09 Whether a Chartink signal for TVSSCS ever arrived, and if so whether it was stored, quoted, sized or traded as TVSSRICHAK (K-06).
+     Evidence: the pinned alias entry and the code path (answers 5.1, 5.3, 4.5); three records name TVSSCS and none names TVSSRICHAK,
+     "Srichakra" or "Supply Chain" (presence tests, inventory 5.6), which says nothing of what they state. Rama's QR-3 answer of
+     23-Oct is a guess about mismatched names in general and leaves (a) to (c) UNKNOWN (section 6; C-10). Stays UNKNOWN.
+
+
+==============================================================================
+3. CONFLICTS BETWEEN SOURCES (stated side by side; not reconciled)
+==============================================================================
+C-01 History against the pin. utils/startup_checks.py lines 919 to 922 (the BL-20 docstring) says a stub instruments.csv once made
+     "the signal pipeline silently dropped any symbol not in the cache"; every cache consumer read at the pin falls back instead
+     (answers 7.5). Both may be true at different times; which code dropped symbols then is not established (L-09).
+C-02 Comments against code at the pin (the code is what ran): signals/webhook_receiver.py line 599 against lines 419 to 471 (K-03);
+     WR10 (lines 21 to 22) against line 715 (K-02); scripts/refresh_instruments.py RI11 (line 24) against line 68 (K-05);
+     scripts/find_symbol_aliases.py line 35 against the two strings (K-07; probe 3). Resolved, not a conflict: core/mis_blocklist.py
+     line 13 ("default 5 calendar days") and config/system_config.yaml line 181 ("default 1") are each true at their own layer: the
+     class's constructor default is 5 (core/mis_blocklist.py line 68), the schema default is 1 (core/config_loader.py line 443), and
+     main.py passes the configured value (line 3057).
+C-03 Rama's Q6 against a frozen record. Rama (22-Oct): "NO, nothing has been manually done anything (Meaning webhook or chartink never
+     touched except adding/removing strategies". C-002_manual.md section 14, R8 (FACT (RECORD-DERIVED) there; records of 04-Aug-2026):
+     test POSTs to the live webhook were pre-authorised on the development PC ("POST a hand-written payload to the live webhook", 15
+     entries of the coding assistant's PC-local permission list; the example posts to the local address) and called "a real
+     diagnostic, used repeatedly in this campaign"; no counts. They can both be true if the posts were the coding assistant's and not
+     Rama's own. QR-2 was answered on 23-Oct with that reading, chosen by Claude at Rama's request (section 6); both sources stand
+     unchanged.
+C-04 Rama's Q9 and the pinned lists. Rama: "System 100% headless, So nothing has been done manually". The pin carries two static lists
+     (five exclusions, two aliases) and the helper's printed step "Review and add to config/symbol_aliases.yaml"
+     (scripts/find_symbol_aliases.py lines 83 to 84). Not a contradiction: Q9 asks about lists beyond A-004, A-008 and C-001, and all
+     three pinned lists are already there (A-004 section 6: the exclusions and the MIS blocklist; C-001 section 7.3: the alias file),
+     so his "nothing" fits the question as asked. Who added the entries is not established (U-05, U-06). Recorded so both are in
+     view.
+C-05 to C-07 Frozen manuals against the source, each an erratum candidate in section 5: A-004 section 5 (CE-1), A-008 section 5
+     (CE-2), A-009 section 3 against A-004 sections 2 and 4.1 (CE-3).
+C-08 A-004 section 5's "HISTORICAL (Rama): an unknown symbol would not be processed (belief, not verified)" against the source: such a
+     symbol is stored, queued and processed up to the screener's quote fetch (answers 8.2). The manual labels it a belief, so no
+     erratum is proposed (answers 15.3).
+C-09 The TVSSCS entry against the public listings. config/symbol_aliases.yaml line 9 maps TVSSCS to TVSSRICHAK with the comment "TVS
+     Supply Chain Solutions"; the helper's example (scripts/find_symbol_aliases.py line 35) calls the pair a prefix extension; the
+     public listings (CURRENT EXTERNAL FACT, 22-Oct-2026; inventory 5.6) give TVSSCS as TVS Supply Chain Solutions Ltd and TVSSRICHAK as
+     TVS Srichakra Ltd. By those listings only the left side is the symbol of the company the comment names; the right side is
+     another company's (K-06). The helper's claim is false by probe 3 (K-07). Whether the listings were the same in the legacy
+     period is not established. QR-3 (answered 23-Oct; section 6).
+C-10 Rama's QR-3 answer against the pinned code path. Rama (23-Oct-2026, given as a guess): "I guess chartink sends some symbol name >
+     Stock analysed inside > Eligible for Order > System placed order > But rejected at broker/instrument end due to 'No such
+     symbol'". At the pin, a name the broker does not quote stops at the secondary screener's quote fetch, as
+     SKIPPED_QUOTE_UNAVAILABLE, and the processor stops the signal there, before sizing and order placement (answers 8.2); an
+     instrument-cache miss falls back and rejects nothing (answers 7.5). So the pinned code would not place an order for such a name,
+     and would not meet a broker rejection for it. Whether an earlier code version did is not established (history not inspected).
+     For TVSSCS under the pinned alias the target is a listed symbol, so the signal would pass the quote fetch as TVSSRICHAK and a "No
+     such symbol" rejection would not be expected for it (answers 8.4; INTERPRETATION). Rama's Q11 ("forever same rejection") fits
+     both accounts. Recorded side by side; not reconciled.
+
+
+==============================================================================
+4. AUDIT LEADS AND WHERE THEY GO (defined in the answers, section 17)
+==============================================================================
+L-01 a NaN or +inf price passes and is queued; stored, a NaN becomes NULL (new) -> C-007, C-008, E-001 to E-004; U-07.
+L-02 the 503 batch audited (503, 0, 0) (recorded: C-001 A-L4, D-06) -> K-008, L-009 (the V2 audit questions of VP-11 and VP-59).
+L-03 intake rejections leave no row and no log line; the schema lists statuses no code writes (mostly recorded: C-001 A-L7) -> K-003,
+     K-008, L-009.
+L-04 case kept for unaliased symbols, then exact matches downstream (new) -> C-005 (claim and dedup keys), D-003 (the quote map),
+     A-004 (the cache).
+L-05 the relative alias path, fail-open (recorded: C-001 7.3, B-002 4 and 13) -> no new work.
+L-06 alias targets unchecked; SIGMAADV-BE's row unknown (new) -> A-004, G-002.
+L-07 no reload of the master; each day on the previous refresh's file (new) -> A-004, B-008.
+L-08 the daily report's excluded count cannot see intake exclusions (new) -> L-011.
+L-09 the BL-20 docstring's history (new) -> A-004 (history).
+L-10 the adapter comment on silver and ETF names (new) -> A-004 (Q-21), E-012.
+L-11 the MIS pre-drop in shadow, so a blocked symbol would continue past it; one repeat in a configuration comment (new detail) ->
+     D-003, G-007.
+L-12 the BE-series alias target against the exchange's intraday bar (new) -> G-007; Q-30 (b).
+L-13 the unguarded SELECT in the INSERT's IntegrityError handler: a 500 with the claims held (new) -> C-005.
+L-14 an overflowing FIX-074 cast gives 500, not 400 (new; edge case) -> C-004's own record; C-001 line 210, C-002 section 9 row 11
+     and C-003 section 7.3 row 8 stand for the common case, no erratum (section 5).
+K-06 the TVSSCS alias maps one company's symbol to another company's (new; configuration defect) -> A-004 (symbol mapping), G-002;
+     U-09, QR-3, C-09.
+K-07, K-08 the helper's false example and the SIGMAADV comment's company name (new; doc drift) -> A-004.
+K-04 the processor's sector lookup calls methods the cache does not have (new; out of C-004's scope) -> the topic that owns the V3
+     chain's sector use (J-010) and concentration (F-007).
+
+
+==============================================================================
+5. ERRATUM CANDIDATES IN FROZEN MANUALS (decided by Rama on 23-Oct-2026; applied only at the C-004 freeze)
+==============================================================================
+Answer to the prompt's question: yes, three frozen manuals carry a directly evidenced inconsistency on C-004's subjects. Each is low,
+wording only, and optional: the frozen findings, counts and decisions stand either way. Texts are against main 970d236. Next free
+erratum numbers, for reference only (to be checked against the live register at the freeze, as DR-056's rule requires): A-004 E-1,
+A-008 E-7, A-009 E-3. Format as in C-003 section 24: struck text, replacement, and the unchanged text on each side.
+Rama's decisions (23-Oct-2026, multiple choice, about 08:05 IST): CE-1 option (b), change line 65 only; CE-2 option (a), no change;
+CE-3 option (b), apply the replacement. The two accepted texts are applied at the C-004 freeze, with their numbers reconfirmed against
+the live register then (A-004 E-1 for CE-1, A-009 E-3 for CE-3; CE-2 takes no number). The frozen manuals stay unchanged until then.
+
+CE-1 A-004 section 5 ("Signal to instrument"). Evidence: the receiver's only symbol check is `if not symbol` (signals/webhook_receiver.py
+     lines 904 to 906); its price check is float() then "<= 0" (lines 908 to 914); it holds no reference to the instrument cache (U03;
+     its one "instrument" word is the comment at line 700); C-001_manual.md section 15 says the same without changing A-004 (answers 4,
+     7.1, 15.4 D3). Reading: "validates symbols" can be read as a validity or instrument check, which did not exist at intake.
+     Options: (a) no change, the cross-reference in C-004 being enough; (b) change line 65 only; (c) change lines 65 and 64.
+     DECISION (Rama, 23-Oct-2026): (b), line 65 only. ACCEPTED, to be applied at the C-004 freeze; the line 64 text below is not
+     taken.
+  - line 65 (A-004 line 65 at main 970d236):
+    - Struck: "the receiver validates symbols/prices, and the instrument master is preloaded at start-up."
+    - Replacement: "the receiver checks a symbol only for being non-empty, after its alias lookup and the static exclusion list, and a
+      price only for parsing as a number and not being zero or less; it does not look the symbol up in the instrument master, which is
+      preloaded at start-up (C-001_manual.md section 15; C-004)."
+    - Unchanged before it (its 8 of 8 characters): "- FACT: "
+    - Unchanged after it: nothing (the struck text ends the line).
+  - line 64, with option (c) only:
+    - Struck: "webhook receiver (validates symbol, price, request)"
+    - Replacement: "webhook receiver (request, field, symbol and price checks; no instrument lookup)"
+    - Unchanged before it (its 32 of 32 characters): "- Path: Chartink, webhook POST, "
+    - Unchanged after it (its first 80 of 116 characters): ", signal persistence and queue, signal processor, screening/decision, sizing/ris"
+  - Checked, not changed: the other "validat" in A-004 (line 39, the builder's "row-set validation"), which is about the build.
+
+CE-2 A-008 section 5 ("Identity and direction"). Evidence: the receiver reads four fields (signals/webhook_receiver.py lines 608 to
+     674; C-002_manual.md section 8.2). Of the other fields, only webhook_url is record-derived for production bodies: the 05-Jul
+     record shows that stored production payloads carried it (C-002_manual.md section 4.2). scan_url and alert_name are listed by
+     Chartink's public sample body (C-002 section 4.4, CURRENT EXTERNAL FACT there, not the legacy period), by a testing alert's
+     displayed payload of 21-Oct (C-002 section 4.3, which does not establish what was sent) and by a unit-test helper ("a test's
+     assumption", C-002 section 4.2). So the inconsistency with line 68 rests on webhook_url alone. The sentence's point, that the
+     webhook carries no side, is unaffected. C-001_manual.md line 83 rewords it as what the receiver reads and calls it "The same as
+     A-008 section 5 (frozen)", so C-001 did not treat it as a conflict. Options: (a) no change; (b) the narrowed text below. Claude's
+     view: (a) suffices, since the gap is one field and the point stands; if (b) is taken, use only the narrowed text.
+     DECISION (Rama, 23-Oct-2026): (a), no change; no erratum number. The text below stays only as the record of the option not
+     taken.
+  - line 68 (A-008 line 68 at main 970d236):
+    - Struck: "the payload is stocks, trigger_prices, triggered_at and an optional scan_name"
+    - Replacement: "the receiver reads only stocks, trigger_prices, triggered_at and an optional scan_name from the payload; stored
+      production payloads also carried webhook_url (05-Jul record), and Chartink's sample body and a testing alert's displayed
+      payload also list scan_url and alert_name (C-002_manual.md sections 4.2 to 4.4 and 8.2)"
+    - Unchanged before it (its 40 of 40 characters): "- The Chartink webhook carries no side: "
+    - Unchanged after it (its first 80 of 192 characters): ". The signal processor computes the order side from StrategyConfig.direction (BU"
+  - Checked, not changed: A-008's other "payload" line (104, the alert names in testing), which is not about the fields.
+
+CE-3 A-009 section 3 ("Configuration sources at the baseline"). Evidence: scripts/refresh_instruments.py takes the symbol universe
+     from the NSE security master and only the token, lot size and tick size from the broker dump (lines 4 to 8, 12 to 16, 92 to 109
+     and 148 to 204), as A-004 says (section 2, line 17: "not the raw broker dump"; section 4.1 lists the sources). Options: (a) no
+     change; (b) the text below. DECISION (Rama, 23-Oct-2026): (b). ACCEPTED, to be applied at the C-004 freeze. The two manuals'
+     different labels for the same 2,228-row record (A-009's "FACT (SUPPLIED RECORD, 18-Sep)" and A-004's "RECORD-DERIVED") are
+     outside C-004's subject and are not part of this candidate.
+  - line 48 (A-009 line 48 at main 970d236):
+    - Struck: "Instrument master built from the broker dump (A-004)."
+    - Replacement: "Instrument master built by scripts/refresh_instruments.py from the NSE security master (the symbol universe),
+      reference files and the broker dump (token, lot size and tick size) (A-004 section 4.1)."
+    - Unchanged before it (its last 80 of 107 characters): "enerated on the VM; not tracked in the repository) | instrument cache (A-004) | "
+    - Unchanged after it (its first 80 of 89 characters): " FACT (SUPPLIED RECORD, 18-Sep): 2,228 rows on the testing VM, all NSE, all lot "
+  - Checked, not changed: no other "broker dump", "instrument dump" or "instrument master" in A-009.
+
+Considered and not proposed (answers 15.3 to 15.5): A-004 section 5's UNKNOWN and section 15's unknowns (answered, forward pointers);
+A-004 section 5's labelled belief (C-08); A-008 lines 71 and 105 (the condition is at line 97; C-001 D-07); A-006 line 39 (true for a
+cached symbol; E-012); A-011 line 248 (the schema's list); A-011_v2_design_inputs.md line 41 (a PROPOSED file, D6); the Section A
+paper's label at line 66 (D5; E-012; for the reviewer); and the cast outcome in C-001 line 210, C-002 section 9 row 11 and C-003
+section 7.3 row 8 (true for the two critical fields' ValueError and TypeError; the other four fields become None, and an overflow
+ends in 500; summary rows; answers 15.5 and L-14).
+
+
+==============================================================================
+6. QUESTIONS FOR RAMA (only what the evidence cannot settle)
+==============================================================================
+QR-1 Host records. Several in-tree records may date the alias and exclusion entries, break down the intake rejections, or describe the
+     instrument staleness incidents (inventory 5.1: for example docs/symbol_logging_audit_2026-05-09.md, the 19-Jul census, the 05-Jul
+     audit, the 21-Jun pre-flight approvals). Under your decision of 22-Oct (about 12:50 IST) they were counted, and three were given
+     presence tests of words (PASS or FAIL and line numbers; inventory 5.6), which that decision already allows. For Q1, Q4, Q8, Q10
+     and U-09, which do you want: (a) leave them UNKNOWN (no further work); (b) more presence tests of named words in named records,
+     within the existing decision; or (c) a reading method for named records, which would need a new decision? Each is consistent
+     with the research so far.
+QR-2 Q6 and C-002's R8. Your Q6 answer is "NO, nothing has been manually done anything". C-002 (frozen) records, from 04-Aug, that
+     test POSTs of hand-written payloads to the live webhook were pre-authorised for the coding assistant and "used repeatedly in this
+     campaign". Does your answer mean such posts were never made, or that they were made by the assistant and not by you? (Either
+     answer is recorded as yours; the record stays as it is.)
+QR-3 TVSSCS (K-06). By today's public listings, the alias file sends TVSSCS (TVS Supply Chain Solutions Ltd) to TVSSRICHAK (TVS
+     Srichakra Ltd), a different company. Do you remember (a) whether the entry was meant for TVS Supply Chain Solutions, (b) whether
+     any order, position or report ever showed TVSSRICHAK when a scanner had flagged TVSSCS, or (c) why and when the entry was added?
+     UNKNOWN is a complete answer; the source fact stands either way.
+No other question is needed: Rama's answers to Q2, Q3, Q4 and Q11 are clear as testimony, and his UNKNOWN answers stand.
+
+Answers (chat, 23-Oct-2026 07:40 IST, after the independent review of 07:30 IST):
+  QR-1 Rama left the choice to Claude ("For QR-1 & QR-2 as per your best & correct opinion"). Claude's choice: (a), leave Q1, Q4, Q8,
+       Q10 and U-09 UNKNOWN and do no more record work in C-004. Reason: a presence test says only where a word occurs, not what a
+       record states, so (b) could not settle any of these questions; (c) would need a new decision and reading method for questions
+       whose answers change neither the legacy description in the answers nor V2's direction (V2-1; VP-27, VP-28). A later topic that
+       needs a record may still propose a method.
+  QR-2 Rama left the choice to Claude (same message). Claude's reading: Rama's NO covers his own manual actions; the test POSTs that
+       C-002's R8 records were the coding assistant's, by that record's own account (pre-authorised on its PC-local permission list
+       and "used repeatedly in this campaign"). This is the review's option A. Both sources stand side by side and the frozen record is
+       unchanged; how many POSTs were sent, and when, stays not established (C-002 section 14). It is recorded as Claude's reading
+       under Rama's delegation, not as Rama's testimony; Rama may override it.
+  QR-3 Rama: "I guess chartink sends some symbol name > Stock analysed inside > Eligible for Order > System placed order > But rejected
+       at broker/instrument end due to 'No such symbol'". HISTORICAL (Rama, 23-Oct-2026), given as a guess, not a recollection. It
+       does not answer (a), (b) or (c) one by one, so each is recorded as UNKNOWN, with the guess kept beside them. Compared with the
+       source: C-10. K-06 stands as a defect of the pinned file; nothing establishes that a TVSSCS signal arrived or was traded.
+
+
+==============================================================================
+7. V2 MATERIAL (Rama's input; kept apart from the legacy facts; W-1)
+==============================================================================
+V2-1 Rama, 22-Oct-2026, in his Q3 and Q4 answers (quoted as written):
+     Q3: "But in new system not this kind of things, Once stock has not been ordered due mismatches or CNC requirement (as per Q2) just
+     outright reject the stock, Not to be added to 'Orders' since this is not executed at broker side, So no more complications in new
+     system".
+     Q4: "In new system no more such things, So if stock not ordered/cancelled then just outright reject and move on [Refer Q3]".
+     Status: V2 input, PROPOSED; not a legacy fact and not a decision. Related rows already open: VP-27 (remove the static symbol
+     blacklist; eligibility controls decided separately; "Ratify at: D-002, C-004"), VP-28 (instrument master from the broker dump; a
+     symbol with no broker match is rejected, never given default token, lot or tick; PROPOSED), and A-009_v2_design_inputs.md line 126
+     (Rama's earlier "symbol_aliases.yaml not required in new system"). Where it is recorded (a C-004 design-inputs file, as C-001 did,
+     a new VP row or a note on VP-27 and VP-28) is decided at C-004's freeze.
+
+
+==============================================================================
+8. PROCESS POINTS FOR THE REVIEW
+==============================================================================
+P-1 Host records were handled value-blind only: count-only searches, line counts, and 18 presence tests on three records for K-06;
+    no line of any record was printed (inventory 5.1 and 5.6). QR-1 asks whether more is wanted.
+P-2 The frozen-manual sweep was done by one background agent on the V2 copy (no legacy file, no network); its report is
+    S/c004/notes/frozen_sweep.md (371 statements from 31 of 58 files; its last write at 23:29 IST, file time). Its last revision added
+    one statement (R371, waitress's default body limit) and its counts section after the answers' first draft; answers 15.1 follows
+    the final version, and Claude's own count of its rows matches it (inventory D-7). Its process note discloses one temporary file of
+    paths, written by mistake in S/c004 and deleted at once (inventory D-8).
+P-3 Freeze-time items, if C-004 is frozen later: Q-20's tracking note (the unknown-symbol path after the receiver, answers 8); VP-27's
+    "Ratify at: ... C-004"; the accepted CE-1 and CE-3 (section 5); V2-1's placement; and, owed from C-003, the C-003 push
+    confirmation in the design log's session notes.
+P-4 Label: CURRENT EXTERNAL FACT (the three local probes and the public listing pages) is not among the prompt's nine labels; it
+    follows C-002 and C-003 (inventory D-4).
+P-5 The answers cite frozen manuals by section and line at main 970d236; a later freeze may shift lines.
+P-6 Independent check. A separate agent that had not seen how the package was written checked the three files against the code (85
+    wrapper reads), the V2 copy, the read log and search files, Rama's sheet and two local probes (inventory 2.6). It reported 29
+    findings: 3 ERROR, 9 IMPRECISE and 17 MINOR (S/c004/check/independent_check.md). Claude checked each against the source, a frozen
+    manual or a probe before changing anything (read log rows 122 to 152; probes 2 and 3), found all 29 correct, and applied all 29.
+    The largest is its finding 6, which led to K-06 once the public listings were checked. The checker's own deviation is inventory
+    D-10.
+P-7 Web lookups (inventory 5.6, D-11): public listing pages were used for three NSE symbols; no legacy service, broker API, Chartink
+    page or account was contacted. The reviewer may confirm the method.
+P-8 Revision 1 (23-Oct-2026). The independent review of 07:30 IST (C-004_INDEPENDENT_REVIEW_AND_RAMA_QUESTIONS_23-OCT-2026.txt)
+    found no factual error and asked for Rama's answers before any further step. Rama answered at 07:40 IST; for QR-1 and QR-2 he
+    asked Claude to choose, and those choices are marked as Claude's (section 6). The review's note that current stock pages are not
+    historical records is already the package's position (inventory 5.6); for source identity, the four page addresses and their
+    access times were added to inventory 5.6. The review's boundaries are kept: research input only, no claim that the alias caused
+    a trade or loss, no reopening of C-001 to C-003, no further record, runtime or repository work.
+P-9 Revision 2: research closed (23-Oct-2026). The review response of 08:00 IST
+    (C-004_REVIEW_RESPONSE_TO_CLAUDE_23-OCT-2026.txt, canonical name) accepted QR-1 (a), QR-2 (a) with its attribution kept, and
+    QR-3's (a) to (c) as UNKNOWN, and asked for the package to be presented with the errata undecided until Rama's explicit approval.
+    Rama replied "Approved" (08:01 IST) and then chose, by multiple choice: close the research and await the drafting brief (no
+    manual is drafted before it); CE-1 (b), CE-2 (a), CE-3 (b) (section 5). The three files are final research input from this
+    revision; the C-004 manual, its review and the freeze follow the established workflow.
+
+
+==============================================================================
+9. NOT OPEN (for completeness)
+==============================================================================
+- The order of every check from the body read to the queue (answers 3 and 4; inventory T-01 to T-17), and their failure outputs.
+- The alias and exclusion mechanics (answers 5 and 6), the instrument master's load, lookups and fallbacks (7), and the first later
+  stop for a symbol the broker does not return (8.2).
+- Production and testing ran the same validation code (answers 10.1).
+END

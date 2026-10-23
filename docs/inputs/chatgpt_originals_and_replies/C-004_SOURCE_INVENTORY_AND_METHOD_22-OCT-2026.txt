@@ -1,0 +1,644 @@
+C-004 - LEGACY FIELD AND SYMBOL VALIDATION
+SOURCE INVENTORY AND METHOD
+Date of work: 22 to 23-Oct-2026 (IST); research started 22:29:53 IST on 22-Oct (S/c004/notes/start_time.txt); corrections after the
+independent check ran past midnight (D-12); delivery checks in section 6
+Revision 1 (23-Oct-2026, from 07:43 IST): Rama's answers to the notes' QR-1 to QR-3 recorded (5.5; notes section 6), the page
+addresses added to 5.6, and the checks of 6.6 re-run on the revised files (D-13). No new legacy read, search, probe or web lookup.
+Revision 2 (23-Oct-2026, from 08:05 IST): research closed by Rama and his erratum decisions recorded (notes section 5 and P-9); the
+checks of 6.6 re-run (D-14). No new legacy read, search, probe or web lookup.
+Request: C-004_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 2), filled in the order of
+C-004_SOURCE_INVENTORY_AND_METHOD_TEMPLATE_22-OCT-2026.txt; names as received (DR-008).
+Companion files: C-004_CLAUDE_REPOSITORY_ANSWERS_22-OCT-2026.txt ("the answers"); C-004_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt
+("the notes").
+Status: RESEARCH INPUT, final (research closed by Rama, 23-Oct-2026). Every count and time below comes from a check that was run in
+this session; where a check was not run, the entry says NOT RUN.
+Paths: "S" below is this session's scratchpad folder; all working files named here are in it. "the clone" is the partial clone of
+the production snapshot kept from C-001 to C-003.
+
+
+==============================================================================
+1. REPOSITORY / CHECKOUT
+==============================================================================
+Repository URL:          https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (origin of the clone; production snapshot only)
+Expected commit:         970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Actual HEAD:             970aabf3c78d777d9d34549e021f7c8e756c7bdb
+HEAD verified:           git rev-parse HEAD at 22:29 IST (start), 22:51 IST (mid-research check) and at delivery (section 6.6).
+Checkout method:         the existing partial clone (filter blob:none; sparse checkout from C-001 to C-003). The pinned tree lists 1,438
+                         blobs (saved listing prod_lstree.txt, made at C-001 with ls-tree -r at the pin); 1,262 are checked out and 176
+                         are not. Every C-004 path was already checked out, so C-004 made no path expansion: the local object count
+                         was 8,922 at the start and at 22:51 IST; at delivery, section 6.6.
+V2 governance copy:      a read-only clone of trading-system-v2 GitHub main at 970d236d687defd1a41619aca5c2e35abc3baf2b (the C-003 freeze,
+                         DR-056), at S/c004/v2; docs/inputs/ not opened.
+Masking method/version:  code, configuration and tests read only through S/c004/tools/cread.py, which runs S/bin/mr.py (mask_read2.py with
+                         mask_read_lib.py, plus the stage-2 mask of lower- and mixed-case client-ID shapes), records the pinned blob ID
+                         (git ls-tree HEAD -- <path>, trees only) against the working file's hash, and logs each call (section 2.2).
+                         Count-only searches through S/bin/count_grep.py over explicit scope lists (section 3). sha256 of the tools:
+                           cread.py          7b57e66d685ca467e1c5bd7315882187452ddd240ecd29eb138470a91b070779
+                           mr.py             b0bd3d87cf51d1cbab4fe09f868f1bacc082e684afe4155515c37788969f4f48
+                           mask_read2.py     bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7
+                           mask_read_lib.py  ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8
+                           count_grep.py     31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b
+                           sensitive_check.py e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337
+                           diag_never_open.py 9aabbaa21b5623f926dbe57643d29084f6cabfe30cb3dccf8c5b5a15919bd8de
+                           run_searches.py   88b008b05c2b3b09043bea250efb2c42781e198f1680f0b2b9da96b496d59161 (batch 1)
+                           run_searches2.py  4ae751e90d44413708ab565bbca6e5a3b59372cdc41ab430cb9da51e40275fb9 (batch 2)
+                           run_searches3.py  d092706952387182f96332d44e8648aa31ca1e6270e116229af1490ac8ec42f9 (batch 3)
+                           run_searches4.py  f5069ff752cd4d139fc734738056971e4fae11b5671dc6d750a90cb170618300 (batch 4)
+                           p1_float_parse.py 18f86060a1729a002e6626af8f7e1b451b3fe8859c013b79e49bfb4e7508e59c (probe 1, 5.3)
+                           p2_sqlite_overflow.py d8b40f2871f033c60ff4d17bac80bc2ea8398d31970a751c833353213d9726cb (probe 2, 5.3)
+                           p3_difflib.py     655a386c0f9058afe55e8ff547749f157b548a084d2e0cf62f67c7c28c41e8ac (probe 3, 5.3)
+                           vb.py             ccc5ac8d6787e4217b004e201fa42277cc69efc4f5da39cf2dbb2ff8e4accba1 (presence tests, 5.6)
+                         By design mask_read2.py reads docs/SYSTEM_MAP.md and DEPLOYMENT.md on every call to build its mask and prints
+                         nothing from them. Its HOSTTOK mask also covers some ordinary letter runs inside words of a few files (for
+                         example utils/startup_checks.py and core/config_loader.py); the words stayed recognisable from context and no
+                         evidence used here was lost. Which letters are masked is not stated, because the mask is built from host
+                         records.
+Line counts:             the filter's header counts one line more than wc -l (the empty string after the file's final newline); the
+                         counts below are wc -l, and no cited range uses the extra line.
+Never-open list used:    the regex of sensitive_check.py: .env and .env.* (which covers .env.example), config/accounts*,
+                         config/security.yaml, config/reference_data/, docs/web_claude/ anywhere, gui_config.local.yaml, *.db and their
+                         WAL/SHM, *.sqlite and *.sqlite3, logs/, data_store/session/, and any *token*.json. config/instruments.csv is not in
+                         the list; it is absent from the tree at the pin (no blob), so there was nothing to open.
+Initial never-open count: 22:29 IST: 102 never-open paths in the tree (by class: 1 root dot-file, 21 config, 80 docs); 8,922 local
+                         objects; 0 never-open blobs present locally (sensitive_check.py and diag_never_open.py, both exit 0).
+Mid-research count:      22:51 IST: the same (102; 8,922; 0).
+Final never-open count:  section 6.6.
+Exceptions/deviations:   section 7 (D-1 to D-14). None involved a never-open path or a credential value.
+
+
+==============================================================================
+2. SOURCE INVENTORY (one row per file actually read; every cread.py call is in the read log, 2.2; the quote check's own mr.py
+   calls are not, D-9)
+==============================================================================
+2.1 Recorded before any module analysis: S/c004/notes/workflow_recorded.md, saved at 22:31:24 IST (file time), before the first
+    search (22:32:11 IST) and the first read (22:32:37 IST). It lists the repository, the reading method, the never-open start check,
+    the candidate paths with their blob IDs and the planned searches. The note's own text says "about 22:33 IST"; that was an
+    estimate written into it before saving, and the file time is the accurate one (D-1).
+
+2.2 The read log: S/c004/code_read_log.tsv, one row per cread.py call: IST time, mode (range or grep), argument, path, pinned blob ID,
+    whether the working file matches it, the filter's line count, lines printed, the mask footers. 152 rows, from 22:32:37 IST on
+    22-Oct to 00:15:44 IST on 23-Oct; every row "match". Rows 1 to 121 (to 23:08:03 IST) are the research reads; rows 122 to 152
+    (from 23:55:53 IST) are the re-reads made to verify the independent check's findings and correct the package (D-12). No row
+    records legacy content.
+
+2.3 Files read. Columns: path | blob ID at the pin (equal to the working file's in every call) | lines (wc -l) | lines actually read
+    ("range a-b" = the filter's --range; overlapping re-reads merged) and greps (matching lines only) | reason | questions (Q1 to
+    Q13 of the answer sheet) and matrices (M-1 to M-7 of the answers, section 0.6) supported | masking and sensitive-output note.
+    Read method for every row: cread.py -> mr.py. Nothing in this table was run.
+
+  signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1207 | ranges 1-68, 105-300, 360-806, 892-1075, 1126-1165
+      (935 lines; several re-read to check citations); greps: definitions and routes; "instrument"; status names and the audit
+      writer; mode and environment words | the intake path end to end: docstring, the WR4b strip, the constructor and alias loader,
+      routes, the FIX-074 cast, the request handler, request checks, the per-symbol loop, the EOD route, per-signal checks, insert
+      and queue, the audit writer | Q1 to Q5, Q7, Q10, Q11; M-1, M-2, M-4, M-5, M-6, M-7 | the filter masked client-ID-shaped text
+      in the WR4b docstring (lines 116, 122 and 123) and address- and key-shaped text in comments; nothing masked is reproduced.
+      A grep at 22:59 IST (json and body-field words) also showed four of the sanitiser's comment and pattern lines (860, 869, 879,
+      882), which name the token parameter as a placeholder only. A second definitions grep ran at 23:55 IST and again at 00:08 IST
+      on 23-Oct (the definition lines only).
+      Not read: 69-104 (the per-IP limiter's methods), 301-359 (the body of _authenticate; C-003), 807-891 (the EOD heartbeat and
+      time parser, C-011, and the storage sanitiser from 857, of which four lines were seen in the 22:59 grep), 1076-1125 (the
+      bodies of the claim, release and heartbeat methods defined at 1074, 1093, 1102 and 1110; C-005), 1166-1207 (stop, and the
+      sweeper at 1182).
+  signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 2703 | ranges 860-1020, 1188-1204, 1600-1620; greps:
+      definitions, instrument and symbol words; symbol-error words (run twice); lot, tick and instrument words; OUTSIDE_HOURS | the
+      hand-off from the queue and every step before and at the screener call; the sector lookup; the stored rejection status (1201) |
+      Q11; M-2, M-3, M-7 | client-ID-shaped lint codes masked in grep output; not reproduced. Steps after the screener (D- to G-
+      topics) not read.
+  config/symbol_aliases.yaml | 09f1ff37a59ae464dc249be3bb32fe8efca76668 | 10 | range 1-10 (whole file, read twice); grep: the two
+      entry names (00:07 IST on 23-Oct, to confirm line 9) | the alias content | Q3, Q4; M-2 | nothing masked; two entries of public
+      NSE ticker names, not sensitive by role.
+  main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4293 | ranges 455-560, 2386-2396, 2425-2525, 3050-3090, 3215-3235, 3282-3292,
+      3570-3594; greps: alias, exclusion and blocklist words; instrument-cache words; quote wiring | the paper quote provider and its
+      alias loader; the adapter's quote-provider wiring; the instrument cache's load and the start-up checks; the MIS blocklist,
+      screener and processor wiring | Q2, Q3, Q8; M-3, M-6, M-7 | client-ID-shaped lint codes and key-value shapes masked; the
+      token-file path name appears in code and is a path, not a value.
+  core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 2516 | range 1985-2000; greps: excluded_symbols; class names and the
+      file-to-model map; MisFilterConfig and ttl_days | SystemConfig.excluded_symbols, the system_config.yaml -> SystemConfig map and
+      the schema default of mis_filter.ttl_days (443) | M-2, M-7 | over-masking only.
+  config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 753 | range 118-186; greps: excluded_symbols; MIS words |
+      signal_queue, excluded_symbols, trade_type, product_map, mis_filter | Q2, Q9, Q11; M-2, M-5 | nothing masked in the range.
+  core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | 360 | grep: primary_account_tag, AR12, accounts.csv, unknown |
+      the source of the WR4b tag and its fallback | Q7; M-6 | client-ID-shaped text masked (16); not reproduced. accounts.csv
+      itself never opened.
+  tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2042 | ranges 60-133, 148-290, 386-434, 598-625,
+      940-1006, 1566-1745, 1840-1945; greps: test and class names (twice), "alias", and U15's alias pattern (23:56 IST) | helpers
+      and the payload, symbol, exclusion and WR4b tests (not run)
+      | M-1, M-2, M-4 | client-ID shapes masked in the WR4b tests; not reproduced.
+  tests/unit/test_fix074_numeric_cast.py | 4f5d3cc814bd6e181ffc9461178ca3f2ed26a5ae | 345 | range 80-345; grep: tests, docstrings,
+      asserts | the FIX-074 tests (not run) | M-1 | nothing sensitive.
+  core/instrument_cache.py | 2bff50f7657fd9600e99d3663791e4d134f01d08 | 297 | ranges 1-60, 75-297 (61-74, the row fields, not read);
+      grep: definitions, raises | lookup semantics, load validation, fallbacks | Q8; M-3 | key-value shapes masked (token fields).
+  utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 1692 | ranges 826-870, 905-950, 1505-1562, 1595-1620; grep:
+      instrument and alias words | the config-file presence list, the cache-size check, the runner's order | Q8; M-3 | over-masking.
+  capital/position_sizer.py | f92eace8d6e30eae2f2f57a0e244fb6873e538f3 | 822 | range 300-316; grep | the lot-size fallback | M-3.
+  orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 4706 | ranges 236-242, 2208-2230, 4020-4048, 4452-4468; greps
+      (3: two earlier, and DEFAULT_TICK with record_block) | the token and tick fallbacks; the DEFAULT_TICK import; the MIS block
+      record; symbol-error words | M-3, M-7 | lint codes masked.
+  orders/price_math.py | 36c71e4213006d509dd73bf279b0f7656a9d9e58 | 377 | range 25-28; grep: DEFAULT_TICK | the tick fallback's
+      constant (27) | M-3 | nothing masked.
+  broker/zerodha_adapter.py | 0c85d2d254aa5015bf98072ec5abf88c88cce133 | 2520 | ranges 119-122, 1382-1402, 1730-1806; greps (3: two
+      earlier, and DEFAULT_TICK) | the tick fallback and its import; get_quote's key construction and mapping | Q11; M-2, M-3 | lint
+      codes masked.
+  scripts/refresh_instruments.py | 2002a24b1e7dbf1ae585df220272739dc1aba6fd | 446 | ranges 1-70, 88-272; grep: definitions and
+      comments | how instruments.csv is built | Q8; M-3 | account-option text masked. Not read: 71-87 (the sector file list) and
+      273-446, which include the credential helper (309-350, deliberately not read).
+  scripts/find_symbol_aliases.py | 24258c1ef2a157b267b5bd2ee7ee144d15cc3c03 | 109 | range 1-109 (whole; 26-60 re-read on 23-Oct);
+      greps: definitions; the fuzzy-match function | the alias helper, its four strategies and the comment at 35 (K-07) | Q3, Q4;
+      M-2 | nothing sensitive.
+  core/mis_blocklist.py | 1f91fedfbdd4e8ef8ce16eb83c0fa1223ae10232 | 160 | ranges 1-40, 60-75; grep: case handling and method names |
+      the MIS boundary; the docstring's Step 0 statement (5-7); the class's ttl_days default (68) | Q2, Q11; M-7.
+  screening/secondary_screener.py | b6f8ff7223ad803869e976f92d794dfc7c811b59 | 705 | ranges 140-200, 404-418, 554-600; grep: skip statuses,
+      blocklist, instrument | the MIS pre-drop and the quote-unavailable skip (D-003 boundary) | Q2, Q11; M-2, M-7.
+  tests/unit/test_fix134_instrument_validation.py | f4e7b94656cf272d4d9a3f5a7b6a8a166f1e0676 | 157 | grep: test names and imports |
+      relevance (refresh-side validation) | M-3.
+  core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 1654 | ranges 42-80, 581-600; grep | the signals.status CHECK and the
+      webhook_audit columns | M-4, M-5.
+  reports/signal_status.py | 98a1631f5634807ecc6cf46cc9d3767215f9871f | 156 | range 36-60; grep | status grouping | M-5.
+  ops_dashboard/backend/services/holdings.py | 143090c16d5e0766112107c5186a168495bc1c2a | 770 | grep | classifies a V07 hit (N-3).
+  scripts/load_test_signals.py | 47d74e172b3539120a971004b73d4ad49e14fcbc | 332 | range 1-30 | a synthetic-payload tool exists | Q6.
+  scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 243 | range 1-30 | a replay tool exists | Q6.
+  reports/daily_report.py | ad40268a655b7c2860c8e31da4b7f2c0ff85d168 | 1946 | ranges 140-152, 470-486, 690-705; grep | the excluded-symbol
+      consumer | M-5.
+  ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | 973 | grep | the exclusion key's display |
+      M-5.
+  config/cron_registry.yaml | 42ff638145ba8c05eba907a33d5b391ae3fc6910 | 767 | range 300-322; grep | the refresh schedule | Q8; M-3 |
+      account-option values masked.
+  deploy/cron/trading-system.cron | f8399b40bfa71e35e27746e46cd463171615477a | 151 | grep | the refresh cron line | Q8 | account
+      option masked; the printed line also carries a VM directory path and a log path, which are not credentials, addresses or
+      host names and are not reproduced.
+
+2.4 Planned and not read (from 2.1's list): config/scan_webhook_map.yaml (54dd98d75f276f9b82027707702df2ee619b11f7): the scanner-key
+    check's position is already established by C-002 and C-003 and was re-read in the receiver (lines 551 to 554), so the map was
+    not needed. tests/unit/test_instrument_cache.py (cab5687f...), tests/unit/test_instrument_cache_integration.py (0cab129a...),
+    tests/unit/test_refresh_instruments.py (1beebce6...) and tests/unit/test_refresh_instruments_assert.py (40b7303e...): not read,
+    because the cache is not on the intake path (answers 7.1); A-004 owns the instrument master. config/instruments.csv: absent at
+    the pin.
+
+2.5 Read outside the legacy repository (governance and inputs; not legacy evidence):
+    - The four attached files of 22-Oct (the research prompt, the answer sheet, the template, Rama's answers), read whole.
+    - V2 copy at 970d236: frozen manuals, reconciliation addenda and design-input files under docs/agenda/, read for boundaries and
+      cross-references only. The frozen-manual sweep is section 5.4.
+    - The project document MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt (read whole through the project reader), for the
+      agenda IDs and names of the later topics this file points to (D-003 Secondary screening, E-012 Tick-size handling, F-005 Lot
+      size, G-007 Order rejection, K-008 Audit state, L-009 Audit trail, L-011 Reports).
+    - Public web pages for three NSE symbols (5.6).
+    - Revision 1: the independent review of 23-Oct-2026 07:30 IST (C-004_INDEPENDENT_REVIEW_AND_RAMA_QUESTIONS_23-OCT-2026.txt), read
+      whole, and Rama's chat answers of 07:40 IST (5.5).
+
+2.6 Reads by the independent check (a separate agent; one of at most two concurrent, DR-002): S/c004/check/qa_read_log.tsv, 85 rows
+    over 29 legacy files, 23:26:35 to 23:49:37 IST on 22-Oct, every row "match", through S/c004/check/qread.py (a copy of cread.py
+    with its own log; sha256 e0fcf7e8be8315aa7986cbe05bea1c70dad858bd0a9c560e0880a3cf3da39a50). None was a never-open path or a host
+    record. Its two count-only searches over S-RT and its two local probes (S/c004/check/probe/) are described in its report,
+    S/c004/check/independent_check.md (process notes). Its findings and how each was applied: notes, P-6.
+
+
+==============================================================================
+3. SEARCH REGISTER (count-only; one row per search; per-file lists saved in S/c004/search/<ID>.txt)
+==============================================================================
+Scopes (the C-002 lists in S/c002/scope, reused unchanged; sha256 of each list): S-ALL = the 1,262 checked-out files (9bfb770e...);
+S-RT = the 281 .py files outside the test folders (4a6302df...); S-CODE = the 869 code and configuration files, tests included
+(7d7b0f51...); S-TESTS = the 486 checked-out files under the test folders: 453 .py, 31 .yaml, 2 .sh (a6c4978e...).
+Method: count_grep.py prints per-file counts of lines matching a Python regex in the filter's output; no line is printed. A count
+does not exclude behaviour reached by dynamic names, by other processes or by installed files that differ from the repository.
+Never-open check before/after: a search opens only checked-out files and fetches no blob; no search caused a path expansion. The
+never-open check ran at 22:29 IST (before every search) and at 22:51 IST (after batches 1 to 3 and V22; before batch 4), with 0
+never-open blobs both times, and again at delivery, after all searches (section 6.6). IDs U08 and U11 were not used (numbering gaps,
+not missing searches).
+Columns: ID | scope | pattern | result | what it supports / cannot establish. Times are per batch, in the batch headings.
+
+Batch 1 (run_searches.py; 22:32:11 to 22:32:26)
+  U01 | S-ALL | (?i)symbol_aliases | 9 files, 20 lines: the receiver (7), main.py (2), scripts/find_symbol_aliases.py (2); records and
+      documents: docs/audit/audit_05jul2026.md (3), docs/audit/integrity_audit_2026.md (2), docs/CONFIG_GUIDE.md (1), docs/SYSTEM_MAP.md (1),
+      docs/audit/secondary_filtration_execution_pipeline_audit.md (1), docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md (1) | the
+      alias file's readers in code are the receiver and main.py (answers 5.2, 5.5) / not what the records say (not read)
+  U02 | S-RT | (?i)\balias(es)?\b | 12 files, 25 lines; the receiver (10), main.py (4), the helper (1); nine other files with 1 or 2 lines
+      each (not read) | the symbol-alias readers by this word are the receiver and main.py / what the nine other files use the word
+      for is not established
+  U03 | S-RT | (?i)instrument_cache|InstrumentCache | 21 files, 148 lines; not signals/webhook_receiver.py | the receiver does not
+      reference the cache (N-1); the consumers of answers 7.5
+  U04 | S-RT | (?i)trigger_prices | 2 files: the receiver (9), scripts/load_test_signals.py (1) | the field is parsed only by the receiver (N-4)
+  U05 | S-RT | (?i)["']stocks["'] | 2 files: the receiver (4), scripts/load_test_signals.py (1) | the same for "stocks"
+  U06 | S-RT | (?i)scan_name|alert_name|scan_url|triggered_at | 31 files, 200 lines (the receiver (46); signal_processor (27);
+      secondary_screener (27); kill_switch (23); others) | the names occur widely downstream (mostly triggered_at, by the per-file
+      counts; not split by name) / which file reads which name is not counted. In the receiver, a grep (read log, 22:59 IST)
+      shows no read of alert_name or scan_url, and webhook_url only in the storage sanitiser (answers 3.4)
+  U07 | S-RT | (?i)json\.loads|get_json|request\.json|force=True | 39 files, 69 lines; the receiver (3) | the receiver's three are the
+      intraday parse (587), the EOD parse (758) and the audit-count extraction (515), confirmed by a grep of the receiver
+  U09 | S-RT | (?i)tradingsymbol | 12 files, 29 lines; not the receiver | the broker's term appears only on broker, order and script paths
+  U10 | S-RT | (?i)unknown.?symbol|invalid.?symbol|symbol.{0,20}(not found|unknown|invalid|rejected) | 14 files, 32 lines; the
+      receiver (7); signal_processor (5) (log messages and a default "unknown", read in the grep of 2.3) | in the two files examined,
+      no symbol-validity rejection other than the receiver's INVALID_SYMBOL by these words. The independent check examined five more
+      through its own wrapper (core/evidence_contract.py, core/config_loader.py, core/exceptions.py, core/mis_blocklist.py,
+      reports/signal_status.py: comments, a docstring, a default and a status list; S/c004/check/independent_check.md, finding 29);
+      the other seven files' hits were not examined
+  U12 | S-RT | (?i)validate_symbol|def _validate|is_valid | 6 files, 89 lines: config_loader (80), core/ids.py (4), main.py (2), three others
+      1 each; not the receiver | with V29 (validate_symbol alone: 0 files), no function named validate_symbol in S-RT
+  U13 | S-RT | (?i)-EQ\b|NSE:|\.NS\b | 13 files, 35 lines; not the receiver | exchange prefixes and suffixes are added at the broker
+      boundary (answers 2), not at intake
+  U14 | S-RT | (?i)lot_size|tick_size | 18 files, 124 lines; not the receiver | the cache's sizing and tick consumers
+  U15 | S-TESTS | (?i)symbol_aliases|\balias(es)?\b | 3 files, 3 lines: test_price_math.py (1), test_sr_v2_continue.py (1),
+      test_webhook_receiver.py (1) (the FIX-C test's printed message, line 1622, by a wrapper grep at 23:56 IST; the pattern's \b
+      cannot match inside the test's name, where an underscore comes before "alias") | no test names the alias file (N-9)
+  U16 | S-TESTS | (?i)trigger_prices|["']stocks["'] | 14 files, 75 lines | the payload-shaped tests and injectors
+  U17 | S-TESTS | (?i)instrument_cache|InstrumentCache | 20 files, 203 lines | cache tests (A-004)
+  U18 | S-CODE | (?i)symbol_aliases|\baliases\b | 7 files, 20 lines: the alias file, docs/locked_decisions.yaml (1), main.py (4), the
+      helper (2), the receiver (10), two tests | code readers as U01
+
+Batch 2 (run_searches2.py; 22:45:19 to 22:46:16)
+  V01 | S-ALL | (?i)refresh_instruments | 28 files, 47 lines (code, cron files, tests and records) | the refresh script's schedule
+      and callers; records named only by count
+  V02 | S-ALL | (?i)instruments\.csv | 42 files, 101 lines | code files naming the file: the cache, startup_checks, main.py, the
+      helper, refresh_instruments, the preflight broker check, slippage_engine, order_placer, sr_level_export, core/events.py,
+      core/exceptions.py; tests; many records / naming is not reading
+  V03 | S-ALL | (?i)REJECTED_EXCLUDED_SYMBOL | 4 files: the receiver (1), test_webhook_receiver.py (1),
+      docs/audit/secondary_filtration_execution_pipeline_audit.md (1), docs/audit/signal_mortality_census_19jul2026.md (1) | the status
+      has no consumer in code (N-8)
+  V04 | S-ALL | (?i)INVALID_SYMBOL|INVALID_PRICE | 9 files, 38 lines: the receiver (5), core/schema.sql (1), reports/signal_status.py (1),
+      tests (3 files), records (3 files) | no code writes these statuses to the database (N-7)
+  V05 | S-ALL | (?i)excluded_symbols | 16 files, 63 lines | code files naming the key: the receiver, config_loader (the declaration),
+      reports/daily_report.py, the dashboard's config view; tests and records
+  V06 | S-ALL | (?i)find_symbol_aliases | 2 files: the helper (1), docs/audit/audit_05jul2026.md (2) | the helper is named by one record
+  V07 | S-RT | (?i)symbol\w*\.(upper|lower|strip|casefold)\(\) | 3 files: the receiver (3) (lines 701, 710, 792), core/mis_blocklist.py (2),
+      ops_dashboard/backend/services/holdings.py (1) | no other case or space normalisation of a symbol-named variable in S-RT (N-3) /
+      not normalisation through other variable names
+  V08 | S-RT | (?i)SKIPPED_QUOTE_UNAVAILABLE | 2 files: secondary_screener (3), scripts/generate_screened_stocks_csv.py (1) | the skip's producer
+  V09 | S-ALL | (?i)instrument_cache_too_small|missing_config_files | 5 files, 18 lines | the start-up guard's names
+  V10 | S-RT | (?i)isalnum\(|isupper\(|fullmatch\(|re\.match\(|\[A-Z0-9 | 8 files, 15 lines; none on the intake path (the receiver: 0) | no
+      symbol-syntax check by these patterns (N-2)
+  V11 | S-RT | (?i)webhook_audit | 14 files, 42 lines | code files naming the table: the receiver, core/migrations.py, main.py,
+      dashboard files, reports/daily_trade_review.py, scripts/db_retention.py, scripts/backup_restore_drill.py / not what each does
+  V12 | S-RT | (?i)REJECTED_NOT_MIS_TRADABLE|mis orders are currently blocked | 3 files: evidence_contract (1), mis_blocklist (2), screener (2)
+  V13 | S-TESTS | (?i)INVALID_SYMBOL|INVALID_PRICE|REJECTED_EXCLUDED_SYMBOL | 3 files: test_webhook_receiver.py (22), two crash-test
+      checkers 1 and 2 | where the per-symbol statuses are asserted
+  V14 | S-ALL | (?i)load_test_signals|replay_signals|signal_injector | 11 files, 24 lines | synthetic and replay tools exist (Q6) / not
+      whether they were ever run
+  V15 | S-RT | (?i)OUTSIDE_HOURS | 2 files: reports/signal_status.py (1), the receiver (1) (docstring line 22) | no S-RT code produces the
+      status (N-6). Run at 22:47:10 by a direct call; its header line was added to the saved file afterwards.
+
+Batch 3 (run_searches3.py; 22:50:12 to 22:50:14) and V22
+  V16 | S-ALL | (?i)stale.{0,60}instrument|instrument.{0,60}stale|froze instruments | 9 files, 10 lines: refresh_instruments.py (2),
+      the preflight broker check (1), test_refresh_instruments_assert.py (1); records: four files under
+      docs/approvals/preflight/21-Jun-2026/AUTHENTIC/ (1 each), docs/audit/audit_05jul2026.md (1),
+      docs/audit/registry_seed_state_split_10aug2026.md (1) | records that may bear on Q8, by count only
+  V17 | S-ALL | (?i)TVSSCS|TVSSRICHAK|SIGMAADV | 6 files, 16 lines: the alias file (2), the receiver (4), the helper (1); records:
+      docs/symbol_logging_audit_2026-05-09.md (6), docs/screened_stocks_csv_workflow.md (2),
+      docs/audit/secondary_filtration_execution_pipeline_audit.md (1) | records that may bear on Q3 and Q4, by count only
+  V18 | S-ALL | (?i)GVPIL|BIRLACABLE|SHANKARA|MCLEODRUSS | 3 files: system_config.yaml (4), test_webhook_receiver.py (4),
+      docs/CONFIG_GUIDE.md (1) | four of the five excluded names (E2E was not searched); no record other than the guide has a
+      matching line, and one line may name several of them (count only)
+  V19 | S-ALL | (?i)FIX-032 | 1 file: the receiver (4) | no record names the alias fix (N-12)
+  V20 | S-ALL | FIX-C\b | 4 files: system_config.yaml (1), config_loader (1), the receiver (1), test_webhook_receiver.py (8) | the same for FIX-C
+  V21 | S-ALL | (?i)\bBL-20\b | 4 files: docs/audit/integrity_audit_2026.md (1), main.py (3), test_startup_checks.py (9), startup_checks (8)
+  V22 | S-RT | (?i)InstrumentsRefreshed|instrument_cache\.reload|_instrument_cache\.reload|cache\.reload\( | 3 files: core/events.py (1),
+      core/instrument_cache.py (5), data/candle_store.py (1) | no S-RT caller reloads the cache by these names (N-5). 22:50:58, direct
+      call.
+
+Batch 4 (run_searches4.py; 22:51:56 to 22:51:57)
+  V23 | S-TESTS | (?i)length mismatch | 0 files | (N-10)
+  V24 | S-TESTS | (?i)comma-separated strings|must be comma | 0 files | (N-10)
+  V25 | S-TESTS | (?i)must be a JSON object | 0 files | (N-10)
+  V26 | S-TESTS | (?i)["'](nan|inf|infinity)["'] | 5 files, 12 lines, none a receiver test (fund manager, position sizer, phase18,
+      preflight engine, leverage validation) | (N-11)
+  V27 | S-TESTS | (?i)_alias_map|symbol_aliases | 0 files | (N-9)
+  V28 | S-TESTS | (?i)Invalid triggered_at|bad_triggered_at | 1 file: test_webhook_receiver.py (2) | the triggered_at 400 is tested
+
+Direct calls after batch 4 (22:59 to 23:02)
+  V29 | S-RT | (?i)validate_symbol | 0 files | (U12). 22:59:57, direct call.
+  V30 | S-RT | (?i)allow.?list|white.?list|deny.?list|black.?list | 14 files, 62 lines, none in signals/ or screening/ (broker auth
+      recovery, kill switch, Telegram notifier, state store, dashboards, preflight, security monitor and others; not read) | no symbol
+      allow-list or deny-list by these words on the intake path (N-13) / what the 14 use the words for. 23:02:14, direct call.
+  V31 | S-RT | (?i)def (sector_for|get_sector)\b|\.(sector_for|get_sector)\( | 0 files | no S-RT definition or call of either name
+      (K-04; the processor looks them up by name with getattr, which this pattern does not match). 23:02:18, direct call.
+
+Limitations common to all: a test can exercise a branch without containing its message text (V23 to V25 and V27 are statements about
+text, not proof that no test reaches the branch); host-record counts say where a word occurs, not what the record says.
+
+
+==============================================================================
+4. TRACE REGISTER
+==============================================================================
+Format per the prompt: rule | source (path, lines, blob at the pin) | input | logic | guard/order | output or failure | storage or
+hand-off | next consumer | evidence class | limitation. Blob IDs: R = signals/webhook_receiver.py 0f15a0ab...; P =
+signals/signal_processor.py 7fab0a02...; others named in full in 2.3. "Request" = the whole POST; "symbol" = one element of the
+comma-split stocks string (answers 2 names each boundary). Every row is source wiring at the baseline, not observed host behaviour.
+
+T-01 JSON parse | R 585-593 | the raw body (bytes, at most 1 MiB, C-003) | json.loads | after the gates of C-003 (auth 547-549,
+     scanner 551-554, EOD branch 562-564, kill 566-568, backpressure 570-578, window 580-583) | 400 {"error": "Malformed JSON: <parser
+     message>"}; WARNING with the first 500 bytes of the raw body; then _handle_webhook's WARNING with the first 1000 bytes (518-523)
+     | no signals row; the audit row (529-534) with counts 0 | none | FACT (SOURCE-VERIFIED) | the parser accepts NaN literals and
+     duplicate keys (last wins): CURRENT EXTERNAL FACT, probe 5.3.
+T-02 Object check | R 595-596 | the parsed value | isinstance(body, dict) | after T-01 | 400 "Request body must be a JSON object" | as
+     T-01 (no row; audit counts 0; the 1000-byte WARNING) | none | FACT (SOURCE-VERIFIED) | no test contains the message (V25).
+T-03 Numeric cast, critical | R 598-606 with 419-444 | top-level price and entry_price, when present and not null | float(); on
+     ValueError or TypeError the request fails; an OverflowError (a JSON integer too large for a float) is not caught (443) and
+     reaches _handle_webhook's handler (525-528) | after T-02, before field presence | 400 "Invalid payload: critical field
+     <name>=<value> cannot be cast to float: <reason>"; WARNING with the body's keys; on an OverflowError, 500 with a CRITICAL line |
+     as T-01; the 500's audit row is (500, 0, 0) | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) test_fix074_numeric_cast.py
+     80-199; the OverflowError: CURRENT EXTERNAL FACT (probe 2, 5.3) | the realistic Chartink body (test_webhook_receiver.py
+     1730-1742) carries neither field, so on such bodies the cast does nothing; the cast is not applied to the comma-split prices; the
+     comment at 599 ("per-signal fields if present") is not borne out (K-03).
+T-04 Numeric cast, other | R 446-469 | trigger_price, sl_pct, target_pct (float) and qty (int) | cast; a ValueError or TypeError
+     sets None with a WARNING; an OverflowError (a huge JSON number; Infinity in qty) is not caught (451, 464) | inside T-03 | none
+     (the request continues), except the 500 of T-03 on an OverflowError | the cast values stay in the parsed body, which nothing
+     below reads | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) 201-341 (the test at 231-260 asserts only the 200, one accepted
+     and a queued signal; "set to None" is its name and docstring); the OverflowError: CURRENT EXTERNAL FACT (probe 2) | the body
+     stored with the signal is the raw text (T-15), not the cast dict.
+T-05 Field presence | R 608-615 | the keys stocks, trigger_prices, triggered_at | `field not in body` | after T-03 | 400 "Missing
+     required field: '<name>'"; WARNING with the keys | as T-01 | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE)
+     test_webhook_receiver.py 258 | presence only: a null value passes here and fails at T-07 or T-08.
+T-06 scan_name | R 617-633; prefix strip 111-138; tag from core/account_registry.py primary_account_tag() | the body's scan_name,
+     optional | if present (not None): lower(), spaces to underscores, strip a leading "<tag>-" or "<tag>_" (no strip when the tag is
+     empty or "unknown"), then compare with the path's scanner name | after T-05 | mismatch: 400 "scan_name in body does not match
+     scanner_name path param"; WARNING with both forms; a non-string value raises AttributeError at 622 and becomes 500 through
+     525-528 (CRITICAL log) | as T-01; a 500's audit row has response code 500 | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) 232,
+     1864-1936; the AttributeError is CURRENT EXTERNAL FACT (probe 5.3) | the tag comes from accounts.csv (never opened), so the
+     installed tag is not established here (C-002, C-003).
+T-07 triggered_at | R 635-662 | str(body["triggered_at"]).strip() | strptime with "%Y-%m-%d %H:%M:%S", then "%I:%M %p", then "%H:%M";
+     a time-only value takes the date of `now` (581); a naive result is set to IST | after T-06 | no format matches: 400 "Invalid
+     triggered_at; expected HH:MM am/pm or YYYY-MM-DD HH:MM:SS"; WARNING with the raw value | as T-01 | none | FACT (SOURCE-VERIFIED);
+     FACT (TEST SOURCE) 276; format behaviour CURRENT EXTERNAL FACT (probe 5.3: "09:15:30", an ISO "T" form, "1234" and "21:15 pm"
+     match no format; "9:15 AM" and "09:15 am" match) | a JSON null becomes "None" and fails here; the expiry rule on the parsed
+     time is C-009's.
+T-08 Field types | R 664-668 | stocks and trigger_prices | both must be str | after T-07 | 400 "stocks and trigger_prices must be
+     comma-separated strings" | as T-01 | none | FACT (SOURCE-VERIFIED) | no test contains the message (V24).
+T-09 Split and length | R 670-674 | the two strings | split on ",", strip each element; counts must be equal | after T-08 | 400
+     "stocks and trigger_prices list length mismatch" | as T-01 | none | FACT (SOURCE-VERIFIED) | empty elements are kept (probe 5.3:
+     "" gives [""]; a trailing comma gives a final ""), so they reach T-12; no test contains the message (V23).
+T-10 Alias | R 696-706; map from 258-292, built once in the constructor (227) | each symbol string | map.get(symbol.upper(), symbol):
+     an aliased symbol becomes the upper-cased target; any other keeps its own case | first step of the loop | none (DEBUG line when
+     changed) | the resolved string is used for every later step, the response, the row and the queue | T-11 | FACT
+     (SOURCE-VERIFIED); FACT (CONFIG) config/symbol_aliases.yaml 9-10 | the path is relative to the working directory (265); a
+     missing or unreadable file gives an empty map with a WARNING or ERROR line (fail-open); the targets are not checked against
+     anything (answers 5.4); no test exercises a mapping (N-9).
+T-11 Exclusion | R 708-717; list from SystemConfig.excluded_symbols (core/config_loader.py 1993; system_config.yaml 130-136) | the
+     resolved symbol | upper() compared with the upper-cased list | after T-10, before T-12 | per-symbol REJECTED_EXCLUDED_SYMBOL,
+     counted as rejected; DEBUG line only | none: no signals row, no claim, no queue entry | none | FACT (SOURCE-VERIFIED); FACT
+     (CONFIG); FACT (TEST SOURCE) 1566-1670 | the list is read from config on each symbol; the installed list is not established.
+T-12 Empty symbol | R 904-906 | the resolved symbol | `if not symbol` | first check in _process_signal | per-symbol INVALID_SYMBOL, no
+     log line | none | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) 992-1005 | the only symbol check: no syntax, length, case or
+     instrument check (N-1, N-2).
+T-13 Price | R 908-914 | the matching element of trigger_prices (a string) | float(); then price <= 0 | after T-12 | per-symbol
+     INVALID_PRICE, no log line | none | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) 198-216 (BADSTOCK between two accepted
+     symbols), 953, 966, 979 | probe 1: "nan", "inf" and "Infinity" pass (accepted), "-inf", "0", "-5" and "" fail; float() also
+     accepts underscores, exponents and non-ASCII digits. Probe 2: bound into the REAL column trigger_price (974-977), a NaN is stored
+     as NULL and +inf as an infinity (SQLite 3.45.1; the VMs' version is not established), while the queue tuple carries the float.
+     Whether a NaN or +inf price breaks a later step is not traced (U-07).
+T-14 Expiry (position only) | R 916-926 | the parsed triggered_at | age against signal_queue.expiry_sec (system_config.yaml 127: 600)
+     | after T-13, before the claims | per-symbol EXPIRED, no log line | none | none | FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) 940 |
+     C-009 owns the rule (a future time gives a negative age and passes; not C-004's).
+T-15 Hand-off | R 928-1072 | the symbol that passed T-10 to T-14 | in-flight claim, cache dedup, fingerprint, INSERT, queue (C-005 to
+     C-007); on an IntegrityError for an earlier QUEUE_FULL row, the M-S2 re-queue (987-1013) | after T-14 | ACCEPTED, or
+     IN_PROCESS, DUPLICATE, QUEUE_FULL, STORE_ERROR; the re-queue answers ACCEPTED (the existing row flipped to QUEUED after the put,
+     its signal_id reused) or QUEUE_FULL (claims released, 998-1001) | INSERT INTO signals (signal_id, symbol, scanner,
+     strategy, triggered_at, received_at, expires_at, status "QUEUED", fingerprint, fingerprint_date, trigger_price, webhook_payload)
+     at 963-980, the payload being the sanitised raw body (681-690); queue tuple (signal_id, scanner_name, symbol, price,
+     triggered_at) at 1047 (993 on the re-queue) | P 867-887 (_process_one unpacks the same five) | FACT (SOURCE-VERIFIED) | C-005
+     to C-007 own these steps; the claim and dedup keys use the symbol as resolved, case kept (L-04); the SELECT at 987-991 has no
+     guard of its own, so an exception there ends the request in 500 with the claims held (L-13).
+T-16 Batch answer | R 730-745 | the per-symbol results | 503 if any result is QUEUE_FULL or STORE_ERROR, else 200; body {accepted,
+     rejected, results}; X-Queue-Depth, and X-Queue-Warning at 60 per cent | after the loop | 200 or 503 | none | the sender | FACT
+     (SOURCE-VERIFIED); FACT (TEST SOURCE) 198, 402, 598 | a 503 can carry ACCEPTED symbols (answers 9.4 row 3).
+T-17 Audit row | R 510-534 with 1126-1154 | the response | counts taken from the body only when the code is 200 (512-517) | in the
+     finally clause for every request that reaches the try (510-534); the shutdown 503 and the per-IP 429 write their own rows before
+     it (487-489, 497-499); a 413 at the body read (480) leaves no row, and a failed insert only logs an error (1153-1154; C-002
+     section 10.3) | none | webhook_audit (ts, scanner_name, source_ip, payload_size_bytes, response_code, signals_accepted,
+     signals_rejected, duration_ms; core/schema.sql 581-593) | dashboards and reports (V11) | FACT (SOURCE-VERIFIED) | no per-symbol
+     status is audited; a 503 batch is audited with counts 0 and 0 (L-02).
+T-18 EOD route (boundary) | R 751-804 | an "eod" scanner's body | its own JSON, object and presence checks; its own triggered_at parser;
+     only stocks type-checked; empty elements dropped; alias applied; no exclusion, no numeric cast, no scan_name check, no price
+     check | before the kill, backpressure and window gates (562-564) | 400s of its own, or 200 | the watchlist capture worker | C-011
+     | FACT (SOURCE-VERIFIED) | C-011 owns it.
+T-19 Instrument master at start-up (boundary) | main.py 2432-2449, 2451-2506; utils/startup_checks.py 833-843, 905-949, 1540-1541,
+     1606-1613 | config/instruments.csv | load; presence check; size check against 1,000 rows | before the receiver serves | missing file:
+     "missing_config_files" (1550-1553); too few rows: "instrument_cache_too_small"; a file that fails to load: no blocking entry
+     from either cache check, then the assert at main.py 2506 (exit 2: B-002 M18) | the in-process cache | consumers of T-20 | FACT
+     (SOURCE-VERIFIED) | A-004 owns the master; the comment at main.py 2437-2438 disagrees with the code (K-01, already recorded in
+     B-002).
+T-20 Cache lookups (boundary) | core/instrument_cache.py 219-285; capital/position_sizer.py 309-313; orders/order_placer.py 2214-2221,
+     4026-4034; broker/zerodha_adapter.py 1383-1402; P 1605-1617 | a symbol as carried | exact, case-sensitive dictionary lookup | at
+     sizing, order placement, target registration, tick snapping | on a miss: lot size 1, DEFAULT_TICK, token 0, sector "UNKNOWN"; the
+     adapter logs a throttled WARNING | none | the order path | FACT (SOURCE-VERIFIED) | no consumer read here rejects a miss; the
+     other cache users of U03 were not read.
+T-21 MIS pre-drop (boundary) | screening/secondary_screener.py 142-165, 554-581; core/mis_blocklist.py 89, 106 (grep);
+     system_config.yaml 164-181 | the symbol and intent | blocklist lookup on strip().upper() | first step of screen() | with shadow
+     false: REJECTED_NOT_MIS_TRADABLE, persisted; with shadow true (the pinned configuration): logged would-drop, the signal continues
+     | the screener's status write | D-003, G-007 | FACT (SOURCE-VERIFIED); FACT (CONFIG) | not C-004's; recorded because Rama's Q2
+     and Q11 concern it.
+T-22 Quote fetch (boundary; the first stop for a symbol the broker does not return) | screening/secondary_screener.py 167-196;
+     broker/zerodha_adapter.py 1730-1806 | the symbol | quote keys "NSE:<symbol>" (1760); response keys mapped back by removing the
+     prefix (1774); quotes.get(symbol) | after T-21 | no quote: SKIPPED_QUOTE_UNAVAILABLE with an INFO line; an exception: the same
+     status with an ERROR line and traceback | the screener persists the status (182, 195); the processor logs a WARNING and returns
+     (P 1008-1013) | none | FACT (SOURCE-VERIFIED) | what the broker returns for an unknown or lower-case key is not established
+     (U-03); D-003 owns the screener.
+T-23 Paper quote provider (boundary; paper only) | main.py 508-518, 537-538, 544; wired only when is_paper (2392-2394) | symbols to
+     quote | a second alias map, loaded raw from the same file (exact-case keys), applied before "NSE:" | inside get_quote in paper
+     mode (zerodha_adapter.py 1742-1755) | missing symbols logged as a partial response | none | none | FACT (SOURCE-VERIFIED) | V2 is
+     live-only (DR-001); legacy fact only.
+
+
+==============================================================================
+5. RECORDS / EXTERNAL EVIDENCE
+==============================================================================
+5.1 Host records inside the pinned repository (dated records, audit notes, the system map and paths records, guides). Method:
+    value-blind only (Rama, 22-Oct, about 12:50 IST): counts, and presence tests of words that print PASS or FAIL and line numbers.
+    C-004 printed no line of any host record. The record evidence is the per-file counts of section 3, and, for three records, their
+    line counts (wc -l) and 18 presence tests (5.6); these say where a word occurs, not what a record states. The record files that
+    the counts tie to C-004's questions (count of matching lines in brackets; date from the file name where it has one):
+      docs/symbol_logging_audit_2026-05-09.md (V17: 6; dated 2026-05-09) - Q3, Q4
+      docs/screened_stocks_csv_workflow.md (V17: 2; undated) - Q3, Q4
+      docs/audit/audit_05jul2026.md (U01: 3; V06: 2; V02: 5; V16: 1; V14: 1; 05-Jul-2026) - Q3, Q4, Q8
+      docs/audit/secondary_filtration_execution_pipeline_audit.md (U01: 1; V03: 1; V04: 2; V05: 2; V17: 1; undated by name) - Q1, Q2, Q9
+      docs/audit/signal_mortality_census_19jul2026.md (V03: 1; V04: 4; 19-Jul-2026) - Q1, Q10
+      docs/audit/integrity_audit_2026.md (U01: 2; V02: 2; V09: 1; V21: 1) - Q8
+      docs/approvals/preflight/21-Jun-2026/AUTHENTIC/ (V16: four files, 1 each; 21-Jun-2026) - Q8
+      docs/audit/registry_seed_state_split_10aug2026.md (V16: 1; 10-Aug-2026) - Q8
+      docs/CONFIG_GUIDE.md (U01: 1; V05: 3; V18: 1; V02: 1; created 19-Jun per C-003's inventory) - Q4, Q9
+      docs/crash_test_info_04jun2026.md (V04: 1; 04-Jun-2026) - Q6
+    Whether any of them should be read or tested further, and by what method, is for Rama (notes QR-1 and P-1).
+5.2 Records repository and the testing snapshot: not inspected (prompt section 4; as in C-003).
+5.3 Local probes (CURRENT EXTERNAL FACT). Each was run with python3 -I under Python 3.13.16; each imports nothing from the legacy
+    tree, opens no file and uses no network. Not evidence of the VMs' Python or SQLite versions (C-002 U-6).
+    Probe 1 (22:44 IST): S/c004/probe/p1_float_parse.py. It reproduces the shapes of the receiver's checks as
+    read in the source (float() and "<= 0"; json.loads on bytes; int.lower(); the three strptime formats; the split; the alias
+    lookup) and printed: nan, NaN, inf and Infinity pass "<= 0" as False; -inf, 0, -5 give True; "" and "12.5.1" raise ValueError;
+    " 12 ", "1e3", "1_000" and two non-ASCII digit strings parse; json.loads accepts bytes, a NaN literal and duplicate keys (last
+    wins), and returns a list for a top-level array; int.lower() raises AttributeError; "09:15 am" and "9:15 AM" match "%I:%M %p",
+    "09:15" matches "%H:%M", "2026-10-22 09:15:00" matches the first format, and "1234", "09:15:30", "2026-10-22T09:15:00", "25:00"
+    and "21:15 pm" match none; str(None) is "None"; "".split(",") gives [""], "A,B," gives a final "", lengths compare as in T-09;
+    the alias shape maps "tvsscs" and "TVSSCS" to the target and leaves "reliance" as "reliance".
+    Probe 2 (written and run at 23:55 IST on 22-Oct, run again at about 00:02 IST on 23-Oct): S/c004/probe/p2_sqlite_overflow.py,
+    with Python's sqlite3 module on SQLite 3.45.1 and an in-memory database. Into a REAL column it stores a bound NaN as NULL, +inf
+    and -inf as infinities and 12.5 as 12.5. float() of a 400-digit JSON integer and int() of a JSON Infinity raise OverflowError,
+    which an except clause for (ValueError, TypeError) does not catch; float() of the string "1e999" (a JSON string value, or a
+    trigger-price element) gives inf.
+    Probe 3 (00:01 IST on 23-Oct): S/c004/probe/p3_difflib.py recomputes the alias helper's four tests (scripts/find_symbol_aliases.py
+    14-16, 27-47) with Python's difflib: TVSSCS -> TVSSRICHAK: exact, prefix and containment all false, ratio 0.625 (not above 0.8);
+    SIGMAADV -> SIGMAADV-BE: prefix and containment true, ratio 0.842.
+    The independent check ran two probes of its own on the same Python and SQLite behaviour, with the same results (its report).
+5.4 Frozen manuals (V2 copy at 970d236; read only): swept for statements on C-004's subjects by one background agent (one of at
+    most two concurrent, DR-002), whose report is S/c004/notes/frozen_sweep.md; Claude checked the load-bearing lines against the
+    manuals. Results and erratum candidates: answers section 15; notes section 5.
+5.5 Rama's answer sheet (HISTORICAL; received 22:28 IST): Rama_C-004_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt, read whole; its answers
+    are quoted in answers section 16 and kept apart from source facts. His answers to the notes' QR-1 to QR-3 came in chat at 07:40
+    IST on 23-Oct (HISTORICAL for QR-3, given as a guess; QR-1 and QR-2 left to Claude's choice); they are recorded in the notes,
+    section 6, and compared with the source in notes C-10.
+5.6 Public listing pages and value-blind presence tests (K-06, K-08; D-11).
+    - Public pages (CURRENT EXTERNAL FACT; WebSearch and WebFetch's summarising fetch, 23:54 to 23:55 IST on 22-Oct; re-checked by
+      three searches at 00:02 IST on 23-Oct). tradingview.com's page for NSE-TVSSCS names "TVS Supply Chain Solutions Ltd.";
+      businesstoday.in's page for TVS Srichakra Ltd gives its NSE symbol as TVSSRICHAK ("The symbol of TVS Srichakra Ltd is
+      TVSSRICHAK"); gurufocus.com's page for NSE:SIGMAADV names "Sigma Advanced Systems Ltd". The search results agree: several
+      brokers' and news sites pair TVS Supply Chain Solutions Ltd with tvsscs and TVS Srichakra Ltd with tvssrichak in their page
+      titles and addresses. One more page was fetched (a Kite forum thread on BE and BL in the instruments file); it established
+      nothing and is not used. No broker API, Chartink page, legacy service or account was contacted. Not evidence of the legacy
+      period.
+      Page addresses and access times (IST), for source identity:
+        https://www.tradingview.com/symbols/NSE-TVSSCS/ (fetched 23:54 on 22-Oct)
+        https://www.businesstoday.in/stocks/tvs-srichakra-ltd-tvssrichak-share-price-361638 (fetched 23:55 on 22-Oct)
+        https://www.gurufocus.com/stock/NSE:SIGMAADV/summary (fetched 23:55 on 22-Oct)
+        https://www.aajtak.in/business/stock/tvs-supply-chain-solutions-ltd-tvsscs-share-price-5682 (a search result at 00:02 on
+          23-Oct, seen by its title and address and not opened by Claude; the independent review of 23-Oct opened it and reports
+          the same company)
+        https://kite.trade/forum/discussion/1520/be-and-bl-in-the-instruments-file (fetched 23:55 on 22-Oct; not used)
+      The pages can change after these times; they are current public sources, not records of the legacy period.
+    - Presence tests (S/c004/tools/vb.py, a copy of C-003's cvb.py with its own log, S/c004/vb_log.tsv; 18 rows, 23:57:33 to
+      23:57:37 IST on 22-Oct). It reads a record through mr.py, never prints the output, and prints only PASS with line numbers or
+      FAIL; it refuses never-open paths and value-shaped patterns. Range 1:600 on each record, which covers each whole file (wc -l:
+      315, 144 and 534). Results, six patterns per record:
+        docs/symbol_logging_audit_2026-05-09.md (blob b447e2d9...): TVSSCS PASS, SIGMAADV PASS; TVSSRICHAK, "Srichakra", "Supply
+          Chain" and "(?i)alias" FAIL.
+        docs/screened_stocks_csv_workflow.md (blob d80fb3b7...): TVSSCS PASS, SIGMAADV PASS; TVSSRICHAK, "Srichakra", "Supply Chain"
+          and "(?i)alias" FAIL.
+        docs/audit/secondary_filtration_execution_pipeline_audit.md (blob 5d405fa4...): TVSSCS PASS, "(?i)alias" PASS; TVSSRICHAK,
+          "Srichakra", "Supply Chain" and SIGMAADV FAIL.
+      The log keeps PASS or FAIL only; the line numbers printed at the time are not used here.
+
+
+==============================================================================
+6. NEVER-OPEN / SECURITY ATTESTATION
+==============================================================================
+6.1 Paths prohibited from opening: the never-open list of section 1, plus the prompt's list (.env files and .env.example, accounts
+    CSVs, config/security.yaml, config/reference_data/, docs/web_claude/, token and session files, databases, logs). Relevant here:
+    config/reference_data/security_master_file.csv is named by scripts/refresh_instruments.py line 52 as the symbol universe; it
+    is never-open and was not opened, so the universe's content is not established (answers 7.2). accounts.csv (the WR4b tag
+    source) was not opened.
+6.2 Exact check used: python3 -I sensitive_check.py on the clone (tree paths matched against the list; local object IDs from git
+    cat-file --batch-all-objects; prints counts and classes only), and diag_never_open.py on the saved listing (prints only if a
+    never-open blob is present). Times and results: 22:29 IST and 22:51 IST: 102 never-open paths; 8,922 local objects; 0 present.
+    Delivery: section 6.6.
+6.3 Never-open blobs fetched or opened: 0 at 22:29 and 22:51 IST (no path expansion; object count unchanged); at delivery, 6.6.
+6.4 Sensitive values displayed in working output: none of the prohibited classes. The filter masked every client-ID shape, address
+    shape and key-value shape it met (counts in the read log's footers). Unmasked and not sensitive: public NSE ticker names, test
+    fixture prices, file paths in code and one VM directory path in the cron line (2.3); none of them is reproduced except ticker
+    names.
+6.5 Sensitive values written to files: the scans of 6.6 decide this for the three deliverables. The working notes, read log and
+    search files were written to hold no legacy content beyond file paths, counts and ticker names.
+6.6 Final checks at delivery (23-Oct-2026 IST; every result below is from a run in this session, after the last legacy read):
+    - HEAD: `git -C <the clone> rev-parse HEAD` at 00:19:14 IST printed 970aabf3c78d777d9d34549e021f7c8e756c7bdb, equal to the pin.
+    - Never-open: sensitive_check.py on the clone at 00:19:14 IST, exit 0: 102 never-open paths in the tree (1 root dot-file, 21
+      config, 80 docs); 8,922 local objects; 0 never-open blobs present locally. diag_never_open.py on the saved listing, exit 0,
+      printed nothing (it prints only when a never-open blob is present).
+    - Local objects: `git cat-file --batch-all-objects` counted 8,922, the same as at 22:29 and 22:51 IST on 22-Oct, so C-004
+      fetched no blob and made no path expansion.
+    - V2 governance copy: `git rev-parse HEAD` printed 970d236d687defd1a41619aca5c2e35abc3baf2b (00:19 IST).
+    - Citation ranges: c4_cite.py (sha256 9b62e631fcc1aa642521aacd57c773e9d49fb20392e292615fd5e15382235948) on the three files, run
+      at 00:23:37 IST and again at 00:25:58 IST on the text as delivered: 218 legacy line citations found; 0 out of range, reversed or
+      in a file not checked out; 0 unresolved paths.
+    - Coverage: c4_cover.py (sha256 d9b31f485a541be170695e33dca97d186991d42be13bde75b78f22498c89273c), run with c4_cite.py: 10
+      citations fall outside every range read, and each is a line seen in a grep of 2.3: the blocklist's two key lines (answers B7
+      and 8.3; T-21), the configuration loader's file-to-model line and its ttl_days default (answers 6.1 and 8.3; notes C-02), the
+      dashboard view's two lines (answers 6.3) and the cron line (answers 7.2).
+    - Quotes: c4_quotes2.py (sha256 67f0fa137f618c94186cdcae1ba5b7b2ebb3c0e1cb4d66e184bc605d2f7cd312), c4_quotes.py plus the items
+      added after the independent check, 00:23:38 to 00:24:14 IST: 190 items (149 legacy fragments read through mr.py at the cited
+      lines; 41 frozen-manual phrases at the cited lines of the V2 copy): 190 PASS, 0 FAIL. Output: S/c004/check_quotes2.txt. (The earlier version,
+      c4_quotes.py, sha256 a154eb578c55fdebf3311ff0a53cc53e02992c874b72ea50d6ece9b14637fe4c, gave 134 PASS and 0 FAIL at 23:24 IST
+      on 22-Oct, file S/c004/check_quotes.txt.)
+    - Final scan method/result: S/c003/scan_outputs.py (sha256 163dec1abfe319e516b1e51c1deb25721dacf4ebb32ea98d7630515c992c6d3b),
+      which runs /home/claude/tools/scan_ids.py (sha256 8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16) and
+      S/lcid_check.py (sha256 a893695e573828683af6e6071bbbca42ce417ab124e6cdd939626e24b8b2d0ea) and counts credential, session-link,
+      SSH-key, user-at-host and bot-name shapes, non-ASCII bytes and carriage returns; then S/c004/tools/classify_hits.py (sha256
+      76cacfc177e4b220c1bea92786d1eb9f7961f8d46b58a86cdc89755ce5771ad4), which classifies every hit by class without printing a
+      value. Run at 00:24 IST on the three files as delivered (counts and classes only):
+      answers: scan_ids 38 long-token hits (40 characters) and 2 client-ID-shape hits (4 characters); lcid_check 3 non-path
+        hits; classified: 1 pinned-commit, 1 V2-commit and 37 blob-ID tokens of 40 characters, and 8 ID-shaped tokens (5
+        legacy file-name tokens, 2 sweep row numbers, 1 session folder name); unclassified 0.
+      notes: scan_ids 1 client-ID-shape hit (4 characters); lcid_check 4 non-path hits; classified: 4 ID-shaped tokens (3
+        session folder names, 1 sweep row number); unclassified 0.
+      inventory: scan_ids 56 long-token hits (32 of 40 characters, 24 of 64) and 2 client-ID-shape hits (4 characters);
+        lcid_check 44 non-path hits; classified: 3 pinned-commit, 2 V2-commit and 30 blob-ID tokens of 40 characters, 24
+        tool or probe sha256 values of 64 characters, and 47 ID-shaped tokens (29 session folder names, 13 times the word
+        "sha256", 3 legacy file-name tokens, 2 sweep row numbers); unclassified 0.
+      All three files: 0 credential-pattern, 0 session-link, 0 SSH-key, 0 user-at-host and 0 bot-name shapes; 0 non-ASCII bytes; 0
+        carriage returns. Scan_ids leaves the pinned commit out of its long-token count, which is why its counts are lower than
+        the classified totals by the pinned-commit tokens. Every hit is a public commit or blob ID, a tool hash, a file or folder
+        name token, or a sweep row number. Re-run at 00:26 IST on the final text of all three files: the same counts.
+    - Repeated at 00:25:13 IST, after the quote check and the scans: HEAD the same commit; sensitive_check.py the same counts (102;
+      8,922; 0); diag_never_open.py exit 0, nothing printed.
+    - Revision 1 re-checks (23-Oct-2026, from 07:45 IST, on the revised files): HEAD the same commit; sensitive_check.py the same
+      counts (102; 8,922; 0); diag_never_open.py exit 0, nothing printed; local objects 8,922; the read log still 152 rows (no new
+      read); the citation check found 218 citations, 0 out of range and 0 unresolved, and the coverage check the same 10 grep-only
+      lines; scan_outputs.py and classify_hits.py the same counts and classes as above, unclassified 0 (last run at 07:46 IST on the
+      final text). The quote check was not re-run: no quoted fragment or cited line changed in revision 1.
+    - Revision 2 re-checks (23-Oct-2026, on the final files): the same checks with the same results; last run at 08:06 IST. The
+      quote check was not re-run: no quoted fragment or cited line changed in revision 2.
+    - Not run: no test, no legacy code, no network check of the files.
+6.7 Working-output incident: none. The re-reads of 22 to 23-Oct printed masked code only (mask footers in the read log); the web
+    lookups returned public company pages only.
+
+
+==============================================================================
+7. DEVIATIONS / OPEN QUESTIONS
+==============================================================================
+ID | what happened or is unknown | evidence | impact | safe next step
+D-1 | The workflow note says "about 22:33 IST"; its file time is 22:31:24 IST | S/c004/notes/workflow_recorded.md line 3; file time |
+    none on the order (the note precedes the first search at 22:32:11 and the first read at 22:32:37) | the file time is used here
+D-2 | The session's context was compacted twice, during the reading phase and while the corrections were applied | the read log (2.2)
+    and the saved search files cover every read and search, so no read is unlisted | none on the evidence | none
+D-3 | One range (signal_processor.py 905-1020) was read twice: the first call's output went through a pipe that printed nothing, and
+    the second saved the masked output to S/c004/notes/sp_905_1020.txt | read log rows 11 and 12 | none (same blob, same filter) |
+    none
+D-4 | Label CURRENT EXTERNAL FACT is not among the prompt's nine | the C-002 and C-003 manuals use it for library and probe facts | the
+    probe facts are kept apart from legacy facts | the reviewer may rename the class
+D-5 | V15, V22 and V29 to V31 were run as direct count_grep.py calls, not through a batch script; V15's header line was added after
+    the run | S/c004/search/V15.txt, V22.txt, V29.txt to V31.txt | none on the counts | none
+D-6 | The read log and filter count one line more than wc -l | section 1 (line counts) | none: ranges are cited within wc -l | none
+D-7 | The deliverables were drafted from the sweep's report while its agent was still revising it; its last revision (file time 23:29
+    IST) added one statement (R371) and its counts section | S/c004/notes/frozen_sweep.md sections 2 and 3 | answers 15.1 and notes P-2
+    were updated to the final version; R371 (waitress's defaults) changes no C-004 statement | none
+D-8 | The sweep agent wrote one temporary file of file paths in S/c004 by mistake and deleted it at once (its report's process note) |
+    frozen_sweep.md, process note | none: paths of the V2 copy only, no legacy content | none
+D-9 | The quote check (6.6) ran mr.py directly on the cited ranges, not through cread.py, so those reads are not rows of the read log;
+    it printed PASS or FAIL only | S/c004/tools/c4_quotes.py lists every item | none on the evidence | none
+D-10 | The independent check ran one git command against its own rules: `git log -1 --format=%H` on the V2 governance copy (not the
+    legacy clone), to confirm its HEAD | its report, process notes | none: it printed only the expected V2 commit; nothing was fetched
+    and no legacy content was involved | none
+D-11 | Two methods beyond the planned reads were used for K-06 and K-08: public listing pages (WebSearch and WebFetch) and value-blind
+    presence tests on three host records (5.6) | 5.6; S/c004/vb_log.tsv | the presence tests are within Rama's value-blind rule of
+    22-Oct (PASS or FAIL and line numbers); the web lookups touched no legacy service, broker API or account | the reviewer may confirm
+    both methods
+D-12 | The work ran past midnight: read-log rows 122 to 152 (23:55 IST on 22-Oct to 00:15 IST on 23-Oct), the presence tests and probes
+    2 and 3 were made to verify the independent check's findings and correct the package; the file names keep the prompt's date | read
+    log; vb_log.tsv | none on the evidence | none
+D-13 | Revision 1 after delivery (23-Oct, from 07:43 IST): Rama's QR answers recorded, the page addresses added (5.6) and the checks
+    of 6.6 re-run; the file names stay as the prompt gave them | the three files' revision lines; notes P-8 | none on the evidence;
+    no legacy read, search, probe or web lookup was made for it | none
+D-14 | Revision 2 (23-Oct, from 08:05 IST): research closed by Rama and his erratum decisions recorded; the checks of 6.6 re-run |
+    notes section 5 and P-9 | none on the evidence; no legacy read, search, probe or web lookup was made for it | none
+Open questions for Rama and the reviewer: notes sections 2, 6 and 8 (QR-1 to QR-3 answered 23-Oct).
+
+
+==============================================================================
+8. COMPLETION STATUS
+==============================================================================
+[x] Source inventory completed before module analysis: the workflow note with the candidate paths and their blob IDs was saved at
+    22:31:24 IST, before the first search and read (2.1). Files added later are rows of 2.3 with their own read-log rows.
+[x] HEAD equals pinned commit: at the start, at 22:51 IST and at delivery (6.6).
+[x] Every read has exact path, blob SHA and line range: 2.3 and the read log (152 rows; 2.2). The quote check's mr.py reads are
+    listed by item, path and range in c4_quotes.py and c4_quotes2.py, not in the read log (D-9).
+[x] Every search has bounded scope and count: section 3 (scopes S-ALL, S-RT, S-CODE, S-TESTS; per-file counts saved).
+[x] No legacy code or tests executed: the three probes import nothing from the legacy tree (5.3); no test was run.
+[x] Never-open count is zero: 0 never-open blobs present locally at 22:29 and 22:51 IST and at delivery; none opened (6.6).
+[x] Outputs scanned using approved value-blind method: 6.6, final scan method/result.
+[x] No V2 design or repository changes made: nothing was written to any repository or to the project; Rama's V2 input is kept as
+    PROPOSED material in the notes (V2-1).
+[x] Evidence classes kept separate: each claim carries its label (answers 0.1); Rama's answers are kept in answers section 16.
+END

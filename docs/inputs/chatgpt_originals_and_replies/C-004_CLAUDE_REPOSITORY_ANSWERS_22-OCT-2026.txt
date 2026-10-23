@@ -1,0 +1,931 @@
+C-004 - LEGACY FIELD AND SYMBOL VALIDATION
+CLAUDE REPOSITORY ANSWERS
+Date of work: 22 to 23-Oct-2026 (IST); research from 22:29:53 IST on 22-Oct, corrections after the independent check to 23-Oct
+(notes P-6); delivery checks in the inventory, section 6
+Revision 1 (23-Oct-2026, from 07:43 IST): Rama's answers to the notes' QR-1 to QR-3 recorded (notes section 6 and C-10; here 8.4 and
+section 16). No finding, label or citation changed.
+Revision 2 (23-Oct-2026, from 08:05 IST): research closed by Rama; his decisions on the erratum candidates recorded (summary, 15.4,
+15.6; notes section 5). No finding, label or citation changed.
+Request: C-004_CLAUDE_RESEARCH_PROMPT_22-OCT-2026.txt (deliverable 1), with C-004_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt (the
+questions), Rama_C-004_ANSWER_SHEET_FOR_CLAUDE_22-OCT-2026.txt (Rama's answers, received 22:28 IST; section 16) and
+C-004_SOURCE_INVENTORY_AND_METHOD_TEMPLATE_22-OCT-2026.txt; names as received (DR-008).
+Source: production snapshot trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb, the partial clone kept from
+C-001 to C-003 (HEAD equal to the pin at the start and at 22:51 IST; at delivery, inventory 6.6). Only the production snapshot was used; the
+testing snapshot and the records repository were not inspected.
+Governance (read only): trading-system-v2 main at 970d236d687defd1a41619aca5c2e35abc3baf2b (the C-003 freeze, DR-056).
+Companion files: C-004_SOURCE_INVENTORY_AND_METHOD_22-OCT-2026.txt ("the inventory": every read and search with blob IDs, line
+ranges and counts, and the trace register T-01 to T-23); C-004_RESEARCH_NOTES_AND_OPEN_QUESTIONS_22-OCT-2026.txt ("the notes":
+unknowns, conflicts, audit leads, erratum candidates, questions for Rama, and Rama's V2 input kept apart).
+Status: RESEARCH INPUT, final (research closed by Rama, 23-Oct-2026). Legacy fact only; the legacy system is dead and reference
+only. No manual drafted, no V2 decision, no frozen manual changed, nothing written to any repository or to the project.
+Security: no credential, token or token-derived value, token-bearing URL, account or client identifier, host or IP address,
+mailbox, SSH detail or person name other than Rama's is reproduced. The legacy webhook token stays treated as exposed and is never
+repeated. Stock symbols named here are public NSE ticker names taken from the pinned configuration and tests.
+
+
+==============================================================================
+0. READING GUIDE
+==============================================================================
+0.1 Evidence labels (claim-specific; the prompt's nine, plus the dated external class used since C-002)
+  FACT (SOURCE-VERIFIED)       read in the pinned code at 970aabf through the masking filter.
+  FACT (CONFIG)                declared in a configuration file at 970aabf; not the installed file on a VM.
+  FACT (TEST SOURCE)           what a test file at 970aabf asserts; no test was run, and a test is not evidence of production
+                               behaviour.
+  FACT (RECORD-DERIVED)        stated by a dated record. C-004 read no host record (value-blind rule; inventory 5.1): it cites
+                               records by search counts and by value-blind presence tests of words (PASS or FAIL and line
+                               numbers), which say where a word occurs, not what a record states. Frozen manuals' own
+                               RECORD-DERIVED facts are cited as such, with "there".
+  HISTORICAL (Rama)            Rama's own account of 22-Oct-2026 (section 16).
+  CURRENT EXTERNAL FACT        checked on 22-Oct-2026 outside the legacy repository: local probes of Python 3.13.16 and SQLite
+                               3.45.1 (no legacy code, no file, no network; inventory 5.3), and public listing pages for three
+                               NSE symbols (inventory 5.6). Not evidence of what the VMs ran or of the legacy period.
+  INTERPRETATION / AUDIT LEAD  reasoned from code, configuration or comments; not observed.
+  KNOWN DEFECT / AMBIGUITY     an inconsistency or documentation drift visible in the source ("doc drift"; where code and a
+                               comment disagree, the code is what ran).
+  UNKNOWN / NOT ESTABLISHED    the inspected evidence does not establish the claim.
+  OPEN QUESTION                needs Rama or a later topic (the notes).
+  A code comment that describes a past event (a dated incident, a live observation) is reported as what the comment says, labelled
+  INTERPRETATION / AUDIT LEAD; it is not a record.
+
+0.2 States kept apart: (a) pinned source; (b) pinned configuration; (c) tests, inspected only; (d) dated records (counted only);
+  (e) the installed and runtime state of the two VMs, never observed (both terminated and deleted); (f) Python's behaviour in the
+  probe. A statement about (a) or (b) says nothing of (e).
+
+0.3 Search scopes behind every negative (C-002's lists, reused unchanged; inventory section 3): S-ALL = the 1,262 checked-out files;
+  S-RT = the 281 .py files outside the test folders; S-CODE = the 869 code and configuration files; S-TESTS = the 486 files under
+  the test folders. A negative reads "not found in <scope> by <search>". Nothing outside the checked-out paths was searched.
+
+0.4 Citations: "path lines A to B" at 970aabf; "R" alone = signals/webhook_receiver.py (blob 0f15a0ab033529d80d9c14c993a5077690b72871)
+  and "P" = signals/signal_processor.py (blob 7fab0a02a302770ac72bbbd662549d5c091086c1). Every other file's blob ID is in the
+  inventory, section 2.3. Line numbers are from this session's filter output; ranges stay within each file's wc -l count.
+
+0.5 Item IDs: K- (known defect or doc drift), L- (audit lead), U- (unknown), N- (negative search), T- (trace rows, inventory
+  section 4), M- (matrices, section 9); in the notes: C- (conflicts), CE- (erratum candidates), QR- (questions for Rama), P-
+  (process points), V2- (Rama's V2 input). The two-digit C-01 to C-09 of the notes are not topic IDs.
+
+0.6 Matrices required by the prompt: M-1 payload fields, types and shapes (section 9.1); M-2 symbol syntax, normalisation, aliasing
+  and unknown symbols (9.2); M-3 instrument-master presence and lookups (9.3); M-4 whole-request failures versus per-symbol
+  outcomes (9.4); M-5 failure representation, logging, auditing and downstream handling (9.5); M-6 production/testing and
+  paper/live (9.6); M-7 dependencies and topic boundaries (9.7).
+
+0.7 Blob IDs at the pin of every legacy file read (git ls-tree HEAD for the path; equal to the working file's hash at every read;
+  lines read: inventory 2.3):
+  signals/webhook_receiver.py                      0f15a0ab033529d80d9c14c993a5077690b72871
+  signals/signal_processor.py                      7fab0a02a302770ac72bbbd662549d5c091086c1
+  config/symbol_aliases.yaml                       09f1ff37a59ae464dc249be3bb32fe8efca76668
+  config/system_config.yaml                        bf742ae5c81c60614370361998e6a102a1064ff7
+  config/cron_registry.yaml                        42ff638145ba8c05eba907a33d5b391ae3fc6910
+  deploy/cron/trading-system.cron                  f8399b40bfa71e35e27746e46cd463171615477a
+  main.py                                          445fb0d8237a6d535ed00e5eb968c8176efd74f3
+  core/config_loader.py                            8635bca77531515561ee48cf92677883a5e30782
+  core/account_registry.py                         d2bdc836cc9a04a99d4d179dba4f46e78213c84c
+  core/instrument_cache.py                         2bff50f7657fd9600e99d3663791e4d134f01d08
+  core/mis_blocklist.py                            1f91fedfbdd4e8ef8ce16eb83c0fa1223ae10232
+  core/schema.sql                                  b46d7489f6ec5e31149dd68957f3b9e45270571e
+  utils/startup_checks.py                          61ff67676d8230640a2aafb6bd6d75d7a185fbb6
+  capital/position_sizer.py                        f92eace8d6e30eae2f2f57a0e244fb6873e538f3
+  orders/order_placer.py                           e3a602909befa3fd3ba4b27caeed108724c07947
+  orders/price_math.py                             36c71e4213006d509dd73bf279b0f7656a9d9e58
+  broker/zerodha_adapter.py                        0c85d2d254aa5015bf98072ec5abf88c88cce133
+  screening/secondary_screener.py                  b6f8ff7223ad803869e976f92d794dfc7c811b59
+  scripts/refresh_instruments.py                   2002a24b1e7dbf1ae585df220272739dc1aba6fd
+  scripts/find_symbol_aliases.py                   24258c1ef2a157b267b5bd2ee7ee144d15cc3c03
+  scripts/load_test_signals.py                     47d74e172b3539120a971004b73d4ad49e14fcbc
+  scripts/replay_signals.py                        72763c3ed8d5d8fe43258619d55840f2780cfa96
+  reports/signal_status.py                         98a1631f5634807ecc6cf46cc9d3767215f9871f
+  reports/daily_report.py                          ad40268a655b7c2860c8e31da4b7f2c0ff85d168
+  ops_dashboard/backend/services/config_view.py    0d4929a1c9908a18af771efe33f55d5a0ad04d9c
+  ops_dashboard/backend/services/holdings.py       143090c16d5e0766112107c5186a168495bc1c2a
+  tests/unit/test_webhook_receiver.py              7b377abb85d644f0f3ff7956385224b43f31ed61
+  tests/unit/test_fix074_numeric_cast.py           4f5d3cc814bd6e181ffc9461178ca3f2ed26a5ae
+  tests/unit/test_fix134_instrument_validation.py  f4e7b94656cf272d4d9a3f5a7b6a8a166f1e0676
+  config/instruments.csv: no blob at the pin (absent from the tree).
+
+
+==============================================================================
+1. SUMMARY
+==============================================================================
+- Where validation happens. All intake validation is in R: request-level checks in _process_request (lines 585 to 674), after the
+  gates C-003 froze (authentication, scanner, EOD branch, kill switch, backpressure, entry window), and per-symbol checks in the
+  loop (696 to 728) and the start of _process_signal (904 to 926). FACT (SOURCE-VERIFIED).
+- Request level (the whole POST fails; no symbol is looked at): malformed JSON (400); a body that is not a JSON object (400); a
+  top-level price or entry_price that will not cast to float (400; FIX-074); a missing stocks, trigger_prices or triggered_at key
+  (400; presence only); a scan_name that does not match the path after lower-casing, spaces to underscores and the account-prefix
+  strip (400), or that is not a string (500); a triggered_at matching none of three formats (400); stocks or trigger_prices not a
+  string (400); unequal counts after splitting on commas (400). A cast that overflows (a JSON number too large for a float, or an
+  Infinity literal in qty) also ends in 500, because the casts catch only ValueError and TypeError. FACT (SOURCE-VERIFIED), with
+  probes for Python's behaviour. Each 400 leaves no signals row, an audit row (400, 0, 0) and a WARNING line holding the first
+  1,000 bytes of the raw body; a 500 leaves no row, one CRITICAL line and (500, 0, 0) (C-003 sections 7.3 and 7.5, frozen).
+- Per symbol, in order: strip; alias (the symbol upper-cased is looked up in a two-entry map from config/symbol_aliases.yaml; a
+  symbol without an alias keeps its own case); the static exclusion list (five symbols, case-insensitive) ->
+  REJECTED_EXCLUDED_SYMBOL; empty -> INVALID_SYMBOL; price not a float or <= 0 -> INVALID_PRICE; too old -> EXPIRED; then the
+  C-005 claims, the INSERT and the queue. FACT (SOURCE-VERIFIED). The four intake rejections are response-only: no signals row,
+  no queue entry and no log line, except one DEBUG line for an exclusion.
+- What is not checked at intake (N-1 to N-3): symbol syntax, length or characters; case (except for aliased symbols); exchange or
+  series; presence in the instrument master. Any non-empty string with a positive price passes. A non-finite price ("nan", "inf")
+  also passes (probe; L-01).
+- The instrument master (config/instruments.csv, absent from the tree at the pin; built by scripts/refresh_instruments.py, declared
+  at 09:00 on weekdays) is loaded once at start-up and is not consulted at intake. Its consumers look symbols up by exact, case-sensitive
+  key and fall back on a miss (lot size 1, tick 0.05, token 0, sector "UNKNOWN"); none of those read rejects a miss (section 7).
+- The first later step that stops a symbol the broker does not return is the secondary screener's quote fetch: quote key
+  "NSE:<symbol>"; no quote, or an exception, gives SKIPPED_QUOTE_UNAVAILABLE, which the screener persists (section 8; D-003).
+  How the broker answered an unknown or lower-case key is not established (U-03).
+- MIS eligibility is not checked at intake. It is learned from the broker's rejection ("MIS orders are currently blocked ... Place
+  a CNC order instead") and applied at the screener; the pinned configuration runs that drop in shadow mode, so on the code path
+  a blocked symbol is logged and continues past the pre-drop (section 8.3; FACT (CONFIG); installed value unknown). Rama's Q2 and
+  Q11 describe this class of rejection.
+- Whole request versus per symbol: a request-level failure returns before any symbol is handled. The batch answers 503 if any
+  symbol is QUEUE_FULL or STORE_ERROR, even when other symbols in the same payload were accepted (the test at
+  test_webhook_receiver.py lines 598 to 622 asserts their ACCEPTED results and stored rows), and such a batch is audited with
+  counts 0 and 0 (already in C-001 D-06 and C-003 section 7.3 row 9). One unguarded path inside the INSERT's IntegrityError handler
+  can still end a batch in 500, leaving that symbol's claims held (9.4; L-13, for C-005).
+- Much of the edge is already frozen: the gate and check order (C-001 7.1, C-002 9, C-003 7.3), the fields read (C-001 4.3, C-002
+  8.2), the alias file and its readers (C-001 7.3, A-009 3 with erratum E-2, B-002 4 and 6), the exclusion list (A-004 6, C-001 7.3),
+  the statuses returned and what they leave (C-001 A-L7 and D-06, C-002 9 and 10, A-011 12 with erratum E-8) and the corrupt
+  instruments file's exit (B-002 M18). C-004 confirms these at the same lines and adds the field-level rules, the price and symbol
+  checks' exact limits, the instrument master's consumers and fallbacks, and the first later stop for an unknown symbol.
+- A configuration defect new in C-004 (K-06): the alias TVSSCS -> TVSSRICHAK maps the NSE symbol of TVS Supply Chain Solutions Ltd,
+  which the entry's own comment names, to the NSE symbol of TVS Srichakra Ltd, a different listed company (CURRENT EXTERNAL FACT,
+  public listing pages checked 22-Oct-2026). On the code path and the pinned alias file, a Chartink signal for TVSSCS is stored,
+  queued and processed as TVSSRICHAK (section 5). The helper's example comment for the same pair is false (K-07). Whether such a
+  signal ever arrived or was traded is not established (U-09); Rama's QR-3 answer of 23-Oct is a guess about mismatched names in
+  general (notes section 6 and C-10).
+- Documentation drift and defects new in C-004: WR10 omits REJECTED_EXCLUDED_SYMBOL (K-02; its OUTSIDE_HOURS half is C-002 K-2),
+  the FIX-074 comment (K-03), an out-of-scope sector lookup that calls methods the cache does not have (K-04), the refresh
+  script's series docstring (K-05) and the SIGMAADV entry's company name (K-08). Section 17.
+- Rama's answers: Q2, Q3, Q4 and Q11 give testimony on MIS-to-CNC rejections and name mismatches; Q6, Q7 and Q9 report no manual
+  action and no production/testing difference; Q1, Q5, Q8, Q10 and Q13 are unknown; Q12 has no records. For Q1, the frozen C-002
+  records show no 400 answer in their windows (12-Jun to 23-Jul 15:29 and 24 to 31-Jul). For Q6, a frozen C-002 record (R8, 04-Aug)
+  stands beside his answer (notes C-03; QR-2, answered 23-Oct with Claude's reading at his request). His V2 input (Q3, Q4) is kept as
+  V2 material in the notes (V2-1), not merged into legacy fact.
+- Frozen manuals: section 15. Three low-severity erratum candidates, decided by Rama on 23-Oct: CE-1 accepted for A-004 section 5
+  line 65 only, CE-2 no change (A-008 section 5), CE-3 accepted (A-009 section 3). The two accepted texts are applied only at the
+  C-004 freeze (notes section 5); no frozen finding changes.
+
+
+==============================================================================
+2. THE SYMBOL AT EACH BOUNDARY
+==============================================================================
+"Symbol" is not one thing. Each claim in this file names its boundary:
+
+| ID | Boundary | Form | Where formed | Evidence |
+|---|---|---|---|---|
+| B1 | Chartink payload | one element of the body's stocks string, comma-separated, as the sender wrote it | the sender | R 664-671; the field names of a Chartink-shaped body: tests/unit/test_webhook_receiver.py 1730-1742 |
+| B2 | Receiver symbol | B1 stripped of surrounding white space; then the alias target (upper-cased) if B1 upper-cased is a key, else B1 unchanged, case kept | R 670, 701 | FACT (SOURCE-VERIFIED) |
+| B3 | Stored and queued symbol | B2 exactly: signals.symbol, the queue tuple's third element, the in-flight and dedup keys (C-005) | R 934, 940, 963-980, 1047 | FACT (SOURCE-VERIFIED) |
+| B4 | Broker quote key | "NSE:" + B3; the response keys are mapped back by removing the text up to the first ":"; the screener then looks up B3 | broker/zerodha_adapter.py 1759-1760, 1773-1774; screening/secondary_screener.py 170-171 | FACT (SOURCE-VERIFIED); what the broker returns as keys: U-03 |
+| B5 | Instrument-master symbol | the symbol column of config/instruments.csv: the NSE security master's symbol, stripped and otherwise unchanged, for the accepted series or a blank series (the filter applies only when the series is non-empty, 103-107) | scripts/refresh_instruments.py 92-109, 194-202; core/instrument_cache.py 143, 158 | FACT (SOURCE-VERIFIED) for the build; the strings themselves: U-02 (the security master is never-open) |
+| B6 | Kite tradingsymbol | the broker dump's tradingsymbol, segment NSE or NSE-EQ, matched to B5 by exact string | scripts/refresh_instruments.py 148-156, 176 | FACT (SOURCE-VERIFIED) |
+| B7 | MIS blocklist key | strip().upper() of the symbol given | core/mis_blocklist.py 89, 106 | FACT (SOURCE-VERIFIED) |
+| B8 | Order symbol | not traced in C-004 (G-002) | - | - |
+
+The alias file calls its right-hand side "Zerodha's official trading symbols" (config/symbol_aliases.yaml 3-5): a B6 name used as a
+B2. Whether each target is also a B5 row is not established (L-06). The cache lookups (B5) and the quote map (B4) are exact string
+matches, so a B3 that differs from B5 or from the broker's key in case or form misses there (INTERPRETATION; L-04).
+
+
+==============================================================================
+3. REQUEST-LEVEL CHECKS (the whole POST; M-1, M-4)
+==============================================================================
+3.1 Position. FACT (SOURCE-VERIFIED). _process_request runs, in order: authentication (R 547-549, 401), the unknown-scanner check
+  (551-554, 404), the EOD branch (562-564; C-011), the kill switch (566-568, 403), backpressure (570-578, 503) and the entry window
+  (580-583, 403), then the checks below. The body-size limit (1 MiB, R 251) is enforced when the body is read (R 480), before all
+  of them. C-003 section 7.3 (frozen) is the full table of these answers; C-004 adds the field-level detail.
+
+3.2 The checks (FACT (SOURCE-VERIFIED) unless marked; trace rows T-01 to T-09 give lines, outputs and limits):
+| # | Check | Lines | Fails with | Notes |
+|---|---|---|---|---|
+| 1 | JSON parse | R 585-593 | 400 "Malformed JSON: <parser message>" | the WARNING at 589-592 logs the first 500 raw bytes; Python's parser accepts NaN literals and keeps the last of duplicate keys (CURRENT EXTERNAL FACT, probe) |
+| 2 | Object | R 595-596 | 400 "Request body must be a JSON object" | a top-level array parses and fails here |
+| 3 | FIX-074 critical cast | R 598-606; 419-444 | 400 "Invalid payload: critical field <name>=<value> cannot be cast to float: <reason>"; an OverflowError (a JSON number too large for a float) is not caught (443) and ends in 500 | only top-level price and entry_price, when present and not null |
+| 4 | FIX-074 other casts | R 446-469 | a ValueError or TypeError sets the value to None with a WARNING; an OverflowError (a huge JSON number; Infinity in qty) is not caught (451, 464) and ends in 500 | trigger_price, sl_pct, target_pct (float), qty (int); nothing later reads them (T-04); OverflowError: CURRENT EXTERNAL FACT, probe 2 |
+| 5 | Required keys | R 608-615 | 400 "Missing required field: '<name>'" | stocks, trigger_prices, triggered_at; presence only (a null passes here) |
+| 6 | scan_name | R 617-633; 111-138 | 400 "scan_name in body does not match scanner_name path param"; a non-string value: AttributeError at 622 -> 500 (525-528) | optional; compared after lower(), spaces to underscores and the strip of a leading "<account tag>-" or "<account tag>_" (WR4b) |
+| 7 | triggered_at | R 635-662 | 400 "Invalid triggered_at; expected HH:MM am/pm or YYYY-MM-DD HH:MM:SS" | str() of the value, stripped; formats "%Y-%m-%d %H:%M:%S", "%I:%M %p", "%H:%M"; a time-only value takes today's date; a naive value is set to IST |
+| 8 | Types | R 664-668 | 400 "stocks and trigger_prices must be comma-separated strings" | a JSON list or number fails |
+| 9 | Split and length | R 670-674 | 400 "stocks and trigger_prices list length mismatch" | split on ",", strip each; empty elements are kept and reach the per-symbol checks |
+
+3.3 What a request-level failure leaves. FACT (SOURCE-VERIFIED); also C-002 section 10.5 and C-003 sections 7.3 and 7.5 (frozen). No
+  signals row and no queue entry; _handle_webhook logs "webhook/<name>: 400 response | raw_body=<first 1,000 bytes>" at WARNING for
+  every 400 (R 518-523); check 1 logs its own WARNING with the first 500 raw bytes (589-592; C-003 section 7.3 row 7, "two WARNINGs"),
+  and checks 3, 5, 6 and 7 a WARNING of their own (keys or values, no raw body); the audit row records the response code with accepted
+  0 and rejected 0 (R 510-534). A 500 (a non-string scan_name, an overflowing cast) logs one CRITICAL line instead (R 526) and no
+  raw-body WARNING.
+
+3.4 Fields the receiver does not check. FACT (SOURCE-VERIFIED; a grep of R for the field names, read log 22:59 IST): scan_url and
+  alert_name are never read; webhook_url is touched only by the storage sanitiser, which blanks it in the stored copy (R 681-690 and
+  the sanitiser's lines 860, 869, 879 and 882, seen in that grep; C-003 section 11.4). Extra keys are ignored. C-001 section 4.3 and
+  C-002 section 8.2 (frozen) already record that the receiver reads only stocks, trigger_prices, triggered_at and the optional
+  scan_name, whatever the Content-Type. Nothing checks that the body's symbols belong to the scanner, that triggered_at is not in the
+  future (C-009), or that a symbol repeats within one payload (C-005 handles repeats as IN_PROCESS or DUPLICATE).
+
+3.5 Tests (FACT (TEST SOURCE); not run). test_webhook_receiver.py: test_malformed_json_returns_400 (245),
+  test_missing_required_field_returns_400 (258), test_bad_triggered_at_format_returns_400 (276),
+  test_scan_name_body_mismatch_returns_400 (232), the WR4b tests (1864-1936); test_fix074_numeric_cast.py lines 80-341 (string casts
+  accepted, a bad critical value 400 with an empty queue; for a bad non-critical value the test at 231-260 asserts only the 200, one
+  accepted and a queued signal, and "set to None" is its name and docstring). No test in S-TESTS contains the messages of checks 2, 8
+  or 9 (V23 to V25; N-10).
+
+
+==============================================================================
+4. PER-SYMBOL CHECKS (M-2, M-4)
+==============================================================================
+4.1 Order. FACT (SOURCE-VERIFIED). For each pair zipped from the two lists (R 696):
+  1. alias (701-706; section 5);
+  2. exclusion (708-717; section 6) -> REJECTED_EXCLUDED_SYMBOL;
+  3. empty symbol (904-906) -> INVALID_SYMBOL;
+  4. price (908-914): float(); ValueError or TypeError, or a value <= 0 -> INVALID_PRICE;
+  5. expiry (916-926) -> EXPIRED (C-009 owns the rule);
+  6. the in-flight claim (934-935) -> IN_PROCESS; the cache dedup (940-947) -> DUPLICATE; the INSERT (963-1044) -> DUPLICATE,
+     STORE_ERROR, or the re-queue of an earlier QUEUE_FULL row (ACCEPTED or QUEUE_FULL); the queue (1047-1068) -> QUEUE_FULL;
+     otherwise ACCEPTED (1072) (C-005 to C-007 own these).
+  Steps 1 and 2 run in the loop; steps 3 to 6 in _process_signal. The resolved symbol (B2) is used from step 1 on, in the
+  response, the row and the queue.
+
+4.2 The only symbol check is emptiness (`if not symbol`, 905). FACT (SOURCE-VERIFIED). An empty element comes from an empty stocks
+  string, a doubled comma or a trailing comma (probe: "".split(",") is [""]; "A,B," ends with ""). The test with " ,TCS" asserts
+  INVALID_SYMBOL then ACCEPTED (test_empty_symbol_returns_invalid_symbol, 992-1005). A symbol of spaces only is stripped to empty
+  first (670). Nothing at intake (signals/webhook_receiver.py) checks characters, length, case, a suffix or presence in the
+  instrument master (N-1, N-2); the later stops are section 8.
+
+4.3 Price. FACT (SOURCE-VERIFIED); probe CURRENT EXTERNAL FACT. The per-symbol price is the matching element of trigger_prices (a
+  string), not the FIX-074 fields. float() accepts surrounding spaces, exponents ("1e3"), underscores ("1_000"), non-ASCII digits,
+  and "nan", "inf" and "Infinity"; of these only "-inf" fails "<= 0". So a NaN or +inf trigger price passes intake and is queued
+  as the float (R 1047). Stored, it is bound into the REAL column trigger_price (R 974-977): CURRENT EXTERNAL FACT (probe 2, Python's
+  sqlite3 with SQLite 3.45.1) a NaN is stored as NULL and +inf as an infinity; the VMs' SQLite version is not established (L-01).
+  Tests: zero (953), negative (966), non-numeric (979), and a mixed batch in which BADSTOCK at -1.0 is INVALID_PRICE between two
+  accepted symbols (198-216).
+
+4.4 What each per-symbol outcome leaves. FACT (SOURCE-VERIFIED).
+| Outcome | signals row | queue | log line | in the response | counted as |
+|---|---|---|---|---|---|
+| REJECTED_EXCLUDED_SYMBOL | no | no | DEBUG (711-714) | {"symbol", "status"} | rejected |
+| INVALID_SYMBOL, INVALID_PRICE, EXPIRED | no | no | none | {"symbol", "status"} | rejected |
+| IN_PROCESS, DUPLICATE (cache) | no (C-005) | no | none | as above | rejected |
+| DUPLICATE (database) | the existing row only | no | none | as above | rejected |
+| STORE_ERROR | no (the INSERT failed) | no | CRITICAL (1036-1039) | as above | rejected; batch 503 |
+| QUEUE_FULL | the row, re-marked QUEUE_FULL (1052-1057) | no | ERROR only if that update fails | as above | rejected; batch 503 |
+| ACCEPTED | QUEUED | yes | none in the receiver | adds "signal_id" | accepted |
+| Re-queue of an earlier QUEUE_FULL row (M-S2, 987-1013) | ACCEPTED: the existing row, flipped to QUEUED after the put (1003-1007), its signal_id reused (993, 1012-1013); QUEUE_FULL: the row unchanged, claims released (998-1001) | ACCEPTED: yes; QUEUE_FULL: no | ACCEPTED: ERROR only if the flip fails (1009-1011), the row then staying QUEUE_FULL while the signal is queued; QUEUE_FULL: none | as above | as ACCEPTED or QUEUE_FULL |
+  The rows marked "no" are what C-003 section 7.6 (frozen) summarises as "Excluded, invalid, expired, in-process and duplicate
+  symbols return before the INSERT", and C-001's A-L7 and A-011 section 12 (erratum E-8) record that they appear only as a 200's
+  rejected count. C-004 adds that they also leave no log line, except the exclusion's DEBUG. The schema's status CHECK allows
+  INVALID_SYMBOL, INVALID_PRICE and OUTSIDE_HOURS (core/schema.sql 60-70) and reports/signal_status.py lists them (46-48), but no
+  S-RT code writes them to the table (N-6, N-7; L-03).
+
+4.5 Hand-off. FACT (SOURCE-VERIFIED). An ACCEPTED symbol leaves one signals row and one queue tuple. The row is a new one (signal_id,
+  symbol = B3, scanner and strategy both set to the path's scanner name, triggered_at, received_at, expires_at, status QUEUED,
+  fingerprint, fingerprint_date, trigger_price = the parsed float (a NaN stored as NULL, 4.3), webhook_payload = the sanitised raw
+  body; R 963-980), or on the re-queue path the existing row (4.4). The tuple is (signal_id, scanner_name, symbol, price,
+  triggered_at) (R 1047; R 993 on the re-queue path), which P unpacks in _process_one (P 867-887). The next consumer is
+  SignalProcessor (C-008).
+
+
+==============================================================================
+5. ALIASES (FIX-032)
+==============================================================================
+5.1 The file. FACT (CONFIG): config/symbol_aliases.yaml (blob 09f1ff37a59ae464dc249be3bb32fe8efca76668, 10 lines). Header (1-7):
+  "Chartink webhook sends abbreviated/alternative symbol names that don't match Zerodha's official trading symbols. This file maps
+  the incoming names to the correct Zerodha symbols. Format: chartink_name: zerodha_name". Entries (9-10): TVSSCS: TVSSRICHAK
+  ("TVS Supply Chain Solutions"); SIGMAADV: SIGMAADV-BE ("Sigma Advanced Materials (BE series)"). The header's own words for the
+  differences are "abbreviated/alternative"; the second entry adds a series suffix on the broker side. Calling the first entry an
+  abbreviation is the helper's comment (5.6), not the file's (INTERPRETATION).
+  KNOWN DEFECT (K-06). CURRENT EXTERNAL FACT (public listing pages, checked 22-Oct-2026; inventory 5.6): TVSSCS is the NSE symbol of
+  TVS Supply Chain Solutions Ltd, the company the entry's comment names, and TVSSRICHAK is the NSE symbol of TVS Srichakra Ltd, a
+  different listed company. So the pinned entry maps one company's symbol to another company's. On the code path (5.3, 4.5), a
+  Chartink element "TVSSCS" is stored as TVSSRICHAK, queued as TVSSRICHAK and quoted as "NSE:TVSSRICHAK" (B4); nothing between intake
+  and the screener compares a symbol with a company name (8.1). Whether a TVSSCS signal ever arrived, and what followed, is not
+  established (U-09; notes QR-3). Value-blind presence tests of the three records that name an aliased symbol (5.7): TVSSCS PASS in
+  all three; TVSSRICHAK, "Srichakra" and "Supply Chain" FAIL in all three.
+  KNOWN DEFECT / AMBIGUITY (K-08, doc drift). The current listing of SIGMAADV names Sigma Advanced Systems Ltd (CURRENT EXTERNAL
+  FACT, same check), not "Sigma Advanced Materials". Whether the name differed during the legacy period is not established. The BE
+  series of the target is L-12.
+
+5.2 Loading. FACT (SOURCE-VERIFIED). The constructor calls _load_symbol_aliases once (R 222-227). It opens
+  Path("config/symbol_aliases.yaml"), relative to the process's working directory (265); a missing file gives an empty map and a
+  WARNING (266-271); yaml.safe_load, then keys and values str() and upper-cased, entries with an empty key or value dropped
+  (273-281); an INFO line with the count (282-285); any exception gives an empty map and an ERROR line (287-292), so a file that is
+  not a mapping also ends there. Fail-open: no map means no translation, not a refused start.
+
+5.3 Application. FACT (SOURCE-VERIFIED). symbol = alias_map.get(raw_symbol.upper(), raw_symbol) (R 701), with a DEBUG line when it
+  changes (702-706); the comment gives the reason: resolve Chartink's alternate names "BEFORE any operation (DB write, in-flight
+  check, queue push) ... to prevent ghost locks and instrument cache misses" (697-700). The EOD route applies the same map (792).
+  The receiver's comments repeat the TVSSCS -> TVSSRICHAK pair as their example (R 222-224, 697-700; K-06).
+
+5.4 What the mechanism does not do. FACT (SOURCE-VERIFIED), from the whole loader and the loop: no check of a target against the
+  instrument master or the broker; no chaining (one lookup); no reload while running (loaded only in the constructor); no
+  normalisation of a symbol without an alias, so "reliance" stays "reliance" (test_fixc_excluded_symbols_case_insensitive asserts
+  the queued symbol is "reliance", 1663-1666).
+
+5.5 A second loader, paper mode only. FACT (SOURCE-VERIFIED). main.py's _make_paper_quote_provider loads the same file raw, without
+  upper-casing (main.py 508-518), and translates exact-case before building "NSE:" keys (537-538, 544). It is built only when
+  is_paper (main.py 2392-2394) and used by the adapter's paper branch (broker/zerodha_adapter.py 1742-1755). Legacy fact only; V2 is
+  live-only (DR-001).
+
+5.6 The helper. FACT (SOURCE-VERIFIED). scripts/find_symbol_aliases.py (blob 24258c1ef2a157b267b5bd2ee7ee144d15cc3c03, 109 lines) reads
+  failed symbols from standard input and config/instruments.csv's first two columns (skipping token "0"), scores candidates by
+  exact (27-30), prefix ("Chartink abbreviates", 32-36), containment (38-41) and fuzzy match (difflib's SequenceMatcher ratio
+  above 0.8, 14-16 and 43-47), and prints YAML-shaped suggestions with "Review and add to config/symbol_aliases.yaml" (83-84).
+  It writes nothing; adding an alias was a manual review step. Whether and when it was run: UNKNOWN.
+  KNOWN DEFECT (K-07, doc drift). The prefix strategy's example comment reads "TVSSCS -> TVSSRICHAK (starts with TVSSCS, then adds
+  suffix)" (35). It is false: TVSSRICHAK neither starts with nor contains TVSSCS, and the pair's ratio is 0.625 (CURRENT EXTERNAL
+  FACT, probe 3, Python's difflib), so none of the four strategies would propose this pair. SIGMAADV -> SIGMAADV-BE passes the
+  prefix test (probe 3). How the TVSSCS entry was chosen is not established.
+
+5.7 Tests and records. No test in S-TESTS names symbol_aliases or the alias map (V27: 0 files; U15's only receiver-test hit is the
+  printed message of the FIX-C test, test_webhook_receiver.py line 1622), so no test exercises a mapping (N-9). FIX-032 is named only
+  in the receiver (V19; N-12). Records that mention the aliased names by count only (V17): docs/symbol_logging_audit_2026-05-09.md (6
+  lines), docs/screened_stocks_csv_workflow.md (2), docs/audit/secondary_filtration_execution_pipeline_audit.md (1); not read, and
+  tested only for the presence of words (K-06; inventory 5.1 and 5.6).
+
+5.8 Already frozen, and what C-004 adds. C-001 section 7.3 (the two aliases, the relative path, once at construction, upper-cased,
+  fail-open, not hashed and not in the configuration-diff alert, the case kept on a miss) and section 15 (the helper has no caller or
+  scheduler in S-ALL); A-009 section 3 with erratum E-2 (the two readers); B-002 section 4 (the fixed path ignores --config), section 6
+  (M29) and section 13 item 8; C-001 section 10 (the paper loader as the one mode-dependent consumer). C-004 adds the TVSSCS entry's
+  company mismatch (K-06), the SIGMAADV comment (K-08), the paper loader's exact-case keys (5.5), the helper's matching, its false
+  example (K-07) and the manual step (5.6), the absence of any alias test (5.7) and the BE-series target (L-12).
+
+
+==============================================================================
+6. THE EXCLUSION LIST (FIX-C)
+==============================================================================
+6.1 Declaration. FACT (CONFIG): config/system_config.yaml 130-136, "FIX-C: Symbol exclusion list (rejected at webhook edge with DEBUG
+  log only)": E2E ("Exclude list from live observation"), GVPIL, BIRLACABLE, SHANKARA, MCLEODRUSS. FACT (SOURCE-VERIFIED): the file
+  maps to SystemConfig (core/config_loader.py 2442), which declares excluded_symbols: list[str] = [] with the comment "FIX-C:
+  symbols rejected at webhook edge" (1993). A-004 section 6 (frozen) already records the five and the mechanism.
+
+6.2 Application. FACT (SOURCE-VERIFIED). R 708-717: after the alias, the resolved symbol upper-cased is compared with the list
+  upper-cased (the list is read from the configuration object for each symbol); a hit gives REJECTED_EXCLUDED_SYMBOL, a DEBUG line
+  and rejected += 1, before any claim or row. FACT (TEST SOURCE): 1566-1622 (an excluded symbol beside an accepted one), 1625-1669
+  (case-insensitive), 1672-1700 (a configuration without the excluded_symbols attribute passes everything, line 1685; "empty" is
+  the docstring's word only).
+
+6.3 Consumers. FACT (SOURCE-VERIFIED). reports/daily_report.py reads the key from system_config.yaml (140-149), prints the list
+  (473), counts signals rows whose symbol is in the list by exact string (481) and uses the set again for the signal sheet (695);
+  the dashboard's configuration view shows the key (ops_dashboard/backend/services/config_view.py 30, 256). INTERPRETATION /
+  AUDIT LEAD (L-08): since intake writes no row for an excluded symbol, the report's count cannot include intake exclusions; it
+  can count only rows that exist for a listed symbol, and only in the list's exact case.
+
+6.4 Origin and reason: UNKNOWN beyond the comment (A-004 section 6 also records this). V18 searched for four of the five names
+  (GVPIL, BIRLACABLE, SHANKARA, MCLEODRUSS; E2E was not searched): the only record with a matching line is docs/CONFIG_GUIDE.md
+  (1 line; not read), and one line may name one or several of them.
+
+
+==============================================================================
+7. THE INSTRUMENT MASTER: PRESENCE, LOOKUPS AND FALLBACKS (M-3; A-004 owns the master)
+==============================================================================
+7.1 Not on the intake path. FACT (SOURCE-VERIFIED): R holds no reference to the cache (U03: not among the 21 S-RT files; its one
+  "instrument" word is the comment at R 700). The receiver's constructor takes no cache: its signature (R 152-162) takes the signal
+  queue, the state store, the configuration, the market windows, the kill switch, a logger, the secret token and eod_capture. The
+  module docstring's WR3 (R 3-14) describes the same constructor without eod_capture.
+
+7.2 The file and its build. FACT (SOURCE-VERIFIED) unless marked.
+  - config/instruments.csv is absent from the tree at the pin; it was generated on the host. scripts/refresh_instruments.py builds
+    it (RI1 to RI15, lines 12-28): the symbol universe from config/reference_data/security_master_file.csv (52; never-open, not
+    opened), equity series {eq, be, n, bt, il} (68; the docstring's RI11 at 24 lists four, K-05), sectors from index files, F&O
+    flags, and per-symbol token, lot size and tick size from the Kite dump for segment NSE or NSE-EQ (148-156). A symbol missing
+    from Kite gets token 0, lot size 1, tick size 0.05 (RI12; 177-181). The write is atomic (207-218). The script defines a
+    post-write check (221-245) and validate_instrument_rows (248-271: at least 1,000 rows, ten required symbols, at most 20 per cent
+    token 0); where main() calls them (from line 380) was not read here, and A-004 section 4.1 (frozen) records them as build guards.
+    A-004 sections 4.1 and 4.2 record the rest of this paragraph too.
+  - FACT (CONFIG): config/cron_registry.yaml 306-319 declares refresh_instruments at 09:00 Monday to Friday (cron 0 9 * * 1-5),
+    critical, market-day only; deploy/cron/trading-system.cron 72-73 carries the matching line. Installed crontab: not observed.
+
+7.3 Start-up. FACT (SOURCE-VERIFIED).
+  - main.py loads the cache before the start-up checks (2432-2449); any exception is logged at ERROR and leaves the cache None.
+  - check_config_files_present requires instruments.csv in the configuration folder (utils/startup_checks.py 833-843, 846-870),
+    and a missing file is the blocking failure "missing_config_files" (1550-1553).
+  - The size check blocks below 1,000 rows (905-949; "instrument_cache_too_small", 1606-1613), but only when the cache is not
+    None (1608; the docstring at 1540-1541 says so).
+  - K-01, already recorded (not new): main.py 2434-2438 says a present but corrupt file makes the size check block with
+    "instrument_cache_too_small"; the code skips that check when the cache is None, and start-up then reaches
+    `assert instrument_cache is not None` (main.py 2506). B-002 (frozen) records this as M18 in its exit-code matrix (exit 2 at an
+    assertion; "KNOWN DEFECT - CONDITIONAL CODE PATH / LATENT; NO OBSERVED OCCURRENCE FOUND"), as section 13 items 4 and 13 (the
+    comment is stale text), and A-011 section 5 gives the same exit 2; Q-40 (h) asks whether it ever happened. C-004 read the same
+    lines and adds nothing.
+
+7.4 Lookup semantics. FACT (SOURCE-VERIFIED): core/instrument_cache.py (blob 2bff50f7657fd9600e99d3663791e4d134f01d08). The index is a
+  dict keyed by the CSV's stripped symbol (93, 143); has() is `symbol in` the dict (219-221); get_by_symbol, lot_size and
+  tick_size raise InstrumentNotFoundError on a miss (223-236, 269-285); sector() returns "UNKNOWN" on a miss or a blank (257-267).
+  No case folding anywhere; a duplicate symbol row keeps the last (93; not checked at load). The load rejects a missing column, an
+  empty symbol, a lot size below 1 and a tick size of 0 or less (117-177).
+
+7.5 Consumers read, and what a miss does. FACT (SOURCE-VERIFIED); the other cache users of U03 were not read.
+| Consumer | Lines | On a miss |
+|---|---|---|
+| capital/position_sizer.py | 307-313 | keeps lot size 1 ("InstrumentNotFoundError or missing cache -> keep default") |
+| orders/order_placer.py _tick_for | 4026-4034 | DEFAULT_TICK, 0.05 (orders/price_math.py 27; imported at order_placer 240-241) |
+| orders/order_placer.py, target registration | 2214-2221 | token 0 ("smart_tgt tolerates 0") |
+| broker/zerodha_adapter.py _resolve_tick | 1383-1402 | the same DEFAULT_TICK (imported at 121) with one WARNING per symbol |
+| P _sector_for | 1605-1617 | "UNKNOWN" (and see K-04) |
+  None of these rejects a symbol for being absent from the master.
+
+7.6 Reload. FACT (SOURCE-VERIFIED): the cache has reload() (188-215), but no S-RT file calls it (V22; N-5). INTERPRETATION / AUDIT
+  LEAD (L-07, new; the sweep found no frozen statement on it): the daily start came at about 08:15 (B-001 section 6, RECORD-DERIVED:
+  the 08:15 token refresh, then the token-watcher starting the service), before the 09:00 refresh, which A-011 section 5 records
+  as a cron job beside the service that the service did not wait for. With no reload, on the code path each day's process ran on
+  the file that the previous refresh had written, unless the service was restarted after 09:00. A-004 and B-008 own this.
+
+7.7 A historical comment. INTERPRETATION / AUDIT LEAD (L-09): the BL-20 docstring says that a stub instruments.csv of about 20 rows
+  once made "the signal pipeline silently dropped any symbol not in the cache, so nearly every scanner signal was rejected"
+  (utils/startup_checks.py 919-922). The consumers read at the pin (7.5) fall back rather than drop; which code dropped symbols at
+  that earlier time is not established (history not inspected).
+
+
+==============================================================================
+8. AFTER INTAKE: THE FIRST STOP FOR AN UNKNOWN SYMBOL, AND MIS ELIGIBILITY (boundaries; M-7)
+==============================================================================
+8.1 The processor before the screener. FACT (SOURCE-VERIFIED), P 895-991: PROCESSING; the kill switch, the entry window and the
+  signal's age (defence in depth); the shadow-inning guard; the strategy lookup through scan_webhook_map (check label
+  UNKNOWN_STRATEGY at P 936; a rejection is stored as f"REJECTED_{check}", here REJECTED_UNKNOWN_STRATEGY, P 1201; C-001 7.4); the
+  strategy-control gate; the per-strategy window; the strategy governor. None tests the symbol's validity.
+
+8.2 The screener's quote fetch: the first stop for a symbol the broker does not return. FACT (SOURCE-VERIFIED).
+  screening/secondary_screener.py 167-196: quotes = quote_fn([symbol]); quote = quotes.get(symbol). The live quote_fn is
+  broker_adapter.get_quote (main.py 3285), which builds "NSE:<symbol>" keys (broker/zerodha_adapter.py 1760) and maps the response
+  keys back by removing the prefix (1774). No quote: an INFO line and SKIPPED_QUOTE_UNAVAILABLE (172-183); an exception: an ERROR
+  line with traceback and the same status (185-196). The screener persists the status (182, 195); the processor logs a WARNING and
+  stops the signal (P 1008-1013). UNKNOWN (U-03): whether the broker omits an unknown or lower-case key or raises; either way the
+  status is the same, with a different log level. D-003 owns the screener.
+
+8.3 MIS eligibility. FACT (SOURCE-VERIFIED) unless marked; D-003 and G-007 own it.
+  - core/mis_blocklist.py 3-19. The module docstring states that "Step 0 (30-Jun-2026) established that NO clean/stable/authoritative
+    machine-readable MIS-eligibility source exists" (5-7; what the comment says, not a record). The code records the broker's own 400
+    ("MIS orders are currently blocked for <SYM>. Place a CNC order instead.") per symbol and date, and the screener pre-drops a later
+    MIS-intent signal for that symbol within a re-test window. record_block and is_blocked key on strip().upper() (lines 89 and 106,
+    seen in a grep with the method names at 85 and 102).
+  - main.py builds the blocklist (3051-3059) and passes it to the order placer (3085), which records a block when an order is
+    rejected with that message (orders/order_placer.py 4462-4464); the screener reads it (main.py 3289-3292).
+  - screening/secondary_screener.py 142-165 and 554-581: first step of screen(), only when the resolved product is MIS (fail-open on
+    a resolve error); every would-drop logs a WARNING; with shadow false the signal is rejected REJECTED_NOT_MIS_TRADABLE and
+    persisted; with shadow true it continues.
+  - FACT (CONFIG): config/system_config.yaml 170-181: enabled true, shadow true ("27-Jul-2026: flipped false -> true in SHADOW ONLY";
+    "DO NOT set shadow: false without Rama"), ttl_days 1 (the schema default is also 1, core/config_loader.py 443; the class's own
+    default is 5, core/mis_blocklist.py 68; main.py passes the configured value, 3057). INTERPRETATION / AUDIT LEAD (L-11): on the
+    pinned configuration a blocked symbol would continue past the pre-drop (code path); whether it then reached order placement
+    depends on every later gate. The comment at 176-177 records one repeat ("learned at 10:06, identical order placed again at
+    10:11"), as a comment, not a record.
+  - Rama's Q2 and Q11 (section 16) describe this class: rejected at ordering because the symbol was not allowed in MIS and had to be
+    CNC; the same rejection until the symbol became MIS-eligible on some day. Consistent with the path above (INTERPRETATION); kept
+    as testimony.
+
+8.4 Name mismatches after intake. INTERPRETATION from 2, 4 and 8.2: a Chartink name that is neither aliased nor the broker's name
+  passes intake (stored, queued, processed up to the screener) and ends at the quote fetch, the same way each time unless an alias is
+  added or the names change. Rama's Q11 ("forever same rejection") is consistent with this; whether it ended there in each case is not
+  established. His QR-3 answer of 23-Oct, given as a guess, places the rejection later: an order placed, then rejected at the broker
+  or instrument end with "No such symbol". The pinned code path stops such a name before ordering (8.2), so the two accounts differ;
+  whether an earlier code version behaved as he describes is not established (notes C-10). An alias whose target is another company's
+  listed symbol (K-06) is different: the quote fetch would return a quote for the target, so on the code path a TVSSCS signal would
+  pass this stop as TVSSRICHAK and go on to the later gates (INTERPRETATION; what those gates did is outside C-004).
+
+
+==============================================================================
+9. MATRICES
+==============================================================================
+9.1 M-1 Payload fields, types and shapes (intraday route; FACT (SOURCE-VERIFIED))
+| Field | Required | Type and shape checked | Failure | Lines |
+|---|---|---|---|---|
+| (body) | yes | JSON, then an object | 400 | R 585-596 |
+| stocks | yes (key) | str; comma-split; elements stripped; equal count with trigger_prices | 400 | R 608-615, 664-674 |
+| trigger_prices | yes (key) | str; comma-split; each element float() and > 0, per symbol | 400 (type, count); INVALID_PRICE (value) | R 664-674, 908-914 |
+| triggered_at | yes (key) | str() then one of three formats | 400 | R 635-662 |
+| scan_name | no | if present: must be a string equal to the path after normalising and the prefix strip | 400; 500 if not a string | R 617-633 |
+| price, entry_price | no | float() when present and not null | 400; 500 on an OverflowError (3.2 row 3) | R 419-444 |
+| trigger_price, sl_pct, target_pct, qty | no | cast when present; a ValueError or TypeError sets None with a WARNING | none; 500 on an OverflowError (3.2 row 4) | R 446-469 |
+| scan_url, alert_name, webhook_url, others | no | not read (webhook_url: blanked in the stored copy) | none | R 681-690; 3.4 |
+
+9.2 M-2 Symbols (FACT (SOURCE-VERIFIED) unless marked)
+| Aspect | At intake | Evidence |
+|---|---|---|
+| White space | stripped (outside only) | R 670 |
+| Case | upper-cased only for the alias lookup and the exclusion compare; kept as sent otherwise; an aliased symbol becomes its upper-cased target | R 701, 710, 278 |
+| Aliasing | two-entry map; one lookup; fail-open | R 258-292, 701; config/symbol_aliases.yaml 9-10 |
+| Exclusion | five symbols; case-insensitive; REJECTED_EXCLUDED_SYMBOL | R 708-717; system_config.yaml 131-136 |
+| Syntax, length, characters, suffix, exchange | not checked | N-2; U13 (no "NSE:" or "-EQ" in R) |
+| Empty | INVALID_SYMBOL | R 905-906 |
+| Unknown to the master or broker | passes intake; later: SKIPPED_QUOTE_UNAVAILABLE at the screener if no quote | sections 7, 8 |
+| Aliased to another company's listed symbol | passes intake as the target, and the quote fetch would not stop it | K-06; 5.1, 8.4 |
+
+9.3 M-3 Instrument master (FACT (SOURCE-VERIFIED) unless marked)
+| Aspect | Behaviour | Evidence |
+|---|---|---|
+| At intake | not consulted | 7.1 |
+| Presence at start-up | required file; at least 1,000 rows; a corrupt file: see K-01 | 7.3 |
+| Lookup | exact, case-sensitive | 7.4 |
+| Token on a miss | 0 (target registration); 0 in the file for a Kite miss (RI12) | 7.2, 7.5 |
+| Lot size on a miss | 1 (position sizer; and in the file for a Kite miss) | 7.2, 7.5 |
+| Tick on a miss | 0.05 (DEFAULT_TICK, orders/price_math.py 27: order placer, adapter; and in the file for a Kite miss) | 7.2, 7.5 |
+| Sector on a miss | "UNKNOWN" | 7.4, 7.5 |
+| Refresh | 09:00 weekdays (FACT (CONFIG)); no reload in the process (L-07) | 7.2, 7.6 |
+
+9.4 M-4 Whole request versus per symbol (FACT (SOURCE-VERIFIED); FACT (TEST SOURCE) where a test is named)
+| Situation | HTTP | Per-symbol results | Rows and queue | Audit (code, accepted, rejected) |
+|---|---|---|---|---|
+| The body-size limit, a gate or a request-level check fails (3.1, 3.2) | 413 at the body read; 401, 403, 404, 429, 503, 400 or 500 | none | none | (code, 0, 0), except a 413, which leaves no audit row (R 480; C-002 section 10.3); the shutdown 503 and the per-IP 429 write their own rows (R 487-489, 497-499) |
+| Every symbol answered, none QUEUE_FULL or STORE_ERROR | 200 | one per symbol | for ACCEPTED only | (200, accepted, rejected) |
+| Any symbol QUEUE_FULL or STORE_ERROR | 503 | one per symbol; others may be ACCEPTED | ACCEPTED ones stored and queued | (503, 0, 0) |
+| An exception inside the loop | 500 | none returned, though earlier symbols may already be stored and queued | as far as it got | (500, 0, 0) |
+  Row 3 is tested: RELIANCE ACCEPTED, TCS STORE_ERROR, INFY ACCEPTED gives 503 with all three results, and RELIANCE and INFY are
+  stored (test_webhook_receiver.py 598-622; the queue is not asserted); a single QUEUE_FULL gives 503 (402-431). Row 4: since
+  P3-s14 a store failure returns STORE_ERROR instead of raising (R 1040-1044; the comment there says the per-symbol loop "has no
+  try/except, so a raise here abandoned every symbol after this one"), and no explicit raise in the loop was found in the lines
+  read. One path still reaches row 4: the SELECT at R 987-991 runs inside the `except sqlite3.IntegrityError` handler with no guard
+  of its own, and an exception raised there is not caught by the sibling `except Exception` (R 1016). It leaves _process_signal and
+  the loop, the request ends in 500 (R 525-528), and the in-flight claim and dedup entry taken at R 934-947 stay held (L-13). FACT
+  (SOURCE-VERIFIED) for the structure; that it ever happened is not established.
+  The 503 audit row's counts are already in C-001 (A-L4, D-06), C-002 section 9 row 12 and C-003 section 7.3 row 9. The EOD route
+  (a 200 whose accepted count is the number of symbols) is C-011's subject (inventory T-18).
+
+9.5 M-5 Failure representation, logging, auditing and downstream handling
+| Failure | Response body | Log | Audit | Database | Downstream |
+|---|---|---|---|---|---|
+| Request-level 400 | {"error": message} | raw-body WARNING (1,000 bytes); the JSON check adds its own WARNING with 500 raw bytes, and checks 3, 5, 6 and 7 one each without the body (3.3) | (400, 0, 0) | none | none |
+| scan_name not a string; an overflowing FIX-074 cast | {"error": "Internal server error"} | CRITICAL | (500, 0, 0) | none | none |
+| REJECTED_EXCLUDED_SYMBOL | per-symbol result | DEBUG | counted in the 200's rejected | none | the daily report's count (L-08) |
+| INVALID_SYMBOL, INVALID_PRICE, EXPIRED | per-symbol result | none | counted in the 200's rejected | none (the schema allows two of them; L-03) | none |
+| Accepted but unknown to the broker | ACCEPTED | none at intake; INFO or ERROR at the screener | counted as accepted | QUEUED, PROCESSING (P 897), then SKIPPED_QUOTE_UNAVAILABLE written by the screener | P logs a WARNING and stops (8.2) |
+| Accepted but MIS-blocked | ACCEPTED | WARNING at the screener per would-drop | counted as accepted | shadow: continues; active: REJECTED_NOT_MIS_TRADABLE | the order path; the broker's 400 (G-007) |
+  The databases and logs of both VMs are gone, so how often each occurred is not established (U-08).
+
+9.6 M-6 Production/testing and paper/live: section 10.
+
+9.7 M-7 Dependencies and topic boundaries
+| Subject | Owner | C-004's use |
+|---|---|---|
+| Gates before the body checks; the audit row; the raw-body WARNING | C-003 (sections 7.2 to 7.5), C-002 (sections 8 to 10) | position and cross-reference only |
+| The account tag for WR4b (accounts.csv) | C-002 section 8.3, C-003 | the strip's rule only |
+| In-flight claim, dedup | C-005 | the symbol's case reaches the keys (L-04); claims held on the handler path (L-13) |
+| Queue, persistence, processing | C-006, C-007, C-008 | the row and tuple only (4.5) |
+| Expiry rule | C-009 | position and status only |
+| Scanner -> strategy | C-010 | P's REJECTED_UNKNOWN_STRATEGY, after intake (8.1) |
+| EOD route | C-011 | its differences (inventory T-18) |
+| Instrument master | A-004 (also B-002, B-008) | presence, lookups and fallbacks (section 7) |
+| Secondary screening, MIS pre-drop | D-003 | the first later stop (8.2, 8.3) |
+| Tick size, lot size | E-012, F-005 | fallbacks only |
+| Order rejection (MIS block at the broker) | G-007 | Rama's Q2 |
+| Symbol mapping; broker order construction | A-004, G-002 | K-06 only (the TVSSCS alias) |
+| Audit state and trail; reports | K-008, L-009, L-011 | L-03, L-08 |
+
+
+==============================================================================
+10. PRODUCTION/TESTING AND PAPER/LIVE (M-6)
+==============================================================================
+10.1 FACT (SOURCE-VERIFIED): R has no mode or environment branch (a grep for paper, live, sandbox, testing and environment words: four
+  comment lines only, read log 22:52 IST). One code path ran the checks of sections 3 to 6.
+10.2 What could differ between the two VMs is input, not code: the account tag behind WR4b (from accounts.csv; A-008 section 9 records,
+  HISTORICAL (Rama), that the testing VM's alert names carried the testing account's client ID, and C-001 section 10 and C-002
+  section 8.3 the strip); and the per-host files config/symbol_aliases.yaml and config/system_config.yaml (excluded_symbols,
+  mis_filter). Frozen manuals settle the testing side for 17-Sep-2026. The testing snapshot holds the testing VM's files as captured
+  on 17-Sep-2026 (B-002 section 10, line 206). In it the receiver differs from production in line endings only (B-002 line 221;
+  A-011 line 291), symbol_aliases.yaml is identical byte for byte (A-009 section 14; B-002 section 10), and system_config.yaml's 18
+  differing leaf settings (entry_start, force_qty, the two position-value caps, 11 sr_shadow settings and 3 SMTP settings; A-009
+  section 14) do not include excluded_symbols or mis_filter. So, by those frozen comparisons (A-009: SOURCE-VERIFIED on the
+  snapshots; B-002: TESTING CAPTURE for what the snapshot shows of the VM), the testing VM's captured files of 17-Sep held the same
+  aliases, exclusions and MIS-filter settings as the production pin. What the production VM had installed, and what either VM had
+  before 17-Sep, is not established (U-01).
+10.3 Paper: the second alias loader of 5.5 runs only in paper mode. V2 is live-only (DR-001); this is legacy fact only.
+10.4 HISTORICAL (Rama, Q7): no difference; both systems consumed Chartink only. The source agrees for the code, and the frozen
+  comparisons of 10.2 agree for the testing VM's captured inputs of 17-Sep; production's installed inputs are not established.
+
+
+==============================================================================
+11. TESTS INSPECTED, NOT EXECUTED (FACT (TEST SOURCE); not proof of production behaviour)
+==============================================================================
+tests/unit/test_webhook_receiver.py (blob 7b377abb85d644f0f3ff7956385224b43f31ed61): helpers _make_config and _valid_payload (60-133;
+the helper configuration has no excluded_symbols, so the receiver's getattr default [] applies); 148 single stock accepted; 179
+multi-stock; 198 mixed valid and invalid; 220 unknown scanner 404; 232 scan_name mismatch 400; 245 malformed JSON 400; 258 missing
+field 400; 276 bad triggered_at 400; 386 backpressure 503; 402 QUEUE_FULL 503; 598 a STORE_ERROR batch keeps going and answers 503 (it
+asserts the ACCEPTED results and the stored rows, not the queue); 940 EXPIRED; 953, 966, 979 INVALID_PRICE (zero, negative,
+non-numeric); 992 INVALID_SYMBOL for " ,TCS"; 1566, 1625, 1672 the exclusion list (1672: a missing attribute); 1730-1742 a
+Chartink-shaped body (stocks, trigger_prices, triggered_at, scan_name, scan_url, alert_name, webhook_url); 1864 to 1936 the WR4b
+strip. tests/unit/test_fix074_numeric_cast.py (blob 4f5d3cc814bd6e181ffc9461178ca3f2ed26a5ae) 80-341: the casts.
+tests/unit/test_fix134_instrument_validation.py (blob f4e7b94656cf272d4d9a3f5a7b6a8a166f1e0676): refresh-side validation only (row
+count, required symbols, token-0 share, alerting); A-004's subject. Not covered by any test found: alias mapping (N-9); the 400s for a
+non-object body, non-string fields and a count mismatch (N-10); non-finite prices (N-11). Because the receiver's alias path is
+relative to the working directory, a test run from the repository root would load the real two-entry file (INTERPRETATION; the tests
+were not run).
+
+
+==============================================================================
+12. NEGATIVE SEARCHES AND THEIR SCOPES (each "not found in" its scope only; inventory section 3)
+==============================================================================
+N-1  R does not reference the instrument cache: U03 (S-RT, instrument_cache|InstrumentCache) lists 21 files, not R; a grep of R for
+     "instrument" finds only the comment at line 700.
+N-2  No symbol-syntax check by isalnum(, isupper(, fullmatch(, re.match( or "[A-Z0-9" on the intake path: V10 (S-RT) finds 8 files,
+     none in signals/ (R: 0). No function named validate_symbol in S-RT (V29: 0).
+N-3  No case or space normalisation of a symbol-named variable in S-RT other than R (lines 701, 710, 792), core/mis_blocklist.py and one
+     dashboard service: V07.
+N-4  trigger_prices and "stocks" are parsed in S-RT only by R and scripts/load_test_signals.py: U04, U05.
+N-5  No S-RT caller of the cache's reload() or of InstrumentsRefreshed outside its definition and one subscriber: V22.
+N-6  OUTSIDE_HOURS is produced by no S-RT code; it appears in R's docstring (line 22) and reports/signal_status.py only: V15.
+N-7  INVALID_SYMBOL and INVALID_PRICE occur in S-ALL code only in R, core/schema.sql and reports/signal_status.py, plus tests and
+     records: V04. No code writes them to the table.
+N-8  REJECTED_EXCLUDED_SYMBOL occurs in S-ALL only in R, one test file and two audit records: V03. No code consumes it.
+N-9  No file in S-TESTS names symbol_aliases or _alias_map: V27; U15's hits are unrelated, the receiver test's one being the printed
+     message of the FIX-C test (test_webhook_receiver.py line 1622).
+N-10 No file in S-TESTS contains "length mismatch", the string-type message or "must be a JSON object": V23 to V25 (a test could reach
+     these branches without the text).
+N-11 No receiver test uses "nan", "inf" or "infinity" strings: V26 (five other test files only).
+N-12 FIX-032 is named in S-ALL only in R: V19. FIX-C in code, configuration and one test file only: V20.
+N-13 No allow-list or deny-list words in signals/ or screening/: V30 lists 14 S-RT files elsewhere (not read).
+
+
+==============================================================================
+13. END-TO-END TRACE
+==============================================================================
+The trace register is in the inventory, section 4 (T-01 to T-23), in the prompt's format: source with lines and blob, input, logic,
+guard and order, output or failure, storage or hand-off, next consumer, evidence class, limitation. In one line (source wiring at the
+baseline, not host execution):
+Chartink POST -> waitress -> Flask -> _handle_webhook (body read, 413 above 1 MiB; shutdown 503; per-IP 429) -> _process_request
+(401, 404, EOD branch, 403, 503, 403; then T-01 to T-09, any failure 400 or 500) -> per symbol: alias (T-10) -> exclusion (T-11) ->
+_process_signal: empty (T-12), price (T-13), expiry (T-14), claims, INSERT, queue (T-15) -> batch 200 or 503 (T-16) -> audit row
+(T-17) -> SignalProcessor._process_one -> pre-flight, strategy and control gates -> SecondaryScreener.screen: MIS pre-drop (T-21),
+quote fetch "NSE:<symbol>" (T-22) -> ... sizing (lot size from the cache with fallback, T-20) -> order placement (tick and token with
+fallback, T-20) -> the broker.
+
+
+==============================================================================
+14. WHAT THE EVIDENCE DOES NOT REACH
+==============================================================================
+The installed files on either VM; the instrument master's actual rows; what Chartink actually sent (beyond C-002's records); how the
+broker answered unknown keys; whether any intake rejection, quote skip or MIS repeat happened on a given day; whether a TVSSCS signal
+ever arrived and was handled as TVSSRICHAK (U-09); the dates of the alias and exclusion entries. The notes file lists each as a U-
+item with what could settle it, where anything can.
+
+
+==============================================================================
+15. FROZEN MANUALS: CROSS-REFERENCE (read only; nothing changed)
+==============================================================================
+15.1 The sweep. One background agent read the V2 copy at 970d236 (no legacy file): 58 files, namely the 57 under docs/agenda
+  (every manual, reconciliation addendum and design-inputs file, and the two section-end papers) and V2_DESIGN_LOG.md sections 2
+  and 3 (the Q and VP rows). It recorded 371 statements, from 31 of the 58 files, on seven subjects (S1 payload fields; S2
+  per-symbol against whole-request outcomes; S3 symbol syntax and normalisation; S4 aliasing; S5 the instrument master; S6
+  eligibility at intake; S7 gate order and the later consumer) as R001 to R371 in S/c004/notes/frozen_sweep.md, with twelve
+  apparent disagreements (its D1 to D12) and five gaps. Largest sets (its counts section, which Claude's own count of its rows
+  matches): C-002_manual.md 69, C-001_manual.md 47, C-003_manual.md 42, A-004_manual.md 38, B-002_manual.md 25 and the design log
+  25. Claude read the load-bearing lines in the manuals themselves (inventory 5.4).
+
+15.2 Confirmed at the same lines (no change):
+  - Gate and check order: A-008 section 8, A-011 section 12, B-008 section 3, B-009 section 5, C-001 section 7.1, C-002 section 9,
+    C-003 section 7.3. None puts a body or symbol check before authentication or the door gates; the summaries that leave steps out
+    (sweep D9) do not reorder them.
+  - Fields: C-001 section 4.3; C-002 sections 8.1 to 8.4 (the four fields read, Content-Type ignored, the 1 MiB limit, the three
+    time formats).
+  - The alert-name rule and its limits: A-008 section 9; C-001 sections 4.3 and 7.6 (D-07); C-002 section 8.3 (K-13).
+  - Aliases: C-001 sections 7.3 and 15; A-009 sections 3 (erratum E-2) and 14; B-002 sections 4, 6 (M29), 10 and 13 (item 8).
+  - Exclusions: A-004 section 6; C-001 section 7.3.
+  - Statuses and what they leave: C-002 sections 9 and 10.2 (and K-2, N8); C-001 section 8 (A-L4, A-L5, A-L7) and section 13 (D-06);
+    A-011 section 12 (erratum E-8); C-003 sections 7.3 and 7.6; B-009 section 5; the C-002 tracking notes of VP-11 and VP-59.
+  - The instrument master: A-004 sections 4.1, 4.2, 6 and 15; B-002 sections 3, 6 (M16 to M18) and 13 (items 4 and 13); B-007
+    section 5 (C1, C9); A-011 section 5; Q-40 (h).
+  - The paper loader: C-001 section 10; A-009 erratum E-2; B-002 section 4; B-009 section 12.
+
+15.3 Answered by C-004 with no erratum (forward pointers and labelled beliefs):
+  - A-004 section 5's UNKNOWN ("the exact signal-to-token lookup function and key ... and the full invalid-symbol rejection path
+    (signal and order chapters)") and section 15's "lookup key and path; invalid-symbol outcome": at intake there is no lookup
+    (already C-001 section 15); after intake the cache's consumers fall back and the screener's quote fetch is the first stop
+    (sections 7.5 and 8.2). The order path stays with section G. Precedent for no erratum: C-003 section 23 recorded a later
+    answer to C-001's forward pointer at its line 263 without one.
+  - A-004 section 5's "HISTORICAL (Rama): an unknown symbol would not be processed (belief, not verified)": the source shows such a
+    symbol stored, queued and processed up to the quote fetch, and stopped there when the broker returns no quote; whether one ever
+    reached an order is not established. The manual already labels the line a belief.
+  - Q-20 (OPEN): its tracking note says "Unknown-symbol handling after the receiver was not traced (C-004, C-008)"; section 8 traces
+    it. Updating the note is a freeze-time item (notes P-3); the question's status is Rama's to set.
+  - The sweep's gaps: no character, length or format rule for symbols (N-2); no limit on the number of symbols in one payload (none in
+    the receiver either; only the equal-count rule, 3.2 row 9); no statement on reloading the master (L-07, new); and the
+    INVALID_PRICE rule (4.3, new).
+
+15.4 The sweep's disagreements, with C-004's view:
+  - D1 A-008 section 5, line 68: "the payload is stocks, trigger_prices, triggered_at and an optional scan_name". Those four are what
+    the receiver reads (3.4). Of the other fields, only webhook_url is record-derived for production bodies (C-002 section 4.2: the
+    05-Jul record shows stored production payloads carried it). scan_url and alert_name are listed by Chartink's public sample body
+    (C-002 section 4.4, CURRENT EXTERNAL FACT there, not the legacy period), by a testing alert's displayed payload of 21-Oct (C-002
+    section 4.3, which does not establish what was sent) and by the test fixture (test_webhook_receiver.py 1730-1742, "a test's
+    assumption", C-002 section 4.2). So the inconsistency with A-008 line 68 stands on webhook_url alone. C-001 line 83 calls its own
+    wording "The same as A-008 section 5". Candidate CE-2 (low): Rama decided no change (23-Oct).
+  - D2 A-008 lines 71 and 105 (the alert name "must normalise"; "still rejected"): true when scan_name is present; A-008 line 97
+    states the condition and C-001's D-07 the limit. Checked, not proposed.
+  - D3 A-004 section 5, lines 64 and 65 ("validates symbol, price, request"; "FACT: the receiver validates symbols/prices"): the
+    receiver's only symbol test is non-empty (R 905) and it never consults the instrument master (N-1); C-001 section 15 said so
+    without changing A-004. Candidate CE-1 (low): accepted for line 65 only (Rama, 23-Oct), applied at the C-004 freeze.
+  - D4 A-009 section 3, line 48 ("Instrument master built from the broker dump"): the builder takes the symbol universe from the NSE
+    security master and only token, lot and tick from the broker dump (scripts/refresh_instruments.py lines 4-8, 12-16, 92-109,
+    148-204), as A-004 says (section 2, line 17: "not the raw broker dump"; section 4.1 lists the sources). Candidate CE-3 (low):
+    accepted (Rama, 23-Oct), applied at the C-004 freeze. The two manuals also label the same 2,228-row record differently (FACT
+    (SUPPLIED RECORD) and RECORD-DERIVED): a label question outside C-004's subject, left to the reviewer.
+  - D5 SECTION-A_END_decision_paper.md line 66 ("FACT (A-004): ETFs were excluded from NSE's 1-paisa tick change") against A-004
+    line 54 (EXTERNAL CONTEXT): tick size is E-012's subject and the paper is CLOSED; for the reviewer, not proposed.
+  - D6 A-011_v2_design_inputs.md line 41 keeps the reading that A-011 erratum E-8 replaced ("only a request count"): a PROPOSED V2
+    file, not a frozen manual; noted for A-011's inputs, not proposed.
+  - D7 A-011 section 15, line 248, lists OUTSIDE_HOURS among the schema's statuses: correct for the schema (core/schema.sql 60-70);
+    the receiver never returns it (C-002 K-2 and N8; N-6 here). No change.
+  - D8 A-008's "WR4" for both the scanner check and the alert-name check: the code's own comments label both WR4 (R 551 and 617), so
+    the sweep's UNVERIFIED point is settled. No change.
+  - D9 to D12: shortened gate lists (no reordering); the cache's "exchange column, NSE or BSE" (C-001 line 350) against the built
+    data (the builder writes "NSE", scripts/refresh_instruments.py 197; not a contradiction); production-against-testing comparisons
+    made by different topics; B-008's addendum status line (not C-004's). No change.
+
+15.5 Other statements checked: A-006 section 5, line 39 (prices snapped "to a valid tick from the instrument cache"): true for a
+  symbol in the cache; a miss falls back to 0.05 (7.5; E-012's subject, as A-004 section 4.4's scope note says); not proposed.
+  A-006 line 42 and Q-30 (b) (the BE series, which the exchange bars from intraday): bear on L-12. C-002 section 14, R8 (04-Aug
+  records of hand-written test POSTs to the live webhook): stands beside Rama's Q6 (notes C-03). C-001 line 210 ("JSON, numeric casts
+  and required fields, each 400 on failure"), C-002 section 9 row 11 ("a failed cast" among the 400s) and C-003 section 7.3 row 8
+  with its note (b) ("type cast" among the 400s): true for price and entry_price failing with ValueError or TypeError; the four
+  other fields never fail the request (they become None), and an overflow ends in 500 (3.2 rows 3 and 4; L-14). They are summary
+  rows, and C-001's points to C-004 for the detail; not proposed.
+
+15.6 The statement the prompt asks for. Yes: three frozen manuals carry a directly evidenced inconsistency on C-004's subjects, each
+  low and wording-only, and each optional: A-004 section 5 (CE-1), A-008 section 5 (CE-2) and A-009 section 3 (CE-3). Rama decided
+  them on 23-Oct (notes section 5): CE-1 accepted for line 65 only, CE-2 no change, CE-3 accepted. No frozen finding, count or
+  decision changes with them. Three summary rows also generalise the cast outcome as 400 (C-001 line 210, C-002
+  section 9 row 11, C-003 section 7.3 row 8; 15.5); their exceptions are edge cases and no erratum is proposed for them. Nothing was
+  edited; the accepted wording is in the notes, section 5, for the C-004 freeze.
+
+
+==============================================================================
+16. RAMA'S ANSWERS AND THE REPOSITORY ANSWER, QUESTION BY QUESTION
+==============================================================================
+Rama's answers are HISTORICAL (Rama, 22-Oct-2026), quoted from his sheet; the repository answer follows each. His sheet gives no
+period or confidence fields; where he wrote UNKNOWN, NO or a statement, that is quoted as written. The repository answer never
+overrides his account and is not merged with it.
+
+Q1 Payloads rejected for an absent, empty, malformed or wrong-type field.
+  Rama: "UNKNOWN".
+  Repository: the mechanisms are sections 3.2 and 3.3 (400 for the request-level conditions; 500 for a non-string scan_name or an
+  overflowing cast). Each 400 leaves an audit row (400, 0, 0) and a WARNING line with the first 1,000 bytes of the body; a 500 leaves
+  one CRITICAL line and the audit row (500, 0, 0); neither leaves a signals row. Records, as frozen in C-002 section 14 (FACT
+  (RECORD-DERIVED) there, R5 and R7): no 400 or 500 answer from 12-Jun to 23-Jul 15:29 (104,911 POSTs: 76,213 x 200, 28,680 x 403, 18
+  x 503, 0 x 400, 0 x 500) and none from 24 to 31-Jul. So no audited request in those windows failed a request-level check; outside
+  them, NOT ESTABLISHED (the VMs' logs and databases are gone). Per-symbol INVALID_SYMBOL and INVALID_PRICE are not 400s; three
+  records contain those status names by count (V04; inventory 5.1: docs/audit/signal_mortality_census_19jul2026.md,
+  docs/audit/secondary_filtration_execution_pipeline_audit.md and docs/crash_test_info_04jun2026.md) and were not read (QR-1; answered
+  23-Oct: no further record work).
+
+Q2 A symbol rejected as unknown, malformed, unsupported or absent from instrument data.
+  Rama: "While making ordering symbols/stocks has been rejected due to some stocks not allowed in MIS order window, meaning some
+  stocks must be in 'CNC' window".
+  Repository: intake rejects no symbol as unknown or malformed; only an empty one (INVALID_SYMBOL) or a listed one
+  (REJECTED_EXCLUDED_SYMBOL) (section 4). Absence from the instrument master is tolerated by every consumer read (7.5). The
+  rejection Rama describes is the broker's MIS block at order placement, which the system learns and applies at the screener, in
+  shadow mode on the pinned configuration (8.3; G-007, D-003). A symbol the broker does not quote stops at the screener as
+  SKIPPED_QUOTE_UNAVAILABLE (8.2).
+
+Q3 Differences between Chartink's symbols and the system's or Zerodha's names.
+  Rama: "Some stocks has different names (ie symbol mismatches) for that stocks one file is created here [the alias file's GitHub
+  link]", followed by V2 input (notes V2-1).
+  Repository: the file's header calls the differences "abbreviated/alternative" names, and its second entry adds a series suffix on
+  the broker's side (SIGMAADV for SIGMAADV-BE) (5.1). The first entry maps TVSSCS to TVSSRICHAK; by today's public listings these
+  are the symbols of two different companies, TVS Supply Chain Solutions Ltd and TVS Srichakra Ltd (K-06, CURRENT EXTERNAL FACT),
+  so on the code path a TVSSCS signal would be stored, queued and quoted as TVS Srichakra's symbol. The helper's example for that
+  pair is false (K-07). Whether such a signal arrived, and what followed, was put to Rama (notes QR-3; his answer of 23-Oct is a guess
+  that leaves it UNKNOWN, notes C-10). Case is not normalised for
+  other symbols (5.4), but whether Chartink ever sent a symbol in another case is not established (U-04).
+
+Q4 An alias or name correction introduced, changed or removed, with date and reason.
+  Rama: the alias file's link, and V2 input (notes V2-1).
+  Repository: the mechanism is FIX-032 (5.2 to 5.4); its stated reason is in the comment at R 697-700 (resolve the names before any
+  write or claim, "to prevent ghost locks and instrument cache misses"). Date: UNKNOWN / NOT ESTABLISHED: the code carries no date, no
+  record in S-ALL names FIX-032 (V19), and history was not inspected (prompt section 4). A record dated 2026-05-09 by its name mentions
+  the aliased names on six lines (V17); it was not read, and a presence test finds TVSSCS and SIGMAADV in it but not TVSSRICHAK or
+  the word "alias" (inventory 5.6; QR-1, answered 23-Oct: no further record work). No change or removal of an entry is visible at
+  the pin.
+
+Q5 How missing or invalid prices, trigger prices, timestamps, stock lists or scan names were handled.
+  Rama: "UNKNOWN".
+  Repository (code, not observation): prices and entry prices: 3.2 row 3; trigger prices: 4.3 and 9.1; timestamps: 3.2 row 7;
+  stock lists: 3.2 rows 5, 8 and 9, and 4.2; scan names: 3.2 row 6. What happened on the VMs: NOT ESTABLISHED.
+
+Q6 Payloads replayed, altered or sent with synthetic symbols or prices for testing.
+  Rama: "NO, nothing has been manually done anything (Meaning webhook or chartink never touched except adding/removing strategies".
+  Repository: tools exist (existence only): scripts/load_test_signals.py (FIX-151; "fires synthetic Chartink payloads" at a mock or
+  running instance; "Do NOT run against production VM during market hours"; lines 4-28), scripts/replay_signals.py (FIX-133;
+  "Read-only replay of historical signals", no database writes and no broker calls; lines 4-19), and the crash-test injector
+  (tests/crash_test/signal_injector.py, V14). Whether any was run against a VM: NOT ESTABLISHED by the repository.
+  Frozen record beside the answer (C-002 section 14, R8, FACT (RECORD-DERIVED) there, 04-Aug-2026): test POSTs to the live webhook
+  were pre-authorised on the development PC ("POST a hand-written payload to the live webhook", 15 entries of the coding
+  assistant's PC-local permission list; the example posts to the local address) and called "a real diagnostic, used repeatedly in
+  this campaign"; no counts. Rama's NO and this record are kept side by side (notes C-03); whether his answer covers posts made by the
+  coding assistant was put to him (QR-2; answered 23-Oct: Claude's reading at his request, notes section 6).
+
+Q7 Production and testing differing in field or symbol validation.
+  Rama: "No such things, why? Both systems are 100% consumers of chartink only, So no such differences".
+  Repository: one code path with no mode or environment branch (10.1). The inputs that could differ are listed in 10.2. The only
+  recorded production/testing difference that bears on field or symbol validation is the testing VM's account-tagged alert names,
+  which WR4b strips (A-008 section 9; C-002 section 8.3). The two snapshots' receiver (line endings apart) and alias file are the
+  same, and the testing VM's captured system_config.yaml of 17-Sep differs from the pin in none of the validation settings (10.2;
+  B-002 section 10; A-009 section 14). The other recorded differences (entry_start, force_qty, the position-value caps, sr_shadow,
+  SMTP, and code in three files; A-009 section 14) do not touch these checks. No observed difference in validation is established.
+
+Q8 The instrument master refreshed, or an incident with stale or missing instrument data.
+  Rama: "Since it is headless process, I never knew nothing".
+  Repository: the refresh job is declared at 09:00 on weekdays (7.2, FACT (CONFIG)); the process does not reload the cache (L-07).
+  Two code comments describe incidents: "instruments staleness incident 21-Jun-2026" and "the bug that froze instruments 7 weeks"
+  (scripts/refresh_instruments.py 223-228), and an earlier stub file of about 20 rows (utils/startup_checks.py 919-922). These are
+  comments (INTERPRETATION / AUDIT LEAD), not records. Records with matching words (V16; not read): four files under
+  docs/approvals/preflight/21-Jun-2026/AUTHENTIC/, docs/audit/audit_05jul2026.md, docs/audit/registry_seed_state_split_10aug2026.md
+  (QR-1; answered 23-Oct: no further record work).
+
+Q9 Manual overrides, static exclusions, alias files, allowlists or denylists beyond A-004, A-008 and C-001.
+  Rama: "System 100% headless, So nothing has been done manually".
+  Repository: at the pin, two static symbol lists (the five exclusions, section 6; the two aliases, section 5) and one learned list
+  (the MIS blocklist, 8.3). All three are already in the manuals the question names: A-004 section 6 records the exclusions and the
+  blocklist, and C-001 section 7.3 the alias file (A-004 does not name it). No other symbol list was found, and no allow-list or
+  deny-list words on the intake path (N-13). So the repository shows nothing beyond A-004, A-008 and C-001, which is consistent with
+  Rama's answer to the question as asked. Who added the static entries, and how, is not established (history not inspected); his
+  statement on manual operation is kept as his account.
+
+Q10 A validation failure rejecting a whole request while other symbols in the same payload still got individual outcomes.
+  Rama: "UNKNOWN".
+  Repository: a request-level failure returns before any symbol is handled, so no symbol in it gets an outcome (9.4 row 1). The
+  reverse exists: a 503 for the whole batch when one symbol is QUEUE_FULL or STORE_ERROR, while others in the same payload are
+  ACCEPTED, stored and queued (9.4 row 3; the test asserts the ACCEPTED results and the stored rows, not the queue). Records, as
+  frozen in C-002 section 14: 18 POSTs answered 503 in all (R4 for 12-Jun to 16-Jul, R5 to 23-Jul, R7 to 31-Jul), none of them since
+  01-Jul (R7). Whether any was such a batch 503 rather than the backpressure 503 is not established, because the audit row is (503,
+  0, 0) either way. NOT ESTABLISHED that it happened.
+
+Q11 A symbol apparently accepted that failed later because it was invalid, unavailable or inconsistent.
+  Rama: "No such things, why? Once chartink signals rejected due name mismatch, it is forever same rejection only & Unless same stock
+  is eligible from CNC > MIS in any day (refer Q@ and Q3)".
+  Repository: ACCEPTED at intake means only non-empty, not excluded, a positive price, NaN or +inf, not expired, claimed and stored
+  (4.1, 4.3). An unknown or mismatched name is accepted and stops at the screener (8.2, 8.4). An MIS-blocked symbol is accepted; the
+  broker's rejection is learned at placement, and with the pinned shadow setting the screener only logs a would-drop, so a later
+  signal for it would continue past the pre-drop (8.3; ttl_days 1 at the pin). Both are consistent with Rama's account
+  (INTERPRETATION). Boundaries: D-003, G-007.
+
+Q12 Dated screenshots, reports, incident notes, logs or research outputs.
+  Rama: "NO".
+  Repository-side pointers only: the host records of inventory 5.1, counted and, for K-06, tested for the presence of words; not read.
+
+Q13 Any other clarification.
+  Rama: "NO or UNKNOWN for idea". Nothing added.
+
+Rama's answers to the notes' QR-1 to QR-3 (chat, 23-Oct-2026 07:40 IST) are recorded in the notes, section 6: QR-1 and QR-2 were
+chosen by Claude at his request (QR-1: no further record work; QR-2: his NO covers his own actions, and the R8 POSTs were the coding
+assistant's by that record's account); QR-3 is his guess, compared with the source in notes C-10.
+
+Final scope check: Rama's sheet leaves its four boxes unticked; this file does not tick them for him.
+
+
+==============================================================================
+17. LABEL INDEX
+==============================================================================
+K-01 Already recorded, not new: main.py 2434-2438 says a corrupt instruments.csv makes the size check block; the check is skipped when
+     the cache is None (utils/startup_checks.py 1540-1541, 1606-1613), and start-up ends at the assert at main.py 2506: B-002 M18 (exit
+     2), B-002 section 13 items 4 and 13, A-011 section 5, Q-40 (h) (7.3).
+K-02 KNOWN DEFECT / AMBIGUITY (doc drift): WR10's per-signal status list (R 21-22) omits REJECTED_EXCLUDED_SYMBOL, which the code
+     returns (715). New in C-004. Its other half, OUTSIDE_HOURS named but never returned (N-6), is C-002's K-2 (frozen).
+K-03 KNOWN DEFECT / AMBIGUITY (comment drift): R 599 says the cast "Handles both top-level numeric fields and per-signal fields if
+     present"; _cast_numeric_fields works only on the dict it is given, the top-level body (419-471, 600).
+K-04 KNOWN DEFECT (out of C-004's scope; a lead for the later topic that owns the V3 chain or sector use): P _sector_for (1605-1617)
+     looks for methods named sector_for or get_sector on the cache; InstrumentCache defines neither (its public methods,
+     core/instrument_cache.py 219-297, have sector()), and no S-RT file defines either name (V31). With the cache main.py passes
+     (main.py 3592), it always returns "UNKNOWN". Where its result is used (P 1601) was not traced.
+K-05 KNOWN DEFECT / AMBIGUITY (doc drift, minor): scripts/refresh_instruments.py's RI11 (24) lists the series eq, be, n, bt; the
+     constant (68) also has il. A-004 section 4.1 records the five from the constant.
+K-06 KNOWN DEFECT (configuration; new in C-004): config/symbol_aliases.yaml line 9 maps TVSSCS, the NSE symbol of TVS Supply Chain
+     Solutions Ltd that the entry's comment names, to TVSSRICHAK, the NSE symbol of TVS Srichakra Ltd, a different listed company
+     (CURRENT EXTERNAL FACT, public listing pages checked 22-Oct-2026; inventory 5.6). On the code path a TVSSCS signal is stored,
+     queued and quoted as TVSSRICHAK (5.1, 5.3), and the quote fetch would not stop it, since the target is a listed symbol (8.4).
+     Whether one arrived or was traded: U-09, QR-3. Owners: A-004 (symbol mapping), G-002.
+K-07 KNOWN DEFECT / AMBIGUITY (doc drift; new): scripts/find_symbol_aliases.py 35 says "TVSSCS -> TVSSRICHAK (starts with TVSSCS,
+     then adds suffix)"; TVSSRICHAK neither starts with nor contains TVSSCS, and the pair's ratio, 0.625, is below the helper's 0.8
+     threshold (probe 3; 5.6). The receiver's comments repeat the pair (R 222-224, 697-700).
+K-08 KNOWN DEFECT / AMBIGUITY (doc drift; new): the SIGMAADV entry's comment names "Sigma Advanced Materials"; the current listing
+     names Sigma Advanced Systems Ltd (CURRENT EXTERNAL FACT; 5.1). The name in the legacy period is not established.
+L-01 New. A NaN or +inf trigger price passes intake and is queued as the float; stored, a NaN becomes NULL and +inf an infinity on
+     SQLite 3.45.1 (probe 2; the VMs' version is not established) (4.3). The effect downstream is not traced (U-07).
+L-02 Already recorded, not new: a 503 batch is audited (503, 0, 0) even when symbols were accepted (9.4): C-001 A-L4 and D-06, C-002
+     section 9 row 12, C-003 section 7.3 row 9.
+L-03 Mostly recorded: intake's per-symbol rejections leave no row and count only inside a 200 (C-001 A-L7; A-011 section 12, erratum
+     E-8). New detail: they also leave no log line (except the exclusion's DEBUG), and the schema and the status report list
+     INVALID_SYMBOL, INVALID_PRICE and OUTSIDE_HOURS, which no S-RT code writes (N-6, N-7; 4.4).
+L-04 New. Case is kept for symbols without an alias (already C-001 section 7.3); every later exact match (claims, dedup, cache, quote
+     map) uses that case (2, 5.4), so a symbol in another case would miss them; whether Chartink sent one is U-04.
+L-05 Already recorded, not new: the alias file is read from a path relative to the working directory, once per process, fail-open
+     (5.2): C-001 section 7.3; B-002 sections 4 and 13 (item 8).
+L-06 New. Alias targets are not checked (5.4); whether SIGMAADV-BE was a row of the master is not established (U-02). The builder
+     writes the security master's symbol unchanged (scripts/refresh_instruments.py 101, 194-195), so SIGMAADV-BE could be a row only
+     if the security master's own symbol field held the suffix.
+L-07 New. No reload of the cache in the running process; the daily start came before the 09:00 refresh, so each day ran on the
+     previous refresh's file unless restarted after 09:00 (7.6).
+L-08 New. The daily report's excluded-symbol count reads signals rows, which intake does not write for excluded symbols (6.3).
+L-09 New. The BL-20 docstring's history of dropped symbols against the fallbacks at the pin (7.7).
+L-10 New. broker/zerodha_adapter.py 1384-1390 says the tick fallback "keeps the silver/ETF names PLACEABLE": a comment suggesting such
+     names could reach placement without a usable tick in the cache; A-004 section 8 leaves the ETF build path UNKNOWN (for A-004 and
+     E-012).
+L-11 New detail on a recorded mechanism (A-004 section 6 B): the MIS pre-drop runs in shadow on the pinned configuration, so a blocked
+     symbol would continue past the pre-drop (code path); whether it then reached the broker depends on every later gate. The
+     configuration's comment records one repeat at the broker (8.3).
+L-12 New. The alias SIGMAADV -> SIGMAADV-BE sends a Chartink symbol to a BE-series name, and A-006 section 5 line 42 records
+     (CURRENT EXTERNAL BROKER FACT there, checked 2026-10-06) that the exchange bars intraday trading in BE, so an MIS order on it is
+     rejected. An intraday strategy's signal on that name would meet the broker's rejection at placement (INTERPRETATION; Q-30 (b)
+     open; G-007). Whether such a signal ever came: not established.
+L-13 New (for C-005). The SELECT inside the `except sqlite3.IntegrityError` handler (R 987-991) has no guard; an exception there is not
+     caught by the sibling handler (R 1016), so the request ends in 500 with earlier symbols possibly stored and queued, and the
+     in-flight claim and dedup entry taken at R 934-947 stay held, with the effect the comment at R 1020-1022 describes for held
+     claims ("they bounce this (symbol, scanner) as DUPLICATE for the whole dedup window") (9.4 row 4). Occurrence not established.
+L-14 New (edge case). An overflowing FIX-074 cast (a JSON number too large for a float; Infinity in qty) ends in 500, not 400, because
+     the casts catch only ValueError and TypeError (3.2 rows 3 and 4; probe 2). C-001 line 210, C-002 section 9 row 11 and C-003
+     section 7.3 row 8 list the cast among the 400s (15.5); for an edge case no erratum is proposed.
+U-01 to U-09: the notes, section 2.
+END

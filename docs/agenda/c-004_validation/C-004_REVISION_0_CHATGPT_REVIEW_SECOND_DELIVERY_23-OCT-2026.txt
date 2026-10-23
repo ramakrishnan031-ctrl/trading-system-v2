@@ -1,0 +1,69 @@
+C-004 REVISION 0 - CHATGPT REVIEW OF SECOND DELIVERY
+Date: 23-Oct-2026
+Scope: Review of the four files supplied in the second delivery; not freeze approval.
+
+RESULT
+The second delivery is materially improved and is suitable to proceed to the final human review/freeze decision after the remaining packaging checks. It is still marked DRAFT / PROPOSED / OPEN, and must not be frozen or stored on the strength of this review alone.
+
+1. BYTE / MANIFEST VERIFICATION
+I independently computed SHA-256 hashes and line counts from the actual four files available in this session. The first three match the second delivery manifest exactly:
+
+File: C-004_manual.md
+Lines: 830
+SHA-256: 26b548b07ed51aa70cfd46ca55c0a92335f1fa963f4faf4ef1348e94749a7e40
+Result: MATCH
+
+File: C-004_v2_design_inputs.md
+Lines: 38
+SHA-256: 297a6c74e4c7dafdc763378af32c65263a0f0b11d20da97f8caf0a0c7419d9c9
+Result: MATCH
+
+File: C-004_REVISION_0_DRAFTING_REPORT_23-OCT-2026.txt
+Lines: 574
+SHA-256: ba7e21090fb934ca86a7e7535b98cb026c6cd3d11a86a75cf11b86fab7ac3365
+Result: MATCH
+
+File: C-004_REVISION_0_DELIVERY_MANIFEST_23-OCT-2026.txt
+Lines: 89
+SHA-256: 87cc1d129056fe73c37d81c5a284363f9c7567fc10de7e89b41785ec371657f2
+Result: Its own hash is not embedded in the manifest; the report/delivery note should state this computed value if not already supplied separately.
+
+All four files are ASCII text. The manifest's own-hash exception is reasonable and documented.
+
+2. KEY CONTENT REVIEW
+A. TVSSCS -> TVSSRICHAK
+The manual now consistently treats this as a known defect in the pinned alias configuration while separating code-path behaviour from historical events:
+- the receiver resolves and stores/queues TVSSRICHAK;
+- the later quote request is made using NSE:TVSSRICHAK;
+- whether the broker would return a quote at the relevant historical time is UNKNOWN / NOT ESTABLISHED (U-03);
+- without a quote, the documented path stops at SKIPPED_QUOTE_UNAVAILABLE before sizing/order placement;
+- no historical signal arrival, quote result, order, position or loss is claimed.
+The same careful qualification is present in the key reviewed passages (sections 7.1, 10.4, 19/U-03, 20/C-10 and 27). This addresses the material over-claim from the first delivery.
+
+B. SIGMAADV -> SIGMAADV-BE
+The manual now conditions the later broker-rejection path on a quote being returned and records the quote outcome as unknown. This avoids treating a current listing as proof of the legacy broker response.
+
+C. V2 design inputs
+The 23-Oct symbol-mismatch direction is recorded separately as PROPOSED / OPEN, not as a frozen decision or legacy fact. It states outright rejection and continuation to the next stock, with no alias files. That separation is appropriate for the current phase.
+
+D. Legacy-only discipline
+The manual continues to label source-verified facts, configuration facts, test-source facts, historical testimony, current external facts, interpretations, defects and unknowns separately. It explicitly states that tests and legacy runtime/broker operations were not run. The accepted errata remain unapplied pending the formal freeze.
+
+3. PROCESS / GOVERNANCE
+The report records that nothing was stored to the Project or repository, staged, committed or pushed, and that no legacy code, tests, host records, broker or live service were touched. This is consistent with the documentation-only boundary.
+
+The report also correctly leaves the P-9 canonical-filename correction as a freeze-time packaging item:
+C-004_REVIEW_RESPONSE_TO_CLAUDE_23-OCT-2026.txt
+The upload suffix "-1" should not become the canonical stored filename.
+
+4. REMAINING ITEMS BEFORE FREEZE
+1. Keep the package DRAFT until Rama explicitly approves the review and freeze.
+2. At freeze time, apply CE-1 and CE-3 only after rechecking live register numbers and anchors; CE-2 remains no change.
+3. Correct the P-9 filename reference in the freeze package and record the stored file's hash.
+4. Complete the freeze-only register/design-log/README/review-notes and package-manifest actions described in the drafting report, with Rama's decision on VP-27's "Ratify at: ... C-004" treatment.
+5. Preserve the second delivery only; the first delivery is superseded and must not be passed on as the current package.
+6. This review independently verifies the delivered bytes against the manifest and reviews the central corrected claims and governance boundaries. It is not a complete line-by-line re-audit of every cited legacy source line.
+
+FINAL STATUS
+No material blocker was identified in the portions independently checked for this review. Recommend: ACCEPT FOR RAMA'S FINAL REVIEW; NOT YET FROZEN.
+No project files or repository files were modified by this review.

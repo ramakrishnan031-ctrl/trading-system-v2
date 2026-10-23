@@ -1,6 +1,6 @@
 # A-004 INSTRUMENTS / MARKET SEGMENTS: LEGACY MANUAL (REVISED)
 
-Status: FROZEN 2026-10-06 (revision 2, after the ChatGPT value-added review of 06-Oct-2026). Recorded as DR-019.
+Status: FROZEN 2026-10-06 (revision 2, after the ChatGPT value-added review of 06-Oct-2026). Recorded as DR-019. Erratum E-1 to this manual (section 5, line 65: what the receiver checked for a symbol and a price) added 2026-10-23 during C-004, accepted by Rama on 23-Oct-2026 (option (b), line 65 only) and recorded in DR-057 (2026-10-23) together with the C-004 freeze.
 Date: 2026-10-06
 Layer: LEGACY ONLY. The historical instrument and segment scope, not V2's universe. V2 ideas are PROPOSED in docs/governance/V2_DESIGN_LOG.md section 3.
 Working copy of: docs/inputs/manuals/A-004_INSTRUMENTS_MARKET_SEGMENTS_LEGACY_MANUAL_23-SEP-2026.md (frozen 23-Sep-2026 in the ChatGPT phase; original untouched). Changes are listed at the end.
@@ -62,7 +62,7 @@ Both leads go to the post-agenda audit (DR-016).
 
 ## 5. Signal to instrument
 - Path: Chartink, webhook POST, webhook receiver (validates symbol, price, request), signal persistence and queue, signal processor, screening/decision, sizing/risk/capital, order placement, Zerodha.
-- FACT: the receiver validates symbols/prices, and the instrument master is preloaded at start-up.
+- FACT: ~~the receiver validates symbols/prices, and the instrument master is preloaded at start-up.~~ (superseded by erratum E-1) the receiver checks a symbol only for being non-empty, after its alias lookup and the static exclusion list, and a price only for parsing as a number and not being zero or less; it does not look the symbol up in the instrument master, which is preloaded at start-up (C-001_manual.md section 15; C-004).
 - UNKNOWN: the exact signal-to-token lookup function and key, whether exchange came from Chartink or was inferred, and the full invalid-symbol rejection path (signal and order chapters).
 - HISTORICAL (Rama): an unknown symbol would not be processed (belief, not verified).
 
@@ -139,3 +139,10 @@ FROZEN 2026-10-06 (DR-019). The freeze does not claim every detail is known; it 
 ## Changes from the original (23-Sep-2026)
 Revision 2 (after ChatGPT review): evidence-boundary rule and evidence levels added (2); fallback values marked FACT with downstream use UNKNOWN (4.1); tick risk split into legacy fact, dated external context, interpretation and unknown, with the external dates verified (10-Jun-2024 and 15-Apr-2025; revision 1 wrongly said 2025 for the 1-paisa change) and builder-versus-order-math scope note (4.4); eligibility controls split into static exclusion, learned MIS blocklist and V2 decision (6); SME changed from "likely excluded" to UNKNOWN with the series-code point kept as an audit lead only, and Rama's statement quoted precisely (8); bracket leverage value labelled a configuration observation (10); strategy split marked user-reported, not a verified inventory (11); angelone live use marked not established (14); fact discipline aligned (15).
 Revision 1: removed section 6.4 V2 input (now VP-27); added series filter and default values, testing-VM row count, data risks, Rama's unknown-symbol belief, learned MIS blocklist cross-reference, NIFTY 50 regime note, ETF and SME rows, DDPI and common-file notes, leverage-map observation, placeholder detail and Q-17 link, Rama's production/sandbox and change recollections, cross-references.
+
+## Erratum (2026-10-23, found during C-004)
+- E-1 (section 5, line 65: the receiver's symbol and price checks). Status: ACCEPTED, option (b). Proposed during C-004 (its research notes, 23-Oct-2026, candidate CE-1), decided by Rama on 23-Oct-2026 (multiple choice, about 08:05 IST: option (b), line 65 only; option (c), which would also have changed line 64, not taken), independently of the C-004 freeze and of the other erratum, and recorded in DR-057 (2026-10-23) together with the C-004 freeze. The struck text stays visible; the replacement is the text in force. Authoritative passages: C-004_manual.md sections 6 and 9.1 (the per-symbol checks; the instrument master not on the intake path) and C-001_manual.md section 15.
+- What changed: "the receiver validates symbols/prices, and the instrument master is preloaded at start-up." became "the receiver checks a symbol only for being non-empty, after its alias lookup and the static exclusion list, and a price only for parsing as a number and not being zero or less; it does not look the symbol up in the instrument master, which is preloaded at start-up (C-001_manual.md section 15; C-004)."
+- Passages checked and not changed: line 64 of section 5 (the path summary, option (c) not taken); the other "validat" in this manual (line 39, the builder's "row-set validation"), which is about the build.
+- Reason: "validates symbols" can be read as a validity or instrument check, which did not exist at intake: the receiver's only symbol check is that the symbol is not empty, and it holds no reference to the instrument cache (C-004_manual.md sections 6.2 and 9.1).
+- Impact: wording only; no frozen finding, count or decision changes, and no V2 decision depends on it.
