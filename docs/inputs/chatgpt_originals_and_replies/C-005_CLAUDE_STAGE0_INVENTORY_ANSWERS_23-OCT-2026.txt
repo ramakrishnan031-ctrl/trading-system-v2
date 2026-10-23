@@ -1,0 +1,287 @@
+C-005 - DEDUPLICATION AND IN-FLIGHT HANDLING
+STAGE 0 ANSWERS: SOURCE INVENTORY AND RESEARCH WORKFLOW (answers to C-005_ANSWER_FILE_FOR_CLAUDE_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 14:48 to 15:10 IST. Prepared by: Claude, on ChatGPT's prompt and answer file of 14:40 IST.
+Status: Stage 0 only; no legacy source content opened, no module analysed, no behavioural conclusion drawn; stops for review.
+
+INVENTORY SUMMARY
+- Pin verified: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (2026-09-11), 1,438 tracked files; GitHub main is the same commit
+  today.
+- Register: 40 files in 32 rows. 4 direct (receiver, processor, schema, system configuration); 10 dependency (main.py's cited
+  wiring included, 9 conditional); 15 test rows (4 included, 10 conditional, 1 excluded); 3 record rows (names only, not read).
+- 138 path-name hits; 36 are in the register, the other 102 are excluded with a reason (section 3 F). 4 register files are not
+  name hits: the prompt named one, the frozen manuals cite the other three.
+- The frozen manuals already hand several C-005 leads over (section 4): the claim heartbeat, not renewed on the inspected code
+  path, and the 60 s sweeper (B-007, known latent defect), the claim release paths (B-009), restart (A-011), symbol case in the
+  keys and claims held on one error path (C-004 L-04, L-13). Stage 1 re-verifies them at the pin and cites them; it does not
+  re-derive them.
+- No question blocks the next stage. One bookmark raised (section 7).
+
+==============================================================================
+1. SOURCE IDENTITY
+==============================================================================
+- Repository URL: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (the production snapshot).
+- Verified commit/ref: 970aabf3c78d777d9d34549e021f7c8e756c7bdb; commit date 2026-09-11T02:05:13+05:30; root tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa.
+- How the pinned commit was verified (14:48 IST, re-checked 14:55 IST, 23-Oct-2026): the project's blob-less partial clone has
+  HEAD at the pin; git log -1 on the pin printed only its ID, commit date and root tree; a fresh git ls-tree -r of the pin is
+  byte-identical to the saved tree listing used below (same SHA-256 of both outputs).
+- Default branch / current HEAD (read-only git ls-remote --symref, 14:55 IST): HEAD is refs/heads/main, and main is
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb. Today's main equals the pin; the pin is what this inventory uses.
+- Accessible and complete: yes. The pin's tree lists 1,438 tracked files (1,432 mode 100644, 6 mode 100755; no symlink or
+  submodule). Blobs are fetched only on demand; none was fetched for this stage. All 40 register blobs are already in the local
+  object store (fetched in earlier topics), which gives their byte sizes without opening them.
+- Tree link: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/tree/970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+==============================================================================
+2. INVENTORY METHOD
+==============================================================================
+- Enumeration: the saved listing of the pin (git ls-tree -r: mode, type, blob ID, path), re-verified as above.
+- Name search: case-insensitive patterns over the 1,438 paths, after removing the 102 never-open paths:
+  (a) dedup|duplicat|dupe|claim|inflight|in_flight|in-flight|idempot|lock|mutex|replay|seen
+  (b) signal|webhook|receiver|processor
+  (c) queue|worker|dispatch
+  (d) persist|store|storage|database|sqlite|schema|migrat|state|journal|ledger|repositor|db|models
+  (e) id or ids as a file-name word|event|fingerprint|hash|ttl|cache|sweep|heartbeat|concurren|thread|race
+  138 paths matched (47 outside tests/ and docs/, 49 under tests/, 42 under docs/). Each was classified from its name only:
+  36 are in the register (section 3 A to D), 102 are excluded with a reason (section 3 F). No hit is unclassified.
+- Completeness cross-check, without legacy content: the 35 frozen manual and reconciliation-addendum files of V2 main ad68ad4
+  (A-001 to C-004) were searched for lines naming dedup, in-flight, IN_PROCESS or DUPLICATE. Those lines cite 54 distinct legacy
+  paths: 10 are in the register (rows 1 to 6, 10, 17, 18, 30), 2 are excluded name hits (broker/order_state_machine.py,
+  utils/instance_lock.py), and the other 42 (cited in A-008, A-011, B-004, B-005, B-007 and C-002) are order, broker, capital,
+  kill-switch, scheduling, start-up, health, deployment, dashboard and logging files, cited there for orders in flight,
+  duplicate orders or exits, the same-symbol risk rule, alarm deduplication, logging and similar; they belong to those topics,
+  not to C-005. This check added three register files that no name pattern matched: main.py,
+  tests/integration/test_end_to_end_smoke.py and docs/audit/integrity_audit_2026.md; config/system_config.yaml (also not a
+  name hit) is in because the prompt names it.
+- Source content opened: NO (legacy). The only documents read were the frozen V2 manuals above. Commands used: git log -1
+  (commit metadata), git ls-tree -r (the tree), git ls-remote --symref (refs), git cat-file --batch-all-objects --batch-check
+  (ID, type and byte size of objects already local; prints no content and fetches nothing), sensitive_check.py.
+- Security checks: sensitive_check.py at 14:55 IST: 102 never-open paths in the tree (by class: 1 root dotfile, 21 config,
+  80 docs), 8,922 local objects, 0 never-open blobs present locally. Never-open paths are left out of the register and not
+  named; no check printed any value.
+- Limitations: a name cannot show deduplication code inside a generically named file (Stage 1 closes this with a count-only
+  search); line counts need the content and are UNKNOWN / NOT ESTABLISHED here; the GitHub tree API is not enabled for this
+  session and was not needed. Line pointers quoted from frozen manuals are earlier readings, to be re-verified at the pin.
+
+==============================================================================
+3. C-005 CANDIDATE FILE REGISTER (pin 970aabf; sizes in bytes from the local object store; lines UNKNOWN for all)
+==============================================================================
+A. Direct candidates
+  1. signals/webhook_receiver.py | blob 0f15a0ab033529d80d9c14c993a5077690b72871 | 59,565 | Python | named starting path; the
+     frozen manuals place here the per-symbol in-flight claim (IN_PROCESS), the cache dedup (DUPLICATE), the database duplicate
+     and fingerprint path, the claim heartbeat and the in-flight sweeper (C-004 section 6.1; C-002 sections 6.4 and 13.6;
+     B-007 section 11; B-009 section 5). INCLUDE.
+  2. signals/signal_processor.py | blob 7fab0a02a302770ac72bbbd662549d5c091086c1 | 139,403 | Python | named starting path;
+     B-009 section 5 records where the processor releases the claim, B-007 section 11 its heartbeat helper. INCLUDE (the
+     release paths and the heartbeat helper only).
+  3. core/schema.sql | blob b46d7489f6ec5e31149dd68957f3b9e45270571e | 104,053 | SQL schema | the signals table (C-001
+     section 12: lines 42 to 79); the database duplicate depends on its unique keys. INCLUDE (the signals table, its unique keys
+     and any trigger on them).
+  4. config/system_config.yaml | blob bf742ae5c81c60614370361998e6a102a1064ff7 | 55,901 | YAML | named starting path (not a
+     name hit); B-009 section 5 gives the 300 s dedup window as "TTL 237, config 337" (by that table's usage, a receiver
+     line and a configuration line); the key itself is UNKNOWN until read. INCLUDE (the dedup and in-flight keys only).
+
+B. Dependency candidates (CONDITIONAL rows are read only where Stage 1's search or call trace shows a part in deduplication)
+  5. main.py | blob 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 208,758 | Python | not a name hit; frozen manuals cite its
+     wiring: the processor is given release_in_flight (C-002 section 6.1: line 3612) and is built without
+     in_flight_heartbeat_fn (B-007 section 11: lines 3575 to 3623); eight server threads (C-002 section 13.6: line 3994).
+     INCLUDE (those ranges only).
+  6. core/state_store.py | blob 11866117801b9329773a1be605448faef3c96f8d | 153,466 | "state" in the name; may hold claim or
+     seen-signal state. CONDITIONAL.
+  7. core/ids.py | blob 5e8b17bdd97f7ed37d7b4229e18353cb62ecd2ff | 5,731 | "ids"; may build signal IDs or the fingerprint.
+     CONDITIONAL.
+  8. core/migrations.py | blob cc39e811e48a9eec823c20b70d343278a6b33eef | 21,663 | a migration may add or change a unique key.
+     CONDITIONAL.
+  9. core/db_connect.py | blob a0f776fef2caf56a1a2e533dfb2ffb436792b543 | 5,265 | connection and locking settings behind the
+     INSERT. CONDITIONAL.
+ 10. core/events.py | blob 6511bc40fe74413ff5498a5b90cd47fae34dff82 | 15,023 | "event"; possible event records of repeats.
+     CONDITIONAL.
+ 11. signals/entry_throttle.py | blob b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | 5,266 | throttling in the signals package;
+     whether it acts on repeats is UNKNOWN. CONDITIONAL.
+ 12. scripts/replay_signals.py | blob 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 8,290 | "replay"; a replay may meet or bypass
+     the dedup. CONDITIONAL.
+ 13. config/scan_webhook_map.yaml | blob 54dd98d75f276f9b82027707702df2ee619b11f7 | 3,067 | the scanner-to-strategy map
+     (C-010); only if the dedup key includes the scanner or strategy. CONDITIONAL.
+ 14. scripts/db_retention.py | blob 3de2dded7d813a3848dce555941f15ba5ac333f4 | 8,564 | row retention could bound a
+     database-level window. CONDITIONAL.
+
+C. Test candidates (source only, never run; only the parts that touch dedup or in-flight)
+ 15. tests/unit/test_webhook_receiver.py | blob 7b377abb85d644f0f3ff7956385224b43f31ed61 | 83,745 | INCLUDE.
+ 16. tests/unit/test_signal_processor.py | blob 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 97,634 | INCLUDE (release cases).
+ 17. tests/unit/test_e4_event_loop_safety.py | blob db8cb8b39f028402ad330adc21b707e0d62f2fbe | 29,816 | C-002 section 16 cites
+     lines 319 to 380 (the in-flight claim under concurrency). INCLUDE.
+ 18. tests/integration/test_end_to_end_smoke.py | blob 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 32,480 | not a name hit;
+     C-002 section 16 cites lines 326 and 363 (deduplication at the webhook). INCLUDE.
+ 19. tests/integration/test_full_signal_flow.py | blob 376a2ee815f798d84857cb777f87617bf5b545c9 | 23,730 | CONDITIONAL
+     (repeat cases, if any).
+ 20. Crash-test helpers | CONDITIONAL: tests/crash_test/idempotency_tester.py (79df5a6cccc2e3541fbb6d4794db98a07353fb21, 6,615);
+     tests/crash_test/signal_injector.py (b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125, 9,588);
+     tests/crash_test/state_inspector.py (b018481f3333c61838b59060f7e582e1b432f443, 8,897);
+     tests/crash_test/state_machine_validator.py (5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe, 11,000).
+ 21. Replay tests (with row 12) | CONDITIONAL:
+     tests/unit/test_fix133_replay_signals.py (dd8123e31fb1648ad89d61bf009723d3bf294a8a, 7,887);
+     tests/integration/test_fix190_incident_replay.py (e0bce224be7b658184e6f0216827bcf64eda4244, 4,277).
+ 22. tests/unit/test_state_store.py | blob 323327dd51e7028b8668e6327d55a63774860230 | 101,559 | CONDITIONAL (with row 6).
+ 23. tests/unit/test_ids.py | blob 18200ebe2a221619282660448dbd26a493b4a1b3 | 18,823 | CONDITIONAL (with row 7).
+ 24. tests/unit/test_events.py | blob 66c67d70e274806936a5f61fe651e1965da9b596 | 24,670 | CONDITIONAL (with row 10).
+ 25. tests/unit/test_entry_throttle.py | blob 94752125157a0593aed220e859030d372f149735 | 6,302 | CONDITIONAL (with row 11).
+ 26. tests/unit/test_db_retention.py | blob cb95fda97197b42e179d69325c22c875e29b8ffa | 5,305 | CONDITIONAL (with row 14).
+ 27. tests/unit/test_signal_status_classification.py | blob fd05297f4fea7814297172c7e5c605ccee210698 | 11,357 | CONDITIONAL
+     (the IN_PROCESS and DUPLICATE statuses).
+ 28. Webhook tests by name | CONDITIONAL: tests/unit/test_c2_webhook_lockdown.py (a136dfbb56a9300e02ad069c59808308e2a9689e,
+     3,728); tests/unit/test_s4_webhook_degrade.py (59f31e2e2e226bf3d7d2ddae6a34d99c1608256d, 5,364).
+ 29. Schema tests | EXCLUDE (C-007), unless a dedup key change is found: tests/unit/test_migrations.py
+     (d43c9b0867497a712b48781a83f2e1fd76c13e5d, 25,854); tests/unit/test_migration_guard.py
+     (beb577ec2f6a2c308c0c4e85cfceb5175f66b056, 5,420); tests/unit/test_schema_version_failfast.py
+     (900c025ca0e570254d1d4245206d3ea5ff6191aa, 4,285).
+
+D. Records (names only; not read at Stage 1; cited through the frozen manuals)
+ 30. docs/audit/integrity_audit_2026.md | blob 25a738f2a9a77ed37374dce367e5fd8e848efd8a | 368,033 | not a name hit; C-001
+     section 8 (A-L9) cites its lines 17 to 29: DUPLICATE rows were pruned from the signals table on 16-Jul-2026. EXCLUDE from
+     reading; cite C-001 (HISTORICAL).
+ 31. docs/audit/signal_mortality_census_19jul2026.md | blob 9f9db37223c3cdfc256be29320075d4d3e7ed228 | 32,507 | C-002
+     section 13.4 cites its lines 191 to 196 (about 80% of symbol arrivals read as expected duplicates). EXCLUDE from reading;
+     cite C-002.
+ 32. Queue records | EXCLUDE (C-006): docs/audit/queue_items_decidable_25jul2026.md (4ad78303d209ac53b268a6142bf9b6662de0a82a,
+     7,285); docs/audit/stale_queue_entries_25jul2026.md (a8c438a027468d71b6366cb2928e51bc40786a45, 4,822).
+
+E. Configuration: besides rows 4 and 13, no configuration file name suggests deduplication.
+
+F. The other 102 name hits, excluded by name (owner or false positive)
+  F1. Schema, migration and status-rule documents and tests (C-007); consulted only if Stage 1 traces a dedup key or
+      constraint there (6): docs/04_db_schema_reference.md; docs/audit/db_schema_review_15jun2026.md;
+      docs/audit/migration_on_open_rule_14jul2026.md; core/analytics_schema.sql;
+      docs/design/terminal_state_write_guard_design_07jul2026.md; tests/unit/test_terminal_state_write_guard.py.
+  F2. Orders, broker, kill switch and square-off (order topics; A-011, B-004, B-005, B-010) (11):
+      broker/order_state_machine.py; tests/unit/test_order_state_machine.py; tests/unit/test_fix129_order_state_validation.py;
+      tests/crash_test/test_ramcoind_oversell_prevented.py; tests/unit/test_ledger2d_co_bracket.py;
+      tests/unit/test_mis_squareoff_restore_and_settle.py; docs/audit/mr4_block2_order_reconciliation_14jul2026.md;
+      docs/audit/mc4_killswitch_lock_16jul2026.md; docs/audit/kill_persist_busy_timeout_25jul2026.md;
+      tests/unit/test_kill_persist_timing.py; tests/unit/test_h5_killswitch_sweep_product.py.
+  F3. Instance lock, start-up, pre-flight, health, configuration, shutdown and operator tools (B-001, B-002, B-007, B-011;
+      C-002, C-003) (21): utils/instance_lock.py; tests/unit/test_instance_lock.py;
+      docs/audit/instance_lock_flake_mechanism_27jul2026.md; utils/cron_heartbeat.py;
+      tests/unit/test_cron_heartbeat_contract.py; docs/audit/healthcheck_threads_25jul2026.md;
+      scripts/preflight/checks/database.py; scripts/preflight/checks/signals.py; scripts/preflight/checks/state.py;
+      tests/unit/test_preflight_signals.py; tests/unit/test_preflight_state_security.py; scripts/check_vm_state.py;
+      tests/unit/test_check_vm_state_reset_removed.py; docs/audit/ledger8b_check_vm_state_step1_02aug2026.md;
+      scripts/backup_restore_drill.py; tests/unit/test_fix129_graceful_shutdown.py;
+      tests/unit/test_ni6_config_hash_change_is_expected.py; tests/unit/test_b1_consumer_health_unblocked.py;
+      scripts/test_webhook.py; scripts/load_test_signals.py; tests/unit/test_load_test_signals.py.
+  F4. Other owners: the instrument cache and the MIS blocklist (A-004); receiver authentication (C-003); the entry throttle's
+      records (read only with row 11) (8): core/instrument_cache.py; tests/unit/test_instrument_cache.py;
+      tests/unit/test_instrument_cache_integration.py; core/mis_blocklist.py; tests/unit/test_mis_blocklist.py;
+      docs/audit/receiver_auth_c6_scoping_2026-07-25.md; docs/decisions/10_entry_throttle_admission.md;
+      docs/audit/throttle_selection_and_record_correction_19jul2026.md.
+  F5. Dashboard, reports, journal and alerts (L topics) (17): ops_dashboard/backend/readers/db_reader.py;
+      ops_dashboard/backend/services/pipeline_state.py; ops_dashboard/docs/redesign/04_signals_asset_spec.md;
+      ops_dashboard/frontend/templates/signals.html; ops_dashboard/tests/test_db_reader.py;
+      ops_dashboard/tests/test_pipeline_state.py; ops_dashboard/tests/test_s3_login_throttle.py;
+      ops_dashboard/tests/test_screen04_signals.py; ops/control_tower/db.py; reports/signal_status.py;
+      scripts/trade_journal.py; tests/unit/test_fix133_trade_journal.py; tests/unit/test_signal_alert_capital_vocabulary.py;
+      docs/audit/daily_report_ledger_order_25jul2026.md; docs/audit/q9_gui_state_report_14jul2026.md;
+      docs/audit/VISUAL_APPROVAL_LEDGER_19-Aug-2026.md; docs/audit/approval_final_19aug/S04_signals.png.
+  F6. Records and a test named for other subjects (deployment-ledger, documentation-sweep, decision and registry records)
+      (19): docs/audit/ledger10_deployed_tree_check_03aug2026.md;
+      docs/audit/ledger11_secrets_surface_measurement_04aug2026.md; docs/audit/ledger2d_step1_measurement_03aug2026.md;
+      docs/audit/ledger2e_design_03aug2026.md; docs/audit/ledger3_design_registration_03aug2026.md;
+      docs/audit/ledger3b_separability_step1_04aug2026.md; docs/audit/ledger6_eod_verify_measurement_03aug2026.md;
+      docs/audit/ledger7_multiauthority_measurement_04aug2026.md; docs/audit/ledger_3a_9_5_step1_03aug2026.md;
+      docs/audit/BARE_FR_CLASS_SWEEP_19-Aug-2026.md; docs/audit/attribution_gloss_sweep_21jul2026.md;
+      docs/audit/capital_figure_sweep_28jul2026.md; docs/audit/locked_contract_staleness_sweep_22jul2026.md;
+      docs/audit/masking_premise_sweep_19jul2026.md; docs/audit/pyc_orphan_sweep_28jul2026.md;
+      docs/audit/sweep_done_17jul2026.md; docs/locked_decisions.yaml; docs/audit/registry_seed_state_split_10aug2026.md;
+      tests/unit/test_registry_seed_state_split.py.
+  F7. False positives (an unrelated word matched) and the empty package file (20): allocation/models.py; regime/models.py;
+      sr_detector/models.py; v3_chain/models.py; strategies/schema.py; data/candle_store.py; tests/unit/test_candle_store.py;
+      tests/unit/test_no_real_data_store_from_tests.py; sr_detector/zone_cache.py; tests/unit/test_sr_v2_zone_cache.py;
+      broker/clock_skew_probe.py; tests/unit/test_clock_skew_probe.py; docs/audit/clock_dependency_class_26jul2026.md;
+      docs/audit/t2_multi_stock_blockers_28jul2026.md; tests/unit/test_time_authority_sweep.py;
+      docs/design/sizing/sizing_thread_conclusions_06aug2026.md; docs/monitoring_prevention_checklist.md;
+      ops_dashboard/assets/illustrations/empty_states/.gitkeep; UNPUSHED_LEDGER.md; signals/__init__.py.
+  Any F file is brought in only if Stage 1's count-only search shows it implements or tests the mechanism. The 102 never-open
+  paths (database files among them) are not listed; the schema evidence is core/schema.sql.
+
+==============================================================================
+4. SCOPE BOUNDARY PROPOSAL
+==============================================================================
+- In C-005: how an incoming signal is recognised as a repeat at intake: the in-flight claim (IN_PROCESS), the cache dedup
+  (DUPLICATE), the database uniqueness and fingerprint on insert (DUPLICATE, or the re-queue of an earlier QUEUE_FULL row as far
+  as the dedup goes); their keys, windows and lifetimes; the claim heartbeat and the sweeper; every release and eviction; what
+  survives a restart; behaviour under concurrent requests; what the replay tool does with them; how each outcome is recorded
+  (as far as the mechanism goes).
+- Already frozen elsewhere and addressed to C-005 (cite and re-verify; do not re-derive):
+  - C-004 L-04 (symbol case reaches the claim and dedup keys) and L-13 (an exception in the IntegrityError handler's SELECT
+    leaves the claim and dedup entry held; occurrence not established).
+  - B-007 sections 11 and 19 (KNOWN DEFECT, latent: the claim heartbeat is not renewed on the inspected code path, so the 60 s
+    sweeper can evict a claim still in use; "what later guards then did is C-005's and C-008's"); B-007 section 20 (UNKNOWN:
+    whether it ever happened).
+  - B-009 section 5 (the per-symbol outcomes and the 300 s window; the processor releases the claim on every path except
+    re-queue and the allocator hand-off); B-006 row TH4 (the sweeper thread).
+  - A-011 section 14 (not rehydrated at start: in-flight claims and the duplicate cache; the database fingerprint remains).
+  - C-002 sections 6.1, 6.4 and 13.6 (release_in_flight wiring, the sweeper stopped at shutdown, IN_PROCESS for a concurrent
+    repeat) and 13.4 (repeats by the alerts' design: about 80% of symbol arrivals read as expected duplicates); C-003
+    section 6.5 (after authentication, repeats are limited by expiry, the dedup cache and the fingerprint); C-001 section 8,
+    A-L7 and A-L9 (IN_PROCESS and cache-DUPLICATE refusals are not signals rows; DUPLICATE rows pruned on 16-Jul-2026).
+- Interfaces: C-003 (repeats after authentication); C-004 (upstream, frozen: the alias-resolved symbol is the key's symbol
+  part); C-006 (queue, QUEUE_FULL and the re-queue); C-007 (the signals table at large, retention); C-008 (processing, which
+  releases the claim); C-009 (expiry); C-010 (the scanner or strategy part of a key, if any); C-011 (the EOD route's own
+  handling). Downstream guards (the risk engine's in-flight count, A-005 section 7; the same-symbol rules, A-008 section 14)
+  are interfaces only.
+- Excluded and handed off: orders in flight and duplicate orders (order topics; A-011, B-004, B-005, B-012); the instance lock
+  (B-001); alarm deduplication (B-001, B-007); queue capacity and backpressure (C-006); the schema at large (C-007); dashboard
+  and reports (L topics).
+- UNKNOWN until source reading is authorised: the exact key fields (B-009 gives (symbol, scanner) for the cache) and their
+  case, the window lengths and where they are set, the fingerprint's inputs, every release and eviction path at the pin,
+  behaviour with eight server threads, and the replay tool's interplay. Whether the sweeper ever evicted a live claim (B-007
+  section 20) is a records question that source reading cannot settle.
+
+==============================================================================
+5. PROPOSED STAGE-1 RESEARCH PLAN (not executed)
+==============================================================================
+1. Safety first: never-open check (must be 0); legacy reads only through the masking filter, one file per call, logged with the
+   pinned blob ID; no host record read (rows 30 and 31 are cited from C-001 and C-002); no test or code run.
+2. Count-only searches (scopes S-ALL, S-RT, S-CODE, S-TESTS as in C-004) for in_flight|inflight|IN_PROCESS|DUPLICATE|dedup|
+   fingerprint|claim|release|heartbeat|sweep|seen|ttl|window, listing files and hit counts only, to find every file that
+   implements or tests the mechanism and to settle the CONDITIONAL rows of section 3.
+3. Masked reads, bounded (pointers are earlier frozen readings, re-verified at the pin):
+   - signals/webhook_receiver.py: the claim structures and the sweeper (202 to 220, 1166 to 1176, 1182 to 1207); the window
+     (237); the alias comment (697 to 700); _process_signal (892 to 1072: claim 928 to 935, cache 937 to 947, INSERT,
+     fingerprint and the IntegrityError path 963 to 1044); the claim helper and heartbeat (1074 to 1120).
+   - signals/signal_processor.py: the release (1248 to 1271) and the heartbeat helper (664 to 673).
+   - main.py: 3575 to 3623 (with 3612) and 3994.
+   - core/schema.sql: the signals table (42 to 79) and any unique index or trigger on its fingerprint.
+   - config/system_config.yaml: line 337 (cited by B-009) and the keys step 2 finds.
+   - Tests: rows 15 to 18 at the cited ranges; conditional rows only where step 2 points.
+4. Trace: from the receiver's entry to each outcome (IN_PROCESS, cache DUPLICATE, database DUPLICATE, re-queue) and to each
+   release or eviction, callers and callees, at the pin; one lifecycle table for a claim and for a dedup entry (taken, renewed,
+   released, evicted, lost at restart).
+5. Outputs, in the established form: a repository answers file (each answer with path, line range at the pin, blob ID and
+   evidence label) and a source inventory (files read, ranges, searches, never-open results), plus bookmarks for any
+   cross-topic point (Rama's rule of 23-Oct-2026), not resolved in C-005.
+6. Stop after delivering the answers, for ChatGPT's reconciliation and manual. Questions to Rama only where the source cannot
+   answer (for example, what he saw of repeated signals in the live period).
+
+==============================================================================
+6. OPEN QUESTIONS / ACCESS LIMITATIONS
+==============================================================================
+- None blocking. Limits: line counts UNKNOWN until reading; the GitHub tree API is not enabled (not needed); host records are
+  not read (the frozen manuals already cite the relevant ones).
+
+==============================================================================
+7. DECLARATION
+==============================================================================
+[x] Production repository only; pinned commit used.
+[x] Stage 0 used repository metadata/tree only; no individual module analysis.
+[x] No tests or code were run.
+[x] No VM, broker, webhook, Chartink, host record or live service was contacted.
+[x] No legacy/V2 source was changed; no file was stored in the repository; no commit/push occurred.
+[x] All uncertainties are labelled; no behavioural conclusion has been asserted.
+
+BOOKMARKS (Rama's rule of 23-Oct-2026: noted, not solved)
+- C-005/BM-01. Cross-check: four frozen manuals touch the claim's lifetime from different sides: B-009 section 5 (released on
+  every processor path except re-queue and the allocator hand-off), C-004 L-13 (held on one receiver error path), B-007
+  section 11 (evicted by the sweeper after more than 60 s without a heartbeat) and C-002 section 13.6 (IN_PROCESS for a
+  concurrent repeat). C-005 Stage 1 puts them in one lifecycle table; any mismatch goes to the final V2 design review, not
+  fixed in C-005.
+END

@@ -1,0 +1,47 @@
+C-005 — CHATGPT REVIEW OF STAGE 0 INVENTORY
+Date: 23-Oct-2026
+Status: Stage 0 reviewed; Stage 1 may proceed within the limits below.
+Repository baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+1. REVIEW DECISION
+The Stage 0 inventory is sufficiently complete to move to Stage 1. The repository pin and current main reference are reported as matching; the inventory method, candidate register, exclusions, proposed scope, and research plan are documented. No behavioural conclusion is accepted from Stage 0, and none should be added retroactively.
+
+This is approval to conduct the bounded, read-only Stage 1 evidence collection described below. It is NOT approval to change legacy/V2 files, run tests or code, contact live/host systems, draft the final manual before reconciliation, or make V2 design decisions.
+
+2. REQUIRED CLARIFICATION TO RECORD — DO NOT TURN INTO A BLOCKER
+The report uses the number “102” for two apparently different sets:
+- 102 matching path-name hits excluded from the C-005 candidate register (Section 2 and Section 3.F); and
+- 102 “never-open paths” excluded for security reasons (Section 2 security checks and Section 3.F closing note).
+
+These may be distinct sets that happen to have the same count, but the report does not explicitly establish that. In the Stage 1 source inventory, label these as two separate populations and report their overlap/counts without naming or opening protected paths. Do not treat this wording issue as a reason to repeat Stage 0 or delay Stage 1.
+
+3. STAGE 1 EXECUTION BOUNDARY
+Follow the Stage 0 plan, with these controls:
+- Use only the pinned production snapshot commit above. Record the pinned blob ID for every source range used.
+- Preserve the never-open-path control. Before each permitted read, verify the protected-path check is still zero; do not list protected path names or reveal sensitive values.
+- Count-only search first; use it to resolve conditional candidate rows. Do not expand scope merely because a file name matched.
+- Read only the bounded source ranges necessary to establish the C-005 intake deduplication and in-flight lifecycle. If a wider range or additional file is needed, record the reason and ask for review before expanding.
+- Do not run tests, execute legacy code, contact VMs/hosts/brokers/webhooks/Chartink/live services, or read historical host records.
+- Treat frozen manual findings as leads to re-verify at the pin, not as substitutes for source evidence. Cite frozen manuals for historical record claims; source reading cannot establish whether a latent defect actually occurred in production.
+- Keep FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT, and OPEN QUESTION distinct.
+- Do not repair, tune, operationally revive, or redesign the legacy system. Do not decide V2 policy.
+
+4. EXPECTED STAGE 1 DELIVERABLES
+Return the completed C-005 repository answer sheet and source inventory/research log. Include:
+- Exact path, function/class or SQL object, line range, pinned blob ID, and evidence category for each material statement.
+- Intake-to-outcome trace for IN_PROCESS, cache DUPLICATE, database uniqueness/fingerprint DUPLICATE, and the earlier QUEUE_FULL re-queue case only insofar as it intersects deduplication.
+- Claim and cache lifecycle tables: creation/acquisition, renewal, release, eviction, restart behaviour, and relevant concurrent/replay paths.
+- The configuration key(s), values, transformations and consumers actually established by source evidence; do not infer keys or values from prior summaries.
+- Callers/callees and paper/live differences only where the pinned source establishes them. If parity is not established, say UNKNOWN / NOT ESTABLISHED.
+- Test assertions as documentary evidence only; do not run tests or claim that tests prove runtime behaviour.
+- A cross-topic bookmark list for contradictions, unresolved policy, or evidence that belongs to C-006–C-011 or an already-frozen topic. Note the issue only; do not resolve it here.
+- Explicit list of files and line ranges actually read, searches performed, conditional rows included/excluded with reasons, and confirmation that protected paths remained unopened.
+
+5. BOOKMARK C-005/BM-01
+Keep the lifecycle mismatch as a bookmark: B-009 release paths, C-004 L-13 claim/cache held on an error path, B-007 heartbeat/sweeper behaviour, and C-002 concurrent-repeat handling must be placed into one evidence-backed lifecycle table. If they do not align, document the mismatch and evidence; do not repair or choose a future design.
+
+6. STOP POINT
+After delivering the answer sheet and inventory/research log, STOP. Do not write or finalize the C-005 manual yet. ChatGPT will reconcile the evidence against the frozen manuals, identify any contradictions/open questions, and prepare the reconciliation plus manual for discussion. Do not commit or push any files.
+
+7. FINAL DECLARATION
+At the end, state whether all boundaries above were followed. List any deviations plainly. Do not claim a step was performed unless you have direct evidence for it.

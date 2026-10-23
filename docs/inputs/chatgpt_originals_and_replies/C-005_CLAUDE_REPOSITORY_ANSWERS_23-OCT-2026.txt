@@ -1,0 +1,259 @@
+C-005 - DEDUPLICATION AND IN-FLIGHT HANDLING
+STAGE 1: CLAUDE'S REPOSITORY ANSWERS (answers to ChatGPT's C-005_CHATGPT_STAGE0_REVIEW_AND_STAGE1_GO_AHEAD_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 15:22 to 15:40 IST. Source: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+Status: evidence for ChatGPT's reconciliation; not a manual. Method, files read and searches: C-005_SOURCE_INVENTORY_AND_METHOD.
+
+Aliases and pinned blobs (every range below was read at the pin through the masking filter; the read log holds each call):
+  R = signals/webhook_receiver.py (0f15a0ab033529d80d9c14c993a5077690b72871, 1,208 lines)
+  P = signals/signal_processor.py (7fab0a02a302770ac72bbbd662549d5c091086c1, 2,704 lines)
+  M = main.py (445fb0d8237a6d535ed00e5eb968c8176efd74f3, 4,294 lines)
+  SQL = core/schema.sql (b46d7489f6ec5e31149dd68957f3b9e45270571e, 1,655 lines)
+  CFG = config/system_config.yaml (bf742ae5c81c60614370361998e6a102a1064ff7, 754 lines)
+  ST = core/state_store.py (11866117801b9329773a1be605448faef3c96f8d, 3,356 lines)
+  TWR = tests/unit/test_webhook_receiver.py (7b377abb85d644f0f3ff7956385224b43f31ed61, 2,043 lines)
+  TSP = tests/unit/test_signal_processor.py (3ec0ea84392a193d18b992ca88df0da5e6235f67, 2,501 lines)
+Labels: FACT (SOURCE-VERIFIED) = read at the pin; FACT (TEST TEXT) = what a test asserts (documentary, not run, proves nothing at
+runtime); FACT (CONFIG) = the repository copy, not the host's; INTERPRETATION = a code-path consequence ("would"), not observed;
+HISTORICAL = a frozen manual or record; KNOWN DEFECT; UNKNOWN / NOT ESTABLISHED; OPEN QUESTION.
+
+==============================================================================
+SUMMARY
+==============================================================================
+- Three repeat guards run in order for every intraday symbol, all inside R _process_signal (R 892-1072), after the validity and
+  expiry checks: (1) the in-memory in-flight claim, keyed by symbol only -> IN_PROCESS; (2) the in-memory TTL cache, keyed by
+  (symbol, scanner) for dedup_window_seconds (300 in the repository config) -> DUPLICATE; (3) the database unique index on
+  (fingerprint, fingerprint_date), the fingerprint being SHA-256 of "scanner|symbol|epoch bucket" -> DUPLICATE, or the re-queue
+  of an earlier QUEUE_FULL row. FACT (SOURCE-VERIFIED).
+- The claim is released by the receiver on every refusal after it (R 944, 1000, 1014, 1031, 1067; not on the C-004 L-13
+  exception path) and by the processor when it finishes (P 1248-1271), except while a signal is re-queued or handed to the
+  allocator. A sweeper evicts any claim with no heartbeat for more than 60 s; no runtime code renews the heartbeat at the pin
+  (B-007's known defect, re-verified).
+- The frozen statements on the claim's lifetime (B-009, C-004 L-13, B-007, C-002) agree once placed in one table (section 4);
+  two further latent points are recorded as leads, not resolved (C5-L1, C5-L2).
+- No paper/live branch exists in R. The EOD route and the replay tool do not use any of the three guards.
+
+==============================================================================
+1. THE THREE GUARDS: STRUCTURE, KEY, WINDOW, STORAGE
+==============================================================================
+| Guard | Structure | Key | Window / life | Lock | Evidence |
+| Claim | R self._in_flight: dict symbol -> {acquired_at, heartbeat_at} (monotonic) | symbol (alias-resolved, case kept) | until released or evicted (no heartbeat > 60 s) | _in_flight_lock | R 202-208, 1074-1091 |
+| Cache | R self._dedup_cache = cachetools TTLCache(maxsize=10000, ttl=window) | (symbol, scanner_name) | window seconds from the set at R 947 | _dedup_lock | R 52, 229-238, 937-947 |
+| Fingerprint | signals.fingerprint + fingerprint_date; UNIQUE INDEX idx_signals_fingerprint_today | sha256(f"{scanner}|{symbol}|{bucket}"), bucket = floor(triggered_at epoch / window); date = IST date of receipt | per bucket and receipt date; the row persists | SQLite (BEGIN IMMEDIATE) | R 949-954, 677-678, 963-980; SQL 74-75, 81-83; ST 526-541 |
+- FACT (SOURCE-VERIFIED): scanner_name is the URL key of /webhook/<key>; the strategy column is set to the same value (R 975), and
+  the strategy map is not part of any key (R 940, 953). The signal_id (core/ids.py new_signal_id, R 55, 957) is not part of any key.
+- FACT: no case or space normalisation of the symbol happens inside _process_signal; the alias lookup uses raw_symbol.upper() as
+  the map key but keeps the raw symbol when there is no alias (R 701). Re-verifies C-004 L-04: "reliance" and "RELIANCE" are
+  different claims, cache keys and fingerprints.
+- FACT: the cache and the fingerprint use different window shapes: the cache entry lives window seconds from its first set (it is
+  set only when absent, R 942-947); the fingerprint bucket is a fixed epoch-aligned slot of triggered_at (the alert's time), and
+  fingerprint_date is the receipt date (R 678, 977). EXTERNAL (library, not verified here): a cachetools TTLCache item expires ttl
+  seconds after it is set, and a membership test does not renew it; the library version was not checked.
+- FACT (TEXT DRIFT): the schema comments still describe the fingerprint as "hash(scanner+symbol+trigger_minute)" and "same minute
+  on same day" (SQL 74, 81); the code hashes the window bucket (R 949-954, FIX-131 Item 17).
+
+==============================================================================
+2. INTAKE-TO-OUTCOME TRACE (per intraday symbol; FACT (SOURCE-VERIFIED) unless marked)
+==============================================================================
+Entry: /webhook/<key> -> _handle_webhook (R 477-534) -> _process_request; an EOD-type key goes to _handle_eod instead (R 564);
+per symbol: alias (R 701), exclusion list (R 709-717), then _process_signal (R 719-723). The loop has no try/except (R 696-728).
+| Step | Outcome (HTTP if the symbol is alone in the batch) | Claim | Cache entry | signals row | Evidence |
+| no symbol / bad price / age > expiry | INVALID_SYMBOL, INVALID_PRICE, EXPIRED (200) | not taken | not set | none | R 905-926 |
+| symbol already claimed | IN_PROCESS (200) | not taken (held by the earlier signal) | untouched | none | R 934-935, 1083-1085 |
+| (symbol, scanner) in cache | DUPLICATE (200) | released | kept | none | R 940-945 |
+| cache set; INSERT ok; queue ok | ACCEPTED (200) | held for the processor | kept for the window | QUEUED | R 947, 963-980, 1046-1072 |
+| INSERT ok; queue full | QUEUE_FULL (503) | released | removed | row set to QUEUE_FULL | R 1050-1068 |
+| IntegrityError; existing row QUEUE_FULL; re-queue ok | ACCEPTED, the existing signal_id (200) | held | kept | row set to QUEUED (a failed flip is only logged) | R 981-1013 |
+| IntegrityError; existing row QUEUE_FULL; queue still full | QUEUE_FULL (503) | released | removed | unchanged | R 996-1001 |
+| IntegrityError; any other existing row (or none found) | DUPLICATE (200) | released | kept | the existing row only | R 1014-1015 |
+| INSERT fails otherwise | STORE_ERROR (503) | released | removed | rolled back (ST 534-541) | R 1016-1044 |
+| an exception inside the IntegrityError handler (e.g. the SELECT at R 987-991) | 500 for the whole request | held | kept | none for this symbol | R 981-1015 (no inner guard; the sibling handler at R 1016 does not catch it), R 525-528 |
+- The batch answers 503 if any symbol is QUEUE_FULL or STORE_ERROR (R 66, 730-734), else 200. FACT.
+- Recording (as far as the mechanism goes): IN_PROCESS and cache DUPLICATE leave no signals row; neither does a database
+  DUPLICATE (only the earlier row exists). The request's webhook_audit row carries accepted/rejected counts only when the answer
+  is 200 (R 506-517, 529-534); a 503 or 500 answer records 0 and 0. No per-symbol reason for a refusal is stored. Re-verifies
+  C-001 A-L7. FACT.
+- Writers of the statuses: the receiver returns IN_PROCESS and DUPLICATE in its response only (R 935, 945, 1015). Count-only
+  search D25 found the quoted literals in S-RT also in reports, the dashboard reader and scripts/eod_cleanup.py (2); the last was
+  not read (bookmark C-005/BM-03). The schema still allows both as stored values (SQL 60-65).
+- Re-verifies C-004 L-13 (FACT, code path; occurrence not established): an exception raised inside the IntegrityError handler
+  escapes _process_signal, the loop and _process_request, and _handle_webhook answers 500 (R 525-528); symbols earlier in the batch
+  may already be stored and queued; the failing symbol's claim and cache entry stay held. See section 4 for how long.
+
+==============================================================================
+3. CONFIGURATION (key, value, transformation, consumers)
+==============================================================================
+| Item | Source | Value at the pin | Transformation / consumer | Evidence |
+| webhook.dedup_window_seconds | CFG 337 | 300 | R: int(getattr(cfg, ..., 300)); TypeError/ValueError -> 300; max(60, value) -> cache ttl and fingerprint bucket | CFG 337; R 171-175, 230-237, 952 |
+| claim timeout | constant | 60.0 s | sweeper threshold | R 208, 1195 |
+| sweep interval | constant | 60.0 s | sweeper wait | R 1189 |
+| cache size | constant | 10,000 entries | TTLCache maxsize | R 237 |
+| signal_queue.expiry_sec | config (key read by R and passed to P) | not re-read here (C-004/C-009) | EXPIRED before the claim | R 679, 925-926; M 3613-3614 |
+| portfolio_allocator.allocator_mode | CFG 565 | "shadow" | the enforce hand-off (which holds the claim) is not taken | CFG 564-565; P 1147-1168 |
+| signal_retention_days | CFG 482 | 90 (comment: keep window for terminal "NOISE fingerprints (EXPIRED/DUPLICATE/REJECTED_*)") | retention (C-007); not traced | CFG 482 |
+- FACT (CONFIG): the webhook block (CFG 327-342) holds no other dedup or in-flight key. The receiver resolves the block as
+  config.webhook or config.system.webhook (R 171-175); M passes app_config (M 3407-3415).
+- UNKNOWN / NOT ESTABLISHED: how core/config_loader.py declares dedup_window_seconds (type, default, validation): one line
+  there (search D20), not read (expansion request X-2 in the inventory). Other consumers by name only: ops_dashboard capacity
+  service (1 line), records and tests (D20). The host's deployed value: not established (no host record read).
+
+==============================================================================
+4. LIFECYCLE TABLES
+==============================================================================
+4.1 The claim (R self._in_flight). FACT (SOURCE-VERIFIED) unless marked.
+| Event | Effect | Evidence |
+| taken | atomically under the lock, only if absent; both timestamps = now | R 1074-1091; test: 50 concurrent claims, one wins (section 7) |
+| renewed | update_heartbeat (R 1110-1120) is the only renewal; no runtime caller exists (D16: R and tests only); P's five checkpoints call _heartbeat (P 899, 1023, 1129, 1346, 1382), a no-op because M builds P without in_flight_heartbeat_fn (M 3575-3623; D17) | KNOWN DEFECT (B-007 sections 11 and 19), re-verified |
+| released by R | on every refusal after the claim: cache DUPLICATE, database DUPLICATE, both QUEUE_FULL paths, STORE_ERROR | R 944, 1014, 1000, 1067, 1031 |
+| released by P | finally of _process_one, unless requeued or handed_off | P 1248-1271 |
+| held across a re-queue | rate-limit pre-check re-queue (P 418-427, returns at 461); BrokerRateLimitError re-queue with retry_count < 3 (P 1486-1525) | P 1260-1262 (comment: "lock must travel with signal") |
+| released after a failed re-queue | pre-check queue full (P 428-460); placement re-queue queue full or 3 retries exhausted (P 1493-1499, 1526-1532 -> finally) | P 456-460, 1531 |
+| released on timeout | requeued stays False (P 1470-1484) -> finally | P 1476, 1484 |
+| allocator enforce | held until admit_prepared (P 1699-1703, unless requeued) or reject_prepared (P 1733-1737); not taken with allocator_mode "shadow" | P 1150-1160; CFG 565 |
+| evicted | sweeper every 60 s removes entries with heartbeat older than 60 s and logs CRITICAL | R 1182-1207 |
+| restart | the dict is built empty in __init__; nothing is loaded | R 206 |
+| shutdown | stop() sets the 503 flag and stops the sweeper | R 1166-1176, 485-490; M 1686, 1690 |
+- INTERPRETATION (code path; with no heartbeat renewal at the pin): any claim still held at a sweep more than 60 s after it was taken
+  is evicted, so a claim lasts at most about 60 to 120 s whatever the processing state (B-007 section 11 says the same). This
+  bounds C-004 L-13's held claim; the cache entry of that path is not bounded by the sweeper (4.2).
+- C5-L1 (AUDIT LEAD; INTERPRETATION; not observed): release (R 1093-1096, 1102-1108) pops by symbol with no owner check, and an
+  entry holds only two timestamps (R 1087-1090). After an eviction and a new claim for the same symbol by a later signal, the
+  earlier signal's release would remove the later signal's claim. Occurrence not established.
+
+4.2 The cache entry (R self._dedup_cache). FACT (SOURCE-VERIFIED).
+| Event | Effect | Evidence |
+| set | only when absent, before the INSERT | R 941-947 |
+| kept | ACCEPTED (both paths), cache DUPLICATE, database DUPLICATE, the L-13 path | R 945, 1012-1015, 1072 |
+| removed early | QUEUE_FULL (both paths) and STORE_ERROR, so the sender's retry is not bounced | R 998-999, 1029-1030, 1065-1066 |
+| expires | window seconds after the set (EXTERNAL, library behaviour) | R 237 |
+| restart | built empty in __init__ | R 237 |
+- FACT (TEST TEXT): after a manual eviction of the claim, the same (symbol, scanner) within the window is still DUPLICATE through
+  the cache (TWR 1373-1443); that test's name and docstring say the symbol "can be readmitted", its assertion expects DUPLICATE.
+
+4.3 The fingerprint row (signals). FACT (SOURCE-VERIFIED) unless marked.
+| Event | Effect | Evidence |
+| written | the INSERT of an accepted symbol (status QUEUED) | R 963-980 |
+| collision | IntegrityError on the unique index -> re-queue of a QUEUE_FULL row, or DUPLICATE | R 981-1015; SQL 82-83 |
+| rolled back | any other INSERT failure: the transaction rolls back (BEGIN IMMEDIATE ... ROLLBACK on any exception) | ST 506-541 |
+| restart | rows persist; the guard still applies for the same bucket and receipt date | SQL 82-83 |
+| pruning | retention of fingerprint-bearing rows: C-007 (CFG 482; scripts/db_retention.py had no C-005 term, D-searches) | - |
+- INTERPRETATION (code path): after a restart the cache is empty, so a repeat is refused only by the fingerprint, i.e. only within
+  the same epoch bucket and receipt date; a repeat in the next bucket would be accepted even if under 300 s after the first.
+  Re-verifies A-011 section 14 (claims and cache not rehydrated; the database fingerprint remains).
+
+4.4 BM-01 placed in one table (frozen statements against the pin; HISTORICAL vs FACT).
+| Frozen statement | At the pin | Fit |
+| B-009 s.5: released on every processor path except re-queue and the allocator hand-off | P 1248-1271 plus P 456-460, 1699-1703, 1733-1737; the pre-check re-queue also keeps the claim (P 418-427) | agrees (both re-queues) |
+| C-004 L-13: claim and cache held on one receiver error path | R 981-1016, 525-528 | agrees; the claim is then freed by the sweeper (4.1), the cache entry lasts its window |
+| B-007 s.11: evicted after more than 60 s without heartbeat; heartbeat not renewed | R 1182-1207, 1110-1120; M 3575-3623; P 664-673 | agrees |
+| C-002 s.13.6: a concurrent repeat of the same symbol gets IN_PROCESS | R 934-935, 1083-1085; M 3994 (8 threads) | agrees while the claim is held; not after an eviction (4.1) |
+Result: no contradiction between the four; combined, they show two latent gaps recorded as leads (4.1 eviction during processing,
+already B-007's known defect; C5-L1). Not resolved here.
+
+==============================================================================
+5. CALLERS, CALLEES AND WIRING (FACT (SOURCE-VERIFIED))
+==============================================================================
+- M builds the receiver first (M 3406-3415) and gives the processor release_in_flight (M 3611-3612); no in_flight_heartbeat_fn
+  (M 3575-3623). Count-only: only M and the P docstring (P 148) name release_in_flight outside R and tests (D18); WebhookReceiver(
+  and SignalProcessor( are constructed in M only among runtime files (D19).
+- R calls: core.ids.new_signal_id (R 55, 957); the store's transaction() and fetch_one (R 964, 987, 1003, 1053); the queue
+  (R 995, 1049). The processor receives the queue tuple (signal_id, scanner, symbol, price, triggered_at) (R 1047; P 886) and
+  releases by tuple element 2, the symbol (P 413, 1269).
+- P's dispatcher submits each queue item to a worker pool and drains the queue after stop (P 377-399).
+- Different mechanism, same words: P keeps its own _in_flight_count under its own lock (P 892, 1249-1258), and A-005 section 7
+  (HISTORICAL) records that the risk engine counts in-flight signals. Neither is the receiver's claim (bookmark C-005/BM-05).
+
+==============================================================================
+6. CONCURRENCY, RESTART, SHUTDOWN, REPLAY, EOD, PAPER/LIVE
+==============================================================================
+- Concurrency (FACT): waitress serves the receiver with threads=8 (M 3987-3998); the claim's check-and-set and the cache's
+  check-and-set are each under one lock (R 1083-1091, 941-947); the cache-hit path releases the claim while holding _dedup_lock
+  (R 941-945), the only lock nesting in the ranges read. The claim is per symbol across scanners, the cache and fingerprint per
+  scanner: a second scanner's alert for a claimed symbol gets IN_PROCESS (R 934-935) and is accepted once the claim is gone
+  (INTERPRETATION).
+- Restart and shutdown: 4.1 to 4.3; A-011 section 14 re-verified.
+- Replay (FACT): scripts/replay_signals.py (72763c3ed8d5d8fe43258619d55840f2780cfa96) reads stored signals rows (SELECTs at its
+  lines 44, 59, 107; docstring RP1 at line 16, "Read-only: NO database writes"), has no INSERT or UPDATE matched, and names no
+  claim, cache or fingerprint (D01, D04, D05: 0). It never meets the intake guards; refused repeats are not rows, so not replayable
+  (INTERPRETATION).
+- EOD route (FACT): _handle_eod (R 751-835, reached at R 564) references none of the three guards (grep of R); the EOD capture
+  table has its own UNIQUE(symbol, trading_date) / primary key "belt-and-suspenders with the receiver dedup" (SQL 1548-1550, 1602;
+  ST 3080 comment). C-011's.
+- Paper/live (FACT, limited): R contains no "paper" or "mode" word (grep); P's release logic has no mode branch in the ranges read;
+  a P comment says paper runs the same timeout handler (P 1476-1477), and the allocator setting is "paper+live" (CFG 565 comment).
+  Parity beyond that: NOT ESTABLISHED.
+
+==============================================================================
+7. TESTS (documentary only; none run; FACT (TEST TEXT))
+==============================================================================
+- TWR: queue full -> 503 then retry ACCEPTED, not DUPLICATE (402-462); store failure releases both claims and the retry is
+  ACCEPTED (524-590); a mixed batch (RELIANCE ACCEPTED, TCS STORE_ERROR) answers 503 (612-616); same fingerprint same minute
+  -> DUPLICATE (625-644); within TTL DUPLICATE, after TTL ACCEPTED (649-707); the window drives the TTL (712-720); same epoch bucket within
+  5 min (726); duplicate across a minute boundary refused via the database (755-795); after the full window ACCEPTED (804-873);
+  symbol in flight -> IN_PROCESS (878-901), then DUPLICATE (909); sweeper evicts old entries (914-936); concurrent posts keep the
+  queue consistent (1041-1069); heartbeating claims are not evicted, a 90 s stall is (1294-1368); eviction then repeat ->
+  DUPLICATE (1373-1443); update_heartbeat (1448, 1478).
+- tests/unit/test_e4_event_loop_safety.py (db8cb8b39f028402ad330adc21b707e0d62f2fbe): 503 after stop() (319-336); receiver
+  stopped before processor (339-373); 50 concurrent claims of one symbol, exactly one wins (380-408).
+- tests/integration/test_end_to_end_smoke.py (7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2): a repeated body -> DUPLICATE or
+  IN_PROCESS, either accepted (312-348); its docstring ties DUPLICATE to the fingerprint (321), while at the pin the cache answers
+  first (R 940-945).
+- TSP: release on screener skipped, screener rejected, rejection, success, placer exception (832-933); rate-limiter re-queue
+  (2144-2167); timeout without re-queue keeps the reservation (2301-2317); rate-limit still re-queued (2324-2340).
+- Crash-test tools (never run; one sends live POSTs): signal_injector.py has a "duplicate" mode (lines 209, 217, 241);
+  state_inspector.py selects signals rows with status 'IN_PROCESS' (88-90) and state_machine_validator.py lists IN_PROCESS and
+  DUPLICATE as stored states (65, 93-108), which the pinned receiver never stores (section 2).
+- test_signal_status_classification.py: the report helper tells the dedup "DUPLICATE" from "REJECTED_DUPLICATE_SYMBOL" (133-157).
+
+==============================================================================
+8. FROZEN LEADS RE-VERIFIED AT THE PIN
+==============================================================================
+| Lead | Result |
+| C-004 L-04 (case reaches the keys) | confirmed (R 701, 940, 953, 1084) |
+| C-004 L-13 (held on one error path) | confirmed (R 981-1016, 525-528); bounded for the claim by the sweeper, not for the cache |
+| B-007 ss.11, 19 (heartbeat not renewed; 60 s sweeper) | confirmed (R 1110-1120, 1182-1207; M 3575-3623; P 664-673; D16, D17) |
+| B-007 s.20 (did the sweeper ever evict a live claim?) | not answerable from source (records question) |
+| B-009 s.5 (outcomes; 300 s; release except re-queue and hand-off) | confirmed ("TTL 237, config 337" = R 237 and CFG 337) |
+| B-006 TH4 (sweeper thread) | confirmed (R 215-220) |
+| A-011 s.14 (not rehydrated; fingerprint remains) | confirmed (R 206, 237; SQL 82-83) |
+| C-002 ss.6.1, 6.4, 13.6, 13.4 | 6.1, 6.4, 13.6 confirmed (M 3612; R 1166-1176; M 3994, R 928-935); 13.4 is a record (HISTORICAL), cited |
+| C-003 s.6.5 (repeats after authentication: expiry, cache, fingerprint) | confirmed (R 925-926, 940-947, 952-954, 981) |
+| C-001 A-L7, A-L9 | A-L7 confirmed (R 934-945, 506-517); A-L9 is a record (HISTORICAL), cited |
+
+==============================================================================
+9. NEW LEADS AND OPEN QUESTIONS (not resolved; INTERPRETATION unless marked)
+==============================================================================
+- C5-L1. Release by symbol can remove a later signal's claim (4.1).
+- C5-L2. Two window shapes: the cache window is anchored at the first receipt and not renewed, the fingerprint is a fixed bucket
+  of triggered_at per receipt date (section 1); after a restart only the bucket applies (4.3).
+- C5-L3. FACT (TEXT DRIFT): schema comments (SQL 74, 81), a test's name and docstring (TWR 1373-1376) and the smoke test's
+  docstring (321) describe older behaviour; the crash-test tools model stored IN_PROCESS/DUPLICATE (section 7).
+- C5-L4. FACT: a failed status flip on the re-queue path is only logged and the answer is still ACCEPTED (R 1002-1013); the row
+  then shows QUEUE_FULL while its entry is queued, until the processor writes PROCESSING (P 897). Owner C-006/C-007.
+- OPEN QUESTION (records, not source): how often IN_PROCESS, cache DUPLICATE and database DUPLICATE occurred live; C-002
+  section 13.4 (HISTORICAL) puts expected duplicates at about 80% of symbol arrivals.
+
+==============================================================================
+10. CROSS-TOPIC BOOKMARKS (noted only)
+==============================================================================
+- C-005/BM-01 (B-007, B-009, C-002, C-004): lifecycle table built (4.4); no contradiction; leads 4.1 and C5-L1 go to the final
+  V2 design review.
+- C-005/BM-02 (C-006, C-007): C5-L4, the re-queue path's failed flip.
+- C-005/BM-03 (C-007, B-010): scripts/eod_cleanup.py names fingerprint (12 lines), IN_PROCESS and DUPLICATE (D02, D03, D05, D25);
+  not read (expansion X-1); CFG 482 speaks of retaining DUPLICATE fingerprints that the pinned receiver does not write.
+- C-005/BM-04 (C-008, A-008 s.14): after an eviction (4.1) or C5-L1, a same-symbol repeat reaches the processor; what the
+  downstream same-symbol rules then do (P 802; the risk engine's DUPLICATE_SYMBOL, D24) is C-008's and A-008's.
+- C-005/BM-05 (A-005 s.7, C-008): two "in-flight" mechanisms share a name (section 5).
+- C-005/BM-06 (C-011): the EOD route bypasses the three guards and relies on its table's own key (section 6).
+
+==============================================================================
+11. DECLARATION
+==============================================================================
+Followed: production snapshot at the pin only; every range read through the masking filter with its pinned blob logged
+(46 calls, all matching the pin); the protected-path check ran before every read and stayed at 0; count-only searches first;
+no test or code run; no VM, host, broker, webhook, Chartink or live service contacted; no host record read; no repository change,
+commit or push; no V2 policy decided; the frozen manuals used as leads and cited, not as source evidence.
+Deviations: one included file was read beyond its cited range: tests/unit/test_e4_event_loop_safety.py 380-410, to finish the
+test that begins on the cited range's last line. Notes: core/state_store.py 506-563 (transaction()) was read as a direct callee
+of the INSERT path (register row 6); no file outside the register was read. Two expansions are requested, not read
+(inventory section 5).
+END

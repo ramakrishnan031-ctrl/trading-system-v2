@@ -1,0 +1,157 @@
+C-005 - DEDUPLICATION AND IN-FLIGHT HANDLING
+SOURCE INVENTORY AND METHOD (Stage 1 research log; companion to C-005_CLAUDE_REPOSITORY_ANSWERS_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 15:22 to 15:40 IST. Authority: ChatGPT's C-005_CHATGPT_STAGE0_REVIEW_AND_STAGE1_GO_AHEAD_23-OCT-2026.txt
+(received through Rama at 15:20 IST) and the Stage 0 plan.
+
+==============================================================================
+1. REPOSITORY / CHECKOUT
+==============================================================================
+- trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb (root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa);
+  GitHub main equal to the pin at 14:55 IST (Stage 0). The project's blob-less partial clone, sparse working tree (the C-002
+  scope lists).
+- Every read went through cread.py (C-005 copy): it refuses never-open paths, runs sensitive_check.py before the read and refuses
+  unless it exits 0, takes the pinned blob from git ls-tree, hashes the working file (git hash-object --no-filters), prints the
+  file only through mr.py (mask_read2.py plus the stage-2 mask), and appends one row to the read log (IST time, mode, argument,
+  path, pinned blob, match, line count, printed lines, mask footers, nev0=ok). No legacy content is written to the log.
+- Workflow recorded before any module analysis: S/c005/notes/workflow_recorded.md (15:23 IST).
+
+==============================================================================
+2. FILES READ (46 logged calls; every call: working file = pinned blob; protected-path check = 0)
+==============================================================================
+Columns: path | blob | lines | what was read (range = full lines printed; grep = only lines matching the pattern were printed)
+- signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1,208 | ranges 141-257, 477-535, 640-750,
+  892-1010, 1010-1125, 1126-1208; grep x3 (definitions and the C-005 terms; retryable statuses, audit calls and imports;
+  "paper"/"mode" and the two call sites)
+- signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 2,704 | ranges 127-225, 377-486, 664-673,
+  867-905, 1146-1172, 1180-1276, 1470-1540, 1646-1745; grep x2 (definitions, release and heartbeat lines; re-queue and hand-off
+  flags)
+- main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4,294 | ranges 3404-3420, 3575-3625, 3986-3998; grep x1 (release,
+  heartbeat, in_flight, construction, server and stop calls)
+- core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 1,655 | range 36-94; grep x1 (fingerprint, the two statuses, dedup)
+- config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 754 | range 327-346; grep x1 (dedup, fingerprint,
+  DUPLICATE, the webhook block, allocator keys)
+- core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 3,356 | range 506-563 (transaction()); grep x1 (dedup,
+  IntegrityError, fingerprint, transaction, fetch_one, rollback)
+- core/ids.py | 5e8b17bdd97f7ed37d7b4229e18353cb62ecd2ff | 125 | grep x1 (dedup; function definitions)
+- scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 244 | grep x1 (docstring, definitions, SQL verbs,
+  status, queue, HTTP and C-005 terms)
+- tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2,043 | range 1372-1447; grep x2 (test
+  definitions; assertions on the outcomes and structures)
+- tests/unit/test_e4_event_loop_safety.py | db8cb8b39f028402ad330adc21b707e0d62f2fbe | 737 | ranges 319-380, 380-410; grep x1
+  (test definitions and section headings)
+- tests/integration/test_end_to_end_smoke.py | 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 800 | grep x1 (tests, C-005 terms)
+- tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 2,501 | grep x2 (release/re-queue test
+  definitions; assertions)
+- grep x1 each, pattern = the C-005 terms (in_flight, IN_PROCESS, DUPLICATE, dedup, fingerprint):
+  tests/integration/test_full_signal_flow.py (376a2ee815f798d84857cb777f87617bf5b545c9, 634),
+  tests/crash_test/signal_injector.py (b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125, 248),
+  tests/crash_test/state_inspector.py (b018481f3333c61838b59060f7e582e1b432f443, 246),
+  tests/crash_test/state_machine_validator.py (5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe, 277),
+  tests/unit/test_fix133_replay_signals.py (dd8123e31fb1648ad89d61bf009723d3bf294a8a, 208),
+  tests/unit/test_signal_status_classification.py (fd05297f4fea7814297172c7e5c605ccee210698, 213).
+Read outside the legacy repository (not legacy evidence): the frozen V2 manuals at V2 main ad68ad4 (cited, read-only, in Stage 0);
+ChatGPT's review file; the Stage 0 answer file.
+
+==============================================================================
+3. SEARCH REGISTER (count-only; per-file counts saved in S/c005/search/<ID>.txt; no matching line printed)
+==============================================================================
+Scopes (the C-002 lists, unchanged): S-ALL 1,262 checked-out files; S-RT 281 .py files outside the test folders; S-CODE 869 code
+and configuration files, tests included; S-TESTS 486 files under the test folders.
+| ID | Scope | Pattern | Result (files / lines) | Used for |
+| D01 | S-ALL | in_flight, inflight, in-flight (any case) | 125 / 1,020; S-RT: 22 files, led by P 91, R 50, order_reconciler 42, risk_engine 33 | the mechanism's files; the other S-RT files are order, capital and report modules by name (not read) |
+| D02 | S-ALL | IN_PROCESS | 23 / 57: R 2, SQL 1, reports/signal_status.py 1, scripts/eod_cleanup.py 1, tests, records | writers of the status |
+| D03 | S-ALL | DUPLICATE (word) | 58 / 163; runtime: R 6, CFG 1, config_loader 1, kill_switch 1, order_reconciler 4, eod_cleanup 1, reports | same |
+| D04 | S-ALL | dedup (any case) | 125 / 479; S-RT 29 files, R 29 | other dedup layers by name |
+| D05 | S-ALL | fingerprint (any case) | 152 / 461; S-RT 12 files: R 13, eod_cleanup 12, the others security, evidence, configuration and report modules by name (not read) | fingerprint users |
+| D06 | S-RT | claim (word start) | 30 / 100; R 15 | claim users |
+| D07 | S-RT | release_in_flight or _release...( | 10 / 47 | release sites |
+| D08 | S-RT | heartbeat | 58 / 368 (mostly cron and monitoring modules by name); R 26, P 14 | heartbeat users |
+| D09 | S-RT | sweep | 20 / 103; R 11 | sweepers |
+| D10 | S-RT | seen | 36 / 110; R 2 | seen-state |
+| D11 | S-RT | ttl | 14 / 47; R 4 | TTLs |
+| D12 | S-RT | IntegrityError | 4 / 5: R 2, ST 1, fund_manager 1, fetch_daily_candles 1 | database-duplicate handlers |
+| D13 | S-RT | replay (word start) | 18 / 119; replay_signals 44 | replay tool |
+| D14 | S-CODE | dedup, in_flight, fingerprint | 153 / 1,056; non-.py config: SQL 14, docs/locked_decisions.yaml 7, CFG 2, cron_registry.yaml 1 | config and schema |
+| D15 | S-TESTS | the C-005 terms | 144 / 917 | test candidates |
+| D16 | S-ALL | update_heartbeat | 3 / 15: R 1 (the definition), TWR 13, one record | no runtime caller |
+| D17 | S-ALL | in_flight_heartbeat | 1 / 5: P only | never wired |
+| D18 | S-ALL | release_in_flight | 6 / 26: R 10, M 1, P 1, tests, records | wiring |
+| D19 | S-ALL | WebhookReceiver( or SignalProcessor( | 16 / 25; runtime: M 2, the two docstrings | construction sites |
+| D20 | S-ALL | dedup_window_seconds | 13 / 28: R 6, CFG 1, core/config_loader.py 1, ops_dashboard capacity service 1, tests, records | key consumers |
+| D21 | S-ALL | fingerprint_date | 101 / 161: R 4, SQL 2, eod_cleanup 1, t2_cnc_gtt_realtest 1, many tests, records | users of the date column |
+| D22 | S-ALL | _dedup_cache, _in_flight (word), _claim_in_flight | 28 / 145: R 27, P 9, risk_engine 4, M 1, others | the structures' users |
+| D23 | S-ALL | DROPPED_DEDUP | 4 / 5: scripts/generate_screened_stocks_csv.py 2, tests, a record | another dedup status (EOD/screened list) |
+| D24 | S-RT | DUPLICATE_SYMBOL | 8 / 12: risk_engine 5, others | the downstream same-symbol rule |
+| D25 | S-RT | quoted 'IN_PROCESS' or 'DUPLICATE' | 6 / 15: R 3, reports, dashboard reader, eod_cleanup 2 | status literals |
+Limits: a count names files, it reads nothing; where a file was not read, the answers say so.
+
+==============================================================================
+4. CONDITIONAL ROWS OF THE STAGE 0 REGISTER: DECISIONS
+==============================================================================
+| Row | File | Decision | Reason |
+| 5 | main.py | INCLUDED | wiring ranges (M 3404-3420, 3575-3625, 3986-3998) |
+| 6 | core/state_store.py | INCLUDED (one range) | transaction(), the INSERT's callee (ST 506-563); its other hits are not C-005 (ST 2803, 3080 by grep) |
+| 7 | core/ids.py | EXCLUDED after grep | the signal_id is in no key; its one "dedup" line concerns broker tags (line 112) |
+| 8 | core/migrations.py | EXCLUDED | no C-005 term (only "seen", D10); the fingerprint key is defined in SQL 82-83 |
+| 9 | core/db_connect.py | EXCLUDED | no hit in D01 to D25 |
+| 10 | core/events.py | EXCLUDED | no hit |
+| 11 | signals/entry_throttle.py | EXCLUDED | no hit |
+| 12 | scripts/replay_signals.py | INCLUDED (grep) | D13; it reads rows only |
+| 13 | config/scan_webhook_map.yaml | EXCLUDED | the keys use the URL scanner name (R 940, 953), not the map |
+| 14 | scripts/db_retention.py | EXCLUDED | no hit; retention is C-007 |
+| 19 | tests/integration/test_full_signal_flow.py | EXCLUDED after grep | fingerprint only in fixture column lists (122, 363) |
+| 20 | tests/crash_test/ (4 helpers) | signal_injector, state_inspector, state_machine_validator INCLUDED (grep); idempotency_tester EXCLUDED (no hit) | documentary |
+| 21 | replay tests | test_fix133_replay_signals EXCLUDED after grep (fixtures, 42, 74); test_fix190_incident_replay EXCLUDED (no hit) | - |
+| 22 | tests/unit/test_state_store.py | EXCLUDED | its 33 term lines test the store, not the receiver's guards (D15 counts; not read) |
+| 23 to 26 | test_ids, test_events, test_entry_throttle, test_db_retention | EXCLUDED | no hit |
+| 27 | tests/unit/test_signal_status_classification.py | INCLUDED (grep) | the report helper's dedup classification |
+| 28 | test_c2_webhook_lockdown, test_s4_webhook_degrade | EXCLUDED | no hit |
+| 29 | the three schema tests | EXCLUDED (as planned) | migrations name no fingerprint term (row 8) |
+Rows 1 to 4 and 15 to 18 were INCLUDE in Stage 0 and were read as above; rows 30 to 32 (records) were cited, not read.
+
+==============================================================================
+5. EXPANSIONS REQUESTED (not read; for review before any reading)
+==============================================================================
+- X-1. scripts/eod_cleanup.py (not in the Stage 0 register; not a name hit): 12 fingerprint lines, the IN_PROCESS and DUPLICATE
+  literals and one fingerprint_date line (D02, D03, D05, D21, D25). Reason: it may change or prune fingerprint-bearing rows or the
+  two statuses, which would touch the database guard's lifecycle (answers 4.3, bookmark C-005/BM-03). Owner if read: C-007 or
+  B-010.
+- X-2. core/config_loader.py, the one line naming dedup_window_seconds (D20). Reason: the loader's type, default and validation of
+  the key (answers section 3). Owner: B-002 (frozen).
+
+==============================================================================
+6. NEVER-OPEN / SECURITY ATTESTATION
+==============================================================================
+6.1 The two populations of 102 (ChatGPT's clarification point 2):
+  - P1, protected paths: 102 tracked paths match the never-open list (by class: 1 root dotfile, 21 config, 80 docs). They were
+    removed before the Stage 0 name search; 7 of them would also have matched the name patterns. None is named here.
+  - P2, excluded name hits: 102 of the 138 name hits among the other 1,336 paths, listed in Stage 0 section 3 F.
+  - Overlap P1 and P2: 0, by construction (P2 is drawn only from paths outside P1). The equal counts are a coincidence.
+6.2 sensitive_check.py ran before each of the 46 reads (cread.py refuses otherwise; every log row nev0=ok) and at delivery
+    (section 8): never-open blobs present locally 0; local object count unchanged at 8,922 (no fetch).
+6.3 Nothing from P1 was opened, fetched or searched (the scope lists exclude it). No host record was read.
+6.4 Working output showed masked code only (mask footers in the read log). The deliverables are scanned value-blind at
+    delivery (section 8).
+
+==============================================================================
+7. DEVIATIONS / OPEN ITEMS
+==============================================================================
+- One range beyond a cited one inside an included file: tests/unit/test_e4_event_loop_safety.py 380-410 (the test that begins on
+  line 380, the cited range's end).
+- No file outside the register was read; X-1 and X-2 wait for review.
+- No independent agent check was run (Rama's lean workflow of 23-Oct-2026); the checks of section 8 are self-checks.
+- Test grep outputs were filtered in the shell before viewing; the log's printed-line counts are the filter's output.
+
+==============================================================================
+8. CHECKS AT DELIVERY (15:40 IST, after the last legacy read; self-checks, no agent)
+==============================================================================
+- sensitive_check.py: never-open blobs present locally 0; local objects 8,922 (unchanged since Stage 0).
+- Read log: 46 rows; every row "match" (working file = pinned blob) and nev0=ok.
+- Citations in the answers file: 216 alias citations (R, P, M, SQL, CFG, ST, TWR, TSP), all within each file's line count;
+  those outside the logged range reads are lines printed by the logged grep reads (CFG 482, 564-565; M 1686, 1690; P 802, 1023,
+  1129, 1346, 1382; R 52, 55, 66, 564, and R 751-835 for "no guard reference" from the term grep; SQL 1548-1550, 1602; ST 3080).
+- 40-character IDs in both files: the pin, the root tree and blob IDs of the pinned listing only; every path-blob pair matches
+  the listing (11 and 18 pairs).
+- scan_ids.py (value-blind): only the known 40-character IDs (11 and 19 hits); no client-ID, address, e-mail, credential or key
+  shape. No session link. ASCII only.
+END
