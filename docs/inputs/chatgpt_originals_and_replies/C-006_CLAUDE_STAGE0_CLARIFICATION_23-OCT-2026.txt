@@ -1,0 +1,160 @@
+C-006 - QUEUE HANDLING
+STAGE 0 CLARIFICATION: PROTECTED-PATH STATUS OF config/system_config.yaml, AND THE REVISED STAGE 1 READING ORDER
+Answers C-006_STAGE0_REVIEW_AND_CLARIFICATION_REQUEST_23-OCT-2026.txt (items A to D, and the scope guard of its item 3).
+Date of work: 23-Oct-2026 (IST), 16:32 to 16:43 IST. Prepared by: Claude.
+Status: update to the Stage 0 inventory only. No legacy source content opened. Stage 1 not started.
+
+ANSWER IN BRIEF
+- A. config/system_config.yaml is NOT one of the 102 protected (never-open) paths. It matches none of the 13 rules that define
+  them (section 2).
+- B. Not applicable, because the file is not protected. No exception is proposed.
+- C. Evidence: the rule's own text (section 1), a classification of every path at the pin (section 2), and a refusal-only test
+  of the gate (section 3). The gate refused all 102 protected paths, 14 invented rule-shaped names, and the one permitted path
+  that holds a protected file's content under another name.
+- D. The revised Stage 1 reading order is in section 5. The file stays in step 2, read only through the gate and the masking
+  filter, and only at its queue and processor blocks.
+- The Stage 0 summary line "No question blocks Stage 1" is withdrawn. This question did block it; it is answered here, and
+  Stage 1 still waits for ChatGPT/Rama's authorisation.
+
+==============================================================================
+1. WHERE "PROTECTED" IS DEFINED
+==============================================================================
+- The rule is in docs/governance/V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md section 4 (V2 main 3e26ec1): "Never open, fetch
+  or read: .env and .env.*; config/accounts.csv; config/accounts_multi_example.csv; config/security.yaml;
+  config/reference_data/; docs/web_claude/ (anywhere); token or session files; gui_config.local.yaml; *.db files; logs.
+  sensitive_check.py (section 8) encodes this list." The Section B handover has the same list.
+- The rule protects three named config files and one config folder, not config/ as a whole. It does not name system_config.yaml.
+- The rule is encoded as one pattern of 13 rules. The pattern text is identical in sensitive_check.py, C-005's cread.py,
+  classify.py, diag_never_open.py and the new cread_c006.py (compared by parsing each script's source, without running it):
+  R1 .env and .env.* (any folder); R2 config/accounts*; R3 config/security.yaml; R4 config/reference_data/; R5 docs/web_claude/
+  (any folder); R6 gui_config.local.yaml (any folder); R7 to R10 *.db, *.db-wal, *.db-shm, *.sqlite and *.sqlite3; R11 logs/
+  (any folder); R12 data_store/session/; R13 *token*.json.
+
+==============================================================================
+2. PATH CLASSIFICATION AT THE PIN (path names and blob IDs only; no file opened)
+==============================================================================
+Source: the saved tree listing of 970aabf. It is byte-identical to a fresh git ls-tree -r HEAD taken at 16:38 IST (SHA-256
+1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5), and the clone's HEAD is the pin. The classification was run
+by Claude's own script, classify_c006.py, which reads path names only.
+| Population | Paths | Result |
+|---|---|---|
+| Tracked files | 1,438 | 102 protected, 1,336 permitted |
+| Protected, by rule | 102 | R1 1 (.env.example, at the root); R2 2; R3 1; R4 18; R5 80; R6 to R13 0. No path matches two rules. |
+| config/ | 51 | 21 protected: config/accounts.csv and config/accounts_multi_example.csv (R2), config/security.yaml (R3), and 18 paths under config/reference_data/ (R4). 30 permitted, all .yaml: 14 in config/ itself, 16 in config/strategies/. |
+| config/system_config.yaml | 1 | In the tree with blob bf742ae5c81c60614370361998e6a102a1064ff7. Rules matched: 0 of 13 (also 0 with letter case ignored). No protected path has the same blob. Present in the working tree. |
+- Letter case: with case ignored, the rules match the same 102 paths, so no tracked path escapes them by letter case.
+- Protected content under a permitted name: the 102 protected paths have 102 distinct blobs. One permitted path,
+  docs/v2_design_spec.md, has the same blob as a path under docs/web_claude/ (known since C-001; design log lesson of
+  2026-10-21). It is not in the working tree, not in any scope list and not in the C-006 register. The new gate refuses it by
+  its blob (section 3).
+- Working tree: none of the 102 protected paths is present (checked by existence only).
+- Scope lists for count-only searches: S-ALL (1,262 paths), S-RT (281), S-CODE (869) and S-TESTS (486). Each holds 0 protected
+  paths and 0 paths with a protected blob, and every path in them is present. system_config.yaml is in S-ALL and S-CODE.
+- C-006 register: all 43 paths it names (32 candidates in rows 1 to 28 and 11 in rows 29 and 30) are in the tree with the blob
+  IDs given at Stage 0. None is protected, and none has a protected blob.
+Supporting records (V2 documents, not legacy source):
+- ChatGPT's C-006 prompt names config/system_config.yaml among its candidate starting paths.
+- 24 frozen manuals, from A-003 to C-005, cite lines of this file. Example: C-005 (DR-058) cites CFG line 337 (the dedup window)
+  and lines 564-565 (the allocator mode).
+- A-010 (frozen, DR-025), section 3, says that configuration files hold variable names, while consumers read the values from
+  the process environment (citing A-009 section 16). It also says that system_config.yaml holds the alert mailbox addresses in
+  plain text, which it marks "not secrets".
+- The file still holds values that must not be reproduced, so it is read only through the masking filter. C-005's two reads
+  of it (15:29 IST; pinned blob matched; never-open 0) printed masks, not values. The read log's mask counts for the whole
+  file are HOSTTOK 5, IPV4 2, KV 1, CLIENTID 1 and ALNUM 1: host- or address-like values, IP-like values, one key-value of a
+  secret-like shape, one ID-like and one long alphanumeric shape. All were masked.
+
+==============================================================================
+3. GATE TEST (refusal-only, 16:38 IST; no legacy file opened; no permitted file read or searched)
+==============================================================================
+| Call | Result |
+|---|---|
+| C-005's cread.py on each of the 102 protected paths | 102 refused: never-open path |
+| cread_c006.py on each of the 102 protected paths | 102 refused: never-open path |
+| cread_c006.py on docs/v2_design_spec.md | refused: shares a never-open blob |
+| cread_c006.py on 14 invented rule-shaped names (at least one per rule; only config/security.yaml is a real path) | 14 refused: never-open path |
+| cread_c006.py on a permitted-shaped name that is not in the tree | refused: not in the pinned tree listing |
+| ccount_c006.py on three lists: the 102 protected paths; main.py with the shared-blob path; main.py with a name not in the tree | each list refused as a whole; nothing searched |
+| sensitive_check.py, before and after the test | exit 0; 8,922 local objects; never-open blobs present locally: 0 |
+| Read logs (C-005's log and the C-006 logs) | unchanged; the C-006 logs were not created |
+Result: the gate blocks every protected path at the pin by its name, and the one permitted path holding protected content by
+its blob. A protected blob in the local store would block every read.
+Tooling changes (Claude's own scripts, not the legacy or V2 repositories):
+- cread_c006.py is C-005's cread.py with two more refusals: a path that is not in the pin's listing, and a path whose pinned
+  blob is a protected blob. Its check that the working file equals the pinned blob now runs before the read instead of after.
+- ccount_c006.py puts the same gate in front of every count-only search. C-005 ran its count searches directly over the
+  scope lists, with no per-file check. The lists hold no protected path and no protected blob (section 2), and their SHA-256
+  prefixes are the ones recorded since C-002, so C-005's count searches read no protected file.
+
+==============================================================================
+4. INVENTORY UPDATES (to the Stage 0 answers; that file itself is not changed)
+==============================================================================
+- Summary: "No question blocks Stage 1" is replaced by "One question blocked Stage 1: the protected-path status of
+  config/system_config.yaml (review item 2). It is answered in this clarification: not protected. Stage 1 waits for
+  authorisation."
+- Row 4 (config/system_config.yaml): classification added. Permitted (0 of 13 rules); read only through the gate and the
+  masking filter.
+- Row 13: the template's full path is ops_dashboard/frontend/templates/capacity.html, with blob
+  544e71c0e3785d82466256eae9a02b5076237a47 as listed. Stage 0's "templates/capacity.html" was a short form.
+- Section 4, never-open line: "102 never-open paths in the tree (1 root dotfile, 21 config, 80 docs)" is broken down by rule
+  in section 2 above.
+- Scope (Stage 0 section 2): the consumer side becomes "the dispatcher and its hand-off to the worker pool (interface only)".
+  The pool's own work queue is removed from scope. Q4 becomes: "Who dequeues, how many consumers exist, and what is handed to
+  the worker pool, by which call?"
+- Rows 27 and 28 (the two July records) are removed from Stage 1. Reading them needs a separate approval.
+- Line counts marked UNKNOWN stay UNKNOWN until a gated read records them.
+
+==============================================================================
+5. REVISED STAGE 1 READING ORDER (not executed; waits for authorisation)
+==============================================================================
+Scope guard for every step (review item 3):
+- Document the hand-off interface only.
+- Do not read the internals of other queues or worker queues, unless evidence shows they are on the signal-queue path and
+  ChatGPT/Rama approve the boundary.
+- C-007 (status, schema, retention) and C-008 (processing) stay bounded cross-references.
+- Frozen manuals are pointers to re-verify at the pin, never evidence on their own.
+- No code or test runs, no live or host access, no fixes, no V2 decisions, no commits and no pushes.
+0. Gate and method:
+   - Every read goes through cread_c006.py and every count-only search through ccount_c006.py.
+   - Before anything is opened, both refuse: the 102 protected paths (the 13 rules), any path outside the pin's listing, any
+     path with a protected blob, and any state with a protected blob in the local store.
+   - Output passes only through the masking filter and is logged with the pinned blob ID.
+   - No path is added to the sparse checkout without the blob-ID comparison (design log lesson of 2026-10-21).
+   - If a trace points to a protected path, that path stays unread and the fact is marked UNKNOWN / NOT ESTABLISHED. No
+     exception is requested.
+   - Count-only searches run first over S-ALL, S-RT, S-CODE and S-TESTS, with the Stage 0 terms. They settle the CONDITIONAL rows.
+1. main.py: the queue's construction and capacity source; its hand-over to the receiver and the processor (C-005 read lines
+   3406-3415 and 3575-3623); the shutdown order (lines 1681-1692); any start-time handling of QUEUED rows. Answers Q1 and Q6.
+2. config/system_config.yaml (permitted; section 2): the signal-queue block (B-009 cites lines 125-127) and the processor block
+   (lines 344-346, seen in C-005), read by range through the gate. core/config_loader.py: the queue settings' model only.
+   Answers Q1 and Q2.
+3. signals/webhook_receiver.py: the backpressure gate (lines 570-578), the health route's queue depth, the per-request answer
+   and depth headers (lines 730-745), the enqueue and both QUEUE_FULL paths (lines 992-1013 and 1046-1068). Answers Q2, Q3, Q7
+   and Q8; checks BM-02 and C5-L4.
+4. signals/signal_processor.py: start and stop (lines 304-348); the dispatcher and its hand-off to the worker pool, as an
+   interface only (lines 377-399); the pre-check re-queue (405-461); the item formats (867-893) and the first status write
+   (897); the placement re-queue and timeout paths (1470-1532); runtime metrics (683 onward); any SHUTDOWN or kill rejection of
+   queued items, located by the count search. Answers Q3 to Q6 and Q8.
+5. core/state_store.py, only the status-write function used on these paths; core/schema.sql, only the status set (lines 60-70).
+   C-007 owns the rest. Answers Q5.
+6. Conditional rows 8 to 17, only where step 0 points. For rows 13, 15 and 29 (other queues and observers): if step 0 or a
+   trace shows that the signal path uses another queue, stop and report the evidence for a boundary decision before reading it.
+7. Tests, as documents only (never run): rows 18 to 21 at the cited ranges; rows 22 to 26 only where step 0 points.
+8. Records (rows 27 and 28): not read in Stage 1.
+9. Outputs: repository answers with path, range, blob ID and label for each statement; a source inventory and read log; and
+   bookmarks for cross-topic points (W-9). Then stop for ChatGPT's reconciliation and manual.
+
+==============================================================================
+6. DECLARATION
+==============================================================================
+- Legacy source contents opened: NO. Only path names, blob IDs and file existence were used. The read and count tools were
+  called only with paths they refused.
+- Legacy code or tests run: NO. Claude's own scripts ran: the classification, sensitive_check.py and the refusal-only gate
+  test.
+- Live, host, broker, webhook or Chartink contacted: NO. The only network request was one read-only git ls-remote of the V2
+  repository on GitHub (main is 3e26ec1). Host records read: NO. The two July records: NOT read.
+- Repository files changed, commit or push: NO. Two new scratch tools (cread_c006.py, ccount_c006.py) were written; neither
+  has yet been used for a read.
+- Independent verification: NO (self-checked).
+- Bookmarks (W-9): none.
+END

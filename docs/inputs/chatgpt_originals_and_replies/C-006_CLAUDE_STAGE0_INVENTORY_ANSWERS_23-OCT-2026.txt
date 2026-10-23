@@ -1,0 +1,181 @@
+C-006 - QUEUE HANDLING
+STAGE 0 ANSWERS: SOURCE INVENTORY AND RESEARCH WORKFLOW (answers to C-006_ANSWER_FILE_FOR_CLAUDE_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), from 16:17 IST. Prepared by: Claude, on ChatGPT's prompt and answer file of 23-Oct-2026.
+Status: Stage 0 only; no legacy source content opened, no module analysed, no behavioural conclusion drawn; stops for review.
+
+INVENTORY SUMMARY
+- Pin verified: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (2026-09-11), 1,438 tracked files; GitHub main is the same commit today.
+- The path-name search finds only 15 paths for the 18 terms: queue handling has no file of its own. It sits in generically named
+  files: the receiver (producer), the signal processor (consumer), main.py (construction and wiring) and the configuration.
+- Register: 30 rows. Candidates: 8 runtime and configuration files (rows 1 to 8), 9 conditional rows (11 files), 9 test rows
+  (11 files) and 2 records (names only); 2 more rows name 11 files left to other topics, among them other queues (section 3 E).
+- The frozen manuals already describe much of the queue (C-002, A-011, B-006, B-008, B-009, B-011, C-005): they are the main
+  pointers for Stage 1, to be re-verified at the pin, not conclusions.
+- At least eight queue-like mechanisms share the name (section 4); C-006 owns the signal queue and its hand-off to the
+  processor's worker pool only.
+- No question blocks Stage 1.
+
+==============================================================================
+1. REPOSITORY AND PIN VERIFICATION
+==============================================================================
+[x] Repository identity: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (the production snapshot).
+[x] Retrieved commit equals 970aabf3c78d777d9d34549e021f7c8e756c7bdb: the project's blob-less partial clone has HEAD at the pin;
+    git log -1 on the pin printed its ID, commit date 2026-09-11T02:05:13+05:30 and root tree
+    080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa (16:17 IST).
+[x] Tree queries and path metadata refer to that pin: a fresh git ls-tree -r of the pin is byte-identical to the saved listing
+    used below (same SHA-256 of both outputs); 1,438 tracked files (1,432 mode 100644, 6 mode 100755).
+[x] No branch tip or current main substituted: read-only git ls-remote --symref (16:17 IST): HEAD is refs/heads/main and main
+    is 970aabf3c78d777d9d34549e021f7c8e756c7bdb, equal to the pin; the pin is what this inventory uses.
+
+==============================================================================
+2. C-006 SCOPE PROPOSAL - QUEUE HANDLING (proposal only)
+==============================================================================
+- In C-006: the signal queue between the webhook receiver and the signal processor: its construction, type, capacity and
+  configuration; the producer side (the backpressure gate, the enqueue, QUEUE_FULL and the sender-retry interface, the re-queue of
+  an earlier QUEUE_FULL row); the queue item's shape; the consumer side (the dispatcher, the hand-off to the worker pool and that
+  pool's own work queue); the processor's re-queue paths and retry counts; the status values written on these paths; drain at
+  stop and the state at start; the queue's observability (depth headers, health output, metrics, logs); tests and operator tools
+  that refer to the queue.
+- Interfaces, not scope: C-003 and C-004 (the gates and checks before the queue); C-005 (claims and cache that travel with a
+  queued signal; BM-02 and C5-L4 as leads); C-007 (statuses and rows at large, retention); C-008 (what the processor does with
+  an item); C-009 (expiry checked on dequeue); C-011 (the EOD route's own capture queue); A-011, B-006, B-011, B-012 (start,
+  workers, shutdown, restart).
+- Out of scope: other queues (section 4), signal processing logic, the schema contract, authentication and payload validation,
+  and any V2 policy.
+
+==============================================================================
+3. CANDIDATE FILE INVENTORY (pin 970aabf; sizes in bytes from the local object store; lines from the C-005 read log where
+   recorded, else UNKNOWN; Read now? NO for every row)
+==============================================================================
+| # | Exact path | Blob ID | Size / lines | Why a candidate (path or search hit only) | Proposed role | Read now? |
+A. Runtime and configuration candidates
+| 1 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 59,565 / 1,208 | Named in the prompt; cited on queue lines by C-002, C-004, B-008, B-009, A-011 (backpressure gate, enqueue, QUEUE_FULL, depth headers) | Producer | NO |
+| 2 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 139,403 / 2,704 | Named; cited by B-006, B-009, B-011, C-005 (dispatcher, worker pool, re-queues, stop) | Consumer | NO |
+| 3 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 208,758 / 4,294 | Named; C-002 section 6.1 says main builds the queue; B-006 and B-011 cite construction and shutdown | Construction, wiring, shutdown order | NO |
+| 4 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 55,901 / 754 | Named; B-009 section 5 cites "config 125-126" and "config 127" for the queue gate and expiry | Queue and worker settings | NO |
+| 5 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 127,242 / UNKNOWN | Not a name hit; C-002 (K-10) cites the queue schema's comment there | Declaration and defaults of the queue settings (bounded to that model; B-002 owns the loader) | NO |
+| 6 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 153,466 / 3,356 | Named; the status writes on queue paths go through the store (C-005) | Status-write callee only | NO |
+| 7 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 104,053 / 1,655 | Named; the signals status set holds QUEUED and QUEUE_FULL (C-005, SQL lines 60-65) | Status values only (C-007 owns the schema) | NO |
+| 8 | scripts/eod_cleanup.py | ab658108e443b7121d886f98b94c5058c42253b0 | 12,698 / UNKNOWN | Not a name hit; C-005 bookmark BM-03 (its status and fingerprint lines) | CONDITIONAL: only if Stage 1's count search shows queue statuses there (owners C-007, B-010) | NO |
+B. Conditional dependencies and observers (read only where Stage 1's count-only search or trace points)
+| 9 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 68,854 / UNKNOWN | Cited on queue-term lines (A-011, B-005, B-007, C-003) | Start-time queue state, if any | NO |
+| 10 | scripts/healthcheck_server.py | c094b5eb402353be5c74b569620aae0943cfad8b | 14,364 / UNKNOWN | Cited on a queue-term line (B-007) | Observer of queue depth, if any | NO |
+| 11 | ops_dashboard/backend/readers/metrics_client.py | a2fba2e8b101d95d06fb24b28267cd8502e48d16 | 3,379 / UNKNOWN | Cited on a queue-term line (B-007) | Observer (L topics) | NO |
+| 12 | reports/signal_status.py | 98a1631f5634807ecc6cf46cc9d3767215f9871f | 7,742 / UNKNOWN | QUEUE_FULL and other statuses (C-005 searches) | Reader of queue statuses (L topics) | NO |
+| 13 | ops_dashboard/backend/services/capacity.py (with api/capacity.py, templates/capacity.html) | 44b8c9f13ba49fa1d019876124a6fba2af41fc6a (42d491acba2bdb5fd8e0447d176be8bf071db11d, 544e71c0e3785d82466256eae9a02b5076237a47) | 17,755 (489; 3,099) / UNKNOWN | Name hit "capacity" | Dashboard view (L topics); whether it shows the queue's capacity is UNKNOWN | NO |
+| 14 | scripts/preflight/checks/signals.py | 1a0d5d5793455a3057fc44bcee5f794e28890c70 | 4,170 / UNKNOWN | Cited on queue-term lines (B-007, C-001) | Pre-flight observer (B-007 frozen) | NO |
+| 15 | core/events.py | 6511bc40fe74413ff5498a5b90cd47fae34dff82 | 15,023 / UNKNOWN | Cited on queue-term lines (B-005, B-006: the event bus's async workers) | A different queue, unless the signal path uses it | NO |
+| 16 | core/ids.py | 5e8b17bdd97f7ed37d7b4229e18353cb62ecd2ff | 5,731 / UNKNOWN | The queue item carries a signal ID (C-005) | Only if the item's ID is checked on dequeue | NO |
+| 17 | tests/integration/test_full_signal_flow.py | 376a2ee815f798d84857cb777f87617bf5b545c9 | 23,730 / 634 | Signal-flow integration test (C-005 register) | Only for queue assertions | NO |
+C. Test candidates (source only; never run)
+| 18 | tests/unit/test_fix134_backpressure.py | 463f7af7922f5e5f30543c0d0a94d508b3eafb10 | 18,590 / UNKNOWN | Name hit "backpressure"; C-002 section 16 cites lines 80-135 (depth headers, 503 threshold) and 166-213 | INCLUDE | NO |
+| 19 | tests/integration/test_hardening_scenarios.py | d87da7ab9ed64792eed017c4d17fa23888b0c85e | 19,676 / UNKNOWN | C-002 section 16 cites line 238 (a full queue, a drain and a retry) | INCLUDE | NO |
+| 20 | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 83,745 / 2,043 | Named; queue-full tests (C-005: lines 402-462) | INCLUDE (queue cases) | NO |
+| 21 | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 97,634 / 2,501 | Named; re-queue tests (C-005: lines 2144-2167, 2301-2340) | INCLUDE (queue cases) | NO |
+| 22 | tests/integration/test_end_to_end_smoke.py | 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 32,480 / 800 | Named | CONDITIONAL | NO |
+| 23 | tests/unit/test_main.py | da7bbb91111358521f44dc00e8c48b1bedbc04be | 58,645 / UNKNOWN | B-011 cites its shutdown tests | CONDITIONAL (drain at stop) | NO |
+| 24 | tests/unit/test_fix129_graceful_shutdown.py | b73465eab0702a9dc40997db301859b6b51b11e1 | 6,011 / UNKNOWN | Name hit "shutdown" | CONDITIONAL | NO |
+| 25 | tests/unit/test_e4_event_loop_safety.py | db8cb8b39f028402ad330adc21b707e0d62f2fbe | 29,816 / 737 | C-005: 503 after stop, receiver stopped before processor | CONDITIONAL | NO |
+| 26 | tests/crash_test/signal_injector.py, state_inspector.py, state_machine_validator.py | b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125, b018481f3333c61838b59060f7e582e1b432f443, 5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe | 9,588 / 248; 8,897 / 246; 11,000 / 277 | C-005: burst and flood modes; stored-status models | CONDITIONAL, documentary (the injector sends live POSTs: never run) | NO |
+D. Records (names only; reading is a separate approval: they are dated repository records)
+| 27 | docs/audit/queue_items_decidable_25jul2026.md | 4ad78303d209ac53b268a6142bf9b6662de0a82a | 7,285 / UNKNOWN | Name hit "queue"; C-005 handed it to C-006 | HISTORICAL record; not read by default | NO |
+| 28 | docs/audit/stale_queue_entries_25jul2026.md | a8c438a027468d71b6366cb2928e51bc40786a45 | 4,822 / UNKNOWN | Name hit "queue"; C-005 handed it to C-006 | HISTORICAL record; not read by default | NO |
+E. Other queues and name hits recorded, not owned by C-006
+| 29 | data/live_feed.py; orders/tgt_retry_manager.py; orders/slippage_recorder.py; screening/step_executor.py | 10ebd00ee728c449c6df4dcc5e576a92f3361e10; 7603537d68c607557277c966d7735cdbdafcf858; 19d1b6c2d4b3f189d9039b9efa4fca9c341c9039; d83b04860f0ff97b33ca60faa20230004d04ae5e | 34,774; 16,997; 15,827; 17,364 | The tick queue (B-006), the target retry (name hit "retry"), two worker queues (B-006) | Other topics; named only | NO |
+| 30 | Retry and capacity name hits outside C-006: tests/unit/test_h3_exit_retry_guard.py, test_h4_killswitch_retry_rederive.py, test_tgt_retry.py; ops_dashboard/tests/test_capacity.py; docs/design/a2_timeout_retry_design_02jul2026.md; docs/audit/forward_shadow_capacity_and_d4_feasibility_19jul2026.md; ops_dashboard/docs/G2a_capacity_inventory.md | 229cc61bf454e41ccbc4eb95b365024a876a08a1; 8eb2bb99db9b4d6a07b84880f73fe810e27f29e3; 35429d211980b1bccba9cfa9392c2655704e86c3; b4d96f47d6e234e41e40833490d3c6cf3a7404dd; 6e377ad2e2938092bee7c0b77c750190bd9c5214; d82100ca4f03f067eb025b87fddbdd76e3f3e9a6; 4c30b148dafc96af76a930420ce77538f16514f9 | 8,542; 6,786; 32,158; 5,162; 13,066; 11,236; 31,276 | Exit, kill-switch and target retries; order-timeout design; capital capacity; the dashboard | EXCLUDE (order, capital and L topics) | NO |
+
+==============================================================================
+4. SEARCH METHOD AND COMPLETENESS
+==============================================================================
+- Path-name search (paths only) over the 1,336 paths left after removing the 102 never-open paths (none of which would match):
+  case-insensitive queue (covers signal_queue, Queue, queue_full, QUEUE_FULL, enqueue, dequeue, requeue), worker, dispatch
+  (covers dispatcher), retry/retries, drain, shutdown, capacity, max_size/maxsize, back_pressure/backpressure; put and get only
+  as file-name words (as substrings they hit words such as output, 7 paths). Result: 15 paths (capacity 6, retry 5, queue 2,
+  shutdown 1, backpressure 1; no path names worker, dispatch, drain, maxsize, put or get). All 15 are in section 3 (rows 13, 18,
+  24, 27 to 30).
+- Frozen-manual cross-check, without legacy content: the 36 frozen manuals and reconciliation addenda of V2 main 3e26ec1
+  searched for lines naming queue, re-queue, QUEUE_FULL, backpressure, drain, dispatcher, worker pool, maxsize, qsize or
+  put_nowait: 66 distinct legacy paths are cited on those lines. 13 are in the register (rows 1 to 7, 9, 18 to 21, 23); the other
+  53 are cited for other queues (the live feed, the flatten worker, the reconciler, the event bus, the EOD route) or for start-up,
+  health, scheduling, deployment, order, capital and dashboard subjects, and are left to their topics (rows 10, 11, 14, 15 and 29
+  name the ones nearest C-006).
+- Several queue mechanisms share the name; recorded only, not reconciled: (1) the signal queue between the receiver and the
+  processor (C-002 section 6.1: built by main with maxsize = capacity, 300); (2) the processor's worker pool and its own work
+  queue (B-006 row TH20; B-006 records "current and queued work" of pools); (3) the web server's task threads and the operating
+  system's listen backlog (C-002); (4) the live feed's tick queue of 10,000 (B-006); (5) the event bus's async workers (B-006
+  TH31); (6) the EOD capture worker (C-002, C-011); (7) the order placer's hand-off "for reconciler" (B-004, B-005); (8) the
+  slippage recorder's and the screener's step-executor worker queues (B-006). C-006 owns (1) and the hand-off into (2).
+- Never-open check: sensitive_check.py at 16:17 IST: 102 never-open paths in the tree (1 root dotfile, 21 config, 80 docs),
+  8,922 local objects, 0 never-open blobs present locally. None named here.
+- Inspected: every path's metadata; no path is inaccessible. Every register blob is already local (fetched in earlier topics),
+  which gives its size without opening it. Line counts come from the C-005 read log for the files read there; the rest are
+  UNKNOWN until read.
+- Limits: a name search cannot find queue code inside generically named files (Stage 1's count-only searches close this);
+  frozen-manual pointers are earlier readings, re-verified at the pin in Stage 1.
+
+==============================================================================
+5. C-005 HANDOFF LEADS (paths only; not concluded here)
+==============================================================================
+- BM-02 / C5-L4 (the failed status flip while the answer stays ACCEPTED): signals/webhook_receiver.py, the re-queue path that
+  C-005 cites at lines 992-1013, and the processor's first status write that C-005 cites at signals/signal_processor.py line 897;
+  the store's status write (row 6).
+- Processor re-queue paths and queue-full branches cited by C-005: signals/signal_processor.py lines 405-461 and 1486-1532.
+- Receiver queue-full branches cited by C-005: signals/webhook_receiver.py lines 996-1001 and 1050-1068.
+
+==============================================================================
+6. OPEN QUESTIONS - INVENTORY STAGE ONLY (for Stage 1; not answered by inference)
+==============================================================================
+- Q1. Which queue class and capacity does the runtime wiring build, and where is the capacity declared, transformed and read?
+- Q2. Where is the backpressure threshold set (C-002: 240 of 300), and is it applied before parsing, per request or per symbol?
+- Q3. What is the queue item's shape on first enqueue and on each re-queue (C-005 saw a tuple and a dict with a retry count)?
+- Q4. Who dequeues, how many consumers exist, and is the worker pool's own queue bounded?
+- Q5. Which paths re-queue, with what limits and waits, and what statuses do they write?
+- Q6. What happens to queued items at stop (drain, rejection, loss), at a kill switch and at a crash, and what does the next
+  start do with rows left QUEUED?
+- Q7. Which outputs show the queue (headers, health, metrics, logs, reports), and what do they read?
+- Q8. Is the queue used by more than one producer (the receiver's re-queue, the processor's re-queues, any script)?
+
+==============================================================================
+7. RECOMMENDED STAGE 1 READING ORDER (not executed)
+==============================================================================
+0. Safety and method as in C-005: protected-path check before every read (must be 0); reads only through the masking filter,
+   logged with the pinned blob ID; count-only searches first over S-ALL, S-RT, S-CODE and S-TESTS for: queue.Queue, signal_queue,
+   put_nowait, get_nowait, .put(, .get(, qsize, maxsize, capacity, backpressure, QUEUE_FULL, QUEUED, re-queue/requeue,
+   retry_count, drain, ThreadPoolExecutor, executor, SHUTDOWN; they settle the CONDITIONAL rows.
+1. main.py: the queue's construction and capacity source; its hand-over to the receiver and the processor (C-005 read
+   lines 3406-3415 and 3575-3623); the shutdown order (lines 1681-1692, from C-002 and C-005); any start-time handling of QUEUED
+   rows. Answers Q1, Q6. Next: rows 4 and 5.
+2. config/system_config.yaml, the signal-queue block (B-009 cites lines 125-127) and the processor block (lines 344-346, seen in
+   C-005); core/config_loader.py, the queue settings' model only. Answers Q1, Q2.
+3. signals/webhook_receiver.py: the backpressure gate (B-008 and B-009 cite lines 570-578), the health route's queue depth
+   (C-002), the per-request answer and depth headers (lines 730-745), the enqueue and both QUEUE_FULL paths (lines 992-1013,
+   1046-1068). Answers Q2, Q3, Q7, Q8; checks BM-02 and C5-L4. Next: the processor.
+4. signals/signal_processor.py: start and stop (lines 304-348), the dispatcher (377-399), the pre-check re-queue (405-461),
+   the item formats (867-893) and first status write (897), the placement re-queue and timeout paths (1470-1532), runtime metrics
+   (683 onward), and any SHUTDOWN or kill rejection of queued items (located by the count search; A-011 says drained signals
+   are rejected as SHUTDOWN). Answers Q3 to Q6, Q8. Next: C-008 for processing; C-007 for statuses.
+5. core/state_store.py, the status-write function used on these paths; core/schema.sql, the status set (lines 60-70, read in
+   C-005). Answers Q5 with C-007 as owner.
+6. Conditional rows 8 to 17, only where step 0 points (for example, scripts/eod_cleanup.py only if it handles QUEUED rows).
+7. Tests (documentary only): rows 18 to 21 at the cited ranges; rows 22 to 26 only where step 0 points.
+8. Records (rows 27 and 28): not read unless approved; if approved, through the masking filter as HISTORICAL evidence of queued
+   rows in the live period.
+9. Outputs: repository answers with path, range, blob ID and label per statement; a source inventory and read log; bookmarks for
+   cross-topic points (W-9). Then stop for ChatGPT's reconciliation and manual.
+
+==============================================================================
+8. DECLARATION
+==============================================================================
+- Pin verified: YES
+- Inventory-only rule followed: YES
+- Source contents opened: NO
+- Code/tests run: NO
+- Live/host/broker/webhook/Chartink contacted: NO (only read-only git metadata requests to GitHub)
+- Host records read: NO
+- Files modified, commit or push: NO
+- Independent verification: NO (self-checked; Rama's lean workflow: no separate agent)
+- Deviations / inaccessible paths: none. Inputs used besides the tree: the C-005 read log's line counts and C-005's searches,
+  and the frozen V2 manuals (documents, not legacy source).
+- Recommended Stage 1 reading order: section 7.
+- Bookmarks (W-9): none raised at Stage 0.
+END

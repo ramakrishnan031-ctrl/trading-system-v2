@@ -1,0 +1,110 @@
+C-006 — QUEUE HANDLING
+STAGE 0 ANSWER SHEET: SOURCE INVENTORY AND RESEARCH WORKFLOW
+Date: 23-Oct-2026
+Status: Fill from repository metadata only; return to ChatGPT/Rama for review before reading module contents.
+Legacy source of truth: trading-system-prod-snapshot
+Pinned baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+IMPORTANT
+- C-005 is frozen as DR-058, commit 3e26ec1a2d6a972d588e4a3cdc818495e7884919, pushed to trading-system-v2/main and verified according to the supplied PowerShell output.
+- This is the next legacy-documentation topic, not V2 design.
+- Do not infer behaviour from filenames, test names, comments, or C-005 bookmarks.
+- Do not open source-code contents at Stage 0. Inventory paths, metadata, and search hits only.
+- Do not run code/tests, contact a VM/host/broker/webhook/Chartink/live service, read host records, modify files, commit, or push.
+
+1. REPOSITORY AND PIN VERIFICATION
+Repository URL:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+
+Confirm:
+[ ] repository identity
+[ ] checked-out/retrieved commit equals 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+[ ] tree queries and path metadata refer to that exact pin
+[ ] no branch tip or current main substituted for the pin
+
+Record the verification method and evidence. If the pin cannot be confirmed, STOP.
+
+2. C-006 SCOPE PROPOSAL — QUEUE HANDLING
+Candidate scope only; do not treat as confirmed until inventory is reviewed:
+- queue creation, type, capacity and configuration
+- enqueue/dequeue interfaces and queue item shape
+- consumer/worker dispatch and concurrency
+- queue-full outcome and sender retry interface
+- re-queue paths, retry counts and status transitions
+- shutdown/drain behaviour and startup state
+- queue observability/logging/metrics
+- tests and operational scripts that refer to queue state
+- handoffs to C-005 (claims/dedup), C-007 (persistence/status), C-008 (processing), and A-011 (startup/shutdown)
+
+Out of scope unless separately approved:
+- detailed signal processing/decision logic (C-008)
+- complete persistence/schema/retention contract (C-007)
+- authentication and payload validation (C-003/C-004)
+- any redesign, remediation, tuning, implementation, or V2 policy decisions
+
+3. CANDIDATE FILE INVENTORY
+Search the pinned tree by path and metadata for queue-related terms, including:
+queue, signal_queue, Queue, queue_full, QUEUE_FULL, enqueue, dequeue, put, get, worker, dispatcher, retry, requeue, drain, shutdown, capacity, maxsize, backpressure.
+
+Likely starting candidates from prior C-005 evidence (presence/scope must be verified at the pin; inclusion is not presumed):
+- signals/webhook_receiver.py
+- signals/signal_processor.py
+- main.py
+- config/system_config.yaml
+- core/schema.sql
+- core/state_store.py
+- tests/unit/test_webhook_receiver.py
+- tests/unit/test_signal_processor.py
+- tests/integration/test_end_to_end_smoke.py
+- scripts or monitoring/reporting files that mention queue states
+
+For every candidate, record:
+| # | Exact path | Blob ID | Size/line count | Why it is a candidate (path/search hit only) | Proposed role | Read now? |
+Do not copy source-code excerpts or state behaviour at Stage 0.
+
+4. SEARCH METHOD AND COMPLETENESS
+Record:
+- exact path/name searches and terms used
+- tree scope searched (all repository paths or limited subtree)
+- candidate files and their blob IDs
+- related files excluded and reason
+- whether any search result is only a comment, test, report, or tool
+- whether there are multiple queue mechanisms with similar names (record only; do not reconcile yet)
+- any path that could not be inspected and why
+
+Do not assume a single queue exists merely because the C-005 notes refer to a signal queue.
+
+5. C-005 HANDOFF LEADS TO CHECK AS PATHS ONLY
+C-005 recorded these bookmarks for C-006:
+- BM-02: failed status flip during a re-queue path; C-006/C-007 ownership.
+- C5-L4: on a queue re-try path, status update failure is logged while receiver response remains ACCEPTED; exact end-to-end queue/status relationship requires bounded source review.
+- Processor re-queue paths and queue-full branches are mentioned in the C-005 evidence; locate candidates without opening them at Stage 0.
+
+Record the relevant path/search hits only. Do not conclude whether a bookmark is confirmed, corrected, or defective in C-006 Stage 0.
+
+6. OPEN QUESTIONS — INVENTORY STAGE ONLY
+List questions that cannot be answered from metadata/path searches, such as:
+- which queue implementation and configuration are actually used by the runtime wiring?
+- where is queue capacity declared and transformed?
+- which functions enqueue/dequeue and which components own retries?
+- how do queue-full responses, persisted statuses, and retries relate?
+These are questions for the next approved source-reading stage, not answers to fill by inference.
+
+7. RECOMMENDED STAGE 1 READING ORDER
+Propose a bounded file/range order based on the inventory. For each proposed range, state the question it would answer and its next consumer/handoff. Do not read the ranges yet. Keep C-007 and C-008 work bounded to explicit interface evidence only.
+
+8. DECLARATION
+Complete:
+- Pin verified: YES / NO
+- Inventory-only rule followed: YES / NO
+- Source contents opened: YES / NO (must be NO)
+- Code/tests run: YES / NO (must be NO)
+- Live/host/broker/webhook/Chartink contacted: YES / NO (must be NO)
+- Host records read: YES / NO (must be NO)
+- Files modified, commit or push: YES / NO (must be NO)
+- Independent verification: YES / NO; if no, state limitation
+- Deviations / inaccessible paths:
+- Recommended Stage 1 reading order:
+
+STOP CONDITION
+Return this completed answer sheet and a concise inventory summary. Stop and wait for ChatGPT/Rama to review and approve the source-reading plan. Do not begin C-006 module analysis or draft the manual.

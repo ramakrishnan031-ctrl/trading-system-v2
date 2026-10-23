@@ -1,0 +1,49 @@
+C-006 — STAGE 1 AUTHORISATION
+Bounded, read-only source evidence collection
+Date: 23-Oct-2026
+Status: APPROVED WITH SCOPE CONTROLS
+Pinned legacy baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+1. REVIEW DECISION
+The Stage 0 clarification resolves the blocking question. The path-only classification reports that `config/system_config.yaml` matches none of the 13 never-open rules and is not one of the 102 protected paths or protected blobs. It may therefore be read for the narrowly specified queue and processor configuration ranges, only through the approved gate and masking filter.
+
+The revised inventory is accepted. Stage 1 is authorised to proceed within the exact limits below. This is not authorisation to draft/finalise the manual, change repositories, or make V2 decisions.
+
+2. MANDATORY SCOPE
+C-006 covers only:
+- The signal queue between `signals/webhook_receiver.py` and `signals/signal_processor.py`.
+- Construction/configuration and producer-to-consumer hand-off.
+- Backpressure and queue-full response/retry interface.
+- Signal-queue re-queue paths and relevant status-write interfaces.
+- The processor dispatcher’s hand-off to its worker pool, interface only.
+- Relevant stop/drain/start state, queue observability, and documentary tests.
+
+Do not analyse the internal implementation of the worker pool’s own queue or any of the other queue-like mechanisms. If evidence suggests one is part of the signal-queue path, stop and submit the evidence for a separate boundary decision before reading it.
+
+3. PROTECTED-PATH AND READING CONTROLS
+- Every source read must use `cread_c006.py`; every count-only search must use `ccount_c006.py`.
+- Before each read/search, verify the tool blocks protected paths, paths outside the pinned tree, protected blobs, and a protected blob present in the local store.
+- Do not open any protected path or any path sharing a protected blob. No exceptions.
+- Use only pinned commit `970aabf3c78d777d9d34549e021f7c8e756c7bdb`; log exact path, line range, blob ID, and masked evidence.
+- Run count-only searches first. Read only the bounded ranges needed to answer the eight inventory questions.
+- Read `config/system_config.yaml` only at the queue and processor blocks cited in the revised Stage 0 plan, through the gate and masking filter. Never reproduce masked values or sensitive material.
+- If a trace points to a protected path, mark the relevant point UNKNOWN / NOT ESTABLISHED and continue only if the bounded scope remains answerable without it.
+- Do not read `docs/audit/queue_items_decidable_25jul2026.md` or `docs/audit/stale_queue_entries_25jul2026.md`; these two historical records remain excluded and require separate approval.
+- Do not run legacy code or tests. Read test source only as documentary evidence.
+- Do not contact VMs, hosts, brokers, webhooks, Chartink or live services; do not read host records.
+- Do not modify either repository, commit, push, or draft the final C-006 manual.
+
+4. REQUIRED STAGE 1 DELIVERABLE
+Return:
+- Completed C-006 repository answer sheet.
+- Source inventory and read log with path/range/blob ID/evidence label for every material claim.
+- Answers to the eight Stage 0 questions, distinguishing FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT, and OPEN QUESTION.
+- Queue lifecycle from construction through enqueue, dequeue/dispatch, re-queue, queue-full handling and shutdown, with explicit hand-off boundaries to C-005, C-007, C-008, C-009 and A-011.
+- Cross-topic bookmarks for contradictions or unresolved questions, including BM-02/C5-L4, without resolving them outside C-006.
+- A declaration of compliance and a plain list of any deviations.
+
+5. STOP POINT
+After the answer sheet and source inventory/read log are returned, STOP. ChatGPT/Rama will reconcile the evidence against frozen manuals and decide whether a C-006 manual draft can be prepared. Do not create the manual, commit, or push.
+
+6. GOVERNANCE
+No V2 retain/reject/redesign decision is authorised. Document the legacy system as it existed; do not repair or silently correct it. Do not claim runtime occurrence from source code or test assertions alone.

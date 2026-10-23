@@ -1,0 +1,49 @@
+C-006 — CHATGPT RECONCILIATION NOTES
+Date: 23-Oct-2026
+Status: Stage 1 evidence accepted for drafting; manual remains NOT FROZEN.
+
+1. REVIEW DECISION
+The two submitted Stage 1 files are sufficiently traceable for a bounded reconciliation draft. The source inventory documents 73 gated reads, 29 count-only searches, pinned blob IDs, evidence hashes, line ranges and claim-to-read mappings. It records the two July records as excluded, no legacy code/tests run, no live/host access, and no repository changes. The delivery checks are self-checks; no independent agent check was performed. This is a limitation, not grounds to claim independent verification.
+
+2. MATERIAL FINDINGS THAT MUST REMAIN VISIBLE
+A. Queue construction: one in-memory standard-library Queue, maxsize 300; receiver and processor share it.
+B. Backpressure is per request at qsize >= 240; warning header threshold is 180. A request may still reach a full queue after passing the request-level check.
+C. The database row is committed as QUEUED before first enqueue. A put failure may therefore leave a row without an item if the status update also fails.
+D. Receiver retry for an existing QUEUE_FULL row puts the item before updating the row to QUEUED; the status update is unconditional and failure is only logged. This is a source-path race/inconsistency, not a proven incident.
+E. Three re-queue paths are present in source, but the FIX-007 rate-limit pre-check is not wired by main.py at the pinned commit. The placement re-queue path is separate.
+F. Dispatcher submits to a five-worker executor without waiting for a free worker. Queue depth does not include work already submitted to the pool.
+G. Clean stop drains the queue into the pool, but REJECTED_SHUTDOWN is written at the placement check only; earlier stages may reject with another status. A late enqueue after final drain is a possible unprocessed item, not an observed event.
+H. The in-memory queue is lost on crash. The bounded searches found no restart path that re-enqueues QUEUED rows. Do not broaden that to an absolute proof about every uninspected mechanism.
+I. B-007's /metrics queue fields fixed at zero are re-verified as a known defect.
+J. Test sources are documentary evidence only; none was run. No production occurrence or sender retry is established.
+
+3. BOOKMARKS — DO NOT RESOLVE IN C-006
+Keep all eight bookmarks open and route them to their named owners:
+- BM-01 and BM-02 -> C-007 (status ordering and failed status updates).
+- BM-03 -> A-011/B-011 (shutdown semantics).
+- BM-04 -> B-006 / whole-design review (pool depth observability).
+- BM-05 -> C-007/C-008 (persisted row values versus retry item values).
+- BM-06 -> C-005/C-008 (unwired rate-limit pre-check).
+- BM-07 -> B-007 / observability topic.
+- BM-08 -> C-009/B-006/C-008/test topics (text drift).
+Do not alter frozen manuals now; record contradictions as bookmarks for the end-of-agenda whole-design reconciliation.
+
+4. BOUNDARY AND LIMITATION CHECK
+- Two July queue records were not opened or searched and remain excluded pending separate approval.
+- `scripts/load_test_signals.py`, `tests/unit/test_fix074_numeric_cast.py`, status readers, and unrelated queues were found by count-only searches but not read. They must not be described as reviewed.
+- `config/system_config.yaml` was read only at the two authorised ranges, with a minor range spill of a comment and blank line before the queue block; no value from that spill is reported.
+- The claim that no restart re-queue was found is bounded by the documented searches, not a universal negative.
+- The config values are repository values, not proof of host-effective configuration.
+- No independent verification was run; state this wherever provenance matters.
+
+5. MANUAL DRAFT
+A C-006 Markdown draft has been prepared from the submitted evidence. It is a reconciliation draft, not frozen. Before freezing, Rama/ChatGPT should check:
+- the eight Stage 0 questions are answered or explicitly marked unknown/open;
+- every important statement retains path/line evidence and correct label;
+- cross-topic boundaries remain intact;
+- the queue lifecycle does not overstate runtime occurrence;
+- bookmarks are carried into the project decision/design log without resolving them prematurely;
+- the manual is stored/pushed only after explicit approval and then verified in GitHub.
+
+6. DECISION
+Accept the Stage 1 evidence package as sufficient for a C-006 manual draft, with the stated bounded-search and self-verification limitations. Do not ask Claude for another research pass now. Do not freeze, commit, push, modify prior manuals, read the excluded July records, or make V2 design decisions without Rama's next instruction.

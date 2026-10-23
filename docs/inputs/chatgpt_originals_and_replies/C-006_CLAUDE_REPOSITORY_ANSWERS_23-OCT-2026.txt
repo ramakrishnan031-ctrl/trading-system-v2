@@ -1,0 +1,326 @@
+C-006 - QUEUE HANDLING
+STAGE 1: CLAUDE'S REPOSITORY ANSWERS (answers to C-006_STAGE1_AUTHORIZATION_FOR_CLAUDE_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 16:50 to 17:24 IST.
+Source: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+Status: evidence for ChatGPT's reconciliation; not a manual. Method, read log, searches and the claim index (path, range, blob,
+read number and label for every claim ID below): C-006_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt.
+
+Aliases and pinned blobs (every cited line was printed by a logged read at the pin, through the gate and the masking filter):
+  R = signals/webhook_receiver.py (0f15a0ab033529d80d9c14c993a5077690b72871, 1,208 lines)
+  P = signals/signal_processor.py (7fab0a02a302770ac72bbbd662549d5c091086c1, 2,704 lines)
+  M = main.py (445fb0d8237a6d535ed00e5eb968c8176efd74f3, 4,294 lines)
+  CFG = config/system_config.yaml (bf742ae5c81c60614370361998e6a102a1064ff7, 754 lines; read only at lines 122-129 and 343-352)
+  CL = core/config_loader.py (8635bca77531515561ee48cf92677883a5e30782, 2,517 lines)
+  ST = core/state_store.py (11866117801b9329773a1be605448faef3c96f8d, 3,356 lines)
+  SQL = core/schema.sql (b46d7489f6ec5e31149dd68957f3b9e45270571e, 1,655 lines)
+  EC = scripts/eod_cleanup.py (ab658108e443b7121d886f98b94c5058c42253b0, 325 lines)
+  HC = scripts/healthcheck_server.py (c094b5eb402353be5c74b569620aae0943cfad8b, 327 lines)
+  PF = scripts/preflight/checks/signals.py (1a0d5d5793455a3057fc44bcee5f794e28890c70, 90 lines)
+  RS = reports/signal_status.py (98a1631f5634807ecc6cf46cc9d3767215f9871f, 157 lines)
+  DC = ops_dashboard/backend/services/capacity.py (44b8c9f13ba49fa1d019876124a6fba2af41fc6a, 328 lines)
+  TB = tests/unit/test_fix134_backpressure.py (463f7af7922f5e5f30543c0d0a94d508b3eafb10, 403 lines)
+  TH = tests/integration/test_hardening_scenarios.py (d87da7ab9ed64792eed017c4d17fa23888b0c85e, 329 lines)
+  TWR = tests/unit/test_webhook_receiver.py (7b377abb85d644f0f3ff7956385224b43f31ed61, 2,043 lines)
+  TSP = tests/unit/test_signal_processor.py (3ec0ea84392a193d18b992ca88df0da5e6235f67, 2,501 lines)
+  TE4 = tests/unit/test_e4_event_loop_safety.py (db8cb8b39f028402ad330adc21b707e0d62f2fbe, 737 lines)
+  TSI = tests/crash_test/state_inspector.py (b018481f3333c61838b59060f7e582e1b432f443, 246 lines)
+  TSMV = tests/crash_test/state_machine_validator.py (5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe, 277 lines)
+Labels: FACT (SOURCE-VERIFIED) = read at the pin; FACT (CONFIG) = the repository copy of the configuration, not a host's;
+FACT (TEST TEXT) = what a test's source asserts (documentary, never run, proves nothing at runtime); FACT (TEXT DRIFT) = a comment
+or docstring that differs from the code; FACT (EXTERNAL) = the Python 3.12 queue documentation, not read at the pin;
+INTERPRETATION = a consequence of the code path ("would"), not observed; HISTORICAL = a frozen V2 manual; KNOWN DEFECT;
+UNKNOWN / NOT ESTABLISHED; OPEN QUESTION. Q01 to Q29 are count-only searches (inventory section 3). No claim here says that
+anything happened at runtime.
+
+==============================================================================
+SUMMARY
+==============================================================================
+- One standard-library queue.Queue(maxsize=300), built in main and shared by the receiver (producer) and the processor
+  (consumer). The receiver refuses a whole request with 503 when the queue holds 240 or more (80%), and marks a symbol
+  QUEUE_FULL when its put finds the queue full; the request then answers 503, which the code's comment calls the sender's cue to
+  retry (R 59-63). FACT (SOURCE-VERIFIED); whether a sender retried is not established.
+- The receiver writes the signal row as QUEUED and commits it before the put; a full queue changes the row to QUEUE_FULL. A
+  later request with the same fingerprint re-queues that row under its old signal_id. FACT.
+- One dispatcher thread takes items and submits each to a pool of 5 workers at once; the queue's depth counts only items the
+  dispatcher has not yet taken. FACT; consequence INTERPRETATION (C6-L4).
+- Three re-queue paths exist in code; one of them (the FIX-007 rate-limit pre-check) is not wired at the pin. FACT.
+- A clean stop drains the queue into the pool and rejects a drained signal as REJECTED_SHUTDOWN only when it reaches placement;
+  items put after the final drain are not processed (INTERPRETATION, C6-L3). A crash loses the queue; nothing found re-queues
+  QUEUED rows at the next start. FACT (bounded by Q10).
+- Eight cross-topic bookmarks (section 7), including BK-04 (C-005 BM-02/C5-L4), re-verified and extended.
+
+==============================================================================
+1. ANSWERS TO THE EIGHT STAGE 0 QUESTIONS
+==============================================================================
+Q1. Which queue class and capacity does the runtime wiring build, and where is the capacity declared, transformed and read?
+- [Q1-a] FACT (SOURCE-VERIFIED): main builds one queue.Queue from the standard-library module queue (M 29), with
+  maxsize = app_config.system.signal_queue.capacity (M 3402-3404), and passes the same object to the receiver (M 3407-3408)
+  and the processor (M 3575-3576). Q21 (count only): outside tests and documents, the two constructor calls appear only in M
+  (two lines) and once in each class's own file (R 146, a usage example above the constructor at R 152; the processor's line was
+  not printed).
+- [Q1-b] FACT (SOURCE-VERIFIED): the setting is declared by SignalQueueConfig (CL 192-197; extra keys forbidden): capacity int,
+  backpressure_pct float and expiry_sec int, all three without a default, and warning_pct float = 0.60. The class has no
+  validator (the next class starts at CL 200). The system model holds it as signal_queue (CL 1991).
+- [Q1-c] FACT (CONFIG): CFG 124-128: signal_queue capacity 300, backpressure_pct 0.80, expiry_sec 600, warning_pct 0.60.
+- [Q1-d] FACT (SOURCE-VERIFIED): capacity is not transformed: maxsize is the raw value (M 3403). The receiver reads the same field
+  on every request (R 537, 571) and in /health (R 397); its thresholds are int(capacity x pct), 240 and 180 with the repository
+  values (R 573-574). The dashboard's capacity service reads the configuration's signal_queue section (DC 114, 171).
+- [Q1-e] FACT (EXTERNAL): a Queue whose maxsize is 0 or less is unbounded. INTERPRETATION: the model accepts any integer (CL 194),
+  so a capacity of 0 or less would have built an unbounded queue; the repository value is 300.
+- [Q1-f] FACT (TEXT DRIFT): CL 196's comment gives expiry_sec a default of 60; the field has none and CFG 127 sets 600. C-009 owns
+  expiry.
+
+Q2. Where is the backpressure threshold set, and is it applied before parsing, per request or per symbol?
+- [Q2-a] FACT (SOURCE-VERIFIED): threshold = int(capacity x backpressure_pct) (R 571-573; CFG 125-126). The gate runs once per
+  request inside _process_request (R 570-578): after the shutting-down check and the per-IP limit (R 483-504), authentication
+  (R 547-549), the unknown-scanner check (R 552-554), the EOD branch (R 562-564) and the kill switch (R 566-568); before the
+  entry-window check (R 580-583) and before the per-symbol loop (R 696). At qsize() >= 240 it answers 503
+  {"error": "Signal queue at capacity; retry later"} with X-Queue-Depth (R 575-578). It is per request, not per symbol. The
+  body parsing between R 584 and R 676 was not read in C-006 (B-008, HISTORICAL, places the window check before it).
+- [Q2-b] FACT (SOURCE-VERIFIED): per symbol, only put_nowait raising queue.Full detects a full queue (R 1048-1050; R 994-996 on
+  the re-queue path), giving QUEUE_FULL. The request answers 503 when any symbol is QUEUE_FULL or STORE_ERROR (R 59-66,
+  730-734); the other symbols' results in the same answer stand.
+- [Q2-c] FACT (EXTERNAL): qsize() is approximate. INTERPRETATION: the gate reads the depth once per request while up to 8 request
+  threads (M 3994) put concurrently, and one admitted request can carry many symbols, so the queue can pass 240 and reach 300;
+  symbols after that get QUEUE_FULL.
+- [Q2-d] FACT (SOURCE-VERIFIED): warning_pct only adds X-Queue-Warning: high to the batch answer when the depth after the loop is
+  180 or more (R 574, 741-744); it refuses nothing.
+
+Q3. What is the queue item's shape on first enqueue and on each re-queue?
+- [Q3-a] FACT (SOURCE-VERIFIED): first enqueue: the 5-tuple (signal_id, scanner_name, symbol, price, triggered_at) (R 1047), put
+  with put_nowait (R 1049) after the INSERT of the row with status QUEUED was committed (R 963-980); signal_id comes from
+  new_signal_id() (R 957).
+- [Q3-b] FACT: the receiver's re-queue of a QUEUE_FULL row: the same 5-tuple shape with the existing row's signal_id and this
+  request's scanner, symbol, price and triggered_at (R 992-995).
+- [Q3-c] FACT: the processor's rate-limit pre-check puts the same item back unchanged (P 426); its placement re-queue puts a dict
+  {signal_id, scanner_name, symbol, trigger_price, triggered_at, retry_count} (P 1510-1520).
+- [Q3-d] FACT: the consumer accepts both shapes (P 878-887); a tuple starts at retry_count 0 (P 887). The docstring says
+  triggered_at is a naive IST datetime (P 874).
+- [Q3-e] INTERPRETATION: on the receiver's re-queue path only the status is updated (R 1005), so the row keeps the first attempt's
+  price and time while the queued tuple carries the retry's; the processor takes its values from the item (P 879-886). C6-L5.
+
+Q4. Who dequeues, how many consumers exist, and what is handed to the worker pool, by which call?
+- [Q4-a] FACT (SOURCE-VERIFIED): one dispatcher thread, sp-dispatcher, a daemon (P 314-320), is the only consumer (P 385, 395;
+  Q04, Q27). It calls get(timeout=drain_poll_sec) (P 385; CFG 346: 0.1 s) and skips on any exception (P 386-387).
+- [Q4-b] FACT: for each item it calls _warm_zones, which hands the symbol to the zone warmer when one is wired, guarded so that it
+  cannot affect dispatch (P 361-375, 388; another queue, not analysed), then self._executor.submit(self._process_one_safe, item)
+  (P 389-390). The item is handed over unchanged as the only argument.
+- [Q4-c] FACT: the pool is ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="sp-worker") (P 310-313);
+  worker_count 5 (CFG 345), validated to 1-50 (CL 588-593) and floored at 1 (P 220).
+- [Q4-d] FACT: the dispatcher does not wait for a free worker (P 383-390; the module docstring says "dispatcher never blocks",
+  P 15). INTERPRETATION: qsize(), the 503 gate and the depth headers count only items not yet taken by the dispatcher, not work
+  waiting inside the pool. How the pool holds waiting work is outside C-006 and was not analysed (B-006 owns the pool). C6-L4.
+- [Q4-e] FACT (CONFIG): pipeline_timeout_sec 30 (CFG 347; CL 568, validator declared at CL 602). How it is applied was not
+  traced in C-006: UNKNOWN / NOT ESTABLISHED here (C-008).
+
+Q5. Which paths re-queue, with what limits and waits, and what statuses do they write?
+| ID | Path | Limit and wait | Status written | Claim | Evidence | Label |
+| Q5-a | Receiver: same fingerprint, existing row QUEUE_FULL, put succeeds | put_nowait, no wait; no retry count | after the put: UPDATE status = 'QUEUED' (a failure is only logged); answer ACCEPTED with the old signal_id | kept for the processor | R 981-1013 | FACT (SOURCE-VERIFIED) |
+| Q5-b | Receiver: same, queue still full | - | none (the row stays QUEUE_FULL); answer QUEUE_FULL | cache entry popped, claim released | R 996-1001 | FACT (SOURCE-VERIFIED) |
+| Q5-c | Processor: FIX-007 rate-limit pre-check (NOT WIRED, Q5-f) | put(timeout=1.0) | none on success; on Full: REJECTED with reason QUEUE_FULL, a failure swallowed | kept on success; released on Full | P 415-461 | FACT (SOURCE-VERIFIED) |
+| Q5-d | Processor: BrokerRateLimitError during placement | at most 3 re-queues (retry_count >= 3 re-raises); put(timeout=1.0); no delay in P | none on success; on Full or when exhausted: PLACEMENT_FAILED via the outer handler | kept (requeued); released on Full or exhaustion | P 1486-1532, 1233-1238, 1260-1271 | FACT (SOURCE-VERIFIED) |
+| Q5-e | Processor: BrokerTimeoutError | no re-queue | TIMEOUT; the reservation is left to recovery | released | P 1464-1484 | FACT (SOURCE-VERIFIED) |
+- [Q5-f] FACT (SOURCE-VERIFIED): Q5-c is not wired: main builds the processor without rate_limiter (M 3575-3623), whose default is
+  None (P 189), and the pre-check runs only when it is set (P 418). Main's rate limiter goes to other constructors (M 2348, 2385,
+  2985). The tests set it on the object directly (TSP 2155, 2227).
+- [Q5-g] FACT: on a successful processor re-queue no status is written (P 426 then return; P 1519-1525). INTERPRETATION: while
+  waiting in the queue, a placement re-queue's row reads PROCESSING (written by P 897 on the attempt) and a pre-check re-queue's
+  row keeps its earlier status (TSP 2160-2162 asserts QUEUED).
+- [Q5-h] FACT (TEXT DRIFT): the comment "Max 3 retries (45s total, 15s each)" (P 1489) has no wait in this code; where a 15 s wait
+  could come from (the rate limiter) was not read: UNKNOWN / NOT ESTABLISHED (OQ-2).
+- [Q5-i] FACT (SOURCE-VERIFIED): statuses on queue paths: QUEUED at INSERT (R 977) and on the re-queue flip (R 1005); QUEUE_FULL
+  (R 1055); PROCESSING when a worker starts (P 897); REJECTED_<check> (P 99, 1201), among them REJECTED_SHUTDOWN (P 1405) and
+  REJECTED_KILL_SWITCH (P 907); PLACEMENT_FAILED (P 1238; P 473-475 for an unhandled exception); TIMEOUT (P 1480-1481); bare
+  REJECTED (P 435-437). The processor writes through update_signal_status, an UPDATE of status and rejection_reason by
+  signal_id with no condition on the current status (ST 1408-1426); the receiver's two UPDATEs are its own (R 1005, 1055). The
+  schema's CHECK accepts all of these (SQL 60-70). C-007 owns statuses.
+
+Q6. What happens to queued items at stop, at a kill switch and at a crash, and what does the next start do with rows left QUEUED?
+- [Q6-a] FACT (SOURCE-VERIFIED): stop order: main stops the receiver, then the processor (M 1681-1692). The receiver's stop() sets
+  its shutting-down flag and returns (R 1166-1176); new requests then get 503 "Service shutting down; retry later" and an audit
+  row (R 483-490). It does not wait for requests already past that check (R 1166-1176; the comment at R 210-213 says they "drain
+  naturally").
+- [Q6-b] FACT: the processor's stop() sets its stop flag (P 333); the dispatcher leaves its loop and submits every item still in
+  the queue to the pool (P 392-399); main's thread joins the dispatcher for up to 10 s (P 336) and then waits for all submitted
+  work with no time limit (P 338-340). FACT (TEXT DRIFT): the docstring says "up to 5s per SP4" (P 327-329); B-006 records the
+  same.
+- [Q6-c] FACT: a drained item runs the normal pipeline: PROCESSING (P 897), then the stages; if it reaches placement, the stop
+  flag rejects it as REJECTED_SHUTDOWN and releases its reservation (P 1398-1405, 1193-1201). An earlier stage rejects with its
+  own status (for example P 905-912). INTERPRETATION: so not every drained signal ends as REJECTED_SHUTDOWN.
+- [Q6-d] INTERPRETATION (code path, not observed): an item put after the dispatcher's final drain, by a request that passed R 485
+  before the flag was set or by a worker's re-queue (P 1520; P 426 if wired), is taken by no one; at exit it is lost and its row
+  keeps QUEUED or PROCESSING. C6-L3, bookmark C-006/BM-03.
+- [Q6-e] FACT (SOURCE-VERIFIED): kill switch: a new request gets 403 "Kill switch active; signals rejected" before the queue gate
+  (R 566-568). Items already queued stay queued and are rejected one by one when processed: REJECTED_KILL_SWITCH (P 905-907), or
+  REJECTED_KILL_SWITCH_LATE before placement (P 1396). No kill-switch module names the queue (Q02, Q24).
+- [Q6-f] FACT: crash: the queue lives only in process memory (M 3402), so its items are lost; their rows keep QUEUED or
+  PROCESSING, and QUEUE_FULL rows stay QUEUE_FULL. HISTORICAL: A-011 Q32 and B-006 say the same.
+- [Q6-g] FACT (bounded by Q10): next start: the queue is built empty (M 3402), and nothing found re-queues QUEUED rows. In runtime
+  files QUEUED appears in R only in the INSERT (R 977), the flip (R 1005) and comments or log text (R 812, 985, 1011), in reports
+  and dashboard readers by their names (not read), and in a comment of EC (EC 221); main, the processor and the start-up checks
+  do not name it. EC's stale-signal step
+  changes rows still PROCESSING from earlier days to EXPIRED and leaves QUEUED and QUEUE_FULL rows unchanged (EC 105-127). When EC
+  runs is B-010's; restart is B-012's.
+
+Q7. Which outputs show the queue, and what do they read?
+| ID | Output | Content | Reads | Evidence | Label |
+| Q7-a | X-Queue-Depth header | "depth/capacity" on the 503 gate answer and on every batch answer | qsize(), config capacity | R 577, 741-742 | FACT (SOURCE-VERIFIED) |
+| Q7-b | X-Queue-Warning: high | depth after the loop >= int(capacity x warning_pct) = 180 | same | R 574, 743-744; CFG 128 | FACT (SOURCE-VERIFIED) |
+| Q7-c | Webhook /health (port 5000 per the comment at R 366) | queue_size, queue_capacity, queue_depth, after the per-IP limit (429) and authentication (401) | qsize(), config | R 364-404 | FACT (SOURCE-VERIFIED) |
+| Q7-d | /metrics (health server) | queue_depth 0 and queue_capacity 0; main merges P.get_runtime_metrics, which has no queue key | - | HC 153-154; M 4076; P 683-738 | FACT (SOURCE-VERIFIED) |
+| Q7-e | P.stats() | queue_depth and workers_active | qsize() | P 2663-2703; no caller in M (read 030) or in runtime files (Q29) | FACT (SOURCE-VERIFIED) |
+| Q7-f | Pre-flight webhook_backpressure | warns at depth >= 0.9 x capacity of /metrics' values, skips without /metrics | /metrics | PF 66-82 | FACT (SOURCE-VERIFIED) |
+| Q7-g | Logs | start and stop INFO; re-queue WARNINGs; failed marks ERROR | - | P 321-323, 347, 420-423, 430-433, 1504-1507, 1528-1530; R 1009-1011, 1059, 1174-1176 | FACT (SOURCE-VERIFIED) |
+| Q7-h | Webhook audit row | per request: code, accepted, rejected; counts only from 200 answers, so a 503 batch records 0 and 0 | - | R 506-517, 529-534 | FACT (SOURCE-VERIFIED) |
+| Q7-i | Status report | QUEUED and QUEUE_FULL among its known other statuses | signals rows | RS 46 | FACT (SOURCE-VERIFIED) |
+| Q7-j | Dashboard capacity view | a "Signal Queue" row: a limit (q_limit; the line that sets it was not read), the backpressure point round(backpressure_pct x limit), and a live size from its trader-health input, or UNAVAILABLE "trader down" | config; trader health | DC 114, 171-181 | FACT (SOURCE-VERIFIED) |
+| Q7-k | Crash-test inspector (test tool) | queue_depth from health, -1 when offline | health | TSI 61-67 | FACT (TEST TEXT) |
+- [Q7-l] KNOWN DEFECT (B-007 item 10, re-verified): /metrics' queue fields have no setter (HC 153-154; P 683-738), so the
+  pre-flight check (PF 76-82) passes with capacity 0. INTERPRETATION: the dashboard's live size key, queue_size, matches the
+  webhook /health field (R 401); its source was not traced (L topics).
+
+Q8. Is the queue used by more than one producer?
+- [Q8-a] FACT (SOURCE-VERIFIED): yes, in code: the receiver puts on first enqueue (R 1049) and when re-queueing a QUEUE_FULL row
+  (R 995); the processor puts on the pre-check re-queue (P 426, not wired) and the placement re-queue (P 1520). The dispatcher is
+  the only consumer (Q4-a).
+- [Q8-b] FACT: main gives the object only to the receiver and the processor (M 3402-3415, 3575-3576; read 001 printed no other use
+  of signal_queue in M). Q04 (put and get calls on names ending in queue or _q, runtime files) finds two such lines in the
+  receiver and four in the processor for this queue; its other hits belong to other queues by file (the live feed, the V3
+  capture worker and runner, the S&R detector and zone warmer).
+- [Q8-c] FACT: the EOD route leaves before the queue gate (R 562-564), and R's only two put calls are R 995 and R 1049 (Q04). The
+  processor's resume paths (continue_from_gate, continue_from_retest) contain no put (P's only puts are P 426 and P 1520, read
+  021); they run their own pipeline paths (C-008).
+- [Q8-d] FACT: producers run concurrently: up to 8 request threads (M 3994) and the workers' re-queues.
+
+==============================================================================
+2. QUEUE LIFECYCLE AND HAND-OFF BOUNDARIES
+==============================================================================
+| ID | Stage | What the code does | Evidence | Label | Hand-off |
+| L-01 | Construction | queue.Queue(maxsize=300) built before the receiver and the processor; one object for both | M 3402-3415, 3575-3576; CFG 125 | FACT | - |
+| L-02 | Start | the processor starts (dispatcher and 5-worker pool) after the start-up reconcile assertion and before the webhook server thread | M 3965-3975, 3987-4000; P 304-324 | FACT | A-011, B-006 |
+| L-03 | Door gates | shutting-down 503, per-IP 429, authentication 401, scanner 404, EOD route, kill 403, backpressure 503, entry window 403 | R 483-504, 547-583 | FACT | C-003 (auth), C-011 (EOD route), A-011 (kill) |
+| L-04 | Before the put | alias and exclusion, then _process_signal's field, expiry and repeat guards, then the INSERT with status QUEUED, committed | R 696-723, 956-980 | FACT (guards as frozen in C-005) | C-004, C-009, C-005 |
+| L-05 | Enqueue | put_nowait of the 5-tuple; ACCEPTED; the claim is left for the processor | R 1046-1049, 1070-1072 | FACT | C-005 (release) |
+| L-06 | Queue full | UPDATE to QUEUE_FULL (a failure is only logged); cache entry popped; claim released; QUEUE_FULL makes the request answer 503 | R 1050-1068, 730-734 | FACT | C-005, C-007 |
+| L-07 | Sender's retry | same fingerprint and a QUEUE_FULL row: re-queue under the old signal_id, then flip to QUEUED (a failure is only logged), ACCEPTED; still full: QUEUE_FULL | R 981-1013 | FACT; C6-L1 INTERPRETATION | C-005, C-007 |
+| L-08 | Dispatch | get(timeout 0.1); zone-warmer hand-off (guarded); executor.submit(_process_one_safe, item) | P 377-390, 361-375 | FACT | B-006 (pool), C-008 |
+| L-09 | Worker start | the pre-check (not wired); PROCESSING; the pipeline | P 405-466, 867-899 | FACT | C-008 |
+| L-10 | Processor re-queue | rate-limit error: dict with retry_count, at most 3, put(timeout 1.0), claim kept; full or exhausted: PLACEMENT_FAILED | P 1486-1532, 1233-1238, 1260-1271 | FACT | C-008, C-005 |
+| L-11 | Stop | receiver flag (503), then the processor: stop flag, drain into the pool, join 10 s, wait for all work; SHUTDOWN only at the placement check | M 1681-1692; R 1166-1176, 483-490; P 326-347, 392-399, 1398-1405 | FACT; C6-L3 INTERPRETATION | A-011, B-011 |
+| L-12 | Crash, next start | queue lost; rows keep QUEUED or PROCESSING; no re-queue at start found; the EOD step expires only stale PROCESSING rows | M 3402; Q10; EC 105-127 | FACT (bounded); INTERPRETATION | B-012, C-007, B-010 |
+
+- [L-B] Boundaries kept (FACT (SOURCE-VERIFIED) for the cited lines): C-005 = the claim, cache and fingerprint that travel with
+  an item, and their release (read here only where a queue path releases them: R 997-1000, 1029-1031, 1065-1067; P 456-460,
+  1260-1271). C-007 = status values, rows, EOD clean-up, retention. C-008 = everything a worker does after PROCESSING, the resume
+  paths, the entry throttle and the pipeline timeout. C-009 = expiry (expires_at at INSERT, R 960-961; expiry_sec 600, CFG 127;
+  the processor's check, not read). A-011, B-011, B-012 = start, stop and restart order.
+
+==============================================================================
+3. TESTS (documentary only; never run; FACT (TEST TEXT))
+==============================================================================
+| Test | What its source asserts | Evidence |
+| TB graduated backpressure | below 60%: X-Queue-Depth and no warning; 65 of 100: 200 and X-Queue-Warning high; 85 of 100: 503 and X-Queue-Depth; header "N/MAX" | TB 90-133 |
+| TB /health | with no secret configured (TB 80-87) or with the correct token (TB 191-197): queue_depth "0/100"; with a secret, an anonymous call gets 401 and none of kill_switch_active, queue_size, queue_capacity, queue_depth (TB 177-189) | TB 80-87, 166-197 |
+| TWR threshold | capacity 5 at 0.8: 4 items queued, the POST gets 503 | TWR 386-399 |
+| TWR put_nowait Full | maxsize 1 with capacity 50: QUEUE_FULL and 503 | TWR 402-431 |
+| TWR M-S2 | QUEUE_FULL, drain, retry: ACCEPTED, one row, status QUEUED | TWR 434-468 |
+| TWR concurrent POSTs | 5 threads: the queue size equals the accepted total | TWR 1041-1071 |
+| TH M-S2 integration | real receiver and store, a maxsize-1 queue: QUEUE_FULL row; the retry reuses its signal_id; status QUEUED; queue size 1 | TH 231-282 |
+| TSP lifecycle | start, stop, is_running; stop with 20 queued under 5 s; stop during processing under 8 s | TSP 458-479, 1809-1832 |
+| TSP helper | waits briefly before stop, "otherwise REJECTED_SHUTDOWN" | TSP 437-445 |
+| TSP FIX-007 | the limiter set on the object; exhausted: re-queued, status stays QUEUED; full queue: status REJECTED and a REJECTED_QUEUE_FULL warning | TSP 2144-2174, 2213-2243 |
+| TSP A-2 | a rate-limit error re-queues a dict with retry metadata; not TIMEOUT | TSP 2324-2344 |
+| TE4 H-16 | 503 "shutting down" after the receiver's stop(); a test of the shutdown order (receiver before processor) | TE4 319-335, 339-340 |
+| TSMV (crash-test tool) | a transition model with DROPPED_BACKPRESSURE and DROPPED_SHUTDOWN; no runtime file writes either (Q28) | TSMV 64-109 |
+Not shown by any test: a sender's real retries, or any production occurrence.
+
+==============================================================================
+4. FROZEN LEADS RE-VERIFIED AT THE PIN
+==============================================================================
+| Frozen statement | At the pin |
+| C-002 6.1: main builds the queue with maxsize = capacity 300 | Confirmed (M 3402-3404; CFG 125) |
+| C-002 rows 9 and 12: 503 at 240 of 300 with X-Queue-Depth; a batch 503 on QUEUE_FULL or STORE_ERROR; X-Queue-Warning from 180 | Confirmed (R 570-578, 730-744) |
+| B-009: config 125-127; REJECTED_SHUTDOWN at P 1398-1405; rate-limit re-queue at most 3 times (P 1486-1532) | Confirmed (CFG 125-127; P 1398-1405, 1493-1532); the status is composed as REJECTED_<check> (P 99, 1201) |
+| B-006 TH20: dispatcher and a pool of 5 | Confirmed (P 310-320; CFG 345; M 3974) |
+| B-006: stop joins the dispatcher for 10 s, then waits for the pool without limit; the docstring says 5 s | Confirmed (P 327-340) |
+| B-007 item 10 (KNOWN DEFECT): /metrics queue fields with no setter | Confirmed (HC 153-154; P 683-738; M 4076) |
+| A-011 Q32: in memory; a crash loses it; no re-queue at start in the inspected path | Consistent (M 3402; Q10, bounded) |
+| A-011 Q31: on a clean stop the dispatcher drains into the workers and each signal is rejected as REJECTED_SHUTDOWN, so each queued signal got a terminal status | Partly: the drain is confirmed (P 392-399); SHUTDOWN comes only at the placement check (P 1398-1405), earlier stages reject with their own status, and items put after the final drain are not processed (C6-L3) -> BM-03 |
+| C-005 6.2: the rate-limit pre-check re-queue holds the claim | Code path confirmed (P 418-461); not wired at the pin (M 3575-3623; P 189) -> BM-06 |
+| C-005 12.5 C5-L4 (BK-04): a failed flip is logged and the answer stays ACCEPTED | Confirmed (R 1002-1013); the flip runs after the put (R 995) -> C6-L1, BM-01 |
+| C-001 A-L4 (in C-002): a 503 batch audits 0 accepted and 0 rejected | Confirmed (R 506-517, 529-534) |
+
+==============================================================================
+5. NEW LEADS AND OPEN QUESTIONS (not resolved; INTERPRETATION unless marked)
+==============================================================================
+- C6-L1. INTERPRETATION. Re-queue flip order: the receiver puts the item (R 995) before it sets the row to QUEUED (R 1003-1007),
+  and that UPDATE has no condition on the current status. A worker that writes PROCESSING (P 897), or a fast rejection, before the
+  flip would be overwritten by QUEUED; if the worker's last write came first, the row would end QUEUED.
+- C6-L2. INTERPRETATION. A failed QUEUE_FULL mark (R 1052-1059) leaves the row QUEUED with no queue item; the request still
+  answers QUEUE_FULL (503). A retry in the same fingerprint bucket then meets that row with status QUEUED and is answered
+  DUPLICATE (R 981-1015), so the signal would never be processed and its row would stay QUEUED.
+- C6-L3. INTERPRETATION. Items put after the dispatcher's final drain, by a late receiver request (R 485, 1166-1176) or a worker's
+  re-queue during stop (P 1520), are not processed (P 392-399); at exit they are lost and their rows stay non-terminal (Q6-d).
+- C6-L4. INTERPRETATION. The queue's depth excludes work waiting in the pool (P 383-390; Q4-d), so the 503 gate and QUEUE_FULL
+  react only when the dispatcher falls behind; whether they ever did at runtime is not established.
+- C6-L5. INTERPRETATION. A re-queued QUEUE_FULL row keeps the first attempt's price and time while the item carries the retry's
+  (R 993, 1005; Q3-e).
+- C6-L6. INTERPRETATION. The pre-check path's full-queue branch reads signal_tuple[1] (P 429); for a dict item that indexes a dict
+  by position and would raise before the status write and the release (P 434-460). The path is not wired at the pin (Q5-f).
+- C6-L7. FACT (TEXT DRIFT), recorded only: CL 196 (expiry default 60); P 327-329 ("up to 5s"); P 1489 ("45s total, 15s each");
+  TSMV 64-109 (DROPPED_* statuses that runtime code does not write, Q28).
+- OQ-1 (OPEN QUESTION). Whether a deployed database's CHECK equals SQL 60-70 (migrations; C-007).
+- OQ-2 (UNKNOWN / NOT ESTABLISHED). What makes each rate-limit attempt take 15 s (P 1489): the rate limiter and the order placer
+  were not read.
+- OQ-3 (OPEN QUESTION). Whether QUEUE_FULL answers, re-queues or late stop items occurred in the live period: records only;
+  the two July queue records stay excluded (separate approval). HISTORICAL (C-002): 18 answers of 503, none since 01-Jul.
+- OQ-4 (UNKNOWN / NOT ESTABLISHED). How pipeline_timeout_sec 30 (CFG 347) is applied (Q4-e; C-008).
+
+==============================================================================
+6. FILES FOUND BUT NOT READ (count hits only; for review)
+==============================================================================
+- X-1. scripts/load_test_signals.py: queue_depth 5, backpressure 1, queue 6, ThreadPoolExecutor 2 lines (Q18, Q08, Q24, Q14); an
+  operational helper by its name, not in the register. Reason to read: what it expects from the depth headers (Q7).
+- X-2. tests/unit/test_fix074_numeric_cast.py: signal_queue 19 lines (Q02); not in the register. Reason: casting of the queue
+  settings (Q1).
+- X-3. Status readers by their names, L topics: ops_dashboard/backend/readers/db_reader.py, ops_dashboard/backend/services/
+  live_activity.py, reports/daily_trade_review.py, reports/daily_report.py (Q09, Q10, Q22).
+- X-4. Other queue-like mechanisms seen in the counts, not C-006: core/logger.py (queue 6, maxsize 1; Q24, Q06), orders/
+  order_placer.py (queue 10), orders/order_reconciler.py and orders/cnc_gtt_monitor.py (queue 4 each), and the HARD_KILL drain
+  test tests/unit/test_mc8_async_hardkill.py (33 term lines, Q25).
+
+==============================================================================
+7. CROSS-TOPIC BOOKMARKS (W-9; noted, not resolved)
+==============================================================================
+| ID | Point | Owners | Status |
+| C-006/BM-01 | BK-04 (C-005 BM-02, C5-L4) re-verified: on the receiver's re-queue path a failed flip is only logged and the answer stays ACCEPTED (R 1002-1013). Also: the flip runs after the put and is unconditional (C6-L1) | C-007 | OPEN |
+| C-006/BM-02 | A failed QUEUE_FULL mark leaves a QUEUED row with no item, and a same-bucket retry is answered DUPLICATE (C6-L2) | C-007 | OPEN |
+| C-006/BM-03 | A-011 Q31 against the code path: drained items run the pipeline, SHUTDOWN comes only at placement, and late items are not processed (C6-L3) | A-011, B-011 | OPEN |
+| C-006/BM-04 | The depth excludes the pool's waiting work, so backpressure reacts only when the dispatcher falls behind (C6-L4) | B-006; whole-design review | OPEN |
+| C-006/BM-05 | The re-queued row keeps the first attempt's price and time; the item carries the retry's (C6-L5) | C-007, C-008 | OPEN |
+| C-006/BM-06 | The FIX-007 pre-check re-queue is not wired at the pin, while C-005 section 6.2 lists it among the reviewed paths; its full branch mis-indexes a dict item (C6-L6) | C-005 (note), C-008 | OPEN |
+| C-006/BM-07 | Observability: /metrics queue fields fixed at 0 (B-007 item 10); P.stats() has queue_depth but no runtime caller; the pre-flight check warns at 0.9 x capacity of /metrics' values | L topics; B-007 | OPEN |
+| C-006/BM-08 | Text drift: expiry default 60 (C-009); "up to 5s" (B-006); "45s total, 15s each" (C-008, OQ-2); DROPPED_* in a crash-test tool (tests) | C-009, B-006, C-008, test topics | OPEN |
+
+==============================================================================
+8. DECLARATION AND DEVIATIONS
+==============================================================================
+- Pinned commit only: YES (HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; listing byte-identical to a fresh tree listing).
+- Every read through cread_c006.py and every count search through ccount_c006.py, each after its self-test: YES (73 reads, 29
+  searches; every read: working file = pinned blob, never-open 0, self-test passed).
+- Protected path, a path with a protected blob, or one of the two July records opened: NO.
+- config/system_config.yaml read only at its queue and processor blocks, by range: YES (lines 122-129 and 343-352; see
+  deviations).
+- Legacy code or tests run: NO. Live, host, broker, webhook or Chartink contacted: NO. Host records read as evidence: NO.
+- Repository files changed, commit or push: NO. Manual drafted: NO. V2 decision made: NO.
+- Independent verification: NO (self-checked; Rama's lean workflow).
+Deviations (plain list):
+- D-1. The queue-block read printed CFG 122-123, the last comment line and a blank line of the block before it; no value.
+- D-2. Count-only searches over S-ALL and S-CODE counted lines in config/system_config.yaml (as the clarification stated): Q02 1,
+  Q07 2, Q08 1, Q18 1, Q26 1. No line of the file was printed outside the two block reads.
+- D-3. After the clarification, Claude's own tools changed: a per-call self-test, saved masked evidence per read, and refusal of
+  the two July records by name (the Stage 1 control). The refusal-only gate test passed again before the first read.
+- D-4 (standing method, not new). The masking filter builds its mask list from host-like tokens in DEPLOYMENT.md and
+  docs/SYSTEM_MAP.md, as in every topic since the handover; it prints nothing from them.
+- D-5. One public web page was read for library behaviour (the Python 3.12 queue documentation; FACT (EXTERNAL)).
+END

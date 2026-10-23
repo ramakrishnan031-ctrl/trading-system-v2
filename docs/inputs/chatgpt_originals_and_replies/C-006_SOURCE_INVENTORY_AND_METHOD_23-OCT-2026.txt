@@ -1,0 +1,389 @@
+C-006 - QUEUE HANDLING
+SOURCE INVENTORY AND METHOD (Stage 1 research log; companion to C-006_CLAUDE_REPOSITORY_ANSWERS_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 16:50 to 17:24 IST. Authority: ChatGPT's C-006_STAGE1_AUTHORIZATION_FOR_CLAUDE_23-OCT-2026.txt
+(received through Rama at 16:50 IST, "APPROVED WITH SCOPE CONTROLS"), with the Stage 0 answers (file written 16:21 IST) and the
+Stage 0 clarification (16:43 IST; its sections 4 and 5).
+
+==============================================================================
+1. REPOSITORY / CHECKOUT
+==============================================================================
+- trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb (root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa);
+  GitHub main equal to the pin at 16:17 IST (Stage 0). The clone's HEAD is the pin, and its saved tree listing (1,438 paths) is
+  byte-identical to a fresh git ls-tree -r HEAD taken at 16:38 IST (SHA-256
+  1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5).
+- The project's blob-less partial clone with the sparse working tree of the C-002 scope lists. Stage 1 made no checkout and no
+  fetch: 8,922 local objects before the first read and at delivery.
+- The workflow was recorded in Claude's working notes at 16:53 IST, before any legacy read (first read 16:59:41 IST).
+
+==============================================================================
+2. GATE AND READING METHOD
+==============================================================================
+- Every read went through cread_c006.py. Each call first runs a self-test: the gate must refuse config/security.yaml (protected),
+  docs/audit/stale_queue_entries_25jul2026.md (excluded by the authorisation), a name that is not in the pin,
+  docs/v2_design_spec.md (a protected blob under a permitted name) and a simulated non-zero local-store check. Then the gate
+  itself: the 13 never-open rules, the two July records, the pin's listing, protected blobs, and sensitive_check.py exit 0. Then
+  the range format, the tree entry against the listing, and the working file's hash against the pinned blob. Only then does it
+  print, through mr.py (mask_read2.py plus the stage-2 mask). It saves each call's masked output as an evidence file and appends
+  one log row (number, IST time, mode, range or pattern, path, pinned blob, match, line count, printed lines, mask counts,
+  nev0=ok, selftest=ok, the evidence file's SHA-256 prefix). A refusal opens nothing and logs nothing.
+- Every count-only search went through ccount_c006.py: the same self-test; it refuses a whole list that holds a protected path, a
+  July record, a name outside the pin or a protected blob; then sensitive_check.py exit 0; then count_grep.py (mask_read2.py
+  --grep). It prints per-file counts only, saves them per search ID, and appends one log row.
+- Search scopes: C-006 copies of the C-002 lists. S-ALL6 = S-ALL without the two July records (1,260 paths, SHA-256 prefix
+  e8752191); S-RT (281, 4a6302df), S-CODE (869, 7d7b0f51) and S-TESTS (486, a6c4978e) unchanged.
+- The refusal-only gate test (the clarification's section 3) was re-run after each tool change and passed before the first read;
+  both tools refused the two July records by name.
+- Standing filter step: mask_read2.py builds its mask list from host-like tokens in DEPLOYMENT.md and docs/SYSTEM_MAP.md, as in
+  every topic since the handover; it prints nothing from them. Its over-masking shows as HOSTTOK counts (213 in read 007) and is
+  safe.
+- config/system_config.yaml: two range reads only (010: lines 122-129; 011: lines 343-352); no grep read of the file.
+- One public page was read for library behaviour: the Python 3.12 queue documentation (docs.python.org), for the FACT (EXTERNAL)
+  statements.
+- Grep reads print only the lines matching their pattern, but the filter masks the whole file, so their mask counts are for the
+  whole file; a range read's mask counts are for the printed lines.
+
+==============================================================================
+3. FILES READ (73 logged calls; every call: working file = pinned blob, never-open 0, self-test passed)
+==============================================================================
+Columns: path | pinned blob | lines | reads (range = full lines printed; grep = only matching lines printed; numbers = read log)
+- main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 4,294 | ranges 3398-3422 (002), 3570-3628 (003), 1678-1700 (005), 3964-4000
+  (006); grep 001, 004, 025, 030
+- core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 2,517 | ranges 190-212 (008), 562-602 (009); grep 007
+- config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 754 | ranges 122-129 (010), 343-352 (011)
+- signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1,208 | ranges 59-67 (013), 180-216 (014), 360-410
+  (015), 477-535 (016), 536-584 (017), 676-750 (018), 956-1072 (019), 1166-1182 (020); grep 012
+- signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 2,704 | ranges 196-248 (022), 302-404 (023), 405-470
+  (024), 470-486 (027), 675-743 (028), 2663-2704 (029), 867-912 (031), 1193-1202 (033), 1240-1276 (034), 1394-1408 (035),
+  1466-1545 (036), 1222-1240 (037), 1452-1466 (038); grep 021, 026, 032
+- core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 3,356 | ranges 1408-1450 (040); grep 039
+- core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 1,655 | ranges 56-72 (041)
+- scripts/eod_cleanup.py | ab658108e443b7121d886f98b94c5058c42253b0 | 325 | ranges 105-128 (044); grep 042
+- scripts/healthcheck_server.py | c094b5eb402353be5c74b569620aae0943cfad8b | 327 | grep 043
+- scripts/preflight/checks/signals.py | 1a0d5d5793455a3057fc44bcee5f794e28890c70 | 90 | ranges 60-85 (045)
+- reports/signal_status.py | 98a1631f5634807ecc6cf46cc9d3767215f9871f | 157 | grep 046
+- ops_dashboard/backend/services/capacity.py | 44b8c9f13ba49fa1d019876124a6fba2af41fc6a | 328 | ranges 171-181 (073); grep 047
+- tests/unit/test_fix134_backpressure.py | 463f7af7922f5e5f30543c0d0a94d508b3eafb10 | 403 | ranges 100-134 (049), 80-99 (066),
+  166-197 (067); grep 048
+- tests/integration/test_hardening_scenarios.py | d87da7ab9ed64792eed017c4d17fa23888b0c85e | 329 | ranges 231-282 (069); grep 050
+- tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 2,043 | ranges 386-400 (052), 1041-1071 (053),
+  402-468 (068); grep 051
+- tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 2,501 | ranges 436-492 (055), 1809-1840 (056),
+  2144-2176 (057), 2213-2244 (058), 2324-2352 (059); grep 054
+- tests/integration/test_end_to_end_smoke.py | 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 800 | grep 060
+- tests/unit/test_main.py | da7bbb91111358521f44dc00e8c48b1bedbc04be | 1,294 | grep 061
+- tests/unit/test_e4_event_loop_safety.py | db8cb8b39f028402ad330adc21b707e0d62f2fbe | 737 | ranges 319-340 (070); grep 062, 065
+- tests/crash_test/state_inspector.py | b018481f3333c61838b59060f7e582e1b432f443 | 246 | ranges 61-67 (072); grep 063
+- tests/crash_test/state_machine_validator.py | 5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe | 277 | ranges 60-110 (071); grep 064
+Read outside the legacy repository (not legacy evidence): the frozen V2 manuals at V2 main 3e26ec1 (as pointers only); ChatGPT's
+authorisation; the Stage 0 answers and clarification; the Python 3.12 queue documentation.
+
+==============================================================================
+4. READ LOG (all 73 calls; generated from the log; IST on 23-Oct-2026)
+==============================================================================
+| No. | IST | Mode | Range | File | Lines printed | Masks (grep: whole file; range: printed lines) | Evidence SHA-256 |
+| 001 | 16:59:41 | grep | pattern 001 | M | 11 | HOSTTOK 0, CLIENTID 19, KV 10, ALNUM 8, IPV4 1; stage-2 none | f3e5d1fb7a8d |
+| 002 | 16:59:48 | range | 3398-3422 | M | 25 | HOSTTOK 0; stage-2 none | a2964c3f903b |
+| 003 | 16:59:53 | range | 3570-3628 | M | 59 | HOSTTOK 0; stage-2 none | 06cb423b14a1 |
+| 004 | 17:00:03 | grep | pattern 004 | M | 11 | HOSTTOK 0, CLIENTID 19, KV 10, ALNUM 8, IPV4 1; stage-2 none | 96396c08e650 |
+| 005 | 17:00:08 | range | 1678-1700 | M | 23 | HOSTTOK 0; stage-2 none | 00f0a08f689d |
+| 006 | 17:00:08 | range | 3964-4000 | M | 37 | HOSTTOK 0; stage-2 none | d9c264a472b8 |
+| 007 | 17:00:20 | grep | pattern 007 | CL | 15 | HOSTTOK 213, IPV4 1, CLIENTID 1, ALNUM 5; stage-2 none | 06bd1d438fcf |
+| 008 | 17:00:29 | range | 190-212 | CL | 23 | HOSTTOK 0; stage-2 none | 1181d489108d |
+| 009 | 17:00:30 | range | 562-602 | CL | 41 | HOSTTOK 0; stage-2 none | b830ff8fd3ca |
+| 010 | 17:00:45 | range | 122-129 | CFG | 8 | HOSTTOK 0; stage-2 none | b43a9a180dd2 |
+| 011 | 17:00:50 | range | 343-352 | CFG | 10 | HOSTTOK 0; stage-2 none | 916bb5b21bb1 |
+| 012 | 17:01:00 | grep | pattern 012 | R | 85 | HOSTTOK 1, CLIENTID 3, KV 2, IPV4 1; stage-2 none | 89858e681337 |
+| 013 | 17:01:08 | range | 59-67 | R | 9 | HOSTTOK 0; stage-2 none | 34f867f5360d |
+| 014 | 17:01:09 | range | 180-216 | R | 37 | HOSTTOK 0, KV 1; stage-2 none | ad3f95262d8a |
+| 015 | 17:01:15 | range | 360-410 | R | 51 | HOSTTOK 0, IPV4 1; stage-2 none | ed6c44da83a9 |
+| 016 | 17:01:20 | range | 477-535 | R | 59 | HOSTTOK 0; stage-2 none | ad6a0b98b9b4 |
+| 017 | 17:01:25 | range | 536-584 | R | 49 | HOSTTOK 0; stage-2 none | 7b0d941704b4 |
+| 018 | 17:01:32 | range | 676-750 | R | 75 | HOSTTOK 0; stage-2 none | e843f30e5ba4 |
+| 019 | 17:01:42 | range | 956-1072 | R | 117 | HOSTTOK 0; stage-2 none | 1e77fe74256f |
+| 020 | 17:02:07 | range | 1166-1182 | R | 17 | HOSTTOK 0; stage-2 none | e60debd09ae1 |
+| 021 | 17:02:16 | grep | pattern 021 | P | 122 | HOSTTOK 0, CLIENTID 7, ALNUM 2; stage-2 none | 0f02e4750679 |
+| 022 | 17:02:31 | range | 196-248 | P | 53 | HOSTTOK 0, ALNUM 1; stage-2 none | f23caf844f56 |
+| 023 | 17:02:38 | range | 302-404 | P | 103 | HOSTTOK 0; stage-2 none | a3e8a5f8ecdf |
+| 024 | 17:03:04 | range | 405-470 | P | 66 | HOSTTOK 0; stage-2 none | 0bf11eef6ca8 |
+| 025 | 17:03:15 | grep | pattern 025 | M | 9 | HOSTTOK 0, CLIENTID 19, KV 10, ALNUM 8, IPV4 1; stage-2 none | cc94057364a2 |
+| 026 | 17:03:15 | grep | pattern 026 | P | 5 | HOSTTOK 0, CLIENTID 7, ALNUM 2; stage-2 none | 2ec13c46fc13 |
+| 027 | 17:03:27 | range | 470-486 | P | 17 | HOSTTOK 0; stage-2 none | 1218879ef051 |
+| 028 | 17:03:27 | range | 675-743 | P | 69 | HOSTTOK 0; stage-2 none | 07f144d7f479 |
+| 029 | 17:03:36 | range | 2663-2704 | P | 42 | HOSTTOK 0; stage-2 none | ad7087d17723 |
+| 030 | 17:03:36 | grep | pattern 030 | M | 1 | HOSTTOK 0, CLIENTID 19, KV 10, ALNUM 8, IPV4 1; stage-2 none | c17db2680ce0 |
+| 031 | 17:03:43 | range | 867-912 | P | 46 | HOSTTOK 0; stage-2 none | 8b8aa8c51b37 |
+| 032 | 17:03:58 | grep | pattern 032 | P | 41 | HOSTTOK 0, CLIENTID 7, ALNUM 2; stage-2 none | 08b9bdad8c3a |
+| 033 | 17:04:05 | range | 1193-1202 | P | 10 | HOSTTOK 0; stage-2 none | d75f6ef90594 |
+| 034 | 17:04:06 | range | 1240-1276 | P | 37 | HOSTTOK 0; stage-2 none | dca7ac05ce12 |
+| 035 | 17:04:06 | range | 1394-1408 | P | 15 | HOSTTOK 0; stage-2 none | a1a6c13745e8 |
+| 036 | 17:04:13 | range | 1466-1545 | P | 80 | HOSTTOK 0; stage-2 none | fc1e03b43d79 |
+| 037 | 17:04:27 | range | 1222-1240 | P | 19 | HOSTTOK 0; stage-2 none | 7bcbcd90a144 |
+| 038 | 17:04:28 | range | 1452-1466 | P | 15 | HOSTTOK 0; stage-2 none | edcf8bc44bca |
+| 039 | 17:04:36 | grep | pattern 039 | ST | 3 | HOSTTOK 0, CLIENTID 1; stage-2 none | 69f6c684817f |
+| 040 | 17:04:41 | range | 1408-1450 | ST | 43 | HOSTTOK 0; stage-2 none | 72fbe5a37e00 |
+| 041 | 17:04:50 | range | 56-72 | SQL | 17 | HOSTTOK 0; stage-2 none | e71ee0cbe0f9 |
+| 042 | 17:05:06 | grep | pattern 042 | EC | 14 | HOSTTOK 0, CLIENTID 1; stage-2 none | 7c71cad4c9da |
+| 043 | 17:05:07 | grep | pattern 043 | HC | 2 | HOSTTOK 8, KV 1, IPV4 2; stage-2 none | 069f1eb568c6 |
+| 044 | 17:05:17 | range | 105-128 | EC | 24 | HOSTTOK 0; stage-2 none | a94d09b57dda |
+| 045 | 17:05:18 | range | 60-85 | PF | 26 | HOSTTOK 0; stage-2 none | 99ef718d03af |
+| 046 | 17:05:26 | grep | pattern 046 | RS | 3 | HOSTTOK 0; stage-2 none | 66732af345d1 |
+| 047 | 17:05:26 | grep | pattern 047 | DC | 11 | HOSTTOK 0; stage-2 none | e7175a087181 |
+| 048 | 17:05:49 | grep | pattern 048 | TB | 63 | HOSTTOK 0, KV 3, IPV4 3, ALNUM 1; stage-2 none | 924026dbd0ec |
+| 049 | 17:05:56 | range | 100-134 | TB | 35 | HOSTTOK 0; stage-2 none | c7f7eed8a44b |
+| 050 | 17:06:01 | grep | pattern 050 | TH | 26 | HOSTTOK 0, ALNUM 4, IPV4 1; stage-2 none | dd0cf85872c8 |
+| 051 | 17:06:08 | grep | pattern 051 | TWR | 40 | HOSTTOK 0, KV 16, IPV4 3, CLIENTID 16, ALNUM 1; stage-2 none | 943d48c74d57 |
+| 052 | 17:06:16 | range | 386-400 | TWR | 15 | HOSTTOK 0; stage-2 none | 2c6ae93dd56d |
+| 053 | 17:06:16 | range | 1041-1071 | TWR | 31 | HOSTTOK 0; stage-2 none | 43783cf58579 |
+| 054 | 17:06:22 | grep | pattern 054 | TSP | 26 | HOSTTOK 0; stage-2 none | de4df1d14bfe |
+| 055 | 17:06:29 | range | 436-492 | TSP | 57 | HOSTTOK 0; stage-2 none | bba006d8f3be |
+| 056 | 17:06:35 | range | 1809-1840 | TSP | 32 | HOSTTOK 0; stage-2 none | 1e902d1bbf8c |
+| 057 | 17:06:36 | range | 2144-2176 | TSP | 33 | HOSTTOK 0; stage-2 none | 6c83c85918f1 |
+| 058 | 17:06:42 | range | 2213-2244 | TSP | 32 | HOSTTOK 0; stage-2 none | 1116f852891d |
+| 059 | 17:06:42 | range | 2324-2352 | TSP | 29 | HOSTTOK 0; stage-2 none | b84fb0e4dfe0 |
+| 060 | 17:06:49 | grep | pattern 060 | E2E | 1 | HOSTTOK 0, ALNUM 7; stage-2 none | c369f23e3131 |
+| 061 | 17:06:50 | grep | pattern 061 | TM | 3 | HOSTTOK 0, IPV4 1, CLIENTID 3, KV 7, LONGNUM 2, ALNUM 4; stage-2 none | 0ba2985485af |
+| 062 | 17:06:50 | grep | pattern 062 | TE4 | 4 | HOSTTOK 0, ALNUM 4; stage-2 none | ba226e0d1541 |
+| 063 | 17:06:51 | grep | pattern 063 | TSI | 4 | HOSTTOK 0; stage-2 none | c6892457a86a |
+| 064 | 17:06:51 | grep | pattern 064 | TSMV | 7 | HOSTTOK 5; stage-2 none | 2739e2ee8acd |
+| 065 | 17:07:12 | grep | pattern 065 | TE4 | 25 | HOSTTOK 0, ALNUM 4; stage-2 none | b5edbfb5bed2 |
+| 066 | 17:15:40 | range | 80-99 | TB | 20 | HOSTTOK 0; stage-2 none | 5ebc06567c65 |
+| 067 | 17:15:41 | range | 166-197 | TB | 32 | HOSTTOK 0, IPV4 1; stage-2 none | eb41ab4e7fc3 |
+| 068 | 17:15:49 | range | 402-468 | TWR | 67 | HOSTTOK 0; stage-2 none | 136197e2d2ed |
+| 069 | 17:15:54 | range | 231-282 | TH | 52 | HOSTTOK 0, ALNUM 1; stage-2 none | a02e61fbde5d |
+| 070 | 17:15:55 | range | 319-340 | TE4 | 22 | HOSTTOK 0; stage-2 none | 261ab6d20ff6 |
+| 071 | 17:16:00 | range | 60-110 | TSMV | 51 | HOSTTOK 0; stage-2 none | f8c6f12589ed |
+| 072 | 17:16:00 | range | 61-67 | TSI | 7 | HOSTTOK 0; stage-2 none | 633081ad37c0 |
+| 073 | 17:16:01 | range | 171-181 | DC | 11 | HOSTTOK 0; stage-2 none | ae41f2b94a3f |
+
+Exact grep patterns (Python regular expressions, matched against each raw line; only matching lines were printed):
+  001 M: signal_queue|maxsize|SignalProcessor\(|WebhookReceiver\(|queue\.Queue|import queue|from queue
+  004 M: signal_processor\.(start|stop|get_runtime_metrics|drain)|webhook_receiver\.(start|stop|shutdown|app|run)|_webhook_server|waitress|serve\(|threads=
+  007 CL: class SignalQueue|class SignalProcessor|signal_queue|capacity|expiry_sec|backpressure|worker_count|drain_poll|queue_depth|queue_warn
+  012 R: ^\s*def |signal_queue|_queue\b|put_nowait|qsize|QUEUE_FULL|QUEUED|backpressure|warning_pct|X-Queue|queue_depth|capacity|re-?queue|_shutting_down|queue\.Full|Full\b
+  021 P: ^\s*def |signal_queue|self\._queue|ThreadPoolExecutor|\.submit\(|worker_count|drain_poll|pipeline_timeout|\.get\(timeout|get_nowait|put_nowait|\.put\(|qsize|queue\.Empty|queue\.Full|_requeue|re-?queue|retry_count|SHUTDOWN|_stop_event|_running|\.join\(|shutdown\(
+  025 M: rate_limiter|_rate_limiter
+  026 P: rate_limiter
+  030 M: signal_processor\.stats|signal_proc\.stats|\.stats\(\)|get_runtime_metrics|metrics_provider
+  032 P: except _PipelineReject|REJECTED_\{|"REJECTED_" \+|f"REJECTED_|class _PipelineReject|rej\.check|\.check\b
+  039 ST: def update_signal_status|def transaction|def fetch_one
+  042 EC: QUEUED|QUEUE_FULL|PROCESSING|^\s*def 
+  043 HC: queue_depth|queue_capacity|signal_queue
+  046 RS: QUEUE_FULL|QUEUED|queue
+  047 DC: signal_queue|backpressure|queue
+  048 TB: ^\s*def test_|^class |X-Queue|503|maxsize|queue_depth|warning
+  050 TH: ^\s*def test_|^class |QUEUE_FULL|QUEUED|maxsize|put_nowait|qsize|503|re-?queue|drain
+  051 TWR: def test_.*([Qq]ueue|backpress|requeue|503|shutdown|stop)|QUEUE_FULL|QUEUED|maxsize|qsize|shutting|put_nowait
+  054 TSP: def test_.*([Qq]ueue|requeue|re_queue|drain|shutdown|stop|dispatch|worker|retry|rate)|REJECTED_SHUTDOWN|QUEUE_FULL|maxsize|qsize|retry_count
+  060 E2E: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  061 TM: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  062 TE4: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  063 TSI: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  064 TSMV: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  065 TE4: ^\s*def test_|\.stop\(\)|503|shutting
+
+==============================================================================
+5. SEARCH REGISTER (count-only; generated from the search log; no matching line printed)
+==============================================================================
+Scopes: S-ALL6 1,260 files; S-RT 281 .py files outside the test folders; S-CODE 869 code and configuration files, tests included;
+S-TESTS 486 files under the test folders. Times: Q01 to Q27 from 16:55:27 to 16:58:03 IST; Q28 and Q29 at 17:07 IST.
+| ID | Scope | Terms (exact patterns below the table) | Files / lines | Runtime and configuration files with counts (tests and documents left out) | Used for |
+| Q01 | S-ALL6 | queue.Queue, Queue( | 23 / 42 | core/logger.py 1, data/live_feed.py 1, M 1, P 1, R 1, sr_detector/detector.py 1, sr_detector/zone_warmer.py 1, v3_chain/runner.py 1 (+1 more) | queue constructions |
+| Q02 | S-ALL6 | signal_queue | 37 / 113 | R 11, M 6, P 6, DC 3, CL 2, ops_dashboard/backend/services/config_view.py 2, CFG 1, ops_dashboard/backend/readers/config_reader.py 1 | users of the name |
+| Q03 | S-ALL6 | put_nowait, get_nowait | 14 / 36 | data/live_feed.py 4, R 2, sr_detector/detector.py 2, sr_detector/zone_warmer.py 2, v3_chain/runner.py 2, v3_chain/watchlist_capture.py 2, P 1 | non-blocking put/get |
+| Q04 | S-RT | put/get calls on *queue or *_q (any case) | 7 / 22 | data/live_feed.py 4, P 4, sr_detector/detector.py 3, sr_detector/zone_warmer.py 3, v3_chain/runner.py 3, v3_chain/watchlist_capture.py 3, R 2 | put/get calls (producers, consumer) |
+| Q05 | S-ALL6 | qsize( | 9 / 24 | R 3, P 1 | depth readers |
+| Q06 | S-CODE | maxsize | 21 / 43 | M 3, core/logger.py 1, data/live_feed.py 1, R 1, sr_detector/detector.py 1, sr_detector/zone_warmer.py 1, v3_chain/runner.py 1, v3_chain/watchlist_capture.py 1 | maxsize settings |
+| Q07 | S-CODE | capacity (any case) | 62 / 299 | ops_dashboard/frontend/templates/capital_risk.html 37, ops_dashboard/backend/api/risk_capital.py 13, ops_dashboard/frontend/templates/dashboard.html 12, broker/rate_limiter.py 11, R 8, ops_dashboard/backend/api/capacity.py 6, DC 6, ops_dashboard/frontend/templates/capacity.html 6 (+19 more) | capacity users |
+| Q08 | S-ALL6 | backpressure, back_pressure, back-pressure (any case) | 54 / 127 | R 10, PF 6, DC 3, CFG 1, CL 1, reports/daily_trade_review.py 1, scripts/load_test_signals.py 1 | backpressure users |
+| Q09 | S-ALL6 | QUEUE_FULL | 39 / 131 | R 15, P 4, RS 3, data/live_feed.py 2, ops_dashboard/backend/readers/db_reader.py 2, SQL 1, reports/daily_report.py 1 | QUEUE_FULL writers/readers |
+| Q10 | S-ALL6 | QUEUED (word) | 38 / 71 | R 5, ops_dashboard/backend/readers/db_reader.py 3, SQL 2, reports/daily_trade_review.py 2, ops_dashboard/backend/services/live_activity.py 1, RS 1, EC 1 | QUEUED writers/readers (start-time re-queue) |
+| Q11 | S-ALL6 | requeue, re-queue (any case) | 20 / 90 | P 18, R 5 | re-queue sites |
+| Q12 | S-ALL6 | retry_count (any case) | 18 / 71 | P 15, orders/order_placer.py 11, ST 9, orders/tgt_retry_manager.py 8, core/migrations.py 2, SQL 2, ops_dashboard/backend/readers/db_reader.py 2, allocation/models.py 1 (+1 more) | retry counters |
+| Q13 | S-RT | drain (word start, any case) | 11 / 79 | allocation/portfolio_allocator.py 19, capital/kill_switch.py 18, M 11, P 8, CL 7, allocation/window_buffer.py 5, data/live_feed.py 3, orders/smart_tgt_manager.py 3 (+3 more) | drain sites |
+| Q14 | S-RT | ThreadPoolExecutor | 9 / 29 | screening/step_executor.py 6, core/events.py 5, P 5, orders/smart_tgt_manager.py 3, screening/entry_gate.py 3, scripts/alert_watcher.py 3, scripts/load_test_signals.py 2, ST 1 (+1 more) | thread pools |
+| Q15 | S-RT | executor (any case) | 17 / 138 | screening/step_executor.py 41, screening/secondary_screener.py 19, core/events.py 17, P 17, orders/smart_tgt_manager.py 13, screening/entry_gate.py 10, M 6, screening/__init__.py 3 (+9 more) | executors |
+| Q16 | S-ALL6 | REJECTED_SHUTDOWN | 2 / 2 | none | the shutdown status literal |
+| Q17 | S-RT | SHUTDOWN (word) | 11 / 33 | utils/startup_checks.py 8, M 4, ops_dashboard/backend/services/live_activity.py 4, ST 3, ops_dashboard/backend/readers/db_reader.py 3, ops_dashboard/backend/services/system_logs.py 3, P 3, ops_dashboard/backend/services/audit.py 2 (+3 more) | SHUTDOWN users |
+| Q18 | S-ALL6 | X-Queue-Depth, X-Queue-Warning, queue_depth, queue_capacity (any case) | 27 / 68 | scripts/load_test_signals.py 5, PF 5, R 5, data/live_feed.py 3, HC 2, P 2, CFG 1, CL 1 | depth fields and headers |
+| Q19 | S-ALL6 | queue full, queue_full, queue-full (any case) | 48 / 166 | R 15, P 6, data/live_feed.py 4, RS 3, ops_dashboard/backend/readers/db_reader.py 2, SQL 1, reports/daily_report.py 1, sr_detector/detector.py 1 (+3 more) | queue-full words |
+| Q20 | S-RT | dispatch (any case) | 20 / 84 | P 24, capital/kill_switch.py 16, core/events.py 13, capital/drift_handler.py 3, capital/fund_manager.py 3, M 3, orders/order_placer.py 3, orders/slippage_recorder.py 3 (+12 more) | dispatchers |
+| Q21 | S-ALL6 | SignalProcessor(, WebhookReceiver( | 16 / 25 | M 2, P 1, R 1 | construction sites of the two classes |
+| Q22 | S-RT | quoted QUEUED | 4 / 5 | R 2, ops_dashboard/backend/readers/db_reader.py 1, ops_dashboard/backend/services/live_activity.py 1, RS 1 | QUEUED literals |
+| Q23 | S-RT | update_signal_status calls and status-setter definitions | 5 / 31 | P 26, screening/retest_monitor.py 2, ST 1, screening/entry_gate.py 1, screening/secondary_screener.py 1 | status-write callers |
+| Q24 | S-RT | queue (word, any case) | 19 / 119 | P 16, R 16, data/live_feed.py 15, orders/order_placer.py 10, sr_detector/zone_warmer.py 7, v3_chain/runner.py 7, v3_chain/watchlist_capture.py 7, core/logger.py 6 (+11 more) | runtime files naming a queue |
+| Q25 | S-TESTS | the C-006 terms, tests | 52 / 387 | tests only (scope); top: TWR 60, TSP 57, test_mc8_async_hardkill 33, TB 27, test_fix074_numeric_cast 25, TH 21 | test candidates |
+| Q26 | S-CODE | max_workers, worker_count, num_workers, pool_size (any case) | 16 / 38 | screening/entry_gate.py 5, P 5, CL 4, core/events.py 2, M 2, scripts/alert_watcher.py 2, CFG 1, orders/smart_tgt_manager.py 1 (+2 more) | pool-size settings |
+| Q27 | S-RT | self.queue, self._queue, ._signal_queue | 2 / 11 | P 6, R 5 | the queue attribute |
+| Q28 | S-RT | DROPPED_BACKPRESSURE, DROPPED_SHUTDOWN | 0 / 0 | none | statuses of the crash-test model |
+| Q29 | S-RT | processor .stats( calls | 0 / 0 | none | callers of P.stats() |
+Exact search patterns (Python regular expressions):
+  Q01: queue\.Queue\b|\bQueue\(
+  Q02: signal_queue
+  Q03: put_nowait|get_nowait
+  Q04: (?i)(queue|_q)\.(put|get)(_nowait)?\(
+  Q05: qsize\(
+  Q06: maxsize
+  Q07: (?i)capacity
+  Q08: (?i)back[_ -]?pressure
+  Q09: QUEUE_FULL
+  Q10: \bQUEUED\b
+  Q11: (?i)re-?queue
+  Q12: (?i)retry_count
+  Q13: (?i)\bdrain
+  Q14: ThreadPoolExecutor
+  Q15: (?i)executor
+  Q16: REJECTED_SHUTDOWN
+  Q17: \bSHUTDOWN\b
+  Q18: (?i)x-queue-depth|x-queue-warning|queue_depth|queue_capacity
+  Q19: (?i)queue[ _-]?full
+  Q20: (?i)dispatch
+  Q21: SignalProcessor\(|WebhookReceiver\(
+  Q22: [\"']QUEUED[\"']
+  Q23: (?i)def (update|set)_signal_status|def update_status|def set_status|\.update_signal_status\(
+  Q24: (?i)\bqueue\b
+  Q25: (?i)signal_queue|QUEUE_FULL|\bQUEUED\b|re-?queue|backpressure|put_nowait|qsize|maxsize|\bdrain|REJECTED_SHUTDOWN|queue_depth|queue_capacity|X-Queue
+  Q26: (?i)max_workers|worker_count|num_workers|pool_size
+  Q27: (?i)self\._?queue\b|\._signal_queue\b
+  Q28: DROPPED_BACKPRESSURE|DROPPED_SHUTDOWN
+  Q29: (signal_processor|signal_proc|processor|_sp)\.stats\(
+Limits: a count names files and reads nothing for the answer; a file named only by a count is described by its name, not read.
+config/system_config.yaml is in S-ALL6 and S-CODE, so its lines were counted (Q02 1, Q07 2, Q08 1, Q18 1, Q26 1); none printed.
+
+==============================================================================
+6. CONDITIONAL ROWS OF THE STAGE 0 REGISTER: DECISIONS
+==============================================================================
+| Row | File | Decision | Reason |
+| 8 | scripts/eod_cleanup.py | INCLUDED (grep 042, range 044) | Q10 found QUEUED there; it is a comment (EC 221); the stale step changes PROCESSING rows only (EC 105-127) |
+| 9 | utils/startup_checks.py | EXCLUDED | no queue term (Q02, Q10, Q24); its SHUTDOWN lines (Q17) belong to scenario detection (A-011) |
+| 10 | scripts/healthcheck_server.py | INCLUDED (grep 043) | Q18: the /metrics queue fields |
+| 11 | ops_dashboard/backend/readers/metrics_client.py | EXCLUDED | no hit in Q02, Q08, Q18 or Q24 |
+| 12 | reports/signal_status.py | INCLUDED (grep 046) | Q09, Q10, Q19, Q22 |
+| 13 | ops_dashboard capacity: services/capacity.py; api/capacity.py; frontend/templates/capacity.html | the service INCLUDED (grep 047, range 073); the route and the template EXCLUDED | the service holds the queue row (Q02, Q08); the other two have no signal_queue or backpressure hit |
+| 14 | scripts/preflight/checks/signals.py | INCLUDED (range 045) | B-007's cited check (PF 66-82); Q08, Q18 |
+| 15 | core/events.py | EXCLUDED | another queue (the event bus); no signal_queue hit (Q02) |
+| 16 | core/ids.py | EXCLUDED | no queue term; the item's signal_id is not checked on dequeue (P 405-413, 878-887) |
+| 17 | tests/integration/test_full_signal_flow.py | EXCLUDED | no hit in Q25 |
+| 18 to 21 | TB, TH, TWR, TSP | INCLUDED | as planned, at their queue cases |
+| 22 | tests/integration/test_end_to_end_smoke.py | EXCLUDED after grep 060 | its one hit concerns a fill map, not the queue |
+| 23 | tests/unit/test_main.py | EXCLUDED after grep 061 | fixture values only (capacity 100, drain poll 0.1, a mock queue) |
+| 24 | tests/unit/test_fix129_graceful_shutdown.py | EXCLUDED | no hit in Q25 |
+| 25 | tests/unit/test_e4_event_loop_safety.py | INCLUDED (greps 062 and 065, range 070) | the H-16 stop tests |
+| 26 | tests/crash_test/ helpers | state_inspector and state_machine_validator INCLUDED (greps 063, 064; ranges 071, 072); signal_injector EXCLUDED | no Q25 hit in signal_injector; documentary only |
+| 27, 28 | the two July 2026 queue records | NOT READ and NOT SEARCHED | excluded by the authorisation; refused by name by both tools |
+| 29, 30 | other queues and other topics | NOT READ | as planned |
+Files found by the counts but outside the register are listed, not read, in the answers file, section 6 (X-1 to X-4).
+
+==============================================================================
+7. CLAIM INDEX (every claim ID of the answers file)
+==============================================================================
+Columns: claim ID | label(s) | cited lines (the answers file's alias table gives each alias's path and pinned blob) | the logged
+reads that printed those lines (section 4 gives each read's range and blob). OQ-3 cites a frozen manual only.
+| Claim | Label | Citations (alias lines) | Logged reads that printed them |
+| Q1-a | FACT (SOURCE-VERIFIED) | M 29, M 3402-3404, M 3407-3408, M 3575-3576, R 146, R 152 | 001 002 003 012 |
+| Q1-b | FACT (SOURCE-VERIFIED) | CL 192-197, CL 200, CL 1991 | 007 008 |
+| Q1-c | FACT (CONFIG) | CFG 124-128 | 010 |
+| Q1-d | FACT (SOURCE-VERIFIED) | M 3403, R 537, R 571, R 397, R 573-574, DC 114, DC 171 | 001 002 012 015 017 047 073 |
+| Q1-e | FACT (EXTERNAL); INTERPRETATION | CL 194 | 007 008 |
+| Q1-f | FACT (TEXT DRIFT) | CL 196, CFG 127 | 007 008 010 |
+| Q2-a | FACT (SOURCE-VERIFIED); HISTORICAL | R 571-573, CFG 125-126, R 570-578, R 483-504, R 547-549, R 552-554, R 562-564, R 566-568, R 580-583, R 696, R 575-578, R 584, R 676 | 010 012 016 017 018 |
+| Q2-b | FACT (SOURCE-VERIFIED) | R 1048-1050, R 994-996, R 59-66 | 012 013 019 |
+| Q2-c | FACT (EXTERNAL); INTERPRETATION | M 3994 | 006 |
+| Q2-d | FACT (SOURCE-VERIFIED) | R 574, R 741-744 | 012 017 018 |
+| Q3-a | FACT (SOURCE-VERIFIED) | R 1047, R 1049, R 963-980, R 957 | 012 019 |
+| Q3-b | FACT | R 992-995 | 012 019 |
+| Q3-c | FACT | P 426, P 1510-1520 | 021 024 036 |
+| Q3-d | FACT | P 878-887, P 887, P 874 | 021 031 |
+| Q3-e | INTERPRETATION | R 1005, P 879-886 | 012 019 021 031 |
+| Q4-a | FACT (SOURCE-VERIFIED) | P 314-320, P 385, P 395, P 385, CFG 346, P 386-387 | 011 021 023 |
+| Q4-b | FACT | P 361-375, P 388, P 389-390 | 021 023 |
+| Q4-c | FACT | P 310-313, CFG 345, CL 588-593, P 220 | 007 009 011 021 022 023 |
+| Q4-d | FACT; INTERPRETATION | P 383-390, P 15 | 021 023 |
+| Q4-e | FACT (CONFIG); UNKNOWN / NOT ESTABLISHED | CFG 347, CL 568, CL 602 | 009 011 |
+| Q5-a | FACT (SOURCE-VERIFIED) | R 981-1013 | 012 019 |
+| Q5-b | FACT (SOURCE-VERIFIED) | R 996-1001 | 012 019 |
+| Q5-c | FACT (SOURCE-VERIFIED) | P 415-461 | 021 024 026 032 |
+| Q5-d | FACT (SOURCE-VERIFIED) | P 1486-1532, P 1233-1238, P 1260-1271 | 021 034 036 037 |
+| Q5-e | FACT (SOURCE-VERIFIED) | P 1464-1484 | 021 036 038 |
+| Q5-f | FACT (SOURCE-VERIFIED) | M 3575-3623, P 189, P 418, M 2348, M 2385, TSP 2155, TSP 2227 | 001 003 024 025 026 057 058 |
+| Q5-g | FACT; INTERPRETATION | P 426, P 1519-1525, P 897, TSP 2160-2162 | 021 024 031 036 057 |
+| Q5-h | FACT (TEXT DRIFT); UNKNOWN / NOT ESTABLISHED | P 1489 | 036 |
+| Q5-i | FACT (SOURCE-VERIFIED) | R 977, R 1005, R 1055, P 897, P 99, P 1201, P 1405, P 907, P 1238, P 473-475, P 1480-1481, P 435-437, ST 1408-1426, R 1005, R 1055, SQL 60-70 | 012 019 021 024 027 031 032 033 035 036 037 039 040 041 |
+| Q6-a | FACT (SOURCE-VERIFIED) | M 1681-1692, R 1166-1176, R 483-490, R 1166-1176, R 210-213 | 004 005 012 014 016 020 |
+| Q6-b | FACT; FACT (TEXT DRIFT) | P 333, P 392-399, P 336, P 338-340, P 327-329 | 021 023 |
+| Q6-c | FACT; INTERPRETATION | P 897, P 1398-1405, P 1193-1201, P 905-912 | 021 031 032 033 035 |
+| Q6-d | INTERPRETATION | R 485, P 1520, P 426 | 012 016 021 024 036 |
+| Q6-e | FACT (SOURCE-VERIFIED) | R 566-568, P 905-907, P 1396 | 017 031 035 |
+| Q6-f | FACT; HISTORICAL | M 3402 | 001 002 |
+| Q6-g | FACT | M 3402, R 977, R 1005, R 812, R 985, R 1011, EC 221, EC 105-127 | 001 002 012 019 042 044 |
+| Q7-a | FACT (SOURCE-VERIFIED) | R 577, R 741-742 | 012 017 018 |
+| Q7-b | FACT (SOURCE-VERIFIED) | R 574, R 743-744, CFG 128 | 010 012 017 018 |
+| Q7-c | FACT (SOURCE-VERIFIED) | R 366, R 364-404 | 012 015 |
+| Q7-d | FACT (SOURCE-VERIFIED) | HC 153-154, M 4076, P 683-738 | 004 021 028 030 043 |
+| Q7-e | FACT (SOURCE-VERIFIED) | P 2663-2703 | 021 029 |
+| Q7-f | FACT (SOURCE-VERIFIED) | PF 66-82 | 045 |
+| Q7-g | FACT (SOURCE-VERIFIED) | P 321-323, P 347, P 420-423, P 430-433, P 1504-1507, P 1528-1530, R 1009-1011, R 1059, R 1174-1176 | 012 019 020 021 023 024 026 032 036 |
+| Q7-h | FACT (SOURCE-VERIFIED) | R 506-517, R 529-534 | 016 |
+| Q7-i | FACT (SOURCE-VERIFIED) | RS 46 | 046 |
+| Q7-j | FACT (SOURCE-VERIFIED) | DC 114, DC 171-181 | 047 073 |
+| Q7-k | FACT (TEST TEXT) | TSI 61-67 | 063 072 |
+| Q7-l | INTERPRETATION; KNOWN DEFECT | HC 153-154, P 683-738, PF 76-82, R 401 | 015 021 028 043 045 |
+| Q8-a | FACT (SOURCE-VERIFIED) | R 1049, R 995, P 426, P 1520 | 012 019 021 024 036 |
+| Q8-b | FACT | M 3402-3415, M 3575-3576 | 001 002 003 |
+| Q8-c | FACT | R 562-564, R 995, R 1049, P 426, P 1520 | 012 017 019 021 024 036 |
+| Q8-d | FACT | M 3994 | 006 |
+| L-01 | FACT | M 3402-3415, M 3575-3576, CFG 125 | 001 002 003 010 |
+| L-02 | FACT | M 3965-3975, M 3987-4000, P 304-324 | 004 006 021 023 |
+| L-03 | FACT | R 483-504, R 547-583 | 012 016 017 |
+| L-04 | FACT | R 696-723, R 956-980 | 012 018 019 |
+| L-05 | FACT | R 1046-1049, R 1070-1072 | 012 019 |
+| L-06 | FACT | R 1050-1068, R 730-734 | 012 018 019 |
+| L-07 | FACT; INTERPRETATION | R 981-1013 | 012 019 |
+| L-08 | FACT | P 377-390, P 361-375 | 021 023 |
+| L-09 | FACT | P 405-466, P 867-899 | 021 024 026 031 032 |
+| L-10 | FACT | P 1486-1532, P 1233-1238, P 1260-1271 | 021 034 036 037 |
+| L-11 | FACT; INTERPRETATION | M 1681-1692, R 1166-1176, R 483-490, P 326-347, P 392-399, P 1398-1405 | 004 005 012 016 020 021 023 035 |
+| L-12 | FACT; INTERPRETATION | M 3402, EC 105-127 | 001 002 042 044 |
+| L-B | FACT (SOURCE-VERIFIED) | R 997-1000, R 1029-1031, R 1065-1067, P 456-460, R 960-961, CFG 127 | 010 012 019 024 |
+| C6-L1 | INTERPRETATION | R 995, R 1003-1007, P 897 | 012 019 031 |
+| C6-L2 | INTERPRETATION | R 1052-1059, R 981-1015 | 012 019 |
+| C6-L3 | INTERPRETATION | R 485, R 1166-1176, P 1520, P 392-399 | 012 016 020 021 023 036 |
+| C6-L4 | INTERPRETATION | P 383-390 | 021 023 |
+| C6-L5 | INTERPRETATION | R 993, R 1005 | 012 019 |
+| C6-L6 | INTERPRETATION | P 429, P 434-460 | 024 |
+| C6-L7 | FACT (TEXT DRIFT) | CL 196, P 327-329, P 1489, TSMV 64-109 | 007 008 023 036 064 071 |
+| OQ-1 | OPEN QUESTION | SQL 60-70 | 041 |
+| OQ-2 | UNKNOWN / NOT ESTABLISHED | P 1489 | 036 |
+| OQ-3 | HISTORICAL; OPEN QUESTION | - | - |
+| OQ-4 | UNKNOWN / NOT ESTABLISHED | CFG 347 | 011 |
+
+==============================================================================
+8. NEVER-OPEN / SECURITY ATTESTATION
+==============================================================================
+- The 102 protected paths and the one permitted path that shares a protected blob were not opened, fetched or searched; the
+  gate refuses them by name and by blob, and no scope list holds any of them.
+- The two July records were not opened or searched: S-ALL6 leaves them out and both tools refuse them by name.
+- sensitive_check.py exited 0 before every read and every search (the gate requires it) and at delivery: never-open blobs present
+  locally 0; local objects 8,922, unchanged since Stage 0 (no fetch).
+- Working output showed masked code only (section 4 gives the mask counts). No masked value is reproduced in the deliverables,
+  which are scanned value-blind at delivery (section 10).
+
+==============================================================================
+9. DEVIATIONS / OPEN ITEMS
+==============================================================================
+- D-1 to D-5 as listed in the answers file, section 8 (CFG 122-123 printed with the queue block; config lines counted by the
+  S-ALL6 and S-CODE searches; tool changes after the clarification; the standing filter step; one public documentation page).
+- No file outside the Stage 0 register was read; conditional rows were read only where the counts pointed (section 6). X-1 to
+  X-4 (answers, section 6) wait for review.
+- No independent agent check was run (Rama's lean workflow); the checks of section 10 are self-checks.
+
+==============================================================================
+10. CHECKS AT DELIVERY (17:24 IST, after the last legacy read at 17:16:01 IST; self-checks, no agent)
+==============================================================================
+- sensitive_check.py: never-open blobs present locally 0; local objects 8,922.
+- Read log: 73 rows; every row match, nev0=ok and selftest=ok. Search log: 29 searches, every one after its self-test.
+- Citations in the answers file: 284 alias citations, every cited line printed by a logged read (cite_cover_c006.py).
+- 40-character IDs in both files: the pin, the root tree and blob IDs of the pinned listing only; every path-blob pair matches
+  the listing.
+- scan_ids.py (value-blind): long_token only: answers 19, inventory 23 (40-character IDs and the listing SHA-256); no other shape.
+- No session link. ASCII only.
+END

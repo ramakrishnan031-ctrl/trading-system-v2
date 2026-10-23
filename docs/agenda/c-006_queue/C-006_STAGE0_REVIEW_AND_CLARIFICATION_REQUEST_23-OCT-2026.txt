@@ -1,0 +1,51 @@
+C-006 — STAGE 0 REVIEW
+REVIEW FINDINGS AND REQUIRED CLARIFICATION BEFORE STAGE 1
+Date: 23-Oct-2026
+Status: INVENTORY REVIEWED; STAGE 1 NOT YET AUTHORISED
+
+SOURCE REVIEWED
+C-006_CLAUDE_STAGE0_INVENTORY_ANSWERS_23-OCT-2026.txt
+Pinned legacy baseline stated by Claude: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+1. OVERALL ASSESSMENT
+The inventory is detailed and the proposed C-006 boundary is generally suitable:
+- C-006 focuses on the signal queue between webhook receiver and signal processor, including its hand-off to workers.
+- Other queue mechanisms are explicitly separated into their own topics.
+- Candidate paths, blob IDs, search method, exclusions, open questions, and a bounded reading order are recorded.
+- Claude declares that no legacy source contents were opened, no code/tests were run, and no files/repository state were changed.
+- The two July 2026 queue records remain unread and are explicitly held for separate approval.
+
+2. BLOCKING INCONSISTENCY — PROTECTED-PATH RULE
+The inventory says there are 102 “never-open” paths, including 21 config paths, and that Stage 1 must perform a protected-path check before every read with zero protected paths permitted. However:
+- `config/system_config.yaml` is listed as candidate row 4.
+- Stage 1 step 2 explicitly proposes reading its signal-queue and processor blocks.
+- The inventory does not establish whether this exact file is among the protected config paths, nor does it explain an approved exception.
+
+Do not read `config/system_config.yaml` until this conflict is resolved. Do not infer that it is safe to read merely because its blob metadata was inventoried.
+
+Required clarification from Claude:
+A. Confirm whether `config/system_config.yaml` is one of the 102 protected/never-open paths, using path classification only.
+B. If protected, keep it unread and identify an already-authorised, non-protected source for the required configuration facts, or mark those facts UNKNOWN / NOT ESTABLISHED. Do not propose an exception.
+C. If it is not protected, show the exact path-classification evidence supporting that distinction and confirm the protected-path check will block every genuinely protected path.
+D. Update the Stage 1 reading order accordingly. Do not open any source while preparing this clarification.
+
+3. SCOPE GUARD
+The inventory correctly says C-006 owns the signal queue and its hand-off to the processor's worker pool. During Stage 1:
+- Document the hand-off interface only.
+- Do not expand into the internal implementation of other queues or worker queues unless evidence proves it is part of the signal-queue path and ChatGPT/Rama approves the boundary.
+- Keep C-007 status/schema/retention and C-008 processing logic as bounded cross-references, not full analyses.
+- Treat earlier frozen manuals as pointers to verify against the pinned source, not as substitutes for source evidence.
+- Do not read `docs/audit/queue_items_decidable_25jul2026.md` or `docs/audit/stale_queue_entries_25jul2026.md`; separate approval is required.
+- No code/tests execution, live/host access, fixes, V2 decisions, commits, or pushes.
+
+4. OTHER OBSERVATIONS
+- The path-name search finds only 15 paths, but the inventory explicitly notes that generic filenames can contain queue logic. The proposed count-only content searches in Stage 1 are therefore appropriate, subject to the protected-path gate.
+- The line-count values marked UNKNOWN should remain unknown until safely and explicitly read; do not infer them.
+- “No question blocks Stage 1” should be revised to reflect the protected-path/config inconsistency above.
+
+5. REQUIRED NEXT ACTION
+Claude should return only a short clarification/update to the inventory and revised Stage 1 reading plan. No source reading yet. Once the protected-path contradiction is resolved and the scope boundary is preserved, ChatGPT/Rama can authorise the bounded Stage 1 review.
+
+DECISION
+Stage 0 inventory: ACCEPTED WITH ONE BLOCKING CLARIFICATION.
+Stage 1 source reading: NOT AUTHORISED YET.

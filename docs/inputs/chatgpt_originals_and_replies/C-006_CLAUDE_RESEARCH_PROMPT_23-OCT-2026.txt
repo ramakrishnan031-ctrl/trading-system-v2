@@ -1,0 +1,50 @@
+C-006 — QUEUE HANDLING
+CLAUDE RESEARCH PROMPT — STAGE 0 INVENTORY ONLY
+Date: 23-Oct-2026
+
+ROLE
+You are documenting a DEAD legacy trading system as a factual historical record. You are not repairing, tuning, reviving, testing, or redesigning it. No V2 decisions or implementation are authorised.
+
+SOURCE OF TRUTH
+Legacy production snapshot:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit:
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+C-005 GOVERNANCE CONTEXT
+C-005 is frozen as DR-058. The supplied execution transcript records commit 3e26ec1a2d6a972d588e4a3cdc818495e7884919 pushed to trading-system-v2/main and verified. C-005 handed off queue/status re-try questions under BM-02 and C5-L4. Treat them only as leads for inventory, not established C-006 conclusions.
+
+MANDATORY FIRST STEP
+Before making conclusions, establish the source inventory and documentation workflow. Do not analyse individual modules yet.
+
+STAGE 0 TASK
+1. Verify the legacy repository and exact pinned commit.
+2. Search the pinned repository tree and metadata only for queue-related files and terms.
+3. Populate the attached/companion answer sheet `C-006_ANSWER_FILE_FOR_CLAUDE_23-OCT-2026.txt`.
+4. Identify candidate paths, blob IDs, line counts/sizes, search terms, exclusions, unresolved inventory gaps, and a proposed bounded Stage 1 reading order.
+5. Keep queue handling distinct from deduplication (C-005), persistence/retention (C-007), signal processing (C-008), startup/shutdown (A-011), and field/auth validation (C-003/C-004). Record interfaces; do not expand into those chapters.
+6. Return the completed answer sheet and a concise summary, then STOP for ChatGPT/Rama review.
+
+STAGE 0 PROHIBITIONS
+- Do not open or read source-code contents; do not quote code.
+- Do not run code or tests.
+- Do not contact VMs, hosts, brokers, webhooks, Chartink, or live services.
+- Do not read host/runtime records.
+- Do not modify repository files, create branches, stage, commit, or push.
+- Do not draft the C-006 manual yet.
+- Do not decide how V2 should handle queues, retries, idempotency, capacity, or shutdown.
+- Do not assume filenames, tests, comments, or C-005 statements prove runtime behaviour.
+- Do not silently fill unknowns with general engineering expectations.
+
+SEARCH TERMS
+Search path names and metadata for:
+queue, signal_queue, Queue, queue_full, QUEUE_FULL, enqueue, dequeue, put, get, worker, dispatcher, retry, requeue, drain, shutdown, capacity, maxsize, backpressure.
+Search across the pinned tree, not only likely directories. Candidate starting paths may include `signals/webhook_receiver.py`, `signals/signal_processor.py`, `main.py`, `config/system_config.yaml`, `core/schema.sql`, `core/state_store.py`, related tests, scripts, and monitoring/reporting paths. Verify each candidate at the pin; do not presume inclusion.
+
+ANSWER QUALITY
+For each candidate, provide exact path, blob ID, size/line count, reason for inclusion based only on path/search hit, proposed role, and whether content was read (must be NO). Distinguish a runtime candidate from a test, report, comment-only hit, or operational helper. If the repository pin cannot be verified, stop rather than switching revisions.
+
+DELIVERABLE
+Return the completed answer sheet plus a short inventory summary. State explicitly that source contents were not opened, no code/tests were run, no live/host systems or records were accessed, and no files/repository state were changed.
+
+STOP after Stage 0. Wait for ChatGPT/Rama's review before any Stage 1 source reading.
