@@ -1,0 +1,311 @@
+C-007 - SIGNAL PERSISTENCE (master agenda title; prompt scope: persistence, status transitions, database schema, retention)
+STAGE 0 ANSWERS: SOURCE INVENTORY AND DOCUMENTATION WORKFLOW (answers to C-007_STAGE0_ANSWER_SHEET_FOR_CLAUDE_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 18:10 to 18:44 IST.
+Prepared by: Claude, on ChatGPT's Stage 0 prompt and answer sheet of 23-Oct-2026 (project practice), received from Rama at 18:09
+  IST.
+Status: Stage 0 only. No legacy source content opened, no module analysed, no behavioural conclusion drawn; stops for review.
+Companion file (deliverable B): C-007_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt (method, gate log, search log,
+  per-file counts). The summary below is deliverable C.
+
+SUMMARY (deliverable C)
+- Pin verified: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (commit date 2026-09-11, root tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa); GitHub main is the same commit today. Every inventory step used that commit's saved
+  listing or its checked-out files (1,260 of 1,260 searched files equal their pinned blobs).
+- Gate: C-006's accepted tools, copied as cread_c007.py and ccount_c007.py, with one addition, a Stage 0 lock that refuses every
+  read of a permitted file until a Stage 1 authorisation. The refusal-only self-test passed (18:16 IST); every count-only search
+  ran through the gate; 0 never-open blobs and 8,922 local objects before and after.
+- Unlike the queue, persistence has files of its own: core/schema.sql (the only code file with a line matching CHECK (status,
+  search P10), core/state_store.py, core/migrations.py and scripts/eod_cleanup.py, beside generically named writers and
+  readers.
+- Counts only, not analysed: SQL that writes signals rows appears in 5 non-test files (INSERT: the state store, the receiver and
+  one test-like script; UPDATE: the state store, the receiver, the order manager and eod_cleanup; DELETE: eod_cleanup alone);
+  the text update_signal_status( appears in 4 other runtime modules (26 lines of the processor, 2 of the retest monitor, 1 each
+  of the entry gate and the secondary screener); FROM or JOIN signals appears in 19 non-test files.
+- Register (section 3): 49 rows, 95 files: 16 files proposed for Stage 1 reads (YES), 5 SUPPORTING, 24 CONDITIONAL and 50 not
+  read (cross-references, exclusions and records, names only).
+- Scope: proposal S-1 (section 4.1) bounds C-007 to the signals table, the signal-status contract and the retention of signals
+  rows, in full, with the rest of the schema by name and owner only; ChatGPT and Rama confirm or widen it in the Stage 1
+  authorisation.
+- Stage 1 read order (section 5): storage contract (schema, migrations, store), then the writers in the order of a signal's
+  life, then start, stop, kill and repair paths, then retention, then the next consumers, then tests.
+- No question blocks Stage 1 (section 7).
+
+==============================================================================
+1. BASELINE CONFIRMATION
+==============================================================================
+[x] Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot (the production snapshot), the origin of
+    the project's blob-less partial clone.
+[x] Exact commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb is the clone's HEAD; git log -1 on that named commit (18:16 IST)
+    printed commit date 2026-09-11T02:05:13+05:30 and root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa (no subject or author
+    printed).
+[x] All inventory operations refer to that commit: a fresh git ls-tree -r of the pin is byte-identical to the saved listing
+    (SHA-256 1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5; 1,438 tracked files: 1,432 mode 100644, 6 mode
+    100755); the 1,260 working files that the searches covered were hashed with git hash-object, and each equals its pinned
+    blob; blob IDs come from that listing and sizes from the local object store.
+[x] No branch tip or current main substituted: read-only git ls-remote --symref (18:16 IST): HEAD is refs/heads/main and main is
+    970aabf3c78d777d9d34549e021f7c8e756c7bdb, equal to the pin.
+[x] V2 references: frozen manuals and governance records were read from a fresh clone of V2 main at
+    642fd7630976c50c72c487d654f3b0631dfdfd35 (taken at 18:07 IST to confirm the C-006 push).
+
+==============================================================================
+2. PROTECTED-PATH AND ACCESS GATE
+==============================================================================
+- Procedure reused: C-006's accepted gate (cread_c006.py, ccount_c006.py), copied as cread_c007.py and ccount_c007.py. Same 13
+  never-open rules as sensitive_check.py (pattern identity checked by parsing both sources). Same refusals: path shape,
+  never-open path, excluded record, not in the pinned listing, shares a never-open blob, local store not clean; the read gate
+  also checks the tree entry and the working file against the pin before any read.
+- Excluded July records: docs/audit/queue_items_decidable_25jul2026.md and docs/audit/stale_queue_entries_25jul2026.md, the two
+  that the C-006 Stage 1 authorisation named (its section 3); read here as the prompt's "excluded July records". Both tools
+  refuse them by name, and neither is in any search list. No other record was opened either (section 3 G: names only).
+- Added for C-007: the Stage 0 lock (STAGE1_AUTHORISED = False in cread_c007.py). A call that passes every gate check is still
+  refused, so no legacy file can be opened at Stage 0. It is lifted only as a step of its own after a Stage 1 authorisation,
+  with the tool's new SHA-256 recorded.
+- Refusal-only self-test (gate_test_c007.py, 18:16 IST): cread_c007.py refused the 102 protected paths ("never-open path"), the
+  2 excluded July records ("excluded July record"), docs/v2_design_spec.md ("shares a never-open blob"), 14 rule-shaped names,
+  one per rule ("never-open path"), a permitted-shaped name not in the tree ("not in the pinned tree listing") and the permitted
+  core/schema.sql ("Stage 0 lock"). ccount_c007.py refused four lists (102 protected paths; 2 excluded records; 1 shared blob; 1
+  path not in the tree) and searched nothing. Before and after: sensitive_check.py exit 0, 102 never-open paths in the tree,
+  8,922 local objects, 0 never-open blobs present; no C-007 log row written. Result: PASSED.
+- Protected paths by rule (pinned listing): R1 .env files 1 (the root .env.example); R2 config/accounts* 2; R3
+  config/security.yaml 1; R4 config/reference_data/ 18; R5 docs/web_claude/ 80; R6 to R13 0. No database file (*.db, *.sqlite,
+  *.sqlite3, WAL or SHM), no logs/ path and no session or token file is tracked: the live database is not in the repository, so
+  C-007 can document schema and code only, never stored rows.
+- Classification of every listed file: each of the 95 register files is permitted (0 of 13 rules; its blob is not a protected
+  blob), except row R48, the two July records, excluded by name.
+- Before each count-only search ccount_c007.py ran its self-test, checked every listed path and ran sensitive_check.py; all 39
+  searches passed the gate (39 log rows with nev0=ok and selftest=ok); none was refused.
+- No source read: the C-007 read log does not exist (0 reads). The only content operations were the count-only searches through
+  the masking filter and git hash-object over the 1,260 searched files.
+- State re-checked before delivery (18:44 IST): 8,922 local objects (1,259 blobs, 1,537 commits, 6,126 trees); 0
+  never-open blobs present. The gate status is clear: no STOP was needed.
+
+==============================================================================
+3. CANDIDATE INVENTORY (names and metadata only; pin 970aabf; Read now? NO for every row)
+==============================================================================
+Columns: Size is bytes from the local object store (all 95 blobs were already local from earlier topics); lines come from the
+  C-005 and C-006 read logs where those topics read the file (19 files), else UNKNOWN. Gate: the read gate's class. Why:
+  path-name hits, count-only search IDs with per-file counts (companion file, section 7 and appendix B), and frozen-manual
+  pointers. Stage 1: YES (primary or test source, read at located ranges), SUPPORTING (a bounded confirmation), CONDITIONAL
+  (only where Stage 1's gated searches tie the file to signals rows), NO (cross-reference, exclusion or record; names only). A
+  candidate is not proof that a file will be read.
+
+| # | Exact path | Blob ID | Size / lines | Gate | Why a candidate | Proposed role | Stage 1 |
+A. Schema and the persistence layer
+| R01 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 104,053 / 1,655 | permitted | Name hit schema; P01 49, P02 1, P10 5 (the only code file with a line matching it); B-003 s.5; C-006 s.7 cites the status CHECK | Primary: the signals table, its status CHECK, its indexes; other tables by name only (B-003 s.5) | YES |
+| R02 | core/migrations.py | cc39e811e48a9eec823c20b70d343278a6b33eef | 21,663 / UNKNOWN | permitted | Name hit migrat; P02 1 (a signals CREATE), P26 35; B-003 s.6 and s.14 (a signals CHECK rebuild is tested) | Primary for the signals table's schema history only; the migration mechanism is B-003's | YES |
+| R03 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 153,466 / 3,356 | permitted | Name hit state_store; P03 2, P04 3, P06b 4, P07 2, P08 4; C-006 s.7 cites update_signal_status at 1408-1426 | Primary: every function that inserts, updates or reads signals rows; open and transaction rules are B-003's | YES |
+| R04 | core/db_connect.py | a0f776fef2caf56a1a2e533dfb2ffb436792b543 | 5,265 / UNKNOWN | permitted | Name hit db; B-003 s.3 and s.4 (connection, analytics attach) | Cross-reference (B-003 frozen) | NO |
+| R05 | core/analytics_schema.sql | 57deb055f4db78d0c016505971a0ce4be040d7a2 | 5,370 / UNKNOWN | permitted | Name hit schema; P01 3; B-003 s.5 (candles, system_metrics, system_metrics_daily) | Exclude: no signal table (B-003; K-009, K-010) | NO |
+B. Writers of signals rows and statuses
+| R06 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 59,565 / 1,208 | permitted | P03 2 (INSERT), P04 2 (UPDATE), P11 5, P15 21; C-005 and C-006 read its insert and its two status updates | Primary for the insert's columns and the receiver's status writes only (C-005, C-006 own the rest) | YES |
+| R07 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 139,403 / 2,704 | permitted | P07 26 (lines with update_signal_status(), P12 4, P14 6; C-006 s.7 and B-009 s.5 cite its status writes | Primary for the status written at each call and its reason; the pipeline's decisions are C-008's | YES |
+| R08 | screening/entry_gate.py; screening/retest_monitor.py; screening/secondary_screener.py | 46b173171bdfeba48af641b67a361618e5acba58; 26639d6ed5dddb1140f0868bb9f937cad5379f82; b6f8ff7223ad803869e976f92d794dfc7c811b59 | 21,303 / UNKNOWN; 19,889 / UNKNOWN; 35,461 / UNKNOWN | permitted | P07 1, 2 and 1 (lines with update_signal_status( outside the processor) | Primary for those calls only (screening logic: D topics) | YES |
+| R09 | orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 34,485 / UNKNOWN | permitted | P04 1 (UPDATE signals), P06b 1 | Primary for that update only (order logic: G topics) | YES |
+| R10 | core/evidence_contract.py | 29fb84bc690d05b832625fb55a496f3f8d4d18d7 | 35,426 / UNKNOWN | permitted | P14 8 (REJECTED_ names), P24 5; its test has 7 lines with update_signal_status( (P07) | CONDITIONAL: only if it defines the status or reason vocabulary written to signals | CONDITIONAL |
+C. Start, stop, kill and repair paths
+| R11 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 208,758 / 4,294 | permitted | P32 1 (a name joining clear, close, expire, mark, recover, repair or reset with signal, stale, pending, queued, processing or orphan), P16 11; A-011 Q32: no re-queue at start identified | CONDITIONAL: start-time handling of non-terminal signals rows, lines located by a gated grep read | CONDITIONAL |
+| R12 | capital/kill_switch.py | 3eb2ece050c3eafbcf2e90ec01c824b4dff27950 | 108,965 / UNKNOWN | permitted | P32 2 | CONDITIONAL: kill-time status writes, if any | CONDITIONAL |
+| R13 | scripts/system_manager.py | 04e776e60f988f47f11753c42577ffd0c428adaf | 65,628 / UNKNOWN | permitted | P12 3 (PROCESSING), P32 1, P06b 3; A-011 cites it | CONDITIONAL: any repair of PROCESSING or other non-terminal rows | CONDITIONAL |
+| R14 | scripts/check_vm_state.py | b9f362ae378b00cc968a1c09145b0843bba31d28 | 8,276 / UNKNOWN | permitted | P06b 3; B-003 s.3; a test named test_check_vm_state_reset_removed | CONDITIONAL: whether it reads or resets signal statuses | CONDITIONAL |
+| R15 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | 68,854 / UNKNOWN | permitted | P17 1, P18 1; cited by six frozen manuals (A-008, A-011, B-002, B-003, B-005, B-007) | CONDITIONAL: start checks on signals rows, if any (B-007 owns the checks) | CONDITIONAL |
+D. Retention, cleanup and their configuration
+| R16 | scripts/eod_cleanup.py | ab658108e443b7121d886f98b94c5058c42253b0 | 12,698 / 325 | permitted | Name hit cleanup; P04 1, P05 2 (the only non-test file with DELETE FROM signals), P19 19, P16 12; C-006 s.8.3 cites lines 105-127; BK-05 | Primary: retention and status repair of signals rows (B-010 owns the EOD sequence) | YES |
+| R17 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 55,901 / 754 | permitted | P35 5, P19 1; C-005 s.8 cites signal_retention_days: 90 | Primary for the retention and cleanup keys only (repository values, not deployed values) | YES |
+| R18 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 127,242 / 2,517 | permitted | P19 3, P23 2 | SUPPORTING: the model and defaults of those keys only (B-002 owns the loader) | SUPPORTING |
+| R19 | config/cron_registry.yaml; deploy/cron/trading-system.cron | 42ff638145ba8c05eba907a33d5b391ae3fc6910; f8399b40bfa71e35e27746e46cd463171615477a | 27,116 / UNKNOWN; 15,842 / UNKNOWN | permitted | P35 58 and 26, P23 20 and 10; B-010 s.10: eod_cleanup at 15:50 | SUPPORTING: the eod_cleanup and db_retention job lines only (scheduling: A-009, B-010, M-002) | SUPPORTING |
+| R20 | scripts/db_retention.py | 3de2dded7d813a3848dce555941f15ba5ac333f4 | 8,564 / UNKNOWN | permitted | Name hits db, retention; P19 24; B-003 s.11: signals, trades and orders are not in its policy | SUPPORTING: confirm only that signals and their fingerprints are outside its policy | SUPPORTING |
+| R21 | scripts/output_retention.py | e11baf33fb49e8abbafceb2e15dc94d1f5cb9f21 | 13,800 / UNKNOWN | permitted | Name hit retention; P19 18, P23 11; no signals-table search hit | CONDITIONAL: only if it touches the database (otherwise M-008) | CONDITIONAL |
+| R22 | scripts/backup_retention.py; scripts/backup_restore_drill.py; scripts/wal_checkpoint.py; scripts/backup_evidence.py | 1b541332c3ec0e8416ec6439eefeb23e3417df9b; fe12a5efcb8a8a5a6c72be00549b009fed8227a5; 3a6d603b7cf100a6b5273a6ee1120cb633dae016; 031cbe80dc0758ec239bb2d6b30b33681ec4cb80 | 13,840 / UNKNOWN; 11,374 / UNKNOWN; 2,390 / UNKNOWN; 6,091 / UNKNOWN | permitted | Name hits backup, restore, wal, retention; B-003 s.12 and B-012 s.8 | Exclude: backups, restore drill and checkpoints (B-003, B-012; M-008, M-009) | NO |
+E. Readers of persisted status (next consumers) and other readers
+| R23 | reports/signal_status.py | 98a1631f5634807ecc6cf46cc9d3767215f9871f | 7,742 / 157 | permitted | Name hits status, signal; P14 13, P15 4; C-006 s.9 cites its known-status list | Next consumer: the status set it classifies (L-011 owns the report) | YES |
+| R24 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | 201,593 / UNKNOWN | permitted | P06b 27, P09 43, P14 15; B-003 s.3 cites it | CONDITIONAL: status-set queries only (L-010) | CONDITIONAL |
+| R25 | reports/daily_report.py; reports/daily_trade_review.py | ad40268a655b7c2860c8e31da4b7f2c0ff85d168; c448b7976964a14caf0061016c239c6a3d7cabad | 84,776 / UNKNOWN; 151,981 / UNKNOWN | permitted | P37 2 each; P15 1 (daily_report); P11 2 (daily_trade_review); B-003 s.10 lists daily_trade_review among scheduled openers | CONDITIONAL: status-set queries only (L-011) | CONDITIONAL |
+| R26 | ops_dashboard/backend/services/live_activity.py; ops_dashboard/backend/services/scanner_attribution.py; ops_dashboard/backend/services/trade_logs.py; ops_dashboard/backend/services/strategy_tower.py; ops_dashboard/backend/services/pipeline_state.py; ops_dashboard/backend/services/audit.py; ops_dashboard/frontend/templates/trade_logs.html; ops_dashboard/frontend/templates/signals.html | ceeb30c7862fc6f1a58b761085245f5e54f87706; 8503d3c1c6e038a7309d52e9d5492e8332ed3624; 5a9b1954bfb84c8471239aa5ee809bb0536af94b; 6effe8732f5284d37a318d9fcc9ddedd9e288070; c06f0431a43462ee89c5675ec5ca2f6fa03e9499; f772aa60f53ad4a40407918f5b9b85ef3b146f59; 1fd578637f4338efd983309d156d75f1fa5225a8; 32a26458f0e3ad0fc4716c7b1540a8edb7c59b63 | 57,432 / UNKNOWN; 37,345 / UNKNOWN; 36,152 / UNKNOWN; 23,047 / UNKNOWN; 7,504 / UNKNOWN; 35,091 / UNKNOWN; 41,915 / UNKNOWN; 32,067 / UNKNOWN | permitted | Name hits (pipeline_state, audit, signals.html) or status names (P11, P12, P14, P37); audit.py P19 19 | Cross-reference: dashboard consumers (L-010) | NO |
+| R27 | ops/control_tower/freshness.py; ops/control_tower/db.py; scripts/healthcheck_server.py | 04b3cd96f5f380ec6bbf4419b5cd20266cfb9b18; c4dc9f5e3512da11a8d768672fc8384df23e5c74; c094b5eb402353be5c74b569620aae0943cfad8b | 5,241 / UNKNOWN; 6,013 / UNKNOWN; 14,364 / 327 | permitted | P06b 2, 0 and 4; B-003 and B-007 cite db.py and the health server | Cross-reference: monitoring readers (B-007, L topics) | NO |
+| R28 | scripts/preflight/checks/database.py; scripts/preflight/checks/signals.py; scripts/preflight/checks/state.py; scripts/preflight/checks/recovery.py | 5ec69c8bf023d0a712c0695c8f5644842414011c; 1a0d5d5793455a3057fc44bcee5f794e28890c70; a46d28d976dce5a0f300ebc7b7179da88a5cbe7d; b14bdc8eb37feae4cbab8e8ab30849bf004e67f7 | 5,755 / UNKNOWN; 4,170 / 90; 5,858 / UNKNOWN; 4,954 / UNKNOWN | permitted | Name hits database, signal, state, recover; database.py P26 8 | Cross-reference: pre-flight checks (B-007 frozen) | NO |
+| R29 | orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | 85,123 / UNKNOWN | permitted | P06b 1 (a read of signals) | Cross-reference: the EOD routine (B-010 frozen) | NO |
+| R30 | scripts/replay_signals.py; scripts/trade_journal.py; scripts/generate_screened_stocks_csv.py; scripts/forward_shadow_record.py; scripts/gemini_trade_coach.py; scripts/fetch_daily_candles.py; scripts/strategy_registry_officer.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96; 59309f9a767ab0700a9e169c7b8e2610f7e55efd; 3e6b5896bbc33a5909cbc76b719752bc8d4b9746; 6c57c0e155332905d75e4a10cd78ea1e97a6ee1f; 6d42f71d5d89e6e48c0584eeeb662caf2883421d; 4a149615dc48ad1342f5b406d4728728631dd7c8; c013518bc49c2323922292af5fa9eeacb3cc4d0b | 8,290 / 244; 6,461 / UNKNOWN; 13,497 / UNKNOWN; 15,232 / UNKNOWN; 10,322 / UNKNOWN; 13,950 / UNKNOWN; 13,075 / UNKNOWN | permitted | P06b 1 to 2 each (readers of signals) | Cross-reference: offline readers (L, N topics) | NO |
+| R31 | scripts/t2_cnc_gtt_realtest.py; scripts/load_test_signals.py | 4034ecd18b2d6c5ccf84419316db964a533eb7f1; 47d74e172b3539120a971004b73d4ad49e14fcbc | 32,894 / UNKNOWN; 11,675 / UNKNOWN | permitted | P03 1 (an INSERT INTO signals) and a name hit signal; test-like scripts | Cross-reference only; never run (whether they reach live services is not established) | NO |
+F. Tests (source only; never run)
+| R32 | tests/unit/test_state_store.py | 323327dd51e7028b8668e6327d55a63774860230 | 101,559 / UNKNOWN | permitted | Name hit state_store; P07 5, P28 7, P29b 8; B-003 s.14 (84 tests) | Test source: signal insert, update and query cases only | YES |
+| R33 | tests/unit/test_migrations.py | d43c9b0867497a712b48781a83f2e1fd76c13e5d | 25,854 / UNKNOWN | permitted | Name hit migrat; P02 1, P37 4; B-003 s.14 (a signals CHECK rebuild) | Test source: signals-table cases only | YES |
+| R34 | tests/unit/test_fix135_eod_cleanup.py | 062b4d6a262f7702b259057464e66413fa7d9f9a | 15,616 / UNKNOWN | permitted | Name hits cleanup, eod; P05 1, P30 29, P28 13 | Test source: eod_cleanup | YES |
+| R35 | tests/unit/test_db_retention.py | cb95fda97197b42e179d69325c22c875e29b8ffa | 5,305 / UNKNOWN | permitted | Name hits db, retention; P30 13 | Test source, SUPPORTING: what the retention policy covers | SUPPORTING |
+| R36 | tests/unit/test_signal_status_classification.py | fd05297f4fea7814297172c7e5c605ccee210698 | 11,357 / 213 | permitted | Name hits status, signal; P31 20, P37 4; C-005 read it | Test source: the status classification | YES |
+| R37 | tests/unit/test_evidence_contract.py | 93668c5e53c8d71b97ea52667912aed0efd35182 | 87,416 / UNKNOWN | permitted | P07 7, P28 10, P31 41, P30 11 | Test source, CONDITIONAL with R10 | CONDITIONAL |
+| R38 | tests/unit/test_webhook_receiver.py; tests/unit/test_signal_processor.py | 7b377abb85d644f0f3ff7956385224b43f31ed61; 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 83,745 / 2,043; 97,634 / 2,501 | permitted | P31 19 and 65; C-005 and C-006 read their queue and dedup cases | Test source, CONDITIONAL: status-write cases only | CONDITIONAL |
+| R39 | tests/integration/test_full_signal_flow.py; tests/integration/test_end_to_end_smoke.py | 376a2ee815f798d84857cb777f87617bf5b545c9; 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | 23,730 / 634; 32,480 / 800 | permitted | P28 2 and 5, P29b 4 and 3 | Test source, CONDITIONAL: status sequences only | CONDITIONAL |
+| R40 | tests/crash_test/state_machine_validator.py; tests/crash_test/invariant_checker.py; tests/crash_test/state_inspector.py; tests/crash_test/cleanup.py | 5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe; d9fca940b44011e7f0917f4f991efe8dba0838c7; b018481f3333c61838b59060f7e582e1b432f443; 5100467b61d65df93cff1171a7e7263a9b5ad4d2 | 11,000 / 277; 16,221 / UNKNOWN; 8,897 / 246; 10,692 / UNKNOWN | permitted | P31 34 and 7, P18 20; cleanup.py P05 1 | Test source, CONDITIONAL and documentary: the crash harness's stored-status models (never run) | CONDITIONAL |
+| R41 | tests/unit/test_e5_cleanup.py; tests/unit/test_fix142_final_cleanup.py; tests/unit/test_check_vm_state_reset_removed.py; tests/unit/test_e3_hygiene.py; tests/unit/test_fix130_latency_tracking.py | 1783c44de7248659b001563f3bfe19a3516ef6ff; 31a53bdee43c03df2fba19325250c5642a8066e8; 723b8b702735af1a4dfcc4b5bf77429a96c91fb8; 5ae2231ce106f2a34ade6b7d40e89f8ddc8881bd; 077bb511c5e4ffe5b7d4a6ba6adcd7f62bc28a30 | 10,337 / UNKNOWN; 12,200 / UNKNOWN; 5,262 / UNKNOWN; 31,327 / UNKNOWN; 10,052 / UNKNOWN | permitted | Name hits cleanup, state (test_fix142_final_cleanup.py: name only); P28 6 (test_e5_cleanup.py); P02 1 (test_check_vm_state_reset_removed.py); P04 1 (test_e3_hygiene.py, test_fix130_latency_tracking.py) | Test source, CONDITIONAL: only where Stage 1's searches tie them to signals rows | CONDITIONAL |
+| R42 | tests/unit/test_terminal_state_write_guard.py; tests/unit/test_migration_guard.py; tests/unit/test_schema_version_failfast.py | c68bb279ca00a0573befd9ffadd016436f5922ea; beb577ec2f6a2c308c0c4e85cfceb5175f66b056; 900c025ca0e570254d1d4245206d3ea5ff6191aa | 18,567 / UNKNOWN; 5,420 / UNKNOWN; 4,285 / UNKNOWN | permitted | P17 37 (terminal); B-003 s.5 and s.14 (the trades terminal-status trigger; the migration guard) | Exclude: trades guard and migration guard (B-003; K-005) | NO |
+G. Records (names only; reading them needs approval)
+| R43 | docs/04_db_schema_reference.md; docs/audit/db_schema_review_15jun2026.md | 0218e152b77e1765fee2aa76564d1c386c05c133; 733b88b598f8ad4e94729ff6ffa30d7d2cf2b997 | 17,765 / UNKNOWN; 15,188 / UNKNOWN | permitted | Name hits schema, db; P10 1 (the review); B-003 cites both | Record (names only): schema text to compare with the source if approved | NO |
+| R44 | docs/decisions/09_prune_retention.md; docs/decisions/BRIEF_09_prune_retention.md; docs/decisions/DESIGN_09_prune_retention.md | ae2390e5425813a3bb3b523af44dd4464d86839d; c298cc4b1ddb2e99b30c03d57868d10e734a8c0d; 7a7fbb10101fd40c5c15e76d6e32fde6ee75cf0e | 5,346 / UNKNOWN; 2,490 / UNKNOWN; 17,385 / UNKNOWN | permitted | Name hits retention, prune; P23 4, 1 and 9 | Record (names only): the legacy retention decision, if approved | NO |
+| R45 | docs/audit/signal_mortality_census_19jul2026.md | 9f9db37223c3cdfc256be29320075d4d3e7ed228 | 32,507 / UNKNOWN | permitted | Name hit signal; P36 3; cited by B-009 and C-004 | Record (names only): a dated census of stored statuses, if approved | NO |
+| R46 | docs/locked_decisions.yaml; docs/design/terminal_state_write_guard_design_07jul2026.md; docs/audit/p3s14_done_17jul2026.md; docs/MASTER_PENDING_28-Jul-2026.txt | 2908b09fb546949774c0c6737a31855f7fc34ce5; ace696d1667c70a5f7e61e143831397e7aff8ab3; dd368a441d7173ad1dc98f5c107d281b181638a1; eea6d0bf66d95847686f7c19989b4f07085d5266 | 167,677 / UNKNOWN; 20,168 / UNKNOWN; 15,669 / UNKNOWN; 55,730 / UNKNOWN | permitted | P35 14 and P07 1 (locked decisions); P10 1 each (the other three) | Record (names only), if approved | NO |
+| R47 | docs/audit/ledger8b_check_vm_state_step1_02aug2026.md | 717d98154b41d6df8ce174f1a19c19a4f68a26a1 | 9,741 / UNKNOWN | permitted | Name hits state, ledger; a dated record about check_vm_state (R14 above) | Record (names only), if approved and only with R14 | NO |
+| R48 | docs/audit/stale_queue_entries_25jul2026.md; docs/audit/queue_items_decidable_25jul2026.md | a8c438a027468d71b6366cb2928e51bc40786a45; 4ad78303d209ac53b268a6142bf9b6662de0a82a | 4,822 / UNKNOWN; 7,285 / UNKNOWN | excluded (by name) | Name hit stale (first); C-005 handed both to C-006 | EXCLUDED: the two July records; refused by name by both tools; separate approval required | NO |
+| R49 | docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md; docs/audit/capital_snapshot_and_backup_retention_24jul2026.md; docs/audit/backup_retention_and_telegram_delivery_22jul2026.md | a7ed4432a06b9a1c4156a08ec549b48aeaaf890f; df021abe1c51c4d2cf8a49e624b117d34aa1a168; 7e9eec33d712d34339097f3046e82acfe7f49e30 | 15,832 / UNKNOWN; 10,470 / UNKNOWN; 6,609 / UNKNOWN | permitted | Name hits retention, backup | Exclude: candle, capital-snapshot and backup retention (K-010, K-011, M-008) | NO |
+H. Frozen manuals and governance records (V2 main 642fd76; pointers to verify at the pin, not conclusions)
+| Record | What it holds for C-007 |
+| A-011_manual.md s.12, s.14, s.15, s.23 | s.12 (Q31, as qualified by C-006 s.8.1 and BK-12; Q32): stop and kill rejections; a crash leaves rows QUEUED or PROCESSING, and no re-queue at start was identified; s.14: what a start rehydrates (not the signal queue, claims or cache); s.15: the signals status set listed from core/schema.sql ("an open set by design"); s.23: "Signal rows left non-terminal by crashes, and how they were cleaned up" is unknown |
+| B-003_manual.md s.3, s.5, s.6, s.10, s.11, s.12, s.14 | database files and paths; the schema inventory (45 tables, version 45, 12 CHECK clauses, one trades trigger); migrations (a signals CHECK rebuild is tested); other openers; db_retention's policy ("Trades, orders and signals are not in that policy"); backups; database tests |
+| B-009_manual.md s.5 | the signal lifecycle, with status writes by line |
+| B-010_manual.md s.7, s.10 | EOD persistence; the post-market jobs (eod_cleanup at 15:50 in the generated crontab) |
+| B-011_manual.md s.5.2; B-012_manual.md s.6, s.8 | persistence and event content at shutdown; startup state after interruption; backups and the restore drill |
+| C-001_manual.md s.13 (D-05) | the stored scanner identity (owners C-007, C-008, C-010, K-003) |
+| C-002_manual.md s.3 (S7), s.10.1 to s.10.3 | S7 "signal persisted" ("The signals row and its later statuses", owner C-007); the webhook_audit table and its coverage |
+| C-004_manual.md s.6.3, s.6.5, s.16.2 (T-15), s.18 (L-01), s.19 (U-07) | the price as parsed; the hand-off to the insert; NaN and +inf prices as stored |
+| C-005_manual.md s.1, s.8, s.12.5, s.13 | "the full database schema/retention contract (C-007)"; the unique key and signal_retention_days: 90 ("the actual pruning behaviour was not traced here"); C5-L4; BM-02, BM-03 |
+| C-006_manual.md s.5.2, s.7, s.8.3, s.9, s.11 | BM-01, BM-02; status writes and the storage boundary ("C-007 owns full status semantics, database schema and retention"; OQ-1, the deployed constraint); eod_cleanup lines 105-127 (stale PROCESSING to EXPIRED; QUEUED and QUEUE_FULL unchanged); the status report; BM-05 |
+| V2_DESIGN_LOG.md s.2, s.3, s.7 | Q-37 (f) (owners C-007, K-003, I-009); Q-41 (B-003 leads; owners K-002, I-005: a boundary only); VP-59 (ratification points C-006 to C-009, I-009); BK-04, BK-05, BK-10, BK-11, BK-14 (cross-check C-007); BK-18 |
+| MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt, sections C and K | C-007 "Signal persistence"; K-001 to K-013 (database architecture, StateStore, signal state, retention, recovery from DB, data consistency) |
+
+==============================================================================
+4. SCOPE MAP AND EXCLUSIONS (proposal only; nothing decided)
+==============================================================================
+4.1 Proposal S-1 (for confirmation in the Stage 1 authorisation)
+- In C-007: (a) the signals table: columns, keys, the unique key, defaults, indexes, constraints (the status CHECK) and
+  triggers, and its schema history (the signals-table steps of the migrations); (b) the signal-status vocabulary and its
+  transitions: every status value written to a signals row, by which writer, under which condition text, with which reason
+  column, and whether any write checks the row's current status; (c) the signals row's insert, update, read and delete paths at
+  the storage layer, with their transaction boundaries as far as they touch signals rows (connection rules stay B-003's); (d)
+  what start, stop, kill and repair paths write to signals rows; (e) the retention of signals rows and of their fingerprint key:
+  the cleanup script, its configuration keys and its schedule lines; (f) the next consumers of the persisted status, by the
+  statuses they expect.
+- By name and owner only: the other tables of core/schema.sql (B-003 section 5 lists all 45).
+- Why bounded this way: the master agenda names C-007 "Signal persistence" in Section C (signal lifecycle) and keeps database
+  architecture, the StateStore, signal state, retention, recovery from DB and data consistency for Section K (K-001, K-002,
+  K-003, K-011 to K-013). The frozen C-005 (section 1) and C-006 (section 7) boundary lines give C-007 "the full database
+  schema/retention contract" and "full status semantics, database schema and retention". Read together, Claude proposes that
+  C-007 covers the signals table's schema, statuses and retention in full and records the rest of the schema by name and owner.
+  If the authorisation widens C-007 to the whole schema, Stage 1 grows to every table's writers (not proposed).
+4.2 Cross-topic map (how duplicated analysis is avoided)
+| Topic | It owns | C-007 records | Leads met in C-007 |
+| C-002 (frozen) | the request audit (webhook_audit) and the intake states | S7's hand-off of the signals row; webhook_audit only as a neighbouring table | - |
+| C-004 (frozen) | validation; the values as parsed | how the stored columns hold those values where the schema or the store shows it | L-01, U-07 |
+| C-005 (frozen) | claims, the cache, the fingerprint and its unique key | the unique key as a schema fact; when rows and fingerprints are pruned | BK-04, BK-05 |
+| C-006 (frozen) | the queue and its hand-off | the queue paths' status writes as entries in the status map, not queue logic | BK-10, BK-11, BK-14; OQ-1 |
+| C-008 | why the processor writes each status | each write's status, writer, condition text and any prior-status check | - |
+| C-009 | the expiry policy | EXPIRED and REJECTED_EXPIRED as stored values and their writers | - |
+| C-010 | scanner-to-strategy mapping | the stored strategy column as written | D-05 |
+| C-011 | the EOD route | nothing, unless Stage 1's searches show that the route writes signals rows | - |
+| A-011, B-011, B-012 (frozen) | lifecycle, stop and restart | what each path writes to signals rows | Q-37 (f); VP-59, BK-18 |
+| B-003 (frozen) | database files, opening, the migration mechanism, other openers, backups | the signals table's definition and history; B-003 cited for the rest | Q-41 (boundary only) |
+| B-010 (frozen) | the EOD sequence and its schedule | what eod_cleanup does to signals rows | BK-05 |
+| B-007 (frozen) | pre-flight and readiness | nothing, unless a check reads signal statuses | - |
+| D and G topics | screening and order logic | their update_signal_status calls and the order manager's update only | - |
+| K-001 to K-013, I-005, M-008, M-009 | database architecture, StateStore design, other tables' state, retention at large, database failure, backups | names and owners only | S-1 |
+| L-009 to L-011 | audit trail, dashboard, reports | the statuses the readers expect (next consumer); otherwise names only | - |
+- Method against duplication: frozen statements are cited by section and re-verified at the pin only where C-007's own
+  statements rest on them (as C-006 did); the receiver's and the processor's files are read only at their insert and
+  status-write lines; a lead (BK row, Q row, OQ-1) is met with what the reading shows and left open or noted for its owner,
+  never resolved for another topic.
+4.3 Exclusions
+- The 102 protected paths (section 2) and docs/v2_design_spec.md (it shares a protected blob): refused by the gate.
+- The two excluded July records (R48): refused by name; separate approval required.
+- Records R43 to R47 and every other dated record: names only, unless the authorisation approves a read; host records (for
+  example docs/SYSTEM_MAP.md and PATHS.md, which the searches counted) are not proposed for any read.
+- Every script and every test, including R31 (whether they reach live services is not established) and the crash harness's
+  injector: never run.
+- The live database and every deployed host: not in the repository and not reachable; their state is not established.
+- Other tables' persistence (trades, orders, capital, GTT state, ledgers, analytics), backups and restore, the database's
+  opening and migration mechanism, and every V2 choice.
+4.4 Leads handed to C-007 (recorded, not resolved)
+- BK-04 and BK-10 (C-005 BM-02, C-006 BM-01): on the receiver's re-queue of a QUEUE_FULL row, a failed status flip still answers
+  ACCEPTED, and the item is put before an unconditional QUEUED update whose failure is only logged: R03, R06.
+- BK-05 (C-005 BM-03): "scripts/eod_cleanup.py names fingerprints and the IN_PROCESS and DUPLICATE statuses (not read); the
+  retention setting's comment speaks of DUPLICATE fingerprints that the pinned receiver does not write": R16, R17.
+- BK-11 (C-006 BM-02): a failed QUEUE_FULL mark leaves a QUEUED row with no queue item, and a same-bucket retry is then answered
+  DUPLICATE: R03, R06.
+- BK-14 (C-006 BM-05): a re-queued QUEUE_FULL row keeps the first attempt's price and time while the queued item carries the
+  retry's: R01, R03, R06.
+- C-006 OQ-1: whether a deployed database's constraint matched the repository schema: R01, R02 (repository side only; the
+  deployed side stays NOT ESTABLISHED).
+- Q-37 (f) and A-011 section 23: which rows crashes left non-terminal and how they were cleaned up: R11 to R16 (code paths
+  only).
+- VP-59 and BK-18: C-007 is one of VP-59's ratification points; C-007 records legacy facts only (W-1, W-6).
+- C-004 L-01 and U-07: NaN and +inf trigger prices as stored: R01 (column types) only.
+
+==============================================================================
+5. STAGE 1 READING PLAN (not executed)
+==============================================================================
+5.1 Questions and read order
+Stage 1 questions: Q1 the signals table's definition at the pin; Q2 its history across schema versions; Q3 the store's signal
+  functions and their transaction boundaries, and whether any update checks the current status; Q4 the status map (value,
+  writer, condition text, reason column); Q5 what start, stop, kill and crash paths write to signals rows; Q6 what eod_cleanup
+  does to signals rows, with which age, keys and schedule, whether fingerprints survive, and whether db_retention leaves signals
+  out; Q7 the statuses that the next consumers expect, against the schema's set; Q8 where comments, documents or configuration
+  comments disagree with the code on these points.
+Order, following source -> input -> logic -> validation/guard -> output -> storage/hand-off -> next consumer:
+0. Method: lift the Stage 0 lock as a step of its own (new SHA-256 recorded); the gate's self-test before every call; in large
+   files a gated grep read first to locate lines, then range reads of the located lines only; any further count-only search
+   logged with its ID.
+1. Storage contract (storage): R01 core/schema.sql: the signals block (C-005 read lines 36-94), every CHECK on a status column
+   (to find the signals one), the indexes and any trigger on signals, and the CREATE TABLE list (checked against B-003 section
+   5) to find any other table that holds signal rows. Answers Q1.
+2. History: R02 core/migrations.py, the signals-table steps only; R33 test_migrations.py, the signals cases. Answers Q2.
+3. Store (logic at the storage layer): R03 core/state_store.py, every function that inserts, updates, reads or deletes signals
+   rows (update_signal_status at 1408-1426, as C-006 cites); R32 test_state_store.py, those cases. Answers Q3.
+4. Writers in the order of a signal's life (input, logic, output): R06 the receiver's insert and its status writes (C-006 cites
+   lines 977, 1005 and 1055); R07 the processor's 26 lines with update_signal_status(, each call with its status and reason; R08
+   the three screening calls; R09 the order manager's update; R10 only if it holds the status or reason vocabulary. Answers Q4.
+5. Guards and repair (validation/guard): R11 main.py, R12 capital/kill_switch.py, R13 scripts/system_manager.py, R14
+   scripts/check_vm_state.py and R15 utils/startup_checks.py, each by a gated grep read for signals and status terms, with range
+   reads only where a hit touches signals rows. Answers Q5.
+6. Retention (storage over time, hand-off): R16 scripts/eod_cleanup.py in full (325 lines); R17 the retention and cleanup keys
+   of config/system_config.yaml; R18 their model and defaults; R19 the eod_cleanup and db_retention job lines; R20 only to
+   confirm that signals and fingerprints are outside db_retention's policy (B-003 section 11); R21 only if it touches the
+   database; R34 and R35 the tests. Answers Q6.
+7. Next consumers: R23 reports/signal_status.py in full (157 lines); R24 and R25 their status-set queries only, if Stage 1 needs
+   them for Q7; R36 the classification test. Answers Q7.
+8. Remaining tests (documentary, never run): R37 to R41, at located ranges, only where steps 1 to 7 point to them.
+9. Records: R43 to R47 only if the authorisation approves them, through the gate by narrow grep reads (never a range read of a
+   host record); R48 never without its separate approval. Answers Q8 with steps 1 to 7.
+10. Outputs: repository answers (each statement with path, line range, pinned blob ID and label), the source inventory and read
+    log, a claim index, and bookmarks for cross-topic points (W-9); then STOP for ChatGPT's reconciliation.
+5.2 How each read is logged
+- cread_c007.py writes one row per call: number, IST time, mode, range or pattern, path, pinned blob ID, the file's line total,
+  lines printed, mask counts, nev0=ok, selftest=ok and the SHA-256 prefix of the saved evidence file (c007/evidence/NNN.txt).
+- The source inventory adds each read's purpose and the claims it supports; a claim index maps every statement of the answers to
+  its evidence numbers and lines; only lines printed by a logged read are cited (V2 design log, lesson of 23-Oct on C-006).
+5.3 Configuration against deployed values
+- Repository values at the pin are FACT (CONFIG); a default in the code is FACT (SOURCE-VERIFIED) as a default. A deployed
+  host's effective value is NOT ESTABLISHED (no host access; the VMs were deleted; W-7). A dated record's value is
+  RECORD-DERIVED and only if records are approved. Whether a deployed database's constraint matched the repository schema stays
+  C-006's OQ-1.
+5.4 Tests
+- FACT (TEST TEXT): "the test source asserts ...", never run. A test that builds its own objects proves the logic it builds, not
+  the production wiring (V2 design log, lesson of 16-Oct).
+5.5 Keeping kinds of statement apart
+- Labels as in C-006: FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (TEST TEXT), FACT (TEXT DRIFT), HISTORICAL or RECORD-DERIVED
+  (dated), INTERPRETATION, KNOWN DEFECT, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION. A negative carries its searched scope ("not
+  found in the inspected scope"); a code path is not an event; cross-topic points become bookmarks, not conclusions.
+
+==============================================================================
+6. SAFETY AND EXECUTION DECLARATION
+==============================================================================
+- No code or tests run: CONFIRMED (none run).
+- No live service, VM, broker, webhook, Chartink or other operational endpoint contacted: CONFIRMED (the only network request of
+  this Stage 0 was a read-only git ls-remote of the legacy repository on GitHub; the V2 clone used was taken at 18:07 IST for
+  the C-006 push confirmation).
+- No credentials or secret values reproduced: CONFIRMED (no source content was printed; this file and the companion file were
+  scanned value-blind before delivery).
+- No excluded July record opened or searched: CONFIRMED (refused by name; in no search list).
+- No files modified, committed or pushed: CONFIRMED (neither repository changed; working files only in Claude's scratch area).
+- No individual module's behaviour analysed: CONFIRMED (paths, blob IDs, sizes and match counts only).
+- Research stops after this delivery, pending ChatGPT's and Rama's review: CONFIRMED.
+- Independent verification: NO (self-checked; Rama's lean workflow W-9, as in C-006).
+- Deviations: two searches (P06, P29) also counted Python import lines ("from signals.x import"); they were re-run without them
+  as P06b and P29b, both kept in the search log, and only P06b and P29b are used above. No other deviation; no inaccessible
+  path.
+
+==============================================================================
+7. OPEN QUESTIONS
+==============================================================================
+No blocking question; awaiting Stage 1 authorisation.
+For the authorisation to settle (not blockers): (1) S-1, accept or widen (section 4.1); (2) records R43 to R47: read by narrow
+  gated grep reads, or names only (the default here); (3) lifting the Stage 0 lock as the first step of Stage 1.
+Bookmark candidate (W-9) for the C-007 manual: C-007's schema and retention scope against Section K (K-001, K-002, K-003, K-011
+  to K-013): cross-check there.
+END

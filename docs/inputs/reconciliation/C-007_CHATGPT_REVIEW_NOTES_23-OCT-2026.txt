@@ -1,0 +1,53 @@
+C-007 SIGNAL PERSISTENCE MANUAL — CHATGPT REVIEW NOTES
+Date: 23-Oct-2026
+Draft reviewed: C-007_SIGNAL_PERSISTENCE_MANUAL_DRAFT_23-OCT-2026.md
+Evidence pin stated in draft: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+REVIEW DECISION
+The draft is detailed, carefully bounded, and broadly suitable to continue toward a freeze package. It is NOT yet ready to freeze unchanged. Make the two clarity corrections below, then return the revised draft for a final pass. This review does not authorise commit, push, project saving, or freezing.
+
+WHAT IS STRONG
+- It preserves the legacy-only scope and separates source facts, configuration, historical statements, interpretations, known defects, and unknowns.
+- It records the evidence pin, file/blob inventory, search limitations, process deviations, and the actual limits of ChatGPT's spot-check.
+- It documents signal columns, status writers, transactions, retention, downstream readers, end-to-end flow, and cross-manual bookmarks rather than turning into a redesign proposal.
+- Rama's OQ-02 answer is recorded correctly as HISTORICAL (RAMA'S STATEMENT), not as independently verified database evidence.
+- It explicitly states that the manual is not frozen and that no live/runtime activity or code execution was performed.
+
+REQUIRED CORRECTION 1 — INTERNAL CONTRADICTION IN THE SOURCE INVENTORY
+Location: Section 1.1, `main.py` row in the sources table (Markdown around line 48); compare Section 6.1 (around line 228).
+
+Current inventory role says: “start-time writes (one grep)”.
+Section 6.1 then says the inspected search found no start step that writes `signals` rows.
+
+These statements can be read as contradictory. Change the inventory role to wording such as:
+“startup-time search for signal-row writes and reload paths; no signal-row writer found in the inspected scope”.
+Keep the existing bounded conclusion in Section 6.1. Do not imply the inventory proved more than its logged search.
+
+REQUIRED CORRECTION 2 — CLARIFY WHICH CRASH RESIDUES MAY REMAIN
+Location: Section 6.3, the paragraph following OQ-02 (around line 239).
+
+The sentence “any residue of the kinds above would have stayed in the database unless a path outside the inspected scope removed it” is too broad when read alongside the documented EOD paths. Earlier-dated `PROCESSING` rows can be changed to `EXPIRED` by step 1, and old eligible `EXPIRED` rows can later be pruned by step 4. Other non-terminal statuses such as `QUEUED`, `QUEUE_FULL`, `RESERVED`, `PASSED`, `GATE_WAITING` and `RETEST_WAITING` are not covered by that same repair/prune path as described.
+
+Replace with wording along these lines:
+“INTERPRETATION: with no hand clean-up, the inspected paths do not repair or prune the listed non-`PROCESSING` residues. Earlier-dated `PROCESSING` rows are an exception: step 1 can change them to `EXPIRED`, after which eligible rows may be pruned by step 4 under RT-02. Whether any such residue existed, its status distribution, and how long it remained are UNKNOWN / NOT ESTABLISHED.”
+
+This is a precision correction, not a new historical claim. Keep the original record and Rama's answer intact.
+
+OPTIONAL CLARITY TWEAK
+Location: Section 4.2 (around line 163). Consider changing “every status write is its own transaction except the two release functions” to “in the inspected paths, each later status-update call uses its own transaction except the two release functions, which combine child-row deletion and status update in one transaction.” This makes the intended scope explicit and avoids accidentally including the initial INSERT or other paths outside the inspected scope.
+
+NO OTHER CHANGE REQUESTED
+- Do not remove the known text-drift findings merely because they are uncomfortable; they are useful factual documentation.
+- Do not promote code-path interpretations into claims that a live event or row actually existed.
+- Do not change the settled fact that Rama reported no manual clean-up.
+- Do not convert bookmarks or proposed V2 inputs into V2 decisions.
+- Do not reopen the accepted transcript-residual decision absent new evidence.
+- Do not run tests, access a VM/database/broker, or alter legacy code.
+
+NEXT GATE
+1. Claude applies only the two required wording corrections (and optionally the scope clarification).
+2. Return the complete revised Markdown draft and a concise change list; no freeze package yet.
+3. ChatGPT reviews the revision. Then Rama explicitly approves or requests further changes.
+4. Only after explicit approval may Claude prepare the freeze package. Commit/push remains a separate authorised step.
+
+Overall: APPROVE FOR REVISION, NOT YET FREEZE-READY.

@@ -1,0 +1,92 @@
+C-007 STAGE 1 — CHATGPT RECONCILIATION / VALUE-ADDED REVIEW
+Date: 23-Oct-2026
+Project: Trading_System-v2_redesign
+Purpose: Review the C-007 Stage 1 repository answers and source inventory/method before any manual drafting or freeze.
+
+DECISION
+Status: SUBSTANTIVE EVIDENCE RECEIVED — RECONCILIATION REQUIRED — NOT FROZEN.
+Do not draft, freeze, commit, or push the C-007 manual yet. The code-reading work contains useful and well-cited findings, but the process deviations must be resolved and recorded first. This is not a rejection of the technical findings and does not authorize more legacy-system activity.
+
+BASELINE AND SCOPE
+- Legacy production repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+- C-007 scope: proposal S-1, as authorized in C-007_STAGE1_AUTHORIZATION_AND_REVIEW_NOTES_23-OCT-2026.txt.
+- Records R43–R47 remained names-only; R48 was not opened or searched, according to Claude's declaration.
+- No code/tests were run, no live service/VM/broker/webhook/Chartink/database was contacted, and no legacy files were changed or pushed, according to Claude's declaration. These remain process declarations, not independently verified facts.
+
+WHAT IS STRONG / USEFUL
+1. The answer file supplies a detailed source-to-storage-to-consumer map, not merely a table summary. It distinguishes repository code/config/test text from runtime facts and record-derived history.
+2. It documents the signals table shape, CHECK families, indexes, foreign-key references, table rebuild history, status writers, retention filters, and downstream status classification differences.
+3. It repeatedly distinguishes code-path implications from observed events and keeps deployed schema, actual stored rows, scheduled-job execution, and manual cleanup history as UNKNOWN / NOT ESTABLISHED.
+4. The 12 cross-topic bookmarks are useful handoffs. Preserve them as bookmarks; do not use C-007 to resolve C-005/C-006/C-008/C-009/C-010/C-011 or other frozen topic ownership.
+5. The stated citation checker correction is a useful process lesson: citations split across continuation lines need to be parsed as joined citations. The inventory says the corrected checker was re-run on C-006 and reported zero uncovered citations.
+
+RECONCILIATION ITEMS — MUST BE CLOSED BEFORE MANUAL DRAFTING
+A. D-1 — cron command output
+The inventory says one grep of deploy/cron/trading-system.cron printed three job lines containing the deployed project directory in working output. The values were not repeated in deliverables, and the same schedule fields were checked in config/cron_registry.yaml.
+Required action:
+- Record this as a contained evidence-handling deviation, not as evidence of live-host access.
+- Confirm the output was not saved to a persistent artifact, log, transcript, or shared file; redact/remove any retained copy if one exists.
+- Keep future citations to the cron file line numbers only; never reproduce the directory value.
+- Do not investigate the host or deployed environment.
+
+B. D-2 — files outside the Stage 0 register
+The answer says core/ids.py, orders/order_placer.py and capital/shadow_engine.py were read for bounded S-1 facts, although they were not in the Stage 0 register.
+Required action:
+- Reconcile each path against the authorised S-1 scope and the inventory's reason for inclusion.
+- If the reads were strictly necessary to substantiate already-authorised questions, document them as a bounded inventory omission and add them to the Stage 1 evidence inventory with path, pinned blob, line ranges and read IDs.
+- Do not expand into those files' wider module behaviour. If any read exceeded S-1, mark the affected claims for exclusion pending review.
+
+C. D-3 — Stage 0 NO rows
+The answer says R29, R30 and R31 were read narrowly for S-1 facts, despite being marked NO in Stage 0. R29's initial exclusion rationale was reportedly based on a docstring line rather than executable behaviour.
+Required action:
+- For each file, record exactly which S-1 question required it, what bounded lines were read, and which claim IDs rely on it.
+- Explain the correction to R29's exclusion reason without silently rewriting the historical Stage 0 record. Preserve both the original Stage 0 decision and the Stage 1 correction.
+- For R30 and R31, verify that the limited read is genuinely within S-1. Remove unrelated findings from C-007.
+- Do not treat the mere fact a file was read as proof that its broader module is in scope.
+
+D. D-4 — reading order
+The authorisation specified reading non-test sources before relevant test source. The inventory reports reads 115–120 followed the test reads 105–114.
+Required action:
+- Record this as a process-order deviation.
+- Since no tests were executed and test content is labelled FACT (TEST TEXT), this does not by itself invalidate source-verified claims. However, any claim supported only by tests must remain explicitly test-text evidence.
+- No need to repeat the source reads merely to restore chronological order. Do not rerun code or tests.
+
+E. Independent review and citation verification
+The checks were self-checks; no independent agent check was run. The citation coverage checker was repaired after a continuation-line omission was found.
+Required action:
+- Treat the stated 415 covered citations as a self-check result, not independent verification.
+- During ChatGPT/Rama reconciliation, spot-check a risk-based sample across schema, migration, status writer, retention, consumer, and text-drift claims against the exact pinned source citations. If a claim cannot be verified from the provided evidence, mark it UNKNOWN / NOT ESTABLISHED or request the specific bounded excerpt.
+- Do not ask Claude to perform an unbounded second pass. Any extra read must have a named question, exact path/range, and logged method under the existing gate.
+
+TECHNICAL FINDINGS TO PRESERVE AS PROVISIONAL, SOURCE-BOUNDED CLAIMS
+- `signals` is described as a 14-column table with a status CHECK containing 20 explicit values plus five GLOB families; the schema comment describes it as an open shape/typo guard, not a closed enum.
+- The receiver inserts accepted symbol rows as QUEUED; refused symbols may leave no `signals` row. The receiver performs some status flips separately from the insert/queue operations.
+- The store's general status update has no current-status predicate and does not store a status-change timestamp; the expiry update is the exception identified in the report.
+- The inspected code has different status classifications across the status report, dashboard, system manager, cleanup and crash harness. The crash harness transition model does not match the status writers listed in the pinned code.
+- The inspected cleanup path marks only qualifying stale PROCESSING rows EXPIRED, then deletes only older EXPIRED, DUPLICATE and REJECTED* rows that have no linked trade. Other statuses are not shown to be repaired/pruned by those inspected paths.
+- Repository schedule/configuration does not establish that the job actually ran in a deployed environment.
+- `expires_at` and age-check bases differ in the cited code. C-009 owns expiry policy; C-007 should record the handoff only.
+These are provisional until the cited source lines are reconciled; do not turn them into runtime-event claims.
+
+CLAIM HYGIENE / LANGUAGE
+- Keep FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (TEST TEXT), FACT (TEXT DRIFT), HISTORICAL / RECORD-DERIVED, INTERPRETATION, KNOWN DEFECT, UNKNOWN / NOT ESTABLISHED and OPEN QUESTION separate.
+- Prefer “the inspected code path would…” over “the system did…” unless a runtime record establishes the event.
+- Avoid calling an interpretation a KNOWN DEFECT without stating the evidence basis and scope. Where the report labels a code-path consequence “KNOWN DEFECT,” reconcile that label against the project's defect-classification convention before freezing.
+- Keep the absence claims bounded to the exact files, patterns and reads enumerated in the inventory. Search patterns do not prove universal absence.
+- Do not reproduce credentials, secrets, sensitive host paths, or values filtered by the read gate.
+
+OPEN QUESTION OQ-02
+Claude asks whether Rama ever manually cleaned up stuck `signals` rows (for example QUEUED or PROCESSING), and how.
+This is a historical question for Rama, not answerable from the pinned code. Do not guess. If the answer is not already recorded in an authorised project record, ask Rama once during reconciliation; otherwise mark UNKNOWN / NOT ESTABLISHED. Do not inspect live systems or excluded records to answer it.
+
+NEXT ACTION
+1. Reconcile A–E above using the existing answer and inventory; no new source reads unless a narrowly defined question cannot be resolved from existing evidence.
+2. Preserve the original Stage 0 register and log; append corrections/deviations rather than rewriting history.
+3. Decide OQ-02 from authorised historical knowledge only.
+4. Return a short reconciliation table: item, disposition, evidence/reference, effect on claims, closed/open.
+5. STOP and submit it to ChatGPT/Rama.
+6. Only after reconciliation approval may Claude draft the detailed C-007 Markdown manual. The manual must not be frozen or pushed until separately reviewed and explicitly approved.
+
+NO V2 DESIGN DECISIONS
+This review documents the dead legacy system only. It does not authorize repairs, operational revival, changes to frozen manuals, V2 architecture choices, implementation, deployment, or testing.

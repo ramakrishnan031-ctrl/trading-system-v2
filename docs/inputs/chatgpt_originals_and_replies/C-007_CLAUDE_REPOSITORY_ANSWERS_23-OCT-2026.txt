@@ -1,0 +1,406 @@
+C-007 - SIGNAL PERSISTENCE
+STAGE 1: CLAUDE'S REPOSITORY ANSWERS (answers to C-007_STAGE1_AUTHORIZATION_AND_REVIEW_NOTES_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 18:48 to 19:34 IST.
+Source: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+Status: evidence for ChatGPT's reconciliation; not a manual. Scope: proposal S-1 as authorised (the signals table and its
+history, the stored statuses, the storage paths, start/stop/kill/repair writes, retention, the next consumers). Method, read log,
+searches and the claim index (cited lines, label and read numbers for every claim ID below):
+C-007_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt.
+
+Aliases and pinned blobs (every cited line was printed by a logged read at the pin, through the gate and the masking filter):
+  SQL = core/schema.sql (b46d7489f6ec5e31149dd68957f3b9e45270571e, 1,655 lines)
+  MIG = core/migrations.py (cc39e811e48a9eec823c20b70d343278a6b33eef, 445 lines)
+  ST = core/state_store.py (11866117801b9329773a1be605448faef3c96f8d, 3,356 lines)
+  R = signals/webhook_receiver.py (0f15a0ab033529d80d9c14c993a5077690b72871, 1,208 lines)
+  IDS = core/ids.py (5e8b17bdd97f7ed37d7b4229e18353cb62ecd2ff, 125 lines)
+  P = signals/signal_processor.py (7fab0a02a302770ac72bbbd662549d5c091086c1, 2,704 lines)
+  EG = screening/entry_gate.py (46b173171bdfeba48af641b67a361618e5acba58, 538 lines)
+  RM = screening/retest_monitor.py (26639d6ed5dddb1140f0868bb9f937cad5379f82, 442 lines)
+  SS = screening/secondary_screener.py (b6f8ff7223ad803869e976f92d794dfc7c811b59, 706 lines)
+  OM = orders/order_manager.py (978d213532532d7db72b215bc8ed415b848928ae, 770 lines)
+  OP = orders/order_placer.py (e3a602909befa3fd3ba4b27caeed108724c07947, 4,707 lines)
+  T2 = scripts/t2_cnc_gtt_realtest.py (4034ecd18b2d6c5ccf84419316db964a533eb7f1, 607 lines; grep only)
+  M = main.py (445fb0d8237a6d535ed00e5eb968c8176efd74f3, 4,294 lines; grep only)
+  KS = capital/kill_switch.py (3eb2ece050c3eafbcf2e90ec01c824b4dff27950, 2,152 lines; grep only)
+  SM = scripts/system_manager.py (04e776e60f988f47f11753c42577ffd0c428adaf, 1,356 lines)
+  CVS = scripts/check_vm_state.py (b9f362ae378b00cc968a1c09145b0843bba31d28, 203 lines; grep only)
+  SUC = utils/startup_checks.py (61ff67676d8230640a2aafb6bd6d75d7a185fbb6, 1,693 lines; grep only)
+  EC = scripts/eod_cleanup.py (ab658108e443b7121d886f98b94c5058c42253b0, 325 lines)
+  CFG = config/system_config.yaml (bf742ae5c81c60614370361998e6a102a1064ff7, 754 lines)
+  CL = core/config_loader.py (8635bca77531515561ee48cf92677883a5e30782, 2,517 lines)
+  CR = config/cron_registry.yaml (42ff638145ba8c05eba907a33d5b391ae3fc6910, 768 lines)
+  CRON = deploy/cron/trading-system.cron (f8399b40bfa71e35e27746e46cd463171615477a, 152 lines; grep only, cited by number)
+  DR = scripts/db_retention.py (3de2dded7d813a3848dce555941f15ba5ac333f4, 231 lines)
+  RS = reports/signal_status.py (98a1631f5634807ecc6cf46cc9d3767215f9871f, 157 lines)
+  SHE = capital/shadow_engine.py (7d19b400f9022a392b6c876f445a3a952bc6d749, 272 lines; grep only)
+  GSC = scripts/generate_screened_stocks_csv.py (3e6b5896bbc33a5909cbc76b719752bc8d4b9746, 358 lines; grep only)
+  DTR = reports/daily_trade_review.py (c448b7976964a14caf0061016c239c6a3d7cabad, 2,925 lines; grep only)
+  DRP = reports/daily_report.py (ad40268a655b7c2860c8e31da4b7f2c0ff85d168, 1,947 lines; grep only)
+  DBR = ops_dashboard/backend/readers/db_reader.py (f59e4f58fe51e32d151deb5e14322c1bb2cc28b5, 4,206 lines)
+  EVC = core/evidence_contract.py (29fb84bc690d05b832625fb55a496f3f8d4d18d7, 701 lines; grep only)
+  EOD = orders/eod_squareoff.py (54f6cd6223353df0e9ad8bc823472f28b19b3818, 1,888 lines)
+  TSS = tests/unit/test_state_store.py (323327dd51e7028b8668e6327d55a63774860230, 2,367 lines)
+  TMG = tests/unit/test_migrations.py (d43c9b0867497a712b48781a83f2e1fd76c13e5d, 535 lines)
+  TEC = tests/unit/test_fix135_eod_cleanup.py (062b4d6a262f7702b259057464e66413fa7d9f9a, 347 lines)
+  TDR = tests/unit/test_db_retention.py (cb95fda97197b42e179d69325c22c875e29b8ffa, 156 lines; grep only)
+  TSC = tests/unit/test_signal_status_classification.py (fd05297f4fea7814297172c7e5c605ccee210698, 213 lines; grep only)
+  TSMV = tests/crash_test/state_machine_validator.py (5443e7b26d9470c8b61a9e3bffe4b044f4e70cbe, 277 lines)
+Labels: FACT (SOURCE-VERIFIED) = read at the pin; FACT (CONFIG) = the repository copy of the configuration, not a host's value;
+FACT (TEST TEXT) = what a test's source asserts (documentary, never run); FACT (TEXT DRIFT) = a comment or docstring that differs
+from the code; HISTORICAL / RECORD-DERIVED = a figure or event stated in a code comment or a frozen V2 manual, not verified here;
+INTERPRETATION = a consequence of a code path ("would"), not observed; KNOWN DEFECT; UNKNOWN / NOT ESTABLISHED; OPEN QUESTION.
+P01 to P45 are count-only searches (Stage 0 inventory, section 7; Stage 1 inventory, section 4). A code path is not an event:
+nothing here says that anything happened at runtime.
+
+==============================================================================
+SUMMARY
+==============================================================================
+- The signals table: 14 columns, signal_id TEXT PRIMARY KEY ("sig_" plus a UUID4 hex), no DEFAULT on any column, a unique index on
+  (fingerprint, fingerprint_date), three other indexes and no trigger; six tables reference it by FOREIGN KEY. Its status CHECK
+  enumerates 20 values and allows five GLOB families (REJECTED*, DROPPED_*, SKIPPED_*, GATE_*, RETEST_*); the schema calls it "a
+  shape/typo guard ..., NOT a closed enum". The table was rebuilt twice for that CHECK (v25 added it, v38 widened it).
+- One row per accepted symbol, inserted by the receiver as QUEUED; refused symbols leave no row. Status writes go through three
+  store functions (update_signal_status, release_gate_state, release_retest_state) and three direct UPDATEs (the receiver's two
+  flips and eod_cleanup's expiry); a fourth direct UPDATE sets trade_id. No status write checks the row's current status except
+  eod_cleanup's expiry (WHERE status = 'PROCESSING'), and the time of a status change is not stored (no updated_at column).
+- 21 status-map rows (section 4). Ten enumerated values and the DROPPED_* family have no writer in the inspected scope; the
+  GATE_WAITING writer has no runtime caller (B-009, frozen) and the RETEST_* writers sit behind a setting that is false in the
+  repository configuration (B-006, B-009, frozen).
+- Start, stop, kill and crash: no start step writes signals rows; stop and kill write REJECTED_SHUTDOWN and REJECTED_KILL_SWITCH
+  (or _LATE) inside the pipeline; a crash leaves non-terminal rows that nothing repairs except eod_cleanup's next run, which
+  changes PROCESSING rows triggered before its run date to EXPIRED. QUEUED, QUEUE_FULL, RESERVED, PASSED, GATE_* and RETEST_*
+  waiting rows are neither repaired nor pruned in the inspected paths.
+- Retention: eod_cleanup (15:50 Monday to Friday in the repository schedule) deletes rows whose status is EXPIRED, DUPLICATE or
+  REJECTED*, older than signal_retention_days (90 in the repository configuration and the model's default), not linked to a trade,
+  children first. db_retention leaves signals out (B-003 re-verified).
+- Next consumers disagree on what is terminal: the status report, the dashboard, the system manager, eod_cleanup and the crash
+  harness each use a different set (section 7). The only signal-transition table found is the crash harness's, and it does not
+  match the pinned writers.
+- No erratum to a frozen manual is proposed; twelve cross-topic bookmarks (section 10).
+
+==============================================================================
+1. GATE, LOCK AND READS
+==============================================================================
+- [G-a] PROCESS RECORD (not a legacy fact): the Stage 0 lock was lifted at 18:49 IST as a step of its own (one edit:
+  STAGE1_AUTHORISED False to True); cread_c007.py's SHA-256 changed from 3c9fa68dbb84c77e... to 6689698b0616ecb9... (inventory
+  section 2 gives both in full). The Stage 1 gate test (gate_test_c007_s1.py) passed at 18:49 IST: the same refusals as at Stage
+  0, and the gate returns no refusal for a permitted path without opening it.
+- [G-b] PROCESS RECORD (not a legacy fact): 120 logged reads of 37 files (inventory section 3) and 8 count-only searches (P38 to
+  P45, inventory section 4); every call ran the self-test, the path checks and sensitive_check.py first. 8,922 local objects and 0
+  never-open blobs before and after. No record was opened; R48 (the two July records) was never named in a read or a search list.
+
+==============================================================================
+2. THE SIGNALS TABLE AT THE PIN (Q1) AND ITS HISTORY (Q2)
+==============================================================================
+- [Q1-a] FACT (SOURCE-VERIFIED): CREATE TABLE IF NOT EXISTS signals (SQL 42-79) with signal_id TEXT PRIMARY KEY (SQL 43); symbol,
+  scanner, strategy, triggered_at, received_at, expires_at and status, all TEXT NOT NULL (SQL 44-50); rejection_reason TEXT,
+  nullable (SQL 71); trade_id TEXT, nullable (SQL 72); trigger_price REAL (SQL 73); fingerprint and fingerprint_date, TEXT NOT
+  NULL (SQL 74-75); webhook_payload TEXT (SQL 76); FOREIGN KEY (trade_id) REFERENCES trades(trade_id) (SQL 78). Fourteen columns;
+  none has a DEFAULT (SQL 42-79).
+- [Q1-b] FACT (SOURCE-VERIFIED): the status CHECK (SQL 60-70) enumerates QUEUED, ACCEPTED, PROCESSING, PROCESSED,
+  PROCESSED_NO_PLACER, PLACEMENT_FAILED, RESERVED, QUEUE_FULL, PASSED, TRADED, DUPLICATE, EXPIRED, INVALID_SYMBOL, INVALID_PRICE,
+  OUTSIDE_HOURS, IN_PROCESS, CANCELLED, FAILED, PENDING and TIMEOUT, and allows any value matching GLOB 'REJECTED*', 'DROPPED_*',
+  'SKIPPED_*', 'GATE_*' or 'RETEST_*'. The comment (SQL 51-59) calls the set open "by design", "a shape/typo guard ..., NOT a
+  closed enum". GLOB 'REJECTED*' also admits a bare REJECTED. This equals the list in A-011 section 15 (frozen): re-verified.
+- [Q1-c] FACT (SOURCE-VERIFIED): indexes: UNIQUE idx_signals_fingerprint_today on (fingerprint, fingerprint_date) (SQL 81-83; its
+  dedup semantics are C-005's), idx_signals_status (SQL 85-86), idx_signals_received_at (SQL 88-89), idx_signals_trade_id (SQL
+  91-93). The schema's only CREATE TRIGGER line is trg_trades_terminal_status_guard (SQL 291), and every line holding "ON signals"
+  is one of those index lines (SQL 83, 86, 89, 93; read 001 printed every such line): no trigger is on signals.
+- [Q1-d] FACT (SOURCE-VERIFIED): six tables declare FOREIGN KEY ... REFERENCES signals(signal_id): trades (SQL 254),
+  screener_results (SQL 693), gate_state (SQL 797), shadow_trades (SQL 977), sr_detector_results (SQL 1290) and retest_state (SQL
+  1333); fm_ledger (SQL 529) and order_execution_log (SQL 1054) carry a signal_id column with no REFERENCES signals line (read 003
+  printed every such line). The comment at SQL 104-115 describes the mutual reference with trades (trades.signal_id set at
+  creation; signals.trade_id set later). Other tables: names and owners only (B-003 section 5).
+- [Q1-e] FACT (SOURCE-VERIFIED): the values the insert stores (R 956-980): signal_id = new_signal_id() (R 957), which returns
+  "sig_" plus a 32-character UUID4 hex (IDS 38, 50-52); scanner and strategy both = scanner_name (R 975; C-001 D-05, frozen: the
+  scanner key stored as the strategy); triggered_at, received_at and expires_at as ISO strings (R 958-961), with expires_at =
+  received_at + expiry_sec (R 960) and expiry_sec = sq_cfg.expiry_sec (R 679); status "QUEUED" (R 977); fingerprint = SHA-256 of
+  "scanner|symbol|epoch bucket" (R 952-954; C-005's); fingerprint_date = the IST date of received_at (R 677-678); trigger_price =
+  the parsed price (R 910, 977); webhook_payload = the sanitised body (R 681-690, 722, 857-886; C-003 section 11.4, frozen, owns
+  the redaction). rejection_reason and trade_id are not in the column list (R 967-971), so they start NULL.
+- [Q2-a] FACT (SOURCE-VERIFIED) and FACT (TEXT DRIFT): the schema's history comment (SQL 1613-1653) names the signals changes v1
+  (tables 1-8), v4 (+signals.trigger_price), v14 (+signals.webhook_payload) and v25 (the status CHECK, "Applied to existing DBs
+  via core/migrations.py table rebuild"); it ends at v27 and is headed "END OF SCHEMA v24" while the stamp is 45 (SQL 1610; B-003
+  section 5 already records this drift), so the v38 widening appears only in the migration map and in the CHECK's own comment (SQL
+  70).
+- [Q2-b] FACT (SOURCE-VERIFIED): the migration map rebuilds signals at two steps only: 25 (O2 CHECK) and 38 ("widen signals.status
+  CHECK to allow GLOB 'RETEST_*'") (MIG 115-116, 132; version notes MIG 37-38, 81-83). A rebuild re-applies schema.sql's current
+  CREATE TABLE and copies the intersecting columns (MIG 24-33, 307); the mechanism and its atomicity are B-003's (sections 6.1,
+  6.2). The map starts at v24 to v25 (MIG 35-37); how v4 and v14 reached existing databases was not traced (B-003 owns it).
+- [Q2-c] HISTORICAL / RECORD-DERIVED (code comment, undated in the comment): the v44 to v45 note records a dry run "on a copy of
+  production (423 trades / 713 orders / 49,410 signals)" (MIG 97-99); B-003 section 6.4 dates the v45 deployment to 27-Jul-2026.
+- [Q2-d] FACT (TEST TEXT): test_migrations.py inserts each of 18 values it calls "real" (QUEUED, IN_PROCESS, PROCESSING, PASSED,
+  PROCESSED, PROCESSED_NO_PLACER, PLACEMENT_FAILED, RESERVED, TRADED, REJECTED, REJECTED_SCORE_45, REJECTED_NO_ATR_DATA,
+  DROPPED_BACKPRESSURE, SKIPPED_QUOTE_UNAVAILABLE, GATE_WAITING, GATE_RELEASED_PRICE_HIT, TIMEOUT, EXPIRED) and expects
+  IntegrityError for "queued", "", "OPEN", "FILLED" and "rejected_x" (TMG 360, 370-384). IN_PROCESS, TRADED and
+  DROPPED_BACKPRESSURE have no writer in the inspected scope (Q4-a). B-003 section 14 records the failsafe test.
+
+==============================================================================
+3. STORAGE-LAYER PATHS, TRANSACTION BOUNDARIES (Q3) AND THE PERSISTENCE PATH MAP
+==============================================================================
+- [Q3-a] FACT (SOURCE-VERIFIED): the store has no insert function for signals; the receiver inserts with its own SQL in its own
+  transaction (R 963-980). The INSERT lines at ST 165 and ST 513 are docstring usage examples (ST 157-167, 511-515).
+- [Q3-b] FACT (SOURCE-VERIFIED): update_signal_status (ST 1408-1426) runs "UPDATE signals SET status = ?, rejection_reason = ?
+  WHERE signal_id = ?" in its own transaction (ST 1422); an empty reason is stored as NULL (ST 1425); the ts argument is "accepted
+  for SP9 API symmetry; not stored (no updated_at col)" (ST 1413); a missing signal_id is a silent no-op (ST 1420). There is no
+  condition on the current status.
+- [Q3-c] FACT (SOURCE-VERIFIED): release_gate_state (ST 2982-2998) and release_retest_state (ST 3049-3059) delete the child row
+  (gate_state or retest_state) and run the same unconditional status UPDATE in one transaction; both are called with a status and
+  no reason (EG 512; RM 209), so rejection_reason becomes NULL.
+- [Q3-d] FACT (SOURCE-VERIFIED): the receiver's two status flips are separate transactions after the insert: QUEUED on the
+  re-accept of a QUEUE_FULL row, after the put (R 992-1007), and QUEUE_FULL when the put finds the queue full (R 1050-1057). Each
+  UPDATE has only WHERE signal_id = ?, and a failure is only logged (R 1008-1011, 1058-1059). The re-accept is decided by a SELECT
+  of the existing row's status (R 987-992) before the UPDATE, not in the same statement. (C-006 sections 4.2 and 5.2, BM-01 and
+  BM-02 record the queue side.)
+- [Q3-e] FACT (SOURCE-VERIFIED): the order manager's link_signal_trade sets signals.trade_id in its own transaction (OM 718-724);
+  the order placer calls it before the broker execution (OP 1017-1018, 1027-1028); on a failure the placer releases the
+  reservation, marks the trade FAILED and raises, and its comment says the processor then marks the signal PLACEMENT_FAILED (OP
+  1024-1034).
+- [Q3-f] FACT (SOURCE-VERIFIED): readers in the store: count_signals_today (ST 895-907, by SUBSTR(received_at, 1, 10)) and
+  get_signals_for_date (ST 2588-2594, by DATE(received_at)); an innings report joins signals (ST 2908, 2910, 2936).
+  get_reservation_id_for_signal reads fm_ledger, not signals (ST 1281-1298). The order manager reads received_at for latency (OM
+  464-471).
+- [Q3-g] FACT (SOURCE-VERIFIED): the other non-test writers of signals SQL found by P03 to P05 and P44: eod_cleanup (EC 120-125,
+  248-268; section 6) and scripts/t2_cnc_gtt_realtest.py, a manual real-order test script that seeds its own signals row (T2 212,
+  215, 227, 229; never run here). The dynamic SQL writes found by P44 target other tables (ST 2554-2568: the slippage logging) or
+  are the rebuild's copy (MIG 307).
+- [Q3-h] INTERPRETATION: every status write is its own transaction except the two release functions. The screener's verdict and
+  its screener_results row (SS 615-630), the gate's gate_state row and its GATE_WAITING status (EG 311-312), and the parked retest
+  candidate and its RETEST_WAITING status (RM 371-373) are each two separate store calls; a failure is logged and not raised (SS
+  604-607; EG 313-317; RM 93, 103-105), so one half can stand without the other.
+
+Persistence path map (input -> logic -> validation/guard -> output -> storage/hand-off -> next consumer):
+| Row | Input | Logic | Validation / guard | Output | Storage / hand-off | Next consumer |
+| PM-01 | one symbol of an accepted webhook (C-002 to C-004) | _process_signal: fingerprint, new signal_id, expiry time (R 892, 949-961) | symbol, price, age, in-flight claim and cache checks, none leaving a row (R 904-947); the unique key (SQL 81-83) | INSERT of 12 columns, status QUEUED (R 963-980) | own transaction (R 963-964); then the queue put (R 1046-1049) | the processor (C-006) |
+| PM-02 | a repeat that hits the unique key | SELECT the existing row; a QUEUE_FULL row is re-queued, any other answers DUPLICATE (R 981-1015) | the status is read before the flip, not in it (R 987-992, 1005) | status QUEUED, or no write | own transaction; a failure is logged (R 1002-1011) | the processor |
+| PM-03 | a full queue at the first put | UPDATE status QUEUE_FULL (R 1050-1057) | no | QUEUE_FULL row; the batch answers 503 (R 60, 1068) | own transaction; a failure is logged (R 1058-1059) | a sender retry (PM-02); the readers (section 7) |
+| PM-04 | a dequeued item, a gate release, a retest confirmation | the pipelines write PROCESSING, RESERVED and one end status (S-04 to S-12) | no (ST 1408-1426) | status and rejection_reason | update_signal_status, one transaction per call (ST 1422) | the readers; reservation and trade paths (C-008, G topics) |
+| PM-05 | a screening verdict | _persist (SS 598-630) | no | the verdict; reason = the rejected step or the status (SS 614) | update_signal_status, then insert_screener_result (SS 615-630) | the processor (PASSED continues); screener_results readers |
+| PM-06 | a gate add or release; a retest park, duplicate or release | EG 309-312, 501-512; RM 180-212, 347-373 | no | GATE_*, RETEST_*, REJECTED_RETEST_DUP | releases: child row and status in one transaction (ST 2982-2998, 3049-3059); add and park: two calls (Q3-h) | continue_from_gate, continue_from_retest (P 2010, 2375; RM 186-190) |
+| PM-07 | the placer's trade, before execution | link_signal_trade (OP 1027-1028; OM 718-724) | no | signals.trade_id | own transaction (OM 720) | trades back-reference (SQL 104-115); eod_cleanup's guard (EC 236) |
+| PM-08 | the 15:50 eod_cleanup run | step 1 expiry; step 4 prune (EC 105-127, 211-271) | WHERE status = 'PROCESSING' and the triggered_at date; the status filter, the cutoff and NOT EXISTS trades (EC 234-236) | EXPIRED rows; deleted rows and children | step 1 one transaction; step 4 batches of 2,000, one commit each (EC 206-208, 250-268) | none (rows gone) |
+| PM-09 | stored rows | the readers of section 7 and the store's readers (Q3-f) | - | counts, buckets, families | - | reports, dashboard, readiness and crash checks |
+
+==============================================================================
+4. STATUS MAP (Q4): status -> writer -> condition -> reason -> prior-status check -> next
+==============================================================================
+| Row | Status | Writer (lines) | Condition (code text) | Reason column | Prior-status check | Next |
+| S-01 | QUEUED (insert) | receiver INSERT (R 963-980) | a symbol that passed the receiver's checks and claims (R 904-947) | NULL | n/a (new row); the unique index refuses a same-bucket repeat (R 981-986) | queue put (R 1046-1049) |
+| S-02 | QUEUED (flip) | receiver re-accept (R 1002-1007) | IntegrityError, the existing row is QUEUE_FULL, the put succeeded (R 987-1001) | unchanged | no (R 1005) | response ACCEPTED with the old signal_id (R 1012-1013) |
+| S-03 | QUEUE_FULL | receiver (R 1050-1057) | put_nowait raised queue.Full | unchanged | no (R 1055) | response QUEUE_FULL; the batch answers 503 (R 59-66, 1068) |
+| S-04 | PROCESSING | processor (P 897, 2034, 2393) | start of _process_one, continue_from_gate and continue_from_retest (P 867, 2010, 2375) | NULL | no | the pipeline's checks |
+| S-05 | REJECTED_<check> | processor handlers (P 1201, 1662, 2316-2318, 2598) | a _PipelineReject; names include KILL_SWITCH, OUTSIDE_ENTRY_WINDOW, EXPIRED, UNKNOWN_STRATEGY, STRATEGY_CIRCUIT_BREAKER, RESERVE_FAILED, KILL_SWITCH_LATE, SHUTDOWN, ENTRY_THROTTLED (P 907, 912, 918-919, 935-936, 990, 1338, 1396, 1405, 1416-1417) and computed ones (P 972, 1128, 1325) | rej.reason | no | the report's rejected bucket (RS 72-73) |
+| S-06 | REJECTED_<reason> | processor reject_prepared (P 1706-1713) | the allocator's pre-check dropped the candidate | "allocator pre-check: <reason>" | no | as S-05 |
+| S-07 | REJECTED, reason QUEUE_FULL | processor (P 428-437) | the FIX-007 rate-limit pre-check's re-queue found the queue full; not wired at the pin (C-006 section 5.1, BM-06) | "QUEUE_FULL" | no | - |
+| S-08 | PLACEMENT_FAILED | processor (P 473-475, 1238, 1683, 2345, 2620) | an unhandled or placement exception | "unhandled: ..." or the exception text | no | reservation released (P 1239-1241) |
+| S-09 | RESERVED | processor (P 1344, 2171, 2501) | the capital reservation succeeded (P 1337-1340) | NULL | no | placement |
+| S-10 | PROCESSED_NO_PLACER | processor (P 1360, 2186, 2509) | no order placer; the reservation is released (P 1353-1359) | NULL | no | - |
+| S-11 | TIMEOUT | processor (P 1480-1482, 2278-2280, 2573-2575) | an ambiguous placement timeout; "recovery owns the reservation" (P 1483) | the timeout text | no | B-005 section 5: the in-flight recovery is not wired |
+| S-12 | PROCESSED | processor (P 1543, 2290, 2583) | success after placement | NULL | no | - |
+| S-13 | PASSED, REJECTED_<step>, SKIPPED_<reason> | secondary screener _persist (SS 598-620) | each verdict: PASSED (SS 359, 518); for example REJECTED_SCORE_<n>, REJECTED_SIGNAL_AGE, REJECTED_STEP_ERROR, REJECTED_<gate reason> (SS 275, 323, 343, 454); SKIPPED_QUOTE_UNAVAILABLE, SKIPPED_EXECUTOR_ERROR, SKIPPED_SCORER_ERROR (SS 181, 260, 297) | the rejected step, else the status (SS 590, 614) | no | the processor continues on PASSED |
+| S-14 | GATE_WAITING | entry gate add (EG 309-312) | add(); B-009 section 15 item 1 (D1, frozen): no runtime caller | NULL | no | gate_state row (EG 311) |
+| S-15 | GATE_RELEASED_<reason> | entry gate release (EG 501-512) via ST 2982-2998 | PRICE_HIT, TIMEOUT, QUOTE_UNAVAILABLE or another reason (EG 501-506) | NULL | no | continue_from_gate (S-04) |
+| S-16 | RETEST_WAITING | retest diverter (RM 359-373) | the candidate was parked; the diverter is off and the monitor not started with the repository setting (B-006 TH11, B-009 section 5, frozen) | NULL | no | retest_state row (RM 97) |
+| S-17 | REJECTED_RETEST_DUP | retest diverter (RM 347-351) | the symbol is already parked | "symbol already parked in WAIT_FOR_RETEST" | no | - |
+| S-18 | RETEST_CONFIRMED, RETEST_REJECTED_<REASON> | retest monitor release (RM 180-212) via ST 3049-3059 | the zone evaluation's result | NULL | no | continue_from_retest on CONFIRMED (RM 186-190) |
+| S-19 | EXPIRED | eod_cleanup step 1 (EC 120-125) | status PROCESSING and the triggered_at date before the run date | unchanged | yes: WHERE status = 'PROCESSING' | pruned later (S-21) |
+| S-20 | trade_id (not a status) | order manager (OM 718-724) via the placer (OP 1027-1028) | the placer's trade, before broker execution (OP 1017-1018) | - | no | the trades link |
+| S-21 | (row deleted) | eod_cleanup step 4 (EC 211-271) | EXPIRED, DUPLICATE or REJECTED*, older than the window, no trades row (EC 234-236) | - | the status filter | children deleted first (EC 198-204, 260-266) |
+- [Q4-a] FACT (SOURCE-VERIFIED): no writer was found for ACCEPTED, TRADED, DUPLICATE, INVALID_SYMBOL, INVALID_PRICE,
+  OUTSIDE_HOURS, IN_PROCESS, CANCELLED, FAILED or PENDING, nor for the DROPPED_* family. Inspected scope: every
+  update_signal_status call in the runtime files (P39, 30 lines, all read: section 4 and EG 312, RM 349, 373, SS 615), every
+  release_gate_state and release_retest_state call (P38), every line-level INSERT, UPDATE or DELETE on signals in the code files
+  (P03 to P05) and every dynamic SQL write (P44), each read at its lines. The P41 (DROPPED_) and P42 (quoted TRADED) hits are in
+  files with none of those writes, for example a reader's label map (GSC 65-67), a default argument (SHE 103) and a docstring
+  query (ST 161). ACCEPTED, DUPLICATE, EXPIRED, INVALID_SYMBOL, INVALID_PRICE, QUEUE_FULL, STORE_ERROR, OUTSIDE_HOURS and
+  IN_PROCESS are the receiver's per-symbol response values (R 21-22); its comment says QUEUE_FULL and STORE_ERROR "never reach
+  signals.status" as responses, the QUEUE_FULL row being a separate UPDATE (R 64-65). STORE_ERROR is not in the CHECK and is never
+  stored (R 1016-1044).
+- [Q4-b] FACT (SOURCE-VERIFIED): the processor's comment says a trade-type mismatch "gets its OWN reject label 'TRADE_TYPE' (->
+  REJECTED_TRADE_TYPE ...)" and other strategy-control rejects keep STRATEGY_CONTROL (P 964-972). REJECTED_NO_ATR_DATA is raised
+  as a check name (P 1804-1805, 1915-1916); the handler adds the prefix again (P 1201), so the stored value would be
+  REJECTED_REJECTED_NO_ATR_DATA (INTERPRETATION; reachable only with sl_method or tgt_method ATR and atr_fallback_mode HALT, P
+  1801-1803, 1913-1914).
+- [Q4-c] FACT (SOURCE-VERIFIED): status values carry numbers and free names: REJECTED_SCORE_<score> (SS 323), REJECTED_<gate
+  reason> (SS 454), RETEST_REJECTED_<REASON> (RM 192), REJECTED_SIZING_<constraint> (P 1128); the report collapses the per-score
+  family (RS 50-53, 147-156).
+
+==============================================================================
+5. START, STOP, KILL, CRASH AND REPAIR (Q5)
+==============================================================================
+- [Q5-a] FACT (SOURCE-VERIFIED), bounded: in main.py a gated grep for UPDATE signals, update_signal_status, QUEUED, PROCESSING,
+  the repair-name pattern and the gate and retest reload calls printed three lines: a comment on queued items (M 1683), the kill
+  state's clear_stale_state (M 2260; KS 315) and the retest monitor's rehydrate (M 3795); P06b found no SQL read of signals in
+  main.py. The kill switch's grep printed no signals write (read 065); utils/startup_checks.py had no matching line (read 068). No
+  start step that writes signals rows was found in the inspected scope.
+- [Q5-b] FACT (SOURCE-VERIFIED): at start the entry gate reloads gate_state rows (EG 179-239) and the retest monitor reloads
+  retest_state rows (RM 118-136); neither writes signals rows. B-006 TH21 and ST8 (frozen) record the gate reload at every start.
+- [Q5-c] FACT (SOURCE-VERIFIED): stop and kill write inside the pipeline: REJECTED_KILL_SWITCH at the pipeline's start (P 906-907,
+  2039, 2398), REJECTED_KILL_SWITCH_LATE and REJECTED_SHUTDOWN before placement (P 1396, 1405, 2213, 2222, 2523, 2528). C-006
+  section 8.1 (frozen) records which drained items reach those checks.
+- [Q5-d] INTERPRETATION (code paths): a crash leaves a row in whatever status it had: QUEUED or QUEUE_FULL (receiver), PROCESSING,
+  RESERVED or PASSED (processor and screener), GATE_WAITING or RETEST_WAITING (parked). Nothing found re-queues QUEUED rows (A-011
+  section 12, C-006 section 8.3, frozen). The only repair found is eod_cleanup step 1 (S-19): at its next run it changes
+  PROCESSING rows whose triggered_at date is before the run date to EXPIRED (EC 105-127); today's PROCESSING rows wait for the
+  next run (TEC 96-102), and the job skips non-trading days (EC 311-312). The other residues are neither repaired nor pruned (EC
+  234-236).
+- [Q5-e] FACT (SOURCE-VERIFIED): the system manager's readiness check counts PROCESSING rows received more than 15 minutes ago as
+  "stuck signals" and warns; it writes nothing (SM 675-691). Its other signals queries are counts (SM 637, 640). check_vm_state.py
+  only reads signals (CVS 72-74, 77, 89, 184-186).
+- [Q5-f] FACT (SOURCE-VERIFIED): the 15:17 routine's step 0 would clear the entry gate and the parked retest candidates (EOD
+  340-356); the clears delete gate_state and retest_state rows without a status write (EG 260-279, ST 3000-3007; RM 107-116, ST
+  3061-3065). B-009 erratum E-1 (frozen) records that main.py builds the routine without the gate, so its gate step is inert.
+- [Q5-g] INTERPRETATION: a gate_state row left from an earlier version would keep its signals row GATE_WAITING and be reloaded at
+  every start (Q5-b, Q5-f); its release status (S-15) depends on the gate's poll (C-008 and D topics; bookmark C7/BM-06).
+
+==============================================================================
+6. RETENTION MAP (Q6)
+==============================================================================
+| Row | Rule | Code | Configuration and default | Schedule |
+| RT-01 | Stale PROCESSING rows become EXPIRED | EC 105-127 (status = 'PROCESSING' AND SUBSTR(triggered_at, 1, 10) < the run date) | none | step 1 of the 15:50 job |
+| RT-02 | Noise rows are deleted | EC 211-271: status IN ('EXPIRED', 'DUPLICATE') OR GLOB 'REJECTED*', fingerprint_date < cutoff = the run date minus the window (EC 215-217), no trades row (EC 234-236); batches of 2,000 (EC 206-208), children first (EC 198-204, 259-266), one commit per batch (EC 268) | signal_retention_days: 90 (CFG 481-484, FACT (CONFIG)); model default 90, minimum 1, extra keys forbidden (CL 1976-1984; CL 2009); a CLI value overrides (EC 43-48, 57-58); a configuration failure falls back to the model default (EC 59-67) | step 4 of the 15:50 job |
+| RT-03 | The job | EC 274-304: the database is data_store/trading_system.db under the project root unless --db (EC 278); the date is today unless --date (EC 285) | - | 15:50 Monday to Friday, market days only, enabled (CR 453-466; CRON 99-100); the entry skips non-trading days and runs under a heartbeat with an alert (EC 307-320, 323-324) |
+| RT-04 | db_retention | DR 52-70: candles, system_metrics, webhook_audit, screener_results (90 days), reconciliation_log (180), fm_ledger (365); signals not listed; an override replaces a listed table's window only (DR 94, 103-105, 181, 189, 191) | its own defaults | 02:30 Monday to Saturday; Sunday with --vacuum (CR 125-139, 140, 151; CRON 36-37, 39-40) |
+- [Q6-a] FACT (SOURCE-VERIFIED): no inspected path deletes rows whose status is outside RT-02's filter (QUEUED, QUEUE_FULL,
+  RESERVED, PASSED, PROCESSED, PROCESSED_NO_PLACER, PLACEMENT_FAILED, TIMEOUT, SKIPPED_*, GATE_*, RETEST_*) or any trade-linked
+  row; PROCESSING rows go only through RT-01. P05: eod_cleanup is the only non-test file that deletes from signals. Its comment
+  says the filter keeps "the trade audit trail (QUEUED->...->TRADED / PLACEMENT_FAILED / PROCESSED)" (EC 219-221).
+- [Q6-b] FACT (SOURCE-VERIFIED): the fingerprint leaves with its row (RT-02); the unique key is per fingerprint_date (SQL 81-83),
+  so a prune of rows older than the window does not touch the same day's key (INTERPRETATION; C-005 owns the dedup).
+- [Q6-c] HISTORICAL / RECORD-DERIVED (code comments): the step 1 filter once read 'IN_PROCESS', "a status the pipeline NEVER
+  persists", and stuck rows were "never cleaned" (EC 110-112, "audit 04-Jul"); the prune's REJECTED* filter caused "the 15:50
+  rollback" until children were deleted first (EC 227-231); a "large backlog (~108k)" (EC 207); the 90-day default is dated "Rama,
+  15-Jul-2026" (CL 1982) and the setting "15-Jul-2026" (CFG 481). The dates on which these changes reached production are NOT
+  ESTABLISHED.
+- [Q6-d] FACT (TEST TEXT): stale PROCESSING from the day before becomes EXPIRED, today's does not, a TRADED row is untouched (TEC
+  85-110); EXPIRED, DUPLICATE and REJECTED_* rows are pruned and TRADED and PROCESSED kept (TEC 116-145); test_db_retention.py
+  names no signals table (read 111).
+
+==============================================================================
+7. NEXT CONSUMERS AND THE STATUSES THEY EXPECT (Q7)
+==============================================================================
+- [Q7-a] FACT (SOURCE-VERIFIED): reports/signal_status.py calls itself "the ONE place signal statuses are classified" (RS 2); its
+  bucket() checks, in order, REJECTED* (rejected), SKIPPED_* (skipped), DROPPED_* (dropped), qualified (PROCESSED, TRADED,
+  PLACEMENT_FAILED, RESERVED, PROCESSED_NO_PLACER, PASSED; RS 39-41), other (EXPIRED, QUEUE_FULL, QUEUED, PENDING, CANCELLED,
+  TIMEOUT, IN_PROCESS, FAILED, ACCEPTED, PROCESSING, DUPLICATE, INVALID_SYMBOL, INVALID_PRICE, OUTSIDE_HOURS, GATE_*, RETEST_*; RS
+  43-48, 80-81) and unmapped, "a real schema-drift alarm" (RS 43-45, 68-82). The daily report and the trade review import it (DRP
+  53; DTR 79).
+- [Q7-b] FACT (SOURCE-VERIFIED): the dashboard's status family (DBR 660-681), checked in order: expired = REJECTED_EXPIRED or
+  EXPIRED; duplicated = DUPLICATE; rejected = REJECTED*, DROPPED_*, SKIPPED_*, QUEUE_FULL, PLACEMENT_FAILED, TIMEOUT; accepted =
+  everything else, QUEUED, PROCESSING, RESERVED, GATE_* and RETEST_* included (DBR 669-670); a QUEUED row with no trade shows as
+  "Received" (DBR 892-896).
+- [Q7-c] FACT (SOURCE-VERIFIED): three more readers each use their own subset: the system manager's stuck check, PROCESSING only
+  (SM 680); eod_cleanup's prune, EXPIRED, DUPLICATE, REJECTED* (EC 234); the crash harness, a terminal set and a transition table
+  that flags any status it does not know (TSMV 49-110, 136-137). core/evidence_contract.py says signals.status "keeps a terminal
+  verdict" and names the screener's statuses for evidence capture (EVC 8, 164-166, 174, 178).
+- [Q7-d] INTERPRETATION: no single definition of a terminal signal status was found in the readers read (section 5 of the
+  inventory lists the readers not read). QUEUE_FULL is "terminal" in the report's docstring (RS 88-89, 101-102) but sits in the
+  set the same file calls "Known non-terminal / other" (RS 43, 46); it is "rejected" on the dashboard (DBR 679); and the receiver
+  re-accepts a QUEUE_FULL row (S-02).
+
+==============================================================================
+8. TEXT DRIFT AND DEFECTS (Q8)
+==============================================================================
+- [D-01] FACT (TEXT DRIFT): the table's header says "Immutable log of EVERY incoming webhook signal ... every signal has a final
+  status" (SQL 36-38); refused symbols leave no row (R 904-947, 1014-1015, 1044; A-011 section 12, frozen), rows are updated after
+  the insert (section 3), and non-terminal rows can remain (Q5-d).
+- [D-02] FACT (TEXT DRIFT): "Four open prefix families are allowed via GLOB" (SQL 53-54); the CHECK has five (SQL 66-70).
+- [D-03] FACT (TEXT DRIFT): the writer list "webhook_receiver, signal_processor, secondary_ screener, entry_gate" (SQL 51-53)
+  leaves out the retest diverter and monitor (S-16 to S-18) and eod_cleanup (S-19).
+- [D-04] FACT (TEXT DRIFT): signal_id is commented "UUID4" (SQL 43); the value is "sig_" plus the UUID4 hex (IDS 9-13, 50-52).
+- [D-05] FACT (TEXT DRIFT): eod_cleanup's header says "Prune old signal fingerprints (>7 days)" (EC 9); the window is 90 days by
+  default (RT-02), and the step deletes whole signals rows and their children (EC 259-266), while the header, the step's name and
+  the setting speak of "fingerprints" (EC 9, 95; CFG 482; CL 1977-1979). Its comment counts "seven children" of signals and then
+  lists six (EC 195-197); the schema declares six (Q1-d).
+- [D-06] FACT (TEXT DRIFT): update_signal_status's docstring: "so every signal_id has a terminal status" (ST 1418-1419). The
+  dashboard's "DUPLICATE (post-insert race only ...)" and "legacy EXPIRED (processor age gate)" (DBR 666-667): no writer of a
+  DUPLICATE row was found (Q4-a), the EXPIRED row writer is eod_cleanup (S-19), and the processor's age gate writes
+  REJECTED_EXPIRED (P 918-919, 1201). The prune test's docstring says the pipeline never persists "a bare 'REJECTED'" (TEC 117);
+  S-07 writes one on a path that C-006 records as not wired.
+- [D-07] FACT (TEXT DRIFT): the crash harness's model (TSMV 49-110) has ACCEPTED, IN_PROCESS, DROPPED_BACKPRESSURE and
+  DROPPED_SHUTDOWN and none of RESERVED, PASSED, QUEUE_FULL, TIMEOUT, PLACEMENT_FAILED, PROCESSED_NO_PLACER, GATE_* or RETEST_*,
+  all of which the pinned writers use (section 4).
+- [D-08] FACT (TEXT DRIFT): the schema says signals.trade_id is "set if signal became a trade" and "set post-fill ... updated
+  after the trade opens" (SQL 72, 108-109); the placer links it before the broker execution (OP 1017-1018).
+- [K-01] KNOWN DEFECT (code path): no status write checks the row's current status except S-19 (section 3), so a later write
+  replaces whatever status the row holds (INTERPRETATION; for the queue paths, C-006 BM-01 and BM-02); the time of a status change
+  is not stored (ST 1413).
+- [K-02] KNOWN DEFECT (code path, against the table's own "final status" text, SQL 38): non-terminal residues are not repaired
+  except PROCESSING, and that only from the next run (Q5-d).
+- [K-03] INTERPRETATION: RT-02's filter leaves out SKIPPED_*, GATE_* and RETEST_* rows of any age, and the K-02 residues; where
+  such a row is final (for example RETEST_REJECTED_*, after which the monitor only logs, RM 191-194), no inspected path removes
+  it, against the prune's stated aim that "the signals table + its dedup index do not grow unbounded" (EC 219-221).
+- [K-04] INTERPRETATION: expires_at is stored as received_at plus expiry_sec (R 960; SQL 49), while both age checks measure from
+  triggered_at (R 924-926; P 914-917), so the stored column is not the expiry the code applies (C-009 owns the policy).
+- [K-05] INTERPRETATION: the doubled prefix of Q4-b (latent).
+
+==============================================================================
+9. TESTS (documentary; FACT (TEST TEXT); never run)
+==============================================================================
+- [T-a] FACT (TEST TEXT): test_update_signal_status: QUEUED, then PROCESSING with an empty reason stored as NULL, then
+  REJECTED_EXPIRED with its reason; a missing signal_id is a no-op (TSS 623-645).
+- [T-b] FACT (TEST TEXT): test_migrations.py: the CHECK's accepted and refused values (Q2-d; TMG 370-384).
+- [T-c] FACT (TEST TEXT): test_fix135_eod_cleanup.py: RT-01 and RT-02 (Q6-d); it also names FK-safe, trade-linked and batched
+  prune tests (TEC 185, 203, 238).
+- [T-d] FACT (TEST TEXT): test_signal_status_classification.py: its test names cover the report's rules (the per-score family, the
+  terminal non-rejected statuses, an unmapped status, DUPLICATE against REJECTED_DUPLICATE_SYMBOL, the trade review's delegation;
+  TSC 107, 140, 147, 153, 165).
+- [T-e] INTERPRETATION: a test that builds its own store proves the logic it builds, not the production wiring (V2 design log,
+  lesson of 16-Oct-2026); none of these tests exercises the receiver's flips or a crash.
+
+==============================================================================
+10. FROZEN MANUALS AND CROSS-TOPIC BOOKMARKS (W-9)
+==============================================================================
+Frozen statements re-verified at the pin, no erratum proposed: A-011 section 15's status list (Q1-b); A-011 section 12, Q32
+(Q5-d); B-003 section 11, db_retention without signals (RT-04); B-009 section 5's REJECTED_EXPIRED (P 918-919); B-009 section 15
+item 1, D1, and erratum E-1 (S-14, Q5-f); B-010 section 10's 15:50 eod_cleanup (RT-03); C-005 section 8 ("signal_retention_days:
+90 ..." left to C-007, now traced: RT-02); C-006 section 8.3 (RT-01, with the run-date condition added).
+| BM | Point | Cross-check with |
+| C7/BM-01 | All status writes are unconditional (K-01); re-verifies the store side of BK-04, BK-10 and BK-11 | C-006 BM-01, BM-02; C-008 |
+| C7/BM-02 | The prune's DUPLICATE has no row writer at the pin, its EXPIRED comes only from step 1, and its IN_PROCESS is history (EC 110-112): the C-007 part of BK-05; closing BK-05 is for reconciliation | C-005 BM-03 (BK-05); B-010 |
+| C7/BM-03 | The re-accept flip changes only status (R 1005) while the queued item carries the retry's price and time (R 993), so the row keeps the first attempt's values; the row side of BK-14 | C-006 BM-05 (BK-14); C-008 |
+| C7/BM-04 | The doubled prefix REJECTED_REJECTED_NO_ATR_DATA (Q4-b) | C-008 |
+| C7/BM-05 | expires_at's basis differs from the age checks' basis (K-04) | C-009 |
+| C7/BM-06 | GATE_WAITING has no runtime writer and the EOD gate clear is inert, so an old gate_state row would reload at every start (Q5-g) | C-008; D topics; B-009 D1, E-1 |
+| C7/BM-07 | No terminal-status definition; residues kept; no status-change time (Q7-d, K-01, K-02) | K-003, K-011, K-012; VP-59 (BK-18); whole-design review |
+| C7/BM-08 | Readers disagree on QUEUE_FULL, DUPLICATE and EXPIRED (Q7-d, D-06) | L-010, L-011 |
+| C7/BM-09 | The strategy column stores the scanner name (Q1-e) | C-001 D-05; C-010; K-003 |
+| C7/BM-10 | Ten enumerated values and DROPPED_* have no writer; the CHECK admits them (Q4-a) | K-003 |
+| C7/BM-11 | The crash harness's model is stale (D-07) | N-005 (failure testing) |
+| C7/BM-12 | The receiver's signals SQL sits in _process_signal only (R 892, 967, 988, 1005, 1055; P03, P04); whether the EOD route reaches that function was not traced | C-011 |
+
+==============================================================================
+11. UNKNOWN / NOT ESTABLISHED, AND OPEN QUESTIONS
+==============================================================================
+- [U-01] UNKNOWN / NOT ESTABLISHED: the deployed databases' schema and CHECK (C-006 OQ-1): repository side only.
+- [U-02] UNKNOWN / NOT ESTABLISHED: stored rows: counts by status, residues and growth (Q-37 (f)). The comment figures (49,410
+  signals, about 108k, and the report's measured examples at RS 13-20, 91, 105) are RECORD-DERIVED and not verified; B-009 section
+  13 (frozen) records a census's leading statuses.
+- [U-03] UNKNOWN / NOT ESTABLISHED: whether the installed schedule ran eod_cleanup and db_retention, and their outcomes; the 15:50
+  rollback's dates (Q6-c).
+- [U-04] UNKNOWN / NOT ESTABLISHED: whether any GATE_* or RETEST_* row exists, and since when (S-14 to S-18).
+- [U-05] UNKNOWN / NOT ESTABLISHED: whether a logged status-write failure ever happened (R 1008-1011, 1058-1059; EG 313-317; SS
+  604-607).
+- [U-06] UNKNOWN / NOT ESTABLISHED: the full set of REJECTED_<check> names: computed names come from other modules (P 972, 1128,
+  1325; C-008).
+- [U-07] UNKNOWN / NOT ESTABLISHED: rows stored before the 05-Jul-2026 payload sanitisation (C-003 R-05 and L-04, frozen).
+- [OQ-01] OPEN QUESTION (C-006 OQ-1, carried): whether the deployed constraint matched the repository schema.
+- [OQ-02] OPEN QUESTION (for Rama; carries Q-37 (f)): were signals rows left non-terminal ever cleaned by hand (QUEUED,
+  PROCESSING, RESERVED or others), and how?
+
+==============================================================================
+12. DECLARATION AND DEVIATIONS
+==============================================================================
+- Scope: S-1 only; other tables named and left to their owners; records names only; R48 never opened or searched.
+- Code or tests run: NO. Live service, VM, broker, webhook, Chartink or database contacted: NO. Files modified, commit or push: NO
+  (only cread_c007.py's lock, in Claude's scratch area).
+- Credentials or identifiers reproduced: NO (scanned value-blind before delivery; inventory section 7).
+- Deviations (inventory section 8): D-1 one gated grep read of deploy/cron/trading-system.cron (read 083) printed, in working
+  output only, three job lines that include the deployed project directory; no file repeats them, and the cron lines are cited
+  here by number only. D-2 three files outside the Stage 0 register were read for S-1 facts: core/ids.py (the key's format),
+  orders/order_placer.py (the trade-link call) and capital/shadow_engine.py (one TRADED mention). D-3 three Stage 0 NO rows were
+  read narrowly for S-1 item 4 or 6: R29 orders/eod_squareoff.py (reads 116 to 118; its Stage 0 reason, "a read of signals", was a
+  docstring line, EOD 38), and one file each of R30 and R31 (reads 090 and 063). D-4 reads 115 to 120 (non-test follow-ups) came
+  after the first test reads.
+- Independent verification: NO (self-checked; Rama's lean workflow W-9).
+END

@@ -1,0 +1,63 @@
+C-007 — STAGE 1 AUTHORISATION AND REVIEW NOTES
+Date: 23-Oct-2026
+Purpose: Hand-off to Claude after ChatGPT review of Stage 0 inventory and method.
+
+DECISION
+Stage 0 is ACCEPTED as an inventory/method deliverable. Stage 1 is AUTHORIZED only within the bounded scope below. This is authorization to read and document the pinned legacy source; it is NOT authorization to modify, execute, test, deploy, or revive the legacy system.
+
+BASELINE
+- Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+- Use this exact commit only. Do not substitute a branch tip or a later snapshot.
+- V2 governance reference noted in Stage 0: main at 642fd7630976c50c72c487d654f3b0631dfdfd35.
+
+APPROVED SCOPE — PROPOSAL S-1
+C-007 covers:
+1. The `signals` table: columns, keys/unique key, defaults, indexes, constraints and triggers, plus only the `signals`-table migration history.
+2. The stored signal-status vocabulary and transitions: status value, writer, condition/reason text, reason column, and whether a write checks the row's current status.
+3. Storage-layer insert/update/read/delete paths for `signals` rows, including transaction boundaries only as they relate to those rows. Database connection/opening rules remain owned by B-003.
+4. What startup, stop, kill and repair paths write to `signals` rows.
+5. Retention/pruning of `signals` rows and their fingerprint key: relevant cleanup code, configuration keys/defaults, and schedule lines.
+6. The status values expected by the immediate downstream readers/consumers.
+
+BOUNDARIES
+- Other tables in `core/schema.sql`: names and owner/cross-reference only; do not analyse their behaviour.
+- Do not redo C-005 claims/deduplication/cache logic, C-006 queue logic, C-008 processor decision logic, C-009 expiry policy, C-010 scanner-to-strategy mapping, or C-011 EOD routing. Record relevant hand-offs and cross-topic bookmarks only.
+- Do not expand into the overall database architecture, connection lifecycle, migrations framework, backup/restore, other tables' persistence, or V2 design. These remain with their established owners.
+- Records R43–R47 and all dated records remain NAMES-ONLY. No record content reads are authorised by this hand-off. The two excluded July records R48 remain excluded and must not be opened or searched.
+- Protected paths and shared protected blobs remain forbidden under the existing gate.
+
+READING AND EVIDENCE METHOD
+1. Before the first source read, explicitly lift the Stage 0 lock as a separate recorded step; record the updated tool SHA-256. Do not weaken any other gate.
+2. Run the gate self-test before every read/search as specified in the Stage 0 method. Use the accepted masked read gate and count-only search gate; log every operation.
+3. Read the storage contract first, then signal-table migrations, StateStore signal-row functions, status writers in signal lifecycle order, startup/stop/kill/repair paths, retention/configuration/schedule, next consumers, and only then relevant test source.
+4. Use a gated grep/search to locate relevant lines, then bounded range reads. Read `scripts/eod_cleanup.py` only for its signal-row and fingerprint-retention responsibilities; do not broaden into unrelated EOD behaviour.
+5. Test files are documentary evidence only. Do not execute tests, scripts, crash harnesses, or application code.
+6. Every factual claim must cite the pinned path, line range, blob ID and read/evidence-log ID. Preserve the labels: FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (TEST TEXT), FACT (TEXT DRIFT), HISTORICAL / RECORD-DERIVED, INTERPRETATION, KNOWN DEFECT, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION.
+7. Search/count results locate candidate material; they are not proof of runtime behaviour. A code path is not proof that an event occurred. Negative findings must state the exact inspected scope.
+8. Repository configuration/defaults are not deployed values. The live database, deployed schema parity, host state and actual historical stored rows remain NOT ESTABLISHED unless evidence already authorised and available proves otherwise.
+
+STAGE 1 WORK PRODUCTS
+- Read log and source inventory updated with every permitted read.
+- Status map: status value -> writer/function -> condition -> reason field/value -> prior-status guard (yes/no/not established) -> output/storage/handoff.
+- Signals-table schema and migration history, limited to the table.
+- Signal-row persistence path map: input -> logic -> validation/guard -> output -> storage/handoff -> next consumer.
+- Retention map: row/fingerprint age/key rules, configuration/defaults, cleanup writes/deletes and schedule, with code/config distinction.
+- Claim index mapping each statement to evidence.
+- Cross-topic bookmarks for C-005/C-006/C-008/C-009/C-010/C-011 and Section K owners; do not resolve another topic's open question.
+- Explicit UNKNOWN / NOT ESTABLISHED and OPEN QUESTION lists.
+
+STOP CONDITIONS
+Stop without reading the affected source and report to ChatGPT/Rama if:
+- the pin or working-file/blob identity check fails;
+- a protected/excluded/shared-protected path or blob is implicated;
+- the gate self-test fails or a read is not logged;
+- a source appears to require reading an excluded dated record to understand it;
+- scope would need to expand beyond S-1;
+- a new fact appears to require changing a frozen decision or resolving another topic's ownership.
+
+PROHIBITIONS
+No file edits to the legacy repository; no commits or pushes; no tests or scripts run; no VM/host/database/broker/webhook/Chartink access; no live operational contact; no V2 design decisions; no credential or secret disclosure. Work only on the pinned repository snapshot and the documentation outputs.
+
+DELIVERY
+Return the Stage 1 evidence pack and a concise findings summary, then STOP for ChatGPT/Rama reconciliation. Do not freeze or push the C-007 manual until review and explicit approval.

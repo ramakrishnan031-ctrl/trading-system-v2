@@ -1,0 +1,43 @@
+C-007 — CHATGPT REVIEW OF STAGE 1 RECONCILIATION TABLE
+Date: 23-Oct-2026
+Legacy pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Review basis: C-007_STAGE1_RECONCILIATION_TABLE_23-OCT-2026.txt plus direct, read-only GitHub file reads at the exact pinned commit. No runtime systems, databases, VMs, or broker services were contacted.
+
+DECISION
+The reconciliation table is acceptable as the process-deviation record, subject to the bounded qualifications below. The proposed source spot-check is substantially completed by ChatGPT. C-007 is NOT yet authorised for manual drafting/freeze until Rama answers OQ-02 or explicitly accepts UNKNOWN / NOT ESTABLISHED, and the residual evidence-handling decision under item A is acknowledged.
+
+INDEPENDENT SPOT-CHECK RESULTS
+The following source claims were checked directly against the pinned GitHub files and the cited line ranges. This is a targeted spot-check, not a full independent re-audit of all 415 citations.
+
+1. Q1-b — core/schema.sql 60–70: VERIFIED. Twenty enumerated status values and five GLOB families are present.
+2. Q1-d — core/schema.sql 254, 693, 797, 977, 1290, 1333: VERIFIED. Each cited line declares FOREIGN KEY (signal_id) REFERENCES signals(signal_id).
+3. Q2-b — core/migrations.py 115–133: VERIFIED. The migration map lists `signals` at steps 25 and 38 within the inspected map.
+4. Q3-b — core/state_store.py 1408–1426: VERIFIED. The update predicates on signal_id only; `ts` is explicitly not stored because there is no updated_at column in this function's comment.
+5. S-02/S-03 — signals/webhook_receiver.py 987–1011 and 1050–1059: PARTIALLY VERIFIED. The inspected requeue branch selects existing status, then updates by signal_id only; failures are logged. The separate queue-full update was cited in the Stage 1 answer, but this spot-check did not re-fetch that second range independently in this pass.
+6. Q4-b — signals/signal_processor.py 1201 and 1804–1805: VERIFIED. The handler prefixes `REJECTED_` to `rej.check`, while the cited ATR check name already begins `REJECTED_NO_ATR_DATA`. The doubled-prefix outcome remains an INTERPRETATION of the path, not an observed runtime row.
+7. RT-01 — scripts/eod_cleanup.py 120–125: VERIFIED. The update sets PROCESSING rows to EXPIRED when the date portion of triggered_at is earlier than the supplied date.
+8. RT-02 — scripts/eod_cleanup.py 234–236: VERIFIED. The prune predicate covers EXPIRED, DUPLICATE and REJECTED*; it also requires the fingerprint date to be older than the cutoff and excludes signals linked to a trade.
+9. RT-02 configuration — config/system_config.yaml 481–484 and core/config_loader.py 1976–1984: VERIFIED. Repository config and model show 90 days, default 90, minimum 1, and extra keys forbidden by the model configuration.
+10. Q7-a — reports/signal_status.py 39–48: VERIFIED for the qualified and known-other sets shown at these lines. The report's other classification branches still depend on the additional cited lines in the Stage 1 answer.
+11. Q7-b — ops_dashboard/backend/readers/db_reader.py 660–681: VERIFIED. Its comment and CASE classify QUEUE_FULL, PLACEMENT_FAILED and TIMEOUT as rejected; the default branch treats everything else as accepted.
+12. D-02 — core/schema.sql 53–70: VERIFIED. The comment says “Four open prefix families” while the CHECK contains five GLOB families.
+13. Q4-a absence claim: NOT INDEPENDENTLY VERIFIED by this spot-check. It depends on the bounded logged search patterns and file scope in the inventory. Preserve it as a bounded claim (“no writer found in the inspected scope”), not a universal assertion that no writer exists anywhere.
+
+QUALIFICATIONS / REQUIRED WORDING
+- The repository schedule and config establish intended configuration, not that a deployed job actually ran.
+- The repository code establishes code paths, not whether any row was present, any failure occurred, any manual cleanup took place, or any trade happened.
+- Keep the scope of negative claims tied to the exact files, search patterns, reads, and pinned commit.
+- Follow the project's stated convention: reserve KNOWN DEFECT for a previously recorded defect re-verified at the pin. New code-path findings K-01/K-02 should be described as source-verified code facts plus a separately labelled INTERPRETATION. This matches item F of Claude's reconciliation.
+- For D-04's script description, use Claude's corrected wording: “a script under scripts/ that seeds its own signals row (Stage 0 R31: test-like, never run, live reach not established)”. Do not assert it is a manual real-order test script unless a cited source supports that label.
+- The transcript residual in item A cannot be removed by this review. The repository file output has been redacted in Claude's private scratch evidence copy per its report; do not repeat the sensitive path text in any further deliverable. Rama must decide whether the residual conversation transcript requires any action available to him. Do not investigate or access a host.
+
+OQ-02 — RAMA'S HISTORICAL ANSWER REQUIRED
+During the legacy live period, were non-terminal `signals` rows (for example QUEUED, PROCESSING, RESERVED or other waiting states) ever cleaned up manually? If yes, was it by SQL, a script, or a database reset? A short answer is enough. If unknown/not remembered, record UNKNOWN / NOT ESTABLISHED. Do not inspect excluded records or live systems to answer.
+
+NEXT GATE
+1. Rama answers OQ-02, or confirms UNKNOWN / NOT ESTABLISHED.
+2. Rama acknowledges the residual-transcript decision in item A.
+3. ChatGPT/Rama close item E with this bounded spot-check result and the Q4-a limitation.
+4. Only then may Claude draft the detailed C-007 Markdown manual for review. Drafting is not freezing; do not commit or push without separate approval.
+
+No V2 design, code changes, tests, deployment, operational revival, or changes to frozen manuals are authorised by this review.

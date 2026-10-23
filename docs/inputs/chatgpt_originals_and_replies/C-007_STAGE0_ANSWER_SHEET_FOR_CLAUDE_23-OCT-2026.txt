@@ -1,0 +1,75 @@
+C-007 — STAGE 0 ANSWER SHEET
+SOURCE INVENTORY AND DOCUMENTATION WORKFLOW
+Date: 23-Oct-2026 (IST)
+Status: To be completed by Claude; inventory stage only
+
+PROJECT RULE
+The legacy trading system is DEAD / REFERENCE ONLY. Phase 1 is factual documentation. Before conclusions, establish the source inventory and documentation workflow. Do not analyse individual modules yet.
+
+PINNED LEGACY BASELINE
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Do not substitute the V2 repository or a moving branch for this pinned legacy baseline.
+
+TOPIC
+C-007 — Persistence, status transitions, database schema and retention.
+C-006 is frozen as DR-059 at V2 commit 642fd7630976c50c72c487d654f3b0631dfdfd35. Its bookmarks BM-01, BM-02 and BM-05 are relevant leads, not pre-decided conclusions. C-005 owns claims/fingerprint/deduplication behaviour; C-006 owns queue hand-off; C-008 owns processing pipeline; C-009 owns expiry. C-007 must document its own scope and record cross-topic hand-offs without resolving other topics prematurely.
+
+CLAUDE — COMPLETE EACH SECTION WITH EVIDENCE
+1. Baseline confirmation
+- Confirm repository URL and exact commit.
+- Record the commit date and tree identity if available.
+- Confirm all later inventory operations refer to this commit, not HEAD on a moving branch.
+
+2. Protected-path and access gate
+- Reuse the project's established protected-path/read gate and refusal-only self-test procedure.
+- Before any source read or content search, check and log the protected-path status.
+- Do not open or search protected files, protected content, or the excluded July records.
+- If the gate or protected-path status is unclear, STOP and ask; do not infer permission.
+
+3. Candidate inventory — names and metadata only
+Inventory candidate files/paths and their blob IDs, without reading their contents, for:
+- database schema and migrations;
+- state-store/database access layer;
+- signal status constants/enums and status-transition helpers;
+- signal insert/update/query paths;
+- retention, cleanup, expiry and EOD cleanup scripts;
+- startup/restart reconciliation and any recovery/status repair paths;
+- configuration models/keys related to database, status, retention and cleanup;
+- unit/integration tests that assert persistence, status changes, retention or cleanup;
+- reports/dashboard/monitoring readers only where they consume persisted status;
+- related frozen manuals and governance bookmarks (C-005, C-006, C-008, C-009, A-011/B-011/B-012).
+For each candidate, record exact path, reason for inclusion, blob ID, and whether it is proposed for Stage 1 or merely a cross-reference. Candidate status is not proof that the file will be read.
+
+4. Scope map and exclusions
+- Propose a bounded C-007 scope map: primary sources, supporting tests, cross-topic references, and explicit exclusions.
+- Identify possible overlap with C-005/C-006/C-008/C-009 and propose how to avoid duplicated analysis.
+- Do not decide behaviour or resolve any bookmark at Stage 0.
+
+5. Stage 1 reading plan
+- Propose a source-read order and explain how it supports source → input → logic → validation/guard → output → storage/handoff → next consumer.
+- State how each read will be logged: path, line range, blob ID, purpose, claim supported, and evidence reference.
+- State how configuration values will be distinguished from deployed-host effective values.
+- State how tests will be labelled as test-source assertions only; do not run them.
+- State how unknowns, interpretations, known defects, historical facts and open questions will be kept distinct.
+
+6. Safety and execution declaration
+Explicitly confirm:
+- no code or tests will be run;
+- no live service, VM, broker, webhook, Chartink or external operational endpoint will be contacted;
+- no credentials or secret values will be reproduced;
+- no excluded July records will be opened or searched;
+- no files will be modified, committed or pushed;
+- no individual module behaviour will be analysed in Stage 0;
+- research will stop after delivering this inventory and plan, pending ChatGPT/Rama review.
+
+7. Open questions
+List only questions that genuinely block a safe and bounded Stage 1 plan. Do not ask Rama to re-decide frozen governance. If no blocker remains, say “No blocking question; awaiting Stage 1 authorisation.”
+
+DELIVERABLES
+A. Completed answer sheet based on this template.
+B. Separate source inventory and method log, including the inventory query terms/counts, candidate paths/blob IDs, protected-path gate outcomes and exclusions.
+C. Concise summary of proposed Stage 1 source-reading sequence and any blocker.
+
+STOP CONDITION
+Do not read source contents, analyse status behaviour, draft the C-007 manual, edit project files, commit or push. Return the deliverables and STOP for ChatGPT/Rama review.

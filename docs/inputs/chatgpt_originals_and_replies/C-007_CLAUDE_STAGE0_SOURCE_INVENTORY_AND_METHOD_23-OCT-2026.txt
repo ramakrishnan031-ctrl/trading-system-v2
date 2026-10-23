@@ -1,0 +1,523 @@
+C-007 - SIGNAL PERSISTENCE
+STAGE 0 SOURCE INVENTORY AND METHOD LOG (deliverable B; companion to C-007_CLAUDE_STAGE0_ANSWERS_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 18:10 to 18:44 IST. Prepared by: Claude.
+Status: Stage 0 only; no legacy source content opened. Row numbers R01 to R49 are the register's (the answers, section 3).
+
+==============================================================================
+1. INPUTS, RULES AND OUTPUTS
+==============================================================================
+- Inputs: C-007_CLAUDE_STAGE0_RESEARCH_PROMPT_23-OCT-2026.txt and C-007_STAGE0_ANSWER_SHEET_FOR_CLAUDE_23-OCT-2026.txt (received
+  from Rama at 18:09 IST); the legacy pin's saved tree listing and the checked-out permitted files of the project's blob-less
+  partial clone; V2 main 642fd76 (fresh clone of 18:07 IST): the 37 frozen manuals and reconciliation addenda, V2_DESIGN_LOG.md,
+  V2_DECISION_REGISTER.md and the master agenda; the C-005 and C-006 read logs (line totals only).
+- Rules applied from the V2 design log's lessons: no tree-wide or history git command on the partial clone; commit metadata for
+  the named pin only; every content search through the masking filter, with counts as the only output; the gate's class beside
+  every listed file; the gate's self-test before every call; every count re-run before delivery; IDs copied from tool output;
+  the header's end time taken from the clock after the last edit.
+- Outputs: the two files; working files in Claude's scratch area under c007/ (tools, scope lists, gate results, search outputs,
+  inventory tables).
+
+==============================================================================
+2. TIMELINE AND STATE (IST)
+==============================================================================
+- 18:09 prompt and answer sheet received; 18:10 work started: V2 governance read (design-log lessons, bookmarks, Q and VP rows,
+  agenda), then C-006's Stage 0 method and tools.
+- Start state, checked before any C-007 tool was written: the clone's HEAD is the pin; 8,922 local objects; 0 never-open blobs
+  present; the saved listing's SHA-256 is 1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5 (1,438 lines).
+- 18:16:43 gate test passed (section 4); 18:16:52 baseline commands (section 5).
+- 18:17:50 path-name search (section 6).
+- 18:19:39 to 18:22:06 count-only searches P01 to P37; 18:22:59 and 18:23:05 P06b and P29b (section 7).
+- 18:24:33 frozen-manual cross-check (section 8).
+- 18:26:28 working-file hashes; 18:26:29 local object list (section 5).
+- Register and tables generated from the saved outputs (section 9); final checks at 18:44 (section 11).
+
+==============================================================================
+3. TOOLS (SHA-256, first 16 hex characters, at delivery)
+==============================================================================
+- 2ec441aa5b51911d  c007/tools/ccount_c007.py
+- 5ac3b590025964d5  c007/tools/compose_c007.py
+- 3c9fa68dbb84c77e  c007/tools/cread_c007.py
+- 493f65ff961408f3  c007/tools/gen_register_c007.py
+- 9332db6b17fc209d  c007/tools/gen_tables_c007.py
+- e7ba30f4fbec2d7c  c007/tools/matrix_c007.py
+- 96b82cc196263cb7  c007/tools/run_searches_c007.py
+- 787d0d2b7cd03d27  c007/gate/gate_test_c007.py
+- 5f29caf31ca7bc4b  c007/inv/name_search_c007.py
+- 07543a1b586250e6  c007/inv/xcheck_c007.py
+- bc0b715df0267bcf  tools/mask_read2.py
+- e36c1382b05129e5  tools/sensitive_check.py
+- 8217536996866bbb  tools/scan_ids.py
+- b0bd3d87cf51d1cb  bin/mr.py
+- 31af8ca5903370bf  bin/count_grep.py
+- Changes from C-006: cread_c007.py (log and evidence paths, the excluded-record refusal text, the Stage 0 lock, the self-test's
+  names); ccount_c007.py (its log path; it imports the gate from cread_c007.py); gate_test_c007.py (adds the excluded records,
+  the Stage 0 lock and a pattern-identity check). The other C-007 scripts are new and read only metadata or Claude's own
+  outputs.
+- Helpers used unchanged: mask_read2.py and count_grep.py (behind every count-only search), sensitive_check.py, scan_ids.py;
+  mr.py is behind cread_c007.py and was not called (no read).
+
+==============================================================================
+4. GATE TEST (gate_test_c007.py, 18:16 IST; output verbatim, long lines wrapped)
+==============================================================================
+  never-open pattern identical in cread_c007.py and sensitive_check.py: True
+  STAGE1_AUTHORISED in cread_c007.py: False
+  protected paths in the pinned listing: 102 | same set as the C-006 clarification: True
+  excluded July records in the pinned listing: 2 of 2
+  before: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+    objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  before: C-007 logs ('absent', 'absent')
+  cread_c007.py on the 102 protected paths: {'rc=1 "refused: never-open path"': 102}
+  cread_c007.py on the 2 excluded July records: {'rc=1 "refused: excluded July record (separate approval required)"': 2}
+  cread_c007.py on docs/v2_design_spec.md (shares a protected blob): (1, 'refused: shares a never-open blob')
+  invented names in the pinned tree: 1 of 14 (config/security.yaml is the real one)
+  cread_c007.py on 14 rule-shaped names: {'rc=1 "refused: never-open path"': 14}
+  cread_c007.py on a permitted-shaped name not in the tree: (1, 'refused: not in the pinned tree listing')
+  cread_c007.py on a permitted path in the tree (core/schema.sql): (1, 'refused: Stage 0 lock (no read before a Stage 1
+    authorisation)')
+  ccount_c007.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing searched')
+  ccount_c007.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing searched')
+  ccount_c007.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing searched')
+  ccount_c007.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    searched')
+  after: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+    objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  after: C-007 logs ('absent', 'absent') | unchanged: True
+  GATE TEST PASSED
+
+==============================================================================
+5. BASELINE COMMANDS (outputs)
+==============================================================================
+- git log -1 --format='%H %cI %T' on the named pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb 2026-09-11T02:05:13+05:30
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+- git ls-remote --symref of the legacy repository (HEAD, refs/heads/main):
+  ref: refs/heads/main  HEAD
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb  HEAD
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb  refs/heads/main
+- git ls-tree -r of the pin (tree objects only; no blob fetched): SHA-256 equal to the saved listing; 1438 lines.
+- git hash-object --no-filters --stdin-paths over s_all: 1260 files hashed; 1260 equal to their pinned blob IDs.
+- git cat-file --batch-all-objects --batch-check (local objects only; no lazy fetch): 8,922 objects (1,259 blobs, 1,537 commits,
+  6,126 trees).
+
+==============================================================================
+6. PATH-NAME SEARCH (paths only)
+==============================================================================
+- Script: name_search_c007.py over the saved listing. 34 terms, matched case-insensitively against the file name (the last path
+  component); nine structural terms also against folder names (no folder hit). Never-open paths are removed first.
+- Terms: schema, migrat, sql, state_store, store, db, database, sqlite, persist, status, state, transition, lifecycle, signal,
+  retention, cleanup, purge/prune, archive, vacuum, wal/checkpoint, expir, eod, backup, restore, recover, reconcil, restart,
+  repair, rehydrat, crash, stale, audit (file name), journal, ledger
+- Output: paths searched (never-open removed): 1336 | never-open paths that a term would match: 22 | excluded July records among
+  the hits: 1 | hits (paths): 171 {'docs': 64, 'ops': 2, 'ops_dashboard': 5, 'runtime': 13, 'scripts': 20, 'tests': 67} | per
+  term (a path can match several): {'ledger': 14, 'recover': 7, 'state': 19, 'schema': 6, 'sql': 2, 'db': 8, 'migrat': 4,
+  'state_store': 2, 'store': 5, 'audit (file name)': 21, 'eod': 21, 'signal': 18, 'reconcil': 17, 'status': 7, 'backup': 8,
+  'retention': 13, 'purge/prune': 4, 'persist': 2, 'stale': 2, 'restart': 2, 'crash': 3, 'restore': 2, 'cleanup': 5, 'database':
+  1, 'journal': 2, 'wal/checkpoint': 2, 'lifecycle': 1, 'rehydrat': 2} | folder-name hits (term, folder: files below): {}
+- 56 of the 171 hits are register files; the other 115 are listed in appendix A by owning area (by name
+  only). One excluded July record is among the hits (docs/audit/stale_queue_entries_25jul2026.md, row R48).
+
+==============================================================================
+7. COUNT-ONLY SEARCHES (ccount_c007.py; per-file counts only, no matching line printed)
+==============================================================================
+7.1 Scopes (c007/scope/)
+| List | Files | SHA-256 (first 8) | Content |
+| s_all | 1,260 | e8752191 | every permitted text file of the pin, the two excluded July records removed (the same list as C-006's S-ALL6) |
+| s_rt | 281 | 4a6302df | runtime Python files (no tests) |
+| s_code | 869 | 7d7b0f51 | code and configuration files, tests included |
+| s_tests | 486 | a6c4978e | test files |
+| s_cfg | 41 | a423cd8c | non-test YAML, service, timer and cron files, built from s_code |
+Outside s_all: the 102 protected paths, the 2 excluded July records, docs/v2_design_spec.md (it shares a protected blob) and 73
+  permitted non-text or fixture files (34 PNG, 29 .gitkeep, 5 test-fixture CSV, 2 .gitignore, 2 WebP, 1 .gitattributes); the
+  path-name search (section 6) covered all of them except the protected paths.
+7.2 Searches (time from the log row; files with matches and matching lines from the tool's own summary line)
+| ID | Time | Scope (files) | Files with matches | Matching lines | What it locates |
+| P01 | 18:19:39 | s_code (869) | 20 | 132 | CREATE TABLE, any table |
+| P02 | 18:19:57 | s_all (1260) | 7 | 7 | where the signals table is created |
+| P03 | 18:19:39 | s_code (869) | 92 | 131 | INSERT or REPLACE INTO signals |
+| P04 | 18:19:39 | s_code (869) | 8 | 11 | UPDATE signals |
+| P05 | 18:19:39 | s_code (869) | 5 | 6 | DELETE FROM signals |
+| P06 | 18:19:39 | s_code (869) | 71 | 201 | FROM or JOIN signals (superseded by P06b: also counted Python import lines) |
+| P06b | 18:22:59 | s_code (869) | 48 | 153 | FROM or JOIN signals, import lines excluded |
+| P07 | 18:20:12 | s_all (1260) | 12 | 52 | the status writer: definition and callers |
+| P08 | 18:19:52 | s_rt (281) | 22 | 55 | functions named for signals |
+| P09 | 18:20:06 | s_code (869) | 47 | 153 | status IN ( ... ), any table |
+| P10 | 18:20:13 | s_all (1260) | 5 | 9 | CHECK on a status column |
+| P11 | 18:19:52 | s_rt (281) | 6 | 13 | QUEUED |
+| P12 | 18:20:03 | s_rt (281) | 7 | 15 | PROCESSING |
+| P13 | 18:20:32 | s_rt (281) | 25 | 61 | EXPIRED and its family |
+| P14 | 18:20:31 | s_rt (281) | 14 | 83 | the REJECTED_ family |
+| P15 | 18:20:32 | s_rt (281) | 6 | 32 | QUEUE_FULL, IN_PROCESS, STORE_ERROR |
+| P16 | 18:20:31 | s_rt (281) | 53 | 195 | stale |
+| P17 | 18:20:53 | s_code (869) | 82 | 525 | terminal and non-terminal |
+| P18 | 18:20:54 | s_code (869) | 76 | 570 | transition and state-machine words |
+| P19 | 18:21:03 | s_code (869) | 42 | 303 | retention |
+| P20 | 18:21:04 | s_code (869) | 14 | 25 | DELETE FROM, any table |
+| P21 | 18:21:04 | s_code (869) | 60 | 172 | VACUUM, wal_checkpoint, PRAGMA |
+| P22 | 18:20:45 | s_rt (281) | 28 | 78 | cleanup, purge, prune, archive |
+| P23 | 18:21:15 | s_all (1260) | 84 | 337 | names of the retention and cleanup scripts |
+| P24 | 18:21:11 | s_code (869) | 103 | 235 | fingerprint (C-005 key) |
+| P25 | 18:21:47 | s_code (869) | 28 | 75 | webhook_audit (C-002 table) |
+| P26 | 18:21:47 | s_code (869) | 42 | 214 | ALTER TABLE, rebuilds, migrations |
+| P27 | 18:21:46 | s_code (869) | 203 | 607 | sqlite3.connect, StateStore( |
+| P28 | 18:21:32 | s_tests (486) | 22 | 121 | status writer and status names, tests |
+| P29 | 18:21:31 | s_tests (486) | 114 | 246 | signals SQL, tests (superseded by P29b: also counted import lines) |
+| P29b | 18:23:05 | s_tests (486) | 98 | 202 | signals SQL, tests, import lines excluded |
+| P30 | 18:21:32 | s_tests (486) | 17 | 121 | retention and cleanup words, tests |
+| P31 | 18:21:48 | s_tests (486) | 71 | 406 | non-terminal and REJECTED_ statuses, tests |
+| P32 | 18:21:44 | s_rt (281) | 3 | 4 | functions named for closing or repairing signals or stale items |
+| P33 | 18:21:45 | s_rt (281) | 22 | 86 | reason columns |
+| P34 | 18:21:52 | s_rt (281) | 15 | 78 | status time columns |
+| P35 | 18:21:46 | s_cfg (41) | 5 | 104 | retention, cleanup, backup, database words in configuration |
+| P36 | 18:22:06 | s_all (1260) | 46 | 79 | "signal(s) table" or "signal row(s)" in text |
+| P37 | 18:21:59 | s_code (869) | 10 | 21 | signal_status |
+7.3 Exact patterns (Python regular expressions, as logged)
+P01  (?i)\bCREATE\s+TABLE\b
+P02  (?i)CREATE\s+TABLE\s+(IF\s+NOT\s+EXISTS\s+)?["'`\[]?signals\b
+P03  (?i)\b(INSERT|REPLACE)(\s+OR\s+\w+)?\s+INTO\s+["'`\[]?signals\b
+P04  (?i)\bUPDATE\s+["'`\[]?signals\b
+P05  (?i)\bDELETE\s+FROM\s+["'`\[]?signals\b
+P06  (?i)\b(FROM|JOIN)\s+["'`\[]?signals\b
+P06b  (?i)\b(FROM|JOIN)\s+["'`\[]?signals\b(?!\.)(?!\s+import\b)
+P07  update_signal_status\s*\(
+P08  (?i)\bdef\s+\w*signal\w*\s*\(
+P09  (?i)\bstatus\s+IN\s*\(
+P10  (?i)\bCHECK\s*\(\s*[\"'`]?status\b
+P11  \bQUEUED\b
+P12  \bPROCESSING\b
+P13  \bEXPIRED\w*
+P14  \bREJECTED_[A-Z_]+
+P15  \bQUEUE_FULL\b|\bIN_PROCESS\b|\bSTORE_ERROR\b
+P16  (?i)\bstale\b|\bstale_\w+
+P17  (?i)non[-_ ]?terminal|\bterminal\b|_TERMINAL\b|TERMINAL_
+P18  (?i)transition|state_machine|ALLOWED_STATUS|VALID_STATUS
+P19  (?i)retention
+P20  (?i)\bDELETE\s+FROM\b
+P21  (?i)\bVACUUM\b|wal_checkpoint|\bPRAGMA\b
+P22  (?i)\bclean_?up\b|\bpurge\b|\bprune\b|\barchiv\w*
+P23  (?i)eod_cleanup|db_retention|backup_retention|output_retention
+P24  (?i)\bfingerprint
+P25  (?i)\bwebhook_audit\b
+P26  (?i)\bALTER\s+TABLE\b|_rebuild|\bmigrat\w*
+P27  (?i)\bsqlite3\.connect\b|\bStateStore\s*\(
+P28  update_signal_status|insert_signal|get_signal|signal_status
+P29  (?i)\b(INSERT\s+INTO|UPDATE|DELETE\s+FROM|FROM)\s+["'`\[]?signals\b
+P29b  (?i)\b(INSERT\s+INTO|UPDATE|DELETE\s+FROM|FROM)\s+["'`\[]?signals\b(?!\.)(?!\s+import\b)
+P30  (?i)retention|eod_cleanup|db_retention|\bpurge\b|\bprune\b|\bVACUUM\b
+P31  \b(QUEUED|PROCESSING|EXPIRED|QUEUE_FULL)\b|\bREJECTED_[A-Z_]+
+P32  (?i)\b(expire|close|mark|reset|clear|recover|repair)_\w*(stale|signal|pending|queued|processing|orphan)\w*
+P33  (?i)\b(rejection|reject|status)_reason\b
+P34  (?i)\b(updated_at|processed_at|status_updated_at|status_changed_at)\b
+P35  (?i)retention|cleanup|purge|prune|vacuum|checkpoint|backup|database|db_path|sqlite
+P36  (?i)\bsignals?\s+(table|rows?)\b
+P37  (?i)\bsignal_status\b
+7.4 Notes
+- P06 and P29 also matched "from signals.<module> import" lines; P06b and P29b add (?!\.)(?!\s+import\b) after the table name
+  and supersede them (both runs stay in the log; P06 71 files, P06b 48).
+- A count is of lines matching a pattern, not of calls, statements or behaviours: a hit can be a comment, a docstring or a
+  string. Counts locate candidates; they prove nothing about what runs.
+- Coverage against the register: every non-test hit of P02, P03, P04, P05, P06b, P07, P10, P11, P12, P15, P32, P37 is a register
+  file (P02: 7 files with hits, test files outside the register 3; P03: 92 files with hits, test files outside the register 77;
+  P04: 8 files with hits, test files outside the register 2; P05: 5 files with hits, test files outside the register 2; P06b: 48
+  files with hits, test files outside the register 17; P07: 12 files with hits, test files outside the register 3; P10: 5 files
+  with hits, test files outside the register 0; P11: 6 files with hits, test files outside the register 0; P12: 7 files with
+  hits, test files outside the register 0; P15: 6 files with hits, test files outside the register 0; P32: 3 files with hits,
+  test files outside the register 0; P37: 10 files with hits, test files outside the register 1)
+
+==============================================================================
+8. FROZEN-MANUAL CROSS-CHECK (V2 documents only)
+==============================================================================
+- Script: xcheck_c007.py over the 37 frozen manuals and reconciliation addenda of V2 main 642fd76. Two term groups: G1 (signal
+  persistence and status: schema.sql, state_store, update_signal_status, insert_signal, "signals table/row", signal_status,
+  webhook_audit, QUEUED, PROCESSING, EXPIRED*, REJECTED_*, QUEUE_FULL, non-terminal) and G2 (retention, eod_cleanup,
+  db_retention, purge, prune, VACUUM, migrat*, schema_meta). Legacy paths cited on matching lines are kept when they are in the
+  pinned listing.
+- Output: documents searched: 37 G1: documents with term lines 29; term lines 412; distinct legacy paths cited on them 106 per
+  document: {'A-001': 1, 'A-002': 5, 'A-003': 3, 'A-004': 1, 'A-007': 2, 'A-008': 10, 'A-010': 4, 'A-011': 16, 'B-002': 4,
+  'B-003': 39, 'B-004': 7, 'B-005': 12, 'B-006': 5, 'B-007': 3, 'B-008': 10, 'B-008+add': 1, 'B-009': 30, 'B-009+add': 1,
+  'B-010': 6, 'B-010+add': 1, 'B-011': 4, 'B-012': 1, 'C-001': 37, 'C-001+add': 1, 'C-002': 50, 'C-003': 23, 'C-004': 72,
+  'C-005': 25, 'C-006': 38} G2: documents with term lines 16; term lines 136; distinct legacy paths cited on them 53 per
+  document: {'A-010': 4, 'A-011': 3, 'B-001': 4, 'B-001+add': 2, 'B-002': 10, 'B-003': 85, 'B-005': 2, 'B-007': 3, 'B-009': 2,
+  'B-009+add': 1, 'B-010': 1, 'B-012': 7, 'B-012+add': 1, 'C-001': 1, 'C-005': 6, 'C-006': 4}
+- 115 distinct legacy paths are cited on those lines; 40 of them are register files. The terms also match order and
+  trade statuses, so the cited set is wider than C-007; the frozen statements used as pointers are listed in the answers,
+  section 3 H, each checked at its section heading.
+
+==============================================================================
+9. REGISTER METADATA
+==============================================================================
+- gen_register_c007.py: blob IDs from the saved listing; sizes from the local object list; line totals from the C-005 and C-006
+  read logs; the gate class from cread_c007.py's rules; per-file counts from the saved search outputs. Output: rows: 49 | files:
+    95 | by group: {'A': 5, 'B': 5, 'C': 5, 'D': 7, 'E': 9, 'F': 11, 'G': 7} | Stage 1: {'YES': 14, 'NO': 17, 'CONDITIONAL': 14,
+    'SUPPORTING': 4} | files by Stage 1 proposal: {'YES': 16, 'NO': 50, 'CONDITIONAL': 24, 'SUPPORTING': 5} | not local: 0 | line
+    totals known: 19 | problems: none
+- Per-file counts of the 95 register files: appendix B.
+
+==============================================================================
+10. EXCLUSIONS AND THEIR EVIDENCE
+==============================================================================
+- Protected, refused by the gate (section 4): 102 paths: R1 1, R2 2, R3 1, R4 18, R5 80, R6 to R13 0.
+- Shares a protected blob, refused: docs/v2_design_spec.md.
+- Excluded July records, refused by name and kept out of every search list: 2 (row R48).
+- Not searched for content (non-text or fixtures): 73 files (section 7.1); named only by the path-name search.
+- Records: names only (rows R43 to R47; the records of appendix A). Host records named by the searches (for example
+  docs/SYSTEM_MAP.md and PATHS.md) are not proposed for any read.
+- Never run: every test and every script (row R31 and the crash harness included).
+
+==============================================================================
+11. CHECKS BEFORE DELIVERY (18:44 IST)
+==============================================================================
+- Counts re-run at 18:44 IST: path-name search, cross-check, register and tables regenerated from the saved outputs; the search
+  log holds 39 rows, and each saved output's summary line equals its log row (mismatches: 0).
+- Gate test re-run: exit 0, "GATE TEST PASSED".
+- Legacy clone: sensitive_check.py exit 0 (never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80}
+  | local objects: 8922 | never-open blobs present locally: 0  (must be 0)); 8,922 objects (1,259 blobs, 1,537 commits, 6,126
+  trees).
+- Register: rows: 49 | files: 95 | by group: {'A': 5, 'B': 5, 'C': 5, 'D': 7, 'E': 9, 'F': 11, 'G': 7} | Stage 1: {'YES': 14,
+  'NO': 17, 'CONDITIONAL': 14, 'SUPPORTING': 4}; problems: none.
+- Both files: value-blind scans: scan_ids.py found long_token shapes only (answers 99, inventory 2: the 40-character object IDs
+  and the listing SHA-256, each checked against the pinned listing, the pin, its root tree and V2 main); no identifier shape
+  outside legacy path names; no credential pattern; no session link; ASCII only; no CR.
+
+==============================================================================
+12. PROCESS RECORD
+==============================================================================
+- No exception: no legacy file opened by a range or grep read; no protected or excluded path searched; no tree-wide or history
+  git command on the partial clone (the git commands used: rev-parse HEAD, log -1 on the named pin, ls-tree -r of the pin,
+  hash-object of checked-out files, cat-file --batch-all-objects, remote get-url, ls-remote).
+- Deviation: P06 and P29 (section 7.4).
+- Register drafts: the coverage check of section 7.4 found two non-test hits outside the first draft (orders/eod_squareoff.py,
+  P06b; ops_dashboard/frontend/templates/trade_logs.html, P37). Both were added (R29, R26), with the pre-flight checks (R28) and
+  the check_vm_state record (R47) from the path-name hits, before the counts were re-run for delivery.
+
+==============================================================================
+APPENDIX A. PATH-NAME HITS OUTSIDE THE REGISTER, BY OWNING AREA (by name only; not inspected)
+==============================================================================
+- EOD topics (B-010, C-011, H-011): 19
+    docs/approvals/cron_officer/20-Jun-2026/sample_clean_eod.html (eod)
+    docs/audit/eod_capture_safety_2026-07-24.md (eod)
+    docs/audit/eod_email_findings_06aug2026.md (eod)
+    docs/audit/ledger6_eod_verify_measurement_03aug2026.md (eod,ledger)
+    docs/design/p1_eod_broker_reconcile_build_design_02jul2026.md (eod,reconcil)
+    docs/design/p1_eod_broker_sync_assessment_02jul2026.md (eod)
+    scripts/eod_broker_reconcile.py (eod,reconcil)
+    scripts/eod_verify.py (eod)
+    tests/crash_test/ct140_eod_failure.py (eod)
+    tests/unit/test_alert_direction_eod_29jun.py (eod)
+    tests/unit/test_eod_broker_reconcile.py (eod,reconcil)
+    tests/unit/test_eod_lifecycle_pipeline_aware.py (lifecycle,eod)
+    tests/unit/test_eod_squareoff.py (eod)
+    tests/unit/test_eod_verify_honest.py (eod)
+    tests/unit/test_fix063_two_pass_eod.py (eod)
+    tests/unit/test_fix073_eod_entry_cutoff.py (eod)
+    tests/unit/test_fix130_eod_pre_alert.py (eod)
+    tests/unit/test_mis_squareoff_restore_and_settle.py (restore)
+    tests/unit/test_v3_eod_route.py (eod)
+- a staleness sweep record (not signal rows): 1
+    docs/audit/locked_contract_staleness_sweep_22jul2026.md (stale)
+- audit records, screens and their tests (the topic each audits; L-009): 19
+    docs/SSOT_AUDIT.md (audit (file name))
+    docs/architectural_audit_2026-06-01.md (audit (file name))
+    docs/audit/approval_final_19aug/S13_audit.png (audit (file name))
+    docs/audit/audit_05jul2026.md (audit (file name))
+    docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md (audit (file name))
+    docs/audit/critical_alert_stream_audit_25jul2026.md (audit (file name))
+    docs/audit/daily_report_redesign_phase0_data_audit_30jun2026.md (audit (file name))
+    docs/audit/full_system_audit_04july2026.md (audit (file name))
+    docs/audit/integrity_audit_2026.md (audit (file name))
+    docs/audit/secondary_filtration_execution_pipeline_audit.md (audit (file name))
+    docs/audit/system_audit_14jun2026.md (audit (file name))
+    docs/audit/system_health_audit_15jul2026.md (audit (file name))
+    docs/audit/system_security_audit_02jul2026.md (audit (file name))
+    docs/audit_2026-05-18_completed.md (audit (file name))
+    docs/broker_integration_audit_2026-06-02.md (audit (file name))
+    docs/symbol_logging_audit_2026-05-09.md (audit (file name))
+    ops_dashboard/frontend/templates/audit.html (audit (file name))
+    ops_dashboard/tests/test_screen13_audit.py (audit (file name))
+    tests/unit/test_alert_send_audit_trail.py (audit (file name))
+- backups, outputs, sentinels, history purge (B-003, M-008, M-009, A-010): 7
+    docs/audit/backup_items_decide_ready_25jul2026.md (backup)
+    docs/audit/c1_history_purge_runbook_02jul2026.md (purge/prune)
+    docs/audit/operator_backup_and_ssh_27jul2026.md (backup)
+    tests/unit/test_backup_retention.py (retention,backup)
+    tests/unit/test_fix131_wal_checkpoint.py (wal/checkpoint)
+    tests/unit/test_output_retention.py (retention)
+    tests/unit/test_sentinel_retention_scope.py (retention)
+- candle store and test data-store isolation (K-010, N topics): 3
+    data/candle_store.py (store)
+    tests/unit/test_candle_store.py (store)
+    tests/unit/test_no_real_data_store_from_tests.py (store)
+- kill-state persistence (I-002, B-012): 2
+    docs/audit/kill_persist_busy_timeout_25jul2026.md (persist)
+    tests/unit/test_kill_persist_timing.py (persist)
+- legacy fix-ledger records and their tests (not C-007): 12
+    UNPUSHED_LEDGER.md (ledger)
+    docs/audit/VISUAL_APPROVAL_LEDGER_19-Aug-2026.md (ledger)
+    docs/audit/daily_report_ledger_order_25jul2026.md (ledger)
+    docs/audit/ledger10_deployed_tree_check_03aug2026.md (ledger)
+    docs/audit/ledger11_secrets_surface_measurement_04aug2026.md (ledger)
+    docs/audit/ledger2d_step1_measurement_03aug2026.md (ledger)
+    docs/audit/ledger2e_design_03aug2026.md (ledger)
+    docs/audit/ledger3_design_registration_03aug2026.md (ledger)
+    docs/audit/ledger3b_separability_step1_04aug2026.md (ledger)
+    docs/audit/ledger7_multiauthority_measurement_04aug2026.md (ledger)
+    docs/audit/ledger_3a_9_5_step1_03aug2026.md (ledger)
+    tests/unit/test_ledger2d_co_bracket.py (ledger)
+- other statuses: strategy, functional, severity, control tower (A-008, L topics): 5
+    docs/audit/audit_remediation_status_02jul2026.md (status,audit (file name))
+    ops/control_tower/status.py (status)
+    scripts/strategy_status.py (status)
+    tests/unit/test_f2_functional_status.py (status)
+    tests/unit/test_ni14_status_follows_severity.py (status)
+- reconciliation (B-005, F-014, G-015): 14
+    docs/audit/artifact_baseline_reconciliation_19jul2026.md (reconcil)
+    docs/audit/mr4_block2_order_reconciliation_14jul2026.md (reconcil)
+    docs/audit/pending_reconciliation_14jul2026.md (reconcil)
+    docs/audit/reconciler_product_filter_build_02aug2026.md (reconcil)
+    docs/audit/reconciliation_redesign_design_30jul2026.txt (reconcil)
+    orders/order_reconciler.py (reconcil)
+    scripts/reconcile_pnl.py (reconcil)
+    scripts/reconcile_positions.py (reconcil)
+    tests/unit/test_b1_reconciler_mtm.py (reconcil)
+    tests/unit/test_fix128_pnl_reconciliation.py (reconcil)
+    tests/unit/test_fix134_reconcile_positions.py (reconcil)
+    tests/unit/test_order_reconciler.py (reconcil)
+    tests/unit/test_reconciler_co_refusal.py (reconcil)
+    tests/unit/test_reconciler_product_filter.py (reconcil)
+- restart and recovery (B-004, B-012, I-009, I-012): 13
+    broker/auth_recovery.py (recover)
+    docs/audit/q9_batch5_post_restart_capital_18jul2026.md (restart)
+    docs/crash_test_info_04jun2026.md (crash)
+    docs/disaster_recovery.md (recover)
+    tests/crash_test/crash_test_reporter.py (crash)
+    tests/crash_test/ct145_rapid_crash.py (crash)
+    tests/integration/test_q9_post_restart_capital_wired.py (restart)
+    tests/unit/test_a1e1_orphan_recovery.py (recover)
+    tests/unit/test_a1e1_recovery_matrix.py (recover)
+    tests/unit/test_auth_recovery.py (recover)
+    tests/unit/test_fix068_timeout_recovery.py (recover)
+    tests/unit/test_fix1_carried_position_rehydrate.py (rehydrat)
+    tests/unit/test_mc1_live_seed_rehydrate.py (rehydrat)
+- schema text, strategy schema and tests owned by B-002, B-003 or B-007: 3
+    docs/audit/migration_on_open_rule_14jul2026.md (migrat)
+    ops_dashboard/tests/test_db_reader.py (db)
+    strategies/schema.py (schema)
+- signal-named files of other topics: alerts, pre-flight, replay, load test, dashboard tests: 8
+    docs/audit/approval_final_19aug/S04_signals.png (signal)
+    ops_dashboard/docs/redesign/04_signals_asset_spec.md (signal)
+    ops_dashboard/tests/test_screen04_signals.py (signal)
+    tests/crash_test/signal_injector.py (signal)
+    tests/unit/test_fix133_replay_signals.py (signal)
+    tests/unit/test_load_test_signals.py (signal)
+    tests/unit/test_preflight_signals.py (signal)
+    tests/unit/test_signal_alert_capital_vocabulary.py (signal)
+- state of other components: orders, pre-flight, registry, GUI (G, H, B-007, A-008, L-010): 8
+    broker/order_state_machine.py (state)
+    docs/audit/q9_gui_state_report_14jul2026.md (state)
+    docs/audit/registry_seed_state_split_10aug2026.md (state)
+    ops_dashboard/tests/test_pipeline_state.py (state)
+    tests/unit/test_fix129_order_state_validation.py (state)
+    tests/unit/test_order_state_machine.py (state)
+    tests/unit/test_preflight_state_security.py (state)
+    tests/unit/test_registry_seed_state_split.py (state)
+- trade journal (L-011): 1
+    tests/unit/test_fix133_trade_journal.py (journal)
+
+==============================================================================
+APPENDIX B. PER-FILE COUNTS OF THE REGISTER FILES (search ID:matching lines)
+==============================================================================
+| Row | Path | Counts |
+| R01 | core/schema.sql | P01:49 P02:1 P09:6 P10:5 P17:7 P18:5 P21:1 P24:3 P25:7 P26:17 |
+| R02 | core/migrations.py | P01:8 P02:1 P18:1 P20:1 P21:10 P25:2 P26:35 |
+| R03 | core/state_store.py | P01:2 P03:2 P04:3 P06:4 P06b:4 P07:2 P08:4 P09:27 P13:3 P16:5 P17:12 P18:7 P20:6 P21:11 P22:4 P26:33 P27:3 P33:4 P34:31 P36:2 |
+| R04 | core/db_connect.py | P01:2 P21:11 P26:2 P27:4 |
+| R05 | core/analytics_schema.sql | P01:3 |
+| R06 | signals/webhook_receiver.py | P03:2 P04:2 P06:1 P06b:1 P08:1 P11:5 P13:2 P14:1 P15:21 P16:3 P22:1 P24:13 P25:3 P36:2 |
+| R07 | signals/signal_processor.py | P06:1 P07:26 P08:3 P09:2 P12:4 P13:3 P14:6 P15:3 P16:8 P22:1 P26:1 P33:6 |
+| R08 | screening/entry_gate.py | P07:1 P16:2 |
+| R08 | screening/retest_monitor.py | P07:2 P14:1 |
+| R08 | screening/secondary_screener.py | P07:1 P14:10 P19:1 P23:1 P33:1 |
+| R09 | orders/order_manager.py | P04:1 P06:1 P06b:1 P08:1 P09:1 P17:7 P33:4 P34:10 |
+| R10 | core/evidence_contract.py | P14:8 P17:1 P19:1 P22:1 P24:5 P33:2 |
+| R11 | main.py | P06:2 P08:1 P16:11 P17:6 P18:6 P24:1 P25:2 P26:7 P27:1 P32:1 |
+| R12 | capital/kill_switch.py | P09:3 P13:1 P16:2 P17:7 P21:1 P32:2 P34:2 |
+| R13 | scripts/system_manager.py | P06:3 P06b:3 P09:2 P12:3 P13:2 P16:2 P17:1 P21:1 P22:1 P27:1 P32:1 |
+| R14 | scripts/check_vm_state.py | P06:3 P06b:3 P09:3 P16:2 P22:4 P27:1 |
+| R15 | utils/startup_checks.py | P17:1 P18:1 |
+| R16 | scripts/eod_cleanup.py | P04:1 P05:2 P06:5 P06b:5 P08:2 P09:7 P11:1 P12:4 P13:3 P15:1 P16:12 P17:1 P19:19 P20:4 P22:11 P23:23 P24:9 P27:1 P34:2 P36:1 |
+| R17 | config/system_config.yaml | P17:1 P19:1 P23:1 P24:2 P35:5 |
+| R18 | core/config_loader.py | P13:1 P14:1 P16:3 P17:1 P18:1 P19:3 P22:3 P23:2 P24:3 P27:1 P36:1 |
+| R19 | config/cron_registry.yaml | P19:24 P21:8 P23:20 P35:58 |
+| R19 | deploy/cron/trading-system.cron | P19:10 P21:3 P23:10 P35:26 |
+| R20 | scripts/db_retention.py | P19:24 P20:1 P21:9 P22:5 P23:12 P25:2 P27:1 |
+| R21 | scripts/output_retention.py | P16:1 P19:18 P21:1 P22:1 P23:11 |
+| R22 | scripts/backup_retention.py | P19:15 P23:11 |
+| R22 | scripts/backup_restore_drill.py | P06:2 P06b:2 P21:5 P22:1 P25:1 P27:6 |
+| R22 | scripts/wal_checkpoint.py | P21:5 P27:1 |
+| R22 | scripts/backup_evidence.py | P19:3 P23:2 |
+| R23 | reports/signal_status.py | P11:1 P12:1 P13:1 P14:13 P15:4 P17:3 P33:2 P37:1 |
+| R24 | ops_dashboard/backend/readers/db_reader.py | P06:28 P06b:27 P08:20 P09:43 P11:3 P12:1 P13:3 P14:15 P15:2 P16:5 P19:9 P21:2 P22:1 P24:1 P25:16 P26:1 P27:1 P33:13 P34:2 P36:5 P37:2 |
+| R25 | reports/daily_report.py | P08:1 P09:1 P15:1 P17:2 P21:1 P27:1 P33:4 P37:2 |
+| R25 | reports/daily_trade_review.py | P06:1 P06b:1 P08:3 P09:2 P11:2 P13:1 P16:1 P24:1 P25:5 P27:1 P33:3 P34:2 P36:2 P37:2 |
+| R26 | ops_dashboard/backend/services/live_activity.py | P08:3 P11:1 P12:1 P33:6 P36:2 |
+| R26 | ops_dashboard/backend/services/scanner_attribution.py | P13:2 P14:8 P33:2 P37:3 |
+| R26 | ops_dashboard/backend/services/trade_logs.py | P08:2 P14:2 P19:4 P23:1 P25:1 P33:4 P37:1 |
+| R26 | ops_dashboard/backend/services/strategy_tower.py | P12:1 P16:2 P25:1 |
+| R26 | ops_dashboard/backend/services/pipeline_state.py | (none) |
+| R26 | ops_dashboard/backend/services/audit.py | P19:19 P22:1 P23:1 P24:4 P25:4 |
+| R26 | ops_dashboard/frontend/templates/trade_logs.html | P17:5 P18:2 P19:8 P37:1 |
+| R26 | ops_dashboard/frontend/templates/signals.html | P36:1 |
+| R27 | ops/control_tower/freshness.py | P06:2 P06b:2 P09:1 |
+| R27 | ops/control_tower/db.py | P09:2 P20:1 |
+| R27 | scripts/healthcheck_server.py | P06:4 P06b:4 P09:3 P22:1 |
+| R28 | scripts/preflight/checks/database.py | P21:2 P26:8 P27:4 |
+| R28 | scripts/preflight/checks/signals.py | (none) |
+| R28 | scripts/preflight/checks/state.py | P09:2 P26:1 P27:2 |
+| R28 | scripts/preflight/checks/recovery.py | (none) |
+| R29 | orders/eod_squareoff.py | P06:1 P06b:1 P16:9 P17:3 P18:8 P21:2 P34:7 |
+| R30 | scripts/replay_signals.py | P06:1 P06b:1 P08:3 P27:1 P33:2 |
+| R30 | scripts/trade_journal.py | P06:2 P06b:2 P20:1 P27:1 |
+| R30 | scripts/generate_screened_stocks_csv.py | P06:2 P06b:2 P14:14 P26:3 P33:10 P36:2 |
+| R30 | scripts/forward_shadow_record.py | P06:1 P06b:1 P27:1 P33:2 |
+| R30 | scripts/gemini_trade_coach.py | P06:1 P06b:1 P08:1 P33:2 |
+| R30 | scripts/fetch_daily_candles.py | P06:1 P06b:1 P27:1 |
+| R30 | scripts/strategy_registry_officer.py | P06:1 P06b:1 P08:1 P18:2 |
+| R31 | scripts/t2_cnc_gtt_realtest.py | P03:1 P16:4 P17:8 P18:2 P21:2 P22:8 P24:1 P26:1 P27:1 P34:1 |
+| R31 | scripts/load_test_signals.py | P08:1 |
+| R32 | tests/unit/test_state_store.py | P03:3 P06:5 P06b:5 P07:5 P09:1 P17:8 P21:6 P24:20 P25:8 P27:75 P28:7 P29:8 P29b:8 P31:6 P36:3 |
+| R33 | tests/unit/test_migrations.py | P01:11 P02:1 P03:5 P06:2 P06b:2 P21:5 P24:7 P26:26 P27:25 P28:4 P29:7 P29b:7 P31:6 P37:4 |
+| R34 | tests/unit/test_fix135_eod_cleanup.py | P03:5 P05:1 P06:9 P06b:9 P09:1 P19:8 P20:1 P21:2 P23:17 P24:12 P27:1 P28:13 P29:14 P29b:14 P30:29 P31:16 |
+| R35 | tests/unit/test_db_retention.py | P19:12 P21:1 P23:3 P27:1 P30:13 |
+| R36 | tests/unit/test_signal_status_classification.py | P06:1 P17:2 P28:5 P29:1 P31:20 P37:4 |
+| R37 | tests/unit/test_evidence_contract.py | P03:1 P06:6 P06b:2 P07:7 P17:6 P19:11 P23:8 P24:11 P28:10 P29:6 P29b:2 P30:11 P31:41 P36:1 |
+| R38 | tests/unit/test_webhook_receiver.py | P03:1 P06:9 P06b:8 P24:16 P25:2 P27:6 P29:10 P29b:9 P31:19 P36:1 |
+| R38 | tests/unit/test_signal_processor.py | P03:5 P06:28 P06b:18 P07:1 P17:1 P18:1 P24:7 P27:1 P28:4 P29:29 P29b:19 P31:65 P36:4 |
+| R39 | tests/integration/test_full_signal_flow.py | P03:2 P06:4 P06b:4 P17:4 P24:2 P28:2 P29:4 P29b:4 P31:4 |
+| R39 | tests/integration/test_end_to_end_smoke.py | P03:3 P06:3 P06b:3 P17:12 P18:1 P24:5 P28:5 P29:3 P29b:3 P31:9 P36:3 |
+| R40 | tests/crash_test/state_machine_validator.py | P06:1 P06b:1 P09:3 P17:8 P18:20 P28:3 P29:1 P29b:1 P31:34 |
+| R40 | tests/crash_test/invariant_checker.py | P06:5 P06b:5 P09:4 P17:4 P18:2 P29:5 P29b:5 P31:7 P36:1 |
+| R40 | tests/crash_test/state_inspector.py | P06:1 P06b:1 P09:1 P29:1 P29b:1 |
+| R40 | tests/crash_test/cleanup.py | P05:1 P06:1 P06b:1 P09:2 P17:2 P20:1 P29:1 P29b:1 |
+| R41 | tests/unit/test_e5_cleanup.py | P03:1 P21:2 P24:4 P27:1 P28:6 P29:1 P29b:1 P36:2 |
+| R41 | tests/unit/test_fix142_final_cleanup.py | (none) |
+| R41 | tests/unit/test_check_vm_state_reset_removed.py | P01:4 P02:1 P27:2 |
+| R41 | tests/unit/test_e3_hygiene.py | P03:1 P04:1 P18:3 P24:1 P27:1 P29:2 P29b:2 |
+| R41 | tests/unit/test_fix130_latency_tracking.py | P03:3 P04:1 P24:3 P27:1 P29:4 P29b:4 P31:3 P36:1 |
+| R42 | tests/unit/test_terminal_state_write_guard.py | P03:1 P09:1 P17:37 P18:2 P24:1 P27:2 P29:1 P29b:1 P31:2 |
+| R42 | tests/unit/test_migration_guard.py | P26:22 P27:9 |
+| R42 | tests/unit/test_schema_version_failfast.py | P17:4 P26:4 P27:8 |
+| R43 | docs/04_db_schema_reference.md | (none) |
+| R43 | docs/audit/db_schema_review_15jun2026.md | P10:1 P23:1 |
+| R44 | docs/decisions/09_prune_retention.md | P23:4 |
+| R44 | docs/decisions/BRIEF_09_prune_retention.md | P23:1 |
+| R44 | docs/decisions/DESIGN_09_prune_retention.md | P23:9 P36:1 |
+| R45 | docs/audit/signal_mortality_census_19jul2026.md | P23:1 P36:3 |
+| R46 | docs/locked_decisions.yaml | P07:1 P18:5 P24:1 P26:3 P35:14 P36:4 |
+| R46 | docs/design/terminal_state_write_guard_design_07jul2026.md | P10:1 |
+| R46 | docs/audit/p3s14_done_17jul2026.md | P10:1 |
+| R46 | docs/MASTER_PENDING_28-Jul-2026.txt | P10:1 |
+| R47 | docs/audit/ledger8b_check_vm_state_step1_02aug2026.md | (none) |
+| R48 | docs/audit/stale_queue_entries_25jul2026.md | (none) |
+| R48 | docs/audit/queue_items_decidable_25jul2026.md | (none) |
+| R49 | docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md | P23:9 |
+| R49 | docs/audit/capital_snapshot_and_backup_retention_24jul2026.md | P23:2 |
+| R49 | docs/audit/backup_retention_and_telegram_delivery_22jul2026.md | P23:3 |
+END
