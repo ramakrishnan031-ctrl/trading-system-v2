@@ -1,0 +1,1080 @@
+C-009 - SIGNAL EXPIRY: STAGE 1, STEP S1-1 ONLY - COUNT-ONLY SEARCHES AND LINE/BYTE TOTALS (results for review)
+Date of work: 24-Oct-2026 (IST), 11:42 to 11:53 IST. Prepared by Claude.
+Authorisation: C-009_STAGE1_AUTHORIZATION_S1-1_ONLY_24-OCT-2026.txt (ChatGPT, reflecting Rama's choices of 11:16 IST; received
+  from Rama at 11:38 IST; 94 lines; SHA-256 5FCEA0FDAD590272E33A20DB43CDB1B2A188DD232A70494D0F260501D2F0A194). Scope: the S1-1
+  count-only discovery step only. Source-content reads stay NOT AUTHORISED; the C-009 manual is not drafted.
+Status: S1-1 done; STOPPED for ChatGPT/Rama review. The read tool stays locked (cread_c009.py, STAGE1_AUTHORISED = False; no
+  read made, no read log exists). Nothing from S1-2 onwards has started.
+Security: per-file counts and file names only; no source line was printed or viewed; no credential, account or client
+  identifier, host or address, deployed path, mailbox or person name is reproduced. Claude's working folders are written as
+  <SCRATCHPAD>, tools/ and "the clone".
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Done: 32 count-only searches (the 8 authorised terms over each of s_all 1,260, s_rt 281, s_tests 486 and s_cfg 41), 2
+  positive controls for the 2 zero results, and line/byte totals for the 93 register files the gate admits; every call passed
+  the gate's self-test and the protected-path check (never-open blobs present: 0 throughout). The per-set results equal the
+  s_all results restricted to each set: True.
+- Files with at least one hit in s_all: 526 (96 runtime Python, 200 test, 5 configuration, 19 other code, 206 documents and
+  records). Of these, 53 are register files and 473 are not (146 with a hit on a signal-expiry term K2 to K6, 327 with hits on
+  K1, K7 or K8 only).
+- The setting's name (K2, expiry_sec or signal_expiry_sec) occurs in 5 runtime files, all already in the register (R04
+  core/config_loader.py 1, R17 core/config_validator.py 1, R05 main.py 2, R02 signals/signal_processor.py 4, R01
+  signals/webhook_receiver.py 6), and in one configuration file, config/system_config.yaml (R03, 1 line).
+- expires_at (K3) occurs in 8 runtime files: ops_dashboard/backend/readers/db_reader.py 1 (R12), scripts/zerodha_login.py 4
+  (N03), signals/webhook_receiver.py 4 (R01), scripts/copy_gate.py 4 (NEW-S), scripts/healthcheck_server.py 1 (NEW-S),
+  scripts/request_copy.py 2 (NEW-S), scripts/security_monitor.py 1 (NEW-S), scripts/t2_cnc_gtt_realtest.py 1 (NEW-S).
+- The literal REJECTED_EXPIRED (K4) occurs in 1 runtime file(s): ops_dashboard/backend/readers/db_reader.py 2 (R12); a quoted
+  EXPIRED (K5) in 15 runtime files; signal_age or max_age (K6) in 12. These are counts of lines naming the terms, not findings
+  about what the code does.
+- Zero results: 2 (Q27, expires_at in s_cfg; Q29, a quoted EXPIRED in s_cfg), each with a positive control on the same list
+  with the same tool and flags (Q33 and Q34: K2 in s_cfg, 1 file).
+- Register files with no hit on any term: 40 (section 9), among them screening/retest_monitor.py (R16),
+  scripts/replay_signals.py (R19), 15 of the 16 strategy files (R23) and two of the three R22 tests.
+- For approval (sections 8 and 10): the new candidate paths with reasons, and an exact read list for S1-2 onwards (RL-01 to
+  RL-12), the central reads unchanged from Stage 0 and four groups of new paths each marked for decision.
+- Disclosed (section 11): the counts required checking out the s_all files and letting the masking filter read them, as at
+  C-005 to C-008; git also fetched the .gitattributes blob during checkout; "stale" and TTL were searched in any letter case.
+  No source line was printed or viewed; no project code, test or script was run.
+
+==============================================================================================================================
+1. AUTHORISATION AND PRE-CHECKS (11:42 IST)
+==============================================================================================================================
+- Legacy: git ls-remote at 11:42 IST: HEAD and refs/heads/main both 970aabf3c78d777d9d34549e021f7c8e756c7bdb; clone HEAD the
+  same; the saved listing's SHA-256 unchanged (1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5).
+- V2: git ls-remote at 11:42 IST: HEAD and refs/heads/main both b720bd7635ca448fa35c828cfd72bfa722b0e24e (unchanged since
+  Stage 0).
+- Before checkout: 7,663 local objects (1,537 commits, 6,126 trees, 0 blobs); sensitive_check.py exit 0, never-open blobs
+  present 0.
+- Tools unchanged since Stage 0: cread_c009.py, ccount_c009.py and clines_c009.py hash as recorded at Stage 0 (section 12).
+  The read lock was not lifted: this authorisation does not permit source reads.
+- The s_all list (1,260 paths, SHA-256 e875219180f307fd529ac7780cb3b4c6d32cbc201d48041ee89c2c97150aaf69) holds no protected
+  path and no path sharing a protected blob; it contains s_rt, s_tests and s_cfg; 1,254 distinct blob IDs; no path has a
+  character with a special meaning in sparse patterns. 93 of the 95 register files are in s_all; the other two are the
+  excluded July records.
+
+==============================================================================================================================
+2. CHECKOUT OF THE s_all FILES (needed for counting; 11:42:56 to 11:43:06 IST)
+==============================================================================================================================
+- git sparse-checkout set --no-cone --stdin with 1,260 anchored patterns, one per s_all path, each starting with "/" (pattern
+  file SHA-256 ed59cbea384755abdaf976821e686f7cb5666ccbafb4e92745ad16c90d90200c); the clone's sparse file equals the list; no
+  object fetched by this step.
+- git checkout at 11:43:04 to 11:43:06 IST ("Your branch is up to date with 'origin/main'"); HEAD 970aabf...; index 1,438
+  entries, 178 of them skip-worktree; 1,260 working files, all in s_all.
+- Fetched: 1,255 blobs = the 1,254 distinct blobs of the s_all files and one more, the pinned blob of .gitattributes, which
+  git read for attributes during the checkout (not a protected path; not in s_all; not opened by Claude or the filter).
+  Never-open blobs present: 0.
+- Every working file equals its pinned blob: git hash-object --no-filters over the 1,260 paths, 1,260 equal, 0 differ.
+
+==============================================================================================================================
+3. GATE TESTS (gate_test_c009_s11.py; refusal-only; reads locked)
+==============================================================================================================================
+- The S1-1 version differs from the Stage 0 test only in allowing blobs in the clone (it requires the object types to be
+  unchanged by the test itself instead of no blob at all) and in its name and message.
+- 11:42:35 IST, before checkout: GATE TEST (S1-1; reads locked) PASSED; the read tool refused a permitted path with "refused:
+  Stage 0 lock (no read before a Stage 1 authorisation)"; the 102 protected paths, the 2 July records, the shared-blob path,
+  14 rule-shaped names and a name not in the tree were refused; ccount and clines refused the four refusal lists.
+- 11:43:26 IST, after checkout: GATE TEST (S1-1; reads locked) PASSED; the read tool refused a permitted path with "refused:
+  Stage 0 lock (no read before a Stage 1 authorisation)"; the 102 protected paths, the 2 July records, the shared-blob path,
+  14 rule-shaped names and a name not in the tree were refused; ccount and clines refused the four refusal lists.
+- 11:50:08 IST, after the searches and totals: GATE TEST (S1-1; reads locked) PASSED; the read tool refused a permitted path
+  with "refused: Stage 0 lock (no read before a Stage 1 authorisation)"; the 102 protected paths, the 2 July records, the
+  shared-blob path, 14 rule-shaped names and a name not in the tree were refused; ccount and clines refused the four refusal
+  lists.
+
+==============================================================================================================================
+4. TERMS AND FILE SETS (authorisation section 2, items 1 and 2)
+==============================================================================================================================
+Each term is a regular expression given to mask_read2.py --grep through count_grep.py, behind the gate of ccount_c009.py; the
+  filter matches it against the raw line and the tool keeps per-file counts of matching lines only. Case: K1, K7 and K8 in any
+  case; the others as written.
+
+| ID | Term (authorisation) | Expression |
+|---|---|---|
+| K1 | expir (any case) | (?i)expir |
+| K2 | expiry_sec or signal_expiry_sec | expiry_sec|signal_expiry_sec |
+| K3 | expires_at | expires_at |
+| K4 | REJECTED_EXPIRED | REJECTED_EXPIRED |
+| K5 | EXPIRED as a quoted string | ["']EXPIRED["'] |
+| K6 | signal_age or max_age | signal_age|max_age |
+| K7 | stale (any case) | (?i)stale |
+| K8 | TTL as a token (any case) | (?i)(?<![a-z0-9])ttl(?![a-z0-9]) |
+
+| List | Paths | SHA-256 of the list file |
+|---|---|---|
+| s_all | 1,260 | e875219180f307fd529ac7780cb3b4c6d32cbc201d48041ee89c2c97150aaf69 |
+| s_rt | 281 | 4a6302df42467270703196afe0c1f71738d994aee3c4660e696bd82464b09903 |
+| s_tests | 486 | a6c4978e1a14e441461c0a6a30b7d8fd476c85465ff8fc4727e9a3211e467581 |
+| s_cfg | 41 | a423cd8ce9d1ebf861cdb0976f17e23f293767f34a5e97bce0828d5cdc1f5268 |
+- Lists rebuilt at Stage 0 by scope_rules.py from the saved listing (the handover's figures); every path in them is checked by
+  the gate before each search.
+
+==============================================================================================================================
+5. SEARCH LOG (ccount_c009.py; time = start; output = the saved per-file counts)
+==============================================================================================================================
+| ID | Time | Term | List | Searched | Files | Lines | Output SHA-256 |
+|---|---|---|---|---|---|---|---|
+| Q01 | 11:44:22 | K1 | s_all | 1260 | 292 | 1019 | 8b16be0af1226543fb7b06b6ee95ebf068bcdd7e64cf55d78126497053d56902 |
+| Q02 | 11:44:34 | K2 | s_all | 1260 | 29 | 57 | dac37427327ea1d156b3259275f4093a6a7c6113c7d76033246fb001abe0c9c5 |
+| Q03 | 11:44:45 | K3 | s_all | 1260 | 103 | 150 | c9c6e56d34e24d41a6c4505d0a2fbe63879ff1bc606a77a489d2015fe200817b |
+| Q04 | 11:44:56 | K4 | s_all | 1260 | 15 | 25 | efa2933ac8ea83d0969b3fed3ccead6b84cc298ce581c30b113a2010c717bf47 |
+| Q05 | 11:45:08 | K5 | s_all | 1260 | 44 | 89 | 2e56edd9d5577d128ee9c35ef40a87a787a40df0f2b8460f455d6050ce140ce4 |
+| Q06 | 11:45:20 | K6 | s_all | 1260 | 36 | 109 | c7bbbf466226a7d0ed107176711e25d9a27647dc9bb91048d7bbe06c105d0ae6 |
+| Q07 | 11:45:31 | K7 | s_all | 1260 | 339 | 1216 | ed9856c0ac1195499500a4c43c36b0b349add760af1ded8eb2a76f7da8a3ffef |
+| Q08 | 11:45:42 | K8 | s_all | 1260 | 45 | 246 | 0f8eb39adcf48a3cdf1a9499bfe07bd298e65144dfff1300721180cbe0f48030 |
+| Q09 | 11:45:54 | K1 | s_rt | 281 | 54 | 254 | df5be7e9c1ee9b9c6827ba5746d169f0fa1261d0a800d34643572fce6f9515e1 |
+| Q10 | 11:45:58 | K2 | s_rt | 281 | 5 | 14 | 5c41d44ba6555dbe81ff948b7ea103e3c59b8e4a708810e42504808eea7d4d37 |
+| Q11 | 11:46:01 | K3 | s_rt | 281 | 8 | 18 | 37e3c87505dd945567f779e995df3d35841f78ccb1523d61062504f8e9465435 |
+| Q12 | 11:46:03 | K4 | s_rt | 281 | 1 | 2 | 2140b283a8939098b82be01225dde166f4dd083c2729fad79589b8bc5a2781c0 |
+| Q13 | 11:46:06 | K5 | s_rt | 281 | 15 | 33 | fd2880f13746f8f099dc76a97b3b09b3adc1771c791671ba235a51ab7a3a7587 |
+| Q14 | 11:46:09 | K6 | s_rt | 281 | 12 | 38 | 0642e76e997cfcd3705fb98b56983e416ff104979ed8bdd9c166d7de192c9695 |
+| Q15 | 11:46:12 | K7 | s_rt | 281 | 58 | 261 | 8f8c5b21e99fe806a7ef90f6233a7d67ef59ff4d08d68f5494d0ff13028fcdfc |
+| Q16 | 11:46:15 | K8 | s_rt | 281 | 17 | 78 | 67051d7ffaa730958f04c5247a6f034985fd5045da81b52002df14cf7d141c61 |
+| Q17 | 11:46:18 | K1 | s_tests | 486 | 135 | 456 | 6087e2b1516903d827a353a0e36c6cbc93197d6ee1d117cb033d270b56062d70 |
+| Q18 | 11:46:21 | K2 | s_tests | 486 | 10 | 25 | 8b1a95b40e069987568a2dbf8be9c6195b10ad477d5ecb5344f6d472318681ff |
+| Q19 | 11:46:25 | K3 | s_tests | 486 | 89 | 126 | 03a9f9690637ee3ab9932d9ac6baaf20b0563fe4c99408bbe7d60bdbd363a36e |
+| Q20 | 11:46:29 | K4 | s_tests | 486 | 9 | 15 | 653bd323f25a93eb0485d7baf070f68408ed5a413961abd214b943e2b16332df |
+| Q21 | 11:46:33 | K5 | s_tests | 486 | 18 | 32 | d2714bfc5480993f69e34a4a475e3123909c9796ff9abecf82ae75574d347313 |
+| Q22 | 11:46:36 | K6 | s_tests | 486 | 11 | 35 | 4fb644c090dd60342b14944a8da8a69da93a2f99b1023292687174a31bae8ed4 |
+| Q23 | 11:46:40 | K7 | s_tests | 486 | 91 | 304 | 77c83847e0566063de017c508d63ed22098253dcc807e29ce08b85e843cc8047 |
+| Q24 | 11:46:44 | K8 | s_tests | 486 | 7 | 67 | bfe23af307e17865a0324aaf32837f0c36c2e1a055a813583dd1b3f01d1494c9 |
+| Q25 | 11:46:48 | K1 | s_cfg | 41 | 3 | 9 | 02b336414366a1d3d482fc5f5285153726568e219ca14b42c1776e2924a233bf |
+| Q26 | 11:46:48 | K2 | s_cfg | 41 | 1 | 1 | 56f3f94600b0125ac822a84f99eab5bf641fa5953700076c3618603542425946 |
+| Q27 | 11:46:49 | K3 | s_cfg | 41 | 0 | 0 | 57d775ca639624bd5e0ba939d2427cdb562549347dcf028e04a60154a5a60f3b |
+| Q28 | 11:46:49 | K4 | s_cfg | 41 | 1 | 1 | cbdd26b8239478096e6cc0826e85b49b4da1bfa1f69545d6318da4d1d20bbc23 |
+| Q29 | 11:46:50 | K5 | s_cfg | 41 | 0 | 0 | 6b7e58cf36886333e0f165d114c042a9490de8a225fe342b5cedd650b844d394 |
+| Q30 | 11:46:50 | K6 | s_cfg | 41 | 2 | 4 | fe188a6b2d467e20df0dd6d9e862894d5c7e0392639cb46f342bd8e3e9b61526 |
+| Q31 | 11:46:50 | K7 | s_cfg | 41 | 3 | 6 | 05c2f6e2f14822f178ca683d24a2cb0db84b1fab51d236df8f2116b7f9ad58a9 |
+| Q32 | 11:46:51 | K8 | s_cfg | 41 | 1 | 6 | 47506ce0475a2394f2abc25625a8164fe62a5b4f26b2b4dae6804cdfe49f23b2 |
+| Q33 | 11:46:51 | K2 | s_cfg | 41 | 1 | 1 | 712436daee40e1f08a3ef31a83546f2db40e33688810cb300c9b9958d75cd038 |
+| Q34 | 11:46:52 | K2 | s_cfg | 41 | 1 | 1 | 5f7fa2a4a9031a2492f19454632f0c0647e8c72456a858e0416078d4750dbf67 |
+- Each log row of the tool records the time, the expression, the list file and the first 8 characters of its SHA-256, the
+  number of paths, the tool's summary line, "nev0=ok" and "selftest=ok"; all 34 rows carry both.
+
+==============================================================================================================================
+6. ZERO RESULTS AND POSITIVE CONTROLS
+==============================================================================================================================
+- Q27 (K3, expires_at, in s_cfg): 0 files. Control Q33 (K2, expiry_sec or signal_expiry_sec, same list, same tool,
+  case-sensitive like K3): 1 file, 1 line; its per-file counts equal those of the first run of K2 on s_cfg.
+- Q29 (K5, EXPIRED as a quoted string, in s_cfg): 0 files. Control Q34 (K2, expiry_sec or signal_expiry_sec, same list, same
+  tool, case-sensitive like K5): 1 file, 1 line; its per-file counts equal those of the first run of K2 on s_cfg.
+- No other search returned zero files.
+
+==============================================================================================================================
+7. RESULTS BY TERM AND SET (files with a hit / matching lines)
+==============================================================================================================================
+| ID | Term | s_all | s_rt | s_tests | s_cfg |
+|---|---|---|---|---|---|
+| K1 | expir (any case) | 292/1019 | 54/254 | 135/456 | 3/9 |
+| K2 | expiry_sec or signal_expiry_sec | 29/57 | 5/14 | 10/25 | 1/1 |
+| K3 | expires_at | 103/150 | 8/18 | 89/126 | 0/0 |
+| K4 | REJECTED_EXPIRED | 15/25 | 1/2 | 9/15 | 1/1 |
+| K5 | EXPIRED as a quoted string | 44/89 | 15/33 | 18/32 | 0/0 |
+| K6 | signal_age or max_age | 36/109 | 12/38 | 11/35 | 2/4 |
+| K7 | stale (any case) | 339/1216 | 58/261 | 91/304 | 3/6 |
+| K8 | TTL as a token (any case) | 45/246 | 17/78 | 7/67 | 1/6 |
+- Appendix A gives the per-file counts of every file with a hit (526 files), with its kind and register row or "NEW".
+- Counts of lines naming a term say nothing about what the code does; for example, the frozen C-007 manual cites
+  REJECTED_EXPIRED written by the processor, while the literal occurs in no processor line (K4: 0 in
+  signals/signal_processor.py, K5: 2); how the status is formed is a question for the authorised read, not a finding here.
+
+==============================================================================================================================
+8. NEW CANDIDATE PATHS (not in the Stage 0 register), WITH REASONS; NO CONTENTS
+==============================================================================================================================
+Reason = the per-file counts (K1 to K8 in Appendix A order). "Proposed" is Claude's proposal for review; where it rests on a
+  file name or folder, it is INTERPRETATION. Nothing here is read.
+
+NC-1 Runtime files naming expires_at (K3), not in the register:
+    scripts/copy_gate.py | blob e2aad00a8055 | rt | K1-K8:   9   0   4   0   0   0   0   2
+    scripts/healthcheck_server.py | blob c094b5eb4023 | rt | K1-K8:   2   0   1   0   0   0   0   0
+    scripts/request_copy.py | blob cfa088237e42 | rt | K1-K8:   6   0   2   0   0   0   0   5
+    scripts/security_monitor.py | blob 42ebed04e2d6 | rt | K1-K8:   8   0   1   0   0   0   2   2
+    scripts/t2_cnc_gtt_realtest.py | blob 4034ecd18b2d | rt | K1-K8:   1   0   1   0   0   0   4   0
+    Proposed: decision at RL-08: one gated grep of the expires_at lines of each (9 lines in all) would establish whether any
+      of them touches the signals column; by their names they are security copy tooling, a security monitor, the health server
+      and a GTT test script (owners M-003, A-010, B-007, G topics; INTERPRETATION). scripts/zerodha_login.py (N03, 4 lines) is
+      the token file's expires_at already recorded in B-004 (B-004_manual.md line 49); no read proposed.
+
+NC-2 Runtime files with a quoted EXPIRED (K5), not in the register:
+    broker/order_monitor.py | blob c4f4aaa564f1 | rt | K1-K8:   1   0   0   0   1   0   0   0
+    capital/kill_switch.py | blob 3eb2ece050c3 | rt | K1-K8:   1   0   0   0   1   0   7   0
+    core/events.py | blob 6511bc40fe74 | rt | K1-K8:   2   0   0   0   1   0   0   0
+    orders/cnc_gtt_monitor.py | blob b08eaaaeb750 | rt | K1-K8:   2   0   0   0   2   0   2   0
+    orders/order_placer.py | blob e3a602909bef | rt | K1-K8:   4   0   0   0   3   0   9  10
+    orders/structure_exit_manager.py | blob 6e4c58d8d2e8 | rt | K1-K8:   3   0   0   0   2   0   0   0
+    scripts/system_manager.py | blob 04e776e60f98 | rt | K1-K8:   4   0   0   0   2   0   3   0
+    Proposed: order modules (broker/order_monitor.py, orders/*) and capital/kill_switch.py and scripts/system_manager.py: no
+      read (order expiry and order states belong to G and H; the kill switch to I-001/I-002; the system manager to M topics;
+      INTERPRETATION by name). core/events.py: decision at RL-11 (one gated grep of its K1 and K5 lines, 3 lines) to see
+      whether an event names signal expiry.
+
+NC-3 Runtime files naming signal_age or max_age (K6), not in the register:
+    core/exceptions.py | blob 1eeac5842084 | rt | K1-K8:   5   0   0   0   0   1   0   0
+    ops_dashboard/backend/services/config_view.py | blob 0d4929a1c990 | rt | K1-K8:   0   0   0   0   0   1   0   0
+    ops_dashboard/backend/services/strategy_score.py | blob 79c55db1987d | rt | K1-K8:   0   0   0   0   0   4   0   0
+    ops_dashboard/backend/services/strategy_tower.py | blob 6effe8732f52 | rt | K1-K8:   3   0   0   0   0   1  10   0
+    screening/hard_gate.py | blob a8e7e2e49675 | rt | K1-K8:   0   0   0   0   0   3   2   0
+    scripts/refresh_instruments.py | blob 2002a24b1e7d | rt | K1-K8:   0   0   0   0   0   3   1   0
+    scripts/v3_hardgate_parity_recompute.py | blob 3623a42b0d15 | rt | K1-K8:   0   0   0   0   0   9   1   0
+    Proposed: screening/hard_gate.py (3 lines): pointer only under OQ-02 (D-002 hard gates, like the screener's step under
+      D-003); dashboard services, scripts/refresh_instruments.py and scripts/v3_hardgate_parity_recompute.py: no read (L-010,
+      A-004, J-010 by name; INTERPRETATION). core/exceptions.py: decision at RL-11 (one gated grep of its K1 and K6 lines, 6
+      lines).
+
+NC-4 Configuration-type files with hits, not in the register:
+    config/cron_registry.yaml | blob 42ff638145ba | cfg | K1-K8:   0   0   0   0   0   0   1   0
+    docs/locked_decisions.yaml | blob 2908b09fb546 | cfg | K1-K8:   2   0   0   1   0   1   2   0
+    Proposed: config/cron_registry.yaml: a host record, matched "stale" once; not read. docs/locked_decisions.yaml (a YAML
+      file under docs/, so in s_cfg by extension) names REJECTED_EXPIRED once and signal_age or max_age once: decision at
+      RL-12 (Recommended: treat it as a record under OQ-06 and do not read it; or one gated grep of its K1, K4 and K6 lines).
+
+NC-5 Test files with K2, K4, K5 or K6 hits, not in the register (test text only; never run):
+    ops_dashboard/tests/conftest.py | blob ea440c793186 | test | K1-K8:   4   0   1   2   0   0   0   0
+    ops_dashboard/tests/test_screen05_orders.py | blob 2786f7aece30 | test | K1-K8:   2   0   0   0   1   0   0   0
+    ops_dashboard/tests/test_screen16_config.py | blob 152d2fdfc3c0 | test | K1-K8:   0   0   0   0   0   1   0   0
+    ops_dashboard/tests/test_screen21_scanner_attribution.py | blob 67e64047b465 | test | K1-K8:   7   0   0   1   0   0   0   0
+    ops_dashboard/tests/test_strategy_score.py | blob e5437ac489be | test | K1-K8:   0   0   0   0   0   7   0   0
+    ops_dashboard/tests/test_trading_modules.py | blob c7c3894aff74 | test | K1-K8:   4   0   0   1   0   0   0   0
+    tests/crash_test/ct143_verify.py | blob cb28276ce470 | test | K1-K8:   2   0   0   0   2   0   0   0
+    tests/crash_test/invariant_checker.py | blob d9fca940b440 | test | K1-K8:   2   0   0   1   1   0   0   0
+    tests/crash_test/state_machine_validator.py | blob 5443e7b26d94 | test | K1-K8:   8   0   0   2   6   0   0   0
+    tests/integration/conftest.py | blob a6180190235f | test | K1-K8:   2   1   0   0   0   1   0   0
+    tests/integration/test_end_to_end_smoke.py | blob 7dc4554968d6 | test | K1-K8:   4   0   3   0   1   0   0   0
+    tests/unit/test_c6_auth_collapse.py | blob b5ac355e9af3 | test | K1-K8:   1   1   0   0   0   0   0   0
+    tests/unit/test_cnc_gtt_monitor.py | blob d63089b859e7 | test | K1-K8:   2   0   1   0   1   0   0   0
+    tests/unit/test_config_loader.py | blob 8f245c35a047 | test | K1-K8:   1   1   0   0   0   2   1   0
+    tests/unit/test_e2_breakeven_sl_column.py | blob 6dbcb36e9d7d | test | K1-K8:   3   0   0   0   1   0   0   0
+    tests/unit/test_e4_event_loop_safety.py | blob db8cb8b39f02 | test | K1-K8:   4   1   3   0   0   0   0   0
+    tests/unit/test_evidence_contract.py | blob 93668c5e53c8 | test | K1-K8:   3   0   1   1   1   0   4   0
+    tests/unit/test_fix074_numeric_cast.py | blob 4f5d3cc814bd | test | K1-K8:   2   1   0   0   0   0   0   0
+    tests/unit/test_fix134_backpressure.py | blob 463f7af7922f | test | K1-K8:   2   1   0   0   0   0   0   0
+    tests/unit/test_fix136_batch9.py | blob 20d59c50759e | test | K1-K8:  21   9   2   1   1   0   0   0
+    tests/unit/test_forward_shadow.py | blob df05501c4f45 | test | K1-K8:   0   0   0   0   0   2   0   0
+    tests/unit/test_h1_cancel_resting_exits.py | blob 87dee7049b3e | test | K1-K8:   2   0   0   0   2   0   0   0
+    tests/unit/test_hard_gate.py | blob 83388f2e371d | test | K1-K8:   0   0   0   0   0   2   5   0
+    tests/unit/test_mc8_async_hardkill.py | blob 00a8087f8582 | test | K1-K8:   3   0   1   0   1   0   0   0
+    tests/unit/test_order_placer.py | blob 9de08f5a8ccf | test | K1-K8:   8   0   1   0   1   0   2   0
+    tests/unit/test_order_state_machine.py | blob a13b5e21afc6 | test | K1-K8:  10   0   0   0   6   0   0   0
+    tests/unit/test_p1_killswitch_cancel_resting.py | blob b64e8b528e63 | test | K1-K8:   1   0   0   0   1   0   0   0
+    tests/unit/test_quality_scorer.py | blob f2fddb776fb3 | test | K1-K8:   0   0   0   0   0   8   0   0
+    tests/unit/test_step_executor.py | blob 82cfe6819362 | test | K1-K8:   0   0   0   0   0   5   3   0
+    tests/unit/test_v3_eod_route.py | blob 2d0dc4071618 | test | K1-K8:   1   1   0   0   0   0   0   0
+    tests/unit/test_v3_hardgate_parity.py | blob eb7701307a6e | test | K1-K8:   0   0   0   0   0   2   0   0
+    Proposed: add tests/unit/test_fix136_batch9.py (9 expiry_sec lines, the most of any test file) and
+      tests/unit/test_config_loader.py (1 expiry_sec line) to RL-09 as gated greps; tests/unit/test_v3_eod_route.py (1
+      expiry_sec line) only if ChatGPT wants the EOD-route interface checked here rather than at C-011; no read of the others
+      (dashboard tests: L-010; crash harness: N-005; order, kill and screening tests: G, H, I and D topics; fixtures;
+      INTERPRETATION by name).
+
+NC-6 Test files whose only signal-expiry term is expires_at (K3): 72 files (each listed in Appendix A as NEW-S). Proposed: no
+  read; their counts are mostly one to three lines (the signals table requires the column), which says nothing about the
+  expiry rule (INTERPRETATION).
+
+NC-7 Other code (shell, batch, PowerShell, HTML, JavaScript) with hits, not in the register: 17 files (Appendix A), 0 of them
+  with a K2 to K6 hit; by their folders they are deployment scripts and dashboard templates (INTERPRETATION). Proposed: no
+  read.
+
+NC-8 Documents and records with hits, not in the register: 198 files, 23 of them with a K2 to K6 hit (Appendix A). Proposed:
+  none read (OQ-06, option A: no historical records; host records such as docs/SYSTEM_MAP.md and PATHS.md are never read
+  except value-blind).
+
+Files with hits on K1, K7 or K8 only (NEW-B in Appendix A): term matches (token, order, feed, cache and similar names are
+  among them); not proposed as candidates.
+
+==============================================================================================================================
+9. REGISTER FILES WITHOUT ANY HIT, AND PROPOSED REGISTER UPDATES
+==============================================================================================================================
+No hit on any of the 8 terms (40 files): R23 config/strategies/first_pullback_long.yaml, R23
+  config/strategies/first_pullback_short.yaml, R23 config/strategies/gap_fade_long.yaml, R23
+  config/strategies/gap_fade_short.yaml, R23 config/strategies/gap_go_long.yaml, R23 config/strategies/gap_go_short.yaml, R23
+  config/strategies/open_high_breakdown_short.yaml, R23 config/strategies/open_low_breakout_long.yaml, R23
+  config/strategies/positional_momentum_long.yaml, R23 config/strategies/positional_sector_rotation.yaml, R23
+  config/strategies/positional_swing_long.yaml, R23 config/strategies/range_breakout_long.yaml, R23
+  config/strategies/range_breakout_short.yaml, R23 config/strategies/vwap_bounce_long.yaml, R23
+  config/strategies/vwap_rejection_short.yaml, N12 deploy/security/sshd_config.d/99-trading-security.conf, N01
+  docs/audit/throttle_selection_and_record_correction_19jul2026.md, N01 docs/decisions/10_entry_throttle_admission.md, N05
+  docs/decisions/BRIEF_09_prune_retention.md, N02 docs/design/a2_timeout_retry_design_02jul2026.md, N09
+  ops_dashboard/tests/test_db_reader.py, N01 ops_dashboard/tests/test_s3_login_throttle.py, R14 screening/quality_scorer.py,
+  R16 screening/retest_monitor.py, N05 scripts/backup_retention.py, N08 scripts/load_test_signals.py, N07
+  scripts/preflight/checks/signals.py, R19 scripts/replay_signals.py, N08 scripts/test_webhook.py, N01
+  signals/entry_throttle.py, N08 tests/crash_test/cleanup.py, N05 tests/unit/test_backup_retention.py, N05
+  tests/unit/test_db_retention.py, R22 tests/unit/test_eod_lifecycle_pipeline_aware.py, N02
+  tests/unit/test_fix068_timeout_recovery.py, N06 tests/unit/test_fix133_entry_windows.py, R22
+  tests/unit/test_fix142_final_cleanup.py, N08 tests/unit/test_load_test_signals.py, N06 tests/unit/test_market_windows.py,
+  R13 tests/unit/test_signal_status_classification.py.
+- R16 screening/retest_monitor.py: no hit; it stays a pointer under OQ-02 (retest rules with the D topics).
+- R19: scripts/replay_signals.py has no hit; its test tests/unit/test_fix133_replay_signals.py has K1 2 and K3 2. Under OQ-07
+  option A (no read unless S1-1 shows a specific expiry dependency): Proposed: close R19; no read.
+- R22: tests/unit/test_eod_lifecycle_pipeline_aware.py and tests/unit/test_fix142_final_cleanup.py have no hit;
+  tests/unit/test_e5_cleanup.py has K1 1 and K3 1. Proposed: close R22; no read.
+- R23: 15 of the 16 strategy files have no hit; config/strategies/pb01_breakout_retest.yaml has one K1 line. Proposed: narrow
+  R23 to that file and settle it with one gated grep (RL-10), since a strategy-level age limit would be in scope.
+- R14 (screening) and R15 (entry gate): pointers under OQ-02; their hits (K6 in the screener files, K7 in the gate) are
+  recorded in Appendix A and not read. screening/quality_scorer.py has no hit.
+- R20 documents: docs/04_db_schema_reference.md (K2 1, K3 1) and docs/CONFIG_GUIDE.md (K2 1, K6 1): decision at RL-12, for
+  text drift only.
+
+==============================================================================================================================
+10. PROPOSED EXACT READ LIST FOR S1-2 ONWARDS (for ChatGPT/Rama approval; nothing here is read)
+==============================================================================================================================
+Mode: "grep TERM" = one gated grep read printing only the matching lines (masked); "range A:B" = one gated range read. Every
+  read through cread_c009.py after the lock is lifted as a step of its own; tests as text; minimum ranges. Line counts in
+  brackets are from this step's searches (for a combined grep, the sum of the per-term counts, an upper bound). The ranges are
+  the frozen manuals' citations, valid for the same pinned blobs.
+
+RL-01 config/system_config.yaml (R03)
+      Mode: range 124:128; grep K1 [6 lines]
+      Question: S1-2: the signal_queue block, and whether any other key here sets a signal age limit.
+
+RL-02 core/config_loader.py (R04)
+      Mode: range 192:200; grep K2 [1 line]
+      Question: S1-3: the expiry field's type, default, comment and validation.
+
+RL-03 main.py (R05)
+      Mode: grep K2 [2 lines]; range 3613:3614 if not covered
+      Question: S1-4: which value reaches each check.
+
+RL-04 signals/webhook_receiver.py (R01)
+      Mode: grep K2 [6]; grep K3 [4]; range 916:926; range 949:961
+      Question: S1-5: the intake check and the expires_at computation.
+
+RL-05 signals/signal_processor.py (R02)
+      Mode: grep K2 [4]; grep K5 [2]; ranges 914:921, 1193:1231, 1515:1515, 2376:2384, and 175:175 and 222:222 if not covered
+      Question: S1-6: the processor's check, outcome, warning and the re-queue's measured instant.
+
+RL-06 core/schema.sql (R06)
+      Mode: grep K3 [1]; grep K2 [1]; range around line 49 if not covered
+      Question: S1-7: the column's definition.
+
+RL-07 ops_dashboard/backend/readers/db_reader.py (R12)
+      Mode: grep K3 [1]
+      Question: S1-8: whether this reader uses expires_at.
+
+RL-08 DECISION: scripts/copy_gate.py, scripts/healthcheck_server.py, scripts/request_copy.py, scripts/security_monitor.py,
+      scripts/t2_cnc_gtt_realtest.py (NC-1)
+      Mode: grep K3 each [4, 1, 2, 1, 1]
+      Question: S1-8: whether any of them touches the signals column. (a) Read (Recommended: 9 lines settle the question by
+      evidence rather than by file names); (b) exclude by owner.
+
+RL-09 tests/unit/test_webhook_receiver.py (R07), tests/unit/test_signal_processor.py (R08), and NEW
+      tests/unit/test_fix136_batch9.py and tests/unit/test_config_loader.py (NC-5)
+      Mode: grep "K2 or K4 or K5" in each [at most 6, 7, 11, 1 lines]; then the minimum ranges of the expiry cases the greps
+      locate
+      Question: S1-9: what the tests assert (text only).
+
+RL-10 config/strategies/pb01_breakout_retest.yaml (R23)
+      Mode: grep K1 [1]
+      Question: whether a strategy sets its own signal age limit.
+
+RL-11 DECISION: core/events.py and core/exceptions.py (NC-2, NC-3)
+      Mode: grep "K1 or K5" [at most 3]; grep "K1 or K6" [at most 6]
+      Question: whether an event or exception names signal expiry. (a) Read (Recommended: at most 9 lines); (b) exclude.
+
+RL-12 DECISION: docs/04_db_schema_reference.md and docs/CONFIG_GUIDE.md (R20); docs/locked_decisions.yaml (NC-4)
+      Mode: grep "K2 or K3 or K6" [at most 2, 2]; grep "K1 or K4 or K6" [at most 4]
+      Question: text drift only. (a) Read the two R20 documents only (Recommended); (b) also docs/locked_decisions.yaml; (c)
+      none.
+
+- Unchanged from the authorisation: no record, excluded July record, host record, protected path or credential is read;
+  C-007's cleanup and readers and C-008's pipeline findings are cited, not re-read (OQ-03); VP-24 and VP-59 are not ratified
+  (OQ-04); chapters 02 and 03 are compared only after Rama attaches them and their SHA-256 match C-008 section 14.7 (OQ-05).
+
+==============================================================================================================================
+11. DEVIATIONS, NOTES AND ERRORS
+==============================================================================================================================
+- Wording point for ChatGPT to confirm (not a hidden deviation): the authorisation permits count-only searches and line/byte
+  totals with the approved tools, and also says "Do not fetch, open, print, extract or read any legacy source blob contents".
+  The tools count by reading checked-out files, so the s_all files were checked out (blobs fetched) and the masking filter
+  read them, as at C-005 to C-008, with per-file counts the only output. Claude printed and viewed no source line; no output
+  holds a source line.
+- Git fetched one blob outside s_all during the checkout: .gitattributes (attribute lookup). Not protected; not opened by
+  Claude.
+- The masking filter, by its design, also reads docs/SYSTEM_MAP.md and DEPLOYMENT.md (host records, both in s_all and so
+  checked out) on every run to build its host-token masks; it prints nothing from them. The searches over s_all and s_cfg
+  covered host records by counts only, as the authorised file sets include them.
+- "stale" and "TTL" were searched in any letter case (the authorisation lists them without a case; recorded in section 4).
+- Line totals follow the filter's convention: newline characters plus one (C-008 section 1.1); for a file ending with a
+  newline this is one more than the physical line count.
+- Errors: none. No gate refusal during the searches; no mismatch of the pin, the listing or any working file.
+
+==============================================================================================================================
+12. TOOLS AND HASHES
+==============================================================================================================================
+| Tool | SHA-256 |
+|---|---|
+| c009/tools/cread_c009.py (locked; not run except by the gate tests' refusal calls) | f2894f0ea6183fe0aadcf72ccd1d14a2def7cf5bb195af96841689260a132a51 |
+| c009/tools/ccount_c009.py | 1fe7fd64407d7989e705676b02fabffa1ec6624d137b0633cd213f0ec65f0594 |
+| c009/tools/clines_c009.py | d80342a421179389f2ec98c8a70cdc0ed8bb9c1dd45dbbcdfba41f6df0590741 |
+| c009/tools/gate_test_c009_s11.py (new: S1-1 version) | ecf4e89a861defb8e5ab7cb4249a850ffda65680555bec33a73011dc5bd1f61d |
+| c009/tools/run_s11_c009.py (new: S1-1 driver) | a341234f6bd58211e3abdd3f7178b5a840a2ba1010d45222d1c52c288689a1e4 |
+| c009/tools/build_s11_c009.py (new: builds this file) | 6bc400d9ac5208e58ff67d4d644c2fd71edc159c933b304cc04504f8304d1b90 |
+| <SCRATCHPAD>/bin/count_grep.py | 31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b |
+| tools/mask_read2.py | bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7 |
+| tools/mask_read_lib.py | ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8 |
+| tools/sensitive_check.py | e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337 |
+| tools/scan_ids.py | 8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16 |
+- Line totals: clines_c009.py L01 at 11:46:52 IST over 93 register files (list SHA-256
+  c30e438be75d3062c11c6d6b4b402b6765b06f80137741bf37d68f7fc87991c0); output SHA-256
+  9bb1201fcb4f17abca134758b7a3f6c56ac640af509fae5c1b1cd52a0515ef5f; log row: "nev0=ok", "selftest=ok", "pinned=ok".
+- S1-1 results file (all counts above are taken from it): SHA-256
+  524644a24982610bb4c4972aa913668585d57b7f233f4fd97e440ffcdc44d276.
+
+==============================================================================================================================
+13. LINE AND BYTE TOTALS OF THE REGISTER FILES (L01; the two July records excluded by the gate and the authorisation)
+==============================================================================================================================
+| Row | Lines | Bytes | Path |
+|---|---|---|---|
+| R01 | 1,208 | 59,565 | signals/webhook_receiver.py |
+| R02 | 2,704 | 139,403 | signals/signal_processor.py |
+| R03 | 754 | 55,901 | config/system_config.yaml |
+| R04 | 2,517 | 127,242 | core/config_loader.py |
+| R05 | 4,294 | 208,758 | main.py |
+| R06 | 1,655 | 104,053 | core/schema.sql |
+| R07 | 2,043 | 83,745 | tests/unit/test_webhook_receiver.py |
+| R08 | 2,501 | 97,634 | tests/unit/test_signal_processor.py |
+| R09 | 325 | 12,698 | scripts/eod_cleanup.py |
+| R10 | 347 | 15,616 | tests/unit/test_fix135_eod_cleanup.py |
+| R11 | 3,356 | 153,466 | core/state_store.py |
+| R12 | 4,206 | 201,593 | ops_dashboard/backend/readers/db_reader.py |
+| R12 | 157 | 7,742 | reports/signal_status.py |
+| R12 | 1,947 | 84,776 | reports/daily_report.py |
+| R12 | 2,925 | 151,981 | reports/daily_trade_review.py |
+| R13 | 2,367 | 101,559 | tests/unit/test_state_store.py |
+| R13 | 535 | 25,854 | tests/unit/test_migrations.py |
+| R13 | 213 | 11,357 | tests/unit/test_signal_status_classification.py |
+| R14 | 706 | 35,461 | screening/secondary_screener.py |
+| R14 | 424 | 17,364 | screening/step_executor.py |
+| R14 | 151 | 6,337 | screening/quality_scorer.py |
+| R14 | 45 | 2,610 | config/scoring_weights.yaml |
+| R14 | 601 | 25,606 | tests/unit/test_secondary_screener.py |
+| R15 | 538 | 21,303 | screening/entry_gate.py |
+| R15 | 1,332 | 48,082 | tests/unit/test_entry_gate.py |
+| R16 | 442 | 19,889 | screening/retest_monitor.py |
+| R17 | 275 | 9,514 | core/config_validator.py |
+| R18 | 634 | 23,730 | tests/integration/test_full_signal_flow.py |
+| R19 | 244 | 8,290 | scripts/replay_signals.py |
+| R19 | 208 | 7,887 | tests/unit/test_fix133_replay_signals.py |
+| R20 | 371 | 17,765 | docs/04_db_schema_reference.md |
+| R20 | 819 | 43,351 | docs/CONFIG_GUIDE.md |
+| R21 | 577 | 32,507 | docs/audit/signal_mortality_census_19jul2026.md |
+| R22 | 572 | 26,459 | tests/unit/test_eod_lifecycle_pipeline_aware.py |
+| R22 | 254 | 10,337 | tests/unit/test_e5_cleanup.py |
+| R22 | 337 | 12,200 | tests/unit/test_fix142_final_cleanup.py |
+| R23 | 55 | 1,121 | config/strategies/first_pullback_long.yaml |
+| R23 | 55 | 1,127 | config/strategies/first_pullback_short.yaml |
+| R23 | 57 | 1,285 | config/strategies/gap_fade_long.yaml |
+| R23 | 56 | 1,211 | config/strategies/gap_fade_short.yaml |
+| R23 | 57 | 1,265 | config/strategies/gap_go_long.yaml |
+| R23 | 57 | 1,259 | config/strategies/gap_go_short.yaml |
+| R23 | 56 | 1,228 | config/strategies/open_high_breakdown_short.yaml |
+| R23 | 55 | 1,150 | config/strategies/open_low_breakout_long.yaml |
+| R23 | 80 | 3,051 | config/strategies/pb01_breakout_retest.yaml |
+| R23 | 56 | 1,310 | config/strategies/positional_momentum_long.yaml |
+| R23 | 56 | 1,315 | config/strategies/positional_sector_rotation.yaml |
+| R23 | 56 | 1,291 | config/strategies/positional_swing_long.yaml |
+| R23 | 56 | 1,220 | config/strategies/range_breakout_long.yaml |
+| R23 | 55 | 1,140 | config/strategies/range_breakout_short.yaml |
+| R23 | 55 | 1,109 | config/strategies/vwap_bounce_long.yaml |
+| R23 | 55 | 1,133 | config/strategies/vwap_rejection_short.yaml |
+| N01 | 126 | 5,266 | signals/entry_throttle.py |
+| N01 | 168 | 6,302 | tests/unit/test_entry_throttle.py |
+| N01 | 310 | 22,617 | docs/audit/throttle_selection_and_record_correction_19jul2026.md |
+| N01 | 37 | 5,206 | docs/decisions/10_entry_throttle_admission.md |
+| N01 | 197 | 8,993 | ops_dashboard/tests/test_s3_login_throttle.py |
+| N01 | 586 | 26,037 | tests/unit/test_mis_squareoff_restore_and_settle.py |
+| N02 | 145 | 7,869 | docs/audit/kill_persist_busy_timeout_25jul2026.md |
+| N02 | 138 | 13,066 | docs/design/a2_timeout_retry_design_02jul2026.md |
+| N02 | 215 | 9,138 | tests/unit/test_fix068_timeout_recovery.py |
+| N02 | 186 | 7,970 | tests/unit/test_ms3_step_timeout_bounds_caller.py |
+| N03 | 236 | 9,733 | broker/token_monitor.py |
+| N03 | 99 | 3,896 | broker/auth_recovery.py |
+| N03 | 289 | 10,600 | scripts/zerodha_login.py |
+| N03 | 35 | 1,515 | tests/unit/test_auth_recovery.py |
+| N04 | 4,622 | 229,305 | orders/order_reconciler.py |
+| N04 | 1,888 | 85,123 | orders/eod_squareoff.py |
+| N04 | 232 | 10,261 | broker/order_state_machine.py |
+| N05 | 231 | 8,564 | scripts/db_retention.py |
+| N05 | 156 | 5,305 | tests/unit/test_db_retention.py |
+| N05 | 48 | 5,346 | docs/decisions/09_prune_retention.md |
+| N05 | 26 | 2,490 | docs/decisions/BRIEF_09_prune_retention.md |
+| N05 | 275 | 17,385 | docs/decisions/DESIGN_09_prune_retention.md |
+| N05 | 311 | 13,840 | scripts/backup_retention.py |
+| N05 | 316 | 13,800 | scripts/output_retention.py |
+| N05 | 246 | 11,447 | tests/unit/test_backup_retention.py |
+| N05 | 220 | 8,860 | tests/unit/test_output_retention.py |
+| N06 | 334 | 13,938 | core/market_windows.py |
+| N06 | 70 | 2,656 | tests/unit/test_fix133_entry_windows.py |
+| N06 | 476 | 18,358 | tests/unit/test_market_windows.py |
+| N07 | 90 | 4,170 | scripts/preflight/checks/signals.py |
+| N08 | 288 | 10,692 | tests/crash_test/cleanup.py |
+| N08 | 248 | 9,588 | tests/crash_test/signal_injector.py |
+| N08 | 333 | 11,675 | scripts/load_test_signals.py |
+| N08 | 173 | 5,852 | tests/unit/test_load_test_signals.py |
+| N08 | 14 | 320 | scripts/test_webhook.py |
+| N09 | 617 | 32,067 | ops_dashboard/frontend/templates/signals.html |
+| N09 | 266 | 12,777 | ops_dashboard/tests/test_screen04_signals.py |
+| N09 | 171 | 10,518 | ops_dashboard/docs/redesign/04_signals_asset_spec.md |
+| N09 | 133 | 6,224 | ops_dashboard/tests/test_db_reader.py |
+| N11 | 148 | 9,955 | docs/audit/locked_contract_staleness_sweep_22jul2026.md |
+| N12 | 14 | 677 | deploy/security/sshd_config.d/99-trading-security.conf |
+- Total: 93 files, 58,214 lines, 2,732,251 bytes.
+
+==============================================================================================================================
+14. DECLARATION
+==============================================================================================================================
+- No source blob content was read, printed or viewed by Claude: the only outputs are per-file counts, line totals and byte
+  sizes. The files were checked out and read by the counting tools only (section 11).
+- No project code, test or script was run; no migration; no legacy service; no replay or load tool.
+- No records repository, testing snapshot, host, VM, broker, webhook, Chartink or live system was contacted; no excluded July
+  record, protected path or credential was opened; host records were counted only.
+- No repository file was written, staged, committed or pushed; the C-009 manual is not drafted; no V2 decision is made.
+- Final state at 11:53:41 IST: never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+  objects: 8918 | never-open blobs present locally: 0 (must be 0); exit 0; object types {'blob': 1255, 'commit': 1537, 'tree':
+  6126}; no read log (0 reads).
+- STOPPED: waiting for ChatGPT/Rama to review this output and approve the exact source-read list (section 10).
+
+==============================================================================================================================
+APPENDIX A. PER-FILE COUNTS (s_all; every file with at least one hit; columns K1 to K8 = matching lines)
+==============================================================================================================================
+Kind: rt = runtime Python (s_rt), test (s_tests), cfg (s_cfg), code = other code in s_code, doc = documents and records. Row:
+  the register row, NEW-S (not in the register; a hit on K2 to K6) or NEW-B (not in the register; K1, K7 or K8 only).
+
+Row    Kind  K1  K2  K3  K4  K5  K6  K7  K8  Path
+NEW-B  rt      1   0   0   0   0   0   0   0  alerts/delivery.py
+NEW-B  rt      1   0   0   0   0   0   1   0  alerts/mis_squareoff_notifier.py
+N03    rt      6   0   0   0   0   0   0   0  broker/auth_recovery.py
+NEW-S  rt      1   0   0   0   1   0   0   0  broker/order_monitor.py
+N04    rt      9   0   0   0   5   0   0   0  broker/order_state_machine.py
+NEW-B  rt      2   0   0   0   0   0   0   0  broker/rate_limiter.py
+NEW-B  rt      1   0   0   0   0   0   0   0  broker/slippage_engine.py
+N03    rt     34   0   0   0   0   0   0   0  broker/token_monitor.py
+NEW-B  rt      2   0   0   0   0   0   3   7  broker/zerodha_adapter.py
+NEW-B  rt      0   0   0   0   0   0  11   0  capital/fund_manager.py
+NEW-S  rt      1   0   0   0   1   0   7   0  capital/kill_switch.py
+NEW-B  rt      0   0   0   0   0   0   1   0  capital/position_sizer.py
+NEW-B  rt      0   0   0   0   0   0   5   0  capital/risk_engine.py
+NEW-B  rt      4   0   0   0   0   0   3   0  core/closure_source.py
+NEW-B  rt      0   0   0   0   0   0  11   0  core/config_auditor.py
+R04    rt      8   1   0   0   0   2   3   8  core/config_loader.py
+R17    rt      1   1   0   0   0   0   0   0  core/config_validator.py
+NEW-S  rt      2   0   0   0   1   0   0   0  core/events.py
+NEW-S  rt      5   0   0   0   0   1   0   0  core/exceptions.py
+N06    rt      0   0   0   0   0   0   1   0  core/market_windows.py
+NEW-B  rt      1   0   0   0   0   0   0   9  core/mis_blocklist.py
+R11    rt      3   0   0   0   1   0   6   0  core/state_store.py
+NEW-B  rt      3   0   0   0   0   0  12   0  data/live_feed.py
+R05    rt      9   2   0   0   0   0  15  12  main.py
+NEW-B  rt      0   0   0   0   0   0   5   0  ops/control_tower/aggregator.py
+NEW-B  rt      0   0   0   0   0   0   1   0  ops/control_tower/db.py
+NEW-B  rt      0   0   0   0   0   0   1   0  ops_dashboard/backend/api/risk_capital.py
+NEW-B  rt      1   0   0   0   0   0   0   0  ops_dashboard/backend/api/trading.py
+NEW-B  rt      0   0   0   0   0   0   1   0  ops_dashboard/backend/app.py
+NEW-B  rt      0   0   0   0   0   0   1   0  ops_dashboard/backend/auth.py
+R12    rt     30   0   1   2   2   1   5   1  ops_dashboard/backend/readers/db_reader.py
+NEW-B  rt      3   0   0   0   0   0   0   0  ops_dashboard/backend/readers/host_reader.py
+NEW-B  rt      1   0   0   0   0   0   0   0  ops_dashboard/backend/services/analytics_period.py
+NEW-B  rt      0   0   0   0   0   0   0   1  ops_dashboard/backend/services/capacity.py
+NEW-S  rt      0   0   0   0   0   1   0   0  ops_dashboard/backend/services/config_view.py
+NEW-B  rt      2   0   0   0   0   0   0   0  ops_dashboard/backend/services/live_activity.py
+NEW-B  rt      3   0   0   0   0   0   0   0  ops_dashboard/backend/services/scanner_attribution.py
+NEW-B  rt      3   0   0   0   0   0   0   0  ops_dashboard/backend/services/strategy_health.py
+NEW-S  rt      0   0   0   0   0   4   0   0  ops_dashboard/backend/services/strategy_score.py
+NEW-S  rt      3   0   0   0   0   1  10   0  ops_dashboard/backend/services/strategy_tower.py
+NEW-B  rt      0   0   0   0   0   0   5   0  ops_dashboard/backend/services/system_health.py
+NEW-B  rt      1   0   0   0   0   0   1   0  orders/breakeven_manager.py
+NEW-B  rt      4   0   0   0   0   0  10   0  orders/closure_classifier.py
+NEW-B  rt      1   0   0   0   0   0   0   0  orders/cnc_gtt.py
+NEW-S  rt      2   0   0   0   2   0   2   0  orders/cnc_gtt_monitor.py
+N04    rt      0   0   0   0   0   0  16   0  orders/eod_squareoff.py
+NEW-B  rt      0   0   0   0   0   0   2   0  orders/mis_autosquareoff.py
+NEW-S  rt      4   0   0   0   3   0   9  10  orders/order_placer.py
+N04    rt     14   0   0   0   7   0  18   0  orders/order_reconciler.py
+NEW-B  rt      0   0   0   0   0   0   1   0  orders/shadow_tracker.py
+NEW-B  rt      0   0   0   0   0   0   2   0  orders/smart_tgt_manager.py
+NEW-S  rt      3   0   0   0   2   0   0   0  orders/structure_exit_manager.py
+R12    rt      0   0   0   0   0   3   0   0  reports/daily_report.py
+R12    rt      1   0   0   0   0   0   1   0  reports/daily_trade_review.py
+R12    rt      1   0   0   0   1   0   0   0  reports/signal_status.py
+R15    rt      0   0   0   0   0   0   2   0  screening/entry_gate.py
+NEW-S  rt      0   0   0   0   0   3   2   0  screening/hard_gate.py
+R14    rt      0   0   0   0   0   5   0   1  screening/secondary_screener.py
+R14    rt      0   0   0   0   0   5   7   0  screening/step_executor.py
+NEW-B  rt      1   0   0   0   0   0   0   0  scripts/agy_runner.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/alert_watcher.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/check_vm_state.py
+NEW-S  rt      9   0   4   0   0   0   0   2  scripts/copy_gate.py
+NEW-B  rt      1   0   0   0   0   0  12   0  scripts/cron_officer.py
+NEW-B  rt      0   0   0   0   0   0   1   0  scripts/cron_report_render.py
+N05    rt      1   0   0   0   0   0   0   0  scripts/db_retention.py
+R09    rt      6   0   0   0   2   0  14   0  scripts/eod_cleanup.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/fetch_fno_ban.py
+NEW-B  rt      0   0   0   0   0   0   2   0  scripts/gemini_log_review.py
+NEW-B  rt      1   0   0   0   0   0   0   0  scripts/generate_screened_stocks_csv.py
+NEW-S  rt      2   0   1   0   0   0   0   0  scripts/healthcheck_server.py
+N05    rt      0   0   0   0   0   0   1   0  scripts/output_retention.py
+NEW-B  rt      0   0   0   0   0   0   1   0  scripts/preflight/autofix.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/preflight/checks/broker.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/preflight/checks/config_sanity.py
+NEW-B  rt      0   0   0   0   0   0   1   0  scripts/preflight/checks/security.py
+NEW-B  rt      0   0   0   0   0   0   1   0  scripts/preflight/startup_hook.py
+NEW-B  rt      0   0   0   0   0   0   2   0  scripts/reconcile_positions.py
+NEW-B  rt      0   0   0   0   0   0   3   0  scripts/reconstruct_excursions.py
+NEW-S  rt      0   0   0   0   0   3   1   0  scripts/refresh_instruments.py
+NEW-S  rt      6   0   2   0   0   0   0   5  scripts/request_copy.py
+NEW-S  rt      8   0   1   0   0   0   2   2  scripts/security_monitor.py
+NEW-S  rt      4   0   0   0   2   0   3   0  scripts/system_manager.py
+NEW-S  rt      1   0   1   0   0   0   4   0  scripts/t2_cnc_gtt_realtest.py
+NEW-S  rt      0   0   0   0   0   9   1   0  scripts/v3_hardgate_parity_recompute.py
+NEW-B  rt      4   0   0   0   0   0   0   0  scripts/v3_shadow_soak_report.py
+N03    rt      4   0   4   0   0   0   0   0  scripts/zerodha_login.py
+R02    rt     12   4   0   0   2   0   8   0  signals/signal_processor.py
+R01    rt     14   6   4   0   1   0   3   4  signals/webhook_receiver.py
+NEW-B  rt      0   0   0   0   0   0   0   1  sr_detector/__init__.py
+NEW-B  rt      0   0   0   0   0   0   0   4  sr_detector/fetch.py
+NEW-B  rt      4   0   0   0   0   0   3   6  sr_detector/zone_cache.py
+NEW-B  rt      2   0   0   0   0   0   0   1  sr_detector/zone_warmer.py
+NEW-B  rt      0   0   0   0   0   0   2   0  utils/instance_lock.py
+NEW-B  rt      3   0   0   0   0   0   0   0  v3_chain/pb01_entry.py
+NEW-B  rt      0   0   0   0   0   0   0   4  v3_chain/runner.py
+NEW-B  cfg     0   0   0   0   0   0   1   0  config/cron_registry.yaml
+R14    cfg     0   0   0   0   0   3   0   0  config/scoring_weights.yaml
+R23    cfg     1   0   0   0   0   0   0   0  config/strategies/pb01_breakout_retest.yaml
+R03    cfg     6   1   0   0   0   0   3   6  config/system_config.yaml
+NEW-S  cfg     2   0   0   1   0   1   2   0  docs/locked_decisions.yaml
+NEW-S  test    4   0   1   2   0   0   0   0  ops_dashboard/tests/conftest.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_b1_typography_floor.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_b3_b4_spec_decisions.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_closure_screens04_08.py
+NEW-B  test    1   0   0   0   0   0   0   0  ops_dashboard/tests/test_g2b2_screens.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_g5d_operations.py
+NEW-B  test    0   0   0   0   0   0   4   0  ops_dashboard/tests/test_screen02_dashboard.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_screen03_strategies.py
+N09    test    1   0   0   0   0   0   0   0  ops_dashboard/tests/test_screen04_signals.py
+NEW-S  test    2   0   0   0   1   0   0   0  ops_dashboard/tests/test_screen05_orders.py
+NEW-B  test    0   0   0   0   0   0   2   0  ops_dashboard/tests/test_screen06_positions.py
+NEW-B  test    1   0   0   0   0   0   0   0  ops_dashboard/tests/test_screen07_trades.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_screen11_execution.py
+NEW-B  test    0   0   0   0   0   0   3   0  ops_dashboard/tests/test_screen12_system_health.py
+NEW-B  test    0   0   0   0   0   0   1   0  ops_dashboard/tests/test_screen14_trade_logs.py
+NEW-S  test    0   0   0   0   0   1   0   0  ops_dashboard/tests/test_screen16_config.py
+NEW-B  test    1   0   0   0   0   0   0   0  ops_dashboard/tests/test_screen18_live_activity.py
+NEW-B  test    1   0   0   0   0   0   0   0  ops_dashboard/tests/test_screen20_strategy_health.py
+NEW-S  test    7   0   0   1   0   0   0   0  ops_dashboard/tests/test_screen21_scanner_attribution.py
+NEW-B  test    0   0   0   0   0   0   2   0  ops_dashboard/tests/test_screen22_holdings.py
+NEW-S  test    0   0   0   0   0   7   0   0  ops_dashboard/tests/test_strategy_score.py
+NEW-B  test    1   0   0   0   0   0   1   0  ops_dashboard/tests/test_strategy_tower.py
+NEW-S  test    4   0   0   1   0   0   0   0  ops_dashboard/tests/test_trading_modules.py
+NEW-S  test    2   0   0   0   2   0   0   0  tests/crash_test/ct143_verify.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/crash_test/ct_day3_isolated.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/crash_test/ct_day3_isolated_batch2.py
+NEW-S  test    2   0   0   1   1   0   0   0  tests/crash_test/invariant_checker.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/crash_test/scenarios/ct126.yaml
+NEW-B  test    1   0   0   0   0   0   1   0  tests/crash_test/scenarios/ct127.yaml
+N08    test    6   0   0   0   0   0   0   0  tests/crash_test/signal_injector.py
+NEW-S  test    8   0   0   2   6   0   0   0  tests/crash_test/state_machine_validator.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/crash_test/test_ct_harness_safety.py
+NEW-B  test    0   0   0   0   0   0   4   0  tests/crash_test/test_kill_switch_edges.py
+NEW-S  test    2   1   0   0   0   1   0   0  tests/integration/conftest.py
+NEW-B  test    1   0   0   0   0   0   5   0  tests/integration/test_alerts_pipeline.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/integration/test_emergency_exit_chain.py
+NEW-S  test    4   0   3   0   1   0   0   0  tests/integration/test_end_to_end_smoke.py
+R18    test    3   0   2   0   1   0   0   0  tests/integration/test_full_signal_flow.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/integration/test_hard_kill_flatten_chain.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/integration/test_hardening_scenarios.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/integration/test_q9_capital_invariant_wired.py
+NEW-B  test    0   0   0   0   0   0   7   0  tests/integration/test_q9_post_restart_capital_wired.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_a1e1_orphan_recovery.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_a1e1_recovery_matrix.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_alert_watcher.py
+N03    test    3   0   0   0   0   0   0   0  tests/unit/test_auth_recovery.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_b1_consumer_health_unblocked.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_b1_reconciler_mtm.py
+NEW-S  test    1   1   0   0   0   0   0   0  tests/unit/test_c6_auth_collapse.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_check1_acceptance_rows.py
+NEW-B  test    7   0   0   0   0   0   1   0  tests/unit/test_check1_deferral.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/unit/test_clock_skew_probe.py
+NEW-B  test   10   0   0   0   0   0   5   0  tests/unit/test_closure_classifier.py
+NEW-B  test    4   0   0   0   0   0   2   0  tests/unit/test_closure_source_contract.py
+NEW-S  test    2   0   1   0   1   0   0   0  tests/unit/test_cnc_gtt_monitor.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_cnc_gtt_slice25_p2.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_cnc_gtt_step4_wiring.py
+NEW-B  test    0   0   0   0   0   0   5   0  tests/unit/test_config_auditor.py
+NEW-S  test    1   1   0   0   0   2   1   0  tests/unit/test_config_loader.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/unit/test_control_tower_phase1b.py
+NEW-B  test    0   0   0   0   0   0   4   0  tests/unit/test_control_tower_phase1c.py
+NEW-B  test    6   0   0   0   0   0   2   0  tests/unit/test_copy_gate.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_cron_alerts.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_cron_officer.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_cron_officer_phase3.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_cron_officer_preflight_banner.py
+NEW-B  test    0   0   0   0   0   0   8   0  tests/unit/test_cron_officer_revision.py
+NEW-B  test    0   0   0   0   0   0   7   0  tests/unit/test_cron_officer_security.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_daily_symbol_stats.py
+NEW-S  test    4   0   4   0   0   0   0   0  tests/unit/test_daily_trade_review.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_delivery_config_independence.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_diary4_tier_multiplier.py
+NEW-S  test    3   0   0   0   1   0   0   0  tests/unit/test_e2_breakeven_sl_column.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_e2_capital_tightening.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_e3_hygiene.py
+NEW-S  test    4   1   3   0   0   0   0   0  tests/unit/test_e4_event_loop_safety.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_e4_w10_pnl_contract.py
+R22    test    1   0   1   0   0   0   0   0  tests/unit/test_e5_cleanup.py
+R15    test    1   0   1   0   0   0   0   0  tests/unit/test_entry_gate.py
+N01    test    2   0   0   0   0   0   0   0  tests/unit/test_entry_throttle.py
+NEW-S  test    1   0   1   0   0   0   5   0  tests/unit/test_eod_squareoff.py
+NEW-S  test    3   0   1   1   1   0   4   0  tests/unit/test_evidence_contract.py
+NEW-B  test    6   0   0   0   0   0   0   0  tests/unit/test_exceptions.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_f4_hygiene.py
+NEW-B  test    0   0   0   0   0   0   5   0  tests/unit/test_fix064_flag_based_reconnect.py
+NEW-B  test    0   0   0   0   0   0  17   0  tests/unit/test_fix067_ms1_fresh_anchor.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix073_eod_entry_cutoff.py
+NEW-S  test    2   1   0   0   0   0   0   0  tests/unit/test_fix074_numeric_cast.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix075_price_drift.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix128_pnl_reconciliation.py
+NEW-B  test   42   0   0   0   0   0   0   0  tests/unit/test_fix128_token_monitor.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix129_cold_start_safety.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix129_order_state_validation.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix129_rejection_handling.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix130_eod_pre_alert.py
+NEW-S  test    3   0   3   0   0   0   0   0  tests/unit/test_fix130_latency_tracking.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix130_strategy_governor.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/unit/test_fix131_telegram_rate_limit.py
+R19    test    2   0   2   0   0   0   0   0  tests/unit/test_fix133_replay_signals.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix133_trade_journal.py
+NEW-S  test    2   1   0   0   0   0   0   0  tests/unit/test_fix134_backpressure.py
+NEW-S  test    1   0   1   0   0   0   2   0  tests/unit/test_fix134_reconcile_positions.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix134_sl_breach.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix134_strategy_metrics.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/unit/test_fix134_ws_reconnect.py
+R10    test   16   0   5   0   3   0  12   0  tests/unit/test_fix135_eod_cleanup.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_fix135_fno_ban.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_fix135_shadow_engine.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix135_strategy_position_cap.py
+NEW-S  test   21   9   2   1   1   0   0   0  tests/unit/test_fix136_batch9.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/unit/test_fix148_broker_gaps.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_fix180.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_fix1_carried_position_rehydrate.py
+NEW-S  test    0   0   0   0   0   2   0   0  tests/unit/test_forward_shadow.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/unit/test_fund_manager.py
+NEW-S  test    1   0   1   0   0   0   1   0  tests/unit/test_gate8_sector_toctou.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_gemini_data_integrity_check.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_gemini_log_review_hardening.py
+NEW-S  test    2   0   1   0   0   0   0   0  tests/unit/test_gemini_premarket_brief.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_gemini_trade_coach.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_generate_screened_csv_readonly.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/unit/test_h11_invalidate_token_path.py
+NEW-B  test   50   0   0   0   0   0   0   0  tests/unit/test_h13_token_monitor_relatch.py
+NEW-S  test    2   0   0   0   2   0   0   0  tests/unit/test_h1_cancel_resting_exits.py
+NEW-S  test    3   0   1   0   0   0   6   4  tests/unit/test_h3_exit_retry_guard.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/unit/test_h4_killswitch_retry_rederive.py
+NEW-S  test    1   0   1   0   0   0   2   0  tests/unit/test_h7_strategy_cap_toctou.py
+NEW-S  test    0   0   0   0   0   2   5   0  tests/unit/test_hard_gate.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_healthcheck_server.py
+NEW-B  test    2   0   0   0   0   0   2   0  tests/unit/test_instance_lock.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_integration_screened_csv_15jul.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_interactive_startup.py
+NEW-S  test    4   0   1   0   0   0  29   0  tests/unit/test_kill_switch.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_ledger2d_co_bracket.py
+NEW-B  test    0   0   0   0   0   0   8   0  tests/unit/test_live_feed.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_mc1_live_seed_rehydrate.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_mc3_per_bucket_invariant.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_mc5_commit_adopted_cas.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_mc7_release_committed_margin.py
+NEW-S  test    3   0   1   0   1   0   0   0  tests/unit/test_mc8_async_hardkill.py
+R13    test    7   0   6   0   1   0   0   0  tests/unit/test_migrations.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_mis_autosquareoff.py
+NEW-B  test    3   0   0   0   0   0   1  24  tests/unit/test_mis_blocklist.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_mis_market_protection.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_mis_squareoff_notifier.py
+N01    test    0   0   0   0   0   0   1   0  tests/unit/test_mis_squareoff_restore_and_settle.py
+NEW-S  test    1   0   1   0   0   0   5   0  tests/unit/test_mo2_check4_partial_capital.py
+N02    test    0   0   0   0   0   1   1   0  tests/unit/test_ms3_step_timeout_bounds_caller.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_ni14_status_follows_severity.py
+NEW-B  test    0   0   0   0   0   0   4   0  tests/unit/test_ni3_delivery_count_caps_are_live.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_one_trade_per_symbol_direction.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_order_manager.py
+NEW-S  test    2   0   1   0   0   0   0   0  tests/unit/test_order_monitor.py
+NEW-S  test    8   0   1   0   1   0   2   0  tests/unit/test_order_placer.py
+NEW-S  test    1   0   1   0   0   0  10   0  tests/unit/test_order_reconciler.py
+NEW-S  test   10   0   0   0   6   0   0   0  tests/unit/test_order_state_machine.py
+N05    test    0   0   0   0   0   0   2   0  tests/unit/test_output_retention.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_p0_live_day1_fixes.py
+NEW-S  test    1   0   0   0   1   0   0   0  tests/unit/test_p1_killswitch_cancel_resting.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_paper_gtt_triggers.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_position_sizer.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_position_sizer_delivery_contract.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_preflight_startup_hook.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_preflight_state_security.py
+NEW-S  test    0   0   0   0   0   8   0   0  tests/unit/test_quality_scorer.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_ramcoind_dup_exit_fix.py
+NEW-B  test    6   0   0   0   0   0   0   0  tests/unit/test_rate_limiter.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_reconstruct_excursions.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_refresh_instruments_assert.py
+NEW-S  test    1   0   1   0   0   0  11   0  tests/unit/test_risk_engine.py
+NEW-B  test    1   0   0   0   0   0   0   0  tests/unit/test_scheduled_kill_severity.py
+R14    test    1   0   1   0   0   4   0   0  tests/unit/test_secondary_screener.py
+NEW-S  test    3   0   3   0   0   0   2   0  tests/unit/test_security_monitor.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_security_monitor_realert.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_shadow_tracker.py
+R08    test   13   4   5   3   0   0   0   0  tests/unit/test_signal_processor.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_slice1_rr_aftercheck.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_smart_tgt_manager.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_sr_detector_backfill.py
+NEW-B  test    0   0   0   0   0   0   0   2  tests/unit/test_sr_detector_fetch.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_sr_detector_observer.py
+NEW-B  test    0   0   0   0   0   0   0   1  tests/unit/test_sr_v2_divert.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_sr_v2_monitor.py
+NEW-B  test    1   0   0   0   0   0   0   6  tests/unit/test_sr_v2_zone_cache.py
+NEW-B  test    0   0   0   0   0   0   1   0  tests/unit/test_startup_checks.py
+R13    test    6   0   3   3   0   0   7   0  tests/unit/test_state_store.py
+NEW-S  test    0   0   0   0   0   5   3   0  tests/unit/test_step_executor.py
+NEW-S  test    1   0   1   0   0   0   3   0  tests/unit/test_system_manager.py
+NEW-B  test    0   0   0   0   0   0   2   0  tests/unit/test_system_manager_security.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_terminal_state_write_guard.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_tgt_retry.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_tick2_pipeline_scoped_daily_gate.py
+NEW-S  test    1   1   0   0   0   0   0   0  tests/unit/test_v3_eod_route.py
+NEW-S  test    0   0   0   0   0   2   0   0  tests/unit/test_v3_hardgate_parity.py
+NEW-B  test    4   0   0   0   0   0   3   0  tests/unit/test_v3_pb01_entry.py
+NEW-B  test    0   0   0   0   0   0   3   0  tests/unit/test_v3_watchlist_capture.py
+NEW-S  test    1   0   1   0   0   0   0   0  tests/unit/test_w8_closure_source_writer.py
+R07    test   47   5   0   0   1   0   4  23  tests/unit/test_webhook_receiver.py
+NEW-B  test    0   0   0   0   0   0   0   7  tests/unit/test_zerodha_adapter.py
+NEW-S  test    2   0   2   0   0   0   0   0  tests/unit/test_zerodha_login.py
+R06    code    9   1   1   0   3   0   3   0  core/schema.sql
+NEW-B  code    0   0   0   0   0   0   1   0  deploy/hooks/post-receive
+NEW-B  code    1   0   0   0   0   0   0   0  deploy/security/install_copy_protection.sh
+NEW-B  code    0   0   0   0   0   0   2   0  deploy/token_watcher.sh
+NEW-B  code    3   0   0   0   0   0   0   0  deploy/zerodha_morning.bat
+NEW-B  code    3   0   0   0   0   0   0   0  deploy/zerodha_morning.ps1
+NEW-B  code    0   0   0   0   0   0   1   0  docs/approvals/preflight/21-Jun-2026/AUTHENTIC/preflight_phase_a_authentic.html
+NEW-B  code    0   0   0   0   0   0   1   0  docs/approvals/preflight/21-Jun-2026/preflight_phase_a_critical.html
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/static/components.js
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/audit.html
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/capital_risk.html
+NEW-B  code    1   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/orders.html
+NEW-B  code    2   0   0   0   0   0   3   0  ops_dashboard/frontend/templates/positions.html
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/scanner_attribution.html
+N09    code   10   0   1   0   1   0   4   0  ops_dashboard/frontend/templates/signals.html
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/strategies.html
+NEW-B  code    3   0   0   0   0   0   0   0  ops_dashboard/frontend/templates/strategy_health.html
+NEW-B  code    4   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/trade_explorer.html
+NEW-B  code    0   0   0   0   0   0   1   0  ops_dashboard/frontend/templates/trade_logs.html
+NEW-B  doc     1   0   0   0   0   0   1   0  GEMINI.md
+NEW-S  doc     7   0   0   0   0   2  17   4  PATHS.md
+NEW-B  doc     2   0   0   0   0   0  10   0  UNPUSHED_LEDGER.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/01_system_architecture.md
+NEW-B  doc     2   0   0   0   0   0   3   0  docs/03_daily_operations_runbook.md
+R20    doc     1   1   1   0   0   0   2   0  docs/04_db_schema_reference.md
+NEW-B  doc     7   0   0   0   0   0   1   0  docs/05_incident_response.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/06_deployment_guide.md
+R20    doc     1   1   0   0   0   1   2   0  docs/CONFIG_GUIDE.md
+NEW-B  doc     9   0   0   0   0   0   2   0  docs/DEPLOY_CALENDAR_28-JUL_TO_04-AUG.txt
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/GEMINI.md
+NEW-B  doc     9   0   0   0   0   0  36   0  docs/MASTER_PENDING_01-Aug-2026.md
+NEW-B  doc     1   0   0   0   0   0   7   0  docs/MASTER_PENDING_28-Jul-2026.txt
+NEW-B  doc     2   0   0   0   0   0   8   0  docs/MASTER_PENDING_30-Jul-2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/MONDAY_27-JUL_CARD.txt
+NEW-B  doc     1   0   0   0   0   0   3   0  docs/RUNBOOK.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/SSOT_AUDIT.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/SYSTEM_ASSUMPTIONS.md
+NEW-S  doc    16   0   0   1   1   1  64   6  docs/SYSTEM_MAP.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/T2_RUNBOOK_29-JUL.txt
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/approvals/preflight/21-Jun-2026/AUTHENTIC/README.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/approvals/preflight/21-Jun-2026/AUTHENTIC/preflight_telegram_authentic.txt
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/approvals/preflight/21-Jun-2026/AUTHENTIC/sentinel_authentic.json
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/approvals/preflight/21-Jun-2026/preflight_telegram_and_subjects.txt
+NEW-B  doc     1   0   0   0   0   0   3   0  docs/architectural_audit_2026-06-01.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/archive/sats_20260622/semgrep_20260622_203318.txt
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/ADDENDUM_capital_drift_05-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/BOOT_PROOF_75e637c_26-Aug-2026.md
+NEW-B  doc     2   0   0   0   0   0   2   0  docs/audit/EVENING_OPERATOR_CARD_05-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   5   0  docs/audit/FRIDAY_MORNING_07-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/GUI_FINAL_CLOSURE_19-Aug-2026.md
+NEW-B  doc     1   0   0   0   0   0   6   0  docs/audit/HANDOFF_05-Aug-EVENING.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/HANDOFF_30-Aug-2026_night.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/MONDAY_POST_SESSION_CHECKLIST.md
+NEW-B  doc     3   0   0   0   0   0   8   0  docs/audit/ROLLBACK_AND_ATTENDANCE_23-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/STOP_PROCEDURE_05-Aug-2026.md
+NEW-B  doc     1   0   0   0   0   0   9   0  docs/audit/STOP_PROCEDURE_06-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   5   0  docs/audit/THURSDAY_CONTINGENCY_06-Aug-2026.md
+NEW-B  doc     0   0   0   0   0   0   6   0  docs/audit/VISUAL_APPROVAL_LEDGER_19-Aug-2026.md
+NEW-B  doc     1   0   0   0   0   0   4   0  docs/audit/alert_stream_fixes_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0   7   0  docs/audit/alertwatcher_loop_fix_16jul2026.md
+NEW-B  doc     1   0   0   0   0   0   5   0  docs/audit/attribution_gloss_sweep_21jul2026.md
+NEW-S  doc     9   1   0   0   0   0  29   3  docs/audit/audit_05jul2026.md
+NEW-B  doc     0   0   0   0   0   0   4   0  docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md
+NEW-S  doc     0   0   0   0   0   1   0   0  docs/audit/band_inversion_investigation_13jul2026.md
+NEW-B  doc     2   0   0   0   0   0   4   0  docs/audit/batch2_done_17jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/batch3_done_17jul2026.md
+NEW-B  doc     0   0   0   0   0   0   6   0  docs/audit/batch_classification_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/bk8_dynamic_sites_classified_04aug2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/boot_path_pair_design_20jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/broker_closing_capital_zero_21jul2026.md
+NEW-B  doc     2   0   0   0   0   0   1   0  docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md
+NEW-B  doc     0   0   0   0   0   0   4   0  docs/audit/capital_figure_sweep_28jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/capital_snapshot_and_backup_retention_24jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/capital_snapshot_verify_2026-07-25.md
+NEW-B  doc     9   0   0   0   0   0   5   0  docs/audit/check1_deferral_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/check1_external_close_decision_27jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/check1_product_skip_step1_05aug2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/check1_w8_build_order_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/check1_w8_design_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/clock_dependency_class_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0   5   0  docs/audit/consecutive_losses_gate_wired_19jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/consolidation_16jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/critical_alert_stream_audit_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/ct_guard_invariant_and_secwatcher_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/d1_quote_observability_d2_classification_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/d4_matcher_measurement_04aug2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/day_reconstruction_15jul2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/db_schema_review_15jun2026.md
+NEW-B  doc     2   0   0   0   0   0   0   0  docs/audit/decision_readiness_triage_19jul2026.md
+NEW-B  doc     0   0   0   0   0   0   0   1  docs/audit/deploy_behaviour_delta_prediction_14jul2026.md
+NEW-B  doc     2   0   0   0   0   0   1   0  docs/audit/deploy_done_15jul2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/deploy_done_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/deploy_done_batch1_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/deploy_done_mc_cluster_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/e4_w10_deploy_stopped_20jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/e4_w10_outcome_impact_19jul2026.md
+NEW-B  doc     3   0   0   0   0   0   0   0  docs/audit/eod_capture_safety_2026-07-24.md
+NEW-B  doc     0   0   0   0   0   0   3   2  docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/f1_trades_sector_16jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/f2_config_reload_investigation_24jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/f2_injection_scoping_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/f2_surface_enumeration_24jul2026.md
+NEW-B  doc     2   0   0   0   0   0   3   0  docs/audit/f2_surface_recheck_25jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/fix_sprint_21jul2026.md
+NEW-S  doc     2   0   0   0   1   0   0   0  docs/audit/fixes_15jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/fixture_blindness_investigation_17jul2026.md
+NEW-S  doc     5   0   0   0   2   0   1   0  docs/audit/followup_investigation_15jul2026.md
+NEW-B  doc     7   0   0   0   0   0   9   0  docs/audit/full_system_audit_04july2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/gemini_watchman_alerts_21jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/instance_lock_flake_mechanism_27jul2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/integration_deploy_15jul2026.md
+NEW-S  doc     9   0   0   0   0   3  46   3  docs/audit/integrity_audit_2026.md
+NEW-S  doc     1   1   0   0   0   0   0   4  docs/audit/item4_partA_inventory_survey_05aug2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/kill_drill_03aug2026.md
+N02    doc     1   0   0   0   0   0   0   0  docs/audit/kill_persist_busy_timeout_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/ledger2d_step1_measurement_03aug2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/ledger3_design_registration_03aug2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/ledger6_eod_verify_measurement_03aug2026.md
+NEW-S  doc     3   0   0   0   1   0   0   0  docs/audit/ledger7_multiauthority_measurement_04aug2026.md
+NEW-B  doc     0   0   0   0   0   0   5   0  docs/audit/ledger8b_check_vm_state_step1_02aug2026.md
+NEW-B  doc     0   0   0   0   0   0   5   0  docs/audit/ledger_3a_9_5_step1_03aug2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/live_seed_mc1_wired_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/liveness_alarm_17jul2026.md
+N11    doc     0   0   0   0   0   0  15   0  docs/audit/locked_contract_staleness_sweep_22jul2026.md
+NEW-S  doc     0   0   0   0   0   1   2   0  docs/audit/ma2_ms3_md1_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/mc1_live_seed_rederivation_20jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/mc4_killswitch_lock_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/mc5_mc6_testmain_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/mc8_investigation_16jul2026.md
+NEW-B  doc     1   0   0   0   0   0   2   0  docs/audit/mc_cluster_consolidation_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/mc_cluster_investigation_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/memory_compaction_23jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/memory_compaction_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/mo5_investigation_22jul2026.md
+NEW-B  doc     1   0   0   0   0   0   2   0  docs/audit/monday_preboot_readiness_19jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/monitoring_hardening_15jul2026.md
+NEW-B  doc     0   0   0   0   0   0   4   0  docs/audit/morning_verify_16jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/opening_capital_double_count_25jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/operator_backup_and_ssh_27jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/orphan_adoption_forensics_22jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/out_of_band_alert_path_verified_25jul2026.md
+NEW-B  doc     2   0   0   0   0   0   0   1  docs/audit/p3s14_done_17jul2026.md
+NEW-B  doc     5   0   0   0   0   0   1   5  docs/audit/p3s14_investigation_17jul2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/paper_fidelity_gaps_26jul2026.md
+NEW-B  doc     0   0   0   0   0   0  10   0  docs/audit/pending_reconciliation_14jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/pre15jun_large_orphans_22jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/pre_deploy_review_checklist_14jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/pre_receive_hook_investigation_20jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/pyc_orphan_sweep_28jul2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/q10_part_b_backfill_20jul2026.md
+NEW-S  doc     1   0   0   0   1   0   0   0  docs/audit/q5_wave7_backlog_triage_14jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/q9_batch3_capital_invariant_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/q9_batch4_sizing_floors_caps_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   8   0  docs/audit/q9_batch5_post_restart_capital_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/q9_coverage_matrix_final_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   7   0  docs/audit/r12_allowlist_enumeration_04aug2026.md
+NEW-B  doc     1   0   0   0   0   0   1   1  docs/audit/regime_computability_verification_20jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/regime_thesis_validation_18jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/registry_seed_state_split_10aug2026.md
+NEW-B  doc     4   0   0   0   0   0   1   0  docs/audit/rulings_1_2_verification_07aug2026.md
+NEW-S  doc     7   3   0   2   0   2   1   4  docs/audit/secondary_filtration_execution_pipeline_audit.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/senco_double_entry_27jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/service_window_configurable_25jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/service_window_extension_2026-07-24.md
+R21    doc     5   0   0   0   1   0   0   2  docs/audit/signal_mortality_census_19jul2026.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/audit/slice25_execution_plan_27jul2026.md
+NEW-B  doc     0   0   0   0   0   0   3   0  docs/audit/sweep_done_17jul2026.md
+NEW-S  doc     0   0   0   0   0   1   1   0  docs/audit/system_audit_14jun2026.md
+NEW-S  doc     2   1   0   0   0   0   0   1  docs/audit/system_flow_review_15jun2026.md
+NEW-B  doc     3   0   0   0   0   0   4   0  docs/audit/system_health_audit_15jul2026.md
+NEW-S  doc     4   0   1   0   0   0   4   0  docs/audit/system_security_audit_02jul2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/audit/w8_backfill_run_28jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/audit/wave7_nine_investigation_22jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   1  docs/audit/wave7_triage_21jul2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/broker_integration_audit_2026-06-02.md
+NEW-B  doc     6   0   0   0   0   0  11   0  docs/campaign_practices.md
+NEW-B  doc     1   0   0   0   0   0   4   0  docs/chatgpt_project_clarification.md
+NEW-B  doc     3   0   0   0   0   0   3   0  docs/closure_source_contract.md
+NEW-S  doc     8   1   0   0   0   0   3   2  docs/crash_test_info_04jun2026.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/decisions/00_INDEX.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/decisions/01_e4_w10_pnl_contract.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/decisions/05_d4_exit_policy.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/decisions/07_regime_enable.md
+N05    doc     4   0   0   0   1   0   0   0  docs/decisions/09_prune_retention.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/decisions/11_absolute_kill_ladder.md
+NEW-B  doc     5   0   0   0   0   0   9   0  docs/decisions/ACTIONS_not_decisions.md
+N05    doc    14   0   0   1  11   0   0   0  docs/decisions/DESIGN_09_prune_retention.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/decisions/DESIGN_ct_harness_safety.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/decisions/RUNBOOK_2fa_seed_vm_only.md
+NEW-B  doc     0   0   0   0   0   0   4   0  docs/design/2026-09-03_exit_path_design.md
+NEW-B  doc     0   0   0   0   0   0   7   0  docs/design/b1_daily_loss_unrealized_mtm_design_02jul2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/design/classification_leakage_06aug2026.md
+NEW-B  doc     3   0   0   0   0   0   3   0  docs/design/f6_delivery_exit_predicate_design_06aug2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/design/p1_eod_broker_sync_assessment_02jul2026.md
+NEW-B  doc     3   0   0   0   0   0   0   0  docs/design/sizing/delivery_config_surface_06aug2026.md
+NEW-B  doc     3   0   0   0   0   0   0   0  docs/design/sizing/sizing_thread_conclusions_06aug2026.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/design/sizing/tier_multiplier_measurement_06aug2026.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/design/terminal_state_write_guard_design_07jul2026.md
+NEW-B  doc     1   0   0   0   0   0   3   0  docs/disaster_recovery.md
+NEW-B  doc     2   0   0   0   0   0   5   0  docs/expected_alarms.md
+NEW-B  doc     1   0   0   0   0   0   0   0  docs/first_day_live_runbook.md
+NEW-B  doc     1   0   0   0   0   0   3   1  docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md
+NEW-B  doc     0   0   0   0   0   0   0  51  docs/incident/2026-09-03_ANANTRAJ_broker_book.json
+NEW-S  doc     1   0   1   0   0   0   4   0  docs/incident/2026-09-03_naked_position_ANANTRAJ.md
+NEW-B  doc     0   0   0   0   0   0   2   0  docs/ops/offmarket_deploy_plan_03jul2026.md
+NEW-S  doc     1   1   0   0   0   0   0   0  docs/pending_skipped_items.txt
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/report_data_contract.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/slippage_intelligence.md
+NEW-B  doc     1   0   0   0   0   0   1   0  docs/trading_system_project_specific_rules.md
+NEW-S  doc     6   3   0   0   0   7   3   1  docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md
+NEW-B  doc     2   0   0   0   0   0   3   0  docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md
+NEW-S  doc     0   0   0   0   0   2   0   0  docs/v3/V3_STEP4B_PARITY_ARTIFACT.md
+NEW-S  doc     1   1   0   0   0  11   0   0  docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md
+NEW-B  doc     2   0   0   0   0   0   2   1  docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/v3/V3_STEP8_TRADE_MGMT_GAPMAP.md
+NEW-B  doc     0   0   0   0   0   0   1   0  docs/v3/V3_STEP9_EXIT_ENGINE_GAPMAP.md
+NEW-S  doc     4   1   0   3   1   0   0   1  ops_dashboard/docs/G2b1_strategy_attribution.md
+NEW-B  doc     0   0   0   0   0   0   2   0  ops_dashboard/docs/G5_REDESIGN_PHASE_A.md
+NEW-B  doc     1   0   0   0   0   0   1   0  ops_dashboard/docs/G5_REDESIGN_PHASE_B.md
+N09    doc     1   0   1   0   0   0   2   0  ops_dashboard/docs/redesign/04_signals_asset_spec.md
+NEW-B  doc     6   0   0   0   0   0   7   0  ops_dashboard/frontend/static/style.css
+NEW-S  doc     1   1   0   0   0   0   0   0  reports/crash_test/day5_master_report.md
+NEW-B  doc     0   0   0   0   0   0   1   0  reports/crash_test/day6_ct159_final.md
+NEW-B  doc     0   0   0   0   0   0   1   0  tasks/lessons.md
+- 526 files.
+
+==============================================================================================================================
+FINAL CHECKS (on this file)
+==============================================================================================================================
+- ASCII only: ok; no CR: ok; no session link: ok; no absolute path: ok; no scratchpad session id: ok; no credential
+  assignment: ok; 40-hex IDs known (2): ok; 64-hex values known (55): ok; legacy-path tokens in the listing (563 checked): ok
+- scan_ids.py (value-blind): 57 hits, classes {'long_token': 57}; the long tokens are blob IDs and SHA-256 values.
+- Identifier shapes in any letter case (lesson 2026-10-21; sha and fix numbers allowed): Claude's tool and folder names x21;
+  part of a legacy file name in the listing x5.
+- A pattern scan does not prove that nothing else sensitive is present (lesson 2026-10-10).

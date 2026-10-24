@@ -1,0 +1,209 @@
+C-009 - SIGNAL EXPIRY: P-1 STRUCTURE-ONLY SCAN DONE; S2-19 STOPPED BY A TOOL CHECK; S2-20 NOT RUN (for review)
+Date of work: 24-Oct-2026 (IST), 13:23 to 13:35 IST. Prepared by Claude.
+Authorisation: C-009_S1-2_REVIEW_DECISIONS_AND_NEXT_AUTHORIZATION_24-OCT-2026.txt (ChatGPT; received from Rama at 13:23 IST;
+  122 lines; SHA-256 713749109B527E57CD026EC88F23619A18DB1504B13F1572A8B47577E3932CD6), sections 2 and 3.
+Status: P-1 DONE (four structure-only scans; line numbers and structural labels only). S2-19 STOPPED before any line was
+  printed: Claude's new chapter-grep tool refused at its own header check, which had a fault (section 3); nothing was printed
+  or kept and no read was logged. S2-20 NOT RUN. Per the approval, no retry. The read lock was engaged again at 13:30:16 IST.
+  P-2 not run; the C-009 manual is not drafted. STOPPED for ChatGPT review.
+Security: P-1 printed line numbers and structural labels only, no source line, name, docstring, expression or literal; no
+  chapter line was printed or kept. Claude's working folders are written as <SCRATCHPAD>, tools/ and "the clone".
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- P-1 (section 4): all 23 anchors mapped to their enclosing structures; all four files parsed; no UNKNOWN. Proposed for P-2
+  (section 5): six whole test functions, 51 lines, covering the 15 case anchors; the set-up anchors' structures are listed
+  with their sizes, not proposed.
+- S2-19 (section 3): cchapread_c009.py compared the masked reader's header line count with the chapter's newline count, but
+  the reader always reports the newline count plus one (as in every S1-2 header). The check could not pass, so the tool
+  refused before printing anything. The chapter's SHA-256 and line count had matched. Claude stopped, did not run S2-20, did
+  not retry, and engaged the lock again.
+- Requested (section 8): approval to run S2-19 and S2-20 again exactly as approved, with only that check corrected (tool
+  SHA-256 in section 3, unit-tested on simulated reader output, not run on a chapter); and a decision on the P-2 ranges.
+- Deviation register (section 6): D-1, D-2 and D-3 with ChatGPT's decisions added as follow-up entries; D-2 recurred at 13:23
+  IST, when chapter 03 was attached again and loaded again. The S2-19 stop is recorded as an execution error, with a lesson.
+- Confirmation (section 7): no other read, no test, import or run, no tree-wide command, no external contact.
+
+==============================================================================================================================
+1. INPUTS RECEIVED AT 13:23 IST, CHECKED BY SHA-256 (no content of a chapter printed)
+==============================================================================================================================
+| File | Lines | SHA-256 | Check |
+|---|---|---|---|
+| C-009_S1-2_REVIEW_DECISIONS_AND_NEXT_AUTHORIZATION_24-OCT-2026.txt | 122 | 713749109B527E57CD026EC88F23619A18DB1504B13F1572A8B47577E3932CD6 | the authorisation |
+| C-008_PART1_REVIEW_AND_PART2_AUTHORIZATION_24-OCT-2026.txt | 23 | D018A689D0477E35136372E60C26F9C914C211237412ECBA436BC0EEFCEE5E51 | equals the C-009 handover, section 1 item 2; kept for the C-009 package |
+| C-008_PUSH_COMMANDS_24-OCT-2026.txt | 269 | 5824540FB138BDC8B589F3864F28BC8C7286A5FBDEE678CCEB95CC6313A4B9AB | equals the C-009 handover, section 7; the template for the C-009 push commands |
+| 02_REPOSITORY_AND_FILE_MAP.md | 3,557 | 8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49 | identical to the copy verified at 12:52 IST |
+| 03_STARTUP_RUNTIME_AND_SCHEDULER.md | 321 | F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087 | identical to the copy verified at 12:52 IST |
+| C-009_CLAUDE_STAGE1_S1-2_READ_RESULTS_24-OCT-2026.txt | 456 | D707911FE762ED713A9FDEA34A4190D1806C2A03BED7F78DB9B883233D1C055A | identical to the file Claude delivered at 13:05 IST |
+
+==============================================================================================================================
+2. READ-LOCK WINDOW (one window for the approved operations only)
+==============================================================================================================================
+| Step | Time (IST) | Record |
+|---|---|---|
+| E-1b lock lifted | 13:29:04 | cread_c009.py SHA-256 23e097b12d3865ac98b1555fc3fdea56b982e8468f7726652a31d82f1ea377c0 before, b815b17f9e7f099d5bd14f8e215eb0c75695d2294ebb37c93a3e5dedece5ac32 after |
+| gate test | 13:29:04 to 13:29:12 | gate_test_c009_s12.py (SHA-256 062946568febb43006e5671ca7d95daa5e3686236e5fb12755906345c7d7e242, unchanged since S1-2): PASSED; output SHA-256 8e630352f963d79a59ff181ed73754b694a600c7413aedcc8666978bf935d059 |
+| P1-01 | 13:29:15 | cstruct_c009.py on tests/unit/test_webhook_receiver.py: done |
+| P1-02 | 13:29:16 | cstruct_c009.py on tests/unit/test_signal_processor.py: done |
+| P1-03 | 13:29:16 | cstruct_c009.py on tests/unit/test_fix136_batch9.py: done |
+| P1-04 | 13:29:16 | cstruct_c009.py on tests/unit/test_config_loader.py: done |
+| S2-19 | 13:29:16 | cchapread_c009.py on 02_REPOSITORY_AND_FILE_MAP.md: refused by its header check; nothing printed or kept; run stopped |
+| S2-20 | - | not run |
+| E-5b lock engaged again | 13:30:16 | SHA-256 b815b17f9e7f099d5bd14f8e215eb0c75695d2294ebb37c93a3e5dedece5ac32 before, a998b4aa7ae835f6105da19bf98c03d580b5201b308cde0a618d552b6c9ca2a2 after; a read attempt and a chapter-grep attempt were then refused by the lock |
+
+- The driver run_s12b_c009.py (SHA-256 6462260d720f5085bfae929a1f4871d99d67e415cd5dd6290c1d1a5028f05a66) checked the decision
+  file's SHA-256 and the lock state, ran only the six listed operations in order and stopped at the first refusal.
+- The gate test is the one used at S1-2 (lock required off, the 102 protected paths and the other cases refused, the approved
+  paths admitted through gate() alone, no read). It lists the clone's local objects with git cat-file --batch-all-objects,
+  which reads the local object store only: 1,257 blobs before and after, nothing fetched.
+
+==============================================================================================================================
+3. S2-19: STOPPED BY THE TOOL'S OWN CHECK; S2-20 NOT RUN
+==============================================================================================================================
+- Tool: cchapread_c009.py, written for S2-19 and S2-20 because cread_c009.py reads only files in the pinned listing. It runs
+  only while the read lock is off, checks the chapter copy's SHA-256 and line count, accepts only the two chapters and the one
+  approved expression ((?i:expir)|signal_age|max_age, K1 or K6), runs the same masked reader as cread_c009.py (mr.py:
+  mask_read2.py plus the stage-2 mask), refuses to print or keep any output above the cap (36 and 4 lines), and logs each read
+  in the read log with evidence.
+- What happened (13:29:16 IST): the copy's SHA-256 and its 3,557 newlines matched; the reader ran; the tool then compared the
+  reader's header count with 3,557 and refused ("unexpected reader header; nothing printed or kept"). No chapter line was
+  printed or kept; the read log still holds 27 rows; no evidence file was written.
+- Cause, from the reader's own source and the S1-2 records, not from the chapter: mask_read2.py counts the pieces after
+  splitting the text on newlines, which is the newline count plus one (every S1-2 header shows it: for example 2,043 for
+  tests/unit/test_webhook_receiver.py, whose newline count is 2,042 at P1-01). The check could not pass for any file. The
+  fault is Claude's: the tool was dry-run only on refusals with the lock on, which did not reach this check.
+- Action taken: the approval says to stop on any refusal and not to retry more broadly. Claude stopped, did not run S2-20, did
+  not retry, and engaged the lock again.
+- Correction prepared, not run: the check now expects the newline count plus one; nothing else changed. First version SHA-256
+  99db5d428d2ff95b647103b76bbe3903ab36f0a1dd6c559c80d0914cb4b4d9f0; corrected version SHA-256
+  295d5ef7fc0a805a6dce82ed398d9e280d9c28d947365065900431d009dbc467. Unit test with a simulated reader output (no chapter, no
+  legacy file, the real logs untouched): a header equal to the newline count plus one passes; the old value is refused; an
+  output above the cap is refused with nothing printed.
+- Lesson proposed for the design log: test every new gated tool end to end on synthetic input before the read window opens; a
+  refusal-only dry run does not exercise the checks that run after the gate.
+
+==============================================================================================================================
+4. P-1 RESULTS: STRUCTURE-ONLY SCANS (outputs verbatim; line numbers and structural labels only)
+==============================================================================================================================
+Tool: cstruct_c009.py (SHA-256 4e77d0c04ae8338717f410ada7ece87c9d15c2891f3704f9fe47222bd450cd69). It imports the gate of
+  cread_c009.py and runs only while the lock is off; refuses any file other than the four approved test files and any anchor
+  other than the listed ones; checks the tree entry and the working file against the pinned blob (git ls-tree and git
+  hash-object on that one file); parses the file as text with Python's ast module (never imported or run); prints line numbers
+  and labels only. "case-level function" = the outermost enclosing function; "lines" = from the def line (or first decorator
+  line) to the last line of the function, inclusive. The scan's line totals count newline characters; the masked reader's
+  headers at S1-2 show one more (section 3).
+
+P1-01 | 13:29:15 | tests/unit/test_webhook_receiver.py | blob 7b377abb85d6 | anchors 72,941,949,1578,1636,1683 | output SHA-256 (first 12) 6d3cc8700deb
+  ===== tests/unit/test_webhook_receiver.py (blob 7b377abb85d6; 2042 lines) structure-only scan; line numbers and labels only
+  functions and classes in the file: 100
+  anchor 72: innermost function (module-level) 63 to 76, 14 lines; case-level function (module-level) 63 to 76, 14 lines
+  anchor 941: innermost function (module-level) 940 to 950, 11 lines; case-level function (module-level) 940 to 950, 11 lines
+  anchor 949: innermost function (module-level) 940 to 950, 11 lines; case-level function (module-level) 940 to 950, 11 lines
+  anchor 1578: innermost function (module-level) 1566 to 1622, 57 lines; case-level function (module-level) 1566 to 1622, 57
+      lines
+  anchor 1636: innermost function (module-level) 1625 to 1669, 45 lines; case-level function (module-level) 1625 to 1669, 45
+      lines
+  anchor 1683: innermost function (module-level) 1672 to 1714, 43 lines; case-level function (module-level) 1672 to 1714, 43
+      lines
+
+P1-02 | 13:29:16 | tests/unit/test_signal_processor.py | blob 3ec0ea84392a | anchors 372,421,573,578,581,582 | output SHA-256 (first 12) 156f39cb0955
+  ===== tests/unit/test_signal_processor.py (blob 3ec0ea84392a; 2500 lines) structure-only scan; line numbers and labels only
+  functions and classes in the file: 168
+  anchor 372: innermost function (module-level) 355 to 427, 73 lines; case-level function (module-level) 355 to 427, 73 lines;
+      the anchor is on its header lines (355 to 376)
+  anchor 421: innermost function (module-level) 355 to 427, 73 lines; case-level function (module-level) 355 to 427, 73 lines
+  anchor 573: innermost function (module-level) 572 to 582, 11 lines; case-level function (module-level) 572 to 582, 11 lines
+  anchor 578: innermost function (module-level) 572 to 582, 11 lines; case-level function (module-level) 572 to 582, 11 lines
+  anchor 581: innermost function (module-level) 572 to 582, 11 lines; case-level function (module-level) 572 to 582, 11 lines
+  anchor 582: innermost function (module-level) 572 to 582, 11 lines; case-level function (module-level) 572 to 582, 11 lines
+
+P1-03 | 13:29:16 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | anchors 121,123,125,135,136,144,145,157,158,176 | output SHA-256 (first 12) 98d5497e2e60
+  ===== tests/unit/test_fix136_batch9.py (blob 20d59c50759e; 468 lines) structure-only scan; line numbers and labels only
+  functions and classes in the file: 50
+  anchor 121: innermost function (method of a module-level class) 120 to 126, 7 lines; case-level function (method of a
+      module-level class) 120 to 126, 7 lines; outermost class 118 to 158
+  anchor 123: innermost function (method of a module-level class) 120 to 126, 7 lines; case-level function (method of a
+      module-level class) 120 to 126, 7 lines; outermost class 118 to 158
+  anchor 125: innermost function (method of a module-level class) 120 to 126, 7 lines; case-level function (method of a
+      module-level class) 120 to 126, 7 lines; outermost class 118 to 158
+  anchor 135: innermost function (method of a module-level class) 128 to 136, 9 lines; case-level function (method of a
+      module-level class) 128 to 136, 9 lines; outermost class 118 to 158
+  anchor 136: innermost function (method of a module-level class) 128 to 136, 9 lines; case-level function (method of a
+      module-level class) 128 to 136, 9 lines; outermost class 118 to 158
+  anchor 144: innermost function (method of a module-level class) 138 to 145, 8 lines; case-level function (method of a
+      module-level class) 138 to 145, 8 lines; outermost class 118 to 158
+  anchor 145: innermost function (method of a module-level class) 138 to 145, 8 lines; case-level function (method of a
+      module-level class) 138 to 145, 8 lines; outermost class 118 to 158
+  anchor 157: innermost function (method of a module-level class) 154 to 158, 5 lines; case-level function (method of a
+      module-level class) 154 to 158, 5 lines; outermost class 118 to 158
+  anchor 158: innermost function (method of a module-level class) 154 to 158, 5 lines; case-level function (method of a
+      module-level class) 154 to 158, 5 lines; outermost class 118 to 158
+  anchor 176: innermost function (method of a module-level class) 167 to 200, 34 lines; case-level function (method of a
+      module-level class) 167 to 200, 34 lines; outermost class 166 to 248
+
+P1-04 | 13:29:16 | tests/unit/test_config_loader.py | blob 8f245c35a047 | anchors 75 | output SHA-256 (first 12) df97cad5cdd9
+  ===== tests/unit/test_config_loader.py (blob 8f245c35a047; 1419 lines) structure-only scan; line numbers and labels only
+  functions and classes in the file: 50
+  anchor 75: no enclosing function or class; module-level statement (Assign) 66 to 196, 131 lines
+
+==============================================================================================================================
+5. PROPOSED P-2 RANGES (for a separate approval; nothing read)
+==============================================================================================================================
+Each proposed range is one whole test function, from its def line to its last line (none has decorators); for every anchor the
+  case-level function is also the innermost one (no nesting). Which anchors are expiry cases and which are set-up is
+  INTERPRETATION from the S1-2 printed lines (reads 019 to 022).
+
+| Range | File | Lines | Count | Anchors | Basis |
+|---|---|---|---|---|---|
+| R-1 | tests/unit/test_webhook_receiver.py | 940:950 | 11 | 941, 949 | the per-stock EXPIRED case |
+| R-2 | tests/unit/test_signal_processor.py | 572:582 | 11 | 573, 578, 581, 582 | the REJECTED_EXPIRED case |
+| R-3 | tests/unit/test_fix136_batch9.py | 120:126 | 7 | 121, 123, 125 | expires_at arithmetic |
+| R-4 | tests/unit/test_fix136_batch9.py | 128:136 | 9 | 135, 136 | age above 60 |
+| R-5 | tests/unit/test_fix136_batch9.py | 138:145 | 8 | 144, 145 | age within 600 |
+| R-6 | tests/unit/test_fix136_batch9.py | 154:158 | 5 | 157, 158 | the queue model holding 600 |
+
+- Total proposed: 6 ranges, 51 lines. The four test_fix136_batch9.py ranges, R-3 to R-6, are methods of one class (118 to
+  158); the class header and any method without an anchor are left out.
+- Not proposed (set-up; listed so that ChatGPT can add any of them): tests/unit/test_webhook_receiver.py 63:76 (14 lines,
+  anchor 72, a helper), 1566:1622 (57, anchor 1578), 1625:1669 (45, anchor 1636) and 1672:1714 (43, anchor 1683), three other
+  tests that set a 24-hour expiry; tests/unit/test_signal_processor.py 355:427 (73, anchors 372 on its header lines and 421, a
+  helper); tests/unit/test_fix136_batch9.py 167:200 (34, anchor 176, another test whose data row names REJECTED_EXPIRED);
+  tests/unit/test_config_loader.py 66:196 (131, anchor 75, a module-level assignment, a configuration fixture).
+
+==============================================================================================================================
+6. DEVIATION REGISTER (original records kept; decisions added as follow-up entries)
+==============================================================================================================================
+| ID | Step and time (IST) | Facts as recorded | Classification and decision | Status |
+|---|---|---|---|---|
+| D-1 | S1-1, 11:43 | The S1-1 authorisation permitted count-only searches and line totals and also said "Do not fetch, open, print, extract or read any legacy source blob contents". Claude checked out the 1,260 s_all files (1,255 blobs) and the masking/count tools read them; no source line printed or viewed. Disclosed in the S1-1 results, section 11, not asked beforehand. | Authorisation/method deviation (ChatGPT's S1-1 review, section 2). Follow-up: Rama 12:10 and the S1-2 decisions (A.1): count-only scans are a defined exception only where a written authorisation names them, prospective only; the S1-1 report stays unchanged. | RECORDED |
+| D-2 | S1-2, 12:50 | The chat app loaded the full text of 03_STARTUP_RUNTIME_AND_SCHEDULER.md into Claude's context when it was attached, before its hash check; not requested; reported before the first read; Rama chose to proceed (12:53); nothing quoted, used or relied on; S2-18 counted by the tool. | PROCESS DEVIATION / EXPOSURE TO CONTEXT, no behavioural finding (ChatGPT, 13:23 file, section 1): the auto-loaded content is unavailable evidence; only lines from a separately authorised bounded grep may be used; future count-only inputs in a form the app does not ingest, where reliable. | RECORDED |
+| D-2 (recurrence) | S1-2 follow-up, 13:23 | Chapter 03 was attached again with ChatGPT's decision file and loaded in full again; not requested; nothing quoted, used or relied on. | Treated under the D-2 decision. Practice: a file already in Claude's workspace (both chapters, verified) need not be attached again. | RECORDED |
+| D-3 | S1-2, about 13:00 | After the reads and the relock, Claude ran git status --porcelain on the partial clone, not authorised; it printed no change but git fetched .gitignore (blob b9b49fc3fd7d) and ops_dashboard/.gitignore (blob 0d0f1a28fc6e); neither opened or printed; pin 970aabf unchanged; never-open blobs 0. | PROCEDURAL DEVIATION / UNAUTHORISED METADATA FETCH, no source-behaviour conclusion (ChatGPT, 13:23 file, section 1): future checks on a partial clone use only the explicitly approved per-file checks. | RECORDED |
+| ERR-1 (error, not a deviation) | P-1 window, 13:29 | S2-19 refused by the new tool's faulty header check; nothing printed or kept; S2-20 not run; no retry; lock engaged again. | Execution stop as the approval requires; the fault is in Claude's tool (section 3). Correction prepared; a re-run needs approval. | OPEN until the re-run is decided |
+
+==============================================================================================================================
+7. CONFIRMATION AND STATE AT THE STOP
+==============================================================================================================================
+- Only the approved operations ran: P1-01 to P1-04 (structure only) and the refused S2-19. No other read of any file in the
+  clone or of a chapter; no RL-09 case range read (P-2 not run); RL-08, docs/locked_decisions.yaml and R18 untouched.
+- No legacy code, test, import, script, migration or application start; no database, VM or host, broker, webhook, Chartink or
+  live-service contact; no legacy file or configuration changed; no commit or push; no C-009 manual drafting.
+- Git use: only per-file checks (git ls-tree and git hash-object on each of the four test files) and the gate test's listing
+  of the local object store (1,257 blobs before and after; no fetch). No git status, no other tree-wide command.
+- Logs: read log 27 rows (unchanged); structure log 4 rows (P1-01 to P1-04); search log Q01 to Q39 (unchanged); lock log E-1,
+  E-5, E-1b, E-5b. Read lock engaged (cread_c009.py SHA-256 a998b4aa7ae835f6105da19bf98c03d580b5201b308cde0a618d552b6c9ca2a2).
+  Never-open blobs present 0.
+- Unchanged: the S1-1 results, the S1-2 checklist and the S1-2 results. The register decisions on R19, R22 and R23 stay
+  documentation-scope decisions.
+
+==============================================================================================================================
+8. FOR CHATGPT
+==============================================================================================================================
+  1. S2-19 and S2-20: approve a re-run exactly as approved in the 13:23 file (same chapters, hashes, expression and caps),
+     with only the header check corrected (cchapread_c009.py SHA-256
+     295d5ef7fc0a805a6dce82ed398d9e280d9c28d947365065900431d009dbc467), in a new read-lock window.
+  2. P-2: approve R-1 to R-6 (51 lines), with or without any of the set-up ranges listed in section 5, or another choice.
+  3. Deviation register: confirm the follow-up entries in section 6 (D-2 recurrence and the S2-19 execution error included).
+
+STOPPED for ChatGPT review. No read until a further approval.

@@ -1,0 +1,326 @@
+C-009 - SIGNAL EXPIRY: S1-2 EXECUTION CHECKLIST (for review; NOT executed)
+Date of work: 24-Oct-2026 (IST), 12:19 to 12:41 IST. Prepared by Claude.
+Responds to: C-009_S1-2_DECISIONS_AND_CONDITIONAL_AUTHORIZATION_24-OCT-2026.txt (ChatGPT; received from Rama at 12:19 IST; 86
+  lines; SHA-256 30D9DC0573A00D272BDFBD58EA01454893F706FA8E62829C65443B7EAD2F0A5B), section D, items 1 to 5.
+Status: S1-2 NOT STARTED and BLOCKED: chapters 02 and 03 are MISSING (conditions B.1 to B.3). Source-content reads stay LOCKED
+  (cread_c009.py, STAGE1_AUTHORISED = False; no read made, no read log exists). Built from Claude's own S1-1 results file, the
+  frozen C-008 manual at V2 main and the saved tree listing; no legacy file was opened.
+Security: paths, line numbers, counts, blob IDs and hashes only; no source line; no credential, account or client identifier,
+  host or address, deployed path, mailbox or person name. Claude's working folders are written as <SCRATCHPAD>, tools/ and
+  "the clone".
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Chapters 02 and 03: MISSING, so S1-2 does not proceed (section 1 has the expected hashes; the check runs when Rama attaches
+  them).
+- Checklist (section 2): the 11 approved read-list entries (RL-01 to RL-07, RL-09 to RL-12) give 16 file items, S2-01 to
+  S2-16, with 19 gated greps and 12 ranges (4 conditional); at most 162 printed lines, plus at most 5 for the conditional
+  ranges. Every path, range and bracketed line count was compared by script with the copied text of its RL entry (appendix A):
+  equal. Two count-only items for the chapters (S2-17, S2-18) follow, as Rama chose.
+- Clarifications (section 5): four points of the read list were not executable as written, so B.4 is not met as written. Rama
+  chose the recommended option for each at 12:31 IST: a conditional range runs only if earlier reads of the same file did not
+  print all its lines, with core/schema.sql fixed at 49:49; the test greps run now and their case ranges are proposed
+  afterwards for a separate approval; the chapters are counted first and grepped only after approval. These choices await
+  ChatGPT's written confirmation (B.6).
+- Exclusions (section 3): RL-08's five scripts, docs/locked_decisions.yaml, records and host records, the protected paths, and
+  every path or operation not in section 2.
+- Confirmation (section 4): no S1-2 source content read; no code, test, import or runtime action; the S1-1 file unchanged.
+  STOPPED for ChatGPT/Rama review (section 5).
+
+==============================================================================================================================
+1. CHAPTERS 02 AND 03: HASH-CHECK STATUS (decisions D.1; conditions B.1 to B.3)
+==============================================================================================================================
+Status: MISSING. Neither chapter has been supplied: at 12:40 IST the session's attachments and uploads held no file of either
+  name. S1-2 does not proceed. The expected values, copied from docs/agenda/c-008_signal-processing/C-008_manual.md line 533
+  (section 14.7) at V2 main b720bd7:
+
+| Chapter | Lines (C-008) | Expected SHA-256 | Actual SHA-256 | Result |
+|---|---|---|---|---|
+| 02_REPOSITORY_AND_FILE_MAP.md | 3,557 | 8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49 | not supplied | FAIL (MISSING) |
+| 03_STARTUP_RUNTIME_AND_SCHEDULER.md | 321 | F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087 | not supplied | FAIL (MISSING) |
+
+- When Rama attaches them: each file goes into a new, empty folder; Claude computes its SHA-256, byte size and line count
+  without printing any of its text and reports name, expected and actual hash, and pass or fail. On any mismatch (hash, or
+  line count against C-008's), Claude stops without reading either chapter, and S1-2 cannot start (B.2).
+- The chapters belong to the 18-Sep manual and describe the testing worktree e7bf477, not the production snapshot at the pin
+  (C-008 section 14.7); any comparison with them is between two documents about two trees.
+
+==============================================================================================================================
+2. THE S1-2 EXECUTION CHECKLIST (decisions D.2; conditions B.4 and B.5)
+==============================================================================================================================
+Source: section 10 of C-009_CLAUDE_STAGE1_S1-1_COUNT_ONLY_RESULTS_24-OCT-2026.txt (SHA-256
+  B5DA521F44BB37031B6091FF94BC0B9258C013EBDD009EC8D7F27556DF7D59BD, checked before copying), lines 319 to 381, reproduced
+  verbatim in appendix A; term expressions from its section 4 (appendix B); blob IDs (first 12 hex digits) from the saved
+  listing of the pin; "max" line counts from the S1-1 per-file counts (for a combined grep, the sum of the per-term counts: an
+  upper bound; for a range, its length). Which RL-11 grep goes with which file is stated in S1-1 section 8 (NC-2, NC-3).
+- Labels: in section 10, "S1-2" to "S1-9" name the question each read serves (the Stage 0 plan's steps); the decisions call
+  the whole read step S1-2, and so does this checklist. It covers every approved entry.
+- Operations on legacy files (S2-01 to S2-16), each through cread_c009.py: "grep" = one gated, masked read printing only the
+  lines that match the expression given; "range A:B" = one gated, masked read of lines A to B. The tool refuses unless the
+  path passes the gate and its tree entry and working file match the pinned blob; each read writes a read-log row and saves
+  its output as evidence. Tests are read as text only. No other path, range, whole file or surrounding context; no count-only
+  scan of a legacy file (none is named, A.1).
+- Rule CR (Rama's choice, CL-1 and CL-2): a conditional range runs in full unless every line of it was already printed by an
+  earlier read of the same file in this checklist; the decision rests on the printed line numbers only, and a skipped range is
+  recorded in the S1-2 results with the read that covered it.
+
+Execution order (only after ChatGPT's written confirmation, B.6):
+  E-1 Lift the read lock as a step of its own: cread_c009.py's SHA-256 before and after, and the time.
+  E-2 Create a Stage 1 gate test and run it; it must pass before the first read (as at C-008, section 1.2 of its manual).
+  E-3 Items S2-01 to S2-16, in order. Stop and report at the first refusal or failed check; a grep that prints more lines than
+      its "max" is a failed check.
+  E-4 Items S2-17 and S2-18 (the chapters, counts only). Then STOP and report the reads, the counts and the proposed RL-09
+      case ranges; the chapter greps (S2-19, S2-20) and the case ranges run only after a further approval.
+
+S2-01 | RL-01 | config/system_config.yaml | blob bf742ae5c81c | approved, A.4
+       1. range 124:128, max 5 lines
+       2. grep (K1), max 6 lines; expression: (?i)expir
+
+S2-02 | RL-02 | core/config_loader.py | blob 8635bca77531 | approved, A.4
+       1. range 192:200, max 9 lines
+       2. grep (K2), max 1 line; expression: expiry_sec|signal_expiry_sec
+
+S2-03 | RL-03 | main.py | blob 445fb0d8237a | approved, A.4
+       1. grep (K2), max 2 lines; expression: expiry_sec|signal_expiry_sec
+       2. range 3613:3614, max 2 lines; conditional, rule CR (section 10: "if not covered")
+
+S2-04 | RL-04 | signals/webhook_receiver.py | blob 0f15a0ab0335 | approved, A.4
+       1. grep (K2), max 6 lines; expression: expiry_sec|signal_expiry_sec
+       2. grep (K3), max 4 lines; expression: expires_at
+       3. range 916:926, max 11 lines
+       4. range 949:961, max 13 lines
+
+S2-05 | RL-05 | signals/signal_processor.py | blob 7fab0a02a302 | approved, A.4
+       1. grep (K2), max 4 lines; expression: expiry_sec|signal_expiry_sec
+       2. grep (K5), max 2 lines; expression: ["']EXPIRED["']
+       3. range 914:921, max 8 lines
+       4. range 1193:1231, max 39 lines
+       5. range 1515:1515, max 1 line
+       6. range 2376:2384, max 9 lines
+       7. range 175:175, max 1 line; conditional, rule CR (section 10: "if not covered")
+       8. range 222:222, max 1 line; conditional, rule CR (section 10: "if not covered")
+
+S2-06 | RL-06 | core/schema.sql | blob b46d7489f6ec | approved, A.4; range fixed by Rama's choice, CL-2
+       1. grep (K3), max 1 line; expression: expires_at
+       2. grep (K2), max 1 line; expression: expiry_sec|signal_expiry_sec
+       3. range 49:49, max 1 line; conditional, rule CR (section 10: "range around line 49 if not covered"; fixed at 49:49,
+          CL-2)
+
+S2-07 | RL-07 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | approved, A.4
+       1. grep (K3), max 1 line; expression: expires_at
+
+S2-08 | RL-09 | tests/unit/test_webhook_receiver.py | blob 7b377abb85d6 | approved as text, A.5
+       1. grep (K2 or K4 or K5), max 6 lines; expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+       case ranges: none in S1-2 (CL-3); Claude proposes them afterwards from the printed line numbers, for a separate
+          approval
+
+S2-09 | RL-09 | tests/unit/test_signal_processor.py | blob 3ec0ea84392a | approved as text, A.5
+       1. grep (K2 or K4 or K5), max 7 lines; expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+       case ranges: none in S1-2 (CL-3); Claude proposes them afterwards from the printed line numbers, for a separate
+          approval
+
+S2-10 | RL-09 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | approved as text, A.5; new path
+       1. grep (K2 or K4 or K5), max 11 lines; expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+       case ranges: none in S1-2 (CL-3); Claude proposes them afterwards from the printed line numbers, for a separate
+          approval
+
+S2-11 | RL-09 | tests/unit/test_config_loader.py | blob 8f245c35a047 | approved as text, A.5; new path
+       1. grep (K2 or K4 or K5), max 1 line; expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+       case ranges: none in S1-2 (CL-3); Claude proposes them afterwards from the printed line numbers, for a separate
+          approval
+
+S2-12 | RL-10 | config/strategies/pb01_breakout_retest.yaml | blob eedf5cac5ed5 | approved, A.6
+       1. grep (K1), max 1 line; expression: (?i)expir
+
+S2-13 | RL-11 | core/events.py | blob 6511bc40fe74 | approved narrowly, A.3; new path
+       1. grep (K1 or K5), max 3 lines; expression: (?i:expir)|["']EXPIRED["']
+
+S2-14 | RL-11 | core/exceptions.py | blob 1eeac5842084 | approved narrowly, A.3; new path
+       1. grep (K1 or K6), max 6 lines; expression: (?i:expir)|signal_age|max_age
+
+S2-15 | RL-12 | docs/04_db_schema_reference.md | blob 0218e152b77e | text drift only, after the chapter hashes match, A.7
+       1. grep (K2 or K3 or K6), max 2 lines; expression: expiry_sec|signal_expiry_sec|expires_at|signal_age|max_age
+
+S2-16 | RL-12 | docs/CONFIG_GUIDE.md | blob 1e4f7ee17440 | text drift only, after the chapter hashes match, A.7
+       1. grep (K2 or K3 or K6), max 2 lines; expression: expiry_sec|signal_expiry_sec|expires_at|signal_age|max_age
+
+S2-17 | OQ-05, CL-4 | 02_REPOSITORY_AND_FILE_MAP.md | Rama's copy, only after its SHA-256 matches; a document
+       1. count-only (K1); expression: (?i)expir
+       2. count-only (K6); expression: signal_age|max_age
+
+S2-18 | OQ-05, CL-4 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | Rama's copy, only after its SHA-256 matches; a document
+       1. count-only (K1); expression: (?i)expir
+       2. count-only (K6); expression: signal_age|max_age
+
+- S2-17 and S2-18 run count_grep.py (mask_read2.py --grep) on the verified copies, not through the legacy gate (the hash check
+  takes its place), and are logged in the search log from Q35 on; no line is printed. A zero gets a positive control on the
+  same file, of the same case type as at S1-1: the term signal (case as written) for K6, (?i)signal for K1.
+
+After a further approval only (listed for information; not executed in S1-2):
+S2-19 | 02_REPOSITORY_AND_FILE_MAP.md | one masked grep (K1 or K6), printing only the matching lines; expression:
+      (?i:expir)|signal_age|max_age
+S2-20 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | the same
+- Both read as documents about the testing tree (C-008 section 14.7); expiry statements only; a host, path or identifier value
+  in them is not quoted.
+
+- Printed-line budget: at most 162 lines for S2-01 to S2-16 (unconditional operations), plus at most 5 for the 4 conditional
+  ranges (S2-03, S2-05, S2-06); RL-11 (S2-13, S2-14) at most 9 lines, the combined maximum of A.3. S2-17 and S2-18 print no
+  line.
+- Expressions: S1-1's, as in appendix B; in a combination, K1 is written "(?i:expir)", because Python accepts a global (?i)
+  only at the start of an expression; it matches what K1 matched, and K5 and K6 stay case-sensitive as at S1-1.
+- Register (A.8), recorded as documentation-scope decisions only, prior entries kept: R19 closed; R22 closed; R23 narrowed to
+  config/strategies/pb01_breakout_retest.yaml. None of them is evidence that a component is behaviourally irrelevant.
+
+==============================================================================================================================
+3. EXPLICIT EXCLUSIONS (decisions D.3): not read, searched or inspected in S1-2
+==============================================================================================================================
+- RL-08, deferred and excluded (A.2): scripts/copy_gate.py, scripts/healthcheck_server.py, scripts/request_copy.py,
+  scripts/security_monitor.py, scripts/t2_cnc_gtt_realtest.py. Whether any of them touches the signals table stays NOT
+  ESTABLISHED.
+- docs/locked_decisions.yaml (A.7; C): RL-12's grep "K1 or K4 or K6" [at most 4] for it does not run.
+- R18 tests/integration/test_full_signal_flow.py: not in section 10; S1-1 made no proposal for it, although S1-1's appendix A
+  records one quoted-EXPIRED (K5) line for it. Excluded; a read would need a separate approval.
+- The other new candidates of S1-1 section 8: NC-2 and NC-3 apart from core/events.py and core/exceptions.py (6 and 6 files);
+  NC-4 (2 files: config/cron_registry.yaml, a host record, and docs/locked_decisions.yaml, above); NC-5 apart from the two
+  test files approved in RL-09 (29 files, tests/unit/test_v3_eod_route.py among them, which S1-1 offered only if ChatGPT
+  wanted it); NC-6 (72 test files), NC-7 (17 files) and NC-8 (198 documents and records). NC-1 is RL-08.
+- Register rows not in section 2: R09 to R11 and R13 (C-007's findings, cited, not re-read; OQ-03); R12's other three readers
+  (reports/signal_status.py, reports/daily_report.py, reports/daily_trade_review.py; cited from C-007); R14 to R16 (pointers;
+  OQ-02); R17 (cited from A-009); R19 and R22 (closed, A.8); R21 (a record; OQ-06); R23's other 15 strategy files; N01 to N12.
+- Records and host records: no historical record (OQ-06, option A); the two July records
+  (docs/audit/queue_items_decidable_25jul2026.md, docs/audit/stale_queue_entries_25jul2026.md); no host record or credential
+  (S1-1 section 10, closing note).
+- The 102 protected paths at the pin and every path sharing their blobs (docs/v2_design_spec.md among them): the gate refuses
+  them.
+- The records repository and the testing snapshot: not opened. The chapters are used only as the files Rama supplies (B.1),
+  after their hashes match.
+- Beyond the listed operations: no whole file, no surrounding context, no range not listed; no RL-09 case range in S1-2
+  (CL-3).
+- No code, test, import, script, migration or application start; no database, VM or host, broker, webhook, Chartink or
+  live-service contact; no legacy file or configuration changed; no commit or push; no C-009 manual drafting.
+
+==============================================================================================================================
+4. CONFIRMATION (decisions D.4)
+==============================================================================================================================
+- No S1-2 source content has been read: the read tool is locked (cread_c009.py SHA-256
+  f2894f0ea6183fe0aadcf72ccd1d14a2def7cf5bb195af96841689260a132a51, the value recorded at Stage 0 and S1-1; STAGE1_AUTHORISED
+  = False), and no read log or evidence folder exists (0 reads).
+- No legacy code, test, script or migration has been run or imported at any point in C-009, and no application, database,
+  host, broker, webhook, Chartink or live service has been contacted. Since S1-1 ended (11:53 IST), Claude has run only its
+  own helper scripts and checks on its own files, none of which opens a legacy file (the build of this checklist and its
+  value-blind checks among them). The search log still holds Q01 to Q34 (11:44 to 11:46 IST) and the lines log L01 only.
+- The S1-1 results file is unchanged as delivered (SHA-256 B5DA521F44BB37031B6091FF94BC0B9258C013EBDD009EC8D7F27556DF7D59BD,
+  checked at this build). Its authorisation/method deviation stays recorded in Claude's working notes for the C-009 review
+  notes and the design log (ChatGPT's S1-1 review, section 2; decisions A.1 and C).
+
+==============================================================================================================================
+5. STOP: PREREQUISITES AND BLOCKERS (decisions D.5; conditions B.1 to B.6)
+==============================================================================================================================
+| Condition | Status |
+|---|---|
+| B.1 Rama supplies chapters 02 and 03 | NOT MET: missing; Rama will attach both (his choice, 12:31 IST) |
+| B.2 their SHA-256 match the C-008 record exactly | NOT CHECKED: no files |
+| B.3 names, expected and actual hashes, pass/fail, no content quoted | REPORTED for the missing state (section 1); repeated when the files arrive |
+| B.4 RL-01 to RL-07, RL-09, RL-10, RL-11 paths and ranges available and unambiguous | Paths: MET (14 paths, all in section 10 and the pinned listing). Ranges: NOT MET as written (CL-1 to CL-3); Rama chose a resolution for each (below), for ChatGPT's confirmation |
+| B.5 final checklist: paths, bounds, operation per item, exclusions; no source read | DONE (sections 2 and 3) |
+| B.6 ChatGPT/Rama review and confirm | PENDING |
+
+Clarifications and Rama's choices (24-Oct-2026, 12:31 IST, multiple choice; each the recommended option):
+- CL-1 (S2-03, S2-05): section 10 says "range 3613:3614 if not covered" and "175:175 and 222:222 if not covered" without
+  saying what covers them. Chosen: rule CR (section 2). Not chosen: always run them; drop them.
+- CL-2 (S2-06): "range around line 49 if not covered" has no bound. Chosen: 49:49 under rule CR. Not chosen: always run; drop.
+- CL-3 (S2-08 to S2-11): "the minimum ranges of the expiry cases the greps locate" cannot be bounded before the greps run.
+  Chosen: S1-2 runs the four greps only; Claude then proposes exact case ranges for a separate approval. Not chosen: a
+  definition-line grep per file with a fixed rule now; greps only, with no case ranges.
+- CL-4 (OQ-05; S2-17 to S2-20): no read operation is named for the chapters themselves. Chosen: once both hashes match, count
+  first (S2-17, S2-18, terms and files named in section 2 as A.1 requires), then, after approval, one masked grep per chapter
+  (S2-19, S2-20), expiry statements only. Not chosen: a grep without the count; no chapter read.
+
+Before S1-2 can start:
+  1. Rama attaches chapters 02 and 03; Claude checks them as section 1 describes and reports.
+  2. ChatGPT confirms in writing this checklist, Rama's four choices and the chapter count terms and files (B.6; A.1).
+  3. Then E-1 to E-4 (section 2), and nothing earlier.
+
+STOPPED for ChatGPT/Rama review. No source content will be read until then.
+
+==============================================================================================================================
+APPENDIX A. S1-1 RESULTS FILE, SECTION 10, VERBATIM (lines 319 to 381)
+==============================================================================================================================
+10. PROPOSED EXACT READ LIST FOR S1-2 ONWARDS (for ChatGPT/Rama approval; nothing here is read)
+==============================================================================================================================
+Mode: "grep TERM" = one gated grep read printing only the matching lines (masked); "range A:B" = one gated range read. Every
+  read through cread_c009.py after the lock is lifted as a step of its own; tests as text; minimum ranges. Line counts in
+  brackets are from this step's searches (for a combined grep, the sum of the per-term counts, an upper bound). The ranges are
+  the frozen manuals' citations, valid for the same pinned blobs.
+
+RL-01 config/system_config.yaml (R03)
+      Mode: range 124:128; grep K1 [6 lines]
+      Question: S1-2: the signal_queue block, and whether any other key here sets a signal age limit.
+
+RL-02 core/config_loader.py (R04)
+      Mode: range 192:200; grep K2 [1 line]
+      Question: S1-3: the expiry field's type, default, comment and validation.
+
+RL-03 main.py (R05)
+      Mode: grep K2 [2 lines]; range 3613:3614 if not covered
+      Question: S1-4: which value reaches each check.
+
+RL-04 signals/webhook_receiver.py (R01)
+      Mode: grep K2 [6]; grep K3 [4]; range 916:926; range 949:961
+      Question: S1-5: the intake check and the expires_at computation.
+
+RL-05 signals/signal_processor.py (R02)
+      Mode: grep K2 [4]; grep K5 [2]; ranges 914:921, 1193:1231, 1515:1515, 2376:2384, and 175:175 and 222:222 if not covered
+      Question: S1-6: the processor's check, outcome, warning and the re-queue's measured instant.
+
+RL-06 core/schema.sql (R06)
+      Mode: grep K3 [1]; grep K2 [1]; range around line 49 if not covered
+      Question: S1-7: the column's definition.
+
+RL-07 ops_dashboard/backend/readers/db_reader.py (R12)
+      Mode: grep K3 [1]
+      Question: S1-8: whether this reader uses expires_at.
+
+RL-08 DECISION: scripts/copy_gate.py, scripts/healthcheck_server.py, scripts/request_copy.py, scripts/security_monitor.py,
+      scripts/t2_cnc_gtt_realtest.py (NC-1)
+      Mode: grep K3 each [4, 1, 2, 1, 1]
+      Question: S1-8: whether any of them touches the signals column. (a) Read (Recommended: 9 lines settle the question by
+      evidence rather than by file names); (b) exclude by owner.
+
+RL-09 tests/unit/test_webhook_receiver.py (R07), tests/unit/test_signal_processor.py (R08), and NEW
+      tests/unit/test_fix136_batch9.py and tests/unit/test_config_loader.py (NC-5)
+      Mode: grep "K2 or K4 or K5" in each [at most 6, 7, 11, 1 lines]; then the minimum ranges of the expiry cases the greps
+      locate
+      Question: S1-9: what the tests assert (text only).
+
+RL-10 config/strategies/pb01_breakout_retest.yaml (R23)
+      Mode: grep K1 [1]
+      Question: whether a strategy sets its own signal age limit.
+
+RL-11 DECISION: core/events.py and core/exceptions.py (NC-2, NC-3)
+      Mode: grep "K1 or K5" [at most 3]; grep "K1 or K6" [at most 6]
+      Question: whether an event or exception names signal expiry. (a) Read (Recommended: at most 9 lines); (b) exclude.
+
+RL-12 DECISION: docs/04_db_schema_reference.md and docs/CONFIG_GUIDE.md (R20); docs/locked_decisions.yaml (NC-4)
+      Mode: grep "K2 or K3 or K6" [at most 2, 2]; grep "K1 or K4 or K6" [at most 4]
+      Question: text drift only. (a) Read the two R20 documents only (Recommended); (b) also docs/locked_decisions.yaml; (c)
+      none.
+
+- Unchanged from the authorisation: no record, excluded July record, host record, protected path or credential is read;
+  C-007's cleanup and readers and C-008's pipeline findings are cited, not re-read (OQ-03); VP-24 and VP-59 are not ratified
+  (OQ-04); chapters 02 and 03 are compared only after Rama attaches them and their SHA-256 match C-008 section 14.7 (OQ-05).
+
+==============================================================================================================================
+APPENDIX B. TERM EXPRESSIONS, VERBATIM (S1-1 results file, section 4, lines 93 to 102)
+==============================================================================================================================
+| ID | Term (authorisation) | Expression |
+|---|---|---|
+| K1 | expir (any case) | (?i)expir |
+| K2 | expiry_sec or signal_expiry_sec | expiry_sec|signal_expiry_sec |
+| K3 | expires_at | expires_at |
+| K4 | REJECTED_EXPIRED | REJECTED_EXPIRED |
+| K5 | EXPIRED as a quoted string | ["']EXPIRED["'] |
+| K6 | signal_age or max_age | signal_age|max_age |
+| K7 | stale (any case) | (?i)stale |
+| K8 | TTL as a token (any case) | (?i)(?<![a-z0-9])ttl(?![a-z0-9]) |

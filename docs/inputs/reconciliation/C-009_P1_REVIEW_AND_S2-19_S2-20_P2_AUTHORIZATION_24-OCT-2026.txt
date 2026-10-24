@@ -1,0 +1,111 @@
+TRADING_SYSTEM-v2_redesign
+C-009 — P-1 REVIEW, CHAPTER GREP RETRY, AND P-2 AUTHORIZATION
+Date: 24-Oct-2026 (IST)
+Basis: C-009_CLAUDE_STAGE1_P1_RESULTS_AND_S2-19_STOP_24-OCT-2026.txt
+Status: LIMITED NEXT STEP AUTHORISED. ALL OTHER READS REMAIN LOCKED.
+
+============================================================
+1. REVIEW DECISIONS
+============================================================
+
+A. P-1 STRUCTURE-ONLY SCAN
+ACCEPTED.
+
+The reported structure-only scans cover all 23 approved anchors in the four approved test files. The report states that only line numbers and structural labels were printed, with no source lines, test names, docstrings, expressions or literals. No behavioural finding follows from P-1.
+
+B. D-2 RECURRENCE
+ACCEPTED AS A RECORDED PROCESS DEVIATION.
+
+The chat application loaded 03_STARTUP_RUNTIME_AND_SCHEDULER.md into Claude's context again when attached. Treat that content as unavailable evidence. Do not rely on it from memory or context; only use output from a separately authorised, bounded grep. Since the chapter copies are already hash-verified in Claude's workspace, do not attach them again unless necessary.
+
+C. ERR-1 — S2-19 TOOL CHECK FAILURE
+ACCEPTED AS AN EXECUTION ERROR, NOT A LEGACY-SYSTEM FINDING.
+
+The faulty header check refused before printing or keeping chapter lines. Claude stopped, did not retry, did not run S2-20, and re-engaged the read lock. The report says the corrected tool changes only the expected reader-header count and was unit-tested against synthetic output. A rerun is authorised below only with the exact corrected tool hash specified below.
+
+D. D-1, D-2 AND D-3
+Keep the original records unchanged and add the reported follow-up decisions. D-3 remains an unauthorised metadata-fetch/procedural deviation. No legacy behaviour finding is established by any of these deviations.
+
+============================================================
+2. AUTHORISATION — S2-19 AND S2-20 BOUNDED CHAPTER GREPS
+============================================================
+
+APPROVED to rerun S2-19 and then S2-20 in a new gated read-lock window, with ONLY the header-check correction described in the Claude report.
+
+Corrected tool:
+cchapread_c009.py SHA-256
+295d5ef7fc0a805a6dce82ed398d9e280d9c28d947365065900431d009dbc467
+
+S2-19:
+- File: 02_REPOSITORY_AND_FILE_MAP.md
+- Verify SHA-256 exactly:
+  8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49
+- Verify newline count: 3,557.
+- Allowed search terms only: case-insensitive `expir`; `signal_age|max_age`.
+- Maximum output: 36 matching lines total.
+- No context lines, additional terms, or other reads.
+
+S2-20:
+- File: 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- Verify SHA-256 exactly:
+  F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087
+- Verify newline count: 321.
+- Allowed search terms only: case-insensitive `expir`; `signal_age|max_age`.
+- Maximum output: 4 matching lines total.
+- No context lines, additional terms, or other reads.
+
+Operational limits:
+- Use the established gated, logged reader only; do not bypass it.
+- Confirm the corrected tool's exact SHA-256 before opening the read window.
+- If either source hash/newline count fails, the tool hash differs, the gate refuses, output exceeds the cap, or any unexpected condition occurs: STOP, print/keep no unapproved output, re-engage the lock, and report the failure. Do not retry or improvise.
+- Run S2-20 only after S2-19 completes successfully and remains within its cap.
+- Record exact bounded output, operation IDs, and log references.
+- Re-engage the read lock immediately after the approved operations.
+
+============================================================
+3. AUTHORISATION — P-2 TEST-CASE READS
+============================================================
+
+APPROVED: read only the following six exact ranges, in the listed order, using the approved gated/masked reader. These are the entire selected functions; the reported total is 51 source lines.
+
+| ID | File | Inclusive line range | Maximum lines |
+|---|---|---:|---:|
+| R-1 | tests/unit/test_webhook_receiver.py | 940:950 | 11 |
+| R-2 | tests/unit/test_signal_processor.py | 572:582 | 11 |
+| R-3 | tests/unit/test_fix136_batch9.py | 120:126 | 7 |
+| R-4 | tests/unit/test_fix136_batch9.py | 128:136 | 9 |
+| R-5 | tests/unit/test_fix136_batch9.py | 138:145 | 8 |
+| R-6 | tests/unit/test_fix136_batch9.py | 154:158 | 5 |
+
+Before each read, verify the exact pinned blob/path and the approved range using the established gate. Print no lines outside each listed range. Do not expand ranges to include surrounding setup, class headers, helper functions, fixtures, or related tests. Do not read the unselected setup ranges listed in Claude's report.
+
+For each range, if the gate refuses, the blob differs, the output exceeds the maximum, or any unapproved line would be included, stop that operation and report it. Do not broaden or retry without a new approval.
+
+The authorization is to read test text only. It does NOT authorise importing or running tests, executing application code, or treating test assertions as proof that runtime behaviour occurred.
+
+============================================================
+4. REQUIRED OUTPUT AND STOP CONDITION
+============================================================
+
+After completing the authorised work, return a review package containing:
+1. S2-19 and S2-20 bounded outputs, exact hashes/line counts, operation IDs and log references.
+2. R-1 to R-6 bounded outputs, with path, pinned blob, exact range, printed-line count and log/evidence references.
+3. Confirmation that the read lock is engaged again.
+4. Updated deviation/error register entries for D-2 recurrence and ERR-1, with original records preserved.
+5. A source-supported comparison of the newly authorised evidence only, clearly labelling FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT and OPEN QUESTION as applicable. Do not make a conclusion that the evidence does not support.
+
+Then STOP for ChatGPT/Rama review.
+
+============================================================
+5. STILL NOT AUTHORISED
+============================================================
+
+- Any file, path, line range, search term, or operation not listed above.
+- RL-08 scripts, docs/locked_decisions.yaml, R18, or any other deferred item.
+- Any additional chapter read or broader search.
+- Tests, imports, code execution, migrations, application startup, or any live-service, broker, webhook, Chartink, VM, host or database contact.
+- Any legacy file/configuration change, commit or push.
+- Drafting, freezing or publishing the C-009 manual.
+- Any V2 architecture/design decision.
+
+This is a bounded documentation-evidence authorisation only. The legacy system remains DEAD / REFERENCE ONLY.

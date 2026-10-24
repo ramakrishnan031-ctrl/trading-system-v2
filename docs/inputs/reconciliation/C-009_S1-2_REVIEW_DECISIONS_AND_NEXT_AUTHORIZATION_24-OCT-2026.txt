@@ -1,0 +1,122 @@
+TRADING_SYSTEM-v2_redesign
+C-009 — S1-2 REVIEW DECISIONS AND NEXT AUTHORIZATION
+Date: 24-Oct-2026 (IST)
+Basis: C-009_CLAUDE_STAGE1_S1-2_READ_RESULTS_24-OCT-2026.txt
+Status: S1-2 REVIEWED; LIMITED NEXT STEPS AUTHORISED; READ LOCK MUST REMAIN ON EXCEPT DURING AN EXPLICITLY GATED OPERATION
+
+============================================================
+1. DECISIONS ON S1-2 DEVIATIONS
+============================================================
+
+D-2 — CHAPTER 03 AUTO-LOADED BY THE CHAT APP
+Decision: ACCEPT AND RECORD AS A PROCESS DEVIATION; DO NOT TREAT THE CHAPTER AS AUTHORISED SOURCE EVIDENCE.
+
+Record the facts exactly:
+- 03_STARTUP_RUNTIME_AND_SCHEDULER.md was automatically loaded into Claude's context when attached, before its hash check.
+- Claude reported the event before the first source read; Rama chose to proceed and record it.
+- The report states that no chapter text was quoted, used or relied on for S1-2.
+- Its S2-18 count-only scans are separately recorded as count-only operations.
+- For any later chapter comparison, treat the auto-loaded content as unavailable evidence. Use only lines returned by the specific, separately authorised bounded grep. Do not use recollection or context from the auto-loaded chapter.
+- Future count-only inputs should be supplied in a form that the chat application does not automatically display or ingest, if the platform supports that reliably.
+
+Classification: PROCESS DEVIATION / EXPOSURE TO CONTEXT; no behavioural finding established by D-2.
+
+D-3 — UNAUTHORISED `git status --porcelain`
+Decision: ACCEPT AND RECORD AS AN UNAUTHORISED-OPERATION / PROCEDURAL DEVIATION. Do not erase or minimise it.
+
+Record the facts exactly:
+- After the authorised reads and relock, Claude ran `git status --porcelain` on the partial clone, although that tree-wide command was not authorised.
+- The command printed no changes but caused Git to fetch two .gitignore blobs: `.gitignore` (blob b9b49fc3fd7d) and `ops_dashboard/.gitignore` (blob 0d0f1a28fc6e).
+- According to the report, neither blob was opened or printed; the pinned commit remained `970aabf` and the never-open blob count remained zero.
+- The action does not establish a legacy behavioural finding, but it is still a workflow violation because the command was not on the approved list.
+- For future checks on a partial clone, use only the explicitly approved per-file checks; do not use `git status`, tree-wide commands, or substitutes without separate approval.
+
+Classification: PROCEDURAL DEVIATION / UNAUTHORISED METADATA FETCH; no source-behaviour conclusion established.
+
+Keep D-1 from S1-1 and D-2/D-3 in the C-009 review notes and design log. Preserve the original records; add these decisions as follow-up entries rather than rewriting history.
+
+============================================================
+2. RL-09 — P-1 STRUCTURE-ONLY SCAN
+============================================================
+
+APPROVED: P-1 only, with these strict limits.
+
+Purpose: identify test/function boundaries around the already reported line numbers, without reading or printing source lines.
+
+Files and already reported line-number anchors:
+- tests/unit/test_webhook_receiver.py: 72, 941, 949, 1578, 1636, 1683
+- tests/unit/test_signal_processor.py: 372, 421, 573, 578, 581, 582
+- tests/unit/test_fix136_batch9.py: 121, 123, 125, 135, 136, 144, 145, 157, 158, 176
+- tests/unit/test_config_loader.py: 75
+
+Permitted operation:
+- Use a read-only text/AST structure scan on these four already approved test files.
+- For each listed anchor, report only the line number of the innermost enclosing function or class start and end, and the candidate test/function start/end line numbers needed to define proposed expiry-case ranges.
+- Print line numbers and structural labels only. Do not print source lines, test names, docstrings, expressions, literals, or surrounding text.
+- Do not import or execute tests, import application modules, run tests, or broaden the scan to unrelated files.
+- Do not read any test-case range as part of P-1.
+- Return the proposed exact ranges, per-range line counts, and a clear mapping to the anchors above. If a range is ambiguous or the AST cannot establish the requested boundary, report UNKNOWN / NOT ESTABLISHED and stop; do not guess.
+
+After P-1, STOP. P-2 (reading any proposed case range) is NOT authorised by this file and requires separate written approval after review of the proposed ranges.
+
+============================================================
+3. S2-19 AND S2-20 — BOUNDED CHAPTER GREPS
+============================================================
+
+SEPARATELY APPROVED NOW, subject to the conditions below.
+
+S2-19:
+- File: 02_REPOSITORY_AND_FILE_MAP.md
+- Allowed expressions only: `(?i)expir` and `signal_age|max_age` (the previously named K1 and K6 terms).
+- One combined grep operation may print a matching line once even if it matches both expressions.
+- Maximum output: 36 matching lines total.
+- Do not print surrounding context, expand ranges, add terms, or use the chapter's automatically loaded context as evidence.
+- Verify the exact file SHA-256 and line count before the operation; expected SHA-256 `8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49`, 3,557 lines.
+
+S2-20:
+- File: 03_STARTUP_RUNTIME_AND_SCHEDULER.md
+- Allowed expressions only: `(?i)expir` and `signal_age|max_age` (the previously named K1 and K6 terms).
+- One combined grep operation may print a matching line once even if it matches both expressions.
+- Maximum output: 4 matching lines total.
+- Do not print surrounding context, expand ranges, add terms, or use the chapter's automatically loaded context as evidence.
+- Verify the exact file SHA-256 and line count before the operation; expected SHA-256 `F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087`, 321 lines.
+
+For both operations:
+- If either file's hash or line count fails, stop without grepping.
+- Use the gated, logged read method and preserve the read-lock protocol. Do not use a different tool or direct file read to bypass the gate.
+- If output exceeds the stated cap, any unapproved term appears, a path/hash mismatch occurs, or any gate refuses, stop immediately. Do not retry more broadly.
+- Report exact output lines and line numbers as printed by the approved operation, plus operation IDs/log references. These lines are authorised evidence only for the bounded C-009 review.
+- No other chapter reads or searches are authorised.
+
+============================================================
+4. REVIEW OF S1-2 COMPLETION RECORD
+============================================================
+
+The reported S1-2 checklist operations S2-01 through S2-18 may be recorded as completed subject to the deviations above. The chapter hashes and line counts are reported as PASS. The four conditional ranges skipped under the pre-approved rule CR are accepted as skipped, as each was reported already covered by an earlier grep of the same file.
+
+Do not describe the work as proving the expiry behaviour correct. No behavioural conclusion is drawn at this stage. The report is evidence inventory for a later bounded comparison only.
+
+The following remain NOT AUTHORISED:
+- RL-08 scripts.
+- `docs/locked_decisions.yaml`.
+- R18.
+- Any additional path or range not explicitly listed above.
+- P-2 reading of RL-09 test cases.
+- C-009 manual drafting.
+- Any code/test execution, imports, application startup, database/host/VM access, broker/webhook/Chartink/live-service contact, legacy edits, commits or pushes.
+- Any V2 design decision.
+
+============================================================
+5. REQUIRED NEXT RESPONSE FROM CLAUDE
+============================================================
+
+1. Execute only the approved P-1 structure-only scan and S2-19/S2-20 bounded greps.
+2. Keep the read lock engaged except for each explicit gated operation; re-engage it immediately afterwards.
+3. Return:
+   - P-1 structure-only results: line numbers/structural labels only, candidate ranges and lengths, no source text.
+   - S2-19 and S2-20 exact bounded grep outputs and operation/log IDs.
+   - Confirmation that no other read, test, import, tree-wide command, or external contact occurred.
+   - Updated deviation register entries for D-2 and D-3, retaining D-1 and all prior records.
+4. STOP for ChatGPT/Rama review. Do not read proposed RL-09 ranges or draft the C-009 manual until separately authorised.
+
+This file authorises only the bounded actions described above. It does not authorise any broader investigation or any change to the dead legacy system.

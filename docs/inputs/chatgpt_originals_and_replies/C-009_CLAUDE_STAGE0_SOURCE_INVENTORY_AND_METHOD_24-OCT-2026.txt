@@ -1,0 +1,635 @@
+C-009 - SIGNAL EXPIRY: STAGE 0 SOURCE INVENTORY AND DOCUMENTATION WORKFLOW LOG (output B)
+Date of work: 24-Oct-2026 (IST), 10:35 to 11:07 IST. Prepared by Claude. Companion of
+  C-009_CLAUDE_STAGE0_ANSWERS_24-OCT-2026.txt (the answers; its section 3 is the register).
+Status: Stage 0 only; no legacy blob fetched, opened or read. Paths are repository paths; Claude's working folders are written
+  as <SCRATCHPAD>, tools/ and "the clone". Protected paths are counted, never listed.
+
+==============================================================================================================================
+1. INPUTS RECEIVED
+==============================================================================================================================
+| File | Lines | Bytes | SHA-256 | Role |
+|---|---|---|---|---|
+| C-009_STAGE0_CLAUDE_HANDOFF_24-OCT-2026.txt | 132 | 7,734 | 1752F445313D3C27EF5C3B1830BBB9F68CD39E4170B0F0DE4C92B0D66C00AE64 | ChatGPT: research prompt and answer sheet (received 10:53 IST) |
+| C009_Stage0_Prompt_and_AnswerSheet_RESHARE.txt | 133 | 7,749 | F22BF828048F6330E10A6DECFB5FFB0C5EE56028FE5A31F224F7232BE72EF392 | ChatGPT: the same prompt and sheet, one file (received 10:32 IST) |
+| C009_Stage0_ResearchPrompt_RESHARE.txt | 48 | 4,102 | 15A02BD43F60EA5E9ED2FCB8F237C86B711AF74FADD6CFBCAC25D9A5188ED9F5 | ChatGPT: the research prompt |
+| C009_Stage0_AnswerSheet_RESHARE.txt | 70 | 3,111 | 03AC3B152D7F77C01137FDC7239FE204D590BF874EF01FA0791D9FE088319C6A | ChatGPT: the answer sheet |
+| V2_SESSION_HANDOVER_C-009_24-OCT-2026.md | 650 | 45,345 | B3BF5042FF3F3574F34856FD871C882D856E12DD38EEC924F3F2C83F658302CF | Claude's handover note from the C-008 chat (owed to docs/governance/ at the C-009 package) |
+- Identity check (10:54 IST, Python over the four ChatGPT files): the research prompt's full text and the answer sheet's full
+  text are contained in C-009_STAGE0_CLAUDE_HANDOFF_24-OCT-2026.txt (prompt: True; sheet: True), and the handoff's and the
+  combined RESHARE file's bodies are equal once their separator lines are set aside (True). Only the first three lines (titles
+  and instructions) and the separator lengths differ. No file has a CR. The four are therefore answered as one prompt and one
+  sheet.
+- Also used, read-only: the Claude Project's copy of the C-009 handover note (read, not byte-compared) and the V2 repository
+  at main b720bd7 (section 3).
+
+==============================================================================================================================
+2. TIMELINE (IST, 24-Oct-2026; times printed by the tools)
+==============================================================================================================================
+- 10:32 Rama's message with the three RESHARE files, the handover note and a screenshot of the previous chat (not stored,
+  DR-008).
+- 10:35:50 workspace checked.
+- 10:38:48 git ls-remote of V2: HEAD and main b720bd7...; fresh clone of V2 main; design log sections 1 and 5 read (lessons,
+  W-1 to W-9); the 21-Oct and 24-Oct handovers read; master agenda line 280.
+- 10:41:10 git ls-remote of the legacy repository: HEAD and main 970aabf...
+- 10:41:18 blob-less clone without checkout; HEAD, root tree and commit date checked; listing saved; sensitive_check.py: 102
+  never-open paths, 0 present; 7,663 local objects (commits and trees only).
+- 10:42:04 one GitHub REST request for the pinned tree's blob sizes, refused (HTTP 403); not retried.
+- 10:43:35 to 10:43:42 Stage 0 gate test: PASSED (section 5).
+- after 10:43:42 search scopes rebuilt (section 4); path-name searches and the frozen-manual cross-reference; register
+  drafted.
+- 10:53 Rama's message with C-009_STAGE0_CLAUDE_HANDOFF_24-OCT-2026.txt; compared at 10:54 (section 1); work continued.
+- 11:07:32 path-name searches re-run for this file; 11:07:33 cross-reference re-run; 11:07:40 final object check (section 9).
+- 11:07 last write of these two files.
+
+==============================================================================================================================
+3. BASELINE COMMANDS AND RESULTS
+==============================================================================================================================
+- Legacy: git ls-remote https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot.git -> HEAD and refs/heads/main
+  both 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Legacy: git clone --filter=blob:none --no-checkout -> remote.origin.promisor true, partialclonefilter blob:none, no index
+  file, no working files; git rev-parse HEAD = 970aabf...; HEAD^{tree} = 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa; the commit
+  object has one parent (only its tree and parent lines printed); git log -1 --format=%cI 970aabf... ->
+  2026-09-11T02:05:13+05:30.
+- Legacy: git ls-tree -r HEAD > the saved listing: 1,438 entries, 1,432 with mode 100644 and 6 with mode 100755, all blobs;
+  SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5 (the handover:
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5; equal: True).
+- Legacy: sensitive_check.py (path field only, lesson 2026-10-09): never-open paths in tree: 102; by top-level class: {'.*':
+  1, 'config': 21, 'docs': 80} | local objects: 7663 | never-open blobs present locally: 0 (must be 0); exit 0. The root
+  .env.example is in the listing and among the protected paths.
+- Legacy: git cat-file --batch-all-objects --batch-check (local only): 1,537 commits, 6,126 trees, 0 blobs (start 10:41 IST
+  and final check 11:07:40 IST).
+- V2: git ls-remote https://github.com/ramakrishnan031-ctrl/trading-system-v2.git -> HEAD and refs/heads/main both
+  b720bd7635ca448fa35c828cfd72bfa722b0e24e; fresh clone: parent dce31648fb06ef4a52bbef4508fcabfc99b38748, tree
+  793b8f9451dd2756b958b6db7aed7aa421bb1709, commit time 2026-10-24 10:03:12 +05:30; message lines: the subject, a blank line
+  and the Co-Authored-By attribution line for Claude Opus 5.5 (W-8), nothing else (shown with cat -A); 370 tracked files.
+- V2 governance at main: V2_DECISION_REGISTER.md 72 lines, highest row DR-061 (line 72); V2_DESIGN_LOG.md 532 lines, highest
+  VP-68, Q-46, BK-43; agenda row C-008 FROZEN (line 298); C-009 named at lines 215 (VP-24), 250 (VP-59), 296 (the C-006 row),
+  506 (BK-17), 507 (BK-18) and 512 (BK-23); no Q row names C-009. C-008_manual.md line 3: FROZEN (revision 3, DR-061).
+  V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md SHA-256 11CBD728711873EFFA18F1EE9E10585627C2CAFA54ECAC8A310AC3E4C60CB569 (its
+  section 8: the six helpers).
+- Frozen source tables: 78 rows (path, blob ID) across the frozen manuals equal the pinned listing; 0 differ.
+
+==============================================================================================================================
+4. TOOLS (SHA-256 at the final build)
+==============================================================================================================================
+| Tool | SHA-256 | Source and changes |
+|---|---|---|
+| tools/mask_read_lib.py | ccc8d5be22ae2e928f5e2d3a42b2d70821ebe8ea318df936dbeac1efe9c74bb8 | exact copy, 21-Oct handover section 8 |
+| tools/mask_read2.py | bc0b715df0267bcfd0ea23e17e52e487d16c7f447a92076e0f6ab4ab1c3f17f7 | exact copy, 21-Oct handover section 8 |
+| tools/sensitive_check.py | e36c1382b05129e5a2b1382af60981b9352c8ae4dca40d29f90629aac998a337 | exact copy, 21-Oct handover section 8 |
+| tools/scan_ids.py | 8217536996866bbb93a31ece81c71193c53e1ea286b2054b1645c994329aca16 | exact copy, 21-Oct handover section 8 |
+| tools/check_md.py | 763dbacdeef6399dc614bc6bc4e4b0f66b47478b25a4901dac3b9fa9bff8e3bb | exact copy, 21-Oct handover section 8 (not used at Stage 0) |
+| tools/cite_check.py | 15711e5bc6041a74273ed029adfcb48aefc1ee513a076dc0027ba557d9ea5c48 | exact copy, 21-Oct handover section 8 (not used at Stage 0) |
+| <SCRATCHPAD>/bin/mr.py | b0bd3d87cf51d1cbab4fe09f868f1bacc082e684afe4155515c37788969f4f48 | exact copy, C-009 handover section 8 (not run) |
+| <SCRATCHPAD>/bin/count_grep.py | 31af8ca5903370bf935b57dcb4fdcdbda343f99226aa50580c495ca2c124362b | exact copy, C-009 handover section 8 (not run) |
+| c009/tools/cread_c009.py | f2894f0ea6183fe0aadcf72ccd1d14a2def7cf5bb195af96841689260a132a51 | copy of cread_c008.py: S, the c009 folders, STAGE1_AUTHORISED = False |
+| c009/tools/ccount_c009.py | 1fe7fd64407d7989e705676b02fabffa1ec6624d137b0633cd213f0ec65f0594 | copy of ccount_c008.py: the import and the c009 folders |
+| c009/tools/clines_c009.py | d80342a421179389f2ec98c8a70cdc0ed8bb9c1dd45dbbcdfba41f6df0590741 | copy of clines_c008.py: the import and the c009 folders |
+| c009/tools/scope_rules.py | 241736b0e0de12a4bf535e699210d75354dbca9e8f3ff06306c4b534fc556840 | exact copy, C-009 handover section 8 |
+| c009/tools/gate_test_c009_s0.py | 843048dac1e6b796df41e696b76a6963134b2f3021a0b641f0355e981cb1bcb6 | new: Stage 0 version of gate_test_c008_s1.py |
+| c009/tools/path_search_c009.py | 562e11cfe116a50223bb18acbd2c07356a471fb28a5b000beaa8a029e99e6158 | new: path-name searches over the saved listing |
+| c009/tools/xref_frozen.py | 259e860e3ed73a797122cc0cdef11d70f5229f6cab052c01c34f705ab08cb53b | new: frozen-manual cross-reference (V2 files only) |
+| c009/tools/register_c009.py | e47ef4d4516ae8920789f4b83bf39daab5b03a8c41f117b2992ead23a8a186d9 | new: the register as data |
+| c009/tools/build_stage0_c009.py | 42ffd57761e3bcd998e242c92d968e22fc0d1abfff1049c7d435797473d56132 | new: builds these two files and runs the final checks |
+- The c009 copies differ from the C-008 copies (C-009 handover section 8) only in: docstring lines naming C-009, the
+  scratchpad path S, the c009 log, evidence, search and lines folders, the import of cread_c009 in ccount and clines, and in
+  cread the lock comment and STAGE1_AUTHORISED = False (the diffs were printed at 10:43 IST). ccount_c009.py and
+  clines_c009.py were not run at Stage 0 except by the gate test's refusal-only calls, in which nothing was searched or
+  counted. mr.py and count_grep.py were not run. No tool was changed after the gate test.
+- Search scopes (scope_rules.py from the listing; for an authorised S1-1 only, not used at Stage 0): s_all 1,260, s_code 869,
+  s_tests 486, s_rt 281, s_cfg 41, the handover's figures.
+
+==============================================================================================================================
+5. GATE TEST (gate_test_c009_s0.py; refusal-only; first run 10:43:35 to 10:43:42 IST, re-run for this file at 11:07:33 IST)
+==============================================================================================================================
+Output of the re-run as printed (the scratchpad path replaced by <SCRATCHPAD>); the first run printed the same lines. Every
+  call is one the gate must refuse before a legacy file is opened or searched.
+  never-open pattern identical in cread_c009.py and sensitive_check.py: True
+  STAGE1_AUTHORISED in cread_c009.py: False
+  protected paths in the pinned listing: 102 | same set as the regenerated reference list: True
+  excluded July records in the pinned listing: 2 of 2
+  before: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} |
+    local objects: 7663 | never-open blobs present locally: 0 (must be 0)
+  before: object types in the clone {'commit': 1537, 'tree': 6126}
+  before: C-009 logs ('absent', 'absent', 'absent')
+  cread_c009.py on the 102 protected paths: {'rc=1 "refused: never-open path"': 102}
+  cread_c009.py on the 2 excluded July records: {'rc=1 "refused: excluded July record (separate approval required)"': 2}
+  cread_c009.py on docs/v2_design_spec.md (shares a protected blob): (1, 'refused: shares a never-open blob')
+  invented names in the pinned tree: 1 of 14 (config/security.yaml is the real one)
+  cread_c009.py on 14 rule-shaped names: {'rc=1 "refused: never-open path"': 14}
+  cread_c009.py on a permitted-shaped name not in the tree: (1, 'refused: not in the pinned tree listing')
+  gate() on a permitted path in the tree (core/schema.sql; no file opened): None
+  cread_c009.py on the permitted path (must be refused by the Stage 0 lock): (1, 'refused: Stage 0 lock (no read before a
+    Stage 1 authorisation)')
+  ccount_c009.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing searched')
+  clines_c009.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing counted')
+  ccount_c009.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing searched')
+  clines_c009.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing counted')
+  ccount_c009.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing searched')
+  clines_c009.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing counted')
+  ccount_c009.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    searched')
+  clines_c009.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    counted')
+  after: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} |
+    local objects: 7663 | never-open blobs present locally: 0 (must be 0)
+  after: object types in the clone {'commit': 1537, 'tree': 6126} | unchanged: True
+  after: C-009 logs ('absent', 'absent', 'absent') | unchanged: True
+  GATE TEST (STAGE 0) PASSED
+
+==============================================================================================================================
+6. PATH-NAME SEARCHES (path_search_c009.py over the 1,438 entries; re-run at 11:07:32 IST)
+==============================================================================================================================
+Columns: matches; protected (never-open) matches, counted only; excluded July records; paths sharing a protected blob;
+  permitted matches. Case-insensitive; the expression is matched anywhere in the path.
+
+| ID | Term | Expression | Matches | Protected | July | Shared blob | Permitted |
+|---|---|---|---|---|---|---|---|
+| P01 | expiry | expiry | 0 | 0 | 0 | 0 | 0 |
+| P02 | expire | expire | 0 | 0 | 0 | 0 | 0 |
+| P03 | expiration | expiration | 0 | 0 | 0 | 0 | 0 |
+| P04 | TTL (substring) | ttl | 6 | 0 | 0 | 0 | 6 |
+| P04t | TTL (token) | (^|[^a-z0-9])ttl([^a-z0-9]|$) | 0 | 0 | 0 | 0 | 0 |
+| P05 | stale | stale | 2 | 0 | 1 | 0 | 1 |
+| P06 | timeout | timeout | 4 | 0 | 0 | 0 | 4 |
+| P07 | age (substring) | age | 47 | 2 | 0 | 0 | 45 |
+| P07t | age (token) | (^|[^a-z0-9])age([^a-z0-9]|$) | 0 | 0 | 0 | 0 | 0 |
+| P08 | queue | queue | 2 | 0 | 2 | 0 | 0 |
+| P09 | signal | signal | 23 | 2 | 0 | 0 | 21 |
+| P10 | order | order | 41 | 3 | 0 | 0 | 38 |
+| P11 | position | position | 22 | 1 | 0 | 0 | 21 |
+| P12 | cleanup | clean[_ -]?up | 6 | 1 | 0 | 0 | 5 |
+| P13 | scheduler | scheduler | 0 | 0 | 0 | 0 | 0 |
+| P14 | config | config | 86 | 21 | 0 | 0 | 65 |
+| P15 | schema | schema | 8 | 2 | 0 | 0 | 6 |
+| P16 | database | database | 1 | 0 | 0 | 0 | 1 |
+| P17 | tests (folder segment) | (^|/)tests/ | 491 | 0 | 0 | 0 | 491 |
+| X01 | expir (stem) | expir | 0 | 0 | 0 | 0 | 0 |
+| X02 | eod | (^|[^a-z0-9])eod([^a-z0-9]|$) | 22 | 1 | 0 | 0 | 21 |
+| X03 | retention / prune / purge / housekeep / sweep | retention|retain|prune|purge|housekeep|sweep | 23 | 0 | 0 | 0 | 23 |
+| X04 | gate / retest | gate|retest | 23 | 1 | 0 | 0 | 22 |
+| X05 | webhook / receiver / processor | webhook|receiver|processor | 13 | 4 | 0 | 0 | 9 |
+| X06 | migration / state_store / db token | migrat|state_store|(^|[^a-z0-9])db([^a-z0-9]|$) | 14 | 0 | 0 | 0 | 14 |
+| X07 | window | window | 7 | 0 | 0 | 0 | 7 |
+| X08 | restart / recover | restart|recover | 10 | 1 | 0 | 0 | 9 |
+| X09 | status | status | 8 | 0 | 0 | 0 | 8 |
+
+Permitted matches and their dispositions (register row, or "-" for a name match only, with no frozen-manual pointer in an
+  expiry context). P17 (the tests folder segment, 491 permitted) is given by folder; its members in the register are listed
+  there with their name basis.
+
+P01 (expiry): no permitted match
+
+P02 (expire): no permitted match
+
+P03 (expiration): no permitted match
+
+P04 (TTL (substring)): 6 permitted
+    N01  docs/audit/throttle_selection_and_record_correction_19jul2026.md
+    N01  docs/decisions/10_entry_throttle_admission.md
+    N01  ops_dashboard/tests/test_s3_login_throttle.py
+    N01  signals/entry_throttle.py
+    N01  tests/unit/test_entry_throttle.py
+    N01  tests/unit/test_mis_squareoff_restore_and_settle.py
+
+P04t (TTL (token)): no permitted match
+
+P05 (stale): 1 permitted
+    N11  docs/audit/locked_contract_staleness_sweep_22jul2026.md
+
+P06 (timeout): 4 permitted
+    N02  docs/audit/kill_persist_busy_timeout_25jul2026.md
+    N02  docs/design/a2_timeout_retry_design_02jul2026.md
+    N02  tests/unit/test_fix068_timeout_recovery.py
+    N02  tests/unit/test_ms3_step_timeout_bounds_caller.py
+
+P07 (age (substring)): 45 permitted
+    -    AGENTS.md
+    -    broker/slippage_engine.py
+    -    capital/fund_manager.py
+    -    config/expected_managers.yaml
+    -    config/slippage_model.yaml
+    -    deploy/tools/claude/AGENTS.md
+    -    docs/AGENTS.md
+    -    docs/audit/approval_19aug/S09_pnl_analytics_1440w_fullpage.png
+    -    docs/audit/approval_19aug/S09_pnl_analytics_1920w_fullpage.png
+    -    docs/audit/approval_19aug/S12_system_health_disk_1440w_fullpage.png
+    -    docs/audit/approval_final_19aug/S10_slippage.png
+    -    docs/audit/decision_packages_19jul2026.md
+    -    docs/audit/decision_readiness_triage_19jul2026.md
+    -    docs/audit/mo9_slippage_reference_hold_25jul2026.md
+    -    docs/audit/q5_wave7_backlog_triage_14jul2026.md
+    -    docs/audit/q9_coverage_matrix_final_18jul2026.md
+    -    docs/audit/q9_money_path_coverage_map_18jul2026.md
+    -    docs/audit/s4_boot_outage_17jul2026.md
+    -    docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md
+    -    docs/audit/wave7_triage_21jul2026.md
+    -    docs/design/classification_leakage_06aug2026.md
+    -    docs/slippage_intelligence.md
+    -    ops_dashboard/backend/services/slippage_analytics.py
+    -    ops_dashboard/frontend/templates/slippage.html
+    -    ops_dashboard/tests/test_screen10_slippage.py
+    -    orders/breakeven_manager.py
+    -    orders/order_manager.py
+    -    orders/slippage_recorder.py
+    -    orders/smart_tgt_manager.py
+    -    orders/structure_exit_manager.py
+    -    orders/tgt_retry_manager.py
+    -    scripts/system_manager.py
+    -    tests/crash_test/test_fund_manager_edges.py
+    -    tests/unit/test_fix132_breakeven_manager.py
+    -    tests/unit/test_fund_manager.py
+    -    tests/unit/test_order_manager.py
+    -    tests/unit/test_slippage_control.py
+    -    tests/unit/test_slippage_engine.py
+    -    tests/unit/test_slippage_recorder.py
+    -    tests/unit/test_smart_tgt_manager.py
+    -    tests/unit/test_structure_exit_manager.py
+    -    tests/unit/test_system_manager.py
+    -    tests/unit/test_system_manager_deployed_tree.py
+    -    tests/unit/test_system_manager_security.py
+    -    tests/unit/test_unit3a_leverage_validation.py
+
+P07t (age (token)): no permitted match
+
+P08 (queue): no permitted match
+
+P09 (signal): 21 permitted
+    -    docs/audit/approval_final_19aug/S04_signals.png
+    R21  docs/audit/signal_mortality_census_19jul2026.md
+    N09  ops_dashboard/docs/redesign/04_signals_asset_spec.md
+    N09  ops_dashboard/frontend/templates/signals.html
+    N09  ops_dashboard/tests/test_screen04_signals.py
+    R12  reports/signal_status.py
+    N08  scripts/load_test_signals.py
+    N07  scripts/preflight/checks/signals.py
+    R19  scripts/replay_signals.py
+    -    signals/__init__.py
+    N01  signals/entry_throttle.py
+    R02  signals/signal_processor.py
+    R01  signals/webhook_receiver.py
+    N08  tests/crash_test/signal_injector.py
+    R18  tests/integration/test_full_signal_flow.py
+    R19  tests/unit/test_fix133_replay_signals.py
+    N08  tests/unit/test_load_test_signals.py
+    -    tests/unit/test_preflight_signals.py
+    -    tests/unit/test_signal_alert_capital_vocabulary.py
+    R08  tests/unit/test_signal_processor.py
+    R13  tests/unit/test_signal_status_classification.py
+
+P10 (order): 38 permitted
+    -    broker/order_monitor.py
+    N04  broker/order_state_machine.py
+    -    docs/audit/approval_final_19aug/S05_orders.png
+    -    docs/audit/check1_w8_build_order_26jul2026.md
+    -    docs/audit/daily_report_ledger_order_25jul2026.md
+    -    docs/audit/mr4_block2_order_reconciliation_14jul2026.md
+    -    ops_dashboard/frontend/templates/orders.html
+    -    ops_dashboard/tests/test_screen05_orders.py
+    -    orders/__init__.py
+    -    orders/breakeven_manager.py
+    -    orders/closure_classifier.py
+    -    orders/cnc_gtt.py
+    -    orders/cnc_gtt_monitor.py
+    -    orders/entry_engine.py
+    N04  orders/eod_squareoff.py
+    -    orders/full_entry_engine.py
+    -    orders/mis_autosquareoff.py
+    -    orders/order_manager.py
+    -    orders/order_placer.py
+    -    orders/order_protocol_co.py
+    -    orders/order_protocol_limit.py
+    N04  orders/order_reconciler.py
+    -    orders/price_math.py
+    -    orders/shadow_tracker.py
+    -    orders/sl_breach_monitor.py
+    -    orders/slippage_recorder.py
+    -    orders/smart_tgt_manager.py
+    -    orders/structure_exit_manager.py
+    -    orders/tgt_retry_manager.py
+    -    tests/unit/test_fix129_order_state_validation.py
+    -    tests/unit/test_order_manager.py
+    -    tests/unit/test_order_monitor.py
+    -    tests/unit/test_order_placer.py
+    -    tests/unit/test_order_placer_fix061.py
+    -    tests/unit/test_order_placer_sector.py
+    -    tests/unit/test_order_reconciler.py
+    -    tests/unit/test_order_state_machine.py
+    -    tests/unit/test_slippage_recorder.py
+
+P11 (position): 21 permitted
+    -    broker/position_helpers.py
+    -    capital/position_sizer.py
+    R23  config/strategies/positional_momentum_long.yaml
+    R23  config/strategies/positional_sector_rotation.yaml
+    R23  config/strategies/positional_swing_long.yaml
+    -    docs/audit/approval_final_19aug/S06_positions.png
+    -    docs/audit/s06_rerender_24aug/S06_positions_1416x808.png
+    -    docs/audit/s06_rerender_24aug/S06_positions_1896x988.png
+    -    docs/audit/slice25_decomposition_26jul2026.md
+    -    docs/incident/2026-09-03_naked_position_ANANTRAJ.md
+    -    ops_dashboard/frontend/templates/positions.html
+    -    ops_dashboard/tests/test_screen06_positions.py
+    -    scripts/reconcile_positions.py
+    -    tests/crash_test/test_position_sizer_edges.py
+    -    tests/unit/test_fix134_reconcile_positions.py
+    -    tests/unit/test_fix135_strategy_position_cap.py
+    -    tests/unit/test_fix1_carried_position_rehydrate.py
+    -    tests/unit/test_h12_paper_positions_signed.py
+    -    tests/unit/test_ni5_position_sizer_policy_required.py
+    -    tests/unit/test_position_sizer.py
+    -    tests/unit/test_position_sizer_delivery_contract.py
+
+P12 (cleanup): 5 permitted
+    R09  scripts/eod_cleanup.py
+    N08  tests/crash_test/cleanup.py
+    R22  tests/unit/test_e5_cleanup.py
+    R10  tests/unit/test_fix135_eod_cleanup.py
+    R22  tests/unit/test_fix142_final_cleanup.py
+
+P13 (scheduler): no permitted match
+
+P14 (config): 65 permitted
+    -    config/broker_costs.yaml
+    -    config/broker_limits.yaml
+    -    config/chartink_scanners.yaml
+    -    config/cron_registry.yaml
+    -    config/expected_managers.yaml
+    -    config/index_universe.yaml
+    -    config/nse_holidays_2026.yaml
+    -    config/preflight.yaml
+    -    config/scan_webhook_map.yaml
+    R14  config/scoring_weights.yaml
+    -    config/slippage_model.yaml
+    R23  config/strategies/first_pullback_long.yaml
+    R23  config/strategies/first_pullback_short.yaml
+    R23  config/strategies/gap_fade_long.yaml
+    R23  config/strategies/gap_fade_short.yaml
+    R23  config/strategies/gap_go_long.yaml
+    R23  config/strategies/gap_go_short.yaml
+    R23  config/strategies/open_high_breakdown_short.yaml
+    R23  config/strategies/open_low_breakout_long.yaml
+    R23  config/strategies/pb01_breakout_retest.yaml
+    R23  config/strategies/positional_momentum_long.yaml
+    R23  config/strategies/positional_sector_rotation.yaml
+    R23  config/strategies/positional_swing_long.yaml
+    R23  config/strategies/range_breakout_long.yaml
+    R23  config/strategies/range_breakout_short.yaml
+    R23  config/strategies/vwap_bounce_long.yaml
+    R23  config/strategies/vwap_rejection_short.yaml
+    -    config/strategy_direction_registry.yaml
+    -    config/symbol_aliases.yaml
+    R03  config/system_config.yaml
+    -    core/config_auditor.py
+    R04  core/config_loader.py
+    -    core/config_snapshotter.py
+    R17  core/config_validator.py
+    N12  deploy/security/sshd_config.d/99-trading-security.conf
+    R20  docs/CONFIG_GUIDE.md
+    -    docs/audit/approval_final_19aug/S16_config.png
+    -    docs/audit/f2_config_reload_investigation_24jul2026.md
+    -    docs/audit/service_window_configurable_25jul2026.md
+    -    docs/design/sizing/config_surface_review_06aug2026.md
+    -    docs/design/sizing/delivery_config_surface_06aug2026.md
+    -    docs/temp_config_tracker.md
+    -    ops_dashboard/backend/config/gui_config.yaml
+    -    ops_dashboard/backend/readers/config_reader.py
+    -    ops_dashboard/backend/services/config_view.py
+    -    ops_dashboard/frontend/templates/config.html
+    -    ops_dashboard/tests/test_screen16_config.py
+    -    scripts/preflight/checks/config_integrity.py
+    -    scripts/preflight/checks/config_sanity.py
+    -    scripts/revert_temp_config.py
+    -    tests/core/test_config_validator.py
+    -    tests/crash_test/revert_temp_configs.sh
+    -    tests/unit/test_config_auditor.py
+    -    tests/unit/test_config_loader.py
+    -    tests/unit/test_config_snapshotter.py
+    -    tests/unit/test_delivery_config_independence.py
+    -    tests/unit/test_delivery_config_inventory.py
+    -    tests/unit/test_e1_report_config_dir.py
+    -    tests/unit/test_f1_disk_config_floor.py
+    -    tests/unit/test_fix131_config_drift.py
+    -    tests/unit/test_fix135_strategy_config_validation.py
+    -    tests/unit/test_ni6_config_hash_change_is_expected.py
+    -    tests/unit/test_preflight_config_rest.py
+    -    tests/unit/test_revert_temp_config.py
+    -    tests/unit/test_service_window_config.py
+
+P15 (schema): 6 permitted
+    -    core/analytics_schema.sql
+    R06  core/schema.sql
+    R20  docs/04_db_schema_reference.md
+    -    docs/audit/db_schema_review_15jun2026.md
+    -    strategies/schema.py
+    -    tests/unit/test_schema_version_failfast.py
+
+P16 (database): 1 permitted
+    -    scripts/preflight/checks/database.py
+
+P17 (tests (folder segment)): ops_dashboard/.../tests 49; tests/conftest.py 1; tests/core 1; tests/crash_test 64; tests/fixtures 5; tests/integration 17; tests/unit 354
+
+X01 (expir (stem)): no permitted match
+
+X02 (eod): 21 permitted
+    -    docs/approvals/cron_officer/20-Jun-2026/sample_clean_eod.html
+    -    docs/audit/eod_capture_safety_2026-07-24.md
+    -    docs/audit/eod_email_findings_06aug2026.md
+    -    docs/audit/ledger6_eod_verify_measurement_03aug2026.md
+    -    docs/design/p1_eod_broker_reconcile_build_design_02jul2026.md
+    -    docs/design/p1_eod_broker_sync_assessment_02jul2026.md
+    N04  orders/eod_squareoff.py
+    -    scripts/eod_broker_reconcile.py
+    R09  scripts/eod_cleanup.py
+    -    scripts/eod_verify.py
+    -    tests/crash_test/ct140_eod_failure.py
+    -    tests/unit/test_alert_direction_eod_29jun.py
+    -    tests/unit/test_eod_broker_reconcile.py
+    R22  tests/unit/test_eod_lifecycle_pipeline_aware.py
+    -    tests/unit/test_eod_squareoff.py
+    -    tests/unit/test_eod_verify_honest.py
+    -    tests/unit/test_fix063_two_pass_eod.py
+    -    tests/unit/test_fix073_eod_entry_cutoff.py
+    -    tests/unit/test_fix130_eod_pre_alert.py
+    R10  tests/unit/test_fix135_eod_cleanup.py
+    -    tests/unit/test_v3_eod_route.py
+
+X03 (retention / prune / purge / housekeep / sweep): 23 permitted
+    -    docs/audit/BARE_FR_CLASS_SWEEP_19-Aug-2026.md
+    -    docs/audit/attribution_gloss_sweep_21jul2026.md
+    -    docs/audit/backup_retention_and_telegram_delivery_22jul2026.md
+    -    docs/audit/c1_history_purge_runbook_02jul2026.md
+    -    docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md
+    -    docs/audit/capital_figure_sweep_28jul2026.md
+    -    docs/audit/capital_snapshot_and_backup_retention_24jul2026.md
+    N11  docs/audit/locked_contract_staleness_sweep_22jul2026.md
+    -    docs/audit/masking_premise_sweep_19jul2026.md
+    -    docs/audit/pyc_orphan_sweep_28jul2026.md
+    -    docs/audit/sweep_done_17jul2026.md
+    N05  docs/decisions/09_prune_retention.md
+    N05  docs/decisions/BRIEF_09_prune_retention.md
+    N05  docs/decisions/DESIGN_09_prune_retention.md
+    N05  scripts/backup_retention.py
+    N05  scripts/db_retention.py
+    N05  scripts/output_retention.py
+    N05  tests/unit/test_backup_retention.py
+    N05  tests/unit/test_db_retention.py
+    -    tests/unit/test_h5_killswitch_sweep_product.py
+    N05  tests/unit/test_output_retention.py
+    -    tests/unit/test_sentinel_retention_scope.py
+    -    tests/unit/test_time_authority_sweep.py
+
+X04 (gate / retest): 22 permitted
+    R23  config/strategies/pb01_breakout_retest.yaml
+    -    docs/audit/consecutive_losses_gate_wired_19jul2026.md
+    -    docs/audit/ms4_gate1_impact_artifact_13jul2026.md
+    -    docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md
+    -    docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md
+    R15  screening/entry_gate.py
+    -    screening/hard_gate.py
+    R16  screening/retest_monitor.py
+    -    scripts/copy_gate.py
+    -    scripts/v3_hardgate_parity_recompute.py
+    -    sr_detector/retest_confirm.py
+    -    tests/crash_test/vm_investigate.py
+    -    tests/crash_test/vm_investigate2.py
+    -    tests/unit/test_copy_gate.py
+    R15  tests/unit/test_entry_gate.py
+    -    tests/unit/test_gate8_sector_toctou.py
+    -    tests/unit/test_hard_gate.py
+    -    tests/unit/test_phase4_trade_type_gate.py
+    -    tests/unit/test_sr_v2_retest_confirm.py
+    -    tests/unit/test_tick2_pipeline_scoped_daily_gate.py
+    -    tests/unit/test_v3_hardgate_parity.py
+    -    tests/unit/test_v3_pb01_gates_score.py
+
+X05 (webhook / receiver / processor): 9 permitted
+    -    config/scan_webhook_map.yaml
+    -    docs/audit/receiver_auth_c6_scoping_2026-07-25.md
+    N08  scripts/test_webhook.py
+    R02  signals/signal_processor.py
+    R01  signals/webhook_receiver.py
+    -    tests/unit/test_c2_webhook_lockdown.py
+    -    tests/unit/test_s4_webhook_degrade.py
+    R08  tests/unit/test_signal_processor.py
+    R07  tests/unit/test_webhook_receiver.py
+
+X06 (migration / state_store / db token): 14 permitted
+    -    core/db_connect.py
+    -    core/migrations.py
+    R11  core/state_store.py
+    R20  docs/04_db_schema_reference.md
+    -    docs/audit/db_schema_review_15jun2026.md
+    -    docs/audit/migration_on_open_rule_14jul2026.md
+    -    ops/control_tower/db.py
+    R12  ops_dashboard/backend/readers/db_reader.py
+    N09  ops_dashboard/tests/test_db_reader.py
+    N05  scripts/db_retention.py
+    N05  tests/unit/test_db_retention.py
+    -    tests/unit/test_migration_guard.py
+    R13  tests/unit/test_migrations.py
+    R13  tests/unit/test_state_store.py
+
+X07 (window): 7 permitted
+    -    allocation/window_buffer.py
+    N06  core/market_windows.py
+    -    docs/audit/service_window_configurable_25jul2026.md
+    -    docs/audit/service_window_extension_2026-07-24.md
+    N06  tests/unit/test_fix133_entry_windows.py
+    N06  tests/unit/test_market_windows.py
+    -    tests/unit/test_service_window_config.py
+
+X08 (restart / recover): 9 permitted
+    N03  broker/auth_recovery.py
+    -    docs/audit/q9_batch5_post_restart_capital_18jul2026.md
+    -    docs/disaster_recovery.md
+    -    scripts/preflight/checks/recovery.py
+    -    tests/integration/test_q9_post_restart_capital_wired.py
+    -    tests/unit/test_a1e1_orphan_recovery.py
+    -    tests/unit/test_a1e1_recovery_matrix.py
+    N03  tests/unit/test_auth_recovery.py
+    N02  tests/unit/test_fix068_timeout_recovery.py
+
+X09 (status): 8 permitted
+    -    docs/audit/audit_remediation_status_02jul2026.md
+    -    ops/control_tower/status.py
+    -    ops_dashboard/assets/icons/status/.gitkeep
+    R12  reports/signal_status.py
+    -    scripts/strategy_status.py
+    -    tests/unit/test_f2_functional_status.py
+    -    tests/unit/test_ni14_status_follows_severity.py
+    R13  tests/unit/test_signal_status_classification.py
+
+==============================================================================================================================
+7. FROZEN-MANUAL CROSS-REFERENCE (xref_frozen.py over docs/agenda/*/*_manual.md at V2 main b720bd7; re-run at 11:07:33 IST)
+==============================================================================================================================
+Method: every line of a frozen manual that matches expir, max_age, signal_age, "age check(s)", age_check, stale, TTL (token),
+  expires_at or EXPIRED, and every backticked legacy path on that line. A pointer, not a finding: the line may concern another
+  kind of expiry (for example a token).
+- Citation rows: 108; distinct legacy paths in the listing: 20; bare names: test_db_retention.py, test_migrations.py (both in
+  the listing under tests/unit/).
+
+| Legacy path | Register | Rows | Manuals and lines (cited legacy lines) |
+|---|---|---|---|
+| broker/token_monitor.py | N03 | 1 | B-012 379 (-) |
+| config/system_config.yaml | R03 | 6 | C-006 64 (124-128); C-006 91 (127); C-006 103 (127); C-007 252 (481-484); C-008 40 (-); C-008 117 (127) |
+| core/config_loader.py | R04 | 3 | C-006 65 (192-200); C-006 103 (196); C-007 252 (1976-1984, 2009) |
+| core/schema.sql | R06 | 7 | C-007 107 (49); C-007 120 (60-70); C-007 120 (51-59); C-007 169 (81-83); C-007 292 (36-38); C-007 294 (49); C-007 318 (1610, 1613) |
+| core/state_store.py | R11 | 3 | C-007 285 (1418-1419); C-007 291 (1424, 2996, 3057); C-007 291 (1413) |
+| main.py | R05 | 6 | B-010 56 (-); B-010 73 (-); B-012 136 (-); B-012 379 (-); C-008 85 (3575-3623); C-008 117 (3613-3614) |
+| ops_dashboard/backend/readers/db_reader.py | R12 | 2 | C-007 266 (660-681, 892-896); C-007 285 (666-667) |
+| orders/eod_squareoff.py | N04 | 1 | B-010 73 (-) |
+| orders/order_reconciler.py | N04 | 1 | B-010 56 (-) |
+| reports/daily_report.py | R12 | 1 | C-007 265 (53) |
+| reports/daily_trade_review.py | R12 | 1 | C-007 265 (79) |
+| reports/signal_status.py | R12 | 3 | C-007 191 (72-73); C-007 265 (-); C-007 265 (2, 39-48, 68-82) |
+| screening/secondary_screener.py | R14 | 5 | C-007 199 (598-620); C-007 199 (359, 518); C-007 199 (275, 323, 343, 454); C-007 199 (181, 260, 297); C-007 199 (590, 614) |
+| scripts/eod_cleanup.py | R09 | 25 | C-006 41 (-); C-006 219 (105-127); C-007 53 (-); C-007 176 (105-127, 211-271); C-007 176 (234-236); C-007 176 (206-208, 250-268); C-007 205 (120-125); C-007 207 (211-271); C-007 207 (234-236); C-007 207 (198-204, 260-266); C-007 237 (105-127); C-007 237 (311-312); C-007 237 (234-236); C-007 251 (105-127); C-007 252 (215-217); C-007 252 (234-236); C-007 252 (206-208); C-007 252 (198-204, 259-266); C-007 252 (268); C-007 252 (43-48, 57-58); C-007 252 (59-67); C-007 268 (234); C-007 291 (122); C-007 332 (105-127); C-007 341 (110-112) |
+| signals/signal_processor.py | R02 | 20 | C-006 26 (-); C-007 191 (1201, 1662, 2316-2318, 2598); C-007 191 (907, 912, 918-919, 935-936, 990, 1338, 1396, 1405, 1416-1417); C-007 191 (972, 1128, 1325); C-007 285 (918-919, 1201); C-007 294 (914-917); C-007 324 (918-919, 1201); C-008 117 (175, 222); C-008 137 (94-100, 1193-1231); C-008 137 (1248-1271); C-008 146 (914-921); C-008 146 (1221-1231); C-008 224 (919); C-008 270 (1515, 914-921); C-008 325 (2376-2384); C-008 345 (1221-1231); C-008 361 (2378); C-008 361 (914-921); C-008 361 (175); C-008 397 (1984-1987) |
+| signals/webhook_receiver.py | R01 | 13 | C-006 26 (-); C-007 107 (679, 960-961); C-007 169 (892, 949-961); C-007 169 (904-947); C-007 169 (963-980); C-007 169 (963-964); C-007 169 (1046-1049); C-007 222 (21-22); C-007 222 (64-65); C-007 222 (1016-1044); C-007 291 (1005, 1055); C-007 294 (960); C-007 294 (924-926) |
+| tests/unit/test_fix135_eod_cleanup.py | R10 | 4 | C-007 285 (117); C-007 303 (85-110); C-007 303 (116-145); C-007 303 (185, 203, 238) |
+| tests/unit/test_migrations.py | R13 | 1 | C-007 302 (360, 370-384) |
+| tests/unit/test_signal_processor.py | R08 | 2 | C-008 397 (544, 558, 572, 585, 599, 614, 632, 651, 668, 687, 1359, 1427, 1557, 1997, 2080, 2106, 2144); C-008 397 (501, 520, 1755, 1874, 2311) |
+| tests/unit/test_state_store.py | R13 | 1 | C-007 301 (623-645) |
+
+Further V2-record pointers found by reading the expiry-word lines (not backticked, so not in the table): C-002 lines 207, 244,
+  284, 359; C-003 line 528; C-004 lines 103, 129, 334, 353, 414, 421, 527, 547; C-005 lines 16, 115-119, 152; C-006 lines 26,
+  43, 64-65, 91, 103, 131, 219, 230, 268; C-007 lines 28, 199, 201, 254, 321, 344; C-008 lines 30, 155, 397, 476-477, 598;
+  A-003 line 58; A-008 line 146; A-009 line 121; A-011 lines 226-230, 250; B-005 line 289; B-009 lines 96, 109, 135-136, 260;
+  B-011 (the EOD lifecycle test). Token-expiry lines in A-006, A-010, B-004, B-007 and B-012 and order-state lines in A-011
+  were read as pointers to owners elsewhere (register N03, N04).
+
+==============================================================================================================================
+8. NOT DONE AND LIMITS
+==============================================================================================================================
+- No count-only content search and no line count (the C-009 prompt's Stage 0 boundary; OQ-01). The handover's Stage 0 practice
+  (C-005 to C-008) included both; this difference is disclosed, not a deviation from the prompt.
+- No byte sizes: the GitHub REST request was refused; git ls-tree -l and git cat-file -s were not used (they would fetch
+  blobs).
+- No sparse checkout set up and nothing checked out: the clone has no index and no working files. No legacy history command
+  (only git log -1 on the named pin, date only). No read, search or line log exists for C-009 (0 reads, 0 count-only searches,
+  0 line counts).
+- Not opened: any legacy blob, any record (the census, the two July records, the staleness sweep record), any host record (the
+  deployment file in N12), the records repository, the testing snapshot, the 18-Sep chapters and their index.
+- The handover note's Claude Project copy was read but not byte-compared with the attached copy.
+- Nothing written to the V2 repository, the legacy repository or the Claude Project.
+
+==============================================================================================================================
+9. FINAL CHECKS (run by the builder at 11:07:40 IST on both files)
+==============================================================================================================================
+- C-009_CLAUDE_STAGE0_ANSWERS_24-OCT-2026.txt: ASCII only: ok; no CR: ok; no session link: ok; no absolute path: ok; no
+  scratchpad session id: ok; no credential assignment: ok; 40-hex IDs known (100): ok; 64-hex values known (1): ok;
+  legacy-path tokens in the listing (101 checked): ok
+  scan_ids.py (value-blind): 108 hits, classes {'client_id_shape': 6, 'long_token': 102}
+  identifier shapes in any letter case (lesson 2026-10-21; sha and fix numbers allowed): C-008's document read IDs x3;
+  ChatGPT's RESHARE file names x3; Claude's tool and folder names x4; the V2 parent commit, short form x1; unclassified: 0
+- C-009_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_24-OCT-2026.txt: ASCII only: ok; no CR: ok; no session link: ok; no absolute
+  path: ok; no scratchpad session id: ok; no credential assignment: ok; 40-hex IDs known (5): ok; 64-hex values known (24):
+  ok; legacy-path tokens in the listing (308 checked): ok
+  scan_ids.py (value-blind): 32 hits, classes {'client_id_shape': 3, 'long_token': 29}
+  identifier shapes in any letter case (lesson 2026-10-21; sha and fix numbers allowed): ChatGPT's RESHARE file names x3;
+  Claude's tool and folder names x46; part of a legacy file name in the listing x1; unclassified: 0
+- Object store at 11:07:40 IST: 1,537 commits, 6,126 trees, 0 blobs; sensitive_check.py exit 0, never-open blobs present
+  locally: 0.
+- The scan_ids.py hits are blob IDs and SHA-256 values (long_token) and the identifier shapes named above; no email, address
+  or credential pattern. A pattern scan does not prove that nothing else sensitive is present (lesson 2026-10-10).

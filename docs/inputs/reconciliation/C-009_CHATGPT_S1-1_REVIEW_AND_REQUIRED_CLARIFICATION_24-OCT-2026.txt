@@ -1,0 +1,110 @@
+TRADING_SYSTEM-v2_redesign
+C-009 — CHATGPT REVIEW OF S1-1 COUNT-ONLY RESULTS
+Date: 24-Oct-2026
+Status: REVIEWED WITH A MATERIAL AUTHORISATION AMBIGUITY
+Next source-content reads: NOT AUTHORISED BY THIS REVIEW
+C-009 manual drafting: NOT AUTHORISED
+
+============================================================
+1. REVIEW RESULT
+============================================================
+
+The submitted result file is detailed and reports:
+- pinned legacy commit remained 970aabf3c78d777d9d34549e021f7c8e756c7bdb;
+- 32 term/file-set count searches, two zero-result positive controls, and line/byte totals for 93 admitted register files;
+- gate self-tests passed before, during and after the count step;
+- no source line was printed or viewed by Claude, no project code/tests/scripts were run, and the source-read lock remained set;
+- new candidate paths and a proposed RL-01 through RL-12 read list were reported for review.
+
+These are findings reported by Claude's result file. ChatGPT has reviewed that report text, not independently rerun Claude's commands or hashes.
+
+Count results are discovery evidence only. They do NOT establish the signal-expiry implementation, actual production behaviour, the configured value in the historical live environment, or whether an expiry event occurred in practice.
+
+============================================================
+2. MATERIAL ISSUE — S1-1 AUTHORISATION WORDING
+============================================================
+
+The written authorisation permitted count-only searches and line/byte totals, but also explicitly said:
+“Do not fetch, open, print, extract or read any legacy source blob contents.”
+
+Claude reports that it checked out 1,260 working files, fetched 1,255 blobs (including .gitattributes), and the masking/count tools read the checked-out files to calculate the counts. Claude says no source lines were printed or viewed.
+
+These statements expose a genuine ambiguity in the authorisation:
+- A content-based count-only search necessarily reads file content internally.
+- The authorisation separately prohibited fetching/opening/reading any source blob content.
+- “No source line printed or viewed” is a useful safeguard, but it does not make the internal content read equivalent to a metadata-only search.
+
+Do not silently reinterpret the original wording after the event. Record this as an authorisation/method deviation requiring explicit governance treatment. The report does not claim that source text was disclosed in the output, and this review does not infer that any protected blob was opened.
+
+REQUIRED ACTION:
+Before any further source-content read, Rama/ChatGPT must explicitly settle whether count-only masked content scanning is permitted as a defined exception to the no-content-read rule for future steps, or whether the rule must remain absolute. Any clarification applies prospectively; do not retroactively relabel the original wording.
+
+Until clarified, do not run S1-2 or any source-content read.
+
+============================================================
+3. FINDINGS THAT MAY BE CARRIED FORWARD
+============================================================
+
+FACT — COUNT-ONLY REPORT:
+- The expiry setting terms K2 (expiry_sec / signal_expiry_sec) were reported in five registered runtime files and one registered config file.
+- expires_at (K3) was reported in eight runtime files, including five unregistered script paths.
+- REJECTED_EXPIRED (K4) was reported in one registered runtime file.
+- Forty registered files had no hits on any of the eight search terms; this is not proof that those files are unrelated to expiry.
+- Two zero results had reported positive controls.
+- Several new candidates were identified for possible narrow review.
+
+UNKNOWN / NOT ESTABLISHED:
+- What the matching lines mean or how the code behaves.
+- Whether expires_at in the five new script paths concerns the signals table.
+- Whether expiry is checked at intake, processing, re-queue, persistence or any other point beyond what frozen manuals already establish.
+- Whether configured expiry values matched historical live deployment values.
+- Whether any particular signal expired or any order/trade was affected.
+
+Do not convert path names or term counts into behaviour claims.
+
+============================================================
+4. REVIEW OF PROPOSED READ LIST — RECOMMENDATION ONLY
+============================================================
+
+No list below is authorised by this document. It is a recommendation for a later, explicit written authorisation after the S1-1 wording issue is resolved and all required prerequisites are satisfied.
+
+Recommended core read candidates:
+- RL-01 to RL-07: existing registered config, loader, main wiring, webhook receiver, signal processor, schema and dashboard reader, using only the listed minimum ranges/term matches.
+- RL-09: the two registered tests plus the two newly proposed test files, but only as text and only the expiry-related matching lines/minimum case ranges.
+- RL-10: the single matching line in config/strategies/pb01_breakout_retest.yaml, if strategy-level signal age is in C-009 scope under Rama's frozen OQ-02 choice.
+- RL-11: core/events.py and core/exceptions.py only if Rama agrees that the minimal matches are needed to establish whether event/exception names touch signal expiry. Otherwise exclude them and record the scope boundary.
+
+RL-08 (five scripts, nine expires_at matching lines):
+- The counts alone cannot establish whether these scripts touch the signals column.
+- A narrow masked grep could answer that bounded question, but these are outside the original register and may belong to other manual topics.
+- Recommendation: defer RL-08 unless Rama explicitly approves adding these five paths to the C-009 read set after reviewing their path names and ownership interpretation. Do not infer relevance merely from the term.
+
+RL-12 (documentation / locked decisions):
+- Do not read docs/locked_decisions.yaml under OQ-06; treat it as an excluded historical/design record unless a specific exception is approved.
+- docs/04_db_schema_reference.md and docs/CONFIG_GUIDE.md may be checked for limited text drift only, but chapter comparison remains blocked until Rama attaches chapters 02 and 03 and their hashes match C-008's recorded values.
+- Do not use documentation text to override source evidence.
+
+The count-only proposal to close R19, R22 or narrow R23 is not itself a behavioural finding. Any register change must be recorded as a documentation-scope decision, not inferred as proof of irrelevance.
+
+============================================================
+5. REQUIRED NEXT STEPS
+============================================================
+
+1. Preserve the S1-1 result file unchanged as submitted; do not rewrite its historical account.
+2. Record the wording conflict/deviation in the C-009 review record.
+3. Obtain Rama's explicit decision on the meaning of “no source-content reads” for masked count-only scanning in future steps.
+4. Keep the source-read lock engaged until that clarification is made.
+5. Obtain explicit approval of the exact S1-2 read list, including each newly added path, and issue a separate written authorisation.
+6. Verify chapters 02 and 03 only after Rama attaches them; compare SHA-256 to the exact values in the C-008 record before reading. On mismatch, stop.
+7. Track the two C-008 freeze-package files as later C-009 freeze prerequisites; they do not authorise or require source reads now.
+
+============================================================
+6. GOVERNANCE STATUS
+============================================================
+
+S1-1 results: RECEIVED AND REVIEWED AS A REPORT.
+Count-only evidence: USABLE WITH THE LIMITATIONS ABOVE.
+Authorisation wording: AMBIGUITY / DEVIATION REQUIRES EXPLICIT RESOLUTION.
+S1-2 and all source-content reads: NOT AUTHORISED BY THIS REVIEW.
+C-009 manual: NOT DRAFTED.
+Legacy changes, operational revival and V2 design decisions: NOT AUTHORISED.

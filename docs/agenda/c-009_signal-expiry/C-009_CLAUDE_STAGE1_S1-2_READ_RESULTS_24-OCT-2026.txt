@@ -1,0 +1,456 @@
+C-009 - SIGNAL EXPIRY: STAGE 1, STEP S1-2 - BOUNDED READ RESULTS (for review)
+Date of work: 24-Oct-2026 (IST), 12:50 to 13:04 IST. Prepared by Claude.
+Authorisation: C-009_S1-2_WRITTEN_APPROVAL_AND_HASH_CONFIRMATION_24-OCT-2026.txt (ChatGPT; received from Rama at 12:50 IST; 57
+  lines; SHA-256 9224F050B991ACE12D0B93D3BA0AE68265455D3AF31DC58395840FAE5E205C57), for the checklist
+  C-009_CLAUDE_S1-2_EXECUTION_CHECKLIST_24-OCT-2026.txt (SHA-256
+  A2E6D84E398BC6B20A9A38679277F0AFC032A8EC742F694588ABBD8CECA3AC07, unchanged since delivery). Rama's decision on deviation
+  D-2: 12:53 IST.
+Status: S1-2 done (S2-01 to S2-18); STOPPED for ChatGPT/Rama review. The read lock is engaged again (12:59 IST). S2-19 and
+  S2-20 not run; no RL-09 case range read; no finding drawn; the C-009 manual is not drafted.
+Security: the masked outputs of the approved reads only; for the chapters, counts only. No credential, account or client
+  identifier, host or address, deployed path, mailbox or person name is reproduced. Claude's working folders are written as
+  <SCRATCHPAD>, tools/ and "the clone".
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Chapters 02 and 03: the copies supplied to this session match the C-008 record exactly (SHA-256 and line count): PASS, as in
+  ChatGPT's check of its Library copies (section 1).
+- Deviations (section 2): D-2, the chat app loaded the full text of chapter 03 into Claude's context when it was attached; not
+  requested, nothing from it quoted or used; Rama chose to proceed and record it. D-3, after the reads Claude ran git status
+  on the partial clone, which the handover forbids; git fetched the two .gitignore blobs (not protected, not opened or printed
+  by Claude).
+- Reads (sections 4 and 5): 27 gated, masked reads (001 to 027) for S2-01 to S2-16, in the approved order; 4 conditional
+  ranges skipped by rule CR, each already printed by an earlier grep of the same file; 157 printed lines, every operation
+  within its max; no refusal and no failed check. The lock was lifted at 12:55:53 IST, the gate test passed at 12:56:38 IST
+  and the lock was engaged again at 12:59:05 IST (section 3).
+- Chapter counts (section 6), no line printed: 02_REPOSITORY_AND_FILE_MAP.md, (?i)expir 35 lines and signal_age|max_age 1;
+  03_STARTUP_RUNTIME_AND_SCHEDULER.md, (?i)expir 4 and signal_age|max_age 0 (positive control: signal 5).
+- RL-09 case ranges (section 7): the greps locate the expiry lines but not where each test case begins and ends, so exact
+  ranges cannot be fixed from them without guessing. Proposed for approval: a structure-only scan that prints line numbers
+  only (P-1), then the exact ranges (P-2).
+
+==============================================================================================================================
+1. CHAPTERS 02 AND 03: HASH CHECK OF THE SESSION COPIES (approval section 3, item 1)
+==============================================================================================================================
+Rama attached both files at 12:50 IST. Each was copied into a new, empty folder (<SCRATCHPAD>/c009/chapters/) and checked
+  there by SHA-256, line count (newline characters) and byte size, printing none of its text (12:52 IST); the copies are
+  byte-identical to the attachments.
+
+| Chapter | Expected SHA-256 (C-008 section 14.7) | Actual SHA-256 | Lines expected / actual | Bytes | Result |
+|---|---|---|---|---|---|
+| 02_REPOSITORY_AND_FILE_MAP.md | 8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49 | 8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49 | 3,557 / 3,557 | 782,947 | PASS |
+| 03_STARTUP_RUNTIME_AND_SCHEDULER.md | F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087 | F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087 | 321 / 321 | 35,778 | PASS |
+
+==============================================================================================================================
+2. DEVIATIONS (recorded for the C-009 review notes and the design log; D-1 is S1-1's, already recorded)
+==============================================================================================================================
+- D-2, chapter 03 loaded into Claude's context (12:50 IST). When the two chapters were attached with the approval, the chat
+  app read 03_STARTUP_RUNTIME_AND_SCHEDULER.md in full into Claude's context, before any hash check;
+  02_REPOSITORY_AND_FILE_MAP.md was too large and was not loaded. Claude did not ask for it. Nothing from chapter 03 has been
+  quoted, used or relied on, and its S2-18 counts were computed by the counting tool. The approval allows counts only for the
+  chapters (S2-19 and S2-20 need a separate approval). Claude reported this before the first read; Rama decided at 12:53 IST
+  (multiple choice) to proceed with S1-2 and record it. Proposed treatment: any later comparison with chapter 03 uses only the
+  lines an approved grep prints, as if it had not been loaded. Proposed practice: a file that is to be counted, not read, is
+  sent in a form the app does not open by itself (for example inside a .zip).
+- D-3, git status on the partial clone (about 13:00 IST). After the reads and the relock, Claude ran git status --porcelain on
+  the clone to confirm that no working file had changed. The handover forbids tree-wide commands on the partial clone, and the
+  approval does not list the command. It printed nothing (no change), but git fetched two blobs to apply its ignore rules:
+  .gitignore (blob b9b49fc3fd7d) and ops_dashboard/.gitignore (blob 0d0f1a28fc6e). Local blobs went from 1,255 to 1,257;
+  never-open blobs present: 0. Neither file was opened or printed by Claude. Lesson proposed for the design log: on a partial
+  clone, confirm file state with the gate's per-file checks (ls-tree, hash-object), never with git status or another tree-wide
+  command; a check that is not on the approved list is still an action under the rules.
+
+==============================================================================================================================
+3. READ LOCK AND GATE TEST (checklist E-1 and E-2; E-5 added)
+==============================================================================================================================
+| Step | Time (IST) | Record |
+|---|---|---|
+| E-1 lock lifted | 12:55:53 | cread_c009.py SHA-256 f2894f0ea6183fe0aadcf72ccd1d14a2def7cf5bb195af96841689260a132a51 before, 5d895dffefc347ab079f2cff7fbf21f72eeac8ec0de71a1942077dfde0de023a after |
+| E-2 gate test | 12:56:30 to 12:56:38 | gate_test_c009_s12.py (SHA-256 062946568febb43006e5671ca7d95daa5e3686236e5fb12755906345c7d7e242): PASSED; output SHA-256 4d0b5af459a93d38ad82ed27dd3a1cb0c1b62fe2d1882552a0258f0323ea1098 |
+| E-5 lock engaged again | 12:59:05 | SHA-256 5d895dffefc347ab079f2cff7fbf21f72eeac8ec0de71a1942077dfde0de023a before, 23e097b12d3865ac98b1555fc3fdea56b982e8468f7726652a31d82f1ea377c0 after; a read attempt was then refused by the lock (no log row) |
+
+- The gate test (adapted from S1-1's; lock required off and the tool required to be the unlocked copy recorded at E-1) refused
+  the 102 protected paths, the 2 excluded July records, the path sharing a protected blob, 14 rule-shaped names, a name not in
+  the tree and a malformed range; admitted the 16 approved paths through gate() alone (no file opened); made no read; and left
+  the logs, the object store and the never-open count (0) unchanged.
+- E-5 is not in the checklist: Claude added it so that no read is possible before a further approval. It changes no scope.
+- The driver run_s12_c009.py (SHA-256 be03127dbda7d15a8053eb23cb34f9a01ea6b4cd5b70aa4609d75d1707ccb646) parsed the 31
+  operations from the approved checklist file (its SHA-256 checked first), refused any path outside the 16, applied rule CR
+  and checked every output: header, exact range lines, single-term grep counts equal to S1-1's, combined greps within their
+  max.
+
+==============================================================================================================================
+4. OPERATIONS COMPLETED (E-3 and E-4)
+==============================================================================================================================
+| Op | Read | Time | File | Operation | Max | Printed | Result |
+|---|---|---|---|---|---|---|---|
+| S2-01.1 | 001 | 12:57:46 | config/system_config.yaml | range 124:128 | 5 | 5 | done |
+| S2-01.2 | 002 | 12:57:47 | config/system_config.yaml | grep (K1) | 6 | 6 | done |
+| S2-02.1 | 003 | 12:57:47 | core/config_loader.py | range 192:200 | 9 | 9 | done |
+| S2-02.2 | 004 | 12:57:47 | core/config_loader.py | grep (K2) | 1 | 1 | done |
+| S2-03.1 | 005 | 12:57:48 | main.py | grep (K2) | 2 | 2 | done |
+| S2-03.2 | - | 12:57:48 | main.py | range 3613:3614 (CR) | 2 | 0 | skipped, rule CR: all its lines printed by read 005 |
+| S2-04.1 | 006 | 12:57:48 | signals/webhook_receiver.py | grep (K2) | 6 | 6 | done |
+| S2-04.2 | 007 | 12:57:49 | signals/webhook_receiver.py | grep (K3) | 4 | 4 | done |
+| S2-04.3 | 008 | 12:57:49 | signals/webhook_receiver.py | range 916:926 | 11 | 11 | done |
+| S2-04.4 | 009 | 12:57:49 | signals/webhook_receiver.py | range 949:961 | 13 | 13 | done |
+| S2-05.1 | 010 | 12:57:50 | signals/signal_processor.py | grep (K2) | 4 | 4 | done |
+| S2-05.2 | 011 | 12:57:50 | signals/signal_processor.py | grep (K5) | 2 | 2 | done |
+| S2-05.3 | 012 | 12:57:50 | signals/signal_processor.py | range 914:921 | 8 | 8 | done |
+| S2-05.4 | 013 | 12:57:51 | signals/signal_processor.py | range 1193:1231 | 39 | 39 | done |
+| S2-05.5 | 014 | 12:57:51 | signals/signal_processor.py | range 1515:1515 | 1 | 1 | done |
+| S2-05.6 | 015 | 12:57:51 | signals/signal_processor.py | range 2376:2384 | 9 | 9 | done |
+| S2-05.7 | - | 12:57:52 | signals/signal_processor.py | range 175:175 (CR) | 1 | 0 | skipped, rule CR: all its lines printed by read 010 |
+| S2-05.8 | - | 12:57:52 | signals/signal_processor.py | range 222:222 (CR) | 1 | 0 | skipped, rule CR: all its lines printed by read 010 |
+| S2-06.1 | 016 | 12:57:52 | core/schema.sql | grep (K3) | 1 | 1 | done |
+| S2-06.2 | 017 | 12:57:52 | core/schema.sql | grep (K2) | 1 | 1 | done |
+| S2-06.3 | - | 12:57:53 | core/schema.sql | range 49:49 (CR) | 1 | 0 | skipped, rule CR: all its lines printed by read 016 |
+| S2-07.1 | 018 | 12:57:53 | ops_dashboard/backend/readers/db_reader.py | grep (K3) | 1 | 1 | done |
+| S2-08.1 | 019 | 12:57:53 | tests/unit/test_webhook_receiver.py | grep (K2 or K4 or K5) | 6 | 6 | done |
+| S2-09.1 | 020 | 12:57:53 | tests/unit/test_signal_processor.py | grep (K2 or K4 or K5) | 7 | 6 | done |
+| S2-10.1 | 021 | 12:57:54 | tests/unit/test_fix136_batch9.py | grep (K2 or K4 or K5) | 11 | 10 | done |
+| S2-11.1 | 022 | 12:57:54 | tests/unit/test_config_loader.py | grep (K2 or K4 or K5) | 1 | 1 | done |
+| S2-12.1 | 023 | 12:57:54 | config/strategies/pb01_breakout_retest.yaml | grep (K1) | 1 | 1 | done |
+| S2-13.1 | 024 | 12:57:55 | core/events.py | grep (K1 or K5) | 3 | 2 | done |
+| S2-14.1 | 025 | 12:57:55 | core/exceptions.py | grep (K1 or K6) | 6 | 5 | done |
+| S2-15.1 | 026 | 12:57:55 | docs/04_db_schema_reference.md | grep (K2 or K3 or K6) | 2 | 1 | done |
+| S2-16.1 | 027 | 12:57:56 | docs/CONFIG_GUIDE.md | grep (K2 or K3 or K6) | 2 | 2 | done |
+| S2-17.1 | Q35 | 12:58:46 | 02_REPOSITORY_AND_FILE_MAP.md | count-only (?i)expir | - | 0 | 35 matching lines |
+| S2-17.2 | Q36 | 12:58:47 | 02_REPOSITORY_AND_FILE_MAP.md | count-only signal_age|max_age | - | 0 | 1 matching line |
+| S2-18.1 | Q37 | 12:58:47 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | count-only (?i)expir | - | 0 | 4 matching lines |
+| S2-18.2 | Q38 | 12:58:47 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | count-only signal_age|max_age | - | 0 | 0 matching lines |
+| S2-18.2 control | Q39 | 12:58:54 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | count-only signal | - | 0 | 5 matching lines |
+
+- Combined greps print a line once even when it matches more than one term, so they can print fewer lines than their max (the
+  sum of the per-term counts): S2-09 6 of 7, S2-10 10 of 11, S2-13 2 of 3, S2-14 5 of 6, S2-15 1 of 2.
+- When cited later: config/system_config.yaml and the strategy file FACT (CONFIG); the code files FACT (SOURCE-VERIFIED); the
+  four test files FACT (TEST TEXT, never run); the two documents FACT (TEXT DRIFT). No finding is drawn in this file.
+
+==============================================================================================================================
+5. BOUNDED OUTPUTS OF THE 27 READS (verbatim, masked)
+==============================================================================================================================
+Each read: its header, then every line exactly as the masked reader printed it ("N: text", N the line number at the pin),
+  after a four-space indent, then the filter's mask counts (whole-file counts). Two lines carry non-ASCII characters as in the
+  source (reads 003 and 015).
+
+Read 001 | S2-01.1 | config/system_config.yaml | blob bf742ae5c81c | 754 lines | range 124:128
+    124: signal_queue:
+    125:   capacity: 300               # Max signals in queue before HTTP 503 (P15)
+    126:   backpressure_pct: 0.80      # 503 threshold = capacity * backpressure_pct (P15)
+    127:   expiry_sec: 600             # WR6: 10 min - Chartink triggered_at is scan time, not delivery time
+    128:   warning_pct: 0.60           # FIX-134 Item 35: X-Queue-Warning header above 60% fill
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 002 | S2-01.2 | config/system_config.yaml | blob bf742ae5c81c | 754 lines | grep (K1)
+  expression: (?i)expir
+    127:   expiry_sec: 600             # WR6: 10 min - Chartink triggered_at is scan time, not delivery time
+    475:   check1_mid_fill_defer_sec: 0.0  # Section D: SECONDS CHECK1 defers finalizing when the broker refuses our orphan-leg cancel with "being processed" (= one of OUR OWN legs is filling, so our fill callback owns the close). 0.0 = OFF = pre-Section-D behaviour exactly. On expiry it finalizes anyway and logs "DEFERRAL EXPIRED UNRESOLVED". Seconds, not cycles: a cycle count is a proxy that changes meaning if poll_interval_sec is retuned.
+    482:   signal_retention_days: 90   # keep-window (days) for terminal NOISE fingerprints (EXPIRED/DUPLICATE/REJECTED_*);
+    538:   zone_rewarm_margin_sec: 300      # re-warm a cached symbol this long before its TTL expiry
+    567:   candle_interval_seconds: 60.0  # wall-clock window alignment (NOT candle_store); short vs the 60s signal expiry
+    627:   entry_end: "11:00"          # next-morning retest thesis expired by mid-morning
+    masks: {'HOSTTOK': 5, 'IPV4': 2, 'KV': 1, 'CLIENTID': 1, 'ALNUM': 1} | stage-2 masks: {}
+
+Read 003 | S2-02.1 | core/config_loader.py | blob 8635bca77531 | 2,517 lines | range 192:200
+    192: class SignalQueueConfig(BaseModel):
+    193:     model_config = ConfigDict(extra="forbid")
+    194:     capacity: int              # max signals in queue (P15 default: 300)
+    195:     backpressure_pct: float    # HTTP 503 at capacity × pct (P15 default: 0.80)
+    196:     expiry_sec: int            # WR6: reject signal older than this many seconds (default 60)
+    197:     warning_pct: float = 0.60  # FIX-134 Item 35: X-Queue-Warning header above this fill %
+    198: 
+    199: 
+    200: class ClockSkewProbeConfig(BaseModel):
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 004 | S2-02.2 | core/config_loader.py | blob 8635bca77531 | 2,517 lines | grep (K2)
+  expression: expiry_sec|signal_expiry_sec
+    196:     expiry_sec: int            # WR6: reject signal older than this many seconds (default 60)
+    masks: {'HOSTTOK': 213, 'IPV4': 1, 'CLIENTID': 1, 'ALNUM': 5} | stage-2 masks: {}
+
+Read 005 | S2-03.1 | main.py | blob 445fb0d8237a | 4,294 lines | grep (K2)
+  expression: expiry_sec|signal_expiry_sec
+    3613:         # Use same expiry as webhook_receiver (config signal_queue.expiry_sec)
+    3614:         signal_expiry_sec=app_config.system.signal_queue.expiry_sec,
+    masks: {'HOSTTOK': 0, 'CLIENTID': 19, 'KV': 10, 'ALNUM': 8, 'IPV4': 1} | stage-2 masks: {}
+
+Read 006 | S2-04.1 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | grep (K2)
+  expression: expiry_sec|signal_expiry_sec
+    26:     WR14 -- signal_queue.expiry_sec + webhook config section
+    679:         expiry_sec: int = sq_cfg.expiry_sec
+    721:                 triggered_at, received_at, today_iso, expiry_sec,
+    900:         expiry_sec: int,
+    925:         if age_sec > expiry_sec:
+    960:         expires_at_dt = received_at + timedelta(seconds=expiry_sec)
+    masks: {'HOSTTOK': 1, 'CLIENTID': 3, 'KV': 2, 'IPV4': 1} | stage-2 masks: {}
+
+Read 007 | S2-04.2 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | grep (K3)
+  expression: expires_at
+    960:         expires_at_dt = received_at + timedelta(seconds=expiry_sec)
+    961:         expires_at_iso = expires_at_dt.isoformat()
+    969:                        triggered_at, received_at, expires_at,
+    976:                         triggered_at_iso, received_at_iso, expires_at_iso,
+    masks: {'HOSTTOK': 1, 'CLIENTID': 3, 'KV': 2, 'IPV4': 1} | stage-2 masks: {}
+
+Read 008 | S2-04.3 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | range 916:926
+    916:         # WR6: signal expiry
+    917:         # FIX-022: triggered_at is now guaranteed IST-aware from parsing,
+    918:         # but handle legacy naive datetimes defensively
+    919:         now = now_ist()
+    920:         if triggered_at.tzinfo is None:
+    921:             triggered_at_aware = triggered_at.replace(tzinfo=ist_timezone())
+    922:         else:
+    923:             triggered_at_aware = triggered_at
+    924:         age_sec = (now - triggered_at_aware).total_seconds()
+    925:         if age_sec > expiry_sec:
+    926:             return {"symbol": symbol, "status": "EXPIRED"}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 009 | S2-04.4 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | range 949:961
+    949:         # WR7 / FIX-131 Item 17: compute dedup fingerprint using configurable bucket.
+    950:         # floor(unix_ts / dedup_window_seconds) gives same bucket for all signals
+    951:         # within the same N-second window, surviving minute/hour boundaries.
+    952:         epoch_bucket = int(triggered_at.timestamp() // self._dedup_window_seconds)
+    953:         fp_raw = f"{scanner_name}|{symbol}|{epoch_bucket}"
+    954:         fingerprint = hashlib.sha256(fp_raw.encode()).hexdigest()
+    955: 
+    956:         # WR9: insert signal row, then push to queue
+    957:         signal_id = new_signal_id()
+    958:         triggered_at_iso = triggered_at.isoformat()
+    959:         received_at_iso = received_at.isoformat()
+    960:         expires_at_dt = received_at + timedelta(seconds=expiry_sec)
+    961:         expires_at_iso = expires_at_dt.isoformat()
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 010 | S2-05.1 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | grep (K2)
+  expression: expiry_sec|signal_expiry_sec
+    175:         signal_expiry_sec: int = 60,
+    222:         self._signal_expiry_sec = signal_expiry_sec
+    917:             if age_sec > self._signal_expiry_sec:
+    920:                     f"Signal age {age_sec:.1f}s > expiry {self._signal_expiry_sec}s",
+    masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+
+Read 011 | S2-05.2 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | grep (K5)
+  expression: ["']EXPIRED["']
+    919:                     "EXPIRED",
+    1221:             if rej.check == "EXPIRED" and self._notifier:
+    masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+
+Read 012 | S2-05.3 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 914:921
+    914:             # Signal age (defense-in-depth; receiver also checks)
+    915:             triggered_aware = triggered_at.replace(tzinfo=ist_timezone())
+    916:             age_sec = (now - triggered_aware).total_seconds()
+    917:             if age_sec > self._signal_expiry_sec:
+    918:                 raise _PipelineReject(
+    919:                     "EXPIRED",
+    920:                     f"Signal age {age_sec:.1f}s > expiry {self._signal_expiry_sec}s",
+    921:                 )
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 013 | S2-05.4 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 1193:1231
+    1193:         except _PipelineReject as rej:
+    1194:             self._log.info(
+    1195:                 f"Signal {signal_id} ({symbol}) rejected at {rej.check}: {rej.reason}"
+    1196:             )
+    1197:             # FIX-190 (Bug B): count non-throttle rejects separately (throttle
+    1198:             # drops are already counted under entries_throttled).
+    1199:             if rej.check != "ENTRY_THROTTLED":
+    1200:                 self._bump_metric("entries_rejected")
+    1201:             self._store.update_signal_status(signal_id, f"REJECTED_{rej.check}", rej.reason)
+    1202:             self._evidence_capture("P2_REJECT", lambda: {
+    1203:                 "signal_id": signal_id, "symbol": symbol,
+    1204:                 # A reject raised before Step 2 has no `strategy_name` bound yet,
+    1205:                 # so the strategy comes from the scanner, resolved exactly as
+    1206:                 # Step 2 resolves it -- never left None, never guessed.
+    1207:                 "strategy": self._evidence_strategy_for(scanner_name),
+    1208:                 "triggered_at": _iso(triggered_at), "trigger_price": trigger_price,
+    1209:                 "status": f"REJECTED_{rej.check}", "reject_reason": rej.reason,
+    1210:                 "rejected_step": rej.check,
+    1211:             })
+    1212:             # Release reservation if we had one
+    1213:             if reservation_id:
+    1214:                 try:
+    1215:                     self._fm.release(reservation_id, f"rejected_{rej.check.lower()}")
+    1216:                 except Exception as rel_exc:
+    1217:                     self._log.error(f"Failed to release reservation {reservation_id}: {rel_exc}")
+    1218:             with self._stats_lock:
+    1219:                 bucket = self._stats["rejected"]
+    1220:                 bucket[rej.check] = bucket.get(rej.check, 0) + 1
+    1221:             if rej.check == "EXPIRED" and self._notifier:
+    1222:                 import time as _time
+    1223:                 now_mono = _time.monotonic()
+    1224:                 if now_mono - self._last_expired_alert_ts > 60.0:
+    1225:                     self._last_expired_alert_ts = now_mono
+    1226:                     try:
+    1227:                         self._notifier.send_warning(
+    1228:                             f"[{self._mode}] Signal EXPIRED: {symbol} age={rej.reason}"
+    1229:                         )
+    1230:                     except Exception:
+    1231:                         pass
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 014 | S2-05.5 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 1515:1515
+    1515:                 "triggered_at": triggered_at,
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 015 | S2-05.6 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 2376:2384
+    2376:         """
+    2377:         Resume a CONFIRMED WAIT_FOR_RETEST candidate. Re-checks kill-switch /
+    2378:         market-window / strategy-control / governor (NOT the :607 60s expiry —
+    2379:         this is a park-and-resume), then sizes + reserves (capital reserved HERE
+    2380:         for the first time) and places a MARKET entry with a STRUCTURE SL below
+    2381:         the reclaimed zone + an R:R-preserving TGT. Called from RetestMonitor's
+    2382:         poll thread on CONFIRMED. ``parked`` is a ParkedCandidate (typed as object
+    2383:         to avoid a circular import).
+    2384:         """
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 016 | S2-06.1 | core/schema.sql | blob b46d7489f6ec | 1,655 lines | grep (K3)
+  expression: expires_at
+    49:     expires_at          TEXT NOT NULL,               -- received_at + signal_expiry_sec
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 017 | S2-06.2 | core/schema.sql | blob b46d7489f6ec | 1,655 lines | grep (K2)
+  expression: expiry_sec|signal_expiry_sec
+    49:     expires_at          TEXT NOT NULL,               -- received_at + signal_expiry_sec
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 018 | S2-07.1 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | grep (K3)
+  expression: expires_at
+    826:         "SELECT s.signal_id, s.received_at, s.expires_at, s.scanner, s.strategy, "
+    masks: {'HOSTTOK': 0, 'LONGNUM': 1} | stage-2 masks: {}
+
+Read 019 | S2-08.1 | tests/unit/test_webhook_receiver.py | blob 7b377abb85d6 | 2,043 lines | grep (K2 or K4 or K5)
+  expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+    72:             expiry_sec=expiry,
+    941:     """Signal triggered_at older than expiry_sec -> per-stock EXPIRED."""
+    949:     assert resp.get_json()["results"][0]["status"] == "EXPIRED"
+    1578:             expiry_sec=86400,  # 24 hours - large enough to not expire during test
+    1636:             expiry_sec=86400,  # 24 hours - large enough to not expire during test
+    1683:             expiry_sec=86400,  # 24 hours - large enough to not expire during test
+    masks: {'HOSTTOK': 0, 'KV': 16, 'IPV4': 3, 'CLIENTID': 16, 'ALNUM': 1} | stage-2 masks: {}
+
+Read 020 | S2-09.1 | tests/unit/test_signal_processor.py | blob 3ec0ea84392a | 2,501 lines | grep (K2 or K4 or K5)
+  expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+    372:     signal_expiry_sec=60,
+    421:         signal_expiry_sec=signal_expiry_sec,
+    573:     """Signal older than expiry_sec -> REJECTED_EXPIRED."""
+    578:     proc, _, _ = _make_proc(store=store, signal_expiry_sec=30)
+    581:     _assert_rejected(store, sig_id, "REJECTED_EXPIRED")
+    582:     print("  OK expired signal -> REJECTED_EXPIRED")
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 021 | S2-10.1 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | 469 lines | grep (K2 or K4 or K5)
+  expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+    121:         """expires_at = received_at + timedelta(seconds=expiry_sec)."""
+    123:         expiry_sec = 600
+    125:         actual = received + timedelta(seconds=expiry_sec)
+    135:         signal_expiry_sec = 60
+    136:         assert age_sec > signal_expiry_sec
+    144:         signal_expiry_sec = 600
+    145:         assert age_sec <= signal_expiry_sec
+    157:         cfg = SignalQueueConfig(capacity=300, backpressure_pct=0.8, expiry_sec=600, warning_pct=0.6)
+    158:         assert cfg.expiry_sec == 600
+    176:                 {"signal_id": "s2", "status": "REJECTED_EXPIRED", "symbol": "TCS", "scanner": "sc1", "strategy": "fp_long", "rejection_reason": "EXPIRED", "trigger_price": 3500, "received_at": "2026-05-31T10:05:00", "triggered_at": "2026-05-31T09:50:00"},
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 022 | S2-11.1 | tests/unit/test_config_loader.py | blob 8f245c35a047 | 1,420 lines | grep (K2 or K4 or K5)
+  expression: expiry_sec|signal_expiry_sec|REJECTED_EXPIRED|["']EXPIRED["']
+    75:   expiry_sec: 60
+    masks: {'HOSTTOK': 20, 'IPV4': 1, 'KV': 3, 'ALNUM': 1} | stage-2 masks: {}
+
+Read 023 | S2-12.1 | config/strategies/pb01_breakout_retest.yaml | blob eedf5cac5ed5 | 80 lines | grep (K1)
+  expression: (?i)expir
+    20: # retest level definition, gap guard and expiry rules is the "V3 DECISION CONTENT
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 024 | S2-13.1 | core/events.py | blob 6511bc40fe74 | 366 lines | grep (K1 or K5)
+  expression: (?i:expir)|["']EXPIRED["']
+    113:     FIX-028: Order reached terminal state (CANCELLED/FAILED/EXPIRED) with partial fill.
+    130:     reason: str = ""               # "CANCELLED" | "FAILED" | "EXPIRED"
+    masks: {'HOSTTOK': 0, 'CLIENTID': 2} | stage-2 masks: {}
+
+Read 025 | S2-14.1 | core/exceptions.py | blob 1eeac5842084 | 423 lines | grep (K1 or K6)
+  expression: (?i:expir)|signal_age|max_age
+    307:     state (COMPLETE, CANCELLED, FAILED, EXPIRED).
+    353:     expiry, screening, or the signal queue.
+    360: class SignalExpiredError(SignalError):
+    366:         signal_id (str): the signal that expired
+    368:         max_age_seconds (float): configured expiry threshold
+    masks: {'HOSTTOK': 0, 'ALNUM': 1} | stage-2 masks: {}
+
+Read 026 | S2-15.1 | docs/04_db_schema_reference.md | blob 0218e152b77e | 371 lines | grep (K2 or K3 or K6)
+  expression: expiry_sec|signal_expiry_sec|expires_at|signal_age|max_age
+    97: expires_at TEXT NOT NULL    -- received_at + expiry_sec
+    masks: {'HOSTTOK': 0, 'ALNUM': 2} | stage-2 masks: {}
+
+Read 027 | S2-16.1 | docs/CONFIG_GUIDE.md | blob 1e4f7ee17440 | 819 lines | grep (K2 or K3 or K6)
+  expression: expiry_sec|signal_expiry_sec|expires_at|signal_age|max_age
+    326: rsi_range 10, sector_strength 10, circuit_check 10, signal_age 10, time_of_day 5,
+    363:   80% full; `expiry_sec: 600` drops signals older than 10 min.
+    masks: {'HOSTTOK': 1, 'CLIENTID': 2} | stage-2 masks: {}
+
+==============================================================================================================================
+6. CHAPTER COUNTS (S2-17 and S2-18; counts only, no line printed)
+==============================================================================================================================
+| Chapter | Term | Search | Matching lines | Control |
+|---|---|---|---|---|
+| 02_REPOSITORY_AND_FILE_MAP.md | (?i)expir (K1) | Q35 | 35 | not needed |
+| 02_REPOSITORY_AND_FILE_MAP.md | signal_age|max_age (K6) | Q36 | 1 | not needed |
+| 03_STARTUP_RUNTIME_AND_SCHEDULER.md | (?i)expir (K1) | Q37 | 4 | not needed |
+| 03_STARTUP_RUNTIME_AND_SCHEDULER.md | signal_age|max_age (K6) | Q38 | 0 | Q39, signal: 5 |
+
+- cchap_c009.py (SHA-256 b1de542be16e90989ce0d6c73f65b611eb8e1103d5206d34b30df9780a1db144) checked each copy's SHA-256 and
+  line count before every scan, accepted only the two named terms and the two named control terms, and ran count_grep.py
+  (mask_read2.py --grep) on the one file; counts only, logged as Q35 to Q39 in the search log.
+- For a later S2-19 and S2-20 approval, the counts bound the chapter greps (K1 or K6): chapter 02 at most 36 lines, chapter 03
+  at most 4. The counts say nothing about what the lines state.
+
+==============================================================================================================================
+7. PROPOSED RL-09 CASE RANGES (for a separate approval; nothing read)
+==============================================================================================================================
+The four greps printed these lines (section 5): tests/unit/test_webhook_receiver.py 72, 941, 949, 1578, 1636, 1683 (read 019);
+  tests/unit/test_signal_processor.py 372, 421, 573, 578, 581, 582 (read 020); tests/unit/test_fix136_batch9.py 121, 123, 125,
+  135, 136, 144, 145, 157, 158, 176 (read 021); tests/unit/test_config_loader.py 75 (read 022). They do not show where each
+  test begins and ends, so exact case ranges cannot be fixed from them without guessing.
+- INTERPRETATION, from the printed lines only: the expiry cases appear to be at 941 to 949 of the receiver tests (a docstring
+  naming the per-stock EXPIRED result and an assertion on it), at 573 to 582 of the processor tests (a docstring naming
+  REJECTED_EXPIRED, a processor built with signal_expiry_sec=30, an assertion and a print) and at 121 to 158 of
+  test_fix136_batch9.py (the expires_at arithmetic, age comparisons against 60 and 600, the queue model holding 600). The
+  other lines appear to be set-up: helper or fixture arguments (72, 372, 421), large expiry values set so that other tests do
+  not expire (1578, 1636, 1683), a data row naming REJECTED_EXPIRED (176) and a configuration fixture value (75).
+- P-1 (Recommended): a structure-only scan of the four test files, named here as A.1 requires: for each of the 23 printed line
+  numbers above, the start and end line of the innermost enclosing function or class, found by parsing the checked-out file as
+  text with Python's ast module in Claude's workspace. The tests are never imported or run; the scan prints line numbers only,
+  no source line. Claude then lists the exact case ranges (P-2: each expiry case from its def line to its last line, with its
+  length; the set-up lines left out unless asked) and stops for approval before reading any of them.
+- Alternative: one gated grep per test file for its definition lines (expression ^\s*(?:async\s+)?def ), printing the def
+  lines (test names), then P-2 from them; more source text than P-1, and its size is not yet known.
+- Alternative: no case ranges (CL-3, option c); a later draft would rely on the grep lines alone.
+
+==============================================================================================================================
+8. BOUNDS KEPT, AND STATE AT THE STOP
+==============================================================================================================================
+- Not done: RL-08's five scripts not inspected; docs/locked_decisions.yaml not read; S2-19 and S2-20 not run; no RL-09 case
+  range read; R18 not read; no path outside the 16 approved files and the two verified chapters; no surrounding context.
+- No legacy code, test, import, script, migration or application start; no database, VM or host, broker, webhook, Chartink or
+  live-service contact; no legacy file or configuration changed; no commit or push; no C-009 manual drafting.
+- Logs: read log 27 rows (001 to 027) with evidence 001 to 027; search log Q01 to Q39 (Q35 to Q39 in this step); lines log L01
+  only; lock log E-1 and E-5. Read lock engaged (cread_c009.py SHA-256
+  23e097b12d3865ac98b1555fc3fdea56b982e8468f7726652a31d82f1ea377c0).
+- Clone: 1,257 local blobs (the 1,255 of S1-1 and the two .gitignore blobs of D-3); never-open blobs present 0; pinned commit
+  970aabf unchanged.
+- Unchanged: the S1-1 results file (SHA-256 B5DA521F44BB37031B6091FF94BC0B9258C013EBDD009EC8D7F27556DF7D59BD) and its recorded
+  deviation; the checklist. Register decisions (R19 closed, R22 closed, R23 narrowed to the pb01 file) stay
+  documentation-scope decisions, prior entries kept.
+
+==============================================================================================================================
+9. FOR CHATGPT/RAMA
+==============================================================================================================================
+  1. D-2 and D-3: confirm how they are recorded (Claude's proposals in section 2).
+  2. RL-09: approve P-1 (or an alternative); the exact case ranges (P-2) then come back for approval before any is read.
+  3. S2-19 and S2-20 (the chapter greps, at most 36 and 4 lines): approve or not.
+  4. Drafting of the C-009 manual stays unauthorised until a separate decision.
+
+STOPPED for ChatGPT/Rama review. No further read until a further approval.

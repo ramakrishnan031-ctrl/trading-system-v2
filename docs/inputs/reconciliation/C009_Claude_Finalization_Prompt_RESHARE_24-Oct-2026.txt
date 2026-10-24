@@ -1,0 +1,46 @@
+CLAUDE TASK — C-009 MANUAL REVIEW AND FINAL PACKAGE
+Date: 24-Oct-2026
+Repository baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Files supplied:
+1. C-009_CHATGPT_RECONCILIATION_AND_REVIEW_24-OCT-2026.txt
+2. C-009_SIGNAL_EXPIRY_LEGACY_MANUAL_DRAFT_24-OCT-2026.md
+3. C-009_CLAUDE_STAGE1_S2-19_S2-20_P2_RESULTS_AND_COMPARISON_24-OCT-2026.txt
+
+Objective:
+Review the draft manual against the recorded evidence and pinned repository baseline, correct only demonstrable factual/transcription issues, and prepare the complete C-009 final package. Do not prolong the workflow with routine approval questions.
+
+Scope:
+- Legacy signal-age expiry only: receiver-side EXPIRED, processor-side REJECTED_EXPIRED, relevant config-model field, bounded test-text comparison, documented uncertainty.
+- Preserve the distinction between production-pin source, test source text, and the 18-Sep testing-tree documentation.
+- Keep OQ-C1 (whether SignalExpiredError is raised) and OQ-C2 (whether expires_at is used by a reader to decide expiry) as open bookmarks unless the already-authorised evidence conclusively answers them.
+- No new source reads are requested. Do not conduct new searches or broaden the read set just to close open questions. If a material factual gap cannot be resolved from the supplied evidence, retain UNKNOWN / NOT ESTABLISHED.
+
+Must not:
+- Run tests, import/execute legacy code, start services, access a VM/host/database/broker/webhook/Chartink/live service, modify legacy files, or make commits/pushes.
+- Make V2 design decisions, fix/tune the legacy behaviour, or recommend reviving it.
+- Claim tests passed: all six tests were read as text only and never run.
+- Infer the deployed expiry threshold from test values 30, 60, or 600.
+- Claim paper/live parity based on the batch-9 test docstring.
+- Treat the 18-Sep manual's testing worktree as identical to the production pin.
+- Expose credentials, tokens, client identifiers, host paths, or other secrets.
+
+Review checklist:
+1. Verify every manual claim is supported by the supplied results.
+2. Keep the receiver and processor checks distinct.
+3. Distinguish `triggered_at` age comparison from `expires_at = received_at + expiry_sec`.
+4. Keep the 60-second warning rate limit conditional on notifier availability.
+5. Label test excerpts as TEST TEXT and never as runtime evidence.
+6. Preserve the existing BK-17/BK-23 context without upgrading it to a proven runtime defect.
+7. Keep the signal-age score, PB01 expiry, token expiry, and C-007 EOD cleanup out of C-009 scope.
+8. Retain the evidence ledger and end-to-end diagram.
+9. If the pinned source line references in the supplied evidence are reproduced, label them as the evidence package’s bounded line references.
+10. Ensure no unsupported caller, ordering, storage consumer, HTTP envelope, recovery path, or paper/live claim has slipped into the manual.
+
+Deliverables:
+A. Final `C-009_SIGNAL_EXPIRY_LEGACY_MANUAL.md`.
+B. `C-009_FINAL_REVIEW_AND_EVIDENCE_REGISTER.md` containing the reviewed facts, unknowns, historical distinctions, and any actual corrections made.
+C. A complete ZIP named `C-009_FINAL_PACKAGE_24-OCT-2026.zip` containing the final manual, review/evidence register, and the supplied C-009 results source file. Do not include secrets.
+D. A short `C-009_FINAL_PACKAGE_MANIFEST.txt` listing exact filenames and SHA-256 hashes.
+
+Return the files and a concise summary. If no material correction is needed, say so and proceed directly to packaging. Do not ask Rama for routine approval. Stop after packaging; Rama will store the final files on PC and GitHub and then ask you to verify the stored copy.

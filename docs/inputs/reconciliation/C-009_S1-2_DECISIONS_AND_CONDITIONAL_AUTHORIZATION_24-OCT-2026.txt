@@ -1,0 +1,86 @@
+TRADING_SYSTEM-v2_redesign
+C-009 — S1-2 DECISIONS AND CONDITIONAL WRITTEN AUTHORISATION
+Date: 24-Oct-2026
+Purpose: Reply to Claude's decision request after S1-1 review.
+
+============================================================
+A. DECISIONS
+============================================================
+
+1. FUTURE COUNT-ONLY SCANS — APPROVED ONLY BY EXPLICIT NAMED AUTHORISATION
+
+For future steps, a count-only scan is permitted only when the separate written authorisation for that step explicitly names the scan/search terms and the exact files or file set. The scan may internally read file contents only to calculate the authorised counts/totals. It must not print, display, quote, extract, summarise or otherwise disclose source lines or source contents. Report only the specifically authorised counts/totals and required integrity metadata.
+
+This is a prospective rule. It does not reinterpret or retroactively cure the S1-1 authorisation wording. Keep the S1-1 report unchanged and retain the recorded deviation.
+
+2. RL-08 — DEFER AND EXCLUDE
+
+Defer and exclude the five scripts containing expires_at from S1-2. Their relationship to the signals table is NOT ESTABLISHED. Do not inspect them in this stage.
+
+3. RL-11 — APPROVE NARROW READ
+
+Approve reading only the matching lines in core/events.py and core/exceptions.py, with a combined maximum of nine matching lines as proposed. Do not expand to surrounding source ranges unless a separate authorisation is obtained.
+
+4. RL-01 TO RL-07 — APPROVE WITH STRICT BOUNDS
+
+Approve only the exact registered central files and minimum line/range boundaries enumerated in the S1-1 result file's Section 10 read list. No additional paths, surrounding context, or whole-file reads. If the referenced list does not identify a path and exact bounded range clearly enough to execute, STOP and ask for clarification.
+
+5. RL-09 — APPROVE FOUR TEST FILES AS TEXT
+
+Approve the four named test files, including test_fix136_batch9.py and test_config_loader.py, but only the expiry-related matching lines and minimum relevant test-case ranges. No test execution, imports, scripts, or runtime behaviour. If the S1-1 result does not identify all four exact paths and bounded ranges, STOP and ask rather than guessing.
+
+6. RL-10 — APPROVE ONE BOUNDED STRATEGY-FILE READ
+
+Approve only the single expiry-related line in config/strategies/pb01_breakout_retest.yaml identified in the S1-1 result. Do not read other strategy files or broaden the range.
+
+7. RL-12 — APPROVE LIMITED DOCUMENTATION COMPARISON
+
+Approve only the limited text-drift comparison in docs/04_db_schema_reference.md and docs/CONFIG_GUIDE.md, and only after chapters 02 and 03 have been supplied and their SHA-256 hashes match the exact C-008 record. If either chapter is missing or either hash differs, STOP without opening/reading the chapters or proceeding with the comparison.
+
+docs/locked_decisions.yaml is expressly excluded and must not be read.
+
+8. REGISTER CHANGES — APPROVED AS SCOPE DECISIONS ONLY
+
+Approve closing R19 and R22 and narrowing R23 to the pb01 strategy file, as proposed. Record these as documentation-scope decisions only, not as evidence that any component is behaviourally irrelevant. Preserve the history/audit trail; do not erase the prior entries.
+
+============================================================
+B. CONDITIONS BEFORE S1-2 MAY START
+============================================================
+
+This document defines the intended S1-2 scope, but source-content reading remains LOCKED until all of the following are satisfied:
+
+1. Rama supplies chapters 02 and 03.
+2. Claude checks each chapter's SHA-256 against the exact hash recorded in the C-008 record. The hashes must match exactly.
+3. Claude reports the two filenames, expected hashes, actual hashes, and pass/fail status without quoting chapter content.
+4. Claude confirms that the exact RL-01–RL-07, RL-09, RL-10 and RL-11 paths/ranges are available in the existing S1-1 Section 10 list and are unambiguous. No path/range may be guessed or substituted.
+5. Claude prepares a final S1-2 execution checklist containing the exact authorised paths, line/range bounds, allowed operation for each item, and excluded paths. Do not read source content while preparing this checklist.
+6. ChatGPT/Rama reviews that checklist and confirms that the prerequisites are satisfied. Until that confirmation, do not execute S1-2.
+
+If any prerequisite fails or is ambiguous, STOP and report the blocker. Do not broaden scope to make progress.
+
+============================================================
+C. METHOD / SAFETY LIMITS
+============================================================
+
+- Keep the source-read lock engaged until the conditions above are confirmed.
+- No code execution, tests, imports, application startup, database access, VM/host access, broker/webhook/Chartink/live-service contact, or operational checks.
+- Do not modify legacy files or configuration; do not commit or push.
+- Do not read docs/locked_decisions.yaml.
+- Do not inspect RL-08.
+- Do not infer behaviour from filenames, search counts, or configuration names.
+- Keep FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL and KNOWN DEFECT distinct.
+- Preserve S1-1 results unchanged and record its authorisation/method deviation in C-009 review notes and the design log.
+- No C-009 manual drafting is authorised by this document.
+
+============================================================
+D. REQUIRED RESPONSE FROM CLAUDE
+============================================================
+
+Return:
+1. Chapter 02/03 hash-check status, if those files have been supplied; otherwise state MISSING and do not proceed.
+2. The exact S1-2 checklist, with paths and bounded ranges copied from the existing S1-1 read list, not reconstructed from memory.
+3. The explicit exclusions (including RL-08 and docs/locked_decisions.yaml).
+4. Confirmation that no S1-2 source content has been read and no code/tests/runtime actions have run.
+5. STOP for ChatGPT/Rama review.
+
+This is a scope and method decision, not a finding about legacy runtime behaviour.

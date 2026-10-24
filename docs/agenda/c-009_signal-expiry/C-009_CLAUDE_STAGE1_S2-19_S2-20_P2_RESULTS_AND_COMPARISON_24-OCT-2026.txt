@@ -1,0 +1,286 @@
+C-009 - SIGNAL EXPIRY: S2-19, S2-20 AND P-2 BOUNDED READS - RESULTS AND COMPARISON (review package)
+Date of work: 24-Oct-2026 (IST), 13:47 to 13:55 IST. Prepared by Claude.
+Authorisation: C-009_P1_REVIEW_AND_S2-19_S2-20_P2_AUTHORIZATION_24-OCT-2026.txt (ChatGPT; received from Rama at 13:47 IST; 111
+  lines; SHA-256 0C0568B9C8F423718F7A6A5FD015DD6BD4FB73D16E9BD42CFF055C1AAD51BFA8), sections 2 to 4.
+Status: all eight approved reads done (S2-19, S2-20, R-1 to R-6; reads 028 to 035), each within its cap; no refusal; the read
+  lock was engaged again at 13:49:52 IST. STOPPED for ChatGPT/Rama review. The C-009 manual is not drafted.
+Security: masked outputs of the approved reads only. No credential, account or client identifier, deployed path, mailbox or
+  person name is reproduced; the masking filter replaced address-like and identifier-like tokens with placeholders (<IPV4>,
+  <HOSTTOK>, <CLIENTID>, <LCID>, <MASKED>, <ALNUM>). Claude's working folders are written as <SCRATCHPAD>, tools/ and "the
+  clone".
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- S2-19 (read 028): 36 lines of chapter 02, exactly its cap (35 for expir and 1 for signal_age or max_age; no line matched
+  both). S2-20 (read 029): 4 lines of chapter 03, exactly its cap. Both copies matched their SHA-256 and newline counts first.
+- P-2 (reads 030 to 035): the six approved test functions, 51 lines, each printed exactly its range.
+- Comparison (section 5): of chapter 02's 36 lines, 10 concern signal expiry or a neighbouring age rule and 26 concern other
+  expiries (broker token, order states, caches, GTT and similar; out of scope under OQ-08). Chapter 03's 4 lines all concern
+  the broker token. At statement level the chapter-02 lines on the receiver's per-signal expiry and the processor's
+  rate-limited EXPIRED warning are consistent with the pin's source (two documents about two trees); the in-flight claim and
+  TTL dedup positions are not established at the pin. R-1 and R-2 assert the two expiry outcomes the source shows (EXPIRED at
+  intake, REJECTED_EXPIRED in the processor); R-3 to R-5 compute ages or times inside the test without calling the receiver or
+  the processor; R-6 checks only that the queue model stores 600.
+- No behavioural conclusion is drawn: the tests were read as text and never run; the chapters describe another tree.
+- Register (section 6): D-2 recurrence and ERR-1 updated (ERR-1 closed by the successful re-run); D-1 to D-3 unchanged.
+
+==============================================================================================================================
+1. WINDOW, TOOLS AND CHECKS
+==============================================================================================================================
+| Step | Time (IST) | Record |
+|---|---|---|
+| tool check before the window | 13:48 | cchapread_c009.py SHA-256 295d5ef7fc0a805a6dce82ed398d9e280d9c28d947365065900431d009dbc467, the approved corrected copy |
+| E-1c lock lifted | 13:49:33 | cread_c009.py SHA-256 a998b4aa7ae835f6105da19bf98c03d580b5201b308cde0a618d552b6c9ca2a2 before, 2ed42c454f023aca9313974a02f53b2ff277e7c519fb44dffbc4092d17ec9333 after |
+| gate test | 13:49:33 to 13:49:41 | gate_test_c009_s12.py (SHA-256 062946568febb43006e5671ca7d95daa5e3686236e5fb12755906345c7d7e242, unchanged): PASSED; output SHA-256 643ad7ae3c91f78c64d9c2da63ca8c595000554f8a35b27468b978c4b8c7ad49 |
+| S2-19 | 13:49:41 | read 028: 02_REPOSITORY_AND_FILE_MAP.md |
+| S2-20 | 13:49:42 | read 029: 03_STARTUP_RUNTIME_AND_SCHEDULER.md |
+| R-1 | 13:49:42 | read 030: tests/unit/test_webhook_receiver.py |
+| R-2 | 13:49:42 | read 031: tests/unit/test_signal_processor.py |
+| R-3 | 13:49:43 | read 032: tests/unit/test_fix136_batch9.py |
+| R-4 | 13:49:43 | read 033: tests/unit/test_fix136_batch9.py |
+| R-5 | 13:49:43 | read 034: tests/unit/test_fix136_batch9.py |
+| R-6 | 13:49:44 | read 035: tests/unit/test_fix136_batch9.py |
+| E-5c lock engaged again | 13:49:52 | SHA-256 2ed42c454f023aca9313974a02f53b2ff277e7c519fb44dffbc4092d17ec9333 before, 2537a5d76e609a716e9d3599bd7c81feaaf8fbfe0c38d27cec814c16a1958b65 after; a read attempt and a chapter-grep attempt were then refused by the lock |
+
+- Driver: run_s12c_c009.py (SHA-256 9395c40cfa5462f1539c84af5962f12817ee47660786122df663699b4ed43c4d): checked the
+  authorisation's and the corrected tool's SHA-256 and the lock state, ran only the eight listed operations in the listed
+  order (S2-20 only after S2-19 succeeded) and checked every output: one new log row, the evidence equal to the output, the
+  header naming the file, a chapter grep within its cap, a range printing exactly its lines. Before the window it was tested
+  on simulated tool outputs (a correct run passes; an output above a cap and a short range both stop it), with the real logs
+  untouched (lesson of ERR-1).
+- Chapter reads (028, 029) ran through cchapread_c009.py: the copy's SHA-256 and newline count checked first, then the same
+  masked reader as cread_c009.py with the one approved expression, (?i:expir)|signal_age|max_age. Test reads (030 to 035) ran
+  through cread_c009.py: the gate, the tree entry and working file equal to the pinned blob, then the masked reader.
+- Git use: only the per-file checks inside cread_c009.py (ls-tree, hash-object) and the gate test's listing of the local
+  object store (1,257 blobs before and after; nothing fetched). No git status, no other tree-wide command.
+
+==============================================================================================================================
+2. S2-19 AND S2-20: BOUNDED CHAPTER GREPS (outputs verbatim)
+==============================================================================================================================
+| Op | Read | Chapter | SHA-256 checked | Newlines | Reader header | Printed / cap | Evidence (SHA-256, first 12) |
+|---|---|---|---|---|---|---|---|
+| S2-19 | 028 | 02_REPOSITORY_AND_FILE_MAP.md | 8B5AEC74544C7A613CED958F90CA9DEEDB524DB321AE7101B9A577015CBF6D49 | 3,557 | 3,558 lines | 36 / 36 | 1b90c40f75cf |
+| S2-20 | 029 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | F7D38F2D0F7EA2D61783970B1E8A81FC06D1676AB613EE4DB18178EE5CBC3087 | 321 | 322 lines | 4 / 4 | 5291cb2b5669 |
+
+Each output: every line exactly as the masked reader printed it ("N: text", N the chapter's line number), after a four-space
+  indent, then the mask counts (whole-file). The reader's header counts one more line than the newline count (ERR-1).
+  Non-ASCII characters appear as in the chapters. These lines are authorised evidence for the bounded C-009 review only; the
+  chapters describe the testing worktree e7bf477 (C-008 section 14.7), not the production pin. Line 566 of chapter 02 names
+  two public IP-lookup services (third-party, not the system's own hosts); kept as printed.
+
+Read 028 | S2-19 | 02_REPOSITORY_AND_FILE_MAP.md | expression (?i:expir)|signal_age|max_age | printed 36
+    171: The single vocabulary module for position-closure attribution: it declares the five closure_source values (who closed a position), the five exit_mechanism values (how the order reached the broker), the frozensets grouping them, and the four-rung evidence precedence ladder. Everything else in the file is contract prose - the first principle (suppress a CRITICAL only on positive evidence), the rung-4 expiry rule and the contradiction rule - held as comments, not code. Imported by orders.closure_classifier, orders.order_manager, orders.order_reconciler and six tests.
+    179: - **Unknowns:** Whether the contradiction rule (108-113), the rung-4 expiry (93-106) and the first principle (17-24) are actually implemented anywhere - this file only states them; the named enforcers (orders/closure_classifier.py, orders/order_reconciler.py) are not in this batch.; The value of order_reconciler.check1_mid_fill_defer_sec cited at line 96.; Which DB column stores these values (the comments name trades.closure_source, line 1 and 5, but nothing here writes it).
+    378: - **Unknowns:** Whether raise sites actually pass the documented context kwargs (each class's 'Useful context kwargs' block is documentation, not enforcement); Whether the alerting layer reads SEVERITY to pick a tier (not visible in this file); Whether the classes the manifest omits (BrokerAuthError 203, BrokerTimeoutError 215, ProductNotSupportedError 228, BrokerRateLimitError 243, RateLimitAbortedError 284, InvalidTransitionError 301, TimeError 322, ClockSkewTooLarge 330, SignalError 350, SignalExpiredError 360, DuplicateSignalError 373, EventDispatchError 393, InstrumentNotFoundError 411) still have live raisers
+    561: Stdlib-only helpers that turn a broker auth failure into an operator-actionable classification and alert text. `classify_broker_auth_error` decides IP-allowlist vs token-expiry vs unknown; `get_public_ip` fetches the VM's current public IP; `build_<LCID>_alert_body` composes the CRITICAL alert body naming the exact IP to allowlist. Imported by broker.token_monitor, capital.kill_switch and two preflight checks.
+    566: - **Key symbols:** `_IP_MARKERS` (L28) - Tuple of 8 lowercase substrings that mark an IP-allowlist/permission failure. | `_TOKEN_MARKERS` (L40) - Tuple of 6 lowercase substrings that mark a token/session-expiry failure. | `classify_broker_auth_error` (L50) - Lowercases str(error) and returns 'IP_NOT_ALLOWLISTED', 'TOKEN_EXPIRED' or 'AUTH_UNKNOWN'; IP markers are tested first (line 60). | `get_public_ip` (L67) - Tries api.ipify.org then checkip.amazonaws.com over urllib with a timeout, returning the stripped body or a literal 'unknown — check the VM's public IP manually' (line 79); never raises. | `build_<LCID>_alert_body` (L82) - Builds a multi-line alert body embedding public_ip twice plus a 160-char truncation of raw_error (line 96).
+    638: - **Key symbols:** `STATES` (L64) - The 9 legal state strings, PENDING through UNKNOWN_IN_FLIGHT (lines 65-73). | `TERMINAL_STATES` (L76) - COMPLETE, CANCELLED, FAILED, EXPIRED — no outgoing transitions. | `EARLIER_STATES` (L88) - PENDING/SUBMITTED/OPEN/PARTIAL, used by order_monitor's chronological-inversion guard. | `_TRANSITIONS` (<CLIENTID>) - The allowed-next-state table; the four terminal keys map to empty tuples (lines 106-109). | `is_terminal` (<CLIENTID>) - Membership test against TERMINAL_STATES. | `allowed_transitions` (<CLIENTID>) - Returns the next-state list, empty for terminal AND for any unrecognised state (line 128). | `all_states` (<CLIENTID>) - Returns list(STATES). | `OrderStateMachine` (<CLIENTID>) - Holds a dict[str,str] guarded by one threading.Lock (lines 154-155). | `OrderStateMachine.register` (<CLIENTID>) - Initialises an order at PENDING; raises ValueError if already registered (lines 170-175). | `OrderStateMachine.transition` (<CLIENTID>) - Validates against _TRANSITIONS under the lock and raises InvalidTransitionError carrying order_id/from_state/to_state/allowed_next_states (lines 201-209). | `OrderStateMachine.current_state` (<CLIENTID>) - Returns the stored state; ValueError for an unregistered id (lines 226-231).
+    642: - **Unknowns:** Whether InvalidTransitionError's constructor really accepts the four keyword arguments passed on lines 205-208 (defined in core.exceptions).; Whether anything still consumes EXPIRED — it is a legal target from SUBMITTED and OPEN (lines 102-103) but this file has no producer.; OSM7 states the OrderStateChanged publish was removed in the 2026-04-26 DEAD-2 audit (lines 34-35); this file alone cannot confirm no subscriber remains elsewhere.
+    684: - **Key symbols:** `_VALID_CATEGORIES` (L45) - frozenset of the four category names (used for documentation/validation). | `_Bucket` (L52) - One bucket: capacity, rate_per_sec, tokens, last_refill, frozen_until, was_frozen, lock (lines 58-65). | `_Bucket._refill` (L69) - Adds elapsed*rate tokens, capped at capacity (lines 71-74). | `_Bucket._seconds_until_ready` (L76) - max(remaining freeze, tokens-needed/rate); lock must be held by the caller (lines 81-86). | `_Bucket.try_acquire` (L90) - Returns False while frozen, else refills and consumes n if available (lines 92-99). | `_Bucket.freeze` (<CLIENTID>) - Sets frozen_until = monotonic()+sleep_sec and the _was_frozen flag (lines 103-105). | `_Bucket.pop_thaw_notice` (<CLIENTID>) - One-shot True after a freeze expires, so only the first post-freeze acquire logs (lines 111-115). | `_Bucket.available_tokens` (<CLIENTID>) - Refills then reads the token count, for error context (lines 119-121). | `RateLimiter` (<CLIENTID>) - Builds the four buckets from limits.order/quote/historical/margins (lines 157-162). | `RateLimiter.acquire` (<CLIENTID>) - Immediate BrokerRateLimitError when n > capacity, then a poll loop bounded by max_wait_sec that raises BrokerRateLimitError on timeout or RateLimitAbortedError when shutdown_event fires (lines 186-246). | `RateLimiter.try_acquire` (<CLIENTID>) - Non-blocking delegate to the bucket (line 256). | `RateLimiter.penalize` (<CLIENTID>) - Freezes the bucket and logs a WARNING naming the 429 backoff (lines 267-272).
+    714: Background watchdog that polls the broker's profile endpoint every check_interval_sec during market hours to confirm the Zerodha access token is still valid. On a genuine token-invalid signal it logs CRITICAL, sends a CRITICAL Telegram notification and fires the injected on_expiry callback (main wires it to soft_kill) — once per episode, re-armed by the next valid check. It deliberately never re-logins, never closes positions and never hard-kills. Imported by main and two unit tests.
+    719: - **Key symbols:** `TokenMonitor` (L39) - Constructor takes profile_fn, on_expiry, logger, check_interval_sec=1800, paper_mode, market_open/close 'HH:MM' strings, notifier and mode (lines 56-67). | `TokenMonitor.start` (L95) - No-op in paper mode (lines 97-99); otherwise starts the daemon thread named 'token-monitor' (lines 103-108). | `TokenMonitor.stop` (<CLIENTID>) - Sets the stop event, joins with a 5 s timeout, logs token_monitor.stop (lines 116-119). | `TokenMonitor.check_now` (<CLIENTID>) - The testable core: True in paper mode; calls profile_fn and on success resets the expiry latch (lines 128-145); on exception classifies and either fires expiry or logs a transient warning (lines 146-165). | `TokenMonitor._is_market_hours` (<CLIENTID>) - Delegates to is_within_market_hours(now_ist().time(), open, close); returns True unconditionally when either bound is None (lines 170-172). | `TokenMonitor._is_token_expiry` (<CLIENTID>) - True when the exception type is named 'TokenException' or classify_broker_auth_error returns 'TOKEN_EXPIRED'; a classifier failure returns False so it cannot manufacture an expiry (lines 187-193). | `TokenMonitor._handle_expiry` (<CLIENTID>) - Latches _expiry_fired, sends the CRITICAL '[mode] TOKEN EXPIRED' notification, then invokes on_expiry, logging CRITICAL if the callback raises (lines 197-224). | `TokenMonitor._check_loop` (<CLIENTID>) - Wait-then-check loop: waits check_interval_sec, skips outside market hours, then calls check_now (lines 228-235).
+    720: - **Inputs:** Constructor args on lines 57-66, notably profile_fn (the broker profile call), on_expiry (the soft-kill callback), notifier and the 'HH:MM' market window strings; Per cycle: the result or exception of profile_fn() (line 132); now_ist() for the market-hours test (line 172)
+    721: - **Outputs:** check_now returns True when valid, False on any exception (lines 145, 165); A CRITICAL notification with severity/title/body/source_module='token_monitor' (lines 203-213); The on_expiry() callback invocation (line 218); Log lines: start (109), stop (119), check_ok DEBUG (133), token_recovered INFO (140), token_expired_or_invalid CRITICAL (154), transient_check_error WARNING (160), on_expiry_callback_failed CRITICAL (221), outside_market_hours DEBUG (233)
+    722: - **Side effects:** Starts a daemon thread (lines 103-108); Telegram send <HOSTTOK> the injected notifier (line 203); Invokes the injected on_expiry, which main wires to soft_kill per the docstring (lines 6-7); Mutates the _expiry_fired latch (lines 144, 199); Broker network call through profile_fn (line 132). No DB writes, no file writes.
+    726: - **Unknowns:** How check_interval_sec, market_open, market_close, notifier and mode are supplied — everything arrives <HOSTTOK> the constructor; no config read exists here.; Whether on_expiry is actually kill_switch.soft_kill — asserted in the docstring (lines 6-7, 46) but wired in main.; What exception types kiteconnect raises for a dead token versus a network blip, which determines whether the line 187/190 classification is correct in practice.
+    912: - **Key symbols:** `StepExecutorResult` (L21) - frozen dataclass: step_results, step_statuses, rejected_at, error_steps, latencies_ms | `_DEFAULT_MARKET_OPEN` (L36) - hardcoded 09:15 IST fallback used only when market_open is not injected | `StepExecutor` (L39) - the runner; SE7 states all 10 steps always run with no short-circuit (line 45) | `StepExecutor.__init__` (L49) - takes logger, optional market_open, step_timeout_sec=5.0; creates the single-worker pool and the rotation lock (69-72) | `_rotate_executor` (L78) - M-S3: swaps in a fresh pool after a step timeout because the hung task keeps the only worker; idempotent under concurrency (97-99) | `run_all` (<CLIENTID>) - builds the step list minus exclude_steps (141-154), submits each with a timeout (166-167), fills results/statuses/latencies and returns StepExecutorResult | `shutdown` (<CLIENTID>) - idempotent shutdown of whichever pool is current, under the same lock as rotation | `_step_1_volume_surge` (<CLIENTID>) - 1.0 iff volume > avg_volume_20d * min_volume_surge; missing/zero avg volume -> 0.0 | `_step_4_rsi_range` (<CLIENTID>) - direction-aware RSI band (40-80 LONG, 20-60 SHORT); missing, non-numeric or out-of-[0,100] -> 0.5 with a warning | `_step_7_time_of_day` (<CLIENTID>) - score by minutes since market open: <15 -> 0.5, <60 -> 1.0, <180 -> 0.8, else 0.5 | `_step_8_spread_check` (<CLIENTID>) - 1.0 iff (ask-bid)/mid*100 <= max_spread_pct; missing bid/ask or mid<=0 -> 0.5 | `_step_10_signal_age` (<CLIENTID>) - freshness: <=30s -> 1.0, <=60s -> 0.5, older -> 0.0; missing triggered_at -> 0.5
+    960: - **Side effects:** Starts a daemon dispatcher thread and a ThreadPoolExecutor worker pool in start() (lines 312-322); shuts them down plus the screener's own pool in stop() (341-347); DB writes <HOSTTOK> state_store.update_signal_status on every state change (936, 1254, 1291, 1397, 1413, 1533, 1596, 1715, 1736, 1765, 2087, 2224, 2239, 2331, 2343, 2369, 2398, 2446, 2554, 2562, 2626, 2636, 2651, 2673); DB read <HOSTTOK> state_store.fetch_one on trades (800) and the counters count_trades_today / count_settled_trades_today / count_executed_trades_today_for_symbol_direction (764, 765, 894); Capital state mutation: fund_manager.reserve (1381, 2211, 2544) and fund_manager.release on every abort path (1409, 1447, 1456, 1466, 1576, 1268, 1294, 1728, 1739, 2233, 2264, 2273, 2281, 2384, 2401, 2558, 2574, 2579, 2586, 2662, 2676); holds fm.portfolio_lock across approve+reserve (1360, 2191, 2527); Telegram sends: notifier.send for the INTRADAY SIGNAL alert before placement (547) and notifier.send_warning for EXPIRED signals, rate-limited to one per 60s (1277-1284); Kill-switch mutation: kill_switch.record_api_failure on every BrokerError path (1177, 1374, 1387, 1532, 1544, 1588, 2173, 2204, 2217, 2330, 2338, 2515, 2539, 2549, 2625, 2633); Re-enqueues signals onto signal_queue: rate-limiter pre-check path (428) and the BrokerRateLimitError retry path with retry_count (1563-1573); Global-ish state mutation: _in_flight_count under _in_flight_lock (1356, 1309, 1749, 2187, 2415, 2523, 2687), _stats under _stats_lock, _rt_metrics under _rt_metrics_lock (717), EntryThrottle.admit records an entry timestamp (1463, 2278, 2583)
+    965: - **Paper vs live:** None visible as a behaviour difference. `mode` is stored at line 228 and used only as a label: the Telegram alert title (549), the EXPIRED warning text (1281), and the `mode` field of the S&R shadow snapshot (645) and sr_detector Candidate (690). No branch in this file tests it; comments at 1116 and 1529 assert paper/live parity of get_quote and of the place() timeout handler respectively.
+    972: The Flask HTTP ingress for Chartink scanner webhooks, used by main.py. It authenticates (HMAC header or ?token=), rate-limits per source IP, validates the JSON payload, resolves symbol aliases, de-duplicates, enforces queue backpressure and per-signal expiry, inserts a row into `signals`, and pushes a (signal_id, scanner_name, symbol, price, triggered_at) tuple onto the shared signal_queue for signal_processor (:1047-1049). It also exposes an authenticated GET /health (:364) and a separate EOD route (:751) that hands DAILY/EOD alerts to a watchlist capture worker instead of the intraday queue, and writes one `webhook_audit` row per POST regardless of outcome (:531, :1126).
+    977: - **Key symbols:** `_PerIpRateLimiter` (L69) - Thread-safe per-source-IP token bucket with lazy eviction of buckets idle >60 s (:102). | `_strip_account_prefix` (<CLIENTID>) - Strips a leading `<primary account tag><-|_>` from an already-normalised scan_name so per-account Chartink alert names still match the URL path segment. | `WebhookReceiver` (<CLIENTID>) - The gateway; its __init__ refuses to construct when require_hmac=True without a secret (:177-182) and starts the in-flight sweeper thread (:220). | `WebhookReceiver._authenticate` (<CLIENTID>) - The single auth decision for both routes: sha256= HMAC over the given payload, else reject if require_hmac, else the ?token= <MASKED> | `WebhookReceiver._load_symbol_aliases` (<CLIENTID>) - Loads config/symbol_aliases.yaml once at startup into an upper-cased alias map; missing/broken file yields {} (passthrough). | `WebhookReceiver._handle_webhook` (<CLIENTID>) - Outer POST wrapper: shutdown 503, per-IP 429, calls _process_request, converts any exception to a 500, and always writes the webhook_audit row in `finally`. | `WebhookReceiver._process_request` (<CLIENTID>) - The gate order and parse: auth → unknown-scanner 404 → EOD route → kill-switch 403 → backpressure 503 → entry-window 403 → JSON/field/scan_name/triggered_at parsing → per-symbol loop. | `WebhookReceiver._handle_eod` (<CLIENTID>) - Self-contained EOD path: parses the payload and calls eod_capture.submit() per symbol, never touching the intraday queue; records a cron heartbeat. | `WebhookReceiver._sanitize_payload_for_storage` (<CLIENTID>) - Redacts the literal secret, any token=<value>, and the webhook_url field from the copy persisted to signals.webhook_payload. | `WebhookReceiver._process_signal` (<CLIENTID>) - Per-symbol pipeline: price validation, expiry, atomic in-flight claim, TTL dedup, fingerprint, INSERT into signals, queue push, and the QUEUE_FULL / STORE_ERROR / re-queue recovery paths. | `WebhookReceiver.release_in_flight` (<CLIENTID>) - Public hook signal_processor calls when it finishes a symbol; update_heartbeat (:1110) is the liveness hook. | `WebhookReceiver._run_sweeper` (<CLIENTID>) - Daemon loop that every 60 s evicts in-flight symbols with no heartbeat for 60 s and logs CRITICAL per eviction.
+    1289: An in-memory, RLock-guarded, per-symbol store of the latest confluence-scored zones, split into resistance and support tuples with the warm timestamp (ZoneSet, line 23). The docstring states a pre-placement check reads it synchronously so nothing fetches on the hot path, and that a miss or an expired entry returns None so the caller falls through to normal placement. Its importers are main.py and sr_detector/zone_warmer.py.
+    1294: - **Key symbols:** `ZoneSet` (L23) - frozen record of (resistance tuple, support tuple, warmed_at) | `ZoneCache` (L29) - the cache object itself | `ZoneCache.__init__` (L30) - takes ttl_sec and an injected now_fn; creates the RLock and the dict | `ZoneCache.put` (L36) - stamps the lists with now_fn() and stores them under the symbol | `ZoneCache.get` (L41) - returns the ZoneSet, or None on miss or when age exceeds the TTL | `ZoneCache.symbols_due_for_rewarm` (L51) - symbols whose age is at least (ttl - margin) -- the warmer's refresh list | `ZoneCache.evict_expired` (L58) - drops every entry older than the TTL and returns how many | `ZoneCache.size` (L65) - number of cached symbols | `ZoneCache.clear` (L69) - empties the store and returns the previous count | `ZoneCache._age_sec` (L75) - seconds between now_fn() and warmed_at
+    1296: - **Outputs:** Optional[ZoneSet] (line 41); List[str] of symbols due for rewarm (line 56); int counts from evict_expired / size / clear (lines 63, 67, 73)
+    1304: A daemon-thread worker that keeps the ZoneCache warm so the pre-placement divert check never fetches: on a queued symbol it fetches the structure timeframes through the injected OhlcFetcher, builds scored zones with the shared zone_builder, and stores resistance+support in the cache (warm, line 129). When the queue is idle it rescans the cache and re-enqueues symbols nearing TTL expiry (lines 106-108, 121-126). Imported by main.py; the file states it never raises into the caller and never does the 1-minute fetch.
+    1752: - **Key symbols:** `OurLeg` (L37) - frozen dataclass for one of our exit orders: order_id, leg, local status, mid_fill flag | `Evidence` (L46) - frozen dataclass of everything CHECK1 gathered, including the two read-ok flags and deferral_expired | `Verdict` (L65) - frozen dataclass: closure_source, severity, rung, leg, contradiction, notes; .is_ours property at line 73 | `_external` (L81) - builds the EXTERNAL_UNATTRIBUTED / CRITICAL verdict with notes | `classify` (L92) - the ordered ladder: read-failure and ambiguous-cancel first, then the contradiction rule, then broker-id > local-COMPLETE > mid-fill, else EXTERNAL | `_LEG_TO_SOURCE` (L33) - maps SL/TGT/EOD onto OWN_SL/OWN_TGT/OWN_EOD; GTT is deliberately absent
+    1753: - **Inputs:** Evidence(our_legs, broker_filled_order_ids, broker_trades_read_ok, orders_read_ok, ambiguous_cancel, deferral_expired) (lines 46-62)
+    1756: - **Unknowns:** whether any caller ever sets deferral_expired / ambiguous_cancel (not visible here); the actual string values of EV_* and EXTERNAL_UNATTRIBUTED (imported from core.closure_source, lines 26-29)
+    1762: Places and maintains the single broker-side two-leg OCO GTT that protects a CNC (delivery) position overnight, once its entry fills — because day-validity SL/TGT legs expire at EOD and would leave the position naked (docstring lines 4-7). Called by orders.full_entry_engine.place_deferred_exits and constructed in main; one GTT per trade, held in an in-memory map that is mirrored to the durable gtt_state table.
+    1788: - **Outputs:** a list of action-label strings, e.g. 'healthy:<sym>' (511-512), 'gtt_exit:<sym>' (613), 'recreated:<sym>' (644), 'qty_mismatch:<sym>' (666), 'queued_preopen:<sym>' (539), 'deferred:broker_unavailable' (125), 'adopted:<sym>' (252), 'orphan_deleted:<gid>' (357), 'unknown_gtt:<gid>' (345); gtt_state status transitions CLEANED / EXPIRED / TRIGGERED and needs_review=1 (lines 555, 605, 631, 646, 661); PositionClosed events (line 598) and notifier alerts (line 747)
+    2607: - **Key symbols:** `<ALNUM>` (L50) - frozen dataclass freezing the confirmation context: row identity, level, the confirmation candle's OHLCV, as_of = the candle close, session_open/session_low/lowest_5m_close/pullback_low, atr30 and baseline_5m_volume | `<ALNUM>.__init__` (L79) - wires config/v3_cfg/store/fetcher/market_windows/on_confirm/logger/now_fn, resolves the poll interval (104-105) and parses entry_start/entry_end (107-108) | `start` (<CLIENTID>) - spawns the daemon thread named 'pb01-entry' (121-122) | `stop` (<CLIENTID>) - sets the stop event and joins the thread with a 2 s default timeout | `_run` (<CLIENTID>) - loop: waits one poll interval FIRST, then calls poll_once, logging and ignoring any exception (138-141) | `poll_once` (<CLIENTID>) - returns before entry_start (147), loads only today's PENDING rows (151), and per row either expires it past entry_end (158-161) or evaluates it (163) | `_evaluate` (<CLIENTID>) - fetches 5-min candles, keeps only today's CLOSED bars (176-178), applies the gap guard (188-193), then walks the bars applying the invalidation floor (207) and the pullback+confirm gates (216-232) | `_confirm` (<CLIENTID>) - builds <ALNUM> with as_of = close_ts of the confirming candle (243), marks the row CONSUMED FIRST, then calls on_confirm (253-261) | `_static_inputs` (<CLIENTID>) - memoized per (symbol, trading_date): ATR30 from prior 30-min bars truncated to the session open (279-283) and baseline 5-min volume from the last 20 prior daily volumes (289-297) | `_fetch_5m` (<CLIENTID>) - one-day 5-minute fetch, returning [] and warning on failure | `_session_open_dt` (<CLIENTID>) - today's session open from market_windows.market_open, defaulting to 09:15 (317) | `_terminate` (<CLIENTID>) - persists the terminal status + outcome JSON + consumed_at <HOSTTOK> the store, increments the effect-telemetry handle (330) and logs
+    2954: 15:50 IST hygiene cron that closes out session artifacts in the trading DB: expires stale PROCESSING signals from prior days, cancels prior-day live-looking orders, deletes orphaned smart_tgt_state rows, and prunes old terminal 'noise' signals together with their analytics children in committed batches. Read by tests.unit.test_fix135_eod_cleanup.
+    2959: - **Key symbols:** `_parse_args` (L35) - CLI: --db, --date, --dry-run, --signal-retention-days/--fingerprint-days | `_resolve_signal_retention_days` (L52) - CLI override wins, else config, else EodCleanupConfig() default; never raises | `run_eod_cleanup` (L70) - runs the four steps in order and returns a counts dict | `_cleanup_stale_signals` (<CLIENTID>) - UPDATE signals SET status='EXPIRED' WHERE status='PROCESSING' AND date(triggered_at) < date (line 122) | `_cleanup_stale_orders` (<CLIENTID>) - two UPDATEs marking prior-day OPEN/SUBMITTED/PENDING/TRIGGER_PENDING orders CANCELLED: those whose trade is closed (line 148) and those with no trade row (line 160) | `_cleanup_orphaned_smart_tgt` (<CLIENTID>) - DELETE FROM smart_tgt_state whose trade_id is not an OPEN/PARTIAL trade (line 185) | `_cleanup_old_fingerprints` (<CLIENTID>) - batched children-first prune of EXPIRED/DUPLICATE/REJECTED* signals older than the cutoff, guarded by NOT EXISTS(trades) (lines 234-236) | `_SIGNAL_ANALYTICS_CHILDREN` (<CLIENTID>) - the five child tables deleted before the parent signals rows | `_PRUNE_BATCH` (<CLIENTID>) - 2000 signal_ids per committed transaction | `main` (<CLIENTID>) - opens the store, resolves retention, runs cleanup, returns 0/1 | `_cron_main` (<CLIENTID>) - holiday skip then HeartbeatTimer(alert=True) wrapper, marking FAILED on non-zero rc
+    2961: - **Outputs:** counts dict: stale_signals_expired, stale_orders_cancelled, orphaned_smart_tgt_deleted, fingerprints_pruned (lines 85-99); log records eod_cleanup.start / .complete and per-step counts (lines 287, 101, 126, 168, 188, 269); exit code 0 or 1 (lines 301, 304)
+    3179: - **Key symbols:** `_check_token` (L30) - loads the Zerodha token file and reports presence + validity + expires_at, never the account id | `_check_kill_switch` (L49) - reads kill_switch_state row id=1; ok iff state == INACTIVE | `_create_app` (L65) - constructs the Flask app and registers the three routes, closing over state_store/logger/providers | `health` (L70) - the /health route: builds the checks dict, gates overall_ok on every entry, returns 200 or 503 | `metrics` (<CLIENTID>) - the /metrics route: nine DB queries plus a merge of the runtime metrics_provider dict | `metrics_prometheus` (<CLIENTID>) - the /metrics/prometheus route: four counters plus uptime in Prometheus text format | `start_healthcheck_server` (<CLIENTID>) - creates the app and starts waitress in a named daemon thread on <IPV4>:8080 by default
+    3497: - **Key symbols:** `load_token` (L49) - parses the token JSON; returns None on OSError or JSONDecodeError | `is_token_valid` (L60) - true only if the file parses, account_id matches, the stored date equals today IST and access_token is non-empty | `exchange_request_token` (L84) - sha256(api_key+request_token+api_secret) checksum POST; raises RuntimeError on non-200 or a missing access_token | `save_token` (<CLIENTID>) - writes the record with os.open mode 0600 (plus chmod 0700 on the dir) and an expires_at of the next 05:00 IST | `run_login_flow` (<CLIENTID>) - interactive flow: open browser, read request_token <HOSTTOK> an injectable input_fn, exchange, save, return the access_token; sys.exit(1) on exchange failure | `_cli_main` (<CLIENTID>) - --account (required) and --token-path; resolves api_key/api_secret env names from accounts.csv, returning 5 on any resolution failure
+    3499: - **Outputs:** access_token string returned by exchange_request_token (line 125) and run_login_flow (line 232); data_store/session/zerodha_token.json holding account_id, broker, access_token, api_key, date, saved_at, expires_at (lines 157-165); stdout instructions and status lines (lines 216-231); exit code 0 or 5 from _cli_main (lines 262-284)
+    3503: - **Unknowns:** whether Kite's real response nests access_token under 'data' or at the top level (both are accepted at line 120); whether the 05:00 IST expires_at matches Zerodha's actual token lifetime; what consumes the 'expires_at' field (nothing in this file reads it back - is_token_valid uses 'date' instead, line 75)
+    masks: {'HOSTTOK': 245, 'CLIENTID': 1631, 'IPV4': 5, 'ALNUM': 19, 'KV': 1} | stage-2 masks: {'LCID': 2}
+
+Read 029 | S2-20 | 03_STARTUP_RUNTIME_AND_SCHEDULER.md | expression (?i:expir)|signal_age|max_age | printed 4
+    102: | | live non-interactive token gate; missing/expired → **exit 6** | `main.py:2555`, `:2560` |
+    174: | 6 | live token file missing or expired; missing credential env var | `main.py:2378`, `:2382`, `:2560` | **yes**, every 10 s |
+    179: ⚠️ **KNOWN DEFECT (registered in chapter 22).** `RestartPreventExitStatus=3 4 5` suppresses three codes. Exit **6** — the live token being missing or expired — is not among them, so a token problem produces an unbounded restart every 10 seconds rather than a single loud failure. The same holds for 1, 2, 7, 8 and 9.
+    194: | at service boot (live) | the token file is read and validated for account match and freshness; missing or expired → **exit 6** | `main.py:2370`, `:2555`, `:2560` |
+    masks: {'HOSTTOK': 1, 'B32': 1, 'IPV4': 6} | stage-2 masks: {}
+
+==============================================================================================================================
+3. P-2: TEST-CASE READS R-1 TO R-6 (outputs verbatim; test text only, never run)
+==============================================================================================================================
+| Range | Read | File | Pinned blob | Range read | Printed / max | Evidence (SHA-256, first 12) |
+|---|---|---|---|---|---|---|
+| R-1 | 030 | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 940:950 | 11 / 11 | f6453a6e6dcc |
+| R-2 | 031 | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | 572:582 | 11 / 11 | ed75aa984f30 |
+| R-3 | 032 | tests/unit/test_fix136_batch9.py | 20d59c50759e1cd0ef8693be1fdff437707755f9 | 120:126 | 7 / 7 | 3cc384a4d120 |
+| R-4 | 033 | tests/unit/test_fix136_batch9.py | 20d59c50759e1cd0ef8693be1fdff437707755f9 | 128:136 | 9 / 9 | 71c9883e4352 |
+| R-5 | 034 | tests/unit/test_fix136_batch9.py | 20d59c50759e1cd0ef8693be1fdff437707755f9 | 138:145 | 8 / 8 | ea90b85ca6b6 |
+| R-6 | 035 | tests/unit/test_fix136_batch9.py | 20d59c50759e1cd0ef8693be1fdff437707755f9 | 154:158 | 5 / 5 | 11051dcb06a3 |
+
+Read 030 | R-1 | tests/unit/test_webhook_receiver.py | blob 7b377abb85d6 | range 940:950 | printed 11
+    940: def test_expired_signal_returns_expired():
+    941:     """Signal triggered_at older than expiry_sec -> per-stock EXPIRED."""
+    942:     receiver, _, _ = _make_receiver(expiry=60)
+    943:     payload = _valid_payload(triggered_at=_expired_str(seconds=120))
+    944: 
+    945:     with receiver.app.test_client() as client:
+    946:         resp = client.post("/webhook/gap_go_long", json=payload)
+    947: 
+    948:     assert resp.status_code == 200
+    949:     assert resp.get_json()["results"][0]["status"] == "EXPIRED"
+    950:     print("  OK expired signal -> EXPIRED")
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 031 | R-2 | tests/unit/test_signal_processor.py | blob 3ec0ea84392a | range 572:582 | printed 11
+    572: def test_expired_signal_rejects():
+    573:     """Signal older than expiry_sec -> REJECTED_EXPIRED."""
+    574:     store, _ = _make_store()
+    575:     sig_id = "sig_exp_001"
+    576:     _insert_queued_signal(store, sig_id)
+    577: 
+    578:     proc, _, _ = _make_proc(store=store, signal_expiry_sec=30)
+    579: 
+    580:     _run_one(proc, _now_tup(sig_id, age_sec=90), store=store)
+    581:     _assert_rejected(store, sig_id, "REJECTED_EXPIRED")
+    582:     print("  OK expired signal -> REJECTED_EXPIRED")
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 032 | R-3 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | range 120:126 | printed 7
+    120:     def test_expires_at_computation(self):
+    121:         """expires_at = received_at + timedelta(seconds=expiry_sec)."""
+    122:         received = datetime(2026, 5, 31, 10, 0, 0, tzinfo=ist_timezone())
+    123:         expiry_sec = 600
+    124:         expected = datetime(2026, 5, 31, 10, 10, 0, tzinfo=ist_timezone())
+    125:         actual = received + timedelta(seconds=expiry_sec)
+    126:         assert actual == expected
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 033 | R-4 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | range 128:136 | printed 9
+    128:     def test_signal_processor_rejects_expired(self):
+    129:         """Signal older than expiry threshold is rejected with EXPIRED status."""
+    130:         from signals.signal_processor import _PipelineReject
+    131:         triggered_at = now_ist() - timedelta(seconds=700)
+    132:         triggered_aware = triggered_at.replace(tzinfo=ist_timezone()) if triggered_at.tzinfo is None else triggered_at
+    133:         now = now_ist()
+    134:         age_sec = (now - triggered_aware).total_seconds()
+    135:         signal_expiry_sec = 60
+    136:         assert age_sec > signal_expiry_sec
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 034 | R-5 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | range 138:145 | printed 8
+    138:     def test_fresh_signal_not_expired(self):
+    139:         """Signal within expiry window passes the age check."""
+    140:         triggered_at = now_ist() - timedelta(seconds=5)
+    141:         triggered_aware = triggered_at
+    142:         now = now_ist()
+    143:         age_sec = (now - triggered_aware).total_seconds()
+    144:         signal_expiry_sec = 600
+    145:         assert age_sec <= signal_expiry_sec
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 035 | R-6 | tests/unit/test_fix136_batch9.py | blob 20d59c50759e | range 154:158 | printed 5
+    154:     def test_parity_same_expiry_paper_and_live(self):
+    155:         """Expiry logic is mode-agnostic — same check in paper and live."""
+    156:         from core.config_loader import SignalQueueConfig
+    157:         cfg = SignalQueueConfig(capacity=300, backpressure_pct=0.8, expiry_sec=600, warning_pct=0.6)
+    158:         assert cfg.expiry_sec == 600
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+==============================================================================================================================
+4. READ LOCK
+==============================================================================================================================
+- Engaged again at 13:49:52 IST, 8 seconds after the last read (cread_c009.py SHA-256
+  2537a5d76e609a716e9d3599bd7c81feaaf8fbfe0c38d27cec814c16a1958b65, STAGE1_AUTHORISED = False). A read attempt (cread_c009.py)
+  and a chapter-grep attempt (cchapread_c009.py) were then refused by the lock, writing no row. Read log: 35 rows (001 to
+  035).
+
+==============================================================================================================================
+5. COMPARISON OF THE NEWLY AUTHORISED EVIDENCE (reads 028 to 035)
+==============================================================================================================================
+- Basis: the new lines only, set against the S1-2 source lines already recorded at the pin (reads 001 to 027, in
+  C-009_CLAUDE_STAGE1_S1-2_READ_RESULTS_24-OCT-2026.txt). Nothing else is used: not the chapter text that the app loaded
+  (D-2), not any unread line, not other topics' findings.
+- Chapter lines are FACT (DOCUMENT TEXT) about what the 18-Sep manual says of the testing worktree e7bf477; as at C-008
+  section 14.7, a difference is a difference between two documents about two trees, and line numbers are not comparable.
+  Results use C-008's terms: CONSISTENT, PARTIAL, NOT COMPARABLE, CONFLICT; OUT OF SCOPE under OQ-08 (signal expiry only).
+- Test lines are FACT (TEST TEXT): what the test source says. The tests were never run, so whether they pass is NOT
+  ESTABLISHED, and an assertion is not evidence that the behaviour occurred.
+
+5.1 Chapter lines (S2-19, S2-20) against the pin
+
+| ID | New evidence | What it states (FACT, DOCUMENT TEXT) | Pin evidence (S1-2) | Result and labels |
+|---|---|---|---|---|
+| CC-01 | ch.02 972 | the receiver "enforces queue backpressure and per-signal expiry, inserts a row into `signals`" | receiver 916-926 (the age check returns EXPIRED), 956-961 (the signal row is prepared) | CONSISTENT at statement level |
+| CC-02 | ch.02 977 | the per-symbol pipeline runs "price validation, expiry, atomic in-flight claim, TTL dedup, fingerprint, INSERT into signals, queue push"; the request gates run before the per-symbol loop | the expiry check (925) comes before the fingerprint (952-954) and the row preparation (957-961); the lines holding the price validation, the in-flight claim, the TTL dedup and the request gates were not read | PARTIAL: expiry before fingerprint and insert is consistent; the positions of the other steps at the pin are NOT ESTABLISHED |
+| CC-03 | ch.02 960, 965 | the processor sends a warning for EXPIRED signals, "rate-limited to one per 60s", with the mode in its text | processor 1221-1229: when the reject check is EXPIRED and a notifier exists, a warning "[mode] Signal EXPIRED: ..." at most once per 60.0 s (monotonic clock) | CONSISTENT at statement level; the chapter's line numbers (1277-1284, 1281) are NOT COMPARABLE with the pin's |
+| CC-04 | ch.02 912 | a screening step scores signal age: up to 30 s 1.0, up to 60 s 0.5, older 0.0; a missing triggered_at 0.5 | none (the screener is R14, a pointer under OQ-02; not read) | NOT COMPARABLE. INTERPRETATION: a scoring step, not the expiry reject; a pointer for D-003, not absorbed into C-009 |
+| CC-05 | ch.02 2954, 2959, 2961 | the 15:50 cleanup sets prior-day PROCESSING signals to EXPIRED and prunes old EXPIRED/DUPLICATE/REJECTED* signals | scripts/eod_cleanup.py (R09) is C-007's frozen finding, cited and not re-read (OQ-03) | NOT COMPARED here (C-007 owns it) |
+| CC-06 | ch.02 378 | SignalExpiredError (line 360) is among the exception classes the manifest omits; whether they "still have live raisers" is listed as unknown | core/exceptions.py:360 defines class SignalExpiredError; in the lines read, the receiver returns an EXPIRED status (926) and the processor raises _PipelineReject("EXPIRED") (918-919) | PARTIAL: the class exists in both documents' trees; whether it is raised anywhere at the pin is NOT ESTABLISHED (OPEN QUESTION OQ-C1) |
+| CC-07 | ch.02 2607 | the pb01 entry poller expires each PENDING row past entry_end | config/strategies/pb01_breakout_retest.yaml line 20 refers to its expiry rules as V3 decision content (read 023) | NOT COMPARABLE. INTERPRETATION: a time limit on V3 pb01 candidate rows, not the signal-age rule; a pointer (OQ-02) |
+| CC-08 | ch.03 102, 174, 179, 194 | all four lines concern the broker token (missing or expired: exit 6, restarts) | - | OUT OF SCOPE (OQ-08). Within the two approved terms, chapter 03 states no signal-expiry rule; whether it does in other words is NOT ESTABLISHED (not searched; the loaded text is not used, D-2) |
+| CC-09 | ch.02, 26 lines: 171, 179, 561, 566, 638, 642, 684, 714, 719, 720, 721, 722, 726, 1289, 1294, 1296, 1304, 1752, 1753, 1756, 1762, 1788, 3179, 3497, 3499, 3503 | closure attribution, broker auth and token expiry, order states, the rate-limit freeze, the zone cache TTL, the CHECK1 deferral, GTT, the health token check and the login token file | - | OUT OF SCOPE (OQ-08); recorded only so that every printed line is accounted for |
+
+5.2 Test text (P-2) against the pin
+
+| ID | Range | What the test text does (FACT, TEST TEXT) | Pin evidence (S1-2) | Result and labels |
+|---|---|---|---|---|
+| CT-01 | R-1, receiver tests 940-950 | builds a receiver with expiry=60, posts a payload whose triggered_at is 120 s old to /webhook/gap_go_long, and asserts HTTP 200 and results[0].status == "EXPIRED" | receiver 916-926: age from triggered_at; if age_sec > expiry_sec it returns {"symbol": ..., "status": "EXPIRED"} | CONSISTENT for the per-symbol EXPIRED status. The HTTP 200 and the results list are asserted by the test only; the code that builds them was not read (NOT ESTABLISHED at the pin) |
+| CT-02 | R-2, processor tests 572-582 | builds a processor with signal_expiry_sec=30, runs one signal aged 90 s, and asserts the stored status REJECTED_EXPIRED | processor 917-919 raises _PipelineReject("EXPIRED") when age_sec > _signal_expiry_sec; 1201 stores REJECTED_<check> | CONSISTENT. The helpers it calls (_make_store, _insert_queued_signal, _make_proc, _now_tup, _run_one, _assert_rejected) were not read, so how the age is built is NOT ESTABLISHED beyond their names |
+| CT-03 | R-3, batch-9 tests 120-126 | computes received + timedelta(seconds=600) in the test and compares it with a literal time | receiver 960: expires_at = received_at + expiry_sec | INTERPRETATION: the test restates the formula but calls no receiver code, so it does not exercise line 960 |
+| CT-04 | R-4, batch-9 tests 128-136 | named for the processor rejecting expired signals; imports _PipelineReject (130), which the lines read do not use; computes an age of about 700 s in the test and asserts it exceeds 60 | processor 917-919 | INTERPRETATION: the body (as read) does not call the processor, so it does not exercise the check its name describes |
+| CT-05 | R-5, batch-9 tests 138-145 | computes an age of about 5 s in the test and asserts it is at most 600 | receiver 924-925, processor 916-917 | INTERPRETATION: arithmetic only; no receiver or processor code exercised |
+| CT-06 | R-6, batch-9 tests 154-158 | docstring: expiry logic is mode-agnostic, the same in paper and live; body: builds SignalQueueConfig(capacity=300, backpressure_pct=0.8, expiry_sec=600, warning_pct=0.6) and asserts expiry_sec == 600 | config_loader 192-197: SignalQueueConfig with expiry_sec: int (no default in the field) | CONSISTENT for the model storing the value given. INTERPRETATION: the docstring's paper/live claim is not exercised by the body. HISTORICAL: paper mode is legacy context (V2 is live-only, DR-001) |
+
+5.3 Labels across the new evidence
+- FACT: the outputs in sections 2 and 3, as printed; the rows above state only what they show.
+- UNKNOWN / NOT ESTABLISHED: the deployed expiry value (the tests use 30, 60 and 600, the pin's configuration 600; the
+  deployed value is not established); whether any of the six tests passes (never run); where the in-flight claim, the TTL
+  dedup and the price validation sit at the pin; whether SignalExpiredError is raised at the pin.
+- INTERPRETATION: CC-04, CC-07 and CT-03 to CT-06 as labelled; nothing in them is a behavioural finding.
+- HISTORICAL: every chapter statement describes the testing worktree e7bf477 as documented on 18-Sep-2026, not the pin.
+- KNOWN DEFECT: none newly established. The open bookmarks stand unchanged: the test text uses both bases that BK-23 records
+  for the source (R-3 computes expires_at from received_at; R-1, R-4 and R-5 measure age from triggered_at), and both 60 and
+  600 as thresholds (BK-17 records the 60/600 text drift).
+- OPEN QUESTION (local numbers; global Q numbers are given at drafting): OQ-C1, is SignalExpiredError raised anywhere at the
+  pin? OQ-C2, does any reader use signals.expires_at to decide expiry (the dashboard reader selects it at db_reader.py:826)?
+
+==============================================================================================================================
+6. DEVIATION AND ERROR REGISTER (original records kept; follow-ups added)
+==============================================================================================================================
+| ID | Original record | Follow-up | Status |
+|---|---|---|---|
+| D-1 | S1-1 (11:43): the count tools read the 1,260 checked-out files under an authorisation that also said not to read blob contents; disclosed after, not asked before. | Decision A.1 of the S1-2 decisions: defined exception, prospective only; S1-1 report unchanged. | RECORDED |
+| D-2 | S1-2 (12:50): the chat app loaded chapter 03 in full before its hash check; not requested; nothing used. | ChatGPT 13:23: process deviation / exposure to context; the loaded content is unavailable evidence. | RECORDED |
+| D-2 recurrence | 13:23: chapter 03 attached again and loaded again; nothing used. | ChatGPT 13:47 (section 1.B): accepted as a recorded process deviation; the chapters are not to be attached again unless necessary. They were not attached for this step, and section 5 uses only read 029's four lines from chapter 03. | RECORDED |
+| D-3 | S1-2 (about 13:00): git status on the partial clone fetched the two .gitignore blobs; not opened or printed. | ChatGPT 13:23 and 13:47: unauthorised metadata fetch / procedural deviation; only approved per-file checks since. | RECORDED |
+| ERR-1 | P-1 window (13:29): S2-19 refused by the new tool's faulty header check; nothing printed or kept; S2-20 not run; no retry. | ChatGPT 13:47 (section 1.C): accepted as an execution error. Re-run 13:49:41 to 13:49:42 with the corrected tool (SHA-256 295d5ef7...): S2-19 36 lines (cap 36), S2-20 4 lines (cap 4). Lesson recorded: test new tools end to end on synthetic input before a window (applied to run_s12c_c009.py). | CLOSED |
+
+==============================================================================================================================
+7. CONFIRMATION AND STATE AT THE STOP
+==============================================================================================================================
+- Only the eight approved operations read anything: no other file, path, range, term or chapter search; no unselected setup
+  range; RL-08, docs/locked_decisions.yaml and R18 untouched.
+- No legacy code, test, import, script, migration or application start; no database, VM or host, broker, webhook, Chartink or
+  live-service contact; no legacy file or configuration changed; no commit or push; no C-009 manual drafting; no V2 decision.
+- Logs: read log 35 rows (028 to 035 in this step); structure log 4 rows; search log Q01 to Q39; lock log E-1, E-5, E-1b,
+  E-5b, E-1c, E-5c. Clone: 1,257 local blobs; never-open blobs 0; pin 970aabf.
+
+==============================================================================================================================
+8. FOR CHATGPT/RAMA
+==============================================================================================================================
+  1. Review the outputs (sections 2 and 3) and the comparison (section 5).
+  2. Decide the next step: for example, authorisation to draft the C-009 manual from the evidence recorded so far, or any
+     further bounded read (none is proposed here).
+  3. OQ-C1 and OQ-C2: answer, park as bookmarks, or authorise a bounded search.
+
+STOPPED for ChatGPT/Rama review. The read lock is engaged.

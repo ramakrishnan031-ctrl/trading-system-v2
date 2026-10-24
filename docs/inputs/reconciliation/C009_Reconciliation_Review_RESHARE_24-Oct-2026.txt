@@ -1,0 +1,75 @@
+C-009 — CHATGPT RECONCILIATION AND REVIEW
+Date: 24-Oct-2026
+Basis: C-009_CLAUDE_STAGE1_S2-19_S2-20_P2_RESULTS_AND_COMPARISON_24-OCT-2026.txt
+Legacy production pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Status: ChatGPT reconciliation; manual drafting may proceed from recorded evidence.
+Scope: legacy signal-age expiry only. No V2 design, fixes, tests, or operational actions.
+
+1. DECISION / NEXT STEP
+Proceed to draft and finalise the C-009 legacy manual using the evidence already recorded. Do not run further bounded reads merely to close OQ-C1 or OQ-C2. Preserve them as explicit open questions in the manual and index/register. Claude should review the draft for factual accuracy and completeness against the already-authorised evidence and pinned repository; any new source read must not be undertaken unless necessary to resolve a material factual gap. If a gap is encountered, record it as UNKNOWN / NOT ESTABLISHED rather than introducing a new approval loop.
+
+2. EVIDENCE BASE
+The supplied results report says:
+- Eight authorised reads (S2-19, S2-20, R-1 to R-6; read IDs 028–035) were completed within their limits.
+- The read lock was re-engaged. No tests were run.
+- Chapter 02/03 lines are documentation about testing worktree e7bf477, not the pinned production tree.
+- Source evidence was read from the pinned production repository. The chapter comparison must not treat differing line numbers across trees as comparable.
+- The six test ranges were read as text only. Test pass/fail and runtime behaviour from those tests are NOT ESTABLISHED.
+- No legacy code, script, migration or application was run; no database, VM, broker, webhook, Chartink or live service was contacted; no legacy file was changed; no commit/push was made; no manual had yet been drafted at the time of Claude’s report.
+
+3. RECONCILED FACTS
+3.1 Receiver-side expiry
+At the pinned source, the authorised comparison identifies receiver lines 916–926 as calculating signal age from triggered_at and returning a per-symbol status of EXPIRED when age_sec > expiry_sec. Lines 960–961 prepare an expires_at value as received_at + expiry_sec. The exact surrounding flow beyond the lines read is not established by this evidence batch.
+
+3.2 Processor-side expiry
+At the pinned source, the authorised comparison identifies processor lines 917–919 as raising _PipelineReject("EXPIRED") when age_sec > _signal_expiry_sec. Lines 1201 onward store a REJECTED_<check> status; the comparison reports that the expiry test expects REJECTED_EXPIRED. The approved evidence also identifies a warning for EXPIRED signals, rate-limited to at most once per 60 seconds when a notifier exists, with mode included in the warning text (processor lines 1221–1229).
+
+3.3 Configuration
+The comparison identifies SignalQueueConfig.expiry_sec in core/config_loader.py lines 192–197. The batch-9 test text constructs it with expiry_sec=600, while other tests use thresholds 30 or 60. These are test inputs, not proof of a deployed value. The deployed expiry value is UNKNOWN / NOT ESTABLISHED.
+
+3.4 Test evidence
+- R-1 test text constructs a receiver with expiry=60, submits a payload whose triggered_at is 120 seconds old, and asserts HTTP 200 with per-symbol EXPIRED.
+- R-2 test text constructs a processor with signal_expiry_sec=30, processes an aged signal, and asserts REJECTED_EXPIRED.
+- R-3 calculates received_at + timedelta(seconds=600) in test code but does not call receiver code.
+- R-4 calculates age and asserts it exceeds a threshold but does not call the processor.
+- R-5 calculates a fresh age and asserts it is within a threshold but does not call receiver/processor expiry code.
+- R-6 constructs SignalQueueConfig with expiry_sec=600 and asserts that field value; it does not establish paper/live behavioural parity.
+All six tests were read as text and never run. Their pass/fail status and actual runtime behaviour are UNKNOWN / NOT ESTABLISHED.
+
+3.5 Documentation comparison
+Chapter 02 lines 972 and 977 describe receiver expiry and a pipeline sequence that includes price validation, expiry, atomic in-flight claim, TTL dedup, fingerprint, insert, and queue push. At the production pin, the read evidence establishes expiry before fingerprint/row preparation only to the extent stated in the source comparison; positions of price validation, in-flight claim, TTL dedup and request gates are NOT ESTABLISHED in this evidence batch.
+Chapter 02 lines 960 and 965 describe a processor EXPIRED warning rate-limited to once per 60 seconds. This is consistent at statement level with the pinned source evidence, but chapter line numbers refer to a different tree.
+The chapter’s signal-age screening score and the PB01 candidate expiry are separate topics and remain outside C-009’s signal-age rejection scope.
+Chapter 03’s four matched lines concern broker-token expiry, not signal expiry. No conclusion is made about unsearched wording elsewhere in that chapter.
+Other chapter lines concerning token expiry, order states, rate limiting, caches, GTT, health checks, and EOD cleanup are out of scope for C-009.
+
+4. OPEN QUESTIONS TO PRESERVE — DO NOT BLOCK THE MANUAL
+OQ-C1: Is SignalExpiredError raised anywhere at the pinned production commit? The class definition exists, but a live raise site is NOT ESTABLISHED by the authorised reads.
+OQ-C2: Does any reader use signals.expires_at to decide expiry? The dashboard reader reportedly selects the column at db_reader.py:826, but use as a decision input is NOT ESTABLISHED.
+Record these as OPEN QUESTION / UNKNOWN. Do not infer answers from class names, selected columns, comments, test names, or documentation.
+
+5. HISTORICAL / KNOWN DEFECT CONTEXT
+- The 18-Sep chapters describe testing worktree e7bf477, not the production pin.
+- The report references existing bookmarks: BK-23 records differing bases in test text (received_at for expires_at calculation versus triggered_at for age checks); BK-17 records 60/600 text drift. These are previously recorded source/test-text differences, not proof of runtime failure.
+- No new KNOWN DEFECT is established by this evidence batch.
+- D-1, D-2, D-3 and ERR-1 records remain as recorded; ERR-1 was closed by the successful bounded re-run. D-2 recurrence and ERR-1 are not C-009 signal-expiry behaviour findings.
+
+6. MANUAL AUTHORING RULES
+The manual must distinguish:
+FACT (PINNED SOURCE), FACT (DOCUMENT TEXT), FACT (TEST TEXT), HISTORICAL, INTERPRETATION, KNOWN DEFECT, and UNKNOWN / NOT ESTABLISHED.
+Do not describe tests as passing. Do not assert the deployed expiry setting. Do not claim paper/live parity from R-6. Do not treat the testing-tree manual as source truth for the production pin. Do not add unverified callers, DB consumers, or queue ordering. Keep code references to the line references established in the evidence package, with a note that they are pin-specific.
+Do not repair or tune the legacy system and do not propose V2 behaviour.
+
+7. ACCEPTANCE CHECKLIST FOR CLAUDE’S REVIEW
+[ ] Manual documents receiver-side EXPIRED status and processor-side REJECTED_EXPIRED separately.
+[ ] Threshold comparison is represented as age_sec > expiry_sec / _signal_expiry_sec only where source evidence supports it.
+[ ] expires_at calculation is documented separately from age-based rejection.
+[ ] Warning behaviour is described only to the extent established by the source evidence.
+[ ] Test cases are described as test text; no test is claimed to have run or passed.
+[ ] Deployed threshold, SignalExpiredError raisers, and expires_at readers remain unknown.
+[ ] The 18-Sep manual comparison is labelled as a different worktree.
+[ ] Signal-age score, PB01 expiry, broker-token expiry, and EOD cleanup are excluded or cross-referenced as out of scope.
+[ ] No V2 decisions, fixes, operational actions, or credential values appear.
+[ ] Any discrepancy is reported directly with exact filename and section; otherwise prepare the final package without another routine approval request.
+
+END

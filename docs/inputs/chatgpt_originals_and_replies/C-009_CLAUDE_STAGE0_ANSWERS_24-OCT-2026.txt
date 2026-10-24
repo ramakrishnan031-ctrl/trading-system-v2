@@ -1,0 +1,733 @@
+C-009 - SIGNAL EXPIRY (master agenda title "Signal expiry"; ChatGPT's prompt: "C-009 - EXPIRY", the topic-map designation)
+STAGE 0 ANSWERS: SOURCE INVENTORY AND DOCUMENTATION WORKFLOW (answers to ChatGPT's C-009 Stage 0 answer sheet of 24-Oct-2026)
+Date of work: 24-Oct-2026 (IST), 10:35 to 11:07 IST.
+Prepared by: Claude, on ChatGPT's C-009 Stage 0 research prompt and answer sheet (project practice), received from Rama as
+  C009_Stage0_Prompt_and_AnswerSheet_RESHARE.txt, C009_Stage0_ResearchPrompt_RESHARE.txt and
+  C009_Stage0_AnswerSheet_RESHARE.txt at 10:32 IST and C-009_STAGE0_CLAUDE_HANDOFF_24-OCT-2026.txt at 10:53 IST. The four
+  carry the same prompt and sheet text (the inventory, section 1); this file answers that sheet.
+Status: Stage 0 only. No legacy blob was fetched, opened or read (the clone holds commits and trees only); no module analysed;
+  no behavioural conclusion drawn. Stops for ChatGPT/Rama review before Stage 1.
+Companion file (output B): C-009_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_24-OCT-2026.txt (inputs, timeline, baseline
+  commands, tools, gate test, the path-name search log with every permitted match and its disposition, the frozen-manual
+  cross-reference, limits and final checks). The register below (section 3) is the one authoritative copy; the companion cites
+  it.
+Security: no credential, token, account or client identifier, host or address, deployed path, mailbox or person name other
+  than Rama's is reproduced; protected paths are counted, never listed.
+
+==============================================================================================================================
+SUMMARY (output C)
+==============================================================================================================================
+- Pin: legacy trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (commit date 2026-09-11, root tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa), equal to the remote main at 10:41 IST; tree listing 1,438 entries, SHA-256 equal
+  to the handover's. V2 main b720bd7635ca448fa35c828cfd72bfa722b0e24e at 10:38 IST (parent dce3164, the C-008 freeze). No
+  mismatch.
+- Method: path names and tree metadata only, as the C-009 prompt sets ("Do NOT open or read legacy source-code blob
+  contents"). The count-only content searches and line counts run at Stage 0 in C-005 to C-008 were NOT run here; they are
+  proposed as the first step of Stage 1 if authorised (OQ-01). 28 path-name searches over the 1,438 entries; a cross-reference
+  of the frozen V2 manuals for legacy paths cited beside expiry words (108 citation rows, 20 legacy paths).
+- Name facts: no path at the pin contains "expir" (expiry, expire, expiration: 0 of 1,438); "stale" occurs in 2 paths (one an
+  excluded July record), "queue" in 2 (both excluded July records), "timeout" in 4; "ttl" only inside "throttle" or "settle".
+- Register (section 3): 35 rows covering 95 files: YES 5 rows (5 files), SUPPORTING 5 (5), CONDITIONAL 13 (42), NO 12 (43).
+  Every listed path is in the pinned listing; none is protected or shares a protected blob; one NO row is a host record
+  (deployment file) and one holds the two excluded July records.
+- Central files (YES, targeted reads only): signals/webhook_receiver.py (the intake age check and expires_at),
+  signals/signal_processor.py (the processor's age check), config/system_config.yaml (the setting), core/config_loader.py (its
+  model), main.py (the wiring). Each is cited in the frozen manuals' expiry passages (C-004, C-006, C-007, C-008).
+- Scope proposal (section 4, for review): the signal-age rule end to end (setting, wiring, the intake and processor checks,
+  expires_at, the outcomes EXPIRED and REJECTED_EXPIRED, the places no age check applies, text drift), citing C-005 to C-008
+  and C-007's 15:50 cleanup without re-analysis. Excluded: token, order and feed expiry or staleness, the dedup TTL and claim
+  sweeper, queue capacity, retention, entry windows, derivatives contract expiry (not applicable).
+- Open questions (section 7): two blocking for the Stage 1 authorisation (OQ-01 method; OQ-02 scope: the screener's signal_age
+  step, the entry gate's TIMEOUT release and retest waits); six non-blocking (re-reading frozen findings, VP-24 and VP-59, the
+  18-Sep chapters 02 and 03, records, tools, the "EXPIRY" label).
+- Declaration (output D, section 8): no source blob opened (none fetched: 0 blobs in the clone before and after); no code,
+  script or test of the project run; no live service, VM, broker, webhook, Chartink or host record contacted; no repository
+  file changed, staged, committed or pushed; no C-009 manual drafted.
+
+==============================================================================================================================
+1. REPOSITORY AND BASELINE VERIFICATION
+==============================================================================================================================
+- Legacy production repository URL: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Verified pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+- Verification method/evidence: git ls-remote at 10:41:10 IST: HEAD and refs/heads/main both 970aabf...; blob-less clone
+  (--filter=blob:none --no-checkout) at 10:41:18 IST: HEAD = 970aabf..., root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+  (commit object read for its tree and parent lines only), commit date 2026-09-11T02:05:13+05:30 (git log -1 --format=%cI on
+  the named commit; date only). Saved listing (git ls-tree -r HEAD; tree objects only): 1,438 entries (1,432 mode 100644, 6
+  mode 100755, all blobs), SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5, equal to the C-009
+  handover's value. 78 source-table rows (path and blob) in the frozen V2 manuals equal the listing (0 differ). Detail: the
+  inventory, section 3.
+- V2 repository URL: https://github.com/ramakrishnan031-ctrl/trading-system-v2
+- Verified V2 main commit: b720bd7635ca448fa35c828cfd72bfa722b0e24e (git ls-remote at 10:38:48 IST, HEAD and refs/heads/main;
+  fresh clone: parent dce31648fb06ef4a52bbef4508fcabfc99b38748, tree 793b8f9451dd2756b958b6db7aed7aa421bb1709, commit time
+  10:03:12 +05:30 on 24-Oct-2026, message = subject "C-008 Signal processing frozen (DR-061) with erratum B-009 E-3", a blank
+  line and the Co-Authored-By line only; 370 tracked files).
+- C-008 frozen handover located and checked? YES. (a) docs/agenda/c-008_signal-processing/C-008_manual.md line 3: "Status:
+  FROZEN 2026-10-24 (revision 3, DR-061)"; (b) docs/governance/V2_DECISION_REGISTER.md line 72: row DR-061 (C-008); (c)
+  docs/governance/V2_DESIGN_LOG.md line 298: agenda row C-008 FROZEN; (d) the handover note for this chat,
+  V2_SESSION_HANDOVER_C-009_24-OCT-2026.md (attached; SHA-256 in the inventory, section 1; to be stored in docs/governance/
+  with the C-009 package, its owed item 3): its base commit, its last-used numbers (DR-061, VP-68, Q-46, BK-43: the highest in
+  the register and the design log at main) and the rows it names for C-009 (VP-24 line 215, VP-59 line 250, BK-17 line 506,
+  BK-18 line 507, BK-23 line 512 of V2_DESIGN_LOG.md) all agree with main. No Q row names C-009. Sequencing: C-009 is next
+  after C-008 in the master agenda (docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt line 280, "C-009
+  Signal expiry").
+- Any mismatch or access limitation: no mismatch. Limitations: (1) one GitHub REST request for the pinned tree's metadata
+  (blob sizes) at 10:42:04 IST was refused (HTTP 403: API access not enabled for this session); nothing was received and it
+  was not retried; byte sizes and line counts are therefore not given (git ls-tree -l and git cat-file -s would fetch blobs,
+  which the clone rules and this prompt forbid). (2) The Claude Project's copy of the handover note was read, not compared
+  byte for byte with the attached copy.
+
+==============================================================================================================================
+2. INVENTORY METHOD
+==============================================================================================================================
+- Repository tree/metadata methods used: git ls-remote (both repositories); git clone --filter=blob:none --no-checkout of the
+  legacy repository (no working files, no index); git rev-parse; the commit object's tree and parent lines; git log -1
+  --format=%cI on the named pin; git ls-tree -r HEAD saved once (paths, modes, blob IDs); git cat-file --batch-all-objects
+  --batch-check (local objects only) and sensitive_check.py before and after; a fresh full clone of V2 main (V2 files read as
+  documents). Path-name searches ran in Python over the saved listing (path_search_c009.py). The frozen-manual cross-reference
+  ran over V2 files only (xref_frozen.py).
+- Path/name searches used (exact terms; case-insensitive regular expressions over the whole path; the expressions are in the
+  inventory, section 6): P01 "expiry"; P02 "expire"; P03 "expiration"; P04 "TTL (substring)"; P04t "TTL (token)"; P05 "stale";
+  P06 "timeout"; P07 "age (substring)"; P07t "age (token)"; P08 "queue"; P09 "signal"; P10 "order"; P11 "position"; P12
+  "cleanup"; P13 "scheduler"; P14 "config"; P15 "schema"; P16 "database"; P17 "tests (folder segment)"; X01 "expir (stem)";
+  X02 "eod"; X03 "retention / prune / purge / housekeep / sweep"; X04 "gate / retest"; X05 "webhook / receiver / processor";
+  X06 "migration / state_store / db token"; X07 "window"; X08 "restart / recover"; X09 "status". P01 to P17 are the prompt's
+  terms (TTL and age also as tokens, since as substrings they match "throttle", "settle", "manage", "page" and the like); X01
+  to X09 are added and labelled, each tied to a frozen-manual citation or a bookmark naming C-009.
+- Search scope and exclusions: all 1,438 entries of the pinned listing (names only). Protected paths (the 102 never-open
+  paths) are counted per search, never listed; the two excluded July records and any path sharing a protected blob are counted
+  separately (none shares a protected blob). Not searched: file contents (no blob present), the records repository, the
+  testing snapshot, any host. The frozen-manual cross-reference read docs/agenda/*/*_manual.md at V2 main b720bd7.
+- Were any source-code blob contents opened? NO. No legacy blob was fetched: the clone's object store held 1,537 commits,
+  6,126 trees and 0 blobs at the final check (11:07:40 IST), as at the start (10:41 IST); never-open blobs present: 0.
+- Were scripts, code, or tests executed? NO for the legacy project: no legacy code, test, script or migration was run. Claude
+  ran only its own tools on the saved listing and V2 files (listed with SHA-256 in the inventory, section 4).
+- Were live services, VMs, broker APIs, webhooks, Chartink, or host records contacted? NO. Network use: git over HTTPS to
+  github.com for the two repositories (two ls-remote calls, two clones) and the one refused GitHub REST request above. One
+  host-record path (a deployment file) appears in a name search result only (register N12); it was not opened.
+
+==============================================================================================================================
+3. CANDIDATE SOURCE INVENTORY (the register; names and metadata only; pin 970aabf)
+==============================================================================================================================
+Classes: YES = central to the topic; SUPPORTING = connects to the central path; CONDITIONAL = read only if an authorised
+  search, a Stage 1 read or a scope decision shows it is needed; NO = excluded or owned elsewhere. Treatments use the prompt's
+  four: full read later / targeted read later / path-name only / excluded. "Name basis" gives the path-name search IDs that
+  matched (section 2; "none" if no term occurs in the path). "V2-record basis" gives pointers into frozen V2 manuals at main
+  b720bd7 (HISTORICAL for C-009: statements of earlier topics, not read again at the pin at Stage 0; the cited legacy line
+  numbers are pointers for Stage 1, valid for the same pinned blobs). Relationships are hypotheses, not behaviour findings.
+  Classification is "permitted" for every path unless stated.
+
+R01  [YES]  targeted read later
+    signals/webhook_receiver.py | blob 0f15a0ab033529d80d9c14c993a5077690b72871 | permitted | name basis: P09,X05
+    V2-record basis: C-004 T-14 (C-004_manual.md lines 129, 334, 421): the intake expiry check, recorded there by its position
+      only ("C-009 owns the rule"); C-004 line 103: nothing checks that triggered_at is not in the future (C-009). C-007 K-04
+      and PM-01 (C-007_manual.md lines 107, 169, 294): expires_at written from received_at plus expiry_sec (cited lines 679,
+      960-961) while the age checks measure from triggered_at (cited 924-926); bookmark BK-23. C-002 (C-002_manual.md lines
+      207, 244, 284): EXPIRED among the per-symbol statuses, owners including C-009.
+    Reason for treatment: The receiver holds one of the two age checks the frozen manuals name and the expires_at computation;
+      the rule itself has not been documented by any topic (C-004 recorded its position only). The file is large and mostly
+      owned by C-002 to C-007, so only the expiry lines are proposed for reading.
+    Proposed Stage 1 lines: 679; 916-926; 949-961 (pointers from the frozen citations); any further lines an authorised Stage
+      1 search locates
+    Related (hypotheses): R03 and R04 (the setting), R05 (wiring), R06 (the column), R07 (its tests). The same file holds
+      C-005's TTL cache and stale-claim sweeper (C-005_manual.md lines 115-119), which are outside this proposal.
+    Owner: C-009 (the rule); C-002 to C-007 own the rest of the file
+
+R02  [YES]  targeted read later
+    signals/signal_processor.py | blob 7fab0a02a302770ac72bbbd662549d5c091086c1 | permitted | name basis: P09,X05
+    V2-record basis: C-008 ST-06, CF-01, RQ-04, D-04 and OB-05 (C-008_manual.md lines 117, 137, 146, 270, 325, 345, 361): the
+      processor's age check (cited 914-921), the constructor default (cited 175, 222), the reject handling and a rate-limited
+      warning (cited 94-100, 1193-1231, 1221-1231), a re-queued retry carrying its original triggered_at (cited 1515), and the
+      retest continuation's docstring (cited 2376-2384). C-007 (C-007_manual.md lines 191, 285): REJECTED_EXPIRED written by
+      the processor (cited 918-919, 1201).
+    Reason for treatment: The second age check; C-008 recorded its place in the pipeline and left the expiry policy to C-009
+      (C-008_manual.md lines 30, 146). Only the expiry lines are proposed; the rest of the file is frozen in C-008.
+    Proposed Stage 1 lines: 175; 222; 914-921; 1193-1231; 1515; 2376-2384 (pointers from the frozen citations)
+    Related (hypotheses): R03 and R04 (the setting), R05 (the value passed at construction), R08 (its tests)
+    Owner: C-009 (the rule); C-008 owns the pipeline
+
+R03  [YES]  targeted read later
+    config/system_config.yaml | blob bf742ae5c81c60614370361998e6a102a1064ff7 | permitted | name basis: P14
+    V2-record basis: C-006 (C-006_manual.md lines 64, 91): the signal_queue block (cited 124-128) with expiry_sec (cited 127),
+      "Expiry is owned by C-009"; C-008 CF-01 (C-008_manual.md line 117); C-004 line 421; A-003 line 58.
+    Reason for treatment: The repository value of the setting both checks use, per the frozen manuals (FACT (CONFIG) only; not
+      host state).
+    Proposed Stage 1 lines: 124-128; any other expiry-related key an authorised configuration search locates
+    Related (hypotheses): R04 (the model), R05 (wiring), R01 and R02 (the consumers)
+    Owner: C-009 (the setting); C-006 recorded the block as queue configuration
+
+R04  [YES]  targeted read later
+    core/config_loader.py | blob 8635bca77531515561ee48cf92677883a5e30782 | permitted | name basis: P14
+    V2-record basis: C-006 (C-006_manual.md lines 65, 103): the SignalQueueConfig model (cited 192-200); its comment gives a
+      default of 60 that the field does not have (cited 196): text drift, bookmark BK-17 (V2_DESIGN_LOG line 506).
+    Reason for treatment: How the setting is typed, defaulted and loaded; the text drift BK-17 names C-009.
+    Proposed Stage 1 lines: 192-200
+    Related (hypotheses): R03, R05, R17 (the usage tracker's record of the 60/600 difference)
+    Owner: C-009 (the expiry field); B-002 and A-009 own configuration loading in general
+
+R05  [YES]  targeted read later
+    main.py | blob 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | permitted | name basis: none
+    V2-record basis: C-008 (C-008_manual.md lines 85, 117): the processor's construction (cited 3575-3623) and
+      signal_expiry_sec taken from the queue's expiry_sec (cited 3613-3614); C-002 (C-002_manual.md line 244) cites main.py
+      3402-3404 and 3612 for the receiver-to-processor hand-off.
+    Reason for treatment: The production wiring decides which value reaches each check; the receiver's side of that wiring is
+      not cited by any frozen manual in an expiry context.
+    Proposed Stage 1 lines: 3613-3614; the receiver's expiry wiring, to be located by one gated grep read
+    Related (hypotheses): R01, R02, R03
+    Owner: C-009 (the expiry wiring); B-006 and C-008 own construction in general
+
+R06  [SUPPORTING]  targeted read later (minimal)
+    core/schema.sql | blob b46d7489f6ec5e31149dd68957f3b9e45270571e | permitted | name basis: P15
+    V2-record basis: C-007 (C-007_manual.md lines 107, 120, 294): expires_at TEXT NOT NULL (cited 49) and the status CHECK
+      list with EXPIRED (cited 60-70).
+    Reason for treatment: The column whose basis BK-23 questions; only its definition and any comment beside it are proposed.
+    Proposed Stage 1 lines: 49 and any comment lines beside it
+    Related (hypotheses): R01 (the writer); R11 and R12 (readers), if any reader of expires_at exists
+    Owner: C-009 (the meaning of expires_at); C-007 owns the schema
+
+R07  [SUPPORTING]  targeted read later (test text; never run)
+    tests/unit/test_webhook_receiver.py | blob 7b377abb85d644f0f3ff7956385224b43f31ed61 | permitted | name basis: P17,X05
+    V2-record basis: C-004 (C-004_manual.md lines 353, 421): an EXPIRED case (cited 940).
+    Reason for treatment: Documents what the test source asserts about the intake check.
+    Proposed Stage 1 lines: the EXPIRED case around line 940, its bounds located by one gated grep
+    Related (hypotheses): R01
+    Owner: C-009 (as test text only)
+
+R08  [SUPPORTING]  targeted read later (test text; never run)
+    tests/unit/test_signal_processor.py | blob 3ec0ea84392a193d18b992ca88df0da5e6235f67 | permitted | name basis: P09,P17,X05
+    V2-record basis: C-008 (C-008_manual.md line 397): the file's test names include expiry cases.
+    Reason for treatment: Documents what the test source asserts about the processor's check.
+    Proposed Stage 1 lines: the expiry cases only, located by one gated grep of the file's definitions
+    Related (hypotheses): R02
+    Owner: C-009 (as test text only)
+
+R09  [SUPPORTING]  path-name only (cite the frozen C-007 record; no re-read planned)
+    scripts/eod_cleanup.py | blob ab658108e443b7121d886f98b94c5058c42253b0 | permitted | name basis: P12,X02
+    V2-record basis: C-007 RT-01, RT-02, S-19 and S-21 (C-007_manual.md lines 176, 205, 207, 237, 251-252): the 15:50 job's
+      step 1 sets earlier-dated PROCESSING rows to EXPIRED (cited 105-127) and its step 4 prunes EXPIRED, DUPLICATE and
+      REJECTED* rows after the window (cited 211-271, 234-236); C-006 line 219; bookmarks BK-05 and BK-20.
+    Reason for treatment: The only EXPIRED row writer the frozen record names; already read at the pin by C-007. Proposed:
+      cite it in C-009's end-to-end table without re-analysis (W-9), and read a line only if a C-009 question needs one the
+      frozen record does not cite.
+    Proposed Stage 1 lines: none planned (C-007 cited 105-127, 211-271)
+    Related (hypotheses): R10 (its test), R12 (readers of EXPIRED)
+    Owner: C-007 (frozen); B-010 (the EOD schedule)
+
+R10  [SUPPORTING]  path-name only (cite the frozen C-007 record)
+    tests/unit/test_fix135_eod_cleanup.py | blob 062b4d6a262f7702b259057464e66413fa7d9f9a | permitted | name basis: P12,P17,X02
+    V2-record basis: C-007 (C-007_manual.md lines 285, 303): the cleanup's expiry and prune tests (cited 85-110, 116-145).
+    Reason for treatment: Already read and recorded by C-007.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R09
+    Owner: C-007 (frozen)
+
+R11  [CONDITIONAL]  path-name only (cite C-007; read only if a C-009 question needs it)
+    core/state_store.py | blob 11866117801b9329773a1be605448faef3c96f8d | permitted | name basis: X06
+    V2-record basis: C-007 (C-007_manual.md lines 285, 291): the status write by signal_id and the "final status" text (cited
+      1413, 1418-1419, 1424, 2996, 3057).
+    Reason for treatment: Stores REJECTED_EXPIRED and EXPIRED as the frozen record describes; storage is C-007's.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R02, R09
+    Owner: C-007 (frozen); K-002, K-003
+
+R12  [CONDITIONAL]  path-name only (cite C-007)
+    ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | permitted | name basis: X06
+    reports/signal_status.py | blob 98a1631f5634807ecc6cf46cc9d3767215f9871f | permitted | name basis: P09,X09
+    reports/daily_report.py | blob ad40268a655b7c2860c8e31da4b7f2c0ff85d168 | permitted | name basis: none
+    reports/daily_trade_review.py | blob c448b7976964a14caf0061016c239c6a3d7cabad | permitted | name basis: none
+    V2-record basis: C-007 D-06 (C-007_manual.md lines 265-266, 285): readers group EXPIRED and REJECTED_EXPIRED differently
+      (cited db_reader.py 660-681, 666-667; signal_status.py 2, 39-48, 68-82; daily_report.py 53; daily_trade_review.py 79);
+      bookmark BK-26; C-001 lines 238, 247.
+    Reason for treatment: Readers of the expiry outcomes; already recorded; displays and reports belong to L-010 and L-011.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R09, R02
+    Owner: C-007 (frozen); L-010, L-011
+
+R13  [CONDITIONAL]  path-name only (cite C-007)
+    tests/unit/test_state_store.py | blob 323327dd51e7028b8668e6327d55a63774860230 | permitted | name basis: P17,X06
+    tests/unit/test_migrations.py | blob d43c9b0867497a712b48781a83f2e1fd76c13e5d | permitted | name basis: P17,X06
+    tests/unit/test_signal_status_classification.py | blob fd05297f4fea7814297172c7e5c605ccee210698 | permitted | name basis: P09,P17,X09
+    V2-record basis: C-007 (C-007_manual.md lines 301-302): REJECTED_EXPIRED in the status-update test (cited 623-645);
+      EXPIRED in the migration test's status list (cited 360, 370-384); the classification test is named in C-007.
+    Reason for treatment: Test text already recorded by C-007.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R11, R12
+    Owner: C-007 (frozen)
+
+R14  [CONDITIONAL]  path-name only until OQ-02 is decided; then targeted read or excluded
+    screening/secondary_screener.py | blob b6f8ff7223ad803869e976f92d794dfc7c811b59 | permitted | name basis: none
+    screening/step_executor.py | blob d83b04860f0ff97b33ca60faa20230004d04ae5e | permitted | name basis: none
+    screening/quality_scorer.py | blob b125e9ce324336fb8beba8012eee6669dbf91848 | permitted | name basis: none
+    config/scoring_weights.yaml | blob e9d6ede4c02d5766acb450e84b1acba78102d89d | permitted | name basis: P14
+    tests/unit/test_secondary_screener.py | blob e8e2ddb2a77d7814160be191b5ff7fa80de4395a | permitted | name basis: P17
+    V2-record basis: A-008 (A-008_manual.md line 146): signal_age is one of the screener's ten weighted steps (weight 10 in
+      config/scoring_weights.yaml); C-007 (C-007_manual.md line 199) lists REJECTED_SIGNAL_AGE among the screener's verdicts.
+      Which of these files implements the step is NOT ESTABLISHED (names only).
+    Reason for treatment: A third age-based outcome, inside secondary screening (D-003 by the master agenda). Whether C-009
+      documents it or only points to it is a scope decision (OQ-02).
+    Proposed Stage 1 lines: to be proposed only if OQ-02 includes the step
+    Related (hypotheses): R02 (the screen call follows the age check on E1)
+    Owner: D-003 by the agenda; decision OQ-02
+
+R15  [CONDITIONAL]  path-name only until OQ-02 is decided
+    screening/entry_gate.py | blob 46b173171bdfeba48af641b67a361618e5acba58 | permitted | name basis: X04
+    tests/unit/test_entry_gate.py | blob ab1a956af8329142bb5b3c1b728f6c5eab6ae564 | permitted | name basis: P17,X04
+    V2-record basis: C-007 S-15 (C-007_manual.md line 201): GATE_RELEASED_<reason>, the reasons including TIMEOUT (cited
+      entry_gate.py 501-512); C-008 (C-008_manual.md lines 30, 598): the gate continuation applies no age check; gate rules
+      belong to the D topics.
+    Reason for treatment: A time-based release of a parked signal; whether it counts as signal expiry for C-009 is a scope
+      decision.
+    Proposed Stage 1 lines: to be proposed only if OQ-02 includes it
+    Related (hypotheses): R02
+    Owner: D topics (gate rules); decision OQ-02
+
+R16  [CONDITIONAL]  path-name only until OQ-02 is decided
+    screening/retest_monitor.py | blob 26639d6ed5dddb1140f0868bb9f937cad5379f82 | permitted | name basis: X04
+    V2-record basis: C-008 ST-15 and D-04 (C-008_manual.md lines 155, 325, 361): the retest divert and the continuation
+      without an age check; whether a retest wait has its own time limit is not recorded in the frozen manuals.
+    Reason for treatment: A parked-signal path; any time limit on it would be a scope question for C-009 or the D topics.
+    Proposed Stage 1 lines: to be proposed only if OQ-02 includes it
+    Related (hypotheses): R02
+    Owner: D-015 (retest) by the agenda; decision OQ-02
+
+R17  [CONDITIONAL]  path-name only (cite A-009; read only for exact wording if needed)
+    core/config_validator.py | blob 8581e82973f158589e74432d1bb41e415bc82ec0 | permitted | name basis: P14
+    V2-record basis: A-009 (A-009_manual.md line 121): the usage tracker was written after a note that "2026-04-28 paper
+      testing" found "signal_expiry_sec: config=600, code default=60" (record-derived, in the source's own text).
+    Reason for treatment: A dated record of the 60/600 difference (BK-17); HISTORICAL via A-009.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R04, R02
+    Owner: A-009 (frozen); B-002
+
+R18  [CONDITIONAL]  path-name only (an authorised Stage 1 search decides)
+    tests/integration/test_full_signal_flow.py | blob 376a2ee815f798d84857cb777f87617bf5b545c9 | permitted | name basis: P09,P17
+    V2-record basis: Named among the signal-path tests in the Section C handover of 21-Oct (its section 6); C-001 cites it.
+    Reason for treatment: Whether it covers expiry is NOT ESTABLISHED (name only).
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R01, R02
+    Owner: -
+
+R19  [CONDITIONAL]  path-name only (OQ-07)
+    scripts/replay_signals.py | blob 72763c3ed8d5d8fe43258619d55840f2780cfa96 | permitted | name basis: P09
+    tests/unit/test_fix133_replay_signals.py | blob dd8123e31fb1648ad89d61bf009723d3bf294a8a | permitted | name basis: P09,P17
+    V2-record basis: C-004 (C-004_manual.md line 547): a read-only replay of historical signals, no database writes and no
+      broker calls (its own header); whether a replay meets or bypasses the age checks is not recorded.
+    Reason for treatment: A tool outside the production signal path; coverage is a scope question (OQ-07).
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R01, R02
+    Owner: C-004 recorded the tool; N-005 (testing)
+
+R20  [CONDITIONAL]  path-name only (narrow grep only if authorised)
+    docs/04_db_schema_reference.md | blob 0218e152b77e1765fee2aa76564d1c386c05c133 | permitted | name basis: P15,X06
+    docs/CONFIG_GUIDE.md | blob 1e4f7ee174405fbbac753420cea75043fe1ec92f | permitted | name basis: P14
+    V2-record basis: None cited in an expiry context. Documentation may describe expires_at or expiry_sec (text to check, as
+      BK-17).
+    Reason for treatment: Possible text drift; documents are claims, not source.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R04, R06
+    Owner: -
+
+R21  [CONDITIONAL]  path-name only (record; OQ-06)
+    docs/audit/signal_mortality_census_19jul2026.md | blob 9f9db37223c3cdfc256be29320075d4d3e7ed228 | permitted | name basis: P09
+    V2-record basis: B-009 (B-009_manual.md line 260): a census of signals from 12-Jun to 16-Jul-2026, summarised in B-009
+      section 13 (HISTORICAL); C-004 (C-004_manual.md line 527): not read at C-004.
+    Reason for treatment: The only record by name that may count expiry outcomes; reading it needs a records rule (OQ-06).
+    Proposed Stage 1 lines: none planned (cite B-009)
+    Related (hypotheses): R09, R12
+    Owner: -
+
+R22  [CONDITIONAL]  path-name only (an authorised Stage 1 search decides)
+    tests/unit/test_eod_lifecycle_pipeline_aware.py | blob 24011f7a0a365a8976f0295c5318fc414f52b7cc | permitted | name basis: P17,X02
+    tests/unit/test_e5_cleanup.py | blob 1783c44de7248659b001563f3bfe19a3516ef6ff | permitted | name basis: P12,P17
+    tests/unit/test_fix142_final_cleanup.py | blob 31a53bdee43c03df2fba19325250c5642a8066e8 | permitted | name basis: P12,P17
+    V2-record basis: B-011 cites the first; none is cited in an expiry context.
+    Reason for treatment: Names suggest EOD lifecycle or clean-up; relevance NOT ESTABLISHED.
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R09
+    Owner: -
+
+R23  [CONDITIONAL]  path-name only (an authorised Stage 1 configuration search decides)
+    config/strategies/first_pullback_long.yaml | blob bba1441d7cc33e295d738397238d751a7d5c06bf | permitted | name basis: P14
+    config/strategies/first_pullback_short.yaml | blob d946da39a9c53a105b43573b6121d6784ec8f65c | permitted | name basis: P14
+    config/strategies/gap_fade_long.yaml | blob 6e0c95d5191d0cf2788f9d81c2f26a74ec6fdb6a | permitted | name basis: P14
+    config/strategies/gap_fade_short.yaml | blob a78b93440fe5c18522ff5796f72b5dad7aaf9505 | permitted | name basis: P14
+    config/strategies/gap_go_long.yaml | blob 6e6656fbc6ed80f9dd749bb4837562a3e0dfdb65 | permitted | name basis: P14
+    config/strategies/gap_go_short.yaml | blob 7e53d31871d6efb65a6d452ed70c25fb0c444442 | permitted | name basis: P14
+    config/strategies/open_high_breakdown_short.yaml | blob 96b354653687a2f36d450688552e5cd906372dcd | permitted | name basis: P14
+    config/strategies/open_low_breakout_long.yaml | blob 48012d053f3335e45feec688d3a157961469f5cb | permitted | name basis: P14
+    config/strategies/pb01_breakout_retest.yaml | blob eedf5cac5ed5132665160a1aac9cce30cf4a38ed | permitted | name basis: P14,X04
+    config/strategies/positional_momentum_long.yaml | blob 7a46596fac63e73dc56949da04212b8d6dffa002 | permitted | name basis: P11,P14
+    config/strategies/positional_sector_rotation.yaml | blob b110bd594203692317aa68b3c60915d4224e2a20 | permitted | name basis: P11,P14
+    config/strategies/positional_swing_long.yaml | blob 597193f8076a8c7b3d9c1234e55e09ee8502696f | permitted | name basis: P11,P14
+    config/strategies/range_breakout_long.yaml | blob ddee444cade6dd2d911de428a70130647ceb2770 | permitted | name basis: P14
+    config/strategies/range_breakout_short.yaml | blob 2f99b1dd5f155bb458b0ddfe3e50366f5892f3ca | permitted | name basis: P14
+    config/strategies/vwap_bounce_long.yaml | blob e279719f9e5d75b545cb1f89011cee0ced78d63b | permitted | name basis: P14
+    config/strategies/vwap_rejection_short.yaml | blob a62177d49e35bba977750f22c9eaf64bf440c0d3 | permitted | name basis: P14
+    V2-record basis: None cited in an expiry context; strategy files belong to A-008 and C-010.
+    Reason for treatment: Whether any strategy sets its own signal age limit is NOT ESTABLISHED (names only).
+    Proposed Stage 1 lines: none planned
+    Related (hypotheses): R03, R14
+    Owner: A-008, C-010
+
+N01  [NO]  excluded
+    signals/entry_throttle.py | blob b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | permitted | name basis: P04,P09
+    tests/unit/test_entry_throttle.py | blob 94752125157a0593aed220e859030d372f149735 | permitted | name basis: P04,P17
+    docs/audit/throttle_selection_and_record_correction_19jul2026.md | blob d49b1a12dfa21b5b553d4e33912941b290783786 | permitted | name basis: P04
+    docs/decisions/10_entry_throttle_admission.md | blob fdf97c54f2dcab9da0c4ff9307b37f03b656ba33 | permitted | name basis: P04
+    ops_dashboard/tests/test_s3_login_throttle.py | blob f1e2dd0af4380c52503346fdf78691ba945bfb45 | permitted | name basis: P04,P17
+    tests/unit/test_mis_squareoff_restore_and_settle.py | blob e79ad4995691e5e304eb8c644d82fcdcb0b8a1ec | permitted | name basis: P04,P17
+    V2-record basis: The throttle is C-008's (its owner question is BK-43, OQ-01 of C-008).
+    Reason for treatment: "ttl" occurs only inside "throttle" or "settle"; no path has TTL as a token (P04t: 0).
+    Related (hypotheses): -
+    Owner: C-008; BK-43
+
+N02  [NO]  path-name only (owned elsewhere)
+    docs/audit/kill_persist_busy_timeout_25jul2026.md | blob 7cdb59b8f068cf5038f51d1b14dd948d9746ef58 | permitted | name basis: P06
+    docs/design/a2_timeout_retry_design_02jul2026.md | blob 6e377ad2e2938092bee7c0b77c750190bd9c5214 | permitted | name basis: P06
+    tests/unit/test_fix068_timeout_recovery.py | blob 0da93265bd4292e211b1162714554b316065ac79 | permitted | name basis: P06,P17,X08
+    tests/unit/test_ms3_step_timeout_bounds_caller.py | blob 9840cfb74d78d92a0181abb37b74312b40aaf6dc | permitted | name basis: P06,P17
+    V2-record basis: B-005 (FIX-068 in-flight recovery, lesson 2026-10-16); C-008 C8/BM-05 and BM-06 (placement TIMEOUT, no
+      per-signal deadline).
+    Reason for treatment: "timeout" names: kill-state persistence, order timeout and retry, in-flight recovery, a step-timeout
+      test.
+    Related (hypotheses): -
+    Owner: I-001, I-002; G-008, G-009; B-005, G-015; C-008, D-003
+
+N03  [NO]  excluded
+    broker/token_monitor.py | blob 15102f2431e32f3900545a1094406313b919e07d | permitted | name basis: none
+    broker/auth_recovery.py | blob d610cee16a1dee20ff6faee71db351e985418048 | permitted | name basis: X08
+    scripts/zerodha_login.py | blob ff6e8745e5877b33f4d445d0686f67866aea857e | permitted | name basis: none
+    tests/unit/test_auth_recovery.py | blob 24c0b8db5bca3cb410a2253258c9eca34e9f43e6 | permitted | name basis: P17,X08
+    V2-record basis: A-006, A-010, B-004 and B-012 record the access token's expiry and the token monitor.
+    Reason for treatment: Token and session expiry, not signal expiry.
+    Related (hypotheses): -
+    Owner: A-010, A-006, B-004, M-005
+
+N04  [NO]  excluded
+    orders/order_reconciler.py | blob beef3e1584c9ad665dec4d1e1498bde001326c70 | permitted | name basis: P10
+    orders/eod_squareoff.py | blob 54f6cd6223353df0e9ad8bc823472f28b19b3818 | permitted | name basis: P10,X02
+    broker/order_state_machine.py | blob f79418d8072c0e6b722473ecde69af995026b121 | permitted | name basis: P10
+    V2-record basis: B-005 and B-010 (the stale-order sweep); A-011 line 250 (EXPIRED as a terminal order state).
+    Reason for treatment: Order expiry, order states and the stale-order sweep, not signal expiry.
+    Related (hypotheses): -
+    Owner: G-015, H-011, G-008; B-005, B-010
+
+N05  [NO]  excluded
+    scripts/db_retention.py | blob 3de2dded7d813a3848dce555941f15ba5ac333f4 | permitted | name basis: X03,X06
+    tests/unit/test_db_retention.py | blob cb95fda97197b42e179d69325c22c875e29b8ffa | permitted | name basis: P17,X03,X06
+    docs/decisions/09_prune_retention.md | blob ae2390e5425813a3bb3b523af44dd4464d86839d | permitted | name basis: X03
+    docs/decisions/BRIEF_09_prune_retention.md | blob c298cc4b1ddb2e99b30c03d57868d10e734a8c0d | permitted | name basis: X03
+    docs/decisions/DESIGN_09_prune_retention.md | blob 7a7fbb10101fd40c5c15e76d6e32fde6ee75cf0e | permitted | name basis: X03
+    scripts/backup_retention.py | blob 1b541332c3ec0e8416ec6439eefeb23e3417df9b | permitted | name basis: X03
+    scripts/output_retention.py | blob e11baf33fb49e8abbafceb2e15dc94d1f5cb9f21 | permitted | name basis: X03
+    tests/unit/test_backup_retention.py | blob a5900958716c40331245099d646dda64fdebf02e | permitted | name basis: P17,X03
+    tests/unit/test_output_retention.py | blob 797b6113af7b67f99d630c6527d252c12c3bd747 | permitted | name basis: P17,X03
+    V2-record basis: C-007 RT-04 (C-007_manual.md lines 254, 321): db_retention's policy does not list the signals table.
+    Reason for treatment: Retention of other tables, backups and outputs; signal-row retention is C-007's (RT-02).
+    Related (hypotheses): R09
+    Owner: C-007, K-011, M-008
+
+N06  [NO]  excluded
+    core/market_windows.py | blob 25625e8cd109c935d014ad357cd6726c75737157 | permitted | name basis: X07
+    tests/unit/test_fix133_entry_windows.py | blob 39a4b89973333809f2b7eceed1cc93212f60fbcc | permitted | name basis: P17,X07
+    tests/unit/test_market_windows.py | blob 6ac7f3e67fe8728c77565367cf68370b1effc318 | permitted | name basis: P17,X07
+    V2-record basis: C-008 ST-05 and ST-10 (entry windows); A-003; VP-24 names C-009 as a ratification point.
+    Reason for treatment: Entry windows are a different time rule; VP-24's ratification is asked separately (OQ-04).
+    Related (hypotheses): R02
+    Owner: C-008 (frozen), A-003, D-016
+
+N07  [NO]  excluded
+    scripts/preflight/checks/signals.py | blob 1a0d5d5793455a3057fc44bcee5f794e28890c70 | permitted | name basis: P09
+    V2-record basis: C-006 (C-006_manual.md lines 43, 230): the pre-flight backpressure check.
+    Reason for treatment: Queue capacity, not expiry.
+    Related (hypotheses): -
+    Owner: C-006 (frozen), B-007
+
+N08  [NO]  excluded
+    tests/crash_test/cleanup.py | blob 5100467b61d65df93cff1171a7e7263a9b5ad4d2 | permitted | name basis: P12,P17
+    tests/crash_test/signal_injector.py | blob b4bb2ef9c8f69c3b850b528a5ea1874f9d2ea125 | permitted | name basis: P09,P17
+    scripts/load_test_signals.py | blob 47d74e172b3539120a971004b73d4ad49e14fcbc | permitted | name basis: P09
+    tests/unit/test_load_test_signals.py | blob 72ffa6861dfebc050c4c4ba1e4ac72835a285f93 | permitted | name basis: P09,P17
+    scripts/test_webhook.py | blob 048ac3c0f5d9aadd430ee31d6d747df468af6205 | permitted | name basis: X05
+    V2-record basis: C-004 (C-004_manual.md line 547) records the load-test tool and the crash-test injector as tools.
+    Reason for treatment: Test harnesses and tools outside the production path.
+    Related (hypotheses): R19
+    Owner: N-005
+
+N09  [NO]  excluded
+    ops_dashboard/frontend/templates/signals.html | blob 32a26458f0e3ad0fc4716c7b1540a8edb7c59b63 | permitted | name basis: P09
+    ops_dashboard/tests/test_screen04_signals.py | blob 5960824438e997944732db96655ddcc81260caac | permitted | name basis: P09,P17
+    ops_dashboard/docs/redesign/04_signals_asset_spec.md | blob e33d00c591470d6bf0a68ff5881be89f3a4f1d06 | permitted | name basis: P09
+    ops_dashboard/tests/test_db_reader.py | blob 3e645f089579e43280a5e7b9986b058b9e7300f3 | permitted | name basis: P17,X06
+    V2-record basis: C-007 D-06 covers the dashboard reader.
+    Reason for treatment: Displays, owned by L-010.
+    Related (hypotheses): R12
+    Owner: L-010
+
+N10  [NO]  excluded (standing rule; separate approval required)
+    docs/audit/queue_items_decidable_25jul2026.md | blob 4ad78303d209ac53b268a6142bf9b6662de0a82a | EXCLUDED JULY RECORD | name basis: P08
+    docs/audit/stale_queue_entries_25jul2026.md | blob a8c438a027468d71b6366cb2928e51bc40786a45 | EXCLUDED JULY RECORD | name basis: P05,P08
+    V2-record basis: Excluded since the C-006 Stage 1 authorisation (its section 3), kept excluded at C-007 and C-008.
+    Reason for treatment: Both match "queue" and one matches "stale"; names only; not opened (OQ-06).
+    Related (hypotheses): -
+    Owner: -
+
+N11  [NO]  path-name only (record; owner by name not established)
+    docs/audit/locked_contract_staleness_sweep_22jul2026.md | blob 3f3dd31be373e34b5a5394f614c4f764fa1200a0 | permitted | name basis: P05,X03
+    V2-record basis: Not cited in an expiry context.
+    Reason for treatment: The one permitted path containing "stale"; its subject is not established from its name; not opened.
+    Related (hypotheses): -
+    Owner: -
+
+N12  [NO]  excluded (host record; never read except value-blind under authorisation)
+    deploy/security/sshd_config.d/99-trading-security.conf | blob cd298aa40417624e3e9abadead0391a2512c1b6b | permitted path; host record (deployment file) | name basis: P14
+    V2-record basis: -
+    Reason for treatment: Matched "config" only; a deployment file (host record).
+    Related (hypotheses): -
+    Owner: M-003
+
+Matches not in the register: every other permitted path a search matched is listed in the inventory, section 6, with its
+  disposition ("-": the term occurs in the name only, with no frozen-manual pointer in an expiry context). Protected matches
+  are counted there. A file whose name carries none of the terms and that no frozen manual cites beside an expiry word is not
+  found by this method; OQ-01 proposes the count-only searches that would find it.
+
+==============================================================================================================================
+4. PROPOSED C-009 BOUNDARY (for review; not a decision)
+==============================================================================================================================
+- Topic: expiry (topic-map designation); the master agenda names it "Signal expiry" (line 280). Implementation details are not
+  established at Stage 0. Proposal S-1 reads the topic as signal expiry only (OQ-08).
+- Proposed included scope (S-1): (a) the signal-age setting at the pin: its repository value, model, code defaults and the
+  wiring that passes it to each check (R03, R04, R05); (b) the intake age check in the receiver: what instant it measures
+  from, against which clock, the comparison, the outcome and what is and is not recorded, and how it treats a time-only or
+  future triggered_at once C-004 has parsed it (R01); (c) expires_at: how it is computed and whether any code reads it (R01,
+  R06; BK-23); (d) the processor's age check: the rule, its outcome and warning, and how a re-queued retry's age is measured,
+  its place on the pipeline being frozen in C-008 (R02); (e) the 15:50 cleanup's EXPIRED and the prune, cited from C-007 (R09,
+  R10); (f) one end-to-end table of every place a signal can end EXPIRED or REJECTED_EXPIRED and every frozen place where no
+  age check applies (the EOD route, the gate and retest continuations), with the text drift of BK-17; (g) tests as text (R07,
+  R08).
+- Proposed exclusions (owners): token and session expiry (A-010, A-006, B-004, M-005); order expiry, order states, order
+  timeouts and the stale-order sweep (G-008, G-009, G-015, H-011; B-005, B-010); the dedup cache TTL and the stale-claim
+  sweeper (C-005, frozen); queue capacity, backpressure and the crash loss of the queue (C-006, frozen); the status
+  vocabulary, storage and retention, db_retention included (C-007, frozen; K-003, K-011); market-data, quote and instrument
+  staleness (B-007, I-007, E-009, E-010, A-004, C-004); entry windows (C-008 frozen; A-003; D-016); kill-switch state clearing
+  (I-001, I-002, B-012); derivatives contract expiry (not applicable: NSE equities only, A-004; B-005_manual.md line 289);
+  paper-only paths (V2 is live-only, DR-001); test harnesses and load tools (N-005); dashboards and reports beyond C-007's
+  record (L-010, L-011).
+- Interfaces/dependencies (each from the frozen record named; to be cited, not re-solved):
+  * C-004 (validation): parses triggered_at (a time-only value takes today's date, C-002_manual.md line 284) and fixes the
+    intake check's position, after the price check and before the claims; "the expiry rule on the parsed time is C-009's"
+    (C-004_manual.md lines 103, 129, 414, 421).
+  * C-005 (claims and deduplication): an EXPIRED symbol acquires no claim and sets no cache entry (C-005_manual.md line 152);
+    C-005's own time windows (the dedup TTL, the 60 s claim stale threshold) stay C-005's (lines 115-119).
+  * C-006 (queue): expiry_sec sits in the queue's configuration block (C-006_manual.md lines 64, 91); the processor reads the
+    queued item, not the row (C-008 RQ-05; BK-14); a crash loses the queue, and nothing found re-queues QUEUED rows at start
+    (C-006 section 8.3, as noted on VP-59).
+  * C-007 (persistence): the expires_at column and its basis (K-04, BK-23); in C-007's inspected scope EXPIRED rows come only
+    from the cleanup's step 1 and are pruned by its step 4 (RT-01, RT-02; BK-05, BK-20); readers group expiry outcomes
+    differently (D-06, BK-26).
+  * C-008 (processing): the age check's place on E1 (ST-06), the 600/60 difference (CF-01), the retry's original time (RQ-04),
+    the continuations without an age check (D-04; section 9), the warning as an observer (OB-05).
+  * C-010 (mapping): only if a strategy-level age limit exists (R23; NOT ESTABLISHED). C-011 (the EOD route): the route has no
+    expiry, dedup or fingerprint check (C-003_manual.md line 528); C-011 owns the route.
+  * D-003 (screening: the signal_age step and REJECTED_SIGNAL_AGE, R14); the D topics for the gate and retest rules (R15,
+    R16): OQ-02.
+  * A-003 and VP-24 (window rejection; ratification names C-009 and C-008); A-011, B-012, I-009 and VP-59 (terminal outcomes
+    across stop, kill and crash; ratification names C-006 to C-009 and I-009): OQ-04.
+  * A-009 and B-002 (configuration model and loading; the usage tracker's 600/60 record, R17).
+- Any overlap that requires ChatGPT/Rama decision: OQ-02 (the screener's signal_age step; the gate's TIMEOUT release and any
+  retest time limit), OQ-04 (VP-24 and VP-59), OQ-08 (what "EXPIRY" covers). Ownership is not resolved here.
+
+==============================================================================================================================
+5. PROPOSED STAGE 1 READ SEQUENCE (not executed; reads only after a Stage 1 authorisation)
+==============================================================================================================================
+Method for every step (as at C-008): the read tool's lock is lifted as a step of its own after the authorisation (SHA-256
+  before and after, time) and the Stage 1 gate test passes; each file is added to the sparse set by an anchored path after its
+  blob ID is compared with the protected blobs; every read goes through cread_c009.py (logged, masked, saved as evidence);
+  minimum ranges; tests as text, never run; any file outside the authorised register: stop or disclose.
+
+S1-1 count-only searches and line totals (if OQ-01 authorises them)
+      Why at this point: Before any read, so that the register rests on every file and not on names and frozen citations
+      alone.
+      Question: Which files, beyond the register, name the expiry setting, the column or the outcomes? Any new file is
+      reported before it is read.
+      Method: ccount_c009.py over s_rt (281), s_tests (486), s_cfg (41) and s_all (1,260) for: expir (any case); expiry_sec or
+      signal_expiry_sec; expires_at; REJECTED_EXPIRED; EXPIRED as a quoted string; signal_age or max_age; stale; TTL as a
+      token; per-file counts only, each zero result with a positive control (same tool, flags and list); clines_c009.py for
+      the line totals and byte sizes of the register files.
+
+S1-2 config/system_config.yaml, lines 124-128
+      Why at this point: The setting first, so every later read can be checked against the value the repository declares.
+      Question: What keys and repository values make up the signal_queue block at the pin, and does any other key in this file
+      (or, from S1-1, any other configuration file) set a signal age limit?
+
+S1-3 core/config_loader.py, lines 192-200
+      Why at this point: The model that loads the setting, before the consumers.
+      Question: What type, default and comment does the expiry field have, and is any validation applied to it when it is
+      loaded?
+
+S1-4 main.py, lines 3613-3614 and one gated grep for the receiver's expiry wiring
+      Why at this point: The wiring decides which value each check receives.
+      Question: Which configured value, if any, reaches the receiver and the processor on the production wiring, and does any
+      path leave a code default in effect?
+
+S1-5 signals/webhook_receiver.py, lines 679, 916-926 and 949-961
+      Why at this point: The first age check a signal meets, and the expires_at computation.
+      Question: From what instant is the age measured, against what clock and time zone as written, with what comparison and
+      boundary; what happens when triggered_at is later than now; what the check returns and records; how expires_at is
+      computed?
+
+S1-6 signals/signal_processor.py, lines 175, 222, 914-921, 1193-1231, 1515 and 2376-2384
+      Why at this point: The second age check, after the queue.
+      Question: What rule does the processor apply (instant, clock, comparison), with what outcome, warning and counting, and
+      does any re-queue or continuation path change the instant measured?
+
+S1-7 core/schema.sql, line 49 (and any comment beside it)
+      Why at this point: After the writer, the column's own definition.
+      Question: How is expires_at defined, and does the schema say what it means?
+
+S1-8 readers of expires_at found by S1-1, if any
+      Why at this point: Only if S1-1 finds any.
+      Question: Does any code read expires_at, and for what?
+
+S1-9 tests/unit/test_webhook_receiver.py (the EXPIRED case near 940) and tests/unit/test_signal_processor.py (expiry cases
+      located by one gated grep of definitions)
+      Why at this point: Tests after the code they describe.
+      Question: What do the test sources assert about the two checks? (documentary; never run)
+
+S1-10 conditional files, only as ChatGPT/Rama decide: R14 (screening), R15 (entry gate), R16 (retest), R17 (the usage
+      tracker's record), R20 (documents), and a statement-level comparison with chapters 02 and 03 of the 18-Sep manual
+      (OQ-05)
+      Why at this point: Scope decisions first; these reads widen the topic.
+      Question: Set by the decision for each: for example, does the screener's signal_age step reject, and on what age?
+
+S1-11 reconciliation with the frozen record (no new legacy read)
+      Why at this point: Last, against everything read.
+      Question: Where does the C-009 record agree with, add to or differ from C-002 (lines 207, 284, 359), C-004 (T-14, line
+      103), C-005 (line 152), C-006 (lines 64, 91, 103, 219), C-007 (K-04, RT-01, RT-02, D-06), C-008 (ST-06, CF-01, RQ-04,
+      D-04, OB-05), A-003 (line 58), A-009 (line 121), A-011 section 12 (lines 226-230) and B-009 section 5 (lines 96, 109,
+      135-136); which bookmarks get notes (BK-17, BK-18, BK-23); and is any erratum needed (proposed with exact texts, decided
+      by Rama)?
+
+==============================================================================================================================
+6. DOCUMENTATION TEMPLATE (for Stage 1; every behaviour field UNKNOWN / NOT ESTABLISHED at Stage 0)
+==============================================================================================================================
+Each material path is documented as SOURCE -> INPUT -> CALCULATION / LOGIC -> VALIDATION / GUARD -> OUTPUT -> STORAGE /
+  HANDOFF -> NEXT CONSUMER, with every cell cited to lines printed by a logged read (path:lines at the pinned blob) and
+  labelled (FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (TEST TEXT), FACT (TEXT DRIFT), HISTORICAL, INTERPRETATION, KNOWN
+  DEFECT, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION). The rows below are the proposed trace rows; SOURCE gives the candidate
+  file only (inventory metadata), and every other field is UNKNOWN / NOT ESTABLISHED until read.
+
+| Row | Path | SOURCE (candidate) | INPUT | LOGIC | GUARD | OUTPUT | STORAGE / HANDOFF | NEXT CONSUMER |
+|---|---|---|---|---|---|---|---|---|
+| TR-01 | intake age check | signals/webhook_receiver.py (R01) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-02 | expires_at computation and write | signals/webhook_receiver.py; core/schema.sql (R01, R06) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-03 | readers of expires_at | to be found by S1-1 (R11, R12 if any) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-04 | setting and model | config/system_config.yaml; core/config_loader.py (R03, R04) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-05 | wiring of the setting | main.py (R05) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-06 | processor age check (E1) | signals/signal_processor.py (R02) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-07 | re-queued retry's age | signals/signal_processor.py (R02) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-08 | paths without an age check (E2, E3, E4; the EOD route) | signals/signal_processor.py (R02); cited from C-008 and C-003 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-09 | 15:50 cleanup EXPIRED and the prune | scripts/eod_cleanup.py (R09; cited from C-007) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-10 | readers of the expiry outcomes | R12 (cited from C-007) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-11 | tests as text | R07, R08 (R10, R13 cited) | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+| TR-12 | conditional rows (OQ-02) | R14, R15, R16 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN |
+(UNKNOWN = UNKNOWN / NOT ESTABLISHED.)
+
+==============================================================================================================================
+7. EVIDENCE DISCIPLINE AND OPEN QUESTIONS
+==============================================================================================================================
+FACTS established by Stage 0 (tree, names, metadata and V2 files only):
+- The pin, its root tree, its date and the remote main are as section 1 states; the saved listing has 1,438 entries and the
+  handover's SHA-256; the clone holds no blob.
+- 102 never-open paths at the pin (1 root dotfile, 21 under config, 80 under docs), none present locally; .env.example is
+  among them.
+- No path name at the pin contains "expir"; "stale" occurs in 2 path names (one an excluded July record), "queue" in 2 (both
+  excluded July records), "timeout" in 4, "scheduler" in none; "ttl" occurs only inside "throttle" or "settle" (no TTL token).
+- The frozen V2 manuals cite 20 legacy paths on lines that use expiry words (plus 2 bare test-file names, both in the listing
+  under tests/unit/); the 78 (path, blob) rows of their source tables all equal the pinned listing.
+- The master agenda names C-009 "Signal expiry"; frozen C-002, C-004, C-005, C-006, C-007 and C-008 each leave the expiry rule
+  or policy to C-009; VP-24 and VP-59 name C-009 as a ratification point; BK-17, BK-18 and BK-23 name C-009; no Q row names
+  C-009.
+- Every register path is in the pinned listing; none is protected or shares a protected blob.
+UNKNOWN / NOT ESTABLISHED (at Stage 0):
+- The expiry rule itself as C-009 will record it (instant, clock, comparison, boundary, outcomes) at either check; only the
+  frozen manuals' statements are known, as HISTORICAL for C-009.
+- Whether any code reads expires_at; whether any expiry-related logic sits in files the names and frozen citations do not
+  reveal (no content search at Stage 0).
+- Line counts and byte sizes of the register files.
+- Whether any strategy sets its own age limit (R23); whether the screener's signal_age step rejects and on what age (R14);
+  whether the gate's TIMEOUT or a retest wait is time-limited (R15, R16).
+- The deployed value of the setting through the live period (repository value only; the VMs were deleted, lesson 2026-10-05).
+INTERPRETATION / proposed scope:
+- Section 4 (S-1) is a proposal. The register's relationships are hypotheses. Classing a name match as "-" (not a candidate)
+  is a scope judgement from names, to be checked by S1-1 if authorised.
+HISTORICAL evidence needed (not gathered at Stage 0):
+- How often signals ended EXPIRED or REJECTED_EXPIRED in production: no measured data in scope; B-009 section 13 summarises a
+  census (HISTORICAL, B-009_manual.md line 260); the census record itself is R21 (OQ-06).
+- Whether the 15:50 cleanup ran on the hosts, and its outcomes (C-007 U-03).
+- The date of any change to the expiry rule or value (A-009 line 121 dates a 600/60 difference to "2026-04-28 paper testing";
+  dated comments or fix IDs met at Stage 1 are to be recorded with each side of the change, lesson 2026-10-09).
+- Rama's recollection of expiry warnings or alerts, if ChatGPT wants it (not asked at Stage 0).
+Potential KNOWN DEFECT claims that must not be asserted without source evidence:
+- KD-1 that the 60-second figure (the model's comment, the constructor default, the retest docstring) ever governed expiry in
+  production; only text drift is recorded (BK-17; C-008 CF-01, D-04).
+- KD-2 that expires_at is never read or is dead data; BK-23 records only the basis difference (C-007 K-04, INTERPRETATION).
+- KD-3 that a future-dated triggered_at "bypassed" expiry with any effect; C-004 records the code path only.
+- KD-4 that signals on the EOD route were harmed by having no age check (C-003 records the absence; C-011 owns the route).
+- KD-5 that re-queued retries expired in practice (C-008 RQ-04 is INTERPRETATION).
+- KD-6 that stale PROCESSING rows accumulated or were expired in practice (C-007 U-03).
+- KD-7 any time-zone mismatch in an age computation (not read by C-009).
+- KD-8 that the readers' different groupings misled any report or decision (C-007 D-06 records the difference only).
+- KD-9 any count or share of expiry outcomes.
+OPEN QUESTIONS requiring Rama/ChatGPT decision (recommended option first; none is decided here):
+- OQ-01 (BLOCKING for Stage 1): Method. The C-009 prompt limits Stage 0 to names and tree metadata, so the count-only content
+  searches and line counts of C-005 to C-008 were not run. (a) Authorise them as Stage 1 step S1-1, through the same gate,
+  counts only, each zero with a positive control, before any read (Recommended); (b) keep them excluded and rely on names and
+  frozen citations.
+- OQ-02 (BLOCKING for Stage 1): Scope. (a) C-009 documents the signal-age rule (intake, expires_at, processor, the cleanup's
+  EXPIRED cited) and only points to the screener's signal_age step, the gate's TIMEOUT release and any retest time limit,
+  which stay with D-003 and the D topics (Recommended); (b) C-009 also documents those three (R14 to R16 become targeted
+  reads).
+- OQ-03 (non-blocking): Frozen findings. (a) Cite C-007's cleanup, prune and readers and C-008's pipeline facts without
+  re-reading, reading only the rule lines C-009 owns (Recommended; W-9; C-008's Stage 0 prompt likewise kept frozen
+  conclusions closed unless a new, specific contradiction appears); (b) re-verify them at the pin.
+- OQ-04 (non-blocking; for Rama): VP-24 and VP-59 name C-009 as a ratification point. (a) Leave both for the whole-design
+  review, as C-004 to C-008 did with theirs (Recommended); (b) ratify at C-009. No V2 decision is made at Stage 0.
+- OQ-05 (non-blocking; for Rama): The 18-Sep manual: chapters 02 and 03 are WRITTEN and, as C-008 found, contain expiry
+  statements: C-008's document reads X014 (chapter 02) and X015 (chapter 03), greps for expiry and timeout terms (X015 also
+  for the processor's and thread names), printed 30 and 6 lines, and its row CH-10 compared chapter 02's "60s-age" with 600 s
+  at the pin (PARTIAL). They are outside the source boundary and not in V2. (a) A bounded statement-level comparison of their
+  expiry statements at Stage 1, with Rama attaching the two chapters (their SHA-256 are recorded in C-008 section 14.7) or
+  instructing a fetch as at C-008 (D-7) (Recommended); (b) no comparison. Chapter 01's overlap is not established (its title
+  is not recorded in V2).
+- OQ-06 (non-blocking): Records. (a) Read none for C-009 and cite B-009's census summary (Recommended); (b) authorise narrow
+  reads of R21 or of the two excluded July records (value-blind where they hold host data).
+- OQ-07 (non-blocking): Tools. (a) Leave the replay and load-test tools out unless S1-1 shows they handle expiry
+  (Recommended); (b) cover them.
+- OQ-08 (non-blocking): Label. (a) Read "EXPIRY" as the master agenda's "Signal expiry" (Recommended); (b) a wider topic of
+  every expiry-like mechanism (then the exclusions of section 4 are reconsidered).
+Missing source files or access limitations:
+- No blob is local: line counts, byte sizes and every content question wait for Stage 1. The GitHub REST request for sizes was
+  refused (section 1).
+- The records repository, the testing snapshot, the 18-Sep chapters and LEGACY_SYSTEM_MANUAL_INDEX.md: outside the source
+  boundary and not opened (OQ-05). Host records and the deleted VMs' configuration: not available and not sought.
+- Not needed for Stage 0 but owed at the C-009 freeze package (handover section 1): ChatGPT's
+  C-008_PART1_REVIEW_AND_PART2_AUTHORIZATION_24-OCT-2026.txt and the template C-008_PUSH_COMMANDS_24-OCT-2026.txt are not yet
+  attached in this chat.
+
+==============================================================================================================================
+8. COMPLETION DECLARATION (output D)
+==============================================================================================================================
+- Exact pinned legacy commit verified: TRUE (section 1).
+- Inventory covers the relevant candidate paths found by the stated method: TRUE for the stated method (path names over all
+  1,438 entries, and every legacy path the frozen V2 manuals cite beside an expiry word). Limit: content was not searched
+  (OQ-01).
+- No source blob contents opened: TRUE. No legacy blob was fetched at all (0 blobs in the clone at the start and at the final
+  check).
+- No code/scripts/tests run: TRUE for the legacy project (Claude's own tools ran on the saved listing and V2 files only).
+- No live systems or host records contacted: TRUE (one deployment-file path appears in a name search only; not opened).
+- No repository files changed/staged/committed/pushed: TRUE (neither repository was written; the legacy clone has no working
+  files; nothing was saved into the V2 repository or the Claude Project).
+- No C-009 manual drafted: TRUE.
+- Stopped for ChatGPT/Rama review before Stage 1: TRUE (the read tool stays locked: STAGE1_AUTHORISED = False).
+Deviations: none from the C-009 prompt. Difference from the handover's Stage 0 practice, disclosed: count-only content
+  searches and line counts were not run (OQ-01); one refused GitHub REST request (section 1).
