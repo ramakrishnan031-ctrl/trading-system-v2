@@ -1,0 +1,32 @@
+C-008 SIGNAL PROCESSING — CHATGPT FINAL REVIEW
+Date: 24-Oct-2026
+Reviewed artifacts:
+- C-008_SIGNAL_PROCESSING_MANUAL_DRAFT_REV1_24-OCT-2026.md
+- C-008_STAGE1_SOURCE_INVENTORY_READ_LOG_AND_METHOD_REV1_24-OCT-2026.txt
+
+REVIEW OUTCOME
+ACCEPTABLE AS A GOVERNED REVISION; NOT APPROVED FOR FREEZE YET.
+Do not commit, push, or mark C-008 frozen on the strength of this review.
+
+WHAT CHECKED OUT
+1. The two uploaded artifacts are the REV1 files, not Revision 0. The manual is 612 lines and its SHA-256 matches the companion inventory's declared value:
+   DC34D02F0811BA23F2310F2AFA9AA614CE273EA021B99738DC455E346A64AE3E.
+2. The manual maintains the important evidence boundaries: pinned repository facts versus deployed behaviour; source facts versus interpretation; test text versus tests run; and UNKNOWN / NOT ESTABLISHED versus known defects. It does not claim that a source path proves a trade occurred.
+3. The companion inventory records the baseline pin, read gate and self-tests, protected/excluded paths, 125 reads, Q36–Q49 count-only searches, read log, source-to-claim index and citation check. It states that no legacy code/tests/services were run, no host or live service was contacted, and no repository was changed.
+4. Scope is appropriately bounded. Processor-side calls to the allocator/V3 chain are separated from their unread internals; gate/retest paths are not conflated with the dispatcher path; the timeout/reconciliation issue remains qualified; no V2 decision is inferred.
+5. RC-15 is correctly recorded as Rama-approved B-009 erratum E-3, with application deferred to the C-008 freeze package. The proposed correction narrows the SOFT_KILL statement to the two error classes counted by the inspected kill-switch path. It does not change B-009 in this draft.
+6. OQ-01 (agenda ownership of the throttle/shadow tracker) remains open, and the draft correctly does not resolve it by assumption. The lack of a second independent check of the applied fixes is disclosed.
+
+FREEZE BLOCKER — MUST RESOLVE FIRST
+The manual itself says reconciliation against LEGACY_SYSTEM_MANUAL_INDEX.md is required before freeze (OQ-02, sections 1.2, 14.3 and 19.3). That file was not available in the reviewed materials, and its contents must not be inferred or replaced with a guessed index.
+
+Required next action:
+- Supply/upload the authoritative LEGACY_SYSTEM_MANUAL_INDEX.md (or identify its exact authoritative project/repository location and revision).
+- Reconcile C-008 against it, record the result in the manual/review record, and re-review any resulting changes.
+- At the eventual freeze only, apply B-009 E-3 to the exact B-009 passage, verify the anchor and E-3 numbering against the live V2 register/main, and replace both DR-0NN placeholders with the actual freeze decision-register row. Do not apply that erratum now.
+
+REVIEW LIMITATION
+This was a document/evidence-record review. I checked the uploaded artifacts and their internal consistency, including the manual's recorded SHA-256, but did not independently reproduce Claude's local read gate, inspect its scratch evidence files, or re-read all 125 source outputs against the pinned Git repository. The inventory's assertions about those checks therefore remain Claude-recorded evidence, not independently reproduced ChatGPT results. The reported citation checker establishes that cited lines were present in saved read outputs; by itself it does not prove every interpretation is correct.
+
+DECISION
+Keep both Revision 1 files as review drafts. No commit, push, freeze, or legacy-system action is authorised. The next gate is the missing-index reconciliation, followed by a final check of the freeze package and B-009 erratum application.

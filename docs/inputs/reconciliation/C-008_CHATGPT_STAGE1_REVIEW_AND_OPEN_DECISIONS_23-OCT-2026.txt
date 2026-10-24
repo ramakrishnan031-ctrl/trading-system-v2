@@ -1,0 +1,55 @@
+C-008 — CHATGPT REVIEW OF STAGE 1 DRAFT
+Date: 23-Oct-2026
+Project: Trading_System-v2_redesign
+Status: REVIEWED WITH OPEN ITEMS — NOT FROZEN
+
+1. REVIEW OUTCOME
+
+The C-008 draft is substantially evidence-backed and suitable to continue through the project review workflow, but it is not yet ready to freeze. The companion inventory/read log reports 125 gated reads across 22 files, 613 cited line ranges checked with zero uncovered citations, no source execution, no protected-file read, no repository changes, and no commit/push. These are Claude's recorded checks; ChatGPT has reviewed the submitted documents and claims, not independently reproduced the local gate or repository checks.
+
+The draft appropriately distinguishes source facts, config facts, test text, interpretation, historical material, known defects and unknowns. It also repeatedly warns that a code path does not prove that a signal, order or trade actually occurred. Preserve these distinctions.
+
+2. RC-15 — RECOMMENDATION FOR RAMA'S DECISION
+
+Issue: frozen B-009 section 10 says broker errors during sizing, risk checks or capital reservation are “counted toward SOFT_KILL”. C-008 reports that the pinned code passes these errors to record_api_failure, but the kill switch counts only BrokerTimeoutError and BrokerRateLimitError toward automatic SOFT_KILL; other classes are logged/not counted. B-004 section 7.3 already records this narrower behaviour.
+
+ChatGPT recommendation: APPROVE A NARROW, TRACEABLE ERRATUM to B-009 section 10, subject to Rama's explicit approval under the established governance workflow. The erratum should qualify the general statement, refer to B-004 section 7.3 / FIX-191 and the pinned source evidence, and preserve the fact that this is legacy behaviour. Do not silently edit the frozen B-009 file, alter its freeze history, or treat the erratum as a V2 decision. If Rama does not approve it, keep RC-15 open and retain the discrepancy in C-008 as an open erratum candidate.
+
+Suggested erratum wording:
+“Qualification: broker errors recorded during sizing, risk approval or capital reservation do not all count toward automatic SOFT_KILL. At the pinned legacy commit, the kill-switch failure counter counts BrokerTimeoutError and BrokerRateLimitError; other error classes are not counted by this path. See B-004 section 7.3 / FIX-191 and the C-008 evidence references. This is a source-level legacy finding, not evidence that any particular error or SOFT_KILL event occurred.”
+
+3. ITEMS THAT MUST REMAIN OPEN
+
+A. Entry-throttle ownership
+C-008 correctly leaves this unresolved. The observed throttle call and outcomes may be documented in C-008; do not assign ownership to a master agenda topic without a governed mapping decision. Record it as an open agenda-mapping question.
+
+B. LEGACY_SYSTEM_MANUAL_INDEX.md
+The file was unavailable to Claude. This does not establish that it does not exist. Reconcile against the actual project-side index before freezing C-008. Rama/ChatGPT should supply the current file if it is not already available to the reviewing session. Do not create a replacement index or infer its contents.
+
+C. Independent second check
+The separate agent's 22 findings were applied, but the fixes were not independently checked again by a second agent. ChatGPT's review is the next review step; do not describe the post-fix draft as having passed a second independent check.
+
+4. REVIEW POINTS TO PRESERVE IN THE MANUAL
+
+- Repository configuration is not proof of deployed configuration.
+- The entry-gate and retest paths are distinguished from the live dispatcher path; dormant/unreachable paths are not presented as proven runtime events.
+- Allocator and V3 material is bounded to processor-side calls; internal behaviour not read remains unknown.
+- The timeout/reconciler mismatch is described as a known historical defect with bounded evidence, not as proof that a timeout occurred.
+- The entry-throttle rule owner, manual-index reconciliation, and RC-15 remain unresolved.
+- The 2 additional reads of the V3 files were from the already approved inventory and were described as docstring-only references. Keep the narrow scope and evidence qualification.
+- No legacy repair, test execution, operational revival, V2 design decision, commit, push or freeze is authorised by this review.
+
+5. REQUIRED NEXT STEPS
+
+1. Rama decides RC-15: approve the narrow erratum or leave it open.
+2. Supply/locate LEGACY_SYSTEM_MANUAL_INDEX.md and reconcile the draft against it.
+3. Keep the entry-throttle owner as an open agenda-mapping question until formally mapped.
+4. Resolve any factual/editorial issues found in this review without broadening C-008 into the owning chapters.
+5. Return the revised manual and companion inventory/read log for final review. Do not freeze, commit or push before explicit approval.
+
+FINAL STATUS
+C-008 Stage 1 draft: ACCEPTABLE FOR GOVERNED REVISION; NOT APPROVED FOR FREEZE.
+RC-15: RECOMMEND ERRATUM; RAMA'S DECISION REQUIRED.
+Entry-throttle ownership: OPEN.
+Manual-index reconciliation: PENDING.
+END

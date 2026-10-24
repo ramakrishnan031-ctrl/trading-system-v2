@@ -1,0 +1,343 @@
+C-008 - SIGNAL PROCESSING (master agenda title; prompt: the signal-processing / decision-pipeline chapter, provisional)
+STAGE 0 ANSWERS: SOURCE INVENTORY AND DOCUMENTATION WORKFLOW (answers to C-008_STAGE0_ANSWER_SHEET_FOR_CLAUDE_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 21:19 to 21:41 IST.
+Prepared by: Claude, on ChatGPT's Stage 0 research prompt and answer sheet of 23-Oct-2026 (project practice), received from Rama at
+  21:17 IST.
+Status: Stage 0 only. No legacy source content opened, no module analysed, no behavioural conclusion drawn; stops for review.
+Companion file (deliverable 2): C-008_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt (method, gate test, search log,
+  paths returned, per-file metadata). The summary below is deliverable 4; the question list (deliverable 3) is section F.
+
+SUMMARY (deliverable 4)
+- Baseline verified (section BASELINE): legacy pin 970aabf3c78d777d9d34549e021f7c8e756c7bdb (commit date 2026-09-11, root tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa), equal to GitHub main today; V2 main dce31648fb06ef4a52bbef4508fcabfc99b38748, as
+  supplied. No discrepancy.
+- Gate: C-007's accepted tools, copied as cread_c008.py and ccount_c008.py with the Stage 0 lock restored, and one new metadata
+  tool, clines_c008.py (line totals and byte sizes only, taken from the masking filter's own file header; no line printed). The
+  refusal-only self-test passed (21:21 IST); 0 never-open blobs and 8,922 local objects before and after; the C-008 read log
+  does not exist (0 reads).
+- Counts only, not analysed: signals/signal_processor.py (2,704 lines) is the only file defining class SignalProcessor (Q01) and
+  main.py the only non-test file importing it (Q03); of the 32 runtime lines naming the status writer with a parenthesis, 26 are
+  in the processor's file (Q06); the processor's file also has the most lines naming the pipeline's entry points and hand-offs
+  (Q04, 31 of 186), its reject exception (Q05, 68 of 134) and in-flight names (Q24, 36 of 51).
+- Modules the pipeline may hand off to, by names and import counts only: screening (6 files), strategy lookup and control (5),
+  capital (6), allocation (4), orders (4), signals/entry_throttle.py, v3_chain (5), sr_detector (2) and core helpers (5).
+- Register (section A): 38 rows, 121 files, every one in the pinned listing: 3 primary or test source (YES), 36 SUPPORTING, 60
+  CONDITIONAL and 22 not read (cross-references, records, host records and the two excluded July records); line totals for 119
+  files (81,124 lines).
+- Boundary (section C, a proposal): C-008 documents the processor's pipeline as orchestration: wiring, entry points, the order
+  of stages, each stage's guard as the processor states it, its outcome and next consumer, the hand-offs, the exception paths,
+  the in-flight bookkeeping and the stop and kill checks inside the pipeline. The rules each stage applies stay with the D, E,
+  F, G, I and J topics; C-006, C-007, C-009, C-010 and C-011 keep their own scope.
+- Questions (section F): none blocking; three boundary points for review and three non-blocking items.
+
+==============================================================================
+BASELINE AND REPOSITORIES (sheet items 1 to 5)
+==============================================================================
+1. [x] Legacy repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot, the origin of the project's
+   blob-less partial clone.
+2. [x] Baseline commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb is the clone's HEAD; git log -1 on that named commit (21:19 IST)
+   printed commit date 2026-09-11T02:05:13+05:30 and root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa (no subject or author
+   printed). Read-only git ls-remote --symref (21:19 IST): HEAD is refs/heads/main and main is the pin. A fresh git ls-tree -r of
+   the pin (tree objects only) is byte-identical to the saved listing (SHA-256
+   1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5; 1,438 tracked files: 1,432 mode 100644, 6 mode 100755); the
+   1,260 working files of the search scope were hashed with git hash-object and each equals its pinned blob.
+3. [x] V2 documentation repository: https://github.com/ramakrishnan031-ctrl/trading-system-v2.
+4. [x] V2 main: git ls-remote at 21:15 and 21:20 IST returned dce31648fb06ef4a52bbef4508fcabfc99b38748 (the C-007 freeze commit,
+   confirmed at 21:15 IST on a fresh clone); the frozen manuals and governance files were read from that clone.
+5. [x] Both match what was supplied: no STOP.
+
+==============================================================================
+A. SOURCE INVENTORY (names and metadata only; pin 970aabf; no file read)
+==============================================================================
+A.1 Access gate
+- Procedure reused: C-007's accepted gate (cread_c007.py, ccount_c007.py), copied as cread_c008.py and ccount_c008.py: the same
+  13 never-open rules as sensitive_check.py (pattern identity checked by parsing both sources); the same refusals (path shape,
+  never-open path, excluded July record, not in the pinned listing, shares a never-open blob, local store not clean); the Stage 0
+  lock (STAGE1_AUTHORISED = False), so a read that passes every check is still refused. clines_c008.py runs the same gate and
+  refuses a file whose working copy differs from its pinned blob.
+- Refusal-only self-test (gate_test_c008.py, 21:21 IST): the read tool refused the 102 protected paths, the 2 excluded July
+  records, docs/v2_design_spec.md (it shares a protected blob), 14 rule-shaped names, a name not in the tree and the permitted
+  core/schema.sql ("Stage 0 lock"); the count and line-count tools each refused four lists (102 protected paths; 2 excluded
+  records; 1 shared blob; 1 path not in the tree) and searched or counted nothing. Before and after: sensitive_check.py exit 0,
+  102 never-open paths in the tree, 8,922 local objects, 0 never-open blobs present; no C-008 log row written. Result: PASSED.
+- Excluded July records: docs/audit/queue_items_decidable_25jul2026.md and docs/audit/stale_queue_entries_25jul2026.md, named by
+  the C-006 Stage 1 authorisation and kept excluded at C-007; every tool refuses them by name and no search list holds them
+  (row R38). Host records (PATHS.md, docs/SYSTEM_MAP.md; row R37) were counted value-blind only and are not proposed for reading.
+- Classification of every register file: each is permitted (0 of 13 rules; its blob is not a protected blob) except R38.
+A.2 Candidate register
+Columns: Exists = in the pinned listing. Type / bytes / lines from clines_c008.py run L02 (21:37 IST; the bytes equal the pinned
+  blob's size because each working file equals its blob). Why (evidence basis) = path-name terms (section B.1), count-only
+  search IDs with the file's matching-line count (section B.2) and the frozen manuals citing the path near pipeline terms
+  (companion file, section 9). Stage 1: YES (primary or test source, read at located ranges), SUPPORTING (a bounded confirmation
+  at located lines), CONDITIONAL (only where Stage 1's gated searches tie the file to the pipeline), NO (names only). A candidate
+  is not proof that a file will be read, and no count is evidence of what the code does.
+
+| # | Exact path | Exists | Blob ID | Type / bytes / lines | Why a candidate (evidence basis) | Gate | Proposed role (inclusion or exclusion, and why) | Stage 1 | Overlap / owner |
+A. The processor, its wiring and its configuration
+| R01 | signals/signal_processor.py | yes | 7fab0a02a302770ac72bbbd662549d5c091086c1 | py / 139,403 / 2,704 | name hit signal,process; Q01 1, Q02 9, Q04 31, Q05 68, Q06 26, Q07 6, Q08 37, Q10 1, Q11 1, Q13 1, Q14 2, Q15 3, Q16 9, Q17 6, Q18 13, Q19 4, Q21 20, Q22 17, Q23 13, Q24 36, Q25 15, Q26 21, Q27 7, Q33 33, Q34 28; frozen manuals: A-007, A-008, A-009, A-011, B-004, B-005, B-006, B-007, B-008, B-008+add, B-009, B-011, C-001, C-004, C-005, C-006, C-007 | permitted | Primary: the pipeline of a dequeued signal: entry points, the order of stages and checks, each stage's guard, outcome (status, reason, release, re-queue) and next consumer, exception paths, in-flight bookkeeping | YES | C-006 (intake), C-007 (status values), C-009, C-010; D, E, F, G topics own the rules it calls |
+| R02 | main.py | yes | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | py / 208,758 / 4,294 | Q02 5, Q03 1, Q04 6, Q09 6, Q10 6, Q11 1, Q12 16, Q13 2, Q14 16, Q16 4, Q18 8, Q19 4, Q20 1, Q21 7, Q22 10, Q23 8, Q24 3, Q25 1, Q26 1, Q27 2, Q29 2, Q33 32, Q35 5; frozen manuals: A-007, A-008, A-009, A-011, B-004, B-005, B-006, B-007, B-009, B-009+add, B-010, C-001, C-002, C-004, C-006, C-007 | permitted | Primary at located lines only: how the processor is built and wired (the components passed to it, its workers, its stop call) | YES | B-001, B-006, B-011 (start and stop at large); C-006 s.2.2, s.5.1 |
+| R03 | config/system_config.yaml | yes | bf742ae5c81c60614370361998e6a102a1064ff7 | yaml / 55,901 / 754 | Q18 2, Q21 2, Q22 1, Q29 1, Q32 8, Q33 2; frozen manuals: A-007, A-008, A-011, B-004, B-005, B-006, B-007, B-008, C-005, C-006 | permitted | Supporting: the configuration blocks the processor reads, located by gated grep; repository values only, FACT (CONFIG) | SUPPORTING | A-009, B-002, C-006 s.3, C-009 |
+| R04 | core/config_loader.py | yes | 8635bca77531515561ee48cf92677883a5e30782 | py / 127,242 / 2,517 | Q07 1, Q18 2, Q21 8, Q22 2, Q25 1, Q26 1, Q27 5, Q29 3, Q33 3; frozen manuals: A-007, A-008, A-009, B-005, C-001, C-006 | permitted | Supporting: the models and defaults of the keys in R03 only | SUPPORTING | B-002 owns the loader |
+| R05 | config/expected_managers.yaml; core/config_auditor.py; core/config_validator.py | yes | ff4d65d5f9b5a5ddfcc8cac7b812c770da555a3c; 054d58298b58cd74f40d1b899022a89983247eea; 8581e82973f158589e74432d1bb41e415bc82ec0 | yaml / 22,155 / 387; py / 45,055 / 859; py / 9,514 / 275 | expected_managers.yaml: Q02 1, Q04 1, Q19 7, Q21 1, Q22 9, Q33 3; frozen manuals: B-006 | config_auditor.py: Q02 1, Q12 1, Q13 2, Q19 5, Q22 2, Q33 1; frozen manuals: A-009 | config_validator.py: Q24 1; frozen manuals: A-009 | permitted | Conditional: only if Stage 1 needs the processor's declared dependencies or a validation of its keys | CONDITIONAL | B-006, A-009, B-002 |
+B. Modules the pipeline hands off to (hand-off only; their logic belongs to the owner topics)
+| R06 | screening/secondary_screener.py | yes | b6f8ff7223ad803869e976f92d794dfc7c811b59 | py / 35,461 / 706 | name hit screen; Q06 1, Q07 10, Q09 3, Q12 1, Q13 1, Q22 1, Q29 5, Q33 2; frozen manuals: A-008, C-004, C-007 | permitted | Supporting: the screening call the processor makes and the verdict it acts on (screening logic not read) | SUPPORTING | D-003; C-007 S-13 |
+| R07 | screening/entry_gate.py; screening/retest_monitor.py | yes | 46b173171bdfeba48af641b67a361618e5acba58; 26639d6ed5dddb1140f0868bb9f937cad5379f82 | py / 21,303 / 538; py / 19,889 / 442 | entry_gate.py: name hit gate,entry; Q06 1, Q08 3, Q20 1, Q23 5, Q33 6; frozen manuals: A-008, A-009, B-006, B-011, C-007 | retest_monitor.py: name hit retest; Q04 3, Q06 2, Q07 1, Q14 1, Q20 1, Q23 1, Q33 3; frozen manuals: B-006, C-007 | permitted | Supporting: the gate and retest divert, park, release and continue hand-offs only | SUPPORTING | D-015, D-016; C-007 S-14 to S-18, BM-06 (BK-24); B-009 D1 |
+| R08 | screening/hard_gate.py; screening/step_executor.py; screening/quality_scorer.py | yes | a8e7e2e49675ca46989898174adf8e0afe419a61; d83b04860f0ff97b33ca60faa20230004d04ae5e; b125e9ce324336fb8beba8012eee6669dbf91848 | py / 23,101 / 467; py / 17,364 / 424; py / 6,337 / 151 | hard_gate.py: name hit gate; Q12 1, Q29 3 | step_executor.py: Q08 2, Q23 6, Q29 4, Q33 1 | quality_scorer.py: name hit score; frozen manuals: A-008 | permitted | Conditional: only if the processor calls them directly (otherwise through the screener) | CONDITIONAL | D-002, D-003, D-017 |
+| R09 | signals/entry_throttle.py | yes | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | py / 5,266 / 126 | name hit throttle,entry; Q15 2; frozen manuals: C-001 | permitted | Supporting: the throttle check the processor makes and its outcome only | SUPPORTING | owner of the throttle rule for review (D-016 or F-010) |
+| R10 | strategies/loader.py; strategies/control.py; strategies/schema.py; strategies/taxonomy.py; core/strategy_direction.py | yes | 99e83b192021297a3df472840728b88123c7b891; b6eecb480b83471149fb9362bafc980c967ff6c9; 22530161a5ee5a24bd85a7701b45269b3f2bacdb; 069644bc1bdb464ffe5faec31f710acdc02e4837; 0e6f8b6686f393dcf38ddf036e565190cec0863a | py / 9,811 / 214; py / 5,552 / 118; py / 14,263 / 376; py / 1,653 / 39; py / 6,954 / 143 | loader.py: Q13 1, Q27 6; frozen manuals: A-009 | control.py: name hit control; Q18 1, Q33 1; frozen manuals: B-009, C-001 | schema.py: Q21 2, Q26 12; frozen manuals: A-008 | taxonomy.py: Q13 1 | strategy_direction.py: name hit strategy,direction; Q13 1, Q21 1; frozen manuals: A-008, A-009 | permitted | Supporting: the strategy lookup and the strategy-control gate as the processor applies them | SUPPORTING | C-010 (mapping), A-008 (strategy model); C-001 s.7.4 |
+| R11 | capital/position_sizer.py | yes | f92eace8d6e30eae2f2f57a0e244fb6873e538f3 | py / 43,742 / 823 | name hit sizing; Q07 2, Q10 1, Q19 20, Q22 2, Q33 1; frozen manuals: C-004 | permitted | Supporting: the sizing call and the reject names the processor stores only | SUPPORTING | F-004 |
+| R12 | capital/risk_engine.py | yes | 27af699b591310a15e206f7bed0a8f82c278e196 | py / 46,383 / 840 | name hit risk; Q02 1, Q08 1, Q10 2, Q16 7, Q19 4, Q22 2, Q24 6, Q33 5; frozen manuals: A-008 | permitted | Supporting: the risk checks the processor calls and the in-flight count it keeps | SUPPORTING | F-006 to F-010; A-005 s.7; BK-07 |
+| R13 | capital/fund_manager.py | yes | 6f61618a5b0e8a9d67d90c7d2ee7ba3a79ad278c | py / 118,545 / 2,584 | Q08 1, Q10 2, Q19 1, Q20 6, Q22 5, Q33 3; frozen manuals: A-011, B-005 | permitted | Supporting: the reserve and release calls only | SUPPORTING | F-011 to F-013 |
+| R14 | capital/kill_switch.py | yes | 3eb2ece050c3eafbcf2e90ec01c824b4dff27950 | py / 108,965 / 2,152 | name hit kill; Q18 1, Q22 6, Q23 2; frozen manuals: A-011, B-004, B-005, C-007 | permitted | Supporting: the kill checks the processor makes only | SUPPORTING | I-001, I-002; C-006 s.8.2, C-007 s.6.2 |
+| R15 | capital/strategy_governor.py; capital/performance_allocator.py | yes | d17193c569c1d2e2890d2047b03cf9d0ae825e8d; ca7cfb0692c9ade5ddd6658614d89a2b15837d38 | py / 9,169 / 197; py / 6,679 / 175 | strategy_governor.py: name hit strategy,governor; Q05 1, Q18 1, Q33 1; frozen manuals: A-008 | performance_allocator.py: name hit allocat; Q21 2 | permitted | Conditional: only if the processor calls them | CONDITIONAL | A-008, F topics |
+| R16 | allocation/portfolio_allocator.py; allocation/ranker.py; allocation/window_buffer.py; allocation/models.py | yes | cb27a82e757f2d8aba4400ec0949611b0c340e2d; beac7be7eadb77c696a5447fbdd0a065ba1a2915; a8b3b5d4dfff89c86f5fc1b6a42f9849890c7edc; f2712028549147f1d14809f4f84760a2fb44111c | py / 16,899 / 337; py / 1,048 / 27; py / 1,075 / 37; py / 3,905 / 104 | portfolio_allocator.py: name hit allocat; Q04 1, Q11 3, Q21 14, Q23 1, Q33 7; frozen manuals: B-006 | ranker.py: Q11 1 | window_buffer.py: name hit window; Q11 1 | models.py: Q19 1, Q21 1, Q25 1, Q33 1 | permitted | Supporting: the allocator hand-off and its pre-check reject only | SUPPORTING | J-012; C-005 s.6.2 |
+| R17 | orders/order_placer.py | yes | e3a602909befa3fd3ba4b27caeed108724c07947 | py / 219,497 / 4,707 | name hit placer/place; Q07 1, Q08 2, Q10 2, Q12 7, Q19 1, Q20 3, Q22 155, Q25 18, Q33 10, Q34 7; frozen manuals: A-006, A-007, A-011, B-004, B-005, B-006, B-008, B-009, B-010, C-001, C-004, C-007 | permitted | Supporting: the placement call and the outcomes the processor handles (success, failure, timeout, retry) | SUPPORTING | G-002, G-003, G-008, G-009; C-006 s.5, C-007 s.4.1 |
+| R18 | orders/order_manager.py; orders/full_entry_engine.py; orders/entry_engine.py | yes | 978d213532532d7db72b215bc8ed415b848928ae; 140445862c7e266cad6ba734653453c563d34a4b; 11a37373db8717d51c558c6fc7debe5383d6c42f | py / 34,485 / 770; py / 9,338 / 237; py / 5,209 / 120 | order_manager.py: Q19 1, Q22 8, Q34 4; frozen manuals: C-007 | full_entry_engine.py: name hit entry; Q12 4, Q22 2; frozen manuals: A-007 | entry_engine.py: name hit entry; Q34 2 | permitted | Conditional: only if the processor calls them | CONDITIONAL | G topics; C-007 s.4.1 (order manager) |
+| R19 | v3_chain/pb01_runner.py; v3_chain/pb01_entry.py; v3_chain/runner.py; v3_chain/score.py; v3_chain/watchlist_capture.py | yes | e87a5aa964643f1eae5fad90eeb1e0993b5829e0; cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8; a782f91f2f4f1afe12c75072708e2a26316eed3f; 8270d49812543497e3ef37b4d4444e9165138541; 25a1f084eadabc443a0dd22d8171b26584d4e897 | py / 15,333 / 297; py / 18,217 / 372; py / 20,092 / 426; py / 10,379 / 206; py / 11,490 / 245 | pb01_runner.py: Q04 2, Q09 1, Q14 7, Q22 1, Q33 2 | pb01_entry.py: name hit entry; Q04 1, Q09 1, Q14 1, Q23 1, Q33 1 | runner.py: Q09 1, Q14 6, Q23 1, Q33 1 | score.py: name hit score | watchlist_capture.py: Q14 1, Q23 1 | permitted | Conditional: only where they enter or call the processor's pipeline | CONDITIONAL | J-010 |
+| R20 | sr_detector/retest_confirm.py; sr_detector/detector.py | yes | 5fc212535bbd2e86f1c5899d07ce76331ab72724; a8500c48c8acb7878c9dcb1460caeb7f8eb9722c | py / 5,459 / 138; py / 14,572 / 330 | retest_confirm.py: name hit retest | detector.py: Q14 3, Q23 1, Q33 1 | permitted | Conditional: only the hooks the processor calls | CONDITIONAL | J topics, D-009 to D-015 |
+| R21 | core/evidence_contract.py | yes | 29fb84bc690d05b832625fb55a496f3f8d4d18d7 | py / 35,426 / 701 | name hit evidence; Q07 8, Q19 1, Q21 1, Q22 1, Q23 1, Q33 2, Q35 5 | permitted | Conditional: only if the processor records its decisions through it | CONDITIONAL | L-008; C-007 s.8 |
+| R22 | core/instrument_cache.py; core/mis_blocklist.py; core/market_windows.py | yes | 2bff50f7657fd9600e99d3663791e4d134f01d08; 1f91fedfbdd4e8ef8ce16eb83c0fa1223ae10232; 25625e8cd109c935d014ad357cd6726c75737157 | py / 12,293 / 298; py / 6,651 / 161; py / 13,938 / 334 | instrument_cache.py: frozen manuals: C-004 | mis_blocklist.py: Q34 2; frozen manuals: C-004 | market_windows.py: name hit window; frozen manuals: A-011 | permitted | Conditional: the processor's instrument, blocklist and window checks, if any | CONDITIONAL | A-003, A-004, C-004 s.10; Q-20 |
+| R23 | core/events.py | yes | 6511bc40fe74413ff5498a5b90cd47fae34dff82 | py / 15,023 / 366 | Q22 3, Q23 7, Q34 1; frozen manuals: B-005, B-006 | permitted | Conditional: only if the processor emits its decisions as events | CONDITIONAL | L topics; B-006 |
+C. Storage, status and the producer (frozen; cross-reference)
+| R24 | core/state_store.py; core/schema.sql; reports/signal_status.py | yes | 11866117801b9329773a1be605448faef3c96f8d; b46d7489f6ec5e31149dd68957f3b9e45270571e; 98a1631f5634807ecc6cf46cc9d3767215f9871f | py / 153,466 / 3,356; sql / 104,053 / 1,655; py / 7,742 / 157 | state_store.py: name hit state; Q06 2, Q08 2, Q16 4, Q20 4, Q21 1, Q22 3, Q23 1, Q25 1, Q33 1, Q34 4; frozen manuals: B-005, B-010, C-001, C-007 | schema.sql: Q18 1, Q19 1, Q22 3, Q33 2; frozen manuals: A-011, B-005, C-007 | signal_status.py: name hit signal,status; Q05 1, Q07 13, Q08 5, Q19 12, Q33 1, Q34 2; frozen manuals: C-007 | permitted | Cross-reference: status storage and readers, frozen in C-007 (cited, not re-read) | NO | C-007 |
+| R25 | signals/webhook_receiver.py | yes | 0f15a0ab033529d80d9c14c993a5077690b72871 | py / 59,565 / 1,208 | Q07 1, Q19 1, Q20 3, Q23 1, Q24 5, Q27 2, Q29 6, Q33 11; frozen manuals: A-008, A-009, A-011, B-006, B-007, B-008+add, C-001, C-002, C-003, C-004, C-006, C-007 | permitted | Cross-reference: the producer side, frozen in C-002 to C-007 | NO | C-002 to C-007 |
+D. Strategy configuration
+| R26 | 16 files (appendix A) | yes | appendix A | 16 files / 21,215 / 917 in all | per file in appendix A | permitted | Supporting: only the keys the processor reads (for example the ATR methods behind BK-22), repository values | SUPPORTING | A-008 s.10, E-005 to E-008 |
+| R27 | config/scan_webhook_map.yaml; config/strategy_direction_registry.yaml; config/scoring_weights.yaml | yes | 54dd98d75f276f9b82027707702df2ee619b11f7; b03f4ed0c90043840f339fc9b5dac6cca93bf736; e9d6ede4c02d5766acb450e84b1acba78102d89d | yaml / 3,067 / 85; yaml / 5,745 / 155; yaml / 2,610 / 45 | scan_webhook_map.yaml: name hit mapping (C-010); Q27 1; frozen manuals: A-008, A-009 | strategy_direction_registry.yaml: name hit strategy,direction; Q32 1; frozen manuals: A-008 | scoring_weights.yaml: name hit score; Q29 3; frozen manuals: A-008 | permitted | Cross-reference: the scanner map, the direction registry and the scoring weights | NO | C-010, A-008, D-017 |
+E. Tests (source only; never run)
+| R28 | tests/unit/test_signal_processor.py | yes | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | py / 97,634 / 2,501 | name hit signal,process; Q02 2, Q03 10, Q04 11, Q05 28, Q09 4, Q10 1, Q13 1, Q17 5, Q18 10, Q19 5, Q22 8, Q26 34, Q27 7, Q29 3, Q30 38, Q31 13, Q33 20; frozen manuals: C-001, C-005, C-006 | permitted | Test source: the pipeline cases, at located ranges | YES | N-001 |
+| R29 | tests/unit/test_main.py | yes | da7bbb91111358521f44dc00e8c48b1bedbc04be | py / 58,645 / 1,294 | Q02 10, Q03 1, Q04 11, Q18 2, Q19 2, Q22 6, Q27 2, Q30 19, Q31 20, Q33 12; frozen manuals: B-005, B-011 | permitted | Test source, conditional: the processor's wiring cases only | CONDITIONAL | B-006 |
+| R30 | tests/integration/test_full_signal_flow.py; tests/integration/test_end_to_end_smoke.py; tests/integration/test_hardening_scenarios.py; tests/integration/conftest.py | yes | 376a2ee815f798d84857cb777f87617bf5b545c9; 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2; d87da7ab9ed64792eed017c4d17fa23888b0c85e; a6180190235f3a6cc39a88728ac04b9815168aad | py / 23,730 / 634; py / 32,480 / 800; py / 19,676 / 329; py / 17,034 / 415 | test_full_signal_flow.py: name hit signal; Q17 1, Q18 1, Q22 13, Q29 1, Q30 2, Q33 1 | test_end_to_end_smoke.py: Q02 1, Q17 1, Q18 1, Q22 10, Q29 1, Q30 4, Q31 1, Q33 5 | test_hardening_scenarios.py: Q02 3, Q04 6, Q09 1, Q10 1, Q19 1, Q30 2, Q31 7, Q33 6 | conftest.py: Q02 5, Q03 1, Q09 3, Q10 4, Q13 1, Q19 4, Q22 5, Q27 4, Q29 2, Q31 5, Q33 11 | permitted | Test source, conditional: pipeline sequences only | CONDITIONAL | N-002, N-009 |
+| R31 | 7 files (appendix A) | yes | appendix A | 7 files / 198,501 / 3,704 in all | per file in appendix A | permitted | Test source, conditional: the checks these tests call wired | CONDITIONAL | F, I topics |
+| R32 | 9 files (appendix A) | yes | appendix A | 9 files / 138,288 / 2,980 in all | per file in appendix A | permitted | Test source, conditional: processor cases only | CONDITIONAL | A-008 s.14, F-007 (BK-02, BK-06) |
+| R33 | 16 files (appendix A) | yes | appendix A | 16 files / 809,582 / 18,073 in all | per file in appendix A | permitted | Test source, conditional: hand-off cases of R06 to R21 only | CONDITIONAL | owners of R06 to R21 |
+F. Records (names only; reading them needs approval; host records never read)
+| R34 | docs/audit/secondary_filtration_execution_pipeline_audit.md; docs/audit/system_flow_review_15jun2026.md; docs/audit/system_audit_14jun2026.md | yes | 5d405fa4205948405537c9672921b44d7b62be4c; 80f7dd814e8f967c4703b9ab9a3702980ffd7499; 711ec35b334a793bd5635ac53b0f2d090af54193 | md / 45,203 / 535; md / 14,028 / 115; md / 12,346 / 255 | secondary_filtration_execution_pipeline_audit.md: name hit pipeline; Q04 9, Q33 22 | system_flow_review_15jun2026.md: Q04 5, Q33 5 | system_audit_14jun2026.md: Q04 4, Q05 3, Q33 13 | permitted | Record (names only): dated pipeline reviews, if approved | NO | records |
+| R35 | docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md; docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md; docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md; docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md | yes | 3d3e30df6219dbde7c94773be718b341616ee81c; 45d6c3d91f43258069e38ea067da6c0a3bc9609b; 6cd5e099ccd29bac00487fb1226e42df130a70bb; 25d260107eb110766eaec21e874c0fa890dde4f8 | md / 29,163 / 194; md / 22,283 / 185; md / 18,833 / 173; md / 27,256 / 139 | V3_STEP10_PIPELINE_PLUMBING_PLAN.md: name hit pipeline; Q04 12, Q33 18 | V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md: name hit allocat; Q04 6, Q05 1, Q33 15 | V3_STEP4_HARDGATE_SCORER_PLAN.md: name hit gate,score; Q04 3, Q33 3 | V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md: Q04 2, Q33 7 | permitted | Record (names only): V3 plans, if approved | NO | J-010, J-012 |
+| R36 | docs/audit/deploy_behaviour_delta_prediction_14jul2026.md; docs/audit/integrity_audit_2026.md; docs/design/a2_timeout_retry_design_02jul2026.md; docs/crash_test_info_04jun2026.md | yes | 5e354151d6a48586fcfb9bc11740ea75350d453c; 25a738f2a9a77ed37374dce367e5fd8e848efd8a; 6e377ad2e2938092bee7c0b77c750190bd9c5214; 5ddea962749830b9f38dce42bdc3a195d4d580f4 | md / 18,043 / 242; md / 368,033 / 4,594; md / 13,066 / 138; md / 49,034 / 1,006 | deploy_behaviour_delta_prediction_14jul2026.md: Q04 6, Q33 3 | integrity_audit_2026.md: Q04 6, Q05 1, Q33 22 | a2_timeout_retry_design_02jul2026.md: Q04 2, Q33 10; frozen manuals: B-004 | crash_test_info_04jun2026.md: Q04 2, Q05 2, Q33 9 | permitted | Record (names only): dated audits and designs that name pipeline functions, if approved | NO | records |
+| R37 | PATHS.md; docs/SYSTEM_MAP.md | yes | e6a1ba7c1cb65b199f0d0460e846c6fbc75b9de8; c251f7c7a29383d817e75673c93ba36c4f5a9285 | md / 260,805 / 656; md / 705,794 / 2,066 | PATHS.md: Q04 10, Q05 3, Q33 16 | SYSTEM_MAP.md: name hit mapping (C-010); Q04 10, Q05 2, Q33 33; frozen manuals: B-005 | host record | Host records: never read (value-blind counts only, as here) | NO | host records |
+| R38 | docs/audit/stale_queue_entries_25jul2026.md; docs/audit/queue_items_decidable_25jul2026.md | yes | a8c438a027468d71b6366cb2928e51bc40786a45; 4ad78303d209ac53b268a6142bf9b6662de0a82a | md / not counted / not counted; md / not counted / not counted | stale_queue_entries_25jul2026.md: name hit queue (C-006) | queue_items_decidable_25jul2026.md: name hit queue (C-006) | excluded (by name) | EXCLUDED: the two July records; refused by name by every tool; separate approval required | NO | excluded |
+A.3 Frozen manuals and governance records (V2 main dce3164; pointers to verify at the pin, not conclusions)
+| Record | What it holds for C-008 |
+| C-001_manual.md s.3, s.7.2, s.7.4, s.12, s.13 | "Signal processing: SignalProcessor._process_one and the stages after it (C-008)"; the processor's Step 2 (scanner-to-strategy resolution, REJECTED_UNKNOWN_STRATEGY, then the strategy-control gate; processor lines 930 to 972 cited); D-05, the stored scanner identity (owners C-007, C-008, C-010, K-003); unknown-symbol handling after the receiver not traced (C-004, C-008) |
+| C-002_manual.md s.3 (S8), s.11, s.17 | state S8 "signal processed" (owner C-008); the owners of the hand-off after an accepted request |
+| C-004_manual.md s.6.5, s.16.1 to s.16.4, s.19 (U-07) | the queue tuple unpacked in _process_one (processor lines 867 to 887); "pre-flight, strategy and control gates (10.1; C-008, C-010)"; NaN and +inf prices downstream not traced (owners C-007, C-008, E-001 to E-004) |
+| C-005_manual.md s.1, s.6.1, s.6.2, s.13 | "processor behaviour beyond claim lifecycle (C-008)"; claim acquisition and release; the re-queue and allocator hand-off; BM-04 (C-008, A-008), BM-05 (A-005, C-008); Q-45 (h) |
+| C-006_manual.md s.1, s.2.2, s.3, s.5, s.6, s.8.1, s.8.2, s.11, s.13 | "C-008 owns worker pipeline logic"; producer and consumer; configuration; the re-queue paths (BM-06, the unwired FIX-007 pre-check); dispatch and worker hand-off; the clean stop (REJECTED_SHUTDOWN at the placement check; BM-03); the kill switch; BM-05, BM-06, BM-08 (C-008) |
+| C-007_manual.md s.1, s.4.3, s.5.1, s.5.2, s.6.2, s.6.4, s.9.2, s.11.2, s.13 | "C-008 (why the processor writes each status)"; the status map (S-04 to S-12, the processor's writes); composed reject names (C-008); stop and kill writes; C7/BM-01, BM-03, BM-04, BM-06 (C-008) |
+| B-009_manual.md s.3 to s.7, s.9, s.10, s.14, s.15 | the session model; strategies at the session; the signal lifecycle by line ("C topics own the detail"); prices; entries; what stopped entries; failures during the session; known defects D1 to D3 |
+| B-006_manual.md s.3, s.9, s.12, s.16; B-011_manual.md s.10.1, s.12 | the worker inventory (TH rows), stop, liveness and tests; shutdown tests and summary |
+| B-005_manual.md s.5; B-004_manual.md s.7.3, s.7.4; B-008_manual.md s.3 | the in-flight recovery (coded, not wired); transport failures, retries, pacing and timeouts on the placement path; a Chartink signal before 10:00 |
+| A-005_manual.md s.3, s.7; A-007_manual.md s.4; A-008_manual.md s.10, s.14; A-009_manual.md s.3, s.5, s.6, s.8, s.9; A-011_manual.md s.12 (as qualified by C-006 s.8.1, BK-12) | the capital architecture and the in-flight count (BK-07); how a strategy's product was gated; per-strategy parameters; the same-symbol rule (BK-02, BK-06); configuration sources, validation, defaults and values held in code; stop and kill rejections |
+| V2_DESIGN_LOG.md s.2, s.3, s.7 | Q-20 and Q-45 (h); VP-11, VP-24, VP-31 and VP-59, which list C-008 among their ratification points; BK-02, BK-03, BK-06, BK-07, BK-14, BK-15, BK-17, BK-18, BK-19, BK-21, BK-22 and BK-24 (cross-check C-008) |
+| MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt, sections C and D | C-008 "Signal processing" (section C's goal: "how an external signal becomes an internal trading candidate"); D-001 to D-018, the trade decision engine ("Should this signal become a trade?") |
+- Master manual index: no file of that name was found in V2 main dce3164 (a search for "manual index" and "master manual" found
+  none); the agenda status table (V2_DESIGN_LOG.md section 4) and README.md's layout were used as the index (question F.6).
+
+==============================================================================
+B. PATH-ONLY SEARCH LOG (counts and path names only; no line printed)
+==============================================================================
+B.1 Path-name search (name_search_c008.py over the saved listing; 21:23:55 IST)
+- Expression: 35 terms matched case-insensitively against the file name (the last path component), and 8 folder terms against
+  folder names: signal, process, pipeline, screen, gate, retest, decision/decide, strategy, reject, status, transition, state,
+  throttle, circuit, kill, entry, window, allocat, sizing (sizer, sizing, size), risk, reserv, placer/place, score, evidence,
+  atr, governor, control, direction, dispatch, worker, pool, queue (C-006), expir (C-009), route (C-011), mapping (C-010);
+  folders signals, screening, strategies, capital, allocation, orders, pipeline, decision.
+- Paths searched: 1,336 (the 1,438 tracked files less the 102 never-open paths, removed first; 12 never-open paths would have
+  matched a term).
+- Results: 264 paths (config: 5, docs: 78, ops: 2, ops_dashboard: 18, runtime: 28, scripts: 13, tests: 120); per term (a path
+  can match several): {allocat: 6, window: 7, state: 19, kill: 24, sizing: 14, risk: 8, strategy: 42, governor: 2, mapping
+  (C-010): 4, score: 9, retest: 4, reject: 4, direction: 11, evidence: 8, decision/decide: 11, signal: 18, control: 15, status:
+  7, gate: 16, process: 3, screen: 32, pipeline: 9, queue (C-006): 2, reserv: 1, entry: 15, throttle: 5, placer/place: 4,
+  circuit: 1, route (C-011): 2}; folder-name hits (term, folder: files below): {allocation:allocation: 5, capital:capital: 10,
+  decision:decisions: 21, orders:orders: 21, screening:screening: 7, signals:signals: 4, strategies:strategies: 21}
+- Paths returned: every hit by name, grouped by area, in the companion file (appendix B). The two excluded July records are among
+  the hits (term "queue"); they are listed by name only.
+- Limitations: a file name says nothing about what the file does; terms such as state, entry or control also match unrelated
+  files; a file whose name has none of the terms is found only by the count-only searches or the frozen manuals.
+B.2 Count-only searches (ccount_c008.py, each after the gate's self-test; per-file match counts only)
+Scopes (c008/scope/, C-007's lists unchanged, same SHA-256): s_all 1,260 files (every permitted text file of the pin, the two
+  excluded July records removed); s_rt 281 runtime Python files; s_code 869 code and configuration files, tests included; s_tests
+  486 test files; s_cfg 41 non-test YAML, service, timer and cron files.
+| ID | Time | Scope (files) | Files with matches | Matching lines | Of which test files | Of which docs | What it locates |
+| Q01 | 21:25:49 | s_all (1260) | 1 | 1 | 0 | 0 | the class SignalProcessor defined |
+| Q02 | 21:25:30 | s_code (869) | 23 | 87 | 18 | 0 | SignalProcessor named |
+| Q03 | 21:25:29 | s_code (869) | 16 | 34 | 15 | 0 | imports of signals.signal_processor |
+| Q04 | 21:25:50 | s_all (1260) | 40 | 186 | 9 | 23 | the pipeline entry points and hand-offs by name |
+| Q05 | 21:25:49 | s_all (1260) | 24 | 134 | 6 | 14 | the pipeline's reject exception by name |
+| Q06 | 21:25:09 | s_rt (281) | 5 | 32 | 0 | 0 | the status writer with a parenthesis (calls or its definition) |
+| Q07 | 21:25:21 | s_rt (281) | 14 | 83 | 0 | 0 | the REJECTED_ names |
+| Q08 | 21:25:34 | s_rt (281) | 20 | 84 | 0 | 0 | processor status names |
+| Q09 | 21:25:58 | s_code (869) | 26 | 52 | 19 | 0 | imports from screening |
+| Q10 | 21:25:59 | s_code (869) | 90 | 150 | 79 | 0 | imports from capital |
+| Q11 | 21:26:00 | s_code (869) | 9 | 16 | 3 | 0 | imports from allocation |
+| Q12 | 21:25:58 | s_rt (281) | 17 | 46 | 0 | 0 | imports from orders |
+| Q13 | 21:26:32 | s_code (869) | 32 | 78 | 17 | 0 | imports from strategies |
+| Q14 | 21:26:33 | s_code (869) | 43 | 111 | 19 | 0 | imports from v3_chain or sr_detector |
+| Q15 | 21:26:34 | s_code (869) | 4 | 10 | 2 | 0 | the entry throttle named |
+| Q16 | 21:26:13 | s_rt (281) | 12 | 54 | 0 | 0 | kill and shutdown names |
+| Q17 | 21:26:35 | s_code (869) | 13 | 26 | 8 | 0 | entry-window names |
+| Q18 | 21:26:34 | s_code (869) | 36 | 100 | 19 | 0 | strategy lookup, control and circuit-breaker names |
+| Q19 | 21:26:47 | s_code (869) | 51 | 206 | 33 | 1 | sizing names |
+| Q20 | 21:26:45 | s_rt (281) | 10 | 26 | 0 | 0 | reserve_ and release_ calls |
+| Q21 | 21:26:53 | s_code (869) | 21 | 100 | 5 | 0 | allocator names |
+| Q22 | 21:26:54 | s_code (869) | 106 | 628 | 63 | 1 | the order placer named |
+| Q23 | 21:26:47 | s_rt (281) | 34 | 82 | 0 | 0 | thread pools, dispatchers and threads |
+| Q24 | 21:26:47 | s_rt (281) | 5 | 51 | 0 | 0 | in-flight names |
+| Q25 | 21:27:06 | s_rt (281) | 9 | 52 | 0 | 0 | retry counters |
+| Q26 | 21:27:28 | s_code (869) | 34 | 172 | 12 | 1 | ATR and stop or target method keys |
+| Q27 | 21:27:28 | s_code (869) | 36 | 111 | 20 | 1 | the scanner map named (C-010 boundary) |
+| Q28 | 21:27:28 | s_code (869) | 0 | 0 | 0 | 0 | EOD-route names (C-011 boundary) |
+| Q29 | 21:27:29 | s_code (869) | 40 | 105 | 27 | 1 | expiry and signal-age names (C-009 boundary) |
+| Q30 | 21:27:11 | s_tests (486) | 189 | 720 | 189 | 0 | test functions named for pipeline areas |
+| Q31 | 21:27:24 | s_tests (486) | 20 | 117 | 20 | 0 | tests naming the processor or its entry points |
+| Q32 | 21:27:13 | s_cfg (41) | 3 | 10 | 0 | 1 | top-level configuration blocks for pipeline areas |
+| Q33 | 21:27:43 | s_all (1260) | 168 | 716 | 39 | 83 | the processor named anywhere (code, tests, records) |
+| Q34 | 21:27:33 | s_rt (281) | 20 | 105 | 0 | 0 | reject check and reason fields |
+| Q35 | 21:27:41 | s_code (869) | 3 | 19 | 1 | 0 | the evidence contract named |
+- Exact expressions: the companion file, section 7.3. Paths returned (names and counts): the companion file, appendix C.
+- Limitations: a count is of lines matching a pattern, not of calls or behaviours; a hit can be a comment, a docstring or a
+  string; import counts show that a file imports from a package, not which name or whether it is used; the patterns are
+  line-level and Python-regex; Q28 found no file (the EOD route's own names are not known at Stage 0); docs and host records are
+  counted, never read; no hit is interpreted as runtime behaviour.
+
+==============================================================================
+C. PROPOSED C-008 BOUNDARY (for review; not a decision)
+==============================================================================
+C.1 Proposal S-1
+- In C-008 (legacy facts only): (a) how main.py builds and wires the processor (the components passed in, its workers, its stop
+  call), at located lines; (b) its entry points: the dequeued item (C-006's tuple), continue_from_gate, continue_from_retest, the
+  allocator's hand-back (reject_prepared) and any other caller Stage 1 finds (for example the V3 chain); (c) the order of stages
+  and checks on each path, with each stage's input, its guard as the processor states it, its outcome (the status and reason it
+  writes, by C-007's status map; any release of a claim or a capital reservation; any re-queue) and its next consumer; (d) the
+  hand-offs: what the processor passes to the screener, the gate, the retest monitor, the strategy loader and control gate, the
+  throttle, the sizer, the risk engine, the fund manager, the allocator, the kill switch and the order placer, and what it does
+  with each result, not those modules' rules; (e) the exception and failure paths inside the pipeline (unhandled errors,
+  placement failures, timeouts, rate-limit re-queues) and what each leaves; (f) the in-flight and same-symbol bookkeeping that
+  the processor holds; (g) the stop and kill checks inside the pipeline; (h) the configuration keys the processor reads, with
+  their repository values.
+- Not in C-008 (owner): the queue and the dispatcher-to-pool hand-off (C-006, frozen; cited); the stored status vocabulary,
+  schema, writers' storage paths and retention (C-007, frozen; cited); the expiry policy (C-009: the age checks appear only as
+  stages with their outcomes); the scanner-to-strategy mapping (C-010: the lookup appears only as a stage); the EOD route (C-011:
+  recorded only if Stage 1 finds it entering the processor); the rules applied by each stage: screening and the trade decision
+  (D-001 to D-018), price construction (E), sizing, risk and capital (F), orders and broker outcomes (G), positions (H), kills
+  (I), S&R, the V3 chain and allocation (J); database and state design (K); alerts, reports and evidence (L).
+- Why this way: section C's goal is how an external signal becomes an internal trading candidate, and section D asks whether a
+  signal should become a trade; the frozen C-005, C-006 and C-007 boundary lines give C-008 "processor behaviour beyond claim
+  lifecycle", "worker pipeline logic" and "why the processor writes each status". Read together, Claude proposes that C-008
+  records the pipeline's sequence and outcomes at the processor level, and each stage's rules only by name and owner.
+- Left open for review: F.1 to F.3.
+C.2 Cross-topic map (how duplicated analysis is avoided)
+| Topic | It owns | C-008 records | Leads met in C-008 |
+| C-001 (frozen) | the scanner identity and the scanner map's loading | how the processor uses the stored scanner and strategy (the lookup as a stage) | D-05 |
+| C-004 (frozen) | validation; the values as parsed | whether the processor checks the price or the symbol again | U-07; Q-20 |
+| C-005 (frozen) | claims, the cache, the fingerprint | where the processor releases the claim, and what reaches it after an eviction | BK-03, BK-06, BK-07; Q-45 (h) |
+| C-006 (frozen) | the queue, the dispatcher and the pool, the re-queue paths, the clean stop | the stages each item runs after the pool hands it on; which values the processor uses | BK-14, BK-15, BK-17, BK-21 |
+| C-007 (frozen) | the stored statuses, schema and retention | why and when each status is written | BK-19, BK-22, BK-24 |
+| C-009 | the expiry policy | the age checks as stages with their outcomes | - |
+| C-010 | scanner-to-strategy mapping | the lookup's place in the pipeline | D-05 |
+| C-011 | the EOD route | nothing, unless Stage 1 finds the route entering the processor (Q28 found no EOD-route name) | - |
+| A-005, A-008 (frozen) | capital and strategy models; the same-symbol rule | the processor's in-flight count and same-symbol checks as stages | BK-02, BK-06, BK-07 |
+| B-006, B-009, B-011 (frozen) | workers, the session, shutdown | the processor's place in them, cited | B-009 D1 to D3 |
+| D, E, F, G, H, I, J topics | screening and decision rules, prices, sizing and risk, orders, positions, kills, S&R, V3, allocation | the call and the outcome only | - |
+| K-003, L-008, L-009 | signal state, evidence, audit trail | names and owners only | - |
+| VP-11, VP-24, VP-31, VP-59 | V2 proposals listing C-008 among their ratification points | nothing for V2 (W-1, W-6) | F.4 |
+- Method against duplication: frozen statements are cited by section and re-verified at the pin only where a C-008 statement
+  rests on them; the hand-off modules are read only at the lines the processor calls; a lead is met with what the reading shows
+  and left open or noted for its owner, never resolved for another topic.
+C.3 Exclusions
+- The 102 protected paths and docs/v2_design_spec.md (it shares a protected blob): refused by the gate.
+- The two excluded July records (R38): refused by name; separate approval required.
+- Records R34 to R36 and every other dated record: names only unless the authorisation approves a read; host records (R37) never.
+- Every script and test: never run. The deployed hosts and databases: deleted and not reachable; their state is not established.
+- V2 design: no proposal is made or ratified at C-008.
+C.4 Leads handed to C-008 (recorded, not resolved)
+- BK-02 (VP-12's same-symbol rule is not carried by intake) and BK-06 (C-005 BM-04): the same-symbol trade rule lives downstream
+  of intake (A-008 s.14): R01, R12.
+- BK-03 (C-005 BM-01) and Q-45 (h): the claim's lifetime during processing and what a later signal for an evicted symbol meets:
+  R01 (code path only; occurrence stays not established).
+- BK-07 (C-005 BM-05): the processor's and the risk engine's in-flight count beside the receiver's claim: R01, R12.
+- BK-14 and BK-21 (C-006 BM-05, C7/BM-03): which values the processor uses when a re-queued row and its item differ: R01.
+- BK-15 (C-006 BM-06): the FIX-007 pre-check re-queue present but not wired: R01, R02.
+- BK-17 (C-006 BM-08): text drift in the processor's stop docstring and retry comment: R01.
+- BK-19 (C7/BM-01): every status write is unconditional; C-008 records why each is written: R01.
+- BK-22 (C7/BM-04): the doubled prefix REJECTED_REJECTED_NO_ATR_DATA (latent): R01, R26.
+- BK-24 (C7/BM-06): the gate's add() has no runtime caller (B-009 D1): R07.
+- Q-20 and C-001's note: unknown-symbol handling after the receiver: R01, R22.
+- C-004 U-07: NaN and +inf trigger prices downstream: R01 (whether the processor checks the price).
+- VP-11, VP-24, VP-31, VP-59: F.4.
+
+==============================================================================
+D. DOCUMENTATION METHOD PROPOSAL (staged reading order; not executed)
+==============================================================================
+D.1 Questions
+Q1 how the processor is built and started; Q2 its entry points; Q3 the order of stages on each path; Q4 each stage's input,
+  guard, outcome (status, reason, releases, re-queue) and next consumer; Q5 the hand-offs and what the processor does with each
+  result; Q6 the exception and failure paths; Q7 the in-flight and same-symbol bookkeeping; Q8 the stop and kill checks inside
+  the pipeline; Q9 the configuration keys it reads; Q10 where comments or tests disagree with the code on these points.
+D.2 Stages
+| Stage | Paths | Question(s) | Evidence capture | Frozen dependencies |
+| 1.0 Method | the tools | - | lift the Stage 0 lock as a step of its own (new SHA-256 recorded); the gate's self-test before every call; in large files a gated grep read first, then range reads of located lines only; every read logged (number, IST time, mode, range or pattern, path, pinned blob, lines printed, mask counts, evidence file SHA-256) | lessons of 23-Oct (C-006, C-007) |
+| 1.1 Wiring | R02 main.py; R05 only if needed | Q1 | grep for the processor's construction and its start and stop calls; range reads of those lines | B-006 s.3; C-006 s.2.2, s.5.1, s.6 |
+| 1.2 Entry points | R01 | Q2 | grep for the class, its method definitions and the four entry names; range reads of their heads | C-004 s.6.5; C-006 s.6; C-007 s.5.1 |
+| 1.3 Pipeline order | R01 | Q3, Q4 | range reads of _process_one end to end, then of the two continue paths; each stage tabulated SOURCE -> INPUT -> LOGIC -> GUARD -> OUTPUT -> STORAGE/HANDOFF -> NEXT CONSUMER and checked against C-007's status map | C-001 s.7.4; C-004 s.16.1; C-007 s.5.1, s.5.2 |
+| 1.4 Hand-offs | R06 to R23 | Q5 | grep in each module for the names Stage 1.3 found the processor calling; range reads of those definitions' heads and returns only | owners' frozen manuals where they exist (A-005, A-008, B-009) |
+| 1.5 Exceptions, stop and kill | R01, R14, R17 | Q6, Q8 | range reads of the processor's handlers, release and re-queue lines; the kill check's and the placer's call heads | C-006 s.5, s.8.1, s.8.2; C-007 s.6.2; B-005 s.5; B-004 s.7.3, s.7.4 |
+| 1.6 In-flight and same-symbol | R01, R12 | Q7 | grep for in-flight names (Q24) and the same-symbol checks; range reads of located lines | A-005 s.7; A-008 s.14; C-005 s.6.1, s.13 |
+| 1.7 Configuration | R03, R04, R26 | Q9 | gated grep for the blocks and keys found in Stages 1.1 to 1.6; repository values as FACT (CONFIG) | A-009 s.3, s.8; C-006 s.3 |
+| 1.8 Tests | R28 first; R29 to R33 only where Stages 1.1 to 1.7 point | Q10 | test text read as documents (FACT (TEST TEXT)); never run | B-006 s.16; C-007 s.10 |
+| 1.9 Records | R34 to R36 only if approved; R37 and R38 never | Q10 | narrow gated grep reads only, never a range read of a host record | - |
+| 1.10 Outputs | - | all | repository answers (each statement with path, lines, pinned blob and label), source inventory and read log, claim index, a citation check that joins wrapped lines, and bookmarks (W-9); then STOP for ChatGPT's reconciliation | lessons of 23-Oct (C-007) |
+D.3 Evidence labels and trace
+- Labels as in C-006 and C-007: FACT (SOURCE-VERIFIED), FACT (CONFIG), FACT (TEST TEXT), FACT (TEXT DRIFT), INTERPRETATION ("the
+  inspected code path would ..."), HISTORICAL and HISTORICAL / RECORD-DERIVED (dated), KNOWN DEFECT (only a previously recorded
+  defect re-verified at the pin), UNKNOWN / NOT ESTABLISHED and OPEN QUESTION. A negative carries its searched scope; a code path
+  is not an event; a cross-topic point becomes a bookmark.
+- The trace SOURCE -> INPUT -> LOGIC -> GUARD -> OUTPUT -> STORAGE/HANDOFF -> NEXT CONSUMER is kept per stage in a path map (as in
+  C-007 section 4.3), where the evidence supports each cell.
+- Configuration: repository values are FACT (CONFIG); deployed values are NOT ESTABLISHED (the VMs were deleted).
+
+==============================================================================
+E. GOVERNANCE / SAFETY
+==============================================================================
+- No source content opened during Stage 0: CONFIRMED in this sense: no file was read (the C-008 read log does not exist, and the
+  Stage 0 lock refused the one permitted path the self-test tried); the only operations on file contents were the 35 count-only
+  searches and two line-count runs (L01, superseded, and L02) through the masking filter, which print counts only, and git
+  hash-object over the 1,260 files of the search scope.
+- No code, tests, jobs, services, VMs, broker, webhook or Chartink run or contacted: CONFIRMED (network: read-only git ls-remote
+  of the two repositories; the V2 clone is the one taken at 21:15 IST to confirm the C-007 push).
+- No files changed; no commit or push: CONFIRMED (neither repository changed; working files only in Claude's scratch area).
+- No credential values or sensitive data copied: CONFIRMED (no content printed; both files scanned value-blind before delivery).
+- No behavioural conclusions or V2 design decisions: CONFIRMED (paths, blob IDs, sizes, line totals and match counts only).
+- Deviations: none. Independent verification: none (self-checked; Rama's lean workflow W-9).
+
+==============================================================================
+F. QUESTIONS FOR CHATGPT/RAMA (deliverable 3)
+==============================================================================
+Blocking: none. Stage 1 can be authorised on S-1 as proposed, or with the boundary changes below.
+Proposed boundary for review:
+F.1 The processor's own pre-checks (kill switch, entry window, signal age, strategy lookup and control, circuit breaker, entry
+    throttle, same-symbol rules): proposed: documented in C-008 at the processor level (place in the pipeline, condition text,
+    outcome); their rule design stays with D-002, D-016, F-007, F-010, I-001 and I-002, and the expiry policy with C-009.
+F.2 The allocator and V3-chain paths (R16, R19): proposed: recorded as hand-offs only (what the processor passes and does with
+    the result), with J-010 and J-012 owning their logic; both stay CONDITIONAL until Stage 1's searches show them reached at the
+    pin.
+F.3 The entry throttle (R09): its rule has no obvious agenda owner; proposed: D-016 (entry timing), or F-010 (concurrent trades);
+    Claude records only its call and outcome either way.
+Unknown but not blocking:
+F.4 VP-11, VP-24, VP-31 and VP-59 list C-008 among their ratification points; proposed: not ratified at C-008 (a legacy manual)
+    but left for the whole-design review, as at C-004 to C-007 (BK-01, BK-02, BK-18). Rama's call at the freeze.
+F.5 Records R34 to R36: names only by default; read only if approved, by narrow gated grep reads.
+F.6 "Master manual index": not found under that name in V2 main; if another index is meant (for example the Phase 1 manual's),
+    please name it.
+
+==============================================================================
+G. REQUIRED DELIVERABLES
+==============================================================================
+1. This completed answer sheet, named C-008_CLAUDE_STAGE0_ANSWERS_23-OCT-2026.txt so that ChatGPT's sheet can be stored
+   unchanged beside it.
+2. The source inventory and method log: C-008_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt.
+3. The scope and boundary questions: section F.
+4. The inventory summary: at the top of this file.
+STOP: no module analysed and no C-008 text drafted; awaiting ChatGPT's and Rama's review of the reading plan.
+END

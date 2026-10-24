@@ -1,0 +1,105 @@
+C-008 — CHATGPT REVIEW OF STAGE 0 AND STAGE 1 AUTHORISATION
+Date: 23-Oct-2026
+Project: Trading_System-v2_redesign
+Status: Stage 0 reviewed; narrowly bounded Stage 1 source reading authorised below.
+
+1. REVIEW RESULT
+
+The submitted Stage 0 answer sheet and source-inventory/method log are internally coherent enough to proceed to Stage 1. The legacy pin matches the stated baseline, the V2 main commit matches the supplied C-007 freeze commit, and the inventory provides path-level candidates, blob IDs, line counts, count-only search results, scope proposals and explicit limitations.
+
+This is a review of Claude's reported process and deliverables, not an independent reproduction of its local checks. Claude explicitly reports that independent verification was not performed. Preserve that qualification.
+
+The Stage 0 count-only searches inspected source-file bytes through the masking/counting tools, but reportedly exposed no source lines and did not open a source file for reading. In future reports, use this precise distinction rather than an unqualified statement that no source contents were touched.
+
+2. BOUNDARY DECISIONS FOR STAGE 1
+
+Apply these decisions; do not ask again unless new evidence creates a material conflict.
+
+A. C-008 scope
+Document the legacy processor's orchestration and sequence only:
+- processor construction/wiring and its entry points;
+- stage order on each supported path;
+- each processor-level check/guard as implemented, the branch/outcome it produces, and the next consumer;
+- statuses/reasons written, claim or reservation release, re-queue, exceptions and failure handling, in-flight/same-symbol bookkeeping, and processor-level stop/kill checks;
+- processor-read configuration values, clearly labelled FACT (CONFIG), not deployed configuration.
+
+For each important stage, trace SOURCE → INPUT → LOGIC → GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER where evidence supports each cell. If a cell is not established, state UNKNOWN / NOT ESTABLISHED.
+
+B. Rule ownership and overlap
+C-008 may state where a check occurs in the pipeline and what the processor does with its result. It must not re-document or decide the underlying rule owned by another topic:
+- C-006: queue/dispatcher/pool and queue mechanics;
+- C-007: persistence schema, status vocabulary, status writers and retention;
+- C-009: expiry policy (C-008 may show where an age check occurs and the resulting branch);
+- C-010: scanner-to-strategy mapping (C-008 may show where lookup occurs and how its result is handled);
+- C-011: EOD route, only if Stage 1 establishes a direct processor hand-off;
+- D topics: screening/trade-decision rule details;
+- E topics: entry price and price construction;
+- F topics: sizing, risk, capital and allocation rule details;
+- G/H/I/J topics: order/broker processing, positions, kill-switch ownership, S&R/V3/allocator rule details;
+- K/L topics: database/state design, alerts, reports and evidence.
+Use precise cross-references; do not duplicate those chapters.
+
+C. Processor pre-checks
+Include the processor-level position and outcome of kill switch, entry window, age/expiry check, strategy lookup/control, circuit breaker, entry throttle and same-symbol checks. Their underlying rule definitions remain with their owning topics. Do not resolve the entry-throttle owner in C-008; record the hand-off and leave the ownership mapping as an open agenda-mapping question for the master agenda review.
+
+D. Allocator and V3-chain
+Keep these CONDITIONAL until Stage 1 evidence establishes whether/how the processor reaches them. If reached, document the processor-side call and outcome only; do not analyse their internal logic.
+
+E. V2 proposals
+VP-11, VP-24, VP-31 and VP-59 are not ratified by a legacy manual. Leave them for the separately governed whole-design review. C-008 must not make V2 design decisions.
+
+F. Historical records
+Do not read R34–R36 dated audit/design records in Stage 1. Their names may remain in the inventory as leads only. The two excluded July queue records remain excluded. Host records remain never-read. A later need for a specific record requires a separate explicit approval.
+
+G. Manual index
+The project has a supplied file named LEGACY_SYSTEM_MANUAL_INDEX.md. Use that project-side index as the documentation index/reference when relevant; do not conclude that no master index exists merely because a file with that exact name was not found in V2 main. Do not modify the index in this task.
+
+3. STAGE 1 READING METHOD — REQUIRED CORRECTION
+
+Stage 1 is authorised only within the scope and controls in this file. Before the first source read:
+- keep the pinned legacy baseline at 970aabf3c78d777d9d34549e021f7c8e756c7bdb;
+- preserve all never-open paths, protected blobs, excluded July records and the existing gate restrictions;
+- explicitly record the Stage 1 authorisation change and its evidence/hash in the method log;
+- run the gate's refusal/safety self-test before any read, and retain the read log;
+- read only at the minimum ranges needed to establish the processor path. No broad dump of a large file.
+
+For each pipeline stage:
+1. Read the processor's caller/branch and enough surrounding lines to establish input, condition, outcome and next hand-off.
+2. Where a callee result matters, inspect the exact callee definition/return or contract range needed to identify the interface and returned outcome. Do not infer behaviour from a method name, import, test name or function head alone.
+3. Read tests as text only where they corroborate a specific code path or reveal a mismatch; never run tests or scripts.
+4. Record exact path, pinned blob ID, line ranges, read-log ID, and evidence label for every factual statement. Separate source facts from test-text facts, interpretations, historical claims, defects and unknowns.
+5. When comments/docstrings disagree with executable code, record the discrepancy as text drift; do not silently correct it.
+6. Keep hand-off modules bounded to the interface and outcome relevant to C-008. Stop when a rule belongs to another chapter and create a cross-reference/bookmark.
+7. Reconcile all proposed steps and hand-offs against the inventory. Add a candidate only when a specific caller or evidence requires it, and document why.
+8. Do not read historical records R34–R36, protected paths, excluded July records or host records. Do not run code, tests, scripts, jobs, services or VMs; do not contact broker/API/webhook/Chartink; do not change or commit/push either repository.
+
+Important: the proposed Stage 0 method says to read only callee heads and returns. That is insufficient where a factual claim depends on a guard, branch, exception or transformation. Use the narrow contextual ranges above; do not expand into full module analysis.
+
+4. DELIVERABLES AFTER STAGE 1
+
+Return for review; do not freeze or commit/push:
+- C-008 draft manual, detailed and evidence-backed;
+- updated source inventory identifying what was actually read and why;
+- complete read log and source-to-claim/evidence index;
+- pipeline-stage trace table;
+- tests-as-text evidence table, if tests were read;
+- cross-topic bookmarks and unresolved questions;
+- known defects/text drift, without repairing the legacy system;
+- a reconciliation list against C-001 through C-007 and the master agenda/index;
+- a short declaration of safety controls and any deviations.
+
+The manual must explicitly distinguish FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT and OPEN QUESTION. Repository configuration is not proof of deployed configuration. A code path is not proof that a signal, order or trade occurred.
+
+5. STOP CONDITIONS
+
+Stop and report before proceeding if:
+- the pinned commit differs;
+- the gate/self-test fails or protected content is present locally;
+- a candidate path is protected, excluded, absent from the pin or has a blob mismatch;
+- an additional file outside the approved inventory is needed;
+- a source statement cannot be established within the authorised scope;
+- the read would require historical/host records or sensitive material;
+- a potential governance decision or V2 design choice appears.
+
+No legacy modification, operational revival, testing, V2 design or implementation is authorised.
+END

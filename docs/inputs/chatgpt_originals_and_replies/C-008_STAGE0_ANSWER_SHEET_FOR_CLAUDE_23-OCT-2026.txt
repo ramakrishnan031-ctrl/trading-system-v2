@@ -1,0 +1,88 @@
+C-008 — STAGE 0 ANSWER SHEET
+Legacy manual: signal processing / decision pipeline
+Date: 23-Oct-2026
+Status: Inventory and workflow only — no module analysis authorised yet.
+
+PURPOSE
+Complete this sheet using repository tree, file metadata, existing frozen manuals/registers, and path/count-only searches. Do not open source-code contents or describe module behaviour at this stage. Return the completed sheet and STOP for ChatGPT/Rama review.
+
+BASELINE AND REPOSITORIES
+1. Legacy production repository URL:
+   https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+2. Required legacy baseline commit:
+   970aabf3c78d777d9d34549e021f7c8e756c7bdb
+3. V2 documentation repository:
+   https://github.com/ramakrishnan031-ctrl/trading-system-v2
+4. Latest supplied verified V2 main commit after C-007 freeze:
+   dce31648fb06ef4a52bbef4508fcabfc99b38748
+5. Confirm the actual repository and commit checked; if either differs, STOP and explain.
+
+A. SOURCE INVENTORY
+For every candidate, record:
+- exact repository-relative path
+- exists at pinned commit? (yes/no/unknown)
+- Git blob/object ID if available
+- file type and line count (metadata only)
+- why it is a candidate for C-008
+- proposed inclusion/exclusion and reason
+- overlap with C-006, C-007, C-009, C-010, C-011 or earlier manuals
+- evidence basis for the inventory entry
+
+Candidate paths to verify, not presumed in scope:
+- signals/signal_processor.py
+- core/state_store.py
+- main.py
+- scripts and modules whose PATH/NAMES suggest screener, signal processing, gate, retest, strategy-decision, or status-transition responsibilities
+- schema/migration files relevant to signal-processing state or companion rows
+- tests whose PATH/NAMES suggest processor, screener, gate/retest, state transition, status, crash, or recovery coverage
+- configuration files referenced by existing frozen manuals
+- existing C-006 and C-007 manuals/bookmarks and the master manual index
+
+Use tree/path searches and counts only. Do not print source lines, function bodies, SQL bodies, or source excerpts.
+
+B. PATH-ONLY SEARCH LOG
+For each search, record:
+- exact search expression/pattern
+- paths searched
+- count of matching paths/results
+- paths returned (names only)
+- exclusions/limitations
+Do not interpret search hits as proof of runtime behaviour.
+
+C. PROPOSED C-008 BOUNDARY — FOR REVIEW, NOT A DECISION
+Tentative subject: processing of a queued signal through the legacy decision pipeline, including the candidate boundaries around processor/screener decisions, status/reason production, and gate/retest hand-offs where supported by evidence.
+Potential hand-offs to distinguish:
+- C-006: queue and queue-full mechanics
+- C-007: durable signal rows, schema/status persistence and persistence writers
+- C-009: expiry and EOD cleanup
+- C-010: scanner-to-strategy mapping
+- C-011: EOD route
+- Earlier chapters: only cross-reference where necessary
+List what should be included, excluded, or left open. Do not decide behaviour or design.
+
+D. DOCUMENTATION METHOD PROPOSAL
+Propose staged source-reading order only, without reading source contents now. For each planned stage, list the paths, question(s) it is intended to answer, evidence capture method, and dependencies on frozen manuals.
+The eventual chapter must distinguish FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT and OPEN QUESTION, and trace SOURCE → INPUT → LOGIC → GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER where evidence supports it.
+
+E. GOVERNANCE / SAFETY
+Confirm:
+- no source content was opened during Stage 0
+- no code/tests/jobs/services/VMs/broker/webhook/Chartink were run or contacted
+- no files were changed; no commit or push was made
+- no credential values or sensitive data were copied
+- no behavioural conclusions or V2 design decisions were made
+If any item cannot be confirmed, state it plainly.
+
+F. QUESTIONS FOR CHATGPT/RAMA
+List only questions that block a sound inventory or staged workflow. Mark each as:
+- blocking
+- proposed boundary for review
+- unknown but not blocking
+Do not silently settle governance decisions.
+
+G. REQUIRED DELIVERABLES
+1. This completed answer sheet.
+2. A separate source-inventory and method log with path-level evidence and counts.
+3. A short list of scope/boundary questions.
+4. A concise inventory summary.
+Then STOP. Do not analyse individual modules or draft C-008 yet.

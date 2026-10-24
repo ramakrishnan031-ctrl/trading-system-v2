@@ -1,0 +1,877 @@
+C-008 - SIGNAL PROCESSING
+STAGE 1 SOURCE INVENTORY, READ LOG AND METHOD, REVISION 1 (companion to C-008_SIGNAL_PROCESSING_MANUAL_DRAFT_REV1_24-OCT-2026.md)
+Date of work (IST): 23-Oct-2026 21:44 to 24-Oct-2026 00:04. Prepared by: Claude.
+Authority: ChatGPT's C-008_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_FOR_CLAUDE_23-OCT-2026.txt (received from Rama at 21:44 IST),
+with Rama's instruction to return the evidence-backed Stage 1 deliverables for review and to freeze or push nothing until they
+are reviewed. The authorisation's SHA-256: FD3E3BBB59DDEB0CBD0C091AE647B4F497ABFBD35BE44182A1AFBE4C3B7B8026.
+Revision 1 follows ChatGPT's C-008_CHATGPT_STAGE1_REVIEW_AND_OPEN_DECISIONS_23-OCT-2026.txt (received from Rama at 23:53 IST on
+23-Oct-2026; SHA-256 2C72BEF8AF11E48D63258344B94B23B2B72C29F9802E48BA5B098FFE15D8BCF0) and Rama's two decisions of
+23-Oct-2026: RC-15 approved as erratum B-009 E-3, to be applied at the C-008 freeze; revision 1 returned with the
+LEGACY_SYSTEM_MANUAL_INDEX.md reconciliation still pending (the manual, sections 1.2 and 19.3).
+Status: Stage 1 deliverable, revision 1, for ChatGPT's final review. Revision 0's two files are kept unchanged. Nothing frozen,
+committed or pushed; nothing written to the Claude Project or GitHub.
+
+==============================================================================
+1. SAFETY DECLARATION AND DEVIATIONS
+==============================================================================
+- Pin: the clone's HEAD stayed at 970aabf3c78d777d9d34549e021f7c8e756c7bdb throughout (section 3). Local objects: 8,922 before
+  the first read and at delivery; never-open blobs present locally: 0 at each check (section 3). No checkout, fetch, tree-wide or
+  history git command was run on the legacy clone; the read tool runs `git ls-tree HEAD -- <path>` and `git hash-object` on the
+  one file it reads (section 4).
+- Gate: every read went through cread_c008.py, which runs its refusal self-test before each call; all 125 logged reads show
+  "match" (working file equal to the pinned blob), "nev0=ok" and "selftest=ok" (section 6). Every Stage 1 count-only search went
+  through ccount_c008.py behind the same gate and self-test.
+- Count-only searches (Q36 to Q49) inspected source-file bytes through the masking and counting tools and printed per-file
+  counts only; they exposed no source line. Grep reads are reads: they printed their matching lines through the masking filter
+  and are logged as reads (section 6).
+- Where read outputs are kept: the saved evidence files in Claude's scratch area (c008/evidence/NNN.txt, one per read) and this
+  session's conversation. scan_ids.py over the 125 evidence files: 0 hits; a credential-assignment pattern over the same
+  files: 0 files. A pattern scan does not prove that nothing sensitive exists.
+- Never opened: the 102 protected paths, the two excluded July records (R38) and the host records (R37). Not read: the dated
+  records R34 to R36 (names only, authorisation F).
+- No legacy code, test, script, job or service was run; no VM, database, broker API, webhook or Chartink was contacted; no
+  legacy file was changed; nothing was committed or pushed in either repository.
+- Stop conditions (authorisation, section 5): none was met. The pin did not differ; the gate and its self-test passed at every
+  call and protected content was never present locally; no candidate was protected, excluded, absent or mismatched; no file
+  outside the approved inventory was read; statements not establishable within scope are recorded as UNKNOWN (manual,
+  section 15); no historical, host or sensitive record was needed; no governance or V2 decision was taken (VP-11, VP-24, VP-31
+  and VP-59 not ratified; the throttle's owner left as OQ-01).
+- Deviations and judgement calls, for the review:
+  DV-1. Three files outside the inventory were found relevant and were NOT read: orders/shadow_tracker.py (what is_tracking
+        returns while the tracker is disabled), broker/rate_limiter.py (where the client-side rate-limit error is raised) and
+        orders/order_reconciler.py (the timeout recovery's gate). Claude judged them not needed for the processor-side
+        statements, which rest on the processor's own branches; each gap is recorded (manual U-01, U-03, EX-08, the last cited
+        from the frozen B-005). If the review wants any of them read, that needs a separate approval.
+  DV-2. One local language probe was run in Claude's workspace (Python 3.13.16; no legacy code): float comparison of NaN and
+        infinity, for manual K-11.
+  DV-3. The filter masked a class name in the order placer's retry loop; it was identified by two count-only searches over that
+        one file (Q41: 0 lines for the client-side class; Q42: 1 line for the broker-side 429 class), not by printing it.
+  DV-4. Reads 120 to 125 came after the state check of 22:07:46 IST: 120 to 123 while the draft was being checked, and 124
+        and 125 at 23:10 IST, to settle an independent-check finding (IC-21; manual section 19.2). All went through the gate, are
+        logged and counted in every figure, and the final state check (section 3) follows them.
+- Independent check (not a deviation; recorded for the review): a separate agent checked a snapshot of the draft (SHA-256
+  beginning b2d6e7518736a4ce) against the saved evidence of reads 001 to 123, the read log, the searches Q01 to Q49, the frozen
+  manuals cited, V2_DESIGN_LOG and the authorisation, without the drafting context; it opened no legacy file and ran nothing.
+  Its 22 findings (2 MUST-FIX, 14 SHOULD-FIX, 6 NOTE) were re-checked against the evidence and are all applied (manual section
+  19.2 lists where); it found no V2 decision made or implied, and one erratum candidate for a frozen manual (manual RC-15, B-009
+  section 10), left for ChatGPT's review and Rama's decision. Its report is kept in Claude's scratch area
+  (c008/notes/ic_report.md). The applied fixes were not checked again by a separate agent: the draft has had one independent
+  check, not two.
+- Revision 1 (after ChatGPT's Stage 1 review): ChatGPT reviewed the submitted documents and claims; it did not reproduce the
+  local gate or repository checks, which are Claude's recorded checks in this file. Revision 1 adds no read and no search
+  (125 reads and 14 Stage 1 searches, as in revision 0); it records Rama's decision on RC-15 (erratum B-009 E-3, ACCEPTED,
+  its texts in the manual's section 14.6, applied only at the freeze) and keeps the throttle's owner (OQ-01) and the index
+  reconciliation (OQ-02) open. The legacy clone was checked again at delivery (section 3).
+
+==============================================================================
+2. AUTHORISATION CHANGE AND GATE TEST
+==============================================================================
+- 21:44 IST: the authorisation received (SHA-256 above).
+- 21:45 IST, as a step of its own: the Stage 0 lock of cread_c008.py lifted. Before: HEAD = pin; 8,922 objects; never-open 0;
+  the tool's SHA-256 e32c38fa4d1a7030e80e7d7bd9bd3c590a57538202e853ad9807d767337f4755.
+  One edit: STAGE1_AUTHORISED = False to True, with a two-line comment naming the authorisation; the comment's time was
+  corrected from 21:46 to 21:45 in the same step, before any read. After: the tool's SHA-256
+  7341d6edc10b76c5ec418c7d1e03c0ff80b688285a6a9abdc4f37dd293d9e6ff.
+- 21:46:15 IST: gate_test_c008_s1.py (SHA-256 0f5d5fbad43c1ae7) PASSED. Output (verbatim, long lines wrapped):
+  never-open pattern identical in cread_c008.py and sensitive_check.py: True
+  STAGE1_AUTHORISED in cread_c008.py: True
+  protected paths in the pinned listing: 102 | same set as the C-006 clarification: True
+  excluded July records in the pinned listing: 2 of 2
+  before: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+    objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  before: C-008 logs ('absent', 'd1db7637bd45ffab', '4afbeb0209f92b27')
+  cread_c008.py on the 102 protected paths: {'rc=1 "refused: never-open path"': 102}
+  cread_c008.py on the 2 excluded July records: {'rc=1 "refused: excluded July record (separate approval required)"': 2}
+  cread_c008.py on docs/v2_design_spec.md (shares a protected blob): (1, 'refused: shares a never-open blob')
+  invented names in the pinned tree: 1 of 14 (config/security.yaml is the real one)
+  cread_c008.py on 14 rule-shaped names: {'rc=1 "refused: never-open path"': 14}
+  cread_c008.py on a permitted-shaped name not in the tree: (1, 'refused: not in the pinned tree listing')
+  gate() on a permitted path in the tree (core/schema.sql; no file opened): None
+  ccount_c008.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing searched')
+  clines_c008.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing counted')
+  ccount_c008.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing searched')
+  clines_c008.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing counted')
+  ccount_c008.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing searched')
+  clines_c008.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing counted')
+  ccount_c008.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    searched')
+  clines_c008.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    counted')
+  after: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+    objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  after: C-008 logs ('absent', 'd1db7637bd45ffab', '4afbeb0209f92b27') | unchanged: True
+  GATE TEST PASSED
+- First read: 21:49:15 IST. Last read: 23:10:58 IST (23-Oct-2026).
+- 23:53 IST: ChatGPT's Stage 1 review received (SHA-256 in the header). About 23:58 IST: Rama's two decisions (multiple
+  choice). Revision 1 was then built from the same logs; no read or search followed read 125.
+
+==============================================================================
+3. BASELINE AND STATE CHECKS (IST)
+==============================================================================
+- 21:49:09: HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; local objects 8,922; sensitive_check.py: never-open paths in tree
+  102 ({'.*': 1, 'config': 21, 'docs': 80}); never-open blobs present locally 0; exit 0.
+- 22:07:46 (after read 119): the same values.
+- 24-Oct-2026 00:04:24 (at delivery, after read 125): HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; local objects 8,922;
+  never-open blobs present locally 0; sensitive_check.py exit 0.
+- V2 reference: main dce31648fb06ef4a52bbef4508fcabfc99b38748, the fresh clone of 21:15 IST (frozen manuals, design log, master
+  agenda); read as V2 documents, not legacy content.
+
+==============================================================================
+4. TOOLS (SHA-256, first 16 hex characters, at delivery)
+==============================================================================
+- cread_c008.py: 7341d6edc10b76c5
+- ccount_c008.py: 55d76a716a4361a7
+- build_manual_c008.py: f22d6de496837125
+- build_inventory_c008.py: 46ab38c140cf7cf8
+- gate_test_c008_s1.py: 0f5d5fbad43c1ae7
+- mr.py: b0bd3d87cf51d1cb
+- count_grep.py: 31af8ca5903370bf
+- mask_read2.py: bc0b715df0267bcf
+- sensitive_check.py: e36c1382b05129e5
+- scan_ids.py: 8217536996866bbb
+- cread_c008.py: the gated read (range A:B or grep REGEX on one file), the self-test, the log row and the evidence file.
+- ccount_c008.py: the gated count-only search over a list of files (per-file counts; saved as c008/search/QNN.txt).
+- build_manual_c008.py: fills the manual's sources table and counts from the logs, checks every citation against the saved
+  evidence, writes the claim index (section 8), and runs the scans (section 10). build_inventory_c008.py: builds this file.
+
+==============================================================================
+5. UPDATED SOURCE INVENTORY (the Stage 0 register, rows R01 to R38, with the Stage 1 result)
+==============================================================================
+Read = number of logged reads of the file. Every file read is in the register; no other legacy file was read.
+R01 | signals/signal_processor.py | Stage 0 proposal: YES | Stage 1: READ: 34 reads; all of the file in ranges except lines 684 to
+      743 (three grep lines printed), 1851 to 1894 and 2664 to 2704
+R02 | main.py | Stage 0 proposal: YES | Stage 1: READ: 22 reads at located lines (construction, late binding, the gate callback,
+      start, stop, the reconciler, risk-engine, governor, evidence and shadow-tracker constructions)
+R03 | config/system_config.yaml | Stage 0 proposal: SUPPORTING | Stage 1: READ: 6 reads (one grep of the keys, five located
+      blocks)
+R04 | core/config_loader.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 3 reads (one grep of the keys, the processor and
+      circuit-breaker models)
+R05 | config/expected_managers.yaml; core/config_auditor.py; core/config_validator.py | Stage 0 proposal: CONDITIONAL | Stage 1:
+      NOT READ: no declared-dependency or key-validation question arose
+R06 | screening/secondary_screener.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 3 reads (the result type, screen()'s entry
+      and quote handling)
+R07 | screening/entry_gate.py; screening/retest_monitor.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: entry_gate.py 3 reads
+      (start, release, docstring); retest_monitor.py 4 reads (divert, confirm)
+R08 | screening/hard_gate.py; screening/step_executor.py; screening/quality_scorer.py | Stage 0 proposal: CONDITIONAL | Stage 1:
+      NOT READ: the processor imports and calls none of them (its imports, lines 45 to 61; the screener is injected)
+R09 | signals/entry_throttle.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 2 reads (to line 116 of 126)
+R10 | strategies/loader.py; strategies/control.py; strategies/schema.py; strategies/taxonomy.py; core/strategy_direction.py |
+      Stage 0 proposal: SUPPORTING | Stage 1: PART: strategies/control.py 2 reads; loader.py, schema.py, taxonomy.py and
+      strategy_direction.py not read (whether the loader keeps disabled strategies is NOT ESTABLISHED, manual ST-09)
+R11 | capital/position_sizer.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 6 reads (interface, input checks, failure
+      constraints)
+R12 | capital/risk_engine.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 8 reads (result type, check names, the in-flight
+      count, the same-symbol checks)
+R13 | capital/fund_manager.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 6 reads (portfolio lock, reserve, release,
+      per-strategy count)
+R14 | capital/kill_switch.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 4 reads (is_active, record_api_failure)
+R15 | capital/strategy_governor.py; capital/performance_allocator.py | Stage 0 proposal: CONDITIONAL | Stage 1: PART:
+      strategy_governor.py 2 reads; performance_allocator.py not read (main passes no performance weights, manual W-03)
+R16 | allocation/portfolio_allocator.py; allocation/ranker.py; allocation/window_buffer.py; allocation/models.py | Stage 0
+      proposal: SUPPORTING | Stage 1: PART: portfolio_allocator.py 2 reads (processor-facing methods); ranker.py, window_buffer.py
+      and models.py not read (authorisation D: the processor-side call and outcome only)
+R17 | orders/order_placer.py | Stage 0 proposal: SUPPORTING | Stage 1: READ: 4 reads (place()'s contract, the R:R gate, the 429
+      loop, the timeout branch)
+R18 | orders/order_manager.py; orders/full_entry_engine.py; orders/entry_engine.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT
+      READ: the processor calls only the order placer (its imports, lines 45 to 61)
+R19 | v3_chain/pb01_runner.py; v3_chain/pb01_entry.py; v3_chain/runner.py; v3_chain/score.py; v3_chain/watchlist_capture.py |
+      Stage 0 proposal: CONDITIONAL | Stage 1: PART: runner.py 2 reads (observe); pb01_runner.py 1 read and pb01_entry.py 1 read,
+      one grep each for the processor's entry-point names, after the independent check (docstring lines only; manual section 2.2);
+      score.py and watchlist_capture.py not read (processor-side only)
+R20 | sr_detector/retest_confirm.py; sr_detector/detector.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT READ: the processor's
+      S&R call is guarded and post-placement (manual OB-03)
+R21 | core/evidence_contract.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT READ: the processor's evidence capture is guarded
+      (manual OC-07)
+R22 | core/instrument_cache.py; core/mis_blocklist.py; core/market_windows.py | Stage 0 proposal: CONDITIONAL | Stage 1: PART:
+      market_windows.py 2 reads; instrument_cache.py and mis_blocklist.py not read (the processor's only cache use is a sector
+      lookup with a fallback and it has no blocklist reference, manual SS-06)
+R23 | core/events.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT READ: the processor stores the event bus and makes no other
+      use of it (manual W-04)
+R24 | core/state_store.py; core/schema.sql; reports/signal_status.py | Stage 0 proposal: NO | Stage 1: NOT READ: cross-reference
+      (C-007), as proposed
+R25 | signals/webhook_receiver.py | Stage 0 proposal: NO | Stage 1: NOT READ: cross-reference (C-002 to C-007), as proposed
+R26 | 16 files (config/strategies/first_pullback_long.yaml ... config/strategies/vwap_rejection_short.yaml) | Stage 0 proposal:
+      SUPPORTING | Stage 1: PART: gap_go_long.yaml one grep (key names); count-only searches Q43 to Q47 over all 16 files
+R27 | config/scan_webhook_map.yaml; config/strategy_direction_registry.yaml; config/scoring_weights.yaml | Stage 0 proposal: NO |
+      Stage 1: NOT READ: cross-reference, as proposed
+R28 | tests/unit/test_signal_processor.py | Stage 0 proposal: YES | Stage 1: READ: 7 reads (test names; seven located ranges; text
+      only, never run)
+R29 | tests/unit/test_main.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT READ: R28 sufficed for the paths cited
+R30 | tests/integration/test_full_signal_flow.py; tests/integration/test_end_to_end_smoke.py;
+      tests/integration/test_hardening_scenarios.py; tests/integration/conftest.py | Stage 0 proposal: CONDITIONAL | Stage 1: NOT
+      READ: R28 sufficed for the paths cited
+R31 | 7 files (tests/integration/test_q9_capital_invariant_wired.py ... tests/integration/test_q9_sizing_floors_caps_wired.py) |
+      Stage 0 proposal: CONDITIONAL | Stage 1: NOT READ: R28 sufficed for the paths cited
+R32 | 9 files (tests/unit/test_tick2_pipeline_scoped_daily_gate.py ... tests/unit/test_fix136_batch9.py) | Stage 0 proposal:
+      CONDITIONAL | Stage 1: NOT READ: R28 sufficed for the paths cited
+R33 | 16 files (tests/unit/test_entry_throttle.py ... tests/unit/test_strategies.py) | Stage 0 proposal: CONDITIONAL | Stage 1:
+      NOT READ: R28 sufficed for the paths cited
+R34 | docs/audit/secondary_filtration_execution_pipeline_audit.md; docs/audit/system_flow_review_15jun2026.md;
+      docs/audit/system_audit_14jun2026.md | Stage 0 proposal: NO | Stage 1: NOT READ: authorisation F (names only)
+R35 | docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md; docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md;
+      docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md; docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md | Stage 0 proposal: NO | Stage 1:
+      NOT READ: authorisation F (names only)
+R36 | docs/audit/deploy_behaviour_delta_prediction_14jul2026.md; docs/audit/integrity_audit_2026.md;
+      docs/design/a2_timeout_retry_design_02jul2026.md; docs/crash_test_info_04jun2026.md | Stage 0 proposal: NO | Stage 1: NOT
+      READ: authorisation F (names only)
+R37 | PATHS.md; docs/SYSTEM_MAP.md | Stage 0 proposal: NO | Stage 1: NEVER READ: host records
+R38 | docs/audit/stale_queue_entries_25jul2026.md; docs/audit/queue_items_decidable_25jul2026.md | Stage 0 proposal: NO | Stage 1:
+      NEVER OPENED: the two excluded July records
+
+==============================================================================
+6. COMPLETE READ LOG (125 reads; c008/code_read_log.tsv; IST)
+==============================================================================
+Columns: read | time | mode | range, or the grep pattern | file | lines printed | evidence SHA-256 (first 12). Every row: working
+file equal to the pinned blob (blob IDs in the manual, section 1.1), never-open 0 and self-test passed.
+001 | 21:49:15 | grep | SignalProcessor|signal_processor | main.py | 32 | 898118e05e6b
+002 | 21:49:21 | range | 3540:3625 | main.py | 86 | 611005c819f8
+003 | 21:49:25 | range | 3625:3705 | main.py | 81 | 035f515e2f5d
+004 | 21:49:32 | grep | _v3_chain_on\s*=|_v2_on\s*=|_struct_exit_on\s*=|_v3_cfg\s*=|_sr_cfg\s*=|mode_label\s*=|signal_queue\s*=|or
+      der_placer\s*=|screener\s*=|scorer\s*=|webhook_receiver\s*=|strategies\s*=|kill_switch\s*=|market_windows\s*=|shadow_tracker
+      \s*=|sr_detector\s*=|evidence_recorder\s*= | main.py | 65 | 613cfdace7df
+005 | 21:49:42 | range | 3404:3432 | main.py | 29 | 687e79786981
+006 | 21:49:42 | range | 3466:3476 | main.py | 11 | 00d0fe7fdd68
+007 | 21:49:48 | range | 3762:3800 | main.py | 39 | 7ef1e23551e5
+008 | 21:49:49 | range | 3830:3870 | main.py | 41 | 0160fd12036d
+009 | 21:49:54 | grep | entry_gate|EntryGate|set_entry_gate|_make_gate_release_cb | main.py | 19 | e32556cc1e7e
+010 | 21:50:00 | range | 866:880 | main.py | 15 | 916d26aa3a4e
+011 | 21:50:01 | range | 3868:3980 | main.py | 113 | 4a0de525ff26
+012 | 21:50:06 | range | 858:900 | main.py | 43 | 5b80001a0d7a
+013 | 21:50:13 | range | 1598:1700 | main.py | 103 | 18ec1fe922c4
+014 | 21:50:28 | grep | ^\s*def |^class |^[A-Z_]+\s*= | signals/signal_processor.py | 43 | 524dc914b99f
+015 | 21:50:43 | range | 60:154 | signals/signal_processor.py | 95 | dae479278234
+016 | 21:50:49 | range | 1:60 | signals/signal_processor.py | 60 | 711545997598
+017 | 21:50:55 | range | 155:303 | signals/signal_processor.py | 149 | a0d29d8e6d26
+018 | 21:51:05 | range | 304:404 | signals/signal_processor.py | 101 | 3a02ecf48dfa
+019 | 21:51:10 | range | 405:486 | signals/signal_processor.py | 82 | a662f5728367
+020 | 21:51:16 | range | 867:960 | signals/signal_processor.py | 94 | ef62f4879822
+021 | 21:51:22 | range | 960:1060 | signals/signal_processor.py | 101 | 0ef27a58a43c
+022 | 21:51:27 | range | 1060:1160 | signals/signal_processor.py | 101 | 0a9e0e4715c5
+023 | 21:51:32 | range | 1160:1277 | signals/signal_processor.py | 118 | f7eb058359dc
+024 | 21:51:41 | range | 1277:1370 | signals/signal_processor.py | 94 | da9ac86999e2
+025 | 21:51:47 | range | 1370:1470 | signals/signal_processor.py | 101 | 6ac652256457
+026 | 21:51:55 | grep | [Gg]ate|WatchEntry|pullback_wait | signals/signal_processor.py | 60 | 816384a2732d
+027 | 21:52:02 | range | 1470:1568 | signals/signal_processor.py | 99 | 06952d37279e
+028 | 21:52:19 | range | 744:866 | signals/signal_processor.py | 123 | 35670538e9d0
+029 | 21:52:26 | range | 1959:2010 | signals/signal_processor.py | 52 | 6b6c5262a757
+030 | 21:52:36 | range | 2010:2106 | signals/signal_processor.py | 97 | 5f95d62a59c5
+031 | 21:52:40 | range | 2106:2203 | signals/signal_processor.py | 98 | d0ce74c49747
+032 | 21:52:45 | range | 2203:2300 | signals/signal_processor.py | 98 | 6949f95e6a8d
+033 | 21:53:40 | grep | ^[a-z_]+:|signal_processor|worker_count|drain_poll|pipeline_timeout|atr_fallback|tgt_min_pct|min_gap_betwe
+      en|entry_burst|per_symbol_cooldown|one_trade_per_symbol|allocator_mode|enforce_scope|v3_chain_mode|wait_for_retest_enabled|s
+      tructure_exit_enabled|trade_type|force_intraday_only|expiry_sec|circuit_breaker|strategy_governor|evidence |
+      config/system_config.yaml | 65 | bd3f249b8c6e
+034 | 21:53:52 | range | 340:355 | config/system_config.yaml | 16 | 56630e207589
+035 | 21:53:53 | range | 561:580 | config/system_config.yaml | 20 | ed4e91f15557
+036 | 21:53:53 | range | 728:742 | config/system_config.yaml | 15 | d9bf024bf816
+037 | 21:53:59 | range | 832:863 | main.py | 32 | 0adf87a0820e
+038 | 21:53:59 | range | 3252:3270 | main.py | 19 | d3032e1bf882
+039 | 21:54:32 | range | 486:560 | signals/signal_processor.py | 75 | a6453df1679f
+040 | 21:54:41 | range | 560:683 | signals/signal_processor.py | 124 | 6e7216e8c880
+041 | 21:54:47 | range | 1568:1660 | signals/signal_processor.py | 93 | bb2134eb8d81
+042 | 21:54:53 | range | 1660:1748 | signals/signal_processor.py | 89 | ca5a4746c4de
+043 | 21:55:01 | grep |
+      \braise\b|_PipelineReject\(\s*$|^\s+"[A-Z_]+",\s*$|return\s+entry|return\s+round|return\s+\(|return\s+tgt|return\s+float |
+      signals/signal_processor.py | 96 | 34eba4395fec
+044 | 21:55:32 | range | 1748:1850 | signals/signal_processor.py | 103 | 3853650ac0de
+045 | 21:55:37 | range | 1895:1958 | signals/signal_processor.py | 64 | 42b53f6e0c00
+046 | 21:55:50 | grep | class SignalProcessor|atr_fallback_mode|tgt_min_pct|pipeline_timeout_sec|min_gap_between|entry_burst|per_s
+      ymbol_cooldown|worker_count|drain_poll|one_trade_per_symbol|allocator_mode|v3_chain_mode|wait_for_retest_enabled|^\s+trade_t
+      ype|force_intraday_only|signal_processor:|class StrategyCircuitBreaker|strategy_circuit_breaker | core/config_loader.py | 43
+      | 0eb64265714b
+047 | 21:56:00 | range | 564:615 | core/config_loader.py | 52 | e187632604fa
+048 | 21:56:00 | range | 1838:1850 | core/config_loader.py | 13 | 095971a50aa6
+049 | 21:56:42 | grep | \b(entry_gate|gate|_gate|_entry_gate)\.add\(|\bEntryGate\b[^\n]*\.add\(|\bWatchEntry\(|def add\(|def
+      start\(|def rehydrate|def _rehydrate|_on_release\(|on_release|def _release|def stop\(|class |def clear_all |
+      screening/entry_gate.py | 25 | eee735a9b11d
+050 | 21:56:51 | range | 144:178 | screening/entry_gate.py | 35 | f8ce4486d158
+051 | 21:56:52 | range | 474:538 | screening/entry_gate.py | 65 | 481a4c5ff6a9
+052 | 21:56:58 | range | 2300:2375 | signals/signal_processor.py | 76 | 9f7a976dea85
+053 | 21:57:04 | range | 2375:2470 | signals/signal_processor.py | 96 | d9b7337368eb
+054 | 21:57:09 | range | 2470:2585 | signals/signal_processor.py | 116 | f9c1e80a3341
+055 | 21:57:21 | range | 2585:2663 | signals/signal_processor.py | 79 | a3f126ba64b1
+056 | 21:57:39 | range | 2944:2956 | main.py | 13 | 282dcb6ce936
+057 | 21:57:40 | grep | OrderReconciler\(|order_reconciler\s*=|ShadowTracker|import.*shadow | main.py | 4 | f08766d4fd9d
+058 | 21:57:40 | range | 508:530 | config/system_config.yaml | 23 | e955bebfc8ac
+059 | 21:57:46 | range | 492:507 | config/system_config.yaml | 16 | 07cdf11fe7ff
+060 | 21:57:46 | range | 3124:3150 | main.py | 27 | 5db17f5e1811
+061 | 21:58:06 | grep | ^def |^class |^CAUSE_|^[A-Z_]+\s*=|will_trade|^\s+return  | strategies/control.py | 16 | 03cf22a5b8f2
+062 | 21:58:14 | range | 48:118 | strategies/control.py | 71 | f1b88ca765c6
+063 | 21:58:20 | grep | def is_entry_allowed|def is_entry_allowed_for_strategy|^class |def __init__ | core/market_windows.py | 4 |
+      7f785917b83a
+064 | 21:58:24 | range | 143:200 | core/market_windows.py | 58 | 43b249bc18ad
+065 | 21:58:30 | grep | def is_active|def record_api_failure|def record_api_success|def _check_api_failures |
+      capital/kill_switch.py | 2 | 090410620ab5
+066 | 21:58:34 | range | 510:560 | capital/kill_switch.py | 51 | 9b5b351a7e2a
+067 | 21:58:35 | range | 791:840 | capital/kill_switch.py | 50 | 463cd8fc4525
+068 | 21:58:40 | range | 840:880 | capital/kill_switch.py | 41 | 8642ca0dd4f7
+069 | 21:58:46 | grep | def check|^class |def __init__|enabled|return \(|return True|return False | capital/strategy_governor.py |
+      12 | 8e4ad3cd7069
+070 | 21:58:50 | range | 49:88 | capital/strategy_governor.py | 40 | 3822bb72d2fc
+071 | 21:58:59 | grep | def screen|^class |^\s+def |return ScreenResult|return self\._|\braise\b|passed\s*=|status\s*=\s*f?" |
+      screening/secondary_screener.py | 32 | 171656868190
+072 | 21:59:10 | range | 43:56 | screening/secondary_screener.py | 14 | a32fef30500e
+073 | 21:59:11 | range | 123:205 | screening/secondary_screener.py | 83 | cc2de0f86108
+074 | 21:59:19 | grep | def calculate|^class |constraint\s*=\s*"|constraint="|success=False|success=True|\braise\b|BrokerError |
+      capital/position_sizer.py | 35 | aecdf3e83a08
+075 | 21:59:28 | range | 245:345 | capital/position_sizer.py | 101 | 2e4d40cdd35b
+076 | 21:59:37 | range | 524:540 | capital/position_sizer.py | 17 | 15d72e7c420d
+077 | 21:59:37 | range | 692:706 | capital/position_sizer.py | 15 | 14b9327e971a
+078 | 21:59:45 | range | 500:516 | capital/position_sizer.py | 17 | 10128a389d7b
+079 | 21:59:51 | grep | def approve|^class
+      |failed_check\s*=|_one_trade_per_symbol_direction\s*=|self\._max_open\s*=|processor_in_flight_count|\braise\b|BrokerError |
+      capital/risk_engine.py | 19 | 865b77e2712a
+080 | 21:59:58 | range | 84:111 | capital/risk_engine.py | 28 | f2e3f34f24a5
+081 | 21:59:58 | range | 478:525 | capital/risk_engine.py | 48 | 3d24920a2873
+082 | 22:00:05 | grep | return reject\(|reject\(\s*$|^\s+"[A-Z_]+",\s*$|checks_run\.append\( | capital/risk_engine.py | 33 |
+      222b98edf1f1
+083 | 22:00:13 | range | 544:620 | capital/risk_engine.py | 77 | b8fe977cf09c
+084 | 22:00:27 | grep | def reserve|def release\b|def release\(|def
+      count_live_reservations|portfolio_lock|^_INTRADAY_INTENTS|^_POSITIONAL_INTENTS|class ReservationResult|^class
+      |reason_if_failed=|success=False|BrokerError | capital/fund_manager.py | 29 | e645e1e891ec
+085 | 22:00:32 | range | 427:446 | capital/fund_manager.py | 20 | 9782b2166012
+086 | 22:00:33 | range | 521:540 | capital/fund_manager.py | 20 | 005db593e222
+087 | 22:00:33 | range | 637:660 | capital/fund_manager.py | 24 | ada478b0824f
+088 | 22:00:43 | range | 424:427 | capital/fund_manager.py | 4 | 281700108b98
+089 | 22:00:44 | range | 1578:1600 | capital/fund_manager.py | 23 | dfe7772e1ab5
+090 | 22:00:48 | grep | ^class |def |return  | signals/entry_throttle.py | 13 | 62e63228033e
+091 | 22:00:53 | range | 1:116 | signals/entry_throttle.py | 116 | f27951f3cd75
+092 | 22:01:08 | grep |     def place\(|BrokerTimeoutError|BrokerRateLimitError | orders/order_placer.py | 3 | f719deef8b04
+093 | 22:01:35 | range | 871:960 | orders/order_placer.py | 90 | 2d9586cd90c7
+094 | 22:01:42 | range | 1418:1470 | orders/order_placer.py | 53 | 799fa497c079
+095 | 22:01:52 | range | 1380:1419 | orders/order_placer.py | 40 | db942dfb022f
+096 | 22:02:36 | grep | ^class |def enabled|def maybe_divert|return True|return False|self\._on_confirm\(|on_confirm |
+      screening/retest_monitor.py | 14 | 9061a32ec0a2
+097 | 22:02:40 | range | 296:378 | screening/retest_monitor.py | 83 | cea970f211cc
+098 | 22:02:41 | range | 178:196 | screening/retest_monitor.py | 19 | 91815191c93f
+099 | 22:02:47 | range | 378:384 | screening/retest_monitor.py | 7 | 0e92ca9d0387
+100 | 22:02:52 | grep | ^class |    def mode|    def in_scope|    def submit|    def observe|    def start|    def
+      stop|Thread\(|put_nowait|\.put\( | allocation/portfolio_allocator.py | 8 | 1a3aeef6013f
+101 | 22:02:56 | range | 66:125 | allocation/portfolio_allocator.py | 60 | 5f0e1bf55520
+102 | 22:03:05 | grep | ^class |    def observe|    def start|Thread\(|put_nowait|queue\.Queue|maxsize | v3_chain/runner.py | 7 |
+      4d5a3afe24de
+103 | 22:03:09 | range | 99:122 | v3_chain/runner.py | 24 | e262fc95e02a
+104 | 22:03:15 | range | 1700:1760 | main.py | 61 | 1e5a7dad426c
+105 | 22:03:23 | range | 4244:4282 | main.py | 39 | 09ae4db8ad67
+106 | 22:03:35 | grep |
+      pullback_wait_enabled|^\s*enabled:|sl_method|tgt_method|v3_playbook|^\s*intent:|max_concurrent_positions|entry_method|direct
+      ion: | config/strategies/gap_go_long.yaml | 9 | 99f6581a6e55
+107 | 22:03:53 | grep | ^\s*def test_|^class Test | tests/unit/test_signal_processor.py | 79 | 4d81eb6525d7
+108 | 22:04:03 | range | 1736:1771 | tests/unit/test_signal_processor.py | 36 | d8342b41cf6c
+109 | 22:04:03 | range | 493:543 | tests/unit/test_signal_processor.py | 51 | 8a9d1902d325
+110 | 22:04:08 | range | 2240:2370 | tests/unit/test_signal_processor.py | 131 | 89e4b3568242
+111 | 22:04:15 | range | 832:940 | tests/unit/test_signal_processor.py | 109 | a18b15dfc88f
+112 | 22:04:19 | range | 1151:1195 | tests/unit/test_signal_processor.py | 45 | bd4a865579b2
+113 | 22:04:28 | range | 1809:1918 | tests/unit/test_signal_processor.py | 110 | 8c2dfdd9502e
+114 | 22:04:55 | grep | has_dup\s*=|active_direction\s*=|has_dup\b.*= | capital/risk_engine.py | 4 | 5fb550b1e491
+115 | 22:04:56 | range | 766:800 | capital/risk_engine.py | 35 | f9b647af8c9f
+116 | 22:05:49 | grep | one_trade_per_symbol_direction|RiskEngine\(|max_open_positions= | main.py | 3 | 235c79681532
+117 | 22:05:50 | range | 350:370 | capital/risk_engine.py | 21 | c3c924d84054
+118 | 22:05:50 | grep | retry_count | signals/signal_processor.py | 15 | 3de5a4403832
+119 | 22:07:22 | grep | _instrument_cache|instrument_cache|mis_block|blocklist|exchange|NSE | signals/signal_processor.py | 3 |
+      847d0231ff01
+120 | 22:11:45 | range | 2894:2916 | main.py | 23 | c2d74c60cd73
+121 | 22:11:45 | range | 516:524 | capital/position_sizer.py | 9 | ff2f7b8cf50e
+122 | 22:11:46 | grep | fetch_one|fetch_all|SELECT |get_signal|signals WHERE | signals/signal_processor.py | 2 | 90bba326e7e0
+123 | 22:28:43 | grep | self\._bus|\.publish\(|from core\.events|import .*Event | signals/signal_processor.py | 1 | 0d2482c5b424
+124 | 23:10:53 | grep |
+      \b(_process_one|_process_one_safe|continue_from_gate|continue_from_retest|admit_prepared|reject_prepared)\b |
+      v3_chain/pb01_runner.py | 2 | 5ea5dd3ba084
+125 | 23:10:58 | grep |
+      \b(_process_one|_process_one_safe|continue_from_gate|continue_from_retest|admit_prepared|reject_prepared)\b |
+      v3_chain/pb01_entry.py | 1 | a76a5bee7df9
+
+==============================================================================
+7. STAGE 1 COUNT-ONLY SEARCHES (Q36 to Q49; c008/search_log.tsv; per-file counts from c008/search/)
+==============================================================================
+Scopes: s_rt = the 281 non-test Python files; s_tests = the 486 test files; l_order_placer = orders/order_placer.py only;
+l_strategies = the 16 files under config/strategies/. A count is of matching lines; it proves nothing about behaviour.
+Q36 | 21:56:24 | pipeline_timeout | s_rt.txt | files searched: 281; files with matches: 1; matching lines: 3 | per file:
+      core/config_loader.py 3 | purpose: any runtime reader of pipeline_timeout_sec (manual CF-03, D-06, K-06)
+Q37 | 21:56:29 | \b(entry_gate|gate|_gate|_entry_gate)\.add\(|\bEntryGate\b[^\n]*\.add\( | s_rt.txt | files searched: 281; files
+      with matches: 2; matching lines: 2 | per file: screening/entry_gate.py 1; signals/signal_processor.py 1 | purpose: callers
+      of the entry gate's add() (B-009 D1 re-check; manual EP-02)
+Q38 | 21:56:33 | \bWatchEntry\( | s_rt.txt | files searched: 281; files with matches: 1; matching lines: 2 | per file:
+      screening/entry_gate.py 2 | purpose: constructions of WatchEntry (manual EP-02)
+Q39 | 22:01:21 | raise\s+BrokerRateLimitError|BrokerRateLimitError\( | s_rt.txt | files searched: 281; files with matches: 2;
+      matching lines: 4 | per file: broker/rate_limiter.py 3; core/exceptions.py 1 | purpose: where the client-side
+      BrokerRateLimitError is raised (manual EX-07)
+Q40 | 22:01:26 | raise\s+BrokerTimeoutError|BrokerTimeoutError\( | s_rt.txt | files searched: 281; files with matches: 3; matching
+      lines: 4 | per file: broker/zerodha_adapter.py 2; core/exceptions.py 1; orders/order_reconciler.py 1 | purpose: where
+      BrokerTimeoutError is raised (manual EX-05)
+Q41 | 22:02:10 | except\s+BrokerRateLimitError\s+as\s+rl_exc|^from core\.exceptions import BrokerError, BrokerRateLimitError,
+      BrokerTimeoutError | l_order_placer.txt | files searched: 1; files with matches: 0; matching lines: 0 | per file: (none) |
+      purpose: whether the placer's retry loop catches the client-side class (manual EX-06): no
+Q42 | 22:02:28 | except\s+BrokerRateLimit429Error\s+as\s+rl_exc | l_order_placer.txt | files searched: 1; files with matches: 1;
+      matching lines: 1 | per file: orders/order_placer.py 1 | purpose: whether the placer's retry loop catches the broker-side
+      429 class (manual EX-06): yes
+Q43 | 22:03:41 | ^pullback_wait_enabled:\s*true\b | l_strategies.txt | files searched: 16; files with matches: 6; matching lines:
+      6 | per file: config/strategies/first_pullback_long.yaml 1; config/strategies/first_pullback_short.yaml 1;
+      config/strategies/open_high_breakdown_short.yaml 1; config/strategies/open_low_breakout_long.yaml 1;
+      config/strategies/vwap_bounce_long.yaml 1; config/strategies/vwap_rejection_short.yaml 1 | purpose: strategy files with
+      pullback_wait_enabled true (manual CF-15, ST-16)
+Q44 | 22:03:42 | ^enabled:\s*false\b | l_strategies.txt | files searched: 16; files with matches: 1; matching lines: 1 | per file:
+      config/strategies/pb01_breakout_retest.yaml 1 | purpose: strategy files with enabled false (manual CF-15, EP-07)
+Q45 | 22:03:42 | ^(sl_method|tgt_method):\s*"?ATR\b | l_strategies.txt | files searched: 16; files with matches: 0; matching
+      lines: 0 | per file: (none) | purpose: strategy files with an ATR stop or target method (manual CF-15, K-01)
+Q46 | 22:03:43 | ^v3_playbook:\s*true\b | l_strategies.txt | files searched: 16; files with matches: 1; matching lines: 1 | per
+      file: config/strategies/pb01_breakout_retest.yaml 1 | purpose: strategy files with v3_playbook true (manual CF-15, EP-07)
+Q47 | 22:03:43 | ^intent:\s*"?DELIVERY\b | l_strategies.txt | files searched: 16; files with matches: 3; matching lines: 3 | per
+      file: config/strategies/positional_momentum_long.yaml 1; config/strategies/positional_sector_rotation.yaml 1;
+      config/strategies/positional_swing_long.yaml 1 | purpose: strategy files with intent DELIVERY (manual CF-15)
+Q48 | 22:06:50 | REJECTED_REJECTED_|REJECTED_SIZING_REJECTED_ | s_tests.txt | files searched: 486; files with matches: 0; matching
+      lines: 0 | per file: (none) | purpose: tests naming a doubled reject name (manual K-01)
+Q49 | 22:06:55 | REJECTED_REJECTED_|REJECTED_SIZING_REJECTED_ | s_rt.txt | files searched: 281; files with matches: 0; matching
+      lines: 0 | per file: (none) | purpose: runtime files naming a doubled reject name (manual K-01)
+
+==============================================================================
+8. SOURCE-TO-CLAIM INDEX (190 claim IDs of the manual)
+==============================================================================
+Columns: claim | section | label (the section's default and any label in the claim) | citations | reads that printed the cited
+lines. "-" in the reads column: the claim cites only other claims, frozen manuals or searches.
+W-01 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | main.py:90, main.py:3574-3623, main.py:3575,
+      main.py:3407-3408, main.py:3576 | reads: 001 002 004 005
+W-02 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | main.py:3575-3623 | reads: 001 002 004
+W-03 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:171-172,
+      signals/signal_processor.py:189, signals/signal_processor.py:192, signals/signal_processor.py:195-196,
+      signals/signal_processor.py:218-219, signals/signal_processor.py:233, signals/signal_processor.py:236,
+      signals/signal_processor.py:239-240, signals/signal_processor.py:1120 | reads: 017 022
+W-04 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:207-208,
+      signals/signal_processor.py:259-268, signals/signal_processor.py:201, main.py:3061, main.py:3588 | reads: 002 004 017 123
+W-05 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | main.py:3631-3651, main.py:3656-3662, main.py:3472-3473,
+      main.py:3672-3694, main.py:3696-3702, main.py:3423, main.py:3769, main.py:3789-3793, main.py:3545-3549,
+      signals/signal_processor.py:356-359, signals/signal_processor.py:1568-1576 | reads: 001 002 003 004 005 006 007 014 018 027
+      041
+W-06 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | main.py:846-862, core/config_loader.py:1838-1844,
+      core/config_loader.py:2023, main.py:2945-2956, main.py:3257-3268 | reads: 004 012 037 038 046 048 056 057
+W-07 | 2.1 Construction | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:155-198, main.py:3839-3844 |
+      reads: 001 008 009 014 017 026 119
+E1 | 2.2 Entry points | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:304-324,
+      signals/signal_processor.py:377-399, signals/signal_processor.py:405-480 | reads: 014 018 019
+E2 | 2.2 Entry points | section: FACT, SOURCE-VERIFIED unless marked | main.py:865-893, signals/signal_processor.py:2010-2369 |
+      reads: 001 009 010 012 014 026 029 030 031 032 043 052
+E3 | 2.2 Entry points | section: FACT, SOURCE-VERIFIED unless marked | main.py:3784-3788, screening/retest_monitor.py:180-190,
+      signals/signal_processor.py:2375-2384 | reads: 001 007 014 052 053 096 098
+E4 | 2.2 Entry points | section: FACT, SOURCE-VERIFIED unless marked | main.py:3636-3649,
+      allocation/portfolio_allocator.py:105-113, signals/signal_processor.py:1646-1737, screening/retest_monitor.py:51,
+      screening/retest_monitor.py:189, v3_chain/pb01_runner.py:6-7, v3_chain/pb01_entry.py:9, main.py:3644-3645 | reads: 001 003
+      014 041 042 096 098 100 101 118 124 125
+W-08 | 2.3 Start and stop order | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | main.py:3880-3881, main.py:3894-3899,
+      main.py:3968-3971, main.py:3972-3975, signals/signal_processor.py:304-324 | reads: 001 009 011 014 018
+W-09 | 2.3 Start and stop order | section: FACT, SOURCE-VERIFIED unless marked | main.py:1643-1679, main.py:1681-1692,
+      main.py:1693-1750, signals/signal_processor.py:326-347 | reads: 001 009 013 014 018 104
+W-10 | 2.3 Start and stop order | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:2215-2222, signals/signal_processor.py:2524-2528 | reads: 026 032 043 054
+CF-01 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:127,
+      main.py:3613-3614, signals/signal_processor.py:175, signals/signal_processor.py:222 | reads: 002 017 033
+CF-02 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:345-346, core/config_loader.py:566-567, core/config_loader.py:588-600, main.py:3590-3591 | reads:
+      002 033 034 046 047
+CF-03 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:347,
+      core/config_loader.py:568, core/config_loader.py:602-607, main.py:3575-3623 | reads: 001 002 004 033 034 046 047
+CF-04 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:344-353, core/config_loader.py:569-572, main.py:3593 | reads: 002 033 034 046 047
+CF-05 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:348,
+      core/config_loader.py:573-575, main.py:3594 | reads: 002 033 034 046 047
+CF-06 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:349-353, core/config_loader.py:576-586, main.py:3595-3599 | reads: 002 033 034 046 047
+CF-07 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:302,
+      core/config_loader.py:784, main.py:2896, main.py:2901, capital/risk_engine.py:203, signals/signal_processor.py:834 | reads:
+      028 033 046 079 116 120
+CF-08 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:142,
+      config/system_config.yaml:149, core/config_loader.py:2030, core/config_loader.py:2044, main.py:3620-3621 | reads: 002 033
+      046
+CF-09 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:564-566, core/config_loader.py:1325, main.py:3632-3633 | reads: 003 033 035 046
+CF-10 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:573-574, core/config_loader.py:1405, main.py:3472-3473 | reads: 004 006 033 035 046
+CF-11 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:529,
+      config/system_config.yaml:634, core/config_loader.py:1200, main.py:3423, main.py:3427, main.py:3549 | reads: 002 004 005 033
+      046 058
+CF-12 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED | config/system_config.yaml:509,
+      main.py:3422 | reads: 005 058
+CF-13 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:732-736, core/config_loader.py:1841 | reads: 033 036 048
+CF-14 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/system_config.yaml:492-504, main.py:2945-2956, main.py:3605 | reads: 002 004 033 056 057 059
+CF-15 | 3. Configuration the processor reads | section: FACT (CONFIG) and FACT, SOURCE-VERIFIED |
+      config/strategies/gap_go_long.yaml:9-11, config/strategies/gap_go_long.yaml:18, config/strategies/gap_go_long.yaml:21,
+      config/strategies/gap_go_long.yaml:28, config/strategies/gap_go_long.yaml:37, config/strategies/gap_go_long.yaml:47 | reads:
+      106
+ST-01 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:415-461, main.py:3575-3623 |
+      reads: 001 002 004 019
+ST-02 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:876-887 | reads: 020 118
+ST-03 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:895-899 | reads: 020
+ST-04 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:905-907,
+      capital/kill_switch.py:510-526 | reads: 020 043 065 066
+ST-05 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:909-912,
+      core/market_windows.py:143-150 | reads: 020 043 063 064
+ST-06 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:914-921,
+      signals/signal_processor.py:1221-1231 | reads: 020 023 043
+ST-07 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:923-928,
+      signals/signal_processor.py:1976-2008 | reads: 014 020 026 029 043
+ST-08 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:930-953 | reads: 020 043
+ST-09 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:955-972,
+      strategies/control.py:67-117 | reads: 020 021 026 043 061 062
+ST-10 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION | signals/signal_processor.py:974-982,
+      core/market_windows.py:152-175, core/market_windows.py:174-175 | reads: 021 043 063 064
+ST-11 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:984-990,
+      capital/strategy_governor.py:49-87, capital/strategy_governor.py:67-72 | reads: 021 043 069 070
+ST-12 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:992-1023,
+      screening/secondary_screener.py:123-196 | reads: 021 071 073
+ST-13 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1025-1030,
+      signals/signal_processor.py:1748-1846 | reads: 014 021 042 043 044
+ST-14 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1032-1035 | reads: 021
+ST-15 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1037-1056,
+      screening/retest_monitor.py:303-379 | reads: 021 096 097 099
+ST-16 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1058-1106, main.py:3616 |
+      reads: 002 021 022 026
+ST-17 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1108-1129,
+      capital/position_sizer.py:245-339 | reads: 022 043 074 075
+ST-18 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1131-1143,
+      signals/signal_processor.py:1578-1603, v3_chain/runner.py:99-118 | reads: 014 022 041 102 103
+ST-19 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1145-1172,
+      allocation/portfolio_allocator.py:69-102 | reads: 022 023 043 100 101 118
+ST-20 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1298-1305 | reads: 024
+ST-21 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1307-1344,
+      capital/fund_manager.py:426-443, signals/signal_processor.py:744-779, signals/signal_processor.py:802-864 | reads: 014 024
+      026 028 043 084 085 088 122
+ST-22 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1351-1363 | reads: 024
+ST-23 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1365-1368,
+      signals/signal_processor.py:1901-1953 | reads: 014 024 043 045
+ST-24 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | signals/signal_processor.py:1370-1380,
+      signals/signal_processor.py:486-555 | reads: 014 019 024 025 039
+ST-25 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1384-1396 | reads: 025 043
+ST-26 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1398-1405 | reads: 025 043
+ST-27 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1407-1418,
+      signals/entry_throttle.py:65-115 | reads: 025 043 090 091
+ST-28 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1420-1445 | reads: 025
+ST-29 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1446-1463,
+      orders/order_placer.py:871-958 | reads: 025 092 093
+ST-30 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1461-1546,
+      signals/signal_processor.py:1540-1546 | reads: 025 027 043 118
+ST-31 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1548-1561,
+      signals/signal_processor.py:614-658 | reads: 014 027 040 043
+ST-32 | 4.1 Stage table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1248-1276 | reads: 023
+ST-33 | 4.2 What the main path shares with the other paths | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:1976-1983, signals/signal_processor.py:928, signals/signal_processor.py:2048,
+      signals/signal_processor.py:2405, signals/signal_processor.py:1307-1313, signals/signal_processor.py:2138-2143,
+      signals/signal_processor.py:2474-2479, signals/signal_processor.py:1646-1660 | reads: 014 020 024 026 029 030 031 041 042
+      053 054 118
+ST-34 | 4.2 What the main path shares with the other paths | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:761-767, signals/signal_processor.py:761-762, signals/signal_processor.py:876-887 | reads: 020
+      028 118 122
+TR-01 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+TR-02 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:905-928 | reads: 020 026 043
+TR-03 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:930-990 | reads: 020 021 026
+      043
+TR-04 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | screening/secondary_screener.py:123-196 | reads: 071 073
+TR-05 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1028-1106 | reads: 021 022
+      026
+TR-06 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | capital/position_sizer.py:245-339 | reads: 074 075
+TR-07 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1131-1172 | reads: 022 023
+      043 118
+TR-08 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1302-1344 | reads: 024 043
+TR-09 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1365-1418 | reads: 024 025
+      043
+TR-10 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | orders/order_placer.py:871-958 | reads: 092 093
+TR-11 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1461-1546 | reads: 025 027
+      043 118
+TR-12 | 4.3 Trace table | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1248-1276 | reads: 023
+OC-01 | 5.1 Statuses the processor writes | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL |
+      signals/signal_processor.py:897, signals/signal_processor.py:2034, signals/signal_processor.py:2393,
+      signals/signal_processor.py:1344, signals/signal_processor.py:2171, signals/signal_processor.py:2501,
+      signals/signal_processor.py:1543, signals/signal_processor.py:2290, signals/signal_processor.py:2583,
+      signals/signal_processor.py:1360, signals/signal_processor.py:2186, signals/signal_processor.py:2509,
+      signals/signal_processor.py:1480-1481, signals/signal_processor.py:2278-2279, signals/signal_processor.py:2573-2574,
+      signals/signal_processor.py:473-475, signals/signal_processor.py:1238, signals/signal_processor.py:1683,
+      signals/signal_processor.py:2345, signals/signal_processor.py:2620, signals/signal_processor.py:1201,
+      signals/signal_processor.py:1662, signals/signal_processor.py:2316-2317, signals/signal_processor.py:2598,
+      signals/signal_processor.py:1712-1713, signals/signal_processor.py:435-437, signals/signal_processor.py:992-996,
+      screening/retest_monitor.py:349-351, screening/retest_monitor.py:373 | reads: 019 020 021 023 024 027 030 031 032 042 052
+      053 054 055 097
+OC-02 | 5.2 Reject names | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:907,
+      signals/signal_processor.py:2039, signals/signal_processor.py:2398, signals/signal_processor.py:912,
+      signals/signal_processor.py:979, signals/signal_processor.py:2044, signals/signal_processor.py:2080,
+      signals/signal_processor.py:2401, signals/signal_processor.py:2422, signals/signal_processor.py:919,
+      signals/signal_processor.py:1994, signals/signal_processor.py:2006, signals/signal_processor.py:936,
+      signals/signal_processor.py:945, signals/signal_processor.py:951, signals/signal_processor.py:2055,
+      signals/signal_processor.py:2409, signals/signal_processor.py:971, signals/signal_processor.py:2074,
+      signals/signal_processor.py:2417, signals/signal_processor.py:990, signals/signal_processor.py:2093,
+      signals/signal_processor.py:2430, signals/signal_processor.py:1125, signals/signal_processor.py:2121,
+      signals/signal_processor.py:2463, signals/signal_processor.py:775, signals/signal_processor.py:860,
+      signals/signal_processor.py:1322, signals/signal_processor.py:2152, signals/signal_processor.py:2487,
+      signals/signal_processor.py:1335, signals/signal_processor.py:1338, signals/signal_processor.py:2165,
+      signals/signal_processor.py:2168, signals/signal_processor.py:2497, signals/signal_processor.py:2499,
+      signals/signal_processor.py:1396, signals/signal_processor.py:1405, signals/signal_processor.py:1417,
+      signals/signal_processor.py:2213, signals/signal_processor.py:2222, signals/signal_processor.py:2232,
+      signals/signal_processor.py:2523, signals/signal_processor.py:2528, signals/signal_processor.py:2536,
+      signals/signal_processor.py:1790, signals/signal_processor.py:1805, signals/signal_processor.py:1827,
+      signals/signal_processor.py:1844, signals/signal_processor.py:1916, signals/signal_processor.py:1939,
+      signals/signal_processor.py:1947, signals/signal_processor.py:2450 | reads: 020 021 022 024 025 026 028 029 030 031 032 043
+      044 045 053 054
+OC-03 | 5.2 Reject names | section: FACT, SOURCE-VERIFIED unless marked | strategies/control.py:41-44,
+      signals/signal_processor.py:970-972, signals/signal_processor.py:1127-1128, capital/position_sizer.py:442,
+      capital/position_sizer.py:447, capital/position_sizer.py:475, capital/position_sizer.py:480,
+      capital/position_sizer.py:502-512, capital/position_sizer.py:524-539, capital/position_sizer.py:593,
+      capital/position_sizer.py:598, capital/position_sizer.py:670, capital/position_sizer.py:675,
+      capital/position_sizer.py:692-705, capital/position_sizer.py:739, capital/position_sizer.py:744,
+      capital/position_sizer.py:771, capital/position_sizer.py:776, capital/risk_engine.py:84-105, capital/risk_engine.py:506-519,
+      capital/risk_engine.py:522, capital/risk_engine.py:530, capital/risk_engine.py:544, capital/risk_engine.py:643,
+      capital/risk_engine.py:676, capital/risk_engine.py:692, capital/risk_engine.py:735, capital/risk_engine.py:768,
+      capital/risk_engine.py:789, capital/risk_engine.py:791-794, signals/signal_processor.py:1324-1325 | reads: 021 022 024 043
+      061 074 076 077 078 079 080 081 082 083 115 121
+OC-04 | 5.3 Reservation, claim, counters and evidence | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION |
+      signals/signal_processor.py:1393-1395, signals/signal_processor.py:1402-1404, signals/signal_processor.py:1412-1414,
+      signals/signal_processor.py:1212-1217, signals/signal_processor.py:1461, signals/signal_processor.py:1239-1243,
+      capital/fund_manager.py:637-660, orders/order_placer.py:893-894, orders/order_placer.py:1390-1402,
+      orders/order_placer.py:1416-1418, capital/fund_manager.py:651-653 | reads: 023 025 084 087 093 094 095
+OC-05 | 5.3 Reservation, claim, counters and evidence | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:1260-1271, signals/signal_processor.py:456-460, signals/signal_processor.py:2018-2019,
+      signals/signal_processor.py:2357-2369, signals/signal_processor.py:2630-2640, signals/signal_processor.py:1056,
+      signals/signal_processor.py:1267-1271, signals/signal_processor.py:1699-1703, signals/signal_processor.py:1733-1737 | reads:
+      019 021 023 026 030 042 052 055
+OC-06 | 5.3 Reservation, claim, counters and evidence | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:1197-1200, signals/signal_processor.py:2314-2315, signals/signal_processor.py:2596-2597,
+      signals/signal_processor.py:270-279, signals/signal_processor.py:898, signals/signal_processor.py:1415,
+      signals/signal_processor.py:1463, main.py:4076, signals/signal_processor.py:1661-1680,
+      signals/signal_processor.py:1706-1737, signals/signal_processor.py:1233-1246, signals/signal_processor.py:1464-1484,
+      signals/signal_processor.py:281-294, signals/signal_processor.py:1218-1220, signals/signal_processor.py:1244-1246,
+      signals/signal_processor.py:1273-1276, signals/signal_processor.py:1544-1546, signals/signal_processor.py:1959-1970 | reads:
+      001 014 017 020 023 025 027 029 042 052 055
+OC-07 | 5.3 Reservation, claim, counters and evidence | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:1202-1211, signals/signal_processor.py:1427-1445, signals/signal_processor.py:1663-1672,
+      signals/signal_processor.py:1716-1727, signals/signal_processor.py:2241-2250, signals/signal_processor.py:2319-2328,
+      signals/signal_processor.py:2543-2552, signals/signal_processor.py:2599-2606, signals/signal_processor.py:443-455,
+      signals/signal_processor.py:582-612, signals/signal_processor.py:1233-1246, signals/signal_processor.py:1464-1484 | reads:
+      014 019 023 025 026 027 032 040 042 052 054 055
+EX-01 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1193-1231
+      | reads: 023
+EX-02 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1111-1125,
+      signals/signal_processor.py:1314-1322, signals/signal_processor.py:1327-1335, capital/kill_switch.py:791-880 | reads: 022
+      024 043 065 067 068
+EX-03 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1233-1246,
+      capital/position_sizer.py:300-339, capital/fund_manager.py:536-538, capital/fund_manager.py:645-646,
+      screening/secondary_screener.py:167-196, capital/strategy_governor.py:67-72 | reads: 023 069 070 071 073 074 075 086 087
+EX-04 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1533-1538,
+      orders/order_placer.py:890-894, orders/order_placer.py:938, orders/order_placer.py:937-958 | reads: 027 043 093
+EX-05 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION |
+      signals/signal_processor.py:1464-1484, orders/order_placer.py:1433-1465 | reads: 025 027 092 094
+EX-06 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION |
+      orders/order_placer.py:1403-1432 | reads: 094 095
+EX-07 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+EX-08 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked; KNOWN DEFECT |
+      signals/signal_processor.py:1464-1477, main.py:3124-3139 | reads: 004 025 027 057 060
+EX-09 | 6. Exceptions and failure handling | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:463-480 |
+      reads: 019
+RQ-01 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | signals/signal_processor.py:1486-1532
+      | reads: 027 043 118
+RQ-02 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:873,
+      signals/signal_processor.py:884, signals/signal_processor.py:887, signals/signal_processor.py:1157,
+      signals/signal_processor.py:1167, signals/signal_processor.py:1187, signals/signal_processor.py:1280,
+      signals/signal_processor.py:1493-1516, signals/signal_processor.py:1621, signals/signal_processor.py:1638,
+      signals/signal_processor.py:1660 | reads: 020 022 023 024 027 041 042 043 118
+RQ-03 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked; FACT (TEST TEXT); INTERPRETATION |
+      signals/signal_processor.py:1519-1525, signals/entry_throttle.py:77-107, tests/unit/test_signal_processor.py:2347-2350,
+      tests/unit/test_signal_processor.py:2324-2344 | reads: 027 090 091 107 110
+RQ-04 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION | signals/signal_processor.py:1515,
+      signals/signal_processor.py:914-921 | reads: 020 027 043
+RQ-05 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | - | reads: -
+RQ-06 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:189,
+      signals/signal_processor.py:233, signals/signal_processor.py:418, main.py:3575-3623, signals/signal_processor.py:427-437 |
+      reads: 001 002 004 017 019
+RQ-07 | 7. Re-queue and retries | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:2283-2288,
+      signals/signal_processor.py:2578-2581 | reads: 032 043 054
+SS-01 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL |
+      capital/risk_engine.py:360-364, capital/risk_engine.py:766-794, signals/signal_processor.py:923-926 | reads: 020 082 114 115
+      117
+SS-02 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:1307-1344, orders/order_placer.py:891, signals/signal_processor.py:1446,
+      signals/entry_throttle.py:13-17, signals/entry_throttle.py:74-115, signals/signal_processor.py:1410 | reads: 024 025 043 090
+      091 093
+SS-03 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:253-257, signals/signal_processor.py:1248-1258, signals/signal_processor.py:1302-1305,
+      signals/signal_processor.py:2133-2136, signals/signal_processor.py:2357-2364, signals/signal_processor.py:2469-2472,
+      signals/signal_processor.py:2630-2636, signals/signal_processor.py:1315-1318, capital/risk_engine.py:564-585,
+      capital/risk_engine.py:587-618, capital/risk_engine.py:585 | reads: 017 023 024 026 031 052 053 054 055 079 082 083
+SS-04 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION; KNOWN
+      DEFECT | main.py:3575-3623, signals/signal_processor.py:171-172, signals/signal_processor.py:219,
+      signals/signal_processor.py:664-673, signals/signal_processor.py:899, signals/signal_processor.py:1023,
+      signals/signal_processor.py:1129, signals/signal_processor.py:1346, signals/signal_processor.py:1382 | reads: 001 002 004
+      014 017 020 021 022 024 025 040
+SS-05 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+SS-06 | 8. Same symbol and in-flight state | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1605-1617,
+      signals/signal_processor.py:176, signals/signal_processor.py:223, signals/signal_processor.py:1606,
+      capital/position_sizer.py:307-313 | reads: 014 017 041 075 119
+EP-01 | 9.1 E2: `continue_from_gate` | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:2033-2035,
+      signals/signal_processor.py:2037-2048, signals/signal_processor.py:2050-2093, signals/signal_processor.py:2095-2104,
+      signals/signal_processor.py:2106-2136, signals/signal_processor.py:2138-2171, signals/signal_processor.py:2173-2201,
+      signals/signal_processor.py:2203-2233, signals/signal_processor.py:2235-2307, signals/signal_processor.py:2309-2369 | reads:
+      026 030 031 032 043 052
+EP-02 | 9.1 E2: `continue_from_gate` | section: FACT, SOURCE-VERIFIED unless marked; KNOWN DEFECT | screening/entry_gate.py:103,
+      signals/signal_processor.py:2236-2240, screening/entry_gate.py:103, screening/entry_gate.py:209,
+      screening/entry_gate.py:144-160, screening/entry_gate.py:474-537, main.py:879-892 | reads: 010 012 026 032 049 050 051
+EP-03 | 9.1 E2: `continue_from_gate` | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:2269-2282 |
+      reads: 026 032
+EP-04 | 9.2 E3: `continue_from_retest` | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:2392-2394,
+      signals/signal_processor.py:2396-2405, signals/signal_processor.py:2407-2430, signals/signal_processor.py:2432-2443,
+      signals/signal_processor.py:2642-2657, signals/signal_processor.py:2446-2452, signals/signal_processor.py:2454-2472,
+      signals/signal_processor.py:2474-2501, signals/signal_processor.py:2503-2536, signals/signal_processor.py:2538-2592,
+      signals/signal_processor.py:2594-2640, signals/signal_processor.py:2376-2384 | reads: 014 026 043 053 054 055
+EP-05 | 9.2 E3: `continue_from_retest` | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | main.py:3769-3797 | reads: 001
+      007
+EP-06 | 9.2 E3: `continue_from_retest` | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:2467,
+      signals/signal_processor.py:2474 | reads: 053 054
+EP-07 | 9.3 E4: the allocator's enforce worker | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:1147-1160, allocation/portfolio_allocator.py:88-102, main.py:3644-3645,
+      config/system_config.yaml:565, main.py:3626-3628, main.py:3646-3648 | reads: 001 003 022 023 033 035 100 101 118
+EP-08 | 9.3 E4: the allocator's enforce worker | section: FACT, SOURCE-VERIFIED unless marked |
+      signals/signal_processor.py:1646-1704, signals/signal_processor.py:1706-1737 | reads: 014 041 042 118
+EP-09 | 9.4 The EOD route | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | - | reads: -
+OB-01 | 10. Observers and shadow hooks | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:1586-1590, v3_chain/runner.py:99-118 | reads: 041 102 103
+OB-02 | 10. Observers and shadow hooks | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1619-1644,
+      allocation/portfolio_allocator.py:88-96 | reads: 014 041 100 101 118
+OB-03 | 10. Observers and shadow hooks | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:614-658,
+      signals/signal_processor.py:1548-1561, signals/signal_processor.py:2295-2307, signals/signal_processor.py:2588-2592,
+      main.py:3490, main.py:3494, main.py:3508 | reads: 004 014 026 027 032 040 043 052 055
+OB-04 | 10. Observers and shadow hooks | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:361-375,
+      signals/signal_processor.py:388 | reads: 014 018
+OB-05 | 10. Observers and shadow hooks | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:1221-1231 |
+      reads: 023
+SD-01 | 11. Kill, stop and shutdown at the processor | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL |
+      capital/risk_engine.py:366-369, capital/risk_engine.py:515-519, main.py:2913, main.py:3061, main.py:3069 | reads: 004 081
+      082 117 120
+SD-02 | 11. Kill, stop and shutdown at the processor | section: FACT, SOURCE-VERIFIED unless marked |
+      capital/kill_switch.py:809-850, capital/kill_switch.py:860-880 | reads: 067 068
+SD-03 | 11. Kill, stop and shutdown at the processor | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION |
+      signals/signal_processor.py:392-399, signals/signal_processor.py:1398-1405, signals/signal_processor.py:1519-1525,
+      signals/signal_processor.py:392-399, signals/signal_processor.py:1344 | reads: 018 024 025 027 043
+SD-04 | 11. Kill, stop and shutdown at the processor | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+D-01 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:326-340 | reads: 014 018
+D-02 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:1489, signals/signal_processor.py:1519-1525,
+      orders/order_placer.py:1431-1432 | reads: 027 094
+D-03 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:1074-1075 | reads: 022 026
+D-04 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:2378, signals/signal_processor.py:914-921,
+      signals/signal_processor.py:175 | reads: 017 020 043 053
+D-05 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:1468-1475,
+      signals/signal_processor.py:2270-2273, signals/signal_processor.py:2566-2569 | reads: 025 027 032 054
+D-06 | 12.1 Text drift | section: FACT (TEXT DRIFT) | config/system_config.yaml:347, core/config_loader.py:568 | reads: 033 034
+      046 047
+D-07 | 12.1 Text drift | section: FACT (TEXT DRIFT) | core/config_loader.py:571 | reads: 047
+D-08 | 12.1 Text drift | section: FACT (TEXT DRIFT); HISTORICAL | signals/signal_processor.py:533-549 | reads: 039
+D-09 | 12.1 Text drift | section: FACT (TEXT DRIFT) | screening/entry_gate.py:98, main.py:3843 | reads: 001 008 009 049
+D-10 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:11, signals/signal_processor.py:146,
+      signals/signal_processor.py:169, main.py:3588 | reads: 002 004 015 016 017
+D-11 | 12.1 Text drift | section: FACT (TEXT DRIFT) | signals/signal_processor.py:2015-2019, signals/signal_processor.py:2046-2093
+      | reads: 026 030 043
+K-01 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION | signals/signal_processor.py:1201,
+      signals/signal_processor.py:1802-1807, signals/signal_processor.py:1913-1918, signals/signal_processor.py:1128,
+      capital/position_sizer.py:692-705 | reads: 022 023 043 044 045 074 077
+K-02 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION |
+      signals/signal_processor.py:1340-1344, signals/signal_processor.py:1365-1368, signals/signal_processor.py:1212-1217 | reads:
+      023 024
+K-03 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL | signals/signal_processor.py:1370-1418,
+      signals/signal_processor.py:1446 | reads: 024 025 043
+K-04 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION | signals/entry_throttle.py:13-17,
+      signals/entry_throttle.py:109-115, signals/entry_throttle.py:69-72, signals/signal_processor.py:1410,
+      signals/signal_processor.py:1446, signals/entry_throttle.py:55-59 | reads: 025 090 091
+K-05 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; INTERPRETATION | signals/signal_processor.py:1201,
+      signals/signal_processor.py:1212-1217, signals/signal_processor.py:1238-1243, signals/signal_processor.py:1480-1483,
+      signals/signal_processor.py:1483, signals/signal_processor.py:1189, signals/signal_processor.py:1238,
+      signals/signal_processor.py:1239-1243, signals/signal_processor.py:1543, signals/signal_processor.py:1461-1463 | reads: 023
+      025 027
+K-06 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL; INTERPRETATION |
+      signals/signal_processor.py:342-344 | reads: 018
+K-07 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+K-08 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked | signals/signal_processor.py:907,
+      capital/risk_engine.py:519, signals/signal_processor.py:912, signals/signal_processor.py:978-982,
+      signals/signal_processor.py:935-953 | reads: 020 021 043 081 082
+K-09 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked | - | reads: -
+K-10 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; HISTORICAL / RECORD-DERIVED |
+      signals/signal_processor.py:1988-1997, signals/signal_processor.py:564-566 | reads: 029 040 043
+K-11 | 12.2 Code-path findings | section: FACT, SOURCE-VERIFIED unless marked; FACT (EXTERNAL; Python 3.13.16 in Claude's
+      workspace, not the legacy interpreter); INTERPRETATION | signals/signal_processor.py:1786,
+      signals/signal_processor.py:1848-1850, signals/signal_processor.py:1082-1101, signals/signal_processor.py:1457 | reads: 022
+      025 026 044
+T-01 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:493-509 | reads: 107 109
+T-02 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:512-526 | reads: 107 109
+T-03 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:832-934 | reads: 107 111
+T-04 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:1151-1192 | reads: 107 112
+T-05 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:1736-1764 | reads: 107 108
+T-06 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:1809-1832 | reads: 107 113
+T-07 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:1856-1916 | reads: 107 113
+T-08 | 13. Tests as text | section: FACT (TEST TEXT); never run | tests/unit/test_signal_processor.py:2255-2366,
+      tests/unit/test_signal_processor.py:544, tests/unit/test_signal_processor.py:558, tests/unit/test_signal_processor.py:572,
+      tests/unit/test_signal_processor.py:585, tests/unit/test_signal_processor.py:599, tests/unit/test_signal_processor.py:614,
+      tests/unit/test_signal_processor.py:632, tests/unit/test_signal_processor.py:651, tests/unit/test_signal_processor.py:668,
+      tests/unit/test_signal_processor.py:687, tests/unit/test_signal_processor.py:1359, tests/unit/test_signal_processor.py:1427,
+      tests/unit/test_signal_processor.py:1557, tests/unit/test_signal_processor.py:1997,
+      tests/unit/test_signal_processor.py:2080, tests/unit/test_signal_processor.py:2106,
+      tests/unit/test_signal_processor.py:2144, tests/unit/test_signal_processor.py:501, tests/unit/test_signal_processor.py:520,
+      tests/unit/test_signal_processor.py:1755, tests/unit/test_signal_processor.py:1874,
+      tests/unit/test_signal_processor.py:2311, signals/signal_processor.py:1984-1987 | reads: 026 029 107 108 109 110 113
+RC-01 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | signals/entry_throttle.py:4-11,
+      signals/entry_throttle.py:77-107 | reads: 090 091
+RC-02 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-03 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-04 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-05 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-06 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-07 | 14.1 Against C-001 to C-007 | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-08 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-09 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-10 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-11 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-12 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-13 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-14 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | - | reads: -
+RC-15 | 14.2 Other frozen manuals consulted | HISTORICAL (frozen statement), checked at the pin | capital/kill_switch.py:809-814,
+      capital/kill_switch.py:842-850 | reads: 067 068
+C8/BM-01 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-02 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-03 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-04 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-05 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-06 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-07 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-08 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-09 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-10 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-11 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+C8/BM-12 | 14.5 New bookmarks | BOOKMARK (W-9) | - | reads: -
+OQ-01 | 15. Open questions and unknowns | OPEN QUESTION | - | reads: -
+OQ-02 | 15. Open questions and unknowns | OPEN QUESTION | - | reads: -
+U-01 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-02 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-03 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-04 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED; HISTORICAL | - | reads: -
+U-05 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-06 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-07 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-08 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+U-09 | 15. Open questions and unknowns | UNKNOWN / NOT ESTABLISHED | - | reads: -
+
+==============================================================================
+9. CITATION CHECK
+==============================================================================
+- build_manual_c008.py reads every backticked `path:lines` span of the manual and checks each cited line against the lines the
+  logged reads of that path printed (the saved evidence). Result: 613 cited line ranges, 0 uncovered.
+- A citation cannot be split across lines: the check also counts lines with an odd number of backticks outside code fences
+  (0); a self-test showed that a citation split across two lines is not matched by the pattern and is caught
+  by that count.
+- The check shows that the cited lines were read, not that each statement about them is right. Before delivery Claude re-checked
+  the statements against the saved evidence (re-counting the numbers and re-opening the frozen-manual sections cited), and a
+  separate agent checked them independently, once (section 1); its findings are applied.
+
+==============================================================================
+10. FINAL CHECKS (at delivery, 24-Oct-2026 00:04 IST)
+==============================================================================
+- The manual: C-008_SIGNAL_PROCESSING_MANUAL_DRAFT_REV1_24-OCT-2026.md; SHA-256
+  DC34D02F0811BA23F2310F2AFA9AA614CE273EA021B99738DC455E346A64AE3E; 612 lines; non-ASCII 0; CR 0; session links 0; absolute paths
+  0; credential-assignment patterns 0; scan_ids.py kinds {'long_token': 26}.
+- The manual's build: 613 citations, 0 uncovered; claim IDs: 190 | duplicates: [] | lines with an odd number of backticks: 0.
+- This file: scanned after it was written; its SHA-256 and the same scan results are given with the delivery.
+- Legacy clone at delivery: HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; local objects 8,922; never-open blobs present locally
+  0; sensitive_check.py exit 0.
+END

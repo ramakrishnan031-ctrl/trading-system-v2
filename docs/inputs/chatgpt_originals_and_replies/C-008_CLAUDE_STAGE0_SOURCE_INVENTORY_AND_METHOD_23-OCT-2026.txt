@@ -1,0 +1,1010 @@
+C-008 - SIGNAL PROCESSING
+STAGE 0 SOURCE INVENTORY AND METHOD LOG (deliverable 2; companion to C-008_CLAUDE_STAGE0_ANSWERS_23-OCT-2026.txt)
+Date of work: 23-Oct-2026 (IST), 21:19 to 21:41 IST. Prepared by: Claude.
+Status: Stage 0 only; no legacy source content opened. Row numbers R01 to R38 are the register's (the answers, section A.2).
+
+==============================================================================
+1. INPUTS, RULES AND OUTPUTS
+==============================================================================
+- Inputs: C-008_CLAUDE_STAGE0_RESEARCH_PROMPT_23-OCT-2026.txt and C-008_STAGE0_ANSWER_SHEET_FOR_CLAUDE_23-OCT-2026.txt (received
+  from Rama at 21:17 IST); the legacy pin's saved tree listing and the checked-out permitted files of the project's blob-less
+  partial clone; V2 main dce3164 (fresh clone of 21:15 IST): the 38 frozen manuals and reconciliation addenda, V2_DESIGN_LOG.md,
+  V2_DECISION_REGISTER.md, README.md, LEGACY_REFERENCE.md and the master agenda; C-007's scope lists and tools.
+- Rules applied from the V2 design log's lessons: no tree-wide or history git command on the partial clone; commit metadata for
+  the named pin only; every content operation through the masking filter, with counts as the only output; the gate's class
+  beside every listed file; the gate's self-test before every call; host records value-blind only; every count taken by script
+  from a saved tool output; IDs copied from tool output; the header's end time taken from the clock after the last edit.
+- Outputs: the two files; working files in Claude's scratch area under c008/ (tools, scope lists, gate results, search and
+  line-count outputs, inventory tables).
+
+==============================================================================
+2. TIMELINE AND STATE (IST)
+==============================================================================
+- 21:17 prompt and answer sheet received; 21:19:41 work started with the baseline commands (section 5), before any C-008 tool was
+  written. Start state: the clone's HEAD is the pin; 8,922 local objects; 0 never-open blobs present; the saved listing's
+  SHA-256 is 1f195d3d516ab4f194bcb7af105fb193a606ee241e2e1437102ef495d8e647a5 (1,438 lines).
+- About 21:20 local object list and V2 ls-remote (section 5); 21:21:14 gate test passed (section 4).
+- 21:22:00 scope lists copied from C-007 and the 1,260 working files hashed (section 7.1).
+- 21:22 to 21:23 V2 governance read and frozen-manual cross-check (section 9).
+- 21:23:55 path-name search (section 6).
+- 21:24:56 to 21:27:43 count-only searches Q01 to Q35 (log rows stamped 21:25:09 to 21:27:43; section 7).
+- 21:31:05 line totals and byte sizes (run L01, 118 files); 21:37:02 the final run L02 over 119 files, after the coverage check
+  (section 7.4) added core/config_validator.py to row R05 (section 8).
+- Register and tables generated from the saved outputs (section 10); final checks at 21:41 (section 11).
+
+==============================================================================
+3. TOOLS (SHA-256, first 16 hex characters, at delivery)
+==============================================================================
+- 55d76a716a4361a7  c008/tools/ccount_c008.py
+- 8745112dbf8521db  c008/tools/clines_c008.py
+- 43c0ac7b85860418  c008/tools/compose_c008.py
+- e32c38fa4d1a7030  c008/tools/cread_c008.py
+- 2cdd56ee52cdecbd  c008/tools/gen_register_c008.py
+- d679fed1d6004b33  c008/tools/register_spec_c008.py
+- 103c8cee5c5c1cd7  c008/tools/run_searches_c008.py
+- 33a0482e76c608c9  c008/gate/gate_test_c008.py
+- e183c859f38e5864  c008/inv/name_search_c008.py
+- ee0eee0e0bbb7736  c008/inv/xcheck_c008.py
+- bc0b715df0267bcf  tools/mask_read2.py
+- e36c1382b05129e5  tools/sensitive_check.py
+- 8217536996866bbb  tools/scan_ids.py
+- b0bd3d87cf51d1cb  bin/mr.py
+- 31af8ca5903370bf  bin/count_grep.py
+- Changes from C-007: cread_c008.py (log and evidence paths, the Stage 0 lock restored, the self-test's invented name);
+  ccount_c008.py (its log and output paths; it imports the gate from cread_c008.py); gate_test_c008.py (adds the line-count
+  tool's refusals). New: clines_c008.py (line totals and byte sizes behind the same gate; each working file must equal its
+  pinned blob; line totals come from the masking filter's header on a grep for a pattern that cannot match, and the run is
+  refused if the filter prints any line); name_search_c008.py and xcheck_c008.py (C-007's, with C-008 terms);
+  run_searches_c008.py; register_spec_c008.py and gen_register_c008.py (the register's data and its metadata from the saved
+  outputs); compose_c008.py (builds both files from templates).
+- Helpers used unchanged: mask_read2.py and count_grep.py (behind every count-only search and the line-count run),
+  sensitive_check.py, scan_ids.py; mr.py is behind cread_c008.py and was not called (no read).
+
+==============================================================================
+4. GATE TEST (gate_test_c008.py, 21:21 IST; output verbatim, long lines wrapped)
+==============================================================================
+  never-open pattern identical in cread_c008.py and sensitive_check.py: True
+  STAGE1_AUTHORISED in cread_c008.py: False
+  protected paths in the pinned listing: 102 | same set as the C-006 clarification: True
+  excluded July records in the pinned listing: 2 of 2
+  before: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} |
+    local objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  before: C-008 logs ('absent', 'absent', 'absent')
+  cread_c008.py on the 102 protected paths: {'rc=1 "refused: never-open path"': 102}
+  cread_c008.py on the 2 excluded July records: {'rc=1 "refused: excluded July record (separate approval required)"': 2}
+  cread_c008.py on docs/v2_design_spec.md (shares a protected blob): (1, 'refused: shares a never-open blob')
+  invented names in the pinned tree: 1 of 14 (config/security.yaml is the real one)
+  cread_c008.py on 14 rule-shaped names: {'rc=1 "refused: never-open path"': 14}
+  cread_c008.py on a permitted-shaped name not in the tree: (1, 'refused: not in the pinned tree listing')
+  cread_c008.py on a permitted path in the tree (core/schema.sql): (1, 'refused: Stage 0 lock (no read before a Stage 1
+    authorisation)')
+  ccount_c008.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing searched')
+  clines_c008.py on list_protected.txt (102 paths): (1, 'refused: the list holds 102 never-open path; nothing counted')
+  ccount_c008.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing searched')
+  clines_c008.py on list_excluded.txt (3 paths): (1, 'refused: the list holds 2 excluded July record; nothing counted')
+  ccount_c008.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing searched')
+  clines_c008.py on list_shared.txt (2 paths): (1, 'refused: the list holds 1 shares a never-open blob; nothing counted')
+  ccount_c008.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    searched')
+  clines_c008.py on list_not_in_tree.txt (2 paths): (1, 'refused: the list holds 1 not in the pinned tree listing; nothing
+    counted')
+  after: sensitive_check exit 0 | never-open paths in tree: 102; by top-level class: {'.*': 1, 'config': 21, 'docs': 80} | local
+    objects: 8922 | never-open blobs present locally: 0  (must be 0)
+  after: C-008 logs ('absent', 'absent', 'absent') | unchanged: True
+  GATE TEST PASSED
+
+==============================================================================
+5. BASELINE COMMANDS (outputs)
+==============================================================================
+- git rev-parse HEAD in the clone: 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- git log -1 --format='%H %cI %T' on the named pin:
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb 2026-09-11T02:05:13+05:30 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+- git ls-remote --symref of the legacy repository (HEAD, refs/heads/main):
+  ref: refs/heads/main  HEAD
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb  HEAD
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb  refs/heads/main
+- git ls-tree -r of the pin (tree objects only; no blob fetched): byte-identical to the saved listing (SHA-256 equal); 1,438
+  lines: 1,432 mode 100644, 6 mode 100755.
+- sensitive_check.py: never-open paths in tree: 102 (root dotfiles 1, config 21, docs 80); local objects: 8,922; never-open
+  blobs present locally: 0; exit 0.
+- git cat-file --batch-all-objects --batch-check (local objects only; no lazy fetch): 8,922 objects (1,259 blobs, 1,537 commits,
+  6,126 trees);
+  the list is identical to the one taken at C-007's Stage 0 (no object was fetched by C-007's Stage 1 reads or since).
+- git ls-remote of the V2 repository, refs/heads/main: dce31648fb06ef4a52bbef4508fcabfc99b38748 (at 21:15 and about 21:20 IST);
+  the fresh V2 clone of 21:15 IST is at that commit with a clean working tree.
+
+==============================================================================
+6. PATH-NAME SEARCH (paths only)
+==============================================================================
+- Script: name_search_c008.py over the saved listing. 35 terms matched case-insensitively against the file name, and 8 folder
+  terms against folder names (section B.1 of the answers lists them). Never-open paths are removed first.
+- Output (verbatim):
+  paths searched (never-open removed): 1336 | never-open paths that a term would match: 12 | excluded July records among the
+    hits: 2
+  hits (paths): 264 {'config': 5, 'docs': 78, 'ops': 2, 'ops_dashboard': 18, 'runtime': 28, 'scripts': 13, 'tests': 120}
+  per term (a path can match several): {'allocat': 6, 'window': 7, 'state': 19, 'kill': 24, 'sizing': 14, 'risk': 8, 'strategy':
+    42, 'governor': 2, 'mapping (C-010)': 4, 'score': 9, 'retest': 4, 'reject': 4, 'direction': 11, 'evidence': 8,
+    'decision/decide': 11, 'signal': 18, 'control': 15, 'status': 7, 'gate': 16, 'process': 3, 'screen': 32, 'pipeline': 9,
+    'queue (C-006)': 2, 'reserv': 1, 'entry': 15, 'throttle': 5, 'placer/place': 4, 'circuit': 1, 'route (C-011)': 2}
+  folder-name hits (term, folder: files below): {'allocation:allocation': 5, 'capital:capital': 10, 'decision:decisions': 21,
+    'orders:orders': 21, 'screening:screening': 7, 'signals:signals': 4, 'strategies:strategies': 21}
+- Terms with no file-name hit: transition, atr, dispatch, worker, pool, expir.
+- 59 of the 264 hits are register files; the other 205 are not; every hit is listed by name in appendix B.
+
+==============================================================================
+7. COUNT-ONLY SEARCHES (ccount_c008.py; per-file counts only, no matching line printed)
+==============================================================================
+7.1 Scopes (c008/scope/, copied from c007/scope/)
+| List | Files | SHA-256 (first 8) | Content |
+| s_all | 1,260 | e8752191 | every permitted text file of the pin, the two excluded July records removed |
+| s_rt | 281 | 4a6302df | runtime Python files (no tests) |
+| s_code | 869 | 7d7b0f51 | code and configuration files, tests included |
+| s_tests | 486 | a6c4978e | test files |
+| s_cfg | 41 | a423cd8c | non-test YAML, service, timer and cron files, built from s_code |
+Outside s_all: the 102 protected paths, the 2 excluded July records, docs/v2_design_spec.md (it shares a protected blob) and 73
+  permitted non-text or fixture files (as at C-007's Stage 0); git hash-object --no-filters --stdin-paths over s_all: 1,260 files
+  hashed, 1,260 equal to their pinned blob IDs.
+7.2 Searches (time from the log row; files with matches and matching lines from the tool's own summary line)
+| ID | Time | Scope (files) | Files with matches | Matching lines | Of which test files | Of which docs | What it locates |
+| Q01 | 21:25:49 | s_all (1260) | 1 | 1 | 0 | 0 | the class SignalProcessor defined |
+| Q02 | 21:25:30 | s_code (869) | 23 | 87 | 18 | 0 | SignalProcessor named |
+| Q03 | 21:25:29 | s_code (869) | 16 | 34 | 15 | 0 | imports of signals.signal_processor |
+| Q04 | 21:25:50 | s_all (1260) | 40 | 186 | 9 | 23 | the pipeline entry points and hand-offs by name |
+| Q05 | 21:25:49 | s_all (1260) | 24 | 134 | 6 | 14 | the pipeline's reject exception by name |
+| Q06 | 21:25:09 | s_rt (281) | 5 | 32 | 0 | 0 | the status writer with a parenthesis (calls or its definition) |
+| Q07 | 21:25:21 | s_rt (281) | 14 | 83 | 0 | 0 | the REJECTED_ names |
+| Q08 | 21:25:34 | s_rt (281) | 20 | 84 | 0 | 0 | processor status names |
+| Q09 | 21:25:58 | s_code (869) | 26 | 52 | 19 | 0 | imports from screening |
+| Q10 | 21:25:59 | s_code (869) | 90 | 150 | 79 | 0 | imports from capital |
+| Q11 | 21:26:00 | s_code (869) | 9 | 16 | 3 | 0 | imports from allocation |
+| Q12 | 21:25:58 | s_rt (281) | 17 | 46 | 0 | 0 | imports from orders |
+| Q13 | 21:26:32 | s_code (869) | 32 | 78 | 17 | 0 | imports from strategies |
+| Q14 | 21:26:33 | s_code (869) | 43 | 111 | 19 | 0 | imports from v3_chain or sr_detector |
+| Q15 | 21:26:34 | s_code (869) | 4 | 10 | 2 | 0 | the entry throttle named |
+| Q16 | 21:26:13 | s_rt (281) | 12 | 54 | 0 | 0 | kill and shutdown names |
+| Q17 | 21:26:35 | s_code (869) | 13 | 26 | 8 | 0 | entry-window names |
+| Q18 | 21:26:34 | s_code (869) | 36 | 100 | 19 | 0 | strategy lookup, control and circuit-breaker names |
+| Q19 | 21:26:47 | s_code (869) | 51 | 206 | 33 | 1 | sizing names |
+| Q20 | 21:26:45 | s_rt (281) | 10 | 26 | 0 | 0 | reserve_ and release_ calls |
+| Q21 | 21:26:53 | s_code (869) | 21 | 100 | 5 | 0 | allocator names |
+| Q22 | 21:26:54 | s_code (869) | 106 | 628 | 63 | 1 | the order placer named |
+| Q23 | 21:26:47 | s_rt (281) | 34 | 82 | 0 | 0 | thread pools, dispatchers and threads |
+| Q24 | 21:26:47 | s_rt (281) | 5 | 51 | 0 | 0 | in-flight names |
+| Q25 | 21:27:06 | s_rt (281) | 9 | 52 | 0 | 0 | retry counters |
+| Q26 | 21:27:28 | s_code (869) | 34 | 172 | 12 | 1 | ATR and stop or target method keys |
+| Q27 | 21:27:28 | s_code (869) | 36 | 111 | 20 | 1 | the scanner map named (C-010 boundary) |
+| Q28 | 21:27:28 | s_code (869) | 0 | 0 | 0 | 0 | EOD-route names (C-011 boundary) |
+| Q29 | 21:27:29 | s_code (869) | 40 | 105 | 27 | 1 | expiry and signal-age names (C-009 boundary) |
+| Q30 | 21:27:11 | s_tests (486) | 189 | 720 | 189 | 0 | test functions named for pipeline areas |
+| Q31 | 21:27:24 | s_tests (486) | 20 | 117 | 20 | 0 | tests naming the processor or its entry points |
+| Q32 | 21:27:13 | s_cfg (41) | 3 | 10 | 0 | 1 | top-level configuration blocks for pipeline areas |
+| Q33 | 21:27:43 | s_all (1260) | 168 | 716 | 39 | 83 | the processor named anywhere (code, tests, records) |
+| Q34 | 21:27:33 | s_rt (281) | 20 | 105 | 0 | 0 | reject check and reason fields |
+| Q35 | 21:27:41 | s_code (869) | 3 | 19 | 1 | 0 | the evidence contract named |
+7.3 Exact patterns (Python regular expressions, as logged)
+Q01  \bclass\s+SignalProcessor\b
+Q02  \bSignalProcessor\b
+Q03  (?m)^\s*(from\s+signals\.signal_processor(\.\w+)*\s+import\b|import\s+signals\.signal_processor\b)
+Q04  \b(_process_one|continue_from_gate|continue_from_retest|reject_prepared)\b
+Q05  \b_PipelineReject\b
+Q06  update_signal_status\s*\(
+Q07  \bREJECTED_[A-Z_]+
+Q08  \b(PROCESSING|RESERVED|PROCESSED|PROCESSED_NO_PLACER|PLACEMENT_FAILED|TIMEOUT)\b
+Q09  (?m)^\s*(from\s+screening(\.\w+)*\s+import\b|import\s+screening\b)
+Q10  (?m)^\s*(from\s+capital(\.\w+)*\s+import\b|import\s+capital\b)
+Q11  (?m)^\s*(from\s+allocation(\.\w+)*\s+import\b|import\s+allocation\b)
+Q12  (?m)^\s*(from\s+orders(\.\w+)*\s+import\b|import\s+orders\b)
+Q13  (?m)^\s*(from\s+strategies(\.\w+)*\s+import\b|import\s+strategies\b)
+Q14  (?m)^\s*(from\s+(v3_chain|sr_detector)(\.\w+)*\s+import\b|import\s+(v3_chain|sr_detector)\b)
+Q15  (?i)\bentry_throttle\b|\bEntryThrottle\b
+Q16  \bKILL_SWITCH\w*|\bis_killed\b|\bSHUTDOWN\b
+Q17  (?i)\bentry_window\b|OUTSIDE_ENTRY_WINDOW|\bentry_cutoff\b
+Q18  (?i)UNKNOWN_STRATEGY|STRATEGY_CONTROL|STRATEGY_CIRCUIT_BREAKER|circuit_breaker
+Q19  (?i)\bposition_sizer\b|\bPositionSizer\b|REJECTED_SIZING
+Q20  (?i)\b(reserve|release)_\w*\s*\(
+Q21  (?i)\ballocator\w*
+Q22  (?i)\border_placer\b|\bOrderPlacer\b
+Q23  (?i)ThreadPoolExecutor|\bmax_workers\b|\bdispatcher\b|threading\.Thread\s*\(
+Q24  (?i)\bin_flight\w*
+Q25  (?i)\bretry_count\b|\bmax_retries\b
+Q26  (?i)\b(atr_fallback_mode|sl_method|tgt_method)\b
+Q27  (?i)\bscan_webhook_map\b|\bscanner_map\b
+Q28  (?i)\beod_route\w*|\beod_signal\w*|\bdaily_signal\w*
+Q29  (?i)\bexpiry_sec\b|\bmax_signal_age\w*|\bsignal_age\w*|REJECTED_EXPIRED
+Q30  (?i)\bdef\s+test_\w*(processor|pipeline|screen|gate|retest|reject|sizing|throttle|allocat|placer|kill|shutdown)\w*
+Q31  \bSignalProcessor\b|\b_process_one\b|\bcontinue_from_(gate|retest)\b|\breject_prepared\b
+Q32  (?im)^(signal_processor|processor|signal_queue|screening|secondary_screen\w*|entry_gate|retest\w*|allocator\w*|portfolio_allocat\w*|position_siz\w*|risk\w*|capital\w*|strategies|strategy\w*)\s*:
+Q33  (?i)\bsignal_processor\b|\bSignalProcessor\b|\b_process_one\b
+Q34  (?i)\brej\.(check|reason)\b|\brejection_reason\b
+Q35  (?i)\bevidence_contract\b|\bEvidenceContract\b
+7.4 Notes
+- A count is of lines matching a pattern, not of calls, statements or behaviours: a hit can be a comment, a docstring or a
+  string. Counts locate candidates; they prove nothing about what runs.
+- Q09 to Q14 count import lines by package: a hit says that a file imports from that package, not which module or name.
+- Q04, Q05 and Q33 match records as well as code (s_all), including the host records PATHS.md and docs/SYSTEM_MAP.md, which are
+  counted only; no record is proposed for reading by these counts.
+- Q28 matched no file; the EOD route's own names are left to C-011 (or to a Stage 1 search if the route enters the processor).
+- Coverage: every non-test, non-record file with a hit in Q01, Q03, Q05, Q06, Q15 or Q24 is a register file (Q01: 1 file with
+  hits, 0 outside the register; Q03: 16 files with hits, 0 outside the register; Q05: 24 files with hits, 0 outside the
+  register; Q06: 5 files with hits, 0 outside the register; Q15: 4 files with hits, 0 outside the register; Q24: 5 files with
+  hits, 0 outside the register).
+
+==============================================================================
+8. LINE TOTALS AND BYTE SIZES (clines_c008.py runs L01 and L02)
+==============================================================================
+- Log row: L02 at 21:37:02 IST over register_files.txt (SHA-256 03d2a05f, 119 paths), nev0=ok, selftest=ok, pinned=ok; an
+  earlier run, L01 at 21:31:05 IST over 118 paths, was superseded when the coverage check (section 7.4) added
+  core/config_validator.py to row R05.
+- 119 permitted register files counted (the two excluded July records are not counted): files counted: 119; lines: 81,124. Per
+  file: appendix A.
+- Method: the gate as in section 4; each working file's git hash-object equal to its pinned blob; the masking filter's file
+  header gives the total; no line of any file was printed (the run would have been refused if one had been).
+
+==============================================================================
+9. FROZEN-MANUAL CROSS-CHECK (V2 documents only)
+==============================================================================
+- Script: xcheck_c008.py over the 38 frozen manuals and reconciliation addenda of V2 main dce3164. G1: lines naming C-008; G2:
+  pipeline terms (signal_processor, SignalProcessor, _process_one, continue_from_gate, continue_from_retest, reject_prepared,
+  _PipelineReject, secondary_screener, entry_gate, retest_monitor, allocator, order_placer, PLACEMENT_FAILED, PROCESSED_NO_PLACER,
+  RESERVED, REJECTED_SHUTDOWN, REJECTED_KILL_SWITCH, dispatcher). Legacy paths cited on matching lines are kept when they are in
+  the pinned listing.
+- Output (verbatim):
+  documents searched: 38
+  G1: documents with term lines 9; term lines 36; distinct legacy paths cited on them 5
+     per document: {'B-007': 1, 'C-001': 5, 'C-001+add': 1, 'C-002': 3, 'C-002+add': 1, 'C-004': 6, 'C-005': 4, 'C-006': 6,
+    'C-007': 9}
+  G2: documents with term lines 25; term lines 291; distinct legacy paths cited on them 123
+     per document: {'A-002': 1, 'A-005': 6, 'A-006': 1, 'A-007': 5, 'A-008': 5, 'A-009': 11, 'A-011': 8, 'B-004': 7, 'B-005':
+    14, 'B-006': 15, 'B-007': 3, 'B-008': 5, 'B-008+add': 1, 'B-009': 40, 'B-009+add': 7, 'B-010': 6, 'B-010+add': 1, 'B-011':
+    5, 'C-001': 15, 'C-002': 3, 'C-003': 4, 'C-004': 20, 'C-005': 9, 'C-006': 43, 'C-007': 56}
+- Lines naming C-008, by document and section (nearest heading):
+  B-007: 11. Monitors outside the process (adds to B-001 sections 8 ...) (1); C-001: 3. Terms (1), 7.4 Scanner-to-strategy
+    resolution (the processor's Step 2) (1), 12. Source-to-consumer trace (source wiring at the baseline ...) (1), 13. Known
+    defects, ambiguities and documentation drift (1), 15. Q-20 and Q-34 evidence (no decision; both stay OPEN) (1); C-001+add:
+    2. Corrections to Claude's research answers (1); C-002: 3. Terms and the eight states (1), 11. The hand-off after an
+    accepted request (FACT, SOURCE-VER ...) (1), 17. Source-to-consumer trace (source wiring at the baseline ...) (1);
+    C-002+add: 4. Dispositions of the candidates (decided by Rama on 22-Oct ...) (1); C-004: 6.5 Hand-off (FACT,
+    SOURCE-VERIFIED) (1), 14. Dependencies and topic boundaries (M-7) (1), 16.1 Architecture (FACT, SOURCE-VERIFIED and CONFIG
+    as in th ...) (1), 18. Audit leads (INTERPRETATION / AUDIT LEAD; not observed) (1), 19. Unknown / not established (1), 23.3
+    Answered by C-004 with no erratum (forward pointers and ...) (1); C-005: 1. Purpose and boundary (1), 13. Cross-topic
+    handoffs (3); C-006: 1. Evidence rules and boundaries (1), 11. Frozen-manual reconciliation and bookmarks (4), 13.
+    End-to-end source path (1); C-007: 1. Evidence rules and boundaries (1), 4.3 Persistence path map (1), 5.2 Composed and
+    dynamic names (1), 6.4 The 15:17 routine's clears (1), 11.2 Bookmarks (W-9) (4), 13. End-to-end source path (1)
+- V2_DESIGN_LOG.md rows naming C-008 (ID, cross-check or ratification cell): Q-20, Q-45, VP-11, VP-24, VP-31, VP-59, BK-02,
+  BK-03, BK-06, BK-07, BK-14, BK-15, BK-17, BK-18, BK-19, BK-21, BK-22, BK-24.
+
+==============================================================================
+10. REGISTER METADATA
+==============================================================================
+- gen_register_c008.py: blob IDs from the saved listing; line totals and sizes from L02; terms from the path-name search;
+  per-file counts from the saved search outputs; frozen-manual citations from section 9; the gate class from the excluded and
+  host-record lists. Output: rows: 38 | files: 121 | by group: {'A': 5, 'B': 18, 'C': 2, 'D': 2, 'E': 6, 'F': 5} | rows by Stage
+    1 proposal: {'YES': 3, 'SUPPORTING': 13, 'CONDITIONAL': 14, 'NO': 8} | files by Stage 1 proposal: {'YES': 3, 'SUPPORTING':
+    36, 'CONDITIONAL': 60, 'NO': 22} | in the pinned listing: 121 | line totals: 119 files (81,124 lines), not counted: 2 (the
+    excluded records) | searches: 35
+
+==============================================================================
+11. FINAL CHECKS (at delivery, 21:41 IST)
+==============================================================================
+- Checks run by compose_c008.py on both files as written (counts and classes only):
+  C-008_CLAUDE_STAGE0_ANSWERS_23-OCT-2026.txt: non-ASCII characters 0; CR 0; tabs 0; session links 0; absolute paths 0;
+    credential pattern 0; 40-hex IDs 76 (not a pinned blob, the pin, its tree or a V2 commit or tree: 0); 64-hex 1 (unknown 0);
+    legacy-shaped paths not in the pinned listing 0; other lower-case identifier shapes 0
+  C-008_CLAUDE_STAGE0_SOURCE_INVENTORY_AND_METHOD_23-OCT-2026.txt: non-ASCII characters 0; CR 0; tabs 0; session links 0;
+    absolute paths 0; credential pattern 0; 40-hex IDs 124 (not a pinned blob, the pin, its tree or a V2 commit or tree: 0);
+    64-hex 1 (unknown 0); legacy-shaped paths not in the pinned listing 0; other lower-case identifier shapes 0
+  scan_ids.py (value-blind) on both files: classes {'long_token': 202} (the long tokens are the blob IDs and hashes checked
+    above); exit 0
+  The register paths are all in the pinned listing: True
+
+==============================================================================
+APPENDIX A. REGISTER FILES (row | path | mode, kind and pinned blob | type / bytes / lines | gate | why)
+==============================================================================
+| R01 | signals/signal_processor.py | 100644 blob 7fab0a02a302770ac72bbbd662549d5c091086c1 | py / 139,403 / 2,704 | permitted | name hit signal,process; Q01 1, Q02 9, Q04 31, Q05 68, Q06 26, Q07 6, Q08 37, Q10 1, Q11 1, Q13 1, Q14 2, Q15 3, Q16 9, Q17 6, Q18 13, Q19 4, Q21 20, Q22 17, Q23 13, Q24 36, Q25 15, Q26 21, Q27 7, Q33 33, Q34 28; frozen manuals: A-007, A-008, A-009, A-011, B-004, B-005, B-006, B-007, B-008, B-008+add, B-009, B-011, C-001, C-004, C-005, C-006, C-007 |
+| R02 | main.py | 100644 blob 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | py / 208,758 / 4,294 | permitted | Q02 5, Q03 1, Q04 6, Q09 6, Q10 6, Q11 1, Q12 16, Q13 2, Q14 16, Q16 4, Q18 8, Q19 4, Q20 1, Q21 7, Q22 10, Q23 8, Q24 3, Q25 1, Q26 1, Q27 2, Q29 2, Q33 32, Q35 5; frozen manuals: A-007, A-008, A-009, A-011, B-004, B-005, B-006, B-007, B-009, B-009+add, B-010, C-001, C-002, C-004, C-006, C-007 |
+| R03 | config/system_config.yaml | 100644 blob bf742ae5c81c60614370361998e6a102a1064ff7 | yaml / 55,901 / 754 | permitted | Q18 2, Q21 2, Q22 1, Q29 1, Q32 8, Q33 2; frozen manuals: A-007, A-008, A-011, B-004, B-005, B-006, B-007, B-008, C-005, C-006 |
+| R04 | core/config_loader.py | 100644 blob 8635bca77531515561ee48cf92677883a5e30782 | py / 127,242 / 2,517 | permitted | Q07 1, Q18 2, Q21 8, Q22 2, Q25 1, Q26 1, Q27 5, Q29 3, Q33 3; frozen manuals: A-007, A-008, A-009, B-005, C-001, C-006 |
+| R05 | config/expected_managers.yaml | 100644 blob ff4d65d5f9b5a5ddfcc8cac7b812c770da555a3c | yaml / 22,155 / 387 | permitted | Q02 1, Q04 1, Q19 7, Q21 1, Q22 9, Q33 3; frozen manuals: B-006 |
+| R05 | core/config_auditor.py | 100644 blob 054d58298b58cd74f40d1b899022a89983247eea | py / 45,055 / 859 | permitted | Q02 1, Q12 1, Q13 2, Q19 5, Q22 2, Q33 1; frozen manuals: A-009 |
+| R05 | core/config_validator.py | 100644 blob 8581e82973f158589e74432d1bb41e415bc82ec0 | py / 9,514 / 275 | permitted | Q24 1; frozen manuals: A-009 |
+| R06 | screening/secondary_screener.py | 100644 blob b6f8ff7223ad803869e976f92d794dfc7c811b59 | py / 35,461 / 706 | permitted | name hit screen; Q06 1, Q07 10, Q09 3, Q12 1, Q13 1, Q22 1, Q29 5, Q33 2; frozen manuals: A-008, C-004, C-007 |
+| R07 | screening/entry_gate.py | 100644 blob 46b173171bdfeba48af641b67a361618e5acba58 | py / 21,303 / 538 | permitted | name hit gate,entry; Q06 1, Q08 3, Q20 1, Q23 5, Q33 6; frozen manuals: A-008, A-009, B-006, B-011, C-007 |
+| R07 | screening/retest_monitor.py | 100644 blob 26639d6ed5dddb1140f0868bb9f937cad5379f82 | py / 19,889 / 442 | permitted | name hit retest; Q04 3, Q06 2, Q07 1, Q14 1, Q20 1, Q23 1, Q33 3; frozen manuals: B-006, C-007 |
+| R08 | screening/hard_gate.py | 100644 blob a8e7e2e49675ca46989898174adf8e0afe419a61 | py / 23,101 / 467 | permitted | name hit gate; Q12 1, Q29 3 |
+| R08 | screening/step_executor.py | 100644 blob d83b04860f0ff97b33ca60faa20230004d04ae5e | py / 17,364 / 424 | permitted | Q08 2, Q23 6, Q29 4, Q33 1 |
+| R08 | screening/quality_scorer.py | 100644 blob b125e9ce324336fb8beba8012eee6669dbf91848 | py / 6,337 / 151 | permitted | name hit score; frozen manuals: A-008 |
+| R09 | signals/entry_throttle.py | 100644 blob b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | py / 5,266 / 126 | permitted | name hit throttle,entry; Q15 2; frozen manuals: C-001 |
+| R10 | strategies/loader.py | 100644 blob 99e83b192021297a3df472840728b88123c7b891 | py / 9,811 / 214 | permitted | Q13 1, Q27 6; frozen manuals: A-009 |
+| R10 | strategies/control.py | 100644 blob b6eecb480b83471149fb9362bafc980c967ff6c9 | py / 5,552 / 118 | permitted | name hit control; Q18 1, Q33 1; frozen manuals: B-009, C-001 |
+| R10 | strategies/schema.py | 100644 blob 22530161a5ee5a24bd85a7701b45269b3f2bacdb | py / 14,263 / 376 | permitted | Q21 2, Q26 12; frozen manuals: A-008 |
+| R10 | strategies/taxonomy.py | 100644 blob 069644bc1bdb464ffe5faec31f710acdc02e4837 | py / 1,653 / 39 | permitted | Q13 1 |
+| R10 | core/strategy_direction.py | 100644 blob 0e6f8b6686f393dcf38ddf036e565190cec0863a | py / 6,954 / 143 | permitted | name hit strategy,direction; Q13 1, Q21 1; frozen manuals: A-008, A-009 |
+| R11 | capital/position_sizer.py | 100644 blob f92eace8d6e30eae2f2f57a0e244fb6873e538f3 | py / 43,742 / 823 | permitted | name hit sizing; Q07 2, Q10 1, Q19 20, Q22 2, Q33 1; frozen manuals: C-004 |
+| R12 | capital/risk_engine.py | 100644 blob 27af699b591310a15e206f7bed0a8f82c278e196 | py / 46,383 / 840 | permitted | name hit risk; Q02 1, Q08 1, Q10 2, Q16 7, Q19 4, Q22 2, Q24 6, Q33 5; frozen manuals: A-008 |
+| R13 | capital/fund_manager.py | 100644 blob 6f61618a5b0e8a9d67d90c7d2ee7ba3a79ad278c | py / 118,545 / 2,584 | permitted | Q08 1, Q10 2, Q19 1, Q20 6, Q22 5, Q33 3; frozen manuals: A-011, B-005 |
+| R14 | capital/kill_switch.py | 100644 blob 3eb2ece050c3eafbcf2e90ec01c824b4dff27950 | py / 108,965 / 2,152 | permitted | name hit kill; Q18 1, Q22 6, Q23 2; frozen manuals: A-011, B-004, B-005, C-007 |
+| R15 | capital/strategy_governor.py | 100644 blob d17193c569c1d2e2890d2047b03cf9d0ae825e8d | py / 9,169 / 197 | permitted | name hit strategy,governor; Q05 1, Q18 1, Q33 1; frozen manuals: A-008 |
+| R15 | capital/performance_allocator.py | 100644 blob ca7cfb0692c9ade5ddd6658614d89a2b15837d38 | py / 6,679 / 175 | permitted | name hit allocat; Q21 2 |
+| R16 | allocation/portfolio_allocator.py | 100644 blob cb27a82e757f2d8aba4400ec0949611b0c340e2d | py / 16,899 / 337 | permitted | name hit allocat; Q04 1, Q11 3, Q21 14, Q23 1, Q33 7; frozen manuals: B-006 |
+| R16 | allocation/ranker.py | 100644 blob beac7be7eadb77c696a5447fbdd0a065ba1a2915 | py / 1,048 / 27 | permitted | Q11 1 |
+| R16 | allocation/window_buffer.py | 100644 blob a8b3b5d4dfff89c86f5fc1b6a42f9849890c7edc | py / 1,075 / 37 | permitted | name hit window; Q11 1 |
+| R16 | allocation/models.py | 100644 blob f2712028549147f1d14809f4f84760a2fb44111c | py / 3,905 / 104 | permitted | Q19 1, Q21 1, Q25 1, Q33 1 |
+| R17 | orders/order_placer.py | 100644 blob e3a602909befa3fd3ba4b27caeed108724c07947 | py / 219,497 / 4,707 | permitted | name hit placer/place; Q07 1, Q08 2, Q10 2, Q12 7, Q19 1, Q20 3, Q22 155, Q25 18, Q33 10, Q34 7; frozen manuals: A-006, A-007, A-011, B-004, B-005, B-006, B-008, B-009, B-010, C-001, C-004, C-007 |
+| R18 | orders/order_manager.py | 100644 blob 978d213532532d7db72b215bc8ed415b848928ae | py / 34,485 / 770 | permitted | Q19 1, Q22 8, Q34 4; frozen manuals: C-007 |
+| R18 | orders/full_entry_engine.py | 100644 blob 140445862c7e266cad6ba734653453c563d34a4b | py / 9,338 / 237 | permitted | name hit entry; Q12 4, Q22 2; frozen manuals: A-007 |
+| R18 | orders/entry_engine.py | 100644 blob 11a37373db8717d51c558c6fc7debe5383d6c42f | py / 5,209 / 120 | permitted | name hit entry; Q34 2 |
+| R19 | v3_chain/pb01_runner.py | 100644 blob e87a5aa964643f1eae5fad90eeb1e0993b5829e0 | py / 15,333 / 297 | permitted | Q04 2, Q09 1, Q14 7, Q22 1, Q33 2 |
+| R19 | v3_chain/pb01_entry.py | 100644 blob cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | py / 18,217 / 372 | permitted | name hit entry; Q04 1, Q09 1, Q14 1, Q23 1, Q33 1 |
+| R19 | v3_chain/runner.py | 100644 blob a782f91f2f4f1afe12c75072708e2a26316eed3f | py / 20,092 / 426 | permitted | Q09 1, Q14 6, Q23 1, Q33 1 |
+| R19 | v3_chain/score.py | 100644 blob 8270d49812543497e3ef37b4d4444e9165138541 | py / 10,379 / 206 | permitted | name hit score |
+| R19 | v3_chain/watchlist_capture.py | 100644 blob 25a1f084eadabc443a0dd22d8171b26584d4e897 | py / 11,490 / 245 | permitted | Q14 1, Q23 1 |
+| R20 | sr_detector/retest_confirm.py | 100644 blob 5fc212535bbd2e86f1c5899d07ce76331ab72724 | py / 5,459 / 138 | permitted | name hit retest |
+| R20 | sr_detector/detector.py | 100644 blob a8500c48c8acb7878c9dcb1460caeb7f8eb9722c | py / 14,572 / 330 | permitted | Q14 3, Q23 1, Q33 1 |
+| R21 | core/evidence_contract.py | 100644 blob 29fb84bc690d05b832625fb55a496f3f8d4d18d7 | py / 35,426 / 701 | permitted | name hit evidence; Q07 8, Q19 1, Q21 1, Q22 1, Q23 1, Q33 2, Q35 5 |
+| R22 | core/instrument_cache.py | 100644 blob 2bff50f7657fd9600e99d3663791e4d134f01d08 | py / 12,293 / 298 | permitted | frozen manuals: C-004 |
+| R22 | core/mis_blocklist.py | 100644 blob 1f91fedfbdd4e8ef8ce16eb83c0fa1223ae10232 | py / 6,651 / 161 | permitted | Q34 2; frozen manuals: C-004 |
+| R22 | core/market_windows.py | 100644 blob 25625e8cd109c935d014ad357cd6726c75737157 | py / 13,938 / 334 | permitted | name hit window; frozen manuals: A-011 |
+| R23 | core/events.py | 100644 blob 6511bc40fe74413ff5498a5b90cd47fae34dff82 | py / 15,023 / 366 | permitted | Q22 3, Q23 7, Q34 1; frozen manuals: B-005, B-006 |
+| R24 | core/state_store.py | 100644 blob 11866117801b9329773a1be605448faef3c96f8d | py / 153,466 / 3,356 | permitted | name hit state; Q06 2, Q08 2, Q16 4, Q20 4, Q21 1, Q22 3, Q23 1, Q25 1, Q33 1, Q34 4; frozen manuals: B-005, B-010, C-001, C-007 |
+| R24 | core/schema.sql | 100644 blob b46d7489f6ec5e31149dd68957f3b9e45270571e | sql / 104,053 / 1,655 | permitted | Q18 1, Q19 1, Q22 3, Q33 2; frozen manuals: A-011, B-005, C-007 |
+| R24 | reports/signal_status.py | 100644 blob 98a1631f5634807ecc6cf46cc9d3767215f9871f | py / 7,742 / 157 | permitted | name hit signal,status; Q05 1, Q07 13, Q08 5, Q19 12, Q33 1, Q34 2; frozen manuals: C-007 |
+| R25 | signals/webhook_receiver.py | 100644 blob 0f15a0ab033529d80d9c14c993a5077690b72871 | py / 59,565 / 1,208 | permitted | Q07 1, Q19 1, Q20 3, Q23 1, Q24 5, Q27 2, Q29 6, Q33 11; frozen manuals: A-008, A-009, A-011, B-006, B-007, B-008+add, C-001, C-002, C-003, C-004, C-006, C-007 |
+| R26 | config/strategies/first_pullback_long.yaml | 100644 blob bba1441d7cc33e295d738397238d751a7d5c06bf | yaml / 1,121 / 55 | permitted | Q26 2 |
+| R26 | config/strategies/first_pullback_short.yaml | 100644 blob d946da39a9c53a105b43573b6121d6784ec8f65c | yaml / 1,127 / 55 | permitted | Q26 2 |
+| R26 | config/strategies/gap_fade_long.yaml | 100644 blob 6e0c95d5191d0cf2788f9d81c2f26a74ec6fdb6a | yaml / 1,285 / 57 | permitted | Q26 2 |
+| R26 | config/strategies/gap_fade_short.yaml | 100644 blob a78b93440fe5c18522ff5796f72b5dad7aaf9505 | yaml / 1,211 / 56 | permitted | Q26 2 |
+| R26 | config/strategies/gap_go_long.yaml | 100644 blob 6e6656fbc6ed80f9dd749bb4837562a3e0dfdb65 | yaml / 1,265 / 57 | permitted | Q26 2 |
+| R26 | config/strategies/gap_go_short.yaml | 100644 blob 7e53d31871d6efb65a6d452ed70c25fb0c444442 | yaml / 1,259 / 57 | permitted | Q26 2 |
+| R26 | config/strategies/open_high_breakdown_short.yaml | 100644 blob 96b354653687a2f36d450688552e5cd906372dcd | yaml / 1,228 / 56 | permitted | Q19 1, Q26 2 |
+| R26 | config/strategies/open_low_breakout_long.yaml | 100644 blob 48012d053f3335e45feec688d3a157961469f5cb | yaml / 1,150 / 55 | permitted | Q26 2 |
+| R26 | config/strategies/pb01_breakout_retest.yaml | 100644 blob eedf5cac5ed5132665160a1aac9cce30cf4a38ed | yaml / 3,051 / 80 | permitted | name hit retest; Q04 1, Q05 1, Q18 1, Q21 1, Q26 2, Q33 1; frozen manuals: C-001 |
+| R26 | config/strategies/positional_momentum_long.yaml | 100644 blob 7a46596fac63e73dc56949da04212b8d6dffa002 | yaml / 1,310 / 56 | permitted | Q26 2 |
+| R26 | config/strategies/positional_sector_rotation.yaml | 100644 blob b110bd594203692317aa68b3c60915d4224e2a20 | yaml / 1,315 / 56 | permitted | Q26 2 |
+| R26 | config/strategies/positional_swing_long.yaml | 100644 blob 597193f8076a8c7b3d9c1234e55e09ee8502696f | yaml / 1,291 / 56 | permitted | Q26 2 |
+| R26 | config/strategies/range_breakout_long.yaml | 100644 blob ddee444cade6dd2d911de428a70130647ceb2770 | yaml / 1,220 / 56 | permitted | Q26 2 |
+| R26 | config/strategies/range_breakout_short.yaml | 100644 blob 2f99b1dd5f155bb458b0ddfe3e50366f5892f3ca | yaml / 1,140 / 55 | permitted | Q26 2 |
+| R26 | config/strategies/vwap_bounce_long.yaml | 100644 blob e279719f9e5d75b545cb1f89011cee0ced78d63b | yaml / 1,109 / 55 | permitted | Q26 2 |
+| R26 | config/strategies/vwap_rejection_short.yaml | 100644 blob a62177d49e35bba977750f22c9eaf64bf440c0d3 | yaml / 1,133 / 55 | permitted | name hit reject; Q26 2 |
+| R27 | config/scan_webhook_map.yaml | 100644 blob 54dd98d75f276f9b82027707702df2ee619b11f7 | yaml / 3,067 / 85 | permitted | name hit mapping (C-010); Q27 1; frozen manuals: A-008, A-009 |
+| R27 | config/strategy_direction_registry.yaml | 100644 blob b03f4ed0c90043840f339fc9b5dac6cca93bf736 | yaml / 5,745 / 155 | permitted | name hit strategy,direction; Q32 1; frozen manuals: A-008 |
+| R27 | config/scoring_weights.yaml | 100644 blob e9d6ede4c02d5766acb450e84b1acba78102d89d | yaml / 2,610 / 45 | permitted | name hit score; Q29 3; frozen manuals: A-008 |
+| R28 | tests/unit/test_signal_processor.py | 100644 blob 3ec0ea84392a193d18b992ca88df0da5e6235f67 | py / 97,634 / 2,501 | permitted | name hit signal,process; Q02 2, Q03 10, Q04 11, Q05 28, Q09 4, Q10 1, Q13 1, Q17 5, Q18 10, Q19 5, Q22 8, Q26 34, Q27 7, Q29 3, Q30 38, Q31 13, Q33 20; frozen manuals: C-001, C-005, C-006 |
+| R29 | tests/unit/test_main.py | 100644 blob da7bbb91111358521f44dc00e8c48b1bedbc04be | py / 58,645 / 1,294 | permitted | Q02 10, Q03 1, Q04 11, Q18 2, Q19 2, Q22 6, Q27 2, Q30 19, Q31 20, Q33 12; frozen manuals: B-005, B-011 |
+| R30 | tests/integration/test_full_signal_flow.py | 100644 blob 376a2ee815f798d84857cb777f87617bf5b545c9 | py / 23,730 / 634 | permitted | name hit signal; Q17 1, Q18 1, Q22 13, Q29 1, Q30 2, Q33 1 |
+| R30 | tests/integration/test_end_to_end_smoke.py | 100644 blob 7dc4554968d65c34b5b1b08cb60d6ad4470a7ed2 | py / 32,480 / 800 | permitted | Q02 1, Q17 1, Q18 1, Q22 10, Q29 1, Q30 4, Q31 1, Q33 5 |
+| R30 | tests/integration/test_hardening_scenarios.py | 100644 blob d87da7ab9ed64792eed017c4d17fa23888b0c85e | py / 19,676 / 329 | permitted | Q02 3, Q04 6, Q09 1, Q10 1, Q19 1, Q30 2, Q31 7, Q33 6 |
+| R30 | tests/integration/conftest.py | 100644 blob a6180190235f3a6cc39a88728ac04b9815168aad | py / 17,034 / 415 | permitted | Q02 5, Q03 1, Q09 3, Q10 4, Q13 1, Q19 4, Q22 5, Q27 4, Q29 2, Q31 5, Q33 11 |
+| R31 | tests/integration/test_q9_capital_invariant_wired.py | 100644 blob 7e3cc2446e02f3943265d7aea1ac33798b5856d2 | py / 22,651 / 420 | permitted | Q22 11, Q30 1, Q33 2 |
+| R31 | tests/integration/test_q9_consecutive_losses_wired.py | 100644 blob 0477da92ec69c1e36df2f255be815d7df4170326 | py / 21,192 / 412 | permitted | Q10 2, Q30 6 |
+| R31 | tests/integration/test_q9_daily_loss_limit_wired.py | 100644 blob a9abe2ca3e74cb6bc84712565d8910ce3bacea53 | py / 18,842 / 376 | permitted | Q19 1, Q22 6 |
+| R31 | tests/integration/test_q9_killswitch_lastmile_wired.py | 100644 blob ff166ea9a98ffd8da5d297e8f2e9b70a3503f6d9 | py / 11,298 / 227 | permitted | name hit kill; Q22 9, Q30 3, Q33 1 |
+| R31 | tests/integration/test_q9_live_seed_mc1_wired.py | 100644 blob c5b18bedf15862b52ad8e967dd2e9bb028e91e44 | py / 34,381 / 616 | permitted | Q10 1 |
+| R31 | tests/integration/test_q9_post_restart_capital_wired.py | 100644 blob 722145e8c8f391ce72a4af5238e62554a5c45e57 | py / 38,770 / 701 | permitted | Q10 2, Q19 1, Q22 12, Q30 3 |
+| R31 | tests/integration/test_q9_sizing_floors_caps_wired.py | 100644 blob 8099ef87e1fe906a07e89c5a1c0137ed691985dc | py / 51,367 / 952 | permitted | name hit sizing; Q02 4, Q10 1, Q19 17, Q21 1, Q30 7, Q31 4, Q33 15 |
+| R32 | tests/unit/test_tick2_pipeline_scoped_daily_gate.py | 100644 blob bc12039ea309bc40568bab58f0b8a73172bdc5b5 | py / 14,554 / 301 | permitted | name hit pipeline,gate; Q02 7, Q03 3, Q10 1, Q30 8, Q31 7, Q33 7 |
+| R32 | tests/unit/test_h7_strategy_cap_toctou.py | 100644 blob 6bdbf4d41d321ffa74d5209b8272207506dab310 | py / 11,571 / 248 | permitted | name hit strategy; Q02 6, Q03 1, Q05 4, Q10 1, Q30 1, Q31 6, Q33 7 |
+| R32 | tests/unit/test_one_trade_per_symbol_direction.py | 100644 blob 1c1e498987a68108ab6ce15d821bd069e0f79dab | py / 11,150 / 242 | permitted | name hit direction; Q02 2, Q03 2, Q05 2, Q30 3, Q31 2, Q33 3 |
+| R32 | tests/unit/test_slice2_strategy_control.py | 100644 blob 4df7c9923a9b5a190bd9f7956c60a185a4155c4a | py / 22,422 / 429 | permitted | name hit strategy,control; Q02 1, Q04 2, Q13 6, Q18 7, Q22 1, Q27 1, Q30 7, Q31 3, Q33 3 |
+| R32 | tests/unit/test_phase4_trade_type_gate.py | 100644 blob 69f0b6b6bb740e3fc443d8a632cb1d270e162305 | py / 9,285 / 146 | permitted | name hit gate; Q13 1, Q18 5, Q27 2, Q30 2, Q33 2 |
+| R32 | tests/unit/test_fix067_ms1_fresh_anchor.py | 100644 blob 479cb646bc76ded841d032107d00eaeba7d6f378 | py / 11,539 / 250 | permitted | Q02 2, Q03 1, Q04 2, Q27 1, Q30 2, Q31 3, Q33 4 |
+| R32 | tests/unit/test_fix190_exit_safety.py | 100644 blob 1eb1d02035999305f4efc8d8c8467ad045f2b007 | py / 5,844 / 158 | permitted | Q02 6, Q03 3, Q15 1, Q31 6, Q33 6 |
+| R32 | tests/unit/test_e4_event_loop_safety.py | 100644 blob db8cb8b39f028402ad330adc21b707e0d62f2fbe | py / 29,816 / 737 | permitted | Q02 2, Q03 2, Q05 5, Q10 1, Q26 3, Q27 1, Q29 1, Q30 2, Q31 2, Q33 4 |
+| R32 | tests/unit/test_fix136_batch9.py | 100644 blob 20d59c50759e1cd0ef8693be1fdff437707755f9 | py / 22,107 / 469 | permitted | Q03 1, Q05 1, Q22 2, Q29 6, Q30 6, Q33 1 |
+| R33 | tests/unit/test_entry_throttle.py | 100644 blob 94752125157a0593aed220e859030d372f149735 | py / 6,302 / 168 | permitted | name hit throttle,entry; Q15 4, Q30 2 |
+| R33 | tests/unit/test_secondary_screener.py | 100644 blob e8e2ddb2a77d7814160be191b5ff7fa80de4395a | py / 25,606 / 601 | permitted | name hit screen; Q09 3, Q13 1, Q29 2, Q30 12 |
+| R33 | tests/unit/test_entry_gate.py | 100644 blob ab1a956af8329142bb5b3c1b728f6c5eab6ae564 | py / 48,082 / 1,332 | permitted | name hit gate,entry; Q09 1, Q30 5 |
+| R33 | tests/unit/test_hard_gate.py | 100644 blob 83388f2e371d6ea7e877de906e1b214ba65047b4 | py / 8,606 / 222 | permitted | name hit gate; Q09 4, Q29 2, Q30 11 |
+| R33 | tests/unit/test_step_executor.py | 100644 blob 82cfe6819362eec9c39ba19bcaa01aafe24e7806 | py / 23,460 / 648 | permitted | Q09 1, Q29 5, Q30 2 |
+| R33 | tests/unit/test_quality_scorer.py | 100644 blob f2fddb776fb33fb31e86b47dbe19dde526c4f225 | py / 12,053 / 333 | permitted | name hit score; Q09 1, Q29 8, Q30 1 |
+| R33 | tests/unit/test_sr_v2_continue.py | 100644 blob 7b61f16d4b09b87578f02ca5c03af1bd55ae17e6 | py / 9,673 / 247 | permitted | Q02 3, Q03 1, Q04 7, Q09 1, Q17 1, Q22 2, Q30 3, Q31 10, Q33 3 |
+| R33 | tests/unit/test_sr_v2_divert.py | 100644 blob 191e94efecef3eb892e14cbb249af6f9c4ef331d | py / 10,582 / 257 | permitted | Q04 1, Q09 1, Q14 2, Q31 1, Q33 1 |
+| R33 | tests/unit/test_portfolio_allocator.py | 100644 blob 13c1c1338752b42b9815b736fd50e1de0f39509b | py / 13,944 / 293 | permitted | name hit allocat; Q04 3, Q11 3, Q21 13, Q30 2, Q31 3, Q33 3 |
+| R33 | tests/unit/test_position_sizer.py | 100644 blob 94b32d93d728fec1578045f54fe304e2a8e28815 | py / 55,337 / 1,171 | permitted | name hit sizing; Q10 2, Q19 20, Q30 4 |
+| R33 | tests/unit/test_risk_engine.py | 100644 blob 5eea70eea26eec17bff6398d2b097ec6d7edae27 | py / 70,542 / 1,517 | permitted | name hit risk; Q10 3, Q19 2, Q22 1, Q30 9, Q33 3 |
+| R33 | tests/unit/test_fund_manager.py | 100644 blob 890969aef2d7d9c5fcd87bdca38be87a381293fc | py / 118,348 / 2,513 | permitted | Q10 1, Q30 16 |
+| R33 | tests/unit/test_kill_switch.py | 100644 blob cf24379d1c09b765ab59dfbfdb7df8c60e066e01 | py / 51,304 / 1,312 | permitted | name hit kill; Q10 1, Q18 5, Q22 1, Q30 21 |
+| R33 | tests/unit/test_order_placer.py | 100644 blob 9de08f5a8ccfb2f14a534082cde8ae70a3f8307a | py / 240,453 / 5,140 | permitted | name hit placer/place; Q22 53, Q30 21, Q33 1 |
+| R33 | tests/unit/test_evidence_contract.py | 100644 blob 93668c5e53c8d71b97ea52667912aed0efd35182 | py / 87,416 / 1,633 | permitted | name hit evidence; Q02 10, Q03 4, Q04 8, Q05 2, Q09 5, Q11 1, Q18 5, Q21 3, Q27 1, Q29 1, Q30 13, Q31 18, Q33 25, Q35 9 |
+| R33 | tests/unit/test_strategies.py | 100644 blob a17ae20faa67a7abd7d4d7fb07f30dbbdb7423f5 | py / 27,874 / 686 | permitted | name hit strategy; Q13 27, Q26 18, Q27 5, Q33 1; frozen manuals: C-001 |
+| R34 | docs/audit/secondary_filtration_execution_pipeline_audit.md | 100644 blob 5d405fa4205948405537c9672921b44d7b62be4c | md / 45,203 / 535 | permitted | name hit pipeline; Q04 9, Q33 22 |
+| R34 | docs/audit/system_flow_review_15jun2026.md | 100644 blob 80f7dd814e8f967c4703b9ab9a3702980ffd7499 | md / 14,028 / 115 | permitted | Q04 5, Q33 5 |
+| R34 | docs/audit/system_audit_14jun2026.md | 100644 blob 711ec35b334a793bd5635ac53b0f2d090af54193 | md / 12,346 / 255 | permitted | Q04 4, Q05 3, Q33 13 |
+| R35 | docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md | 100644 blob 3d3e30df6219dbde7c94773be718b341616ee81c | md / 29,163 / 194 | permitted | name hit pipeline; Q04 12, Q33 18 |
+| R35 | docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md | 100644 blob 45d6c3d91f43258069e38ea067da6c0a3bc9609b | md / 22,283 / 185 | permitted | name hit allocat; Q04 6, Q05 1, Q33 15 |
+| R35 | docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md | 100644 blob 6cd5e099ccd29bac00487fb1226e42df130a70bb | md / 18,833 / 173 | permitted | name hit gate,score; Q04 3, Q33 3 |
+| R35 | docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md | 100644 blob 25d260107eb110766eaec21e874c0fa890dde4f8 | md / 27,256 / 139 | permitted | Q04 2, Q33 7 |
+| R36 | docs/audit/deploy_behaviour_delta_prediction_14jul2026.md | 100644 blob 5e354151d6a48586fcfb9bc11740ea75350d453c | md / 18,043 / 242 | permitted | Q04 6, Q33 3 |
+| R36 | docs/audit/integrity_audit_2026.md | 100644 blob 25a738f2a9a77ed37374dce367e5fd8e848efd8a | md / 368,033 / 4,594 | permitted | Q04 6, Q05 1, Q33 22 |
+| R36 | docs/design/a2_timeout_retry_design_02jul2026.md | 100644 blob 6e377ad2e2938092bee7c0b77c750190bd9c5214 | md / 13,066 / 138 | permitted | Q04 2, Q33 10; frozen manuals: B-004 |
+| R36 | docs/crash_test_info_04jun2026.md | 100644 blob 5ddea962749830b9f38dce42bdc3a195d4d580f4 | md / 49,034 / 1,006 | permitted | Q04 2, Q05 2, Q33 9 |
+| R37 | PATHS.md | 100644 blob e6a1ba7c1cb65b199f0d0460e846c6fbc75b9de8 | md / 260,805 / 656 | host record | Q04 10, Q05 3, Q33 16 |
+| R37 | docs/SYSTEM_MAP.md | 100644 blob c251f7c7a29383d817e75673c93ba36c4f5a9285 | md / 705,794 / 2,066 | host record | name hit mapping (C-010); Q04 10, Q05 2, Q33 33; frozen manuals: B-005 |
+| R38 | docs/audit/stale_queue_entries_25jul2026.md | 100644 blob a8c438a027468d71b6366cb2928e51bc40786a45 | md / not counted / not counted | excluded (by name) | name hit queue (C-006) |
+| R38 | docs/audit/queue_items_decidable_25jul2026.md | 100644 blob 4ad78303d209ac53b268a6142bf9b6662de0a82a | md / not counted / not counted | excluded (by name) | name hit queue (C-006) |
+
+==============================================================================
+APPENDIX B. PATH-NAME HITS BY AREA (names only; terms in brackets)
+==============================================================================
+config (5): config/scan_webhook_map.yaml (mapping (C-010)); config/scoring_weights.yaml (score);
+  config/strategies/pb01_breakout_retest.yaml (retest); config/strategies/vwap_rejection_short.yaml (reject);
+  config/strategy_direction_registry.yaml (strategy,direction)
+docs (78): docs/02_strategy_yaml_guide.md (strategy); docs/SYSTEM_MAP.md (mapping (C-010));
+  docs/audit/GUI_CLOSURE_DECISION_MATRIX_19-Aug-2026.md (decision/decide); docs/audit/GUI_DECISION_PACK_D1_D2_D3_19-Aug-2026.md
+  (decision/decide); docs/audit/GUI_DECISION_READY_MATRIX_19-Aug-2026.md (decision/decide);
+  docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md (reject); docs/audit/approval_19aug/S03_strategies_1440x900.png
+  (strategy); docs/audit/approval_19aug/S03_strategies_1920x1080.png (strategy);
+  docs/audit/approval_final_19aug/S03_strategies.png (strategy); docs/audit/approval_final_19aug/S04_signals.png (signal);
+  docs/audit/approval_final_19aug/S08_capital_risk.png (risk); docs/audit/approval_final_19aug/S17_controls.png (control);
+  docs/audit/approval_final_19aug/S19_strategy_ranking.png (strategy); docs/audit/approval_final_19aug/S20_strategy_health.png
+  (strategy); docs/audit/audit_remediation_status_02jul2026.md (status); docs/audit/backup_items_decide_ready_25jul2026.md
+  (decision/decide); docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md (allocat);
+  docs/audit/check1_external_close_decision_27jul2026.md (decision/decide);
+  docs/audit/consecutive_losses_gate_wired_19jul2026.md (gate); docs/audit/decision_packages_19jul2026.md (decision/decide);
+  docs/audit/decision_readiness_triage_19jul2026.md (decision/decide); docs/audit/deployment_evidence_pb01_shadow_14jul2026.md
+  (evidence); docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md (reject,kill);
+  docs/audit/f2_live_process_surfaces_24jul2026.md (process); docs/audit/forward_shadow_deployment_evidence_13jul2026.md
+  (evidence); docs/audit/kill_drill_03aug2026.md (kill); docs/audit/kill_persist_busy_timeout_25jul2026.md (kill);
+  docs/audit/ledger8b_check_vm_state_step1_02aug2026.md (state); docs/audit/mc4_killswitch_lock_16jul2026.md (kill);
+  docs/audit/mc8_async_hardkill_16jul2026.md (kill); docs/audit/missing_direction_alert_done_18jul2026.md (direction);
+  docs/audit/ms4_gate1_impact_artifact_13jul2026.md (gate); docs/audit/ms4_screener_nulls_and_parked_items_25jul2026.md
+  (screen); docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md (gate); docs/audit/q4_hard_kill_delivery_decision_30jul2026.md
+  (decision/decide,kill); docs/audit/q6_two_pipeline_design_14jul2026.md (pipeline);
+  docs/audit/q9_batch2_killswitch_toctou_18jul2026.md (kill); docs/audit/q9_batch4_sizing_floors_caps_18jul2026.md (sizing);
+  docs/audit/q9_gui_state_report_14jul2026.md (state); docs/audit/q9_money_path_coverage_map_18jul2026.md (mapping (C-010));
+  docs/audit/queue_items_decidable_25jul2026.md (queue (C-006));
+  docs/audit/regime_direction_preference_investigation_20jul2026.md (direction);
+  docs/audit/regime_thesis_minscore_control_18jul2026.md (score,control); docs/audit/registry_seed_state_split_10aug2026.md
+  (state); docs/audit/reservation_nonatomicity_latent_or_live_04aug2026.md (reserv);
+  docs/audit/secondary_filtration_execution_pipeline_audit.md (pipeline); docs/audit/senco_double_entry_27jul2026.md (entry);
+  docs/audit/service_window_configurable_25jul2026.md (window); docs/audit/service_window_extension_2026-07-24.md (window);
+  docs/audit/signal_mortality_census_19jul2026.md (signal); docs/audit/sizing_interaction_impact_report_13jul2026.md (sizing);
+  docs/audit/stale_queue_entries_25jul2026.md (queue (C-006)); docs/audit/strategy_direction_investigation_17jul2026.md
+  (strategy,direction); docs/audit/strategy_direction_registry_done_17jul2026.md (strategy,direction);
+  docs/audit/throttle_selection_and_record_correction_19jul2026.md (throttle); docs/decisions/02_d1_concentration_sizing.md
+  (sizing); docs/decisions/03_d2_strategic_direction.md (strategy,direction); docs/decisions/06_performance_allocator.md
+  (allocat); docs/decisions/10_entry_throttle_admission.md (throttle,entry); docs/decisions/11_absolute_kill_ladder.md (kill);
+  docs/decisions/ACTIONS_not_decisions.md (decision/decide); docs/design/sizing/current_sizing_chain_06aug2026.md (sizing);
+  docs/design/sizing/dependency_map_06aug2026.md (mapping (C-010)); docs/design/sizing/sizing_thread_conclusions_06aug2026.md
+  (sizing); docs/design/terminal_state_write_guard_design_07jul2026.md (state); docs/locked_decisions.yaml (decision/decide);
+  docs/screened_stocks_csv_workflow.md (screen); docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md (pipeline);
+  docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md (gate,score); docs/v3/V3_STEP5_RISK_SIZING_GAPMAP.md (sizing,risk);
+  docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md (allocat); docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md (entry);
+  ops_dashboard/docs/G2b1_strategy_attribution.md (strategy); ops_dashboard/docs/G3_0_CONTROL_PLANE_INVESTIGATION.md (control);
+  ops_dashboard/docs/G5_SIGNOFF_EVIDENCE.md (evidence); ops_dashboard/docs/SOAK_EVIDENCE_TEMPLATE.md (evidence);
+  ops_dashboard/docs/redesign/03_strategies_asset_spec.md (strategy); ops_dashboard/docs/redesign/04_signals_asset_spec.md
+  (signal)
+ops (2): ops/control_tower/size_logger.py (sizing); ops/control_tower/status.py (status)
+ops_dashboard (18): ops_dashboard/backend/api/pipeline.py (pipeline); ops_dashboard/backend/api/risk_capital.py (risk);
+  ops_dashboard/backend/api/strategies.py (strategy); ops_dashboard/backend/readers/control_client.py (control);
+  ops_dashboard/backend/services/controls.py (control); ops_dashboard/backend/services/pipeline_state.py (pipeline,state);
+  ops_dashboard/backend/services/strategy_health.py (strategy); ops_dashboard/backend/services/strategy_meta.py (strategy);
+  ops_dashboard/backend/services/strategy_ranking.py (strategy); ops_dashboard/backend/services/strategy_score.py
+  (strategy,score); ops_dashboard/backend/services/strategy_tower.py (strategy);
+  ops_dashboard/frontend/templates/capital_risk.html (risk); ops_dashboard/frontend/templates/controls.html (control);
+  ops_dashboard/frontend/templates/risk.html (risk); ops_dashboard/frontend/templates/signals.html (signal);
+  ops_dashboard/frontend/templates/strategies.html (strategy); ops_dashboard/frontend/templates/strategy_health.html (strategy);
+  ops_dashboard/frontend/templates/strategy_ranking.html (strategy)
+runtime (28): allocation/portfolio_allocator.py (allocat); allocation/window_buffer.py (window); broker/order_state_machine.py
+  (state); capital/kill_switch.py (kill); capital/performance_allocator.py (allocat); capital/position_sizer.py (sizing);
+  capital/risk_engine.py (risk); capital/strategy_governor.py (strategy,governor); core/evidence_artefact_manifest.txt
+  (evidence); core/evidence_contract.py (evidence); core/market_windows.py (window); core/state_store.py (state);
+  core/strategy_direction.py (strategy,direction); orders/entry_engine.py (entry); orders/full_entry_engine.py (entry);
+  orders/order_placer.py (placer/place); reports/signal_status.py (signal,status); screening/entry_gate.py (gate,entry);
+  screening/hard_gate.py (gate); screening/quality_scorer.py (score); screening/retest_monitor.py (retest);
+  screening/secondary_screener.py (screen); signals/entry_throttle.py (throttle,entry); signals/signal_processor.py
+  (signal,process); sr_detector/retest_confirm.py (retest); strategies/control.py (control); v3_chain/pb01_entry.py (entry);
+  v3_chain/score.py (score)
+scripts (13): scripts/backup_evidence.py (evidence); scripts/check_vm_state.py (state); scripts/clear_kill_switch.py (kill);
+  scripts/compute_strategy_metrics.py (strategy); scripts/copy_gate.py (gate); scripts/generate_screened_stocks_csv.py (screen);
+  scripts/load_test_signals.py (signal); scripts/preflight/checks/signals.py (signal); scripts/preflight/checks/state.py
+  (state); scripts/replay_signals.py (signal); scripts/strategy_registry_officer.py (strategy); scripts/strategy_status.py
+  (strategy,status); scripts/v3_hardgate_parity_recompute.py (gate)
+tests (120): ops_dashboard/tests/test_b3_b4_spec_decisions.py (decision/decide);
+  ops_dashboard/tests/test_closure_screens04_08.py (screen); ops_dashboard/tests/test_family_of_direction.py (direction);
+  ops_dashboard/tests/test_g2b2_screens.py (screen); ops_dashboard/tests/test_pipeline_state.py (pipeline,state);
+  ops_dashboard/tests/test_s3_login_throttle.py (throttle); ops_dashboard/tests/test_screen01_login.py (screen);
+  ops_dashboard/tests/test_screen02_dashboard.py (screen); ops_dashboard/tests/test_screen03_strategies.py (screen,strategy);
+  ops_dashboard/tests/test_screen04_signals.py (signal,screen); ops_dashboard/tests/test_screen05_orders.py (screen);
+  ops_dashboard/tests/test_screen06_positions.py (screen); ops_dashboard/tests/test_screen07_trades.py (screen);
+  ops_dashboard/tests/test_screen08_capital_risk.py (screen,risk); ops_dashboard/tests/test_screen09_pnl_analytics.py (screen);
+  ops_dashboard/tests/test_screen10_slippage.py (screen); ops_dashboard/tests/test_screen11_execution.py (screen);
+  ops_dashboard/tests/test_screen12_system_health.py (screen); ops_dashboard/tests/test_screen13_audit.py (screen);
+  ops_dashboard/tests/test_screen14_trade_logs.py (screen); ops_dashboard/tests/test_screen15_system_logs.py (screen);
+  ops_dashboard/tests/test_screen16_config.py (screen); ops_dashboard/tests/test_screen17_controls.py (screen,control);
+  ops_dashboard/tests/test_screen17_export.py (screen); ops_dashboard/tests/test_screen18_live_activity.py (screen);
+  ops_dashboard/tests/test_screen19_strategy_ranking.py (screen,strategy); ops_dashboard/tests/test_screen20_strategy_health.py
+  (screen,strategy); ops_dashboard/tests/test_screen21_scanner_attribution.py (screen);
+  ops_dashboard/tests/test_screen22_holdings.py (screen); ops_dashboard/tests/test_strategy_score.py (strategy,score);
+  ops_dashboard/tests/test_strategy_tower.py (strategy); tests/crash_test/network_controller.py (control);
+  tests/crash_test/signal_injector.py (signal); tests/crash_test/state_inspector.py (state);
+  tests/crash_test/state_machine_validator.py (state); tests/crash_test/test_kill_switch_edges.py (kill);
+  tests/crash_test/test_position_sizer_edges.py (sizing); tests/integration/test_alerts_pipeline.py (pipeline);
+  tests/integration/test_full_signal_flow.py (signal); tests/integration/test_hard_kill_flatten_chain.py (kill);
+  tests/integration/test_q9_killswitch_lastmile_wired.py (kill); tests/integration/test_q9_sizing_floors_caps_wired.py (sizing);
+  tests/unit/test_a3_entry_kill_recheck.py (kill,entry); tests/unit/test_alert_direction_eod_29jun.py (direction);
+  tests/unit/test_check_vm_state_reset_removed.py (state); tests/unit/test_clear_kill_switch.py (kill);
+  tests/unit/test_control_tower_phase1a.py (control); tests/unit/test_control_tower_phase1b.py (control);
+  tests/unit/test_control_tower_phase1c.py (control); tests/unit/test_control_tower_phase1d.py (control);
+  tests/unit/test_copy_gate.py (gate); tests/unit/test_entry_gate.py (gate,entry); tests/unit/test_entry_throttle.py
+  (throttle,entry); tests/unit/test_eod_lifecycle_pipeline_aware.py (pipeline); tests/unit/test_evidence_contract.py (evidence);
+  tests/unit/test_f2_functional_status.py (status); tests/unit/test_fix066_entry_offset_margin.py (entry);
+  tests/unit/test_fix073_eod_entry_cutoff.py (entry); tests/unit/test_fix128_circuit_breaker.py (circuit);
+  tests/unit/test_fix129_order_state_validation.py (state); tests/unit/test_fix129_rejection_handling.py (reject);
+  tests/unit/test_fix130_strategy_governor.py (strategy,governor); tests/unit/test_fix133_dynamic_sizing.py (sizing);
+  tests/unit/test_fix133_entry_windows.py (entry,window); tests/unit/test_fix133_replay_signals.py (signal);
+  tests/unit/test_fix134_strategy_metrics.py (strategy); tests/unit/test_fix135_strategy_config_validation.py (strategy);
+  tests/unit/test_fix135_strategy_position_cap.py (strategy); tests/unit/test_gate8_sector_toctou.py (gate);
+  tests/unit/test_generate_screened_csv_readonly.py (screen); tests/unit/test_h4_killswitch_retry_rederive.py (kill);
+  tests/unit/test_h5_killswitch_sweep_product.py (kill); tests/unit/test_h7_strategy_cap_toctou.py (strategy);
+  tests/unit/test_h8_shadow_tracker_strategy_column.py (strategy); tests/unit/test_hard_gate.py (gate);
+  tests/unit/test_integration_screened_csv_15jul.py (screen); tests/unit/test_kill_alerts_delivery_carveout.py (kill);
+  tests/unit/test_kill_persist_timing.py (kill); tests/unit/test_kill_switch.py (kill);
+  tests/unit/test_kill_switch_product_filter.py (kill); tests/unit/test_load_test_signals.py (signal);
+  tests/unit/test_market_windows.py (window); tests/unit/test_mc8_async_hardkill.py (kill);
+  tests/unit/test_ni14_status_follows_severity.py (status); tests/unit/test_ni5_position_sizer_policy_required.py (sizing);
+  tests/unit/test_one_trade_per_symbol_direction.py (direction); tests/unit/test_order_placer.py (placer/place);
+  tests/unit/test_order_placer_fix061.py (placer/place); tests/unit/test_order_placer_sector.py (placer/place);
+  tests/unit/test_order_state_machine.py (state); tests/unit/test_p1_killswitch_cancel_resting.py (kill);
+  tests/unit/test_phase4_trade_type_gate.py (gate); tests/unit/test_portfolio_allocator.py (allocat);
+  tests/unit/test_position_sizer.py (sizing); tests/unit/test_position_sizer_delivery_contract.py (sizing);
+  tests/unit/test_preflight_signals.py (signal); tests/unit/test_preflight_state_security.py (state);
+  tests/unit/test_quality_scorer.py (score); tests/unit/test_registry_seed_state_split.py (state);
+  tests/unit/test_risk_engine.py (risk); tests/unit/test_scheduled_kill_severity.py (kill);
+  tests/unit/test_secondary_screener.py (screen); tests/unit/test_service_window_config.py (window);
+  tests/unit/test_signal_alert_capital_vocabulary.py (signal); tests/unit/test_signal_processor.py (signal,process);
+  tests/unit/test_signal_status_classification.py (signal,status); tests/unit/test_slice2_strategy_control.py
+  (strategy,control); tests/unit/test_slippage_control.py (control); tests/unit/test_sr_v2_retest_confirm.py (retest);
+  tests/unit/test_state_store.py (state); tests/unit/test_strategies.py (strategy);
+  tests/unit/test_strategy_direction_routing.py (strategy,direction,route (C-011)); tests/unit/test_strategy_registry_officer.py
+  (strategy); tests/unit/test_terminal_state_write_guard.py (state); tests/unit/test_tick2_pipeline_scoped_daily_gate.py
+  (pipeline,gate); tests/unit/test_v3_eod_route.py (route (C-011)); tests/unit/test_v3_hardgate_parity.py (gate);
+  tests/unit/test_v3_pb01_entry.py (entry); tests/unit/test_v3_pb01_gates_score.py (gate,score);
+  tests/unit/test_v3_strategy_taxonomy.py (strategy)
+
+==============================================================================
+APPENDIX C. PATHS RETURNED BY EACH COUNT-ONLY SEARCH (names and matching-line counts)
+==============================================================================
+Q01 (1 path): signals/signal_processor.py 1
+Q02 (23 paths): capital/risk_engine.py 1; config/expected_managers.yaml 1; core/config_auditor.py 1; main.py 5;
+  signals/signal_processor.py 9; tests/integration/conftest.py 5; tests/integration/test_end_to_end_smoke.py 1;
+  tests/integration/test_hardening_scenarios.py 3; tests/integration/test_q9_sizing_floors_caps_wired.py 4;
+  tests/unit/test_alert_direction_eod_29jun.py 2; tests/unit/test_e4_event_loop_safety.py 2;
+  tests/unit/test_evidence_contract.py 10; tests/unit/test_fix067_ms1_fresh_anchor.py 2; tests/unit/test_fix190_exit_safety.py
+  6; tests/unit/test_h7_strategy_cap_toctou.py 6; tests/unit/test_main.py 10; tests/unit/test_one_trade_per_symbol_direction.py
+  2; tests/unit/test_signal_alert_capital_vocabulary.py 2; tests/unit/test_signal_processor.py 2;
+  tests/unit/test_slice2_strategy_control.py 1; tests/unit/test_sr_detector_observer.py 2; tests/unit/test_sr_v2_continue.py 3;
+  tests/unit/test_tick2_pipeline_scoped_daily_gate.py 7
+Q03 (16 paths): main.py 1; tests/integration/conftest.py 1; tests/unit/test_alert_direction_eod_29jun.py 1;
+  tests/unit/test_e4_event_loop_safety.py 2; tests/unit/test_evidence_contract.py 4; tests/unit/test_fix067_ms1_fresh_anchor.py
+  1; tests/unit/test_fix136_batch9.py 1; tests/unit/test_fix190_exit_safety.py 3; tests/unit/test_h7_strategy_cap_toctou.py 1;
+  tests/unit/test_main.py 1; tests/unit/test_one_trade_per_symbol_direction.py 2;
+  tests/unit/test_signal_alert_capital_vocabulary.py 1; tests/unit/test_signal_processor.py 10;
+  tests/unit/test_sr_detector_observer.py 1; tests/unit/test_sr_v2_continue.py 1;
+  tests/unit/test_tick2_pipeline_scoped_daily_gate.py 3
+Q04 (40 paths): PATHS.md 10; allocation/portfolio_allocator.py 1; config/expected_managers.yaml 1;
+  config/strategies/pb01_breakout_retest.yaml 1; docs/SYSTEM_MAP.md 10; docs/audit/audit_05jul2026.md 1;
+  docs/audit/deploy_behaviour_delta_prediction_14jul2026.md 6; docs/audit/effect_verification_contract_01aug2026.md 1;
+  docs/audit/full_system_audit_04july2026.md 2; docs/audit/integrity_audit_2026.md 6; docs/audit/ma2_ms3_md1_25jul2026.md 1;
+  docs/audit/pending_reconciliation_14jul2026.md 1; docs/audit/pre_deploy_review_checklist_14jul2026.md 1;
+  docs/audit/q5_wave7_backlog_triage_14jul2026.md 1; docs/audit/secondary_filtration_execution_pipeline_audit.md 9;
+  docs/audit/system_audit_14jun2026.md 4; docs/audit/system_flow_review_15jun2026.md 5;
+  docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md 1; docs/audit/wave7_triage_21jul2026.md 1;
+  docs/chatgpt_project_clarification.md 2; docs/crash_test_info_04jun2026.md 2; docs/design/a2_timeout_retry_design_02jul2026.md
+  2; docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md 2; docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md 12;
+  docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md 3; docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md 6; main.py 6;
+  screening/retest_monitor.py 3; signals/signal_processor.py 31; tests/integration/test_hardening_scenarios.py 6;
+  tests/unit/test_evidence_contract.py 8; tests/unit/test_fix067_ms1_fresh_anchor.py 2; tests/unit/test_main.py 11;
+  tests/unit/test_portfolio_allocator.py 3; tests/unit/test_signal_processor.py 11; tests/unit/test_slice2_strategy_control.py
+  2; tests/unit/test_sr_v2_continue.py 7; tests/unit/test_sr_v2_divert.py 1; v3_chain/pb01_entry.py 1; v3_chain/pb01_runner.py 2
+Q05 (24 paths): PATHS.md 3; capital/strategy_governor.py 1; config/strategies/pb01_breakout_retest.yaml 1;
+  docs/DEPLOY_CALENDAR_28-JUL_TO_04-AUG.txt 1; docs/SYSTEM_MAP.md 2; docs/audit/HANDOFF_05-Aug-EVENING.md 1;
+  docs/audit/integrity_audit_2026.md 1; docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md 1;
+  docs/audit/rulings_1_2_verification_07aug2026.md 1; docs/audit/system_audit_14jun2026.md 3;
+  docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md 1; docs/crash_test_info_04jun2026.md 2;
+  docs/decisions/DESIGN_09_prune_retention.md 2; docs/design/sizing/delivery_config_surface_06aug2026.md 1;
+  docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md 1; ops_dashboard/docs/G2b1_strategy_attribution.md 1; reports/signal_status.py 1;
+  signals/signal_processor.py 68; tests/unit/test_e4_event_loop_safety.py 5; tests/unit/test_evidence_contract.py 2;
+  tests/unit/test_fix136_batch9.py 1; tests/unit/test_h7_strategy_cap_toctou.py 4;
+  tests/unit/test_one_trade_per_symbol_direction.py 2; tests/unit/test_signal_processor.py 28
+Q06 (5 paths): core/state_store.py 2; screening/entry_gate.py 1; screening/retest_monitor.py 2; screening/secondary_screener.py
+  1; signals/signal_processor.py 26
+Q07 (14 paths): capital/position_sizer.py 2; core/config_loader.py 1; core/evidence_contract.py 8;
+  ops_dashboard/backend/readers/db_reader.py 15; ops_dashboard/backend/services/scanner_attribution.py 8;
+  ops_dashboard/backend/services/trade_logs.py 2; orders/order_placer.py 1; reports/signal_status.py 13;
+  screening/retest_monitor.py 1; screening/secondary_screener.py 10; scripts/generate_screened_stocks_csv.py 14;
+  scripts/v3_hardgate_parity_recompute.py 1; signals/signal_processor.py 6; signals/webhook_receiver.py 1
+Q08 (20 paths): alerts/mis_squareoff_notifier.py 3; capital/fund_manager.py 1; capital/risk_engine.py 1; core/state_store.py 2;
+  ops_dashboard/backend/readers/db_reader.py 5; ops_dashboard/backend/services/live_activity.py 1;
+  ops_dashboard/backend/services/strategy_tower.py 1; orders/eod_squareoff.py 2; orders/order_placer.py 2;
+  reports/daily_report.py 3; reports/daily_trade_review.py 3; reports/signal_status.py 5; reports/style_constants.py 1;
+  screening/entry_gate.py 3; screening/step_executor.py 2; scripts/eod_cleanup.py 5; scripts/fetch_daily_candles.py 3;
+  scripts/system_manager.py 3; scripts/t2_cnc_gtt_realtest.py 1; signals/signal_processor.py 37
+Q09 (26 paths): main.py 6; screening/__init__.py 3; screening/secondary_screener.py 3; scripts/v3_hardgate_parity_recompute.py
+  1; tests/crash_test/ct_day2_isolated.py 3; tests/integration/conftest.py 3; tests/integration/test_hardening_scenarios.py 1;
+  tests/unit/test_entry_gate.py 1; tests/unit/test_evidence_contract.py 5; tests/unit/test_hard_gate.py 4;
+  tests/unit/test_mis_blocklist.py 2; tests/unit/test_ms3_step_timeout_bounds_caller.py 1; tests/unit/test_nocil_prefill.py 1;
+  tests/unit/test_phase19_batch3.py 1; tests/unit/test_quality_scorer.py 1; tests/unit/test_secondary_screener.py 3;
+  tests/unit/test_signal_processor.py 4; tests/unit/test_sr_v2_continue.py 1; tests/unit/test_sr_v2_divert.py 1;
+  tests/unit/test_sr_v2_monitor.py 1; tests/unit/test_step_executor.py 1; tests/unit/test_v3_chain.py 1;
+  tests/unit/test_v3_pb01_gates_score.py 1; v3_chain/pb01_entry.py 1; v3_chain/pb01_runner.py 1; v3_chain/runner.py 1
+Q10 (90 paths): capital/drift_handler.py 1; capital/fund_manager.py 2; capital/position_sizer.py 1; capital/risk_engine.py 2;
+  main.py 6; orders/eod_squareoff.py 2; orders/order_placer.py 2; orders/order_reconciler.py 2; scripts/clear_kill_switch.py 1;
+  scripts/system_manager.py 1; signals/signal_processor.py 1; tests/crash_test/ct_day2_isolated.py 1;
+  tests/crash_test/ct_day3_isolated.py 4; tests/crash_test/ct_day3_isolated_batch2.py 6; tests/crash_test/test_double_release.py
+  1; tests/crash_test/test_fund_manager_edges.py 1; tests/crash_test/test_kill_switch_edges.py 1;
+  tests/crash_test/test_position_sizer_edges.py 2; tests/integration/conftest.py 4;
+  tests/integration/test_hard_kill_flatten_chain.py 1; tests/integration/test_hardening_scenarios.py 1;
+  tests/integration/test_q9_consecutive_losses_wired.py 2; tests/integration/test_q9_live_seed_mc1_wired.py 1;
+  tests/integration/test_q9_post_restart_capital_wired.py 2; tests/integration/test_q9_sizing_floors_caps_wired.py 1;
+  tests/unit/test_a1e1_recovery_matrix.py 1; tests/unit/test_a3_entry_kill_recheck.py 1;
+  tests/unit/test_alert_delivery_contract.py 3; tests/unit/test_clear_kill_switch.py 1;
+  tests/unit/test_delivery_config_independence.py 2; tests/unit/test_diary4_tier_multiplier.py 2;
+  tests/unit/test_drift_handler.py 1; tests/unit/test_e2_capital_tightening.py 2; tests/unit/test_e3_hygiene.py 1;
+  tests/unit/test_e4_event_loop_safety.py 1; tests/unit/test_e4_w10_pnl_contract.py 1; tests/unit/test_e5_cleanup.py 1;
+  tests/unit/test_eod_lifecycle_pipeline_aware.py 1; tests/unit/test_eod_squareoff.py 1; tests/unit/test_fix063_two_pass_eod.py
+  2; tests/unit/test_fix066_entry_offset_margin.py 2; tests/unit/test_fix073_eod_entry_cutoff.py 1;
+  tests/unit/test_fix075_price_drift.py 1; tests/unit/test_fix129_cold_start_safety.py 1;
+  tests/unit/test_fix130_strategy_governor.py 1; tests/unit/test_fix133_dynamic_sizing.py 2;
+  tests/unit/test_fix135_shadow_engine.py 1; tests/unit/test_fix142_final_cleanup.py 1; tests/unit/test_fix180.py 1;
+  tests/unit/test_fix181.py 2; tests/unit/test_fix1_carried_position_rehydrate.py 1; tests/unit/test_fund_manager.py 1;
+  tests/unit/test_gate8_sector_toctou.py 3; tests/unit/test_h4_killswitch_retry_rederive.py 1;
+  tests/unit/test_h5_killswitch_sweep_product.py 1; tests/unit/test_h7_strategy_cap_toctou.py 1;
+  tests/unit/test_instrument_cache_integration.py 2; tests/unit/test_invariant.py 4;
+  tests/unit/test_kill_alerts_delivery_carveout.py 1; tests/unit/test_kill_persist_timing.py 1; tests/unit/test_kill_switch.py
+  1; tests/unit/test_kill_switch_product_filter.py 2; tests/unit/test_ledger2d_co_bracket.py 1;
+  tests/unit/test_mc1_live_seed_rehydrate.py 1; tests/unit/test_mc3_per_bucket_invariant.py 2;
+  tests/unit/test_mc5_commit_adopted_cas.py 1; tests/unit/test_mc6_zero_multiplier_skip.py 2;
+  tests/unit/test_mc7_release_committed_margin.py 1; tests/unit/test_mc8_async_hardkill.py 2;
+  tests/unit/test_mo2_check4_partial_capital.py 1; tests/unit/test_ni17_qty_cap_guards_the_output.py 2;
+  tests/unit/test_ni18_constraint_reports_multiplier.py 2; tests/unit/test_ni19_segment_split_is_partial_by_design.py 1;
+  tests/unit/test_ni5_position_sizer_policy_required.py 3; tests/unit/test_ni9_delivery_count_caps_required.py 1;
+  tests/unit/test_order_reconciler.py 4; tests/unit/test_p0_live_day1_fixes.py 4;
+  tests/unit/test_p1_killswitch_cancel_resting.py 1; tests/unit/test_paper_product_fidelity.py 2;
+  tests/unit/test_phase18_batch2.py 3; tests/unit/test_phase19_batch2.py 1;
+  tests/unit/test_phase3_delivery_caps_conditional_capital.py 2; tests/unit/test_position_sizer.py 2;
+  tests/unit/test_position_sizer_delivery_contract.py 1; tests/unit/test_risk_engine.py 3;
+  tests/unit/test_scheduled_kill_severity.py 1; tests/unit/test_signal_processor.py 1;
+  tests/unit/test_tick2_pipeline_scoped_daily_gate.py 1; tests/unit/test_time_authority_sweep.py 1;
+  tests/unit/test_unit3a_leverage_validation.py 1
+Q11 (9 paths): allocation/__init__.py 4; allocation/portfolio_allocator.py 3; allocation/ranker.py 1;
+  allocation/window_buffer.py 1; main.py 1; signals/signal_processor.py 1; tests/unit/test_eod_lifecycle_pipeline_aware.py 1;
+  tests/unit/test_evidence_contract.py 1; tests/unit/test_portfolio_allocator.py 3
+Q12 (17 paths): broker/zerodha_adapter.py 1; core/config_auditor.py 1; main.py 16; orders/breakeven_manager.py 1;
+  orders/cnc_gtt.py 1; orders/eod_squareoff.py 1; orders/full_entry_engine.py 4; orders/order_placer.py 7;
+  orders/order_protocol_co.py 2; orders/order_protocol_limit.py 2; orders/order_reconciler.py 3; orders/shadow_tracker.py 1;
+  orders/sl_breach_monitor.py 1; orders/structure_exit_manager.py 1; screening/hard_gate.py 1; screening/secondary_screener.py
+  1; scripts/t2_cnc_gtt_realtest.py 2
+Q13 (32 paths): core/config_auditor.py 2; core/strategy_direction.py 1; main.py 2; ops/control_tower/aggregator.py 1;
+  reports/daily_report.py 1; screening/secondary_screener.py 1; scripts/preflight/checks/config_integrity.py 2;
+  scripts/preflight/checks/config_sanity.py 1; scripts/replay_signals.py 1; scripts/strategy_status.py 3;
+  signals/signal_processor.py 1; strategies/__init__.py 2; strategies/loader.py 1; strategies/taxonomy.py 1;
+  tests/integration/conftest.py 1; tests/unit/test_config_auditor.py 1; tests/unit/test_e1_report_config_dir.py 2;
+  tests/unit/test_eod_lifecycle_pipeline_aware.py 1; tests/unit/test_fix130_sl_gap_buffer.py 1;
+  tests/unit/test_fix132_breakeven_manager.py 1; tests/unit/test_fix133_entry_windows.py 2;
+  tests/unit/test_fix133_replay_signals.py 2; tests/unit/test_fix135_strategy_position_cap.py 3;
+  tests/unit/test_p0_live_day1_fixes.py 2; tests/unit/test_pb01_registration.py 2; tests/unit/test_phase4_trade_type_gate.py 1;
+  tests/unit/test_secondary_screener.py 1; tests/unit/test_signal_processor.py 1; tests/unit/test_slice2_strategy_control.py 6;
+  tests/unit/test_strategies.py 27; tests/unit/test_v3_strategy_taxonomy.py 2; utils/startup_checks.py 2
+Q14 (43 paths): core/candle_math.py 2; core/daily_stats.py 1; main.py 16; orders/structure_exit_manager.py 1; regime/engine.py
+  1; screening/retest_monitor.py 1; scripts/forward_shadow_record.py 2; scripts/sr_level_export.py 2;
+  signals/signal_processor.py 2; sr_detector/__init__.py 3; sr_detector/confluence.py 1; sr_detector/detector.py 3;
+  sr_detector/fetch.py 1; sr_detector/flags.py 1; sr_detector/pivots.py 1; sr_detector/zone_builder.py 5;
+  sr_detector/zone_cache.py 1; sr_detector/zone_warmer.py 3; sr_detector/zones.py 1; tests/unit/test_candle_math.py 1;
+  tests/unit/test_daily_stats.py 1; tests/unit/test_forward_shadow.py 1; tests/unit/test_market_regime.py 1;
+  tests/unit/test_sr_anchors.py 3; tests/unit/test_sr_detector_fetch.py 2; tests/unit/test_sr_detector_observer.py 2;
+  tests/unit/test_sr_detector_units.py 6; tests/unit/test_sr_level_export.py 1; tests/unit/test_sr_v2_divert.py 2;
+  tests/unit/test_sr_v2_monitor.py 1; tests/unit/test_sr_v2_retest_confirm.py 1; tests/unit/test_sr_v2_zone_cache.py 4;
+  tests/unit/test_v3_chain.py 6; tests/unit/test_v3_pb01_e2e.py 5; tests/unit/test_v3_pb01_entry.py 2;
+  tests/unit/test_v3_pb01_gates_score.py 1; tests/unit/test_v3_pb01_runner.py 4; tests/unit/test_v3_watchlist_capture.py 2;
+  v3_chain/__init__.py 2; v3_chain/pb01_entry.py 1; v3_chain/pb01_runner.py 7; v3_chain/runner.py 6;
+  v3_chain/watchlist_capture.py 1
+Q15 (4 paths): signals/entry_throttle.py 2; signals/signal_processor.py 3; tests/unit/test_entry_throttle.py 4;
+  tests/unit/test_fix190_exit_safety.py 1
+Q16 (12 paths): capital/risk_engine.py 7; core/state_store.py 4; main.py 4; ops_dashboard/backend/api/dashboard.py 1;
+  ops_dashboard/backend/readers/db_reader.py 3; ops_dashboard/backend/services/audit.py 3;
+  ops_dashboard/backend/services/live_activity.py 4; ops_dashboard/backend/services/system_health.py 1;
+  ops_dashboard/backend/services/system_logs.py 4; reports/daily_report.py 1; signals/signal_processor.py 9;
+  utils/startup_checks.py 13
+Q17 (13 paths): ops_dashboard/backend/services/capacity.py 1; ops_dashboard/backend/services/freshness.py 2;
+  ops_dashboard/tests/test_capacity.py 2; ops_dashboard/tests/test_freshness.py 1; reports/daily_trade_review.py 1;
+  scripts/generate_screened_stocks_csv.py 1; signals/signal_processor.py 6; tests/crash_test/state_machine_validator.py 2;
+  tests/integration/test_end_to_end_smoke.py 1; tests/integration/test_full_signal_flow.py 1;
+  tests/unit/test_signal_processor.py 5; tests/unit/test_sr_v2_continue.py 1; tests/unit/test_webhook_receiver.py 2
+Q18 (36 paths): broker/order_monitor.py 2; capital/kill_switch.py 1; capital/strategy_governor.py 1;
+  config/strategies/pb01_breakout_retest.yaml 1; config/system_config.yaml 2; core/config_loader.py 2; core/schema.sql 1;
+  main.py 8; ops_dashboard/backend/readers/db_reader.py 2; ops_dashboard/backend/services/audit.py 2;
+  ops_dashboard/backend/services/capacity.py 4; ops_dashboard/backend/services/config_view.py 3; ops_dashboard/tests/conftest.py
+  2; orders/eod_squareoff.py 2; orders/mis_autosquareoff.py 1; scripts/generate_screened_stocks_csv.py 1;
+  signals/signal_processor.py 13; strategies/control.py 1; tests/integration/test_end_to_end_smoke.py 1;
+  tests/integration/test_full_signal_flow.py 1; tests/unit/test_alert_direction_eod_29jun.py 1;
+  tests/unit/test_check_vm_state_reset_removed.py 1; tests/unit/test_evidence_contract.py 5;
+  tests/unit/test_fix128_circuit_breaker.py 2; tests/unit/test_fix133_replay_signals.py 2;
+  tests/unit/test_kill_alerts_delivery_carveout.py 1; tests/unit/test_kill_switch.py 5; tests/unit/test_main.py 2;
+  tests/unit/test_p0_live_day1_fixes.py 1; tests/unit/test_phase4_trade_type_gate.py 5;
+  tests/unit/test_scheduled_kill_severity.py 4; tests/unit/test_signal_processor.py 10;
+  tests/unit/test_slice2_strategy_control.py 7; tests/unit/test_slippage_control.py 1;
+  tests/unit/test_strategy_direction_routing.py 1; tests/unit/test_system_manager.py 1
+Q19 (51 paths): allocation/models.py 1; capital/fund_manager.py 1; capital/position_sizer.py 20; capital/risk_engine.py 4;
+  config/expected_managers.yaml 7; config/strategies/open_high_breakdown_short.yaml 1; core/config_auditor.py 5;
+  core/evidence_contract.py 1; core/schema.sql 1; docs/locked_decisions.yaml 8; main.py 4;
+  ops_dashboard/backend/readers/db_reader.py 1; ops_dashboard/backend/services/config_view.py 2;
+  ops_dashboard/tests/test_screen16_config.py 1; orders/order_manager.py 1; orders/order_placer.py 1; reports/signal_status.py
+  12; signals/signal_processor.py 4; signals/webhook_receiver.py 1; tests/crash_test/ct_day3_isolated.py 1;
+  tests/crash_test/ct_day3_isolated_batch2.py 1; tests/crash_test/scenarios/ct003.yaml 1; tests/crash_test/scenarios/ct005.yaml
+  1; tests/crash_test/state_machine_validator.py 6; tests/crash_test/test_position_sizer_edges.py 4;
+  tests/integration/conftest.py 4; tests/integration/test_hardening_scenarios.py 1;
+  tests/integration/test_q9_daily_loss_limit_wired.py 1; tests/integration/test_q9_post_restart_capital_wired.py 1;
+  tests/integration/test_q9_sizing_floors_caps_wired.py 17; tests/unit/test_config_auditor.py 3;
+  tests/unit/test_daily_trade_review.py 1; tests/unit/test_delivery_config_independence.py 3;
+  tests/unit/test_diary4_tier_multiplier.py 2; tests/unit/test_fix066_entry_offset_margin.py 4;
+  tests/unit/test_fix133_dynamic_sizing.py 2; tests/unit/test_gate8_sector_toctou.py 1;
+  tests/unit/test_instrument_cache_integration.py 7; tests/unit/test_main.py 2; tests/unit/test_mc6_zero_multiplier_skip.py 3;
+  tests/unit/test_ni17_qty_cap_guards_the_output.py 3; tests/unit/test_ni18_constraint_reports_multiplier.py 2;
+  tests/unit/test_ni19_segment_split_is_partial_by_design.py 2; tests/unit/test_ni5_position_sizer_policy_required.py 10;
+  tests/unit/test_p0_live_day1_fixes.py 1; tests/unit/test_position_sizer.py 20;
+  tests/unit/test_position_sizer_delivery_contract.py 2; tests/unit/test_risk_engine.py 2; tests/unit/test_signal_processor.py
+  5; tests/unit/test_signal_status_classification.py 14; tests/unit/test_unit3a_leverage_validation.py 3
+Q20 (10 paths): capital/fund_manager.py 6; core/state_store.py 4; main.py 1; orders/cnc_gtt_monitor.py 1; orders/order_placer.py
+  3; orders/order_reconciler.py 5; screening/entry_gate.py 1; screening/retest_monitor.py 1; signals/webhook_receiver.py 3;
+  utils/instance_lock.py 1
+Q21 (21 paths): allocation/__init__.py 4; allocation/models.py 1; allocation/portfolio_allocator.py 14;
+  capital/performance_allocator.py 2; config/expected_managers.yaml 1; config/strategies/pb01_breakout_retest.yaml 1;
+  config/system_config.yaml 2; core/config_loader.py 8; core/evidence_contract.py 1; core/state_store.py 1;
+  core/strategy_direction.py 1; main.py 7; ops_dashboard/backend/services/audit.py 1; scripts/v3_shadow_soak_report.py 12;
+  signals/signal_processor.py 20; strategies/schema.py 2; tests/integration/test_q9_sizing_floors_caps_wired.py 1;
+  tests/unit/test_eod_lifecycle_pipeline_aware.py 4; tests/unit/test_evidence_contract.py 3;
+  tests/unit/test_mc6_zero_multiplier_skip.py 1; tests/unit/test_portfolio_allocator.py 13
+Q22 (106 paths): alerts/delivery.py 1; broker/angelone_adapter.py 1; broker/cost_calculator.py 1; broker/order_monitor.py 1;
+  broker/position_helpers.py 1; broker/zerodha_adapter.py 6; capital/fund_manager.py 5; capital/kill_switch.py 6;
+  capital/position_sizer.py 2; capital/risk_engine.py 2; config/broker_limits.yaml 1; config/expected_managers.yaml 9;
+  config/system_config.yaml 1; core/config_auditor.py 2; core/config_loader.py 2; core/events.py 3; core/evidence_contract.py 1;
+  core/exceptions.py 2; core/schema.sql 3; core/state_store.py 3; data/live_feed.py 1; docs/locked_decisions.yaml 14; main.py
+  10; ops_dashboard/backend/readers/config_reader.py 1; ops_dashboard/backend/services/slippage_analytics.py 1;
+  ops_dashboard/backend/services/system_logs.py 1; ops_dashboard/tests/conftest.py 3; orders/breakeven_manager.py 1;
+  orders/full_entry_engine.py 2; orders/mis_autosquareoff.py 1; orders/order_manager.py 8; orders/order_placer.py 155;
+  orders/order_protocol_co.py 4; orders/order_protocol_limit.py 10; orders/order_reconciler.py 12; orders/price_math.py 1;
+  orders/shadow_tracker.py 1; orders/smart_tgt_manager.py 2; orders/tgt_retry_manager.py 5; reports/daily_report.py 1;
+  reports/daily_trade_review.py 1; screening/secondary_screener.py 1; signals/signal_processor.py 17;
+  tests/crash_test/scenarios/ct003.yaml 1; tests/integration/conftest.py 5; tests/integration/test_emergency_exit_chain.py 4;
+  tests/integration/test_end_to_end_smoke.py 10; tests/integration/test_full_signal_flow.py 13;
+  tests/integration/test_q9_capital_invariant_wired.py 11; tests/integration/test_q9_daily_loss_limit_wired.py 6;
+  tests/integration/test_q9_killswitch_lastmile_wired.py 9; tests/integration/test_q9_post_restart_capital_wired.py 12;
+  tests/unit/test_a1e1_recovery_matrix.py 2; tests/unit/test_a3_entry_kill_recheck.py 5;
+  tests/unit/test_alert_delivery_contract.py 5; tests/unit/test_alert_direction_eod_29jun.py 4;
+  tests/unit/test_alert_send_audit_trail.py 3; tests/unit/test_check1_classified_close.py 2; tests/unit/test_check1_deferral.py
+  2; tests/unit/test_closure_source_contract.py 1; tests/unit/test_cnc_gtt_slice25_p1.py 4;
+  tests/unit/test_e2_breakeven_sl_column.py 1; tests/unit/test_e2_capital_tightening.py 9; tests/unit/test_e3_hygiene.py 5;
+  tests/unit/test_events.py 14; tests/unit/test_exit_alert_sign.py 2; tests/unit/test_fix068_timeout_recovery.py 5;
+  tests/unit/test_fix073_eod_entry_cutoff.py 9; tests/unit/test_fix075_price_drift.py 3;
+  tests/unit/test_fix129_rejection_handling.py 2; tests/unit/test_fix134_liquidity_check.py 4; tests/unit/test_fix136_batch9.py
+  2; tests/unit/test_fix148_broker_gaps.py 4; tests/unit/test_fix180.py 1; tests/unit/test_gemini_log_review_hardening.py 1;
+  tests/unit/test_h1_cancel_resting_exits.py 5; tests/unit/test_h2_exiting_close_release.py 5;
+  tests/unit/test_h3_exit_retry_guard.py 7; tests/unit/test_instrument_cache_integration.py 4; tests/unit/test_kill_switch.py 1;
+  tests/unit/test_main.py 6; tests/unit/test_mc8_async_hardkill.py 2; tests/unit/test_mis_blocklist.py 4;
+  tests/unit/test_nocil_clamp_fix.py 1; tests/unit/test_order_placer.py 53; tests/unit/test_order_placer_fix061.py 7;
+  tests/unit/test_order_placer_sector.py 4; tests/unit/test_order_reconciler.py 5; tests/unit/test_p0_live_day1_fixes.py 1;
+  tests/unit/test_phase21_batch1.py 6; tests/unit/test_price_math.py 2; tests/unit/test_ramcoind_dup_exit_fix.py 1;
+  tests/unit/test_risk_engine.py 1; tests/unit/test_signal_processor.py 8; tests/unit/test_slice1_rr_aftercheck.py 5;
+  tests/unit/test_slice2_strategy_control.py 1; tests/unit/test_slippage_control.py 2; tests/unit/test_smart_tgt_manager.py 1;
+  tests/unit/test_sr_v2_continue.py 2; tests/unit/test_terminal_state_write_guard.py 2; tests/unit/test_tgt_retry.py 15;
+  tests/unit/test_tick_failsafe_snap.py 1; tests/unit/test_v3_pb01_runner.py 1; tests/unit/test_w8_closure_source_writer.py 3;
+  tests/unit/test_zerodha_adapter.py 4; v3_chain/pb01_runner.py 1
+Q23 (34 paths): alerts/mis_squareoff_notifier.py 3; allocation/portfolio_allocator.py 1; broker/clock_skew_probe.py 1;
+  broker/order_monitor.py 1; broker/token_monitor.py 1; broker/zerodha_adapter.py 1; capital/kill_switch.py 2; core/events.py 7;
+  core/evidence_contract.py 1; core/state_store.py 1; data/candle_store.py 2; data/live_feed.py 3; main.py 8;
+  orders/eod_squareoff.py 1; orders/mis_autosquareoff.py 1; orders/order_reconciler.py 1; orders/sl_breach_monitor.py 1;
+  orders/smart_tgt_manager.py 4; orders/tgt_retry_manager.py 1; regime/runner.py 1; screening/entry_gate.py 5;
+  screening/retest_monitor.py 1; screening/step_executor.py 6; scripts/alert_watcher.py 5; scripts/healthcheck_server.py 1;
+  scripts/load_test_signals.py 2; scripts/preflight/autofix.py 1; signals/signal_processor.py 13; signals/webhook_receiver.py 1;
+  sr_detector/detector.py 1; sr_detector/zone_warmer.py 1; v3_chain/pb01_entry.py 1; v3_chain/runner.py 1;
+  v3_chain/watchlist_capture.py 1
+Q24 (5 paths): capital/risk_engine.py 6; core/config_validator.py 1; main.py 3; signals/signal_processor.py 36;
+  signals/webhook_receiver.py 5
+Q25 (9 paths): alerts/telegram_notifier.py 5; allocation/models.py 1; core/config_loader.py 1; core/state_store.py 1; main.py 1;
+  ops_dashboard/backend/readers/db_reader.py 2; orders/order_placer.py 18; orders/tgt_retry_manager.py 8;
+  signals/signal_processor.py 15
+Q26 (34 paths): config/strategies/first_pullback_long.yaml 2; config/strategies/first_pullback_short.yaml 2;
+  config/strategies/gap_fade_long.yaml 2; config/strategies/gap_fade_short.yaml 2; config/strategies/gap_go_long.yaml 2;
+  config/strategies/gap_go_short.yaml 2; config/strategies/open_high_breakdown_short.yaml 2;
+  config/strategies/open_low_breakout_long.yaml 2; config/strategies/pb01_breakout_retest.yaml 2;
+  config/strategies/positional_momentum_long.yaml 2; config/strategies/positional_sector_rotation.yaml 2;
+  config/strategies/positional_swing_long.yaml 2; config/strategies/range_breakout_long.yaml 2;
+  config/strategies/range_breakout_short.yaml 2; config/strategies/vwap_bounce_long.yaml 2;
+  config/strategies/vwap_rejection_short.yaml 2; core/config_loader.py 1; docs/locked_decisions.yaml 9; main.py 1;
+  orders/shadow_tracker.py 12; signals/signal_processor.py 21; strategies/schema.py 12; tests/unit/test_e4_event_loop_safety.py
+  3; tests/unit/test_fix130_sl_gap_buffer.py 5; tests/unit/test_fix132_breakeven_manager.py 4;
+  tests/unit/test_fix133_entry_windows.py 2; tests/unit/test_fix135_strategy_config_validation.py 2;
+  tests/unit/test_fix135_strategy_position_cap.py 6; tests/unit/test_h8_shadow_tracker_strategy_column.py 5;
+  tests/unit/test_shadow_tracker.py 3; tests/unit/test_signal_processor.py 34; tests/unit/test_startup_checks.py 1;
+  tests/unit/test_strategies.py 18; tests/unit/test_v3_strategy_taxonomy.py 1
+Q27 (36 paths): config/scan_webhook_map.yaml 1; core/config_loader.py 5; docs/locked_decisions.yaml 8; main.py 2;
+  ops_dashboard/backend/readers/config_reader.py 4; ops_dashboard/backend/services/audit.py 1;
+  ops_dashboard/backend/services/config_view.py 2; ops_dashboard/backend/services/scanner_attribution.py 4;
+  ops_dashboard/frontend/templates/scanner_attribution.html 2; ops_dashboard/tests/conftest.py 2;
+  ops_dashboard/tests/test_screen21_scanner_attribution.py 5; scripts/preflight/checks/config_integrity.py 1;
+  scripts/preflight_scanner_check.py 1; scripts/premarket_healthcheck.py 1; signals/signal_processor.py 7;
+  signals/webhook_receiver.py 2; strategies/loader.py 6; tests/integration/conftest.py 4; tests/unit/test_c6_auth_collapse.py 1;
+  tests/unit/test_config_loader.py 9; tests/unit/test_e4_event_loop_safety.py 1; tests/unit/test_evidence_contract.py 1;
+  tests/unit/test_fix067_ms1_fresh_anchor.py 1; tests/unit/test_fix074_numeric_cast.py 1; tests/unit/test_fix134_backpressure.py
+  1; tests/unit/test_main.py 2; tests/unit/test_pb01_registration.py 3; tests/unit/test_phase4_trade_type_gate.py 2;
+  tests/unit/test_preflight_scanner.py 1; tests/unit/test_signal_processor.py 7; tests/unit/test_slice2_strategy_control.py 1;
+  tests/unit/test_startup_checks.py 4; tests/unit/test_strategies.py 5; tests/unit/test_v3_eod_route.py 1;
+  tests/unit/test_webhook_receiver.py 4; utils/startup_checks.py 8
+Q28 (0 paths): (none)
+Q29 (40 paths): config/scoring_weights.yaml 3; config/system_config.yaml 1; core/config_loader.py 3; docs/locked_decisions.yaml
+  1; main.py 2; ops_dashboard/backend/readers/db_reader.py 3; ops_dashboard/backend/services/config_view.py 1;
+  ops_dashboard/tests/conftest.py 2; ops_dashboard/tests/test_screen16_config.py 1;
+  ops_dashboard/tests/test_screen21_scanner_attribution.py 1; ops_dashboard/tests/test_trading_modules.py 1;
+  reports/daily_report.py 3; screening/hard_gate.py 3; screening/secondary_screener.py 5; screening/step_executor.py 4;
+  scripts/v3_hardgate_parity_recompute.py 10; signals/webhook_receiver.py 6; tests/crash_test/invariant_checker.py 1;
+  tests/crash_test/state_machine_validator.py 2; tests/integration/conftest.py 2; tests/integration/test_end_to_end_smoke.py 1;
+  tests/integration/test_full_signal_flow.py 1; tests/unit/test_c6_auth_collapse.py 1; tests/unit/test_config_loader.py 3;
+  tests/unit/test_e4_event_loop_safety.py 1; tests/unit/test_evidence_contract.py 1; tests/unit/test_fix074_numeric_cast.py 1;
+  tests/unit/test_fix134_backpressure.py 1; tests/unit/test_fix136_batch9.py 6; tests/unit/test_forward_shadow.py 2;
+  tests/unit/test_hard_gate.py 2; tests/unit/test_ms3_step_timeout_bounds_caller.py 1; tests/unit/test_quality_scorer.py 8;
+  tests/unit/test_secondary_screener.py 2; tests/unit/test_signal_processor.py 3; tests/unit/test_state_store.py 3;
+  tests/unit/test_step_executor.py 5; tests/unit/test_v3_eod_route.py 1; tests/unit/test_v3_hardgate_parity.py 2;
+  tests/unit/test_webhook_receiver.py 5
+Q30 (189 paths): ops_dashboard/tests/test_api_contract.py 1; ops_dashboard/tests/test_auth.py 1;
+  ops_dashboard/tests/test_b3_b4_spec_decisions.py 3; ops_dashboard/tests/test_closure_screens04_08.py 2;
+  ops_dashboard/tests/test_db_reader.py 2; ops_dashboard/tests/test_g2b2_screens.py 1;
+  ops_dashboard/tests/test_g5a_components.py 2; ops_dashboard/tests/test_g5b_reuse.py 2;
+  ops_dashboard/tests/test_g5c_analytics.py 1; ops_dashboard/tests/test_g5d_operations.py 2;
+  ops_dashboard/tests/test_global_table_rule.py 1; ops_dashboard/tests/test_pipeline_state.py 3;
+  ops_dashboard/tests/test_s1011_chart_labels.py 7; ops_dashboard/tests/test_s3_login_throttle.py 2;
+  ops_dashboard/tests/test_screen02_dashboard.py 5; ops_dashboard/tests/test_screen03_strategies.py 8;
+  ops_dashboard/tests/test_screen06_positions.py 1; ops_dashboard/tests/test_screen07_trades.py 5;
+  ops_dashboard/tests/test_screen08_capital_risk.py 1; ops_dashboard/tests/test_screen09_pnl_analytics.py 4;
+  ops_dashboard/tests/test_screen10_slippage.py 5; ops_dashboard/tests/test_screen11_execution.py 9;
+  ops_dashboard/tests/test_screen12_system_health.py 3; ops_dashboard/tests/test_screen13_audit.py 3;
+  ops_dashboard/tests/test_screen14_trade_logs.py 5; ops_dashboard/tests/test_screen15_system_logs.py 2;
+  ops_dashboard/tests/test_screen16_config.py 5; ops_dashboard/tests/test_screen17_controls.py 2;
+  ops_dashboard/tests/test_screen17_export.py 1; ops_dashboard/tests/test_screen18_live_activity.py 9;
+  ops_dashboard/tests/test_screen19_strategy_ranking.py 3; ops_dashboard/tests/test_screen20_strategy_health.py 7;
+  ops_dashboard/tests/test_screen21_scanner_attribution.py 14; ops_dashboard/tests/test_screen22_holdings.py 8;
+  tests/integration/test_end_to_end_smoke.py 4; tests/integration/test_fix190_incident_replay.py 1;
+  tests/integration/test_full_signal_flow.py 2; tests/integration/test_hard_kill_flatten_chain.py 1;
+  tests/integration/test_hardening_scenarios.py 2; tests/integration/test_q9_capital_invariant_wired.py 1;
+  tests/integration/test_q9_consecutive_losses_wired.py 6; tests/integration/test_q9_killswitch_lastmile_wired.py 3;
+  tests/integration/test_q9_post_restart_capital_wired.py 3; tests/integration/test_q9_sizing_floors_caps_wired.py 7;
+  tests/unit/test_a1e1_recovery_matrix.py 2; tests/unit/test_a3_entry_kill_recheck.py 4;
+  tests/unit/test_alert_delivery_contract.py 4; tests/unit/test_alert_delivery_phase1.py 3;
+  tests/unit/test_c2_webhook_lockdown.py 1; tests/unit/test_c6_auth_collapse.py 2; tests/unit/test_clear_kill_switch.py 3;
+  tests/unit/test_cnc_gtt_monitor.py 3; tests/unit/test_cnc_gtt_slice25_p1.py 2; tests/unit/test_config_auditor.py 3;
+  tests/unit/test_config_loader.py 1; tests/unit/test_cron_alerts.py 1; tests/unit/test_cron_registry.py 1;
+  tests/unit/test_daily_report.py 2; tests/unit/test_delivery_config_independence.py 8;
+  tests/unit/test_diary4_tier_multiplier.py 4; tests/unit/test_drift_handler.py 6; tests/unit/test_e2_breakeven_sl_column.py 1;
+  tests/unit/test_e2_capital_tightening.py 2; tests/unit/test_e4_event_loop_safety.py 2; tests/unit/test_e4_w10_pnl_contract.py
+  1; tests/unit/test_emergency_exit_tag_fix.py 1; tests/unit/test_entry_gate.py 5; tests/unit/test_entry_throttle.py 2;
+  tests/unit/test_eod_lifecycle_pipeline_aware.py 2; tests/unit/test_eod_squareoff.py 8; tests/unit/test_events.py 5;
+  tests/unit/test_evidence_contract.py 13; tests/unit/test_fix062_token_invalidation.py 2;
+  tests/unit/test_fix065_market_hours_guard.py 1; tests/unit/test_fix067_ms1_fresh_anchor.py 2;
+  tests/unit/test_fix068_timeout_recovery.py 2; tests/unit/test_fix073_eod_entry_cutoff.py 2;
+  tests/unit/test_fix074_numeric_cast.py 2; tests/unit/test_fix128_daily_loss_sequence.py 5;
+  tests/unit/test_fix128_pnl_reconciliation.py 1; tests/unit/test_fix128_token_monitor.py 1;
+  tests/unit/test_fix129_graceful_shutdown.py 1; tests/unit/test_fix129_rejection_handling.py 1;
+  tests/unit/test_fix134_backpressure.py 1; tests/unit/test_fix134_liquidity_check.py 6; tests/unit/test_fix134_ws_reconnect.py
+  3; tests/unit/test_fix135_auto_token.py 1; tests/unit/test_fix135_eod_cleanup.py 2; tests/unit/test_fix135_fno_ban.py 1;
+  tests/unit/test_fix135_shadow_engine.py 1; tests/unit/test_fix136_batch9.py 6; tests/unit/test_fix137_batch10.py 2;
+  tests/unit/test_fix140_price_movement_cancel.py 1; tests/unit/test_fix142_final_cleanup.py 1;
+  tests/unit/test_fix164_market_open_margin_sync.py 1; tests/unit/test_fix181.py 3;
+  tests/unit/test_fix1_carried_position_rehydrate.py 1; tests/unit/test_fund_manager.py 16;
+  tests/unit/test_gate8_sector_toctou.py 1; tests/unit/test_gemini_premarket_brief.py 1; tests/unit/test_gemini_trade_coach.py
+  1; tests/unit/test_generate_screened_csv_readonly.py 2; tests/unit/test_h11_invalidate_token_path.py 1;
+  tests/unit/test_h7_strategy_cap_toctou.py 1; tests/unit/test_hard_gate.py 11; tests/unit/test_healthcheck_server.py 3;
+  tests/unit/test_ids.py 19; tests/unit/test_kill_alerts_delivery_carveout.py 3; tests/unit/test_kill_persist_timing.py 1;
+  tests/unit/test_kill_switch.py 21; tests/unit/test_ledger2d_co_bracket.py 2; tests/unit/test_live_feed.py 1;
+  tests/unit/test_liveness_probe.py 1; tests/unit/test_main.py 19; tests/unit/test_mc5_commit_adopted_cas.py 1;
+  tests/unit/test_mc6_zero_multiplier_skip.py 1; tests/unit/test_mc8_async_hardkill.py 9; tests/unit/test_migrations.py 4;
+  tests/unit/test_mis_blocklist.py 4; tests/unit/test_mis_market_protection.py 3; tests/unit/test_mis_squareoff_notifier.py 1;
+  tests/unit/test_mis_squareoff_restore_and_settle.py 1; tests/unit/test_mo2_check4_partial_capital.py 1;
+  tests/unit/test_ms3_step_timeout_bounds_caller.py 2; tests/unit/test_ni3_delivery_count_caps_are_live.py 2;
+  tests/unit/test_ni4_delivery_count_caps_required.py 3; tests/unit/test_nocil_clamp_fix.py 2; tests/unit/test_nocil_prefill.py
+  6; tests/unit/test_one_trade_per_symbol_direction.py 3; tests/unit/test_order_manager.py 7; tests/unit/test_order_monitor.py
+  1; tests/unit/test_order_placer.py 21; tests/unit/test_order_placer_fix061.py 2; tests/unit/test_order_reconciler.py 2;
+  tests/unit/test_order_state_machine.py 5; tests/unit/test_p0_live_day1_fixes.py 2;
+  tests/unit/test_p1_killswitch_cancel_resting.py 1; tests/unit/test_phase19_batch2.py 1;
+  tests/unit/test_phase3_delivery_caps_conditional_capital.py 5; tests/unit/test_phase4_trade_type_gate.py 2;
+  tests/unit/test_portfolio_allocator.py 2; tests/unit/test_position_sizer.py 4; tests/unit/test_preflight_state_security.py 3;
+  tests/unit/test_price_math.py 14; tests/unit/test_quality_scorer.py 1; tests/unit/test_rate_limiter.py 2;
+  tests/unit/test_reconciler_co_refusal.py 1; tests/unit/test_reconciler_product_filter.py 1; tests/unit/test_risk_engine.py 9;
+  tests/unit/test_scheduled_kill_severity.py 6; tests/unit/test_secondary_screener.py 12;
+  tests/unit/test_service_window_config.py 5; tests/unit/test_signal_processor.py 38;
+  tests/unit/test_signal_status_classification.py 9; tests/unit/test_slice2_strategy_control.py 7;
+  tests/unit/test_slippage_control.py 2; tests/unit/test_slippage_engine.py 1; tests/unit/test_smart_tgt_manager.py 2;
+  tests/unit/test_sr_detector_observer.py 1; tests/unit/test_sr_detector_units.py 1; tests/unit/test_sr_v2_continue.py 3;
+  tests/unit/test_sr_v2_monitor.py 3; tests/unit/test_sr_v2_retest_confirm.py 10; tests/unit/test_startup_checks.py 9;
+  tests/unit/test_state_store.py 9; tests/unit/test_step_executor.py 2; tests/unit/test_system_manager.py 7;
+  tests/unit/test_system_manager_deployed_tree.py 1; tests/unit/test_system_manager_security.py 1;
+  tests/unit/test_t2_broker_error_classification.py 2; tests/unit/test_t2_ensure_flat.py 3; tests/unit/test_t2_limit_paths.py 1;
+  tests/unit/test_t4_deploy_preflight.py 2; tests/unit/test_telegram_notifier.py 1;
+  tests/unit/test_terminal_state_write_guard.py 3; tests/unit/test_tgt_retry.py 5;
+  tests/unit/test_tick2_pipeline_scoped_daily_gate.py 8; tests/unit/test_tick_failsafe_snap.py 1;
+  tests/unit/test_unit3a_leverage_validation.py 6; tests/unit/test_v3_chain.py 1; tests/unit/test_v3_eod_route.py 2;
+  tests/unit/test_v3_hardgate_parity.py 1; tests/unit/test_v3_pb01_e2e.py 1; tests/unit/test_v3_pb01_entry.py 1;
+  tests/unit/test_v3_pb01_gates_score.py 2; tests/unit/test_v3_pb01_runner.py 1; tests/unit/test_v3_strategy_taxonomy.py 2;
+  tests/unit/test_webhook_receiver.py 8; tests/unit/test_zerodha_adapter.py 5
+Q31 (20 paths): tests/integration/conftest.py 5; tests/integration/test_end_to_end_smoke.py 1;
+  tests/integration/test_hardening_scenarios.py 7; tests/integration/test_q9_sizing_floors_caps_wired.py 4;
+  tests/unit/test_alert_direction_eod_29jun.py 2; tests/unit/test_e4_event_loop_safety.py 2;
+  tests/unit/test_evidence_contract.py 18; tests/unit/test_fix067_ms1_fresh_anchor.py 3; tests/unit/test_fix190_exit_safety.py
+  6; tests/unit/test_h7_strategy_cap_toctou.py 6; tests/unit/test_main.py 20; tests/unit/test_one_trade_per_symbol_direction.py
+  2; tests/unit/test_portfolio_allocator.py 3; tests/unit/test_signal_alert_capital_vocabulary.py 2;
+  tests/unit/test_signal_processor.py 13; tests/unit/test_slice2_strategy_control.py 3; tests/unit/test_sr_detector_observer.py
+  2; tests/unit/test_sr_v2_continue.py 10; tests/unit/test_sr_v2_divert.py 1;
+  tests/unit/test_tick2_pipeline_scoped_daily_gate.py 7
+Q32 (3 paths): config/strategy_direction_registry.yaml 1; config/system_config.yaml 8; docs/locked_decisions.yaml 1
+Q33 (168 paths): PATHS.md 16; alerts/delivery.py 1; alerts/telegram_notifier.py 1; allocation/__init__.py 1;
+  allocation/models.py 1; allocation/portfolio_allocator.py 7; broker/auth_recovery.py 1; capital/fund_manager.py 3;
+  capital/position_sizer.py 1; capital/risk_engine.py 5; capital/shadow_engine.py 1; capital/strategy_governor.py 1;
+  config/expected_managers.yaml 3; config/strategies/pb01_breakout_retest.yaml 1; config/system_config.yaml 2;
+  core/config_auditor.py 1; core/config_loader.py 3; core/evidence_artefact_manifest.txt 1; core/evidence_contract.py 2;
+  core/exceptions.py 1; core/schema.sql 2; core/state_store.py 1; docs/01_system_architecture.md 4; docs/CONFIG_GUIDE.md 5;
+  docs/DEPLOY_CALENDAR_28-JUL_TO_04-AUG.txt 2; docs/MASTER_PENDING_01-Aug-2026.md 11; docs/MASTER_PENDING_30-Jul-2026.md 1;
+  docs/SYSTEM_ASSUMPTIONS.md 1; docs/SYSTEM_MAP.md 33; docs/architectural_audit_2026-06-01.md 2;
+  docs/audit/HANDOFF_05-Aug-EVENING.md 5; docs/audit/STOP_PROCEDURE_05-Aug-2026.md 1;
+  docs/audit/THURSDAY_CONTINGENCY_06-Aug-2026.md 1; docs/audit/audit_05jul2026.md 34;
+  docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md 1;
+  docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md 1; docs/audit/check1_product_skip_step1_05aug2026.md 2;
+  docs/audit/d1_quote_observability_d2_classification_25jul2026.md 1; docs/audit/decision_packages_19jul2026.md 1;
+  docs/audit/deploy_behaviour_delta_prediction_14jul2026.md 3; docs/audit/effect_verification_contract_01aug2026.md 4;
+  docs/audit/f1_trades_sector_16jul2026.md 3; docs/audit/f2_injection_scoping_25jul2026.md 1;
+  docs/audit/full_system_audit_04july2026.md 5; docs/audit/healthcheck_threads_25jul2026.md 2;
+  docs/audit/integrity_audit_2026.md 22; docs/audit/item4_partA_inventory_survey_05aug2026.md 9;
+  docs/audit/kill_persist_busy_timeout_25jul2026.md 1; docs/audit/ledger_3a_9_5_step1_03aug2026.md 1;
+  docs/audit/ma2_ms3_md1_25jul2026.md 4; docs/audit/mc4_killswitch_lock_16jul2026.md 1; docs/audit/mc5_mc6_testmain_16jul2026.md
+  1; docs/audit/orphan_adoption_forensics_22jul2026.md 1; docs/audit/p3s14_done_17jul2026.md 1;
+  docs/audit/p3s14_investigation_17jul2026.md 3; docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md 3;
+  docs/audit/pending_reconciliation_14jul2026.md 1; docs/audit/pre_deploy_review_checklist_14jul2026.md 3;
+  docs/audit/q5_wave7_backlog_triage_14jul2026.md 1; docs/audit/q9_batch1_daily_loss_wired_18jul2026.md 1;
+  docs/audit/q9_batch2_killswitch_toctou_18jul2026.md 1; docs/audit/q9_batch3_capital_invariant_18jul2026.md 1;
+  docs/audit/q9_batch4_sizing_floors_caps_18jul2026.md 7; docs/audit/rulings_1_2_verification_07aug2026.md 14;
+  docs/audit/secondary_filtration_execution_pipeline_audit.md 22; docs/audit/signal_mortality_census_19jul2026.md 6;
+  docs/audit/slice25_never_run_pieces_26jul2026.md 1; docs/audit/strategy_direction_investigation_17jul2026.md 1;
+  docs/audit/strategy_direction_registry_done_17jul2026.md 1; docs/audit/system_audit_14jun2026.md 13;
+  docs/audit/system_flow_review_15jun2026.md 5; docs/audit/system_security_audit_02jul2026.md 5;
+  docs/audit/t2_multi_stock_blockers_28jul2026.md 1; docs/audit/telegram_token_shadow_investigation_03jul2026.md 1;
+  docs/audit/throttle_selection_and_record_correction_19jul2026.md 3; docs/audit/trailing_stop_never_fired_2026-07-24.md 1;
+  docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md 1; docs/audit/wave7_nine_investigation_22jul2026.md 1;
+  docs/audit/wave7_triage_21jul2026.md 3; docs/audit_2026-05-18_completed.md 1; docs/campaign_practices.md 1;
+  docs/chatgpt_project_clarification.md 2; docs/crash_test_info_04jun2026.md 9; docs/decisions/10_entry_throttle_admission.md 1;
+  docs/decisions/DESIGN_09_prune_retention.md 1; docs/design/a1_e1_orphan_fix_design_02jul2026.md 1;
+  docs/design/a2_timeout_retry_design_02jul2026.md 10; docs/design/sizing/config_surface_review_06aug2026.md 1;
+  docs/design/sizing/delivery_config_surface_06aug2026.md 4; docs/design/sizing/sizing_thread_conclusions_06aug2026.md 1;
+  docs/design/sizing/tier_multiplier_measurement_06aug2026.md 1; docs/expected_alarms.md 1; docs/locked_decisions.yaml 9;
+  docs/ops/offmarket_deploy_plan_03jul2026.md 3; docs/symbol_logging_audit_2026-05-09.md 10;
+  docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md 7; docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md 18;
+  docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md 3; docs/v3/V3_STEP5_RISK_SIZING_GAPMAP.md 1;
+  docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md 15; docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md 2; main.py 32;
+  ops_dashboard/backend/readers/db_reader.py 1; ops_dashboard/backend/services/audit.py 1;
+  ops_dashboard/backend/services/capacity.py 1; ops_dashboard/backend/services/config_view.py 1;
+  ops_dashboard/backend/services/system_logs.py 1; ops_dashboard/backend/services/trade_logs.py 1;
+  ops_dashboard/docs/G2a_capacity_inventory.md 4; ops_dashboard/docs/G2b1_strategy_attribution.md 2;
+  ops_dashboard/docs/G3_0_CONTROL_PLANE_INVESTIGATION.md 1; ops_dashboard/tests/conftest.py 1; orders/order_placer.py 10;
+  orders/shadow_tracker.py 3; reports/signal_status.py 1; screening/entry_gate.py 6; screening/retest_monitor.py 3;
+  screening/secondary_screener.py 2; screening/step_executor.py 1; scripts/eod_cleanup.py 1; scripts/preflight/checks/engine.py
+  1; signals/signal_processor.py 33; signals/webhook_receiver.py 11; sr_detector/detector.py 1; sr_detector/models.py 1;
+  strategies/control.py 1; tests/crash_test/ct_day2_isolated.py 1; tests/crash_test/scenarios/ct003.yaml 1;
+  tests/integration/conftest.py 11; tests/integration/test_end_to_end_smoke.py 5; tests/integration/test_full_signal_flow.py 1;
+  tests/integration/test_hardening_scenarios.py 6; tests/integration/test_q9_capital_invariant_wired.py 2;
+  tests/integration/test_q9_killswitch_lastmile_wired.py 1; tests/integration/test_q9_sizing_floors_caps_wired.py 15;
+  tests/unit/test_alert_direction_eod_29jun.py 3; tests/unit/test_config_loader.py 1; tests/unit/test_e3_hygiene.py 1;
+  tests/unit/test_e4_event_loop_safety.py 4; tests/unit/test_evidence_contract.py 25; tests/unit/test_fix067_ms1_fresh_anchor.py
+  4; tests/unit/test_fix133_dynamic_sizing.py 1; tests/unit/test_fix136_batch9.py 1; tests/unit/test_fix190_exit_safety.py 6;
+  tests/unit/test_h7_strategy_cap_toctou.py 7; tests/unit/test_ma2_alert_send_deadline.py 1; tests/unit/test_main.py 12;
+  tests/unit/test_mc6_zero_multiplier_skip.py 1; tests/unit/test_one_trade_per_symbol_direction.py 3;
+  tests/unit/test_order_placer.py 1; tests/unit/test_p0_live_day1_fixes.py 1; tests/unit/test_phase4_trade_type_gate.py 2;
+  tests/unit/test_portfolio_allocator.py 3; tests/unit/test_risk_engine.py 3; tests/unit/test_signal_alert_capital_vocabulary.py
+  3; tests/unit/test_signal_processor.py 20; tests/unit/test_slice2_strategy_control.py 3;
+  tests/unit/test_sr_detector_observer.py 4; tests/unit/test_sr_v2_continue.py 3; tests/unit/test_sr_v2_divert.py 1;
+  tests/unit/test_strategies.py 1; tests/unit/test_tick2_pipeline_scoped_daily_gate.py 7; tests/unit/test_v3_chain.py 1;
+  tests/unit/test_v3_eod_route.py 1; v3_chain/__init__.py 1; v3_chain/pb01_entry.py 1; v3_chain/pb01_runner.py 2;
+  v3_chain/runner.py 1
+Q34 (20 paths): broker/order_monitor.py 2; broker/zerodha_adapter.py 5; core/events.py 1; core/mis_blocklist.py 2;
+  core/state_store.py 4; ops_dashboard/backend/readers/db_reader.py 13; ops_dashboard/backend/services/live_activity.py 6;
+  ops_dashboard/backend/services/scanner_attribution.py 2; ops_dashboard/backend/services/trade_logs.py 4;
+  orders/entry_engine.py 2; orders/order_manager.py 4; orders/order_placer.py 7; reports/daily_report.py 4;
+  reports/daily_trade_review.py 3; reports/signal_status.py 2; scripts/forward_shadow_record.py 2; scripts/gemini_trade_coach.py
+  2; scripts/generate_screened_stocks_csv.py 10; scripts/replay_signals.py 2; signals/signal_processor.py 28
+Q35 (3 paths): core/evidence_contract.py 5; main.py 5; tests/unit/test_evidence_contract.py 9
+END

@@ -1,0 +1,50 @@
+C-008 REVISION 2 REVIEW — CROSS-CHECK AND REVISION 3 PROPOSALS
+Review date: 24-Oct-2026 (IST)
+Status: REVIEW ONLY — NOT APPROVED FOR FREEZE
+
+OVERALL ASSESSMENT
+The cross-check is useful and appropriately distinguishes two evidence trees: C-008 uses the pinned production snapshot (970aabf); the 18-Sep chapters describe a testing worktree at e7bf477 plus an uncommitted change set and explicitly state production was never read. The three conflicts should therefore be recorded as cross-document/tree differences, not treated as proof that either underlying tree was wrong.
+
+The proposed revision 3 is not ready to freeze. Rama's decisions D-1 to D-3 are required; P-06 needs a bounded evidence check before changing SS-03; and source-boundary and wording details need tightening.
+
+WHAT CHECKS OUT
+- The two chapter files' titles, line counts, SHA-256 hashes, evidence dates and repository blob IDs are documented. The report says uploaded copies are byte-identical to the two fetched chapter blobs.
+- The reported 61 results total correctly: 41 CONSISTENT + 8 PARTIAL + 3 CONFLICT + 9 NOT COMPARABLE = 61.
+- Three conflicts are clearly isolated:
+  C1 / CH-04: “reverse-order teardown” versus C-008's pinned start/stop order.
+  C2 / CH-11: “every decision is delegated” versus processor-owned checks/rejects in C-008.
+  C3 / CH-26: REJECTED_QUEUE_FULL versus the pinned branch writing REJECTED with reason QUEUE_FULL.
+- The cross-check correctly says the 18-Sep chapters describe another tree and that their underlying code was not checked against that tree.
+- The Python assertion qualification is valid at language level: Python's reference says assert statements emit no code when optimization is requested. It does NOT establish that production started with -O; that remains UNKNOWN / NOT ESTABLISHED.
+
+DECISIONS REQUIRED FROM RAMA — DO NOT APPLY SILENTLY
+D-1 / C1: Recommend (a): record the difference in C-008 section 14.7, preserve C-008's pinned evidence, and do not modify the 18-Sep manual. Option (b) remains available if Rama wants the other manual's owner notified.
+D-2 / C2: Recommend (a): record the difference and preserve the pinned evidence; do not change the 18-Sep manual.
+D-3 / C3: Recommend (a): record the status-string difference and preserve C-008's finding. Do not widen the source boundary to the testing snapshot merely to settle a question not needed to describe the pinned branch. The testing-tree explanation remains NOT ESTABLISHED.
+D-4: Recommend (i): keep the 61-row table as a separate companion file, frozen with C-008 revision 3.
+D-5: Do not approve automatically. The saved output of read 042 is pre-existing evidence, but check the source boundary in the decision note before re-viewing it. If authorised, restrict the check to that exact saved output and the question whether admit_prepared's finally decrements _in_flight_count. No source-code re-read, new search or additional claim. Otherwise leave SS-03 unchanged and CH-34 UNVERIFIED.
+D-6: Optional. Recommend adopting the chapter 02 pointer only as a statement about the testing tree; keep U-01 open for the pinned production snapshot. Do not infer production behaviour from another tree.
+D-7: Rama explicitly asked Claude to check GitHub and download the chapters after the earlier decision note. It is reasonable to record a narrowly scoped, user-authorised superseding instruction: the two chapter blobs only, no other repository files read. Do not imply the earlier source boundary remained unchanged. Preserve the reported commit, blob IDs, hashes and read log. If command logs do not substantiate the claimed scope, mark it UNKNOWN / NOT ESTABLISHED.
+
+REVISION 3 REQUIRED GUARDS
+1. Keep status DRAFT / NOT FROZEN until decisions and final review are complete.
+2. Do not apply D-1 to D-3 until Rama answers. If he chooses (a), record each decision and date in section 14.7 and the companion file.
+3. Resolve D-5 before changing SS-03; otherwise leave it unchanged and CH-34 UNVERIFIED.
+4. Section 14.7 must say the comparison is bounded, chapter 02 was read only in part, and no agreement beyond listed rows is claimed.
+5. Do not say “the two manuals agree” globally. Use “within the bounded overlap” and preserve the 9 NOT COMPARABLE results.
+6. Keep the production-vs-testing-tree distinction prominent for all three conflicts.
+7. P-04 may state the Python language-level fact only. Production launch flags remain UNKNOWN / NOT ESTABLISHED.
+8. P-05 is a reader-method note. Do not assert trailing newlines caused the count difference unless that was checked.
+9. P-08 should record Rama's later instruction as superseding the earlier restriction for those two files only.
+10. Reconcile P-13/P-14 with actual artifacts and logs before publication. Do not conflate 18 chapter reads, 125 legacy reads and 18 searches.
+11. Replace “No legacy source file was read” with precise wording if accurate: “No new legacy source read was performed for the cross-check; three saved outputs of previously logged reads were re-viewed.”
+12. Do not freeze, commit, push or publish until the revised draft, companion inventory and cross-check are reviewed and Rama explicitly approves under W-4 (DR-017).
+
+LIMITATIONS / OPEN ITEMS
+- This review uses the two uploaded deliverables and project files available here; it has not independently reproduced Claude's Git operations, hashes, masked-reader logs or 61-row comparison.
+- Chapter line citations were not checked against their underlying testing tree. The conflicts are documentary differences; their underlying-tree causes remain unresolved.
+- The proposal still contains placeholders such as [date], [N], [E4's lines] and conditional text. Fill only after the required decisions/checks; none should remain in a release candidate.
+- The official Python documentation cited is https://docs.python.org/3/reference/simple_stmts.html#the-assert-statement. It does not prove the service's runtime optimisation mode.
+
+NEXT ACTION
+Rama should answer D-1 through D-7 (or explicitly delegate decisions). Claude may then prepare revision 3 and companion files strictly according to approved answers, return them for review, and STOP. This review authorises no freeze or repository write.
