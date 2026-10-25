@@ -1,0 +1,65 @@
+C-011 STAGE 0 — ANSWER SHEET
+EOD / DAILY SIGNAL ROUTING
+Date: 25-Oct-2026
+Status: PREPARATION ONLY — NOT A MANUAL, NOT FROZEN
+
+1. PURPOSE
+Establish a complete, bounded source inventory and a proposed reading sequence for C-011, “EOD/Daily signal routing”, against the DEAD legacy production repository. Stage 0 is inventory and scope reconciliation only. Do not analyse module behaviour or draft the manual yet.
+
+2. AUTHORITATIVE LEGACY SOURCE
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned baseline commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Commit URL: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/commit/970aabf3c78d777d9d34549e021f7c8e756c7bdb
+The commit must be used as the immutable reference. Do not silently use the current default branch or any later commit.
+
+3. INITIAL REPOSITORY REVIEW — FACTS USED TO SET THE INVENTORY SCOPE
+At the pinned commit, the following files were verified by direct GitHub fetch:
+- README.md — blob 5329666bbd1c0cb46cdf7e0e264670ead9e74cc6
+- signals/webhook_receiver.py — blob 0f15a0ab033529d80d9c14c993a5077690b72871
+- signals/signal_processor.py — blob 7fab0a02a302770ac72bbbd662549d5c091086c1
+- config/system_config.yaml — blob bf742ae5c81c60614370361998e6a102a1064ff7
+
+The receiver’s module documentation describes an optional `eod_capture` dependency, identified there as `WatchlistCaptureWorker`, and says the normal webhook path validates, deduplicates, checks expiry/backpressure, persists, and queues signals. The processor’s module documentation describes a downstream queue worker and strategy lookup. These are only inventory clues for Stage 0; they are not a C-011 conclusion about the actual EOD/Daily route.
+
+4. C-011 SCOPE TO INVENTORY
+The label “EOD/Daily signal routing” could refer to more than one distinct path. Inventory must identify the repository paths and evidence boundaries for each candidate without deciding behaviour:
+A. End-of-day (EOD) capture/watchlist path, including the `eod_capture`/`WatchlistCaptureWorker` reference and its producer/consumer/wiring.
+B. Daily or EOD-related scanner/webhook signal routing, including any scanner-name, route, signal-type, timeframe, or strategy dispatch.
+C. Startup/runtime wiring and configuration that activates or disables either path.
+D. Relevant persistence/schema and scheduled task/cron entry points, if any.
+E. Focused tests and existing documentation/audit records that explicitly cover those paths.
+
+Do not assume A and B are the same route. If the repository does not establish that they are connected, record the connection as UNKNOWN / NOT ESTABLISHED.
+
+5. KNOWN ADJACENT MANUALS / BOUNDARIES
+- C-002: scanner-to-webhook boundary and webhook delivery context.
+- C-003: authentication.
+- C-004: field and symbol validation.
+- C-005: claims/deduplication.
+- C-006: queue.
+- C-007: persistence.
+- C-008: signal processing.
+- C-009: signal expiry (completed and pushed 24-Oct-2026).
+- C-010: scanner-to-strategy mapping (frozen under DR-063, commit 9b4cb686da6a9cdd1ea9626ef1b286bfe58fd220).
+C-011 must document its own EOD/Daily routing boundary and cross-reference adjacent manuals rather than rewriting them. Do not reopen their frozen findings unless C-011 inventory produces genuinely new, directly relevant evidence.
+
+6. REQUIRED STAGE 0 OUTPUT FROM CLAUDE
+Return:
+- Completed source inventory with exact repository paths and pinned-commit blob SHAs where available.
+- A classification for each candidate: likely in-scope / adjacent dependency / excluded, with a short reason.
+- Proposed bounded reading sequence for a later Stage 1 evidence pass.
+- Relevant tests and docs/audit records to inventory, without running tests or reading their bodies in Stage 0.
+- A concise list of uncertainties and scope overlaps, clearly labelled UNKNOWN / NOT ESTABLISHED.
+- Confirmation that the repository ref remained pinned and that no source behaviour was analysed.
+
+7. LIMITS
+No source-content reads during Stage 0 beyond the already-established inventory metadata; no behavioural conclusions; no line-by-line audit; no tests; no manual drafting; no edits, commits, pushes, VM/host/broker/webhook/Chartink/live-system access; no V2 design or implementation. Do not reproduce secrets or credential-shaped values.
+
+8. FACT DISCIPLINE
+Use these labels where applicable:
+FACT; UNKNOWN / NOT ESTABLISHED; INTERPRETATION; HISTORICAL; KNOWN DEFECT; OPEN QUESTION.
+Do not turn a path name, comment, module docstring, or proposed sequence into proof of runtime behaviour.
+Do not treat the C-010 handover clue or the presence of `eod_capture` as proof of what “Daily” means.
+
+9. STOP CONDITION
+After returning the inventory and proposed reading sequence, STOP and wait for ChatGPT’s reconciliation. Do not begin Stage 1 or draft C-011 until explicitly authorised.

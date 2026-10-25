@@ -1,0 +1,515 @@
+C-011 - EOD / DAILY SIGNAL ROUTING
+STAGE 0 ANSWERS: SOURCE INVENTORY AND READING PLAN (the completed answer sheet: Claude's answers to ChatGPT's
+  C-011_STAGE0_ANSWER_SHEET_25-OCT-2026.txt, which is kept unchanged under its own name)
+Date of work: 25-Oct-2026 (IST); inputs received at 08:46 IST (file time). Prepared by Claude.
+Inputs: C-011_STAGE0_CLAUDE_RESEARCH_PROMPT_25-OCT-2026.txt (59 lines; SHA-256
+  51AB0A7E6E5F8876BA6DC80D9ED2155C23504F27D2ABD57F9D1884BEC334D6CA) and C-011_STAGE0_ANSWER_SHEET_25-OCT-2026.txt (65 lines;
+  SHA-256 94E5FDACA4347637E8F34F50CCA0DB2CBFF6183AB7CE95754B546513234FBA18), received from Rama.
+Status: Stage 0 only: path names and metadata. No legacy source content was opened, printed, searched or counted; no module
+  analysed; no behavioural conclusion drawn. Stops for ChatGPT's reconciliation and an explicit authorisation.
+Security: no credential, token, account or client identifier, host or address, deployed path, mailbox or person name other
+  than Rama's is reproduced; protected paths are counted, never listed.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Pin confirmed (FACT): the repository's HEAD and main are 970aabf3c78d777d9d34549e021f7c8e756c7bdb, the local clone's HEAD
+  is the same commit, and ChatGPT's four named blobs equal the pinned listing's (section 1).
+- Inventory (section 3): 61 rows, 53 single files and 8 grouped rows, covering 161 files: 9 rows likely in scope, 32
+  adjacent and 20 excluded (12 single files and 8 groups of 108 files). Every listed path is permitted under the never-open
+  rules; the 7 protected paths that matched a term by name are counted only.
+- A and B (section 4): path names and metadata establish no link between the capture/watchlist path (A) and the scanner-type
+  routing (B): UNKNOWN / NOT ESTABLISHED from the inventory. The frozen manuals record at this pin that the receiver sends an
+  "eod"-type key (only pb01_breakout_retest) to a capture worker that writes pb01_watchlist rows for the PB-01 entry stage
+  (HISTORICAL; not yet re-verified by C-011). What "Daily" covers is an OPEN QUESTION (OQ-01).
+- Proposed Stage 1 (section 5): S1-1, 32 count-only searches (terms T1 to T8 over the four C-010 scopes), two earlier counts
+  cited instead of repeated; then S1-2, eight bounded steps (ranges of 298 lines at most plus greps bounded by S1-1), with a
+  stop before S1-2 if the total would pass 400 printed lines.
+- Questions (section 7): OQ-01 (what "Daily" covers), OQ-02 (the downstream boundary) and OQ-03 (method) are blocking; OQ-04
+  to OQ-07 are not.
+- Declaration (section 8): no source content read; nothing run, contacted, changed, committed or pushed.
+
+==============================================================================================================================
+1. REPOSITORY IDENTITY (answer sheet sections 2 and 3; prompt action 1)
+==============================================================================================================================
+- Repository and pinned commit: ramakrishnan031-ctrl/trading-system-prod-snapshot at
+  970aabf3c78d777d9d34549e021f7c8e756c7bdb (FACT).
+- git ls-remote at 08:47:53 IST: HEAD and refs/heads/main both 970aabf3c78d777d9d34549e021f7c8e756c7bdb; the pin is still
+  the tip of main (FACT). The local clone's HEAD is the pin (git rev-parse, rechecked at 09:12 IST). Commit metadata: tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa, parent 056905b861b22f034da07baeed969fe0daeb3cb7, committed 2026-09-11 02:05:13
+  IST (FACT). The clone is the one set up for C-009: partial (filter blob:none), sparse checkout; nothing in it was changed.
+  No other branch, commit, VM or live system was used.
+- ChatGPT's four blobs (answer sheet section 3) equal the pinned listing's (FACT): README.md
+  5329666bbd1c0cb46cdf7e0e264670ead9e74cc6; signals/webhook_receiver.py 0f15a0ab033529d80d9c14c993a5077690b72871;
+  signals/signal_processor.py 7fab0a02a302770ac72bbbd662549d5c091086c1; config/system_config.yaml
+  bf742ae5c81c60614370361998e6a102a1064ff7. The module-documentation clues the sheet cites (eod_capture,
+  WatchlistCaptureWorker, a downstream queue worker) were not opened here and are not used as evidence.
+- V2 baseline for this topic: trading-system-v2 main at 9b4cb686da6a9cdd1ea9626ef1b286bfe58fd220 (the C-010 freeze,
+  DR-063), checked with git ls-remote at 08:50:30 IST. Next numbers: DR-064, Q-47, VP-69, BK-51.
+
+==============================================================================================================================
+2. INVENTORY METHOD (prompt actions 2 and 3; answer sheet section 7)
+==============================================================================================================================
+- Complete tracked-file inventory: the saved tree listing of the pinned commit (git ls-tree -r of the commit, from tree
+  objects only; no blob involved): 1,438 entries, all blobs (1,432 mode 100644, 6 mode 100755), SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5, the value recorded in the C-009 handover and used at
+  C-010. It was not regenerated: on the partial clone only per-file or metadata commands are used.
+- Metadata: blob IDs from the listing; byte sizes from the clone's local object store as recorded at C-010 (git cat-file
+  --batch-all-objects --batch-check, which lists objects already present and fetches nothing). At 09:12 IST the store held
+  8,920 objects (1,257 blobs, 1,537 commits, 6,126 trees), the same as at C-010; protected blobs present: 0
+  (sensitive_check.py). Line counts were not taken, because they need the files' contents; where a frozen manual records a
+  file's line count, section 3 gives it as HISTORICAL.
+- Exclusions by rule (counts only): 102 protected paths, never opened (21 under config, 80 under docs, 1 root dotfile); the
+  two July 2026 queue records (excluded since C-006; no term matched either); host-type and deployment records are counted
+  only, never read.
+- Candidates were found (a) by case-insensitive searches of all 1,438 path names for the prompt's terms and their neighbours
+  (17 term groups; Appendix A): 150 permitted paths matched at least one term, and 7 protected paths matched (8 term matches),
+  counted only; (b) by the legacy paths that the frozen V2 manuals cite for the EOD route, its wiring and its records (11
+  more files; a search of V2 documents, not of legacy source); (c) the V2 project documents for the topic's title
+  (section 4.3). Every one of the 150 permitted matches is in a row of section 3 or a list of Appendix A, once.
+- Source contents were NOT read during this Stage 0: no blob was opened, printed, searched or counted for C-011. Count-only
+  content searches are proposed as the first Stage 1 step (OQ-03), because Rama decided on 24-Oct-2026 (12:10 IST) that
+  count-only scanning is "a defined exception only where an authorisation names it" (V2_DESIGN_LOG lessons, 24-Oct-2026).
+
+==============================================================================================================================
+3. CANDIDATE SOURCE INVENTORY (answer sheet sections 4 and 6; prompt actions 3 and 5; nothing below has been read)
+==============================================================================================================================
+Group (answer sheet section 4): A the EOD capture/watchlist path; B daily/EOD scanner or signal routing; C start-up wiring and
+  configuration; D persistence, schema and scheduled jobs; E tests and records; "-" another subject.
+Class: IN likely in scope; ADJ adjacent dependency; EXC excluded. "Why a candidate" gives the path-name match or the frozen
+  manuals' citations at this pin (V2 records: HISTORICAL for C-011; no relation is established by C-011 yet).
+Access: each listed file's classification under the never-open rules (design-log lesson of 23-Oct-2026). "permitted" means
+  that no never-open rule matches it; "counts only" marks a deployment file or host-type record whose lines may hold deployed
+  paths or host values. Stage 1: what section 5 proposes (read, grep, count = S1-1's counts only, no).
+
+| ID | Path | Pinned blob | Bytes | Group | Why a candidate | Class | Access | Stage 1 |
+|---|---|---|---|---|---|---|---|---|
+| R01 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 59,565 | B, A | the type branch, lines 551 to 564: an "eod" key leaves after authentication and the unknown-scanner check, before the kill, backpressure and window gates (C-001 7.1, C-003 10.4, C-004 T-18, C-006 4.1, B-008 3); the EOD handler and its hand-off, 751 to 835 (C-001 7.5, C-002 9 row 7 and 11, C-004 T-18, C-005 10.2); eod_capture in the constructor (C-004 9.1) | IN | permitted | read |
+| R02 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | 11,490 | A | the capture worker: its start, 86 to 92, and the error caught at 131 (B-006 TH9); the row write, 106 to 178 (C-001 7.5); left to C-011 by C-010 (R22) | IN | permitted | read |
+| R03 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 104,053 | D | pb01_watchlist is one of its tables (B-003 5), with a unique key on symbol and trading date (C-005 10.2) | IN | permitted | read |
+| R04 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 208,758 | C | the capture worker and the entry stage wired at 3712 to 3755 (B-006 TH9, TH10); the late binding set_eod_capture at 3612 and 3747 (C-002 6.1); both stopped at shutdown, 1720 to 1729 (B-006 3) | IN | permitted | read |
+| R05 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 55,901 | C | the watchlist block, 619 to 630, as cited: 619 to 621 (C-001 7.5); enabled at 620 and the entry stage's poll at 630 (B-006 3); playbook_scanner at 621 (C-001 4.4); the entry stage's window within 619 to 627 (B-008 3) | IN | permitted (no never-open rule matches; C-006 clarification) | read |
+| R06 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | 3,067 | B | scanner_type: eod on pb01_breakout_retest at line 84, the map's only explicit scanner_type (C-001 4.1 and 5.2; A-009 8) | IN | permitted | read |
+| R07 | v3_chain/pb01_entry.py | cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | 18,217 | A | the next consumer, the PB-01 entry stage: its start, 117 to 125 (B-006 TH10); the row status is its durable state (B-006 11); 372 lines (C-008 1.1) | IN (the pickup only; OQ-02) | permitted | read |
+| R08 | tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | 5,761 | E | the EOD route's tests (C-001 11: lines 39 to 119; C-002 16: lines 59 to 113) | IN (as text; not run) | permitted | grep |
+| R09 | tests/unit/test_v3_watchlist_capture.py | 8b50580570a92305ed5a7a6c45e726faee801768 | 6,849 | E | the capture worker's tests, by name (no frozen manual cites the file) | IN (as text; not run) | permitted | grep |
+| R10 | utils/cron_heartbeat.py | f6819c0db9372e038c7dc0c2d2721b1482603eea | 7,245 | D | the "pb01_capture" heartbeat row written per EOD alert, recording "queued", not "captured" (C-002 10.7 and 11; B-007 11) | ADJ | permitted | count |
+| R11 | config/strategies/pb01_breakout_retest.yaml | eedf5cac5ed5132665160a1aac9cce30cf4a38ed | 3,051 | B | the one EOD-type strategy: enabled false, v3_playbook true, horizon NEXT_DAY, window 09:25 to 11:00 (A-008 3 and 16; B-009 4); 80 lines (C-009 2.1) | ADJ (A-008's) | permitted | count |
+| R12 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | 127,242 | C | the scanner_type schema, 2347 to 2371, default at 2352 to 2357 (C-001 4.2 and 5.2); the setting watchlist.playbook_scanner, whose schema comment says it "binds the eod route", 1533 to 1535 (C-001 4.4, D-04) | ADJ | permitted | count |
+| R13 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 153,466 | D | a store method for the watchlist rows: UNKNOWN | ADJ | permitted | count |
+| R14 | core/migrations.py | cc39e811e48a9eec823c20b70d343278a6b33eef | 21,663 | D | a migration of pb01_watchlist: UNKNOWN (the mechanism: B-003 6) | ADJ | permitted | count |
+| R15 | v3_chain/pb01_runner.py | e87a5aa964643f1eae5fad90eeb1e0993b5829e0 | 15,333 | A | a PB-01 runner, by name: 297 lines, docstring lines only printed at C-008 (C-008 1.1); its relation to the two PB-01 workers UNKNOWN | ADJ | permitted | count |
+| R16 | v3_chain/models.py | 159e319d8c91ead43e286613b6dfc58ed8ef9ab9 | 5,430 | A | V3 models, by name; a watchlist row model UNKNOWN | ADJ | permitted | count |
+| R17 | v3_chain/__init__.py | 72b84e0f5997fab407fba7c6e627a86b6d0a0975 | 645 | A | the package, by name | ADJ | permitted | count |
+| R18 | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | 1,653 | B | strategy classes, by name (C-010 R20.2); an EOD or horizon class UNKNOWN | ADJ | permitted | count |
+| R19 | strategies/schema.py | 22530161a5ee5a24bd85a7701b45269b3f2bacdb | 14,263 | B | the strategy model, whose fields include horizon and v3_playbook (A-008 3 and 16) | ADJ (A-008's) | permitted | count |
+| R20 | config/cron_registry.yaml | 42ff638145ba8c05eba907a33d5b391ae3fc6910 | 27,116 | D | the job registry: 47 jobs plus an officer entry (A-009 3; A-011 19); 768 lines (C-007 1.1); a job acting on the watchlist or the PB-01 stages UNKNOWN | ADJ | permitted | count |
+| R21 | deploy/cron/trading-system.cron | f8399b40bfa71e35e27746e46cd463171615477a | 15,842 | D | the crontab generated from the registry (A-009 3; B-012 7.1); its lines hold the deployed project directory (design-log lesson of 23-Oct-2026, C-007 read 083) | ADJ | permitted; counts only, no line printed | count |
+| R22 | core/cron_registry.py | 0f804da57eb34ceca3216f3c94713b3cd4f7ef27 | 14,789 | D | the registry's loader (B-012 7.1) | ADJ | permitted | count |
+| R23 | alerts/cron_alerts.py | 66ce4b6bf1670deaad296a2d0e0d8ef01c965bd5 | 5,253 | D | heartbeat alerts, by name | ADJ | permitted | count |
+| R24 | scripts/cron_officer.py | 405320128a1bfa221c4cf998351bc117079c200a | 46,613 | D | the cron officer, by name (Rama's job count from it: A-003 10) | ADJ | permitted | count |
+| R25 | scripts/fetch_daily_candles.py | 4a149615dc48ad1342f5b406d4728728631dd7c8 | 13,950 | D | a "daily" post-market job at 15:40 that writes candles (B-003 10; B-010 10) and reads signals (C-007 12, not read); a relation to the EOD route or the watchlist UNKNOWN | ADJ | permitted | count |
+| R26 | tests/unit/test_c6_auth_collapse.py | b5ac355e9af35cb48afcb83fbe6124de3bf6603d | 29,873 | E | the EOD route after hours and under a kill, after authentication (C-002 16: lines 337 to 382; C-003 10.4: lines 361 to 379) | ADJ (C-002's and C-003's; as text) | permitted | count |
+| R27 | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | 83,745 | E | the receiver's tests, lines 134 to 1006, which leave the EOD route to other files (C-002 16) | ADJ (as text) | permitted | count |
+| R28 | tests/unit/test_v3_pb01_e2e.py | e0c81020c1614982400b8d62166b8333151d7819 | 5,220 | E | PB-01 end to end, by name | ADJ (as text) | permitted | count |
+| R29 | tests/unit/test_v3_pb01_entry.py | 2330afee2c4bbe4f52d48a825bbfbc56dedfc0d1 | 9,844 | E | the entry stage's tests, by name | ADJ (as text) | permitted | count |
+| R30 | tests/unit/test_v3_pb01_runner.py | a4cc9f09e9cc490de792d1ede9aa742827cce6e3 | 7,206 | E | the runner's tests, by name | ADJ (as text) | permitted | count |
+| R31 | tests/unit/test_cron_heartbeat_contract.py | 82e4222a4e6d3fb1d0eb0c71f47700fb820fc085 | 5,398 | E | the heartbeat row's contract, by name; a "pb01_capture" case UNKNOWN | ADJ (as text) | permitted | count |
+| R32 | tests/unit/test_v3_strategy_taxonomy.py | bc5c5caed4da96ede3a71bda5c007c6b1adff339 | 4,793 | E | the taxonomy's tests, by name | ADJ (as text) | permitted | count |
+| R33 | docs/audit/eod_capture_safety_2026-07-24.md | db5c44612170fd9732049a2f40667b477eeeb2bc | 11,644 | E | a dated record on the EOD capture (RECORD-DERIVED for its own date only); scanner_type in 2 of its lines (C-010 S1-1, Q08) | ADJ | permitted | count; headings only if authorised (OQ-06) |
+| R34 | docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md | adf589da731440a1a81d6dfee5570cc1ee0b1702 | 10,954 | E | a dated PB-01 and V3 record | ADJ | permitted | count |
+| R35 | docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md | 78c628a0c8fe61a22c8974c403fa0776f3ff308a | 5,220 | E | a dated record of the PB-01 shadow flip (14-Jul) | ADJ | permitted | count |
+| R36 | docs/audit/integrity_audit_2026.md | 25a738f2a9a77ed37374dce367e5fd8e848efd8a | 368,033 | E | the 31-Jul integrity audit: PB-01's 5 POSTs, 27 to 31-Jul (lines 84 to 99; C-001 4.5, R-02); EOD captures counted as accepted (IA-P1-03, lines 187 to 209; C-001 A-L5) | ADJ (C-001's; cited) | permitted | count |
+| R37 | docs/audit/service_window_configurable_25jul2026.md | 41c2843b7526a5e3380c01a29030336214da2917 | 18,577 | E | the 24 and 25-Jul service-window record: PB-01's 17:00 alerts from 13-Jul met a closed port; the self-exit moved to 17:35 (C-002 14, R6) | ADJ (C-002's; cited) | permitted | count |
+| R38 | docs/audit/followup_investigation_15jul2026.md | 01008d209aff7a5c65c34207e0b3e84a06ba65c9 | 17,177 | E | the 15-Jul specification of the PB-01 alert (C-002 4.2; C-003 R-06); scanner_type in 1 line (C-010 Q08); may hold host values | ADJ (C-002's; cited) | permitted; counts only | count |
+| R39 | docs/03_daily_operations_runbook.md | 135aa048bcc303829737b8d5d66560d9ad2017e4 | 8,896 | E | "daily" operations; an EOD-scan step UNKNOWN | ADJ | permitted | count |
+| R40 | docs/04_db_schema_reference.md | 0218e152b77e1765fee2aa76564d1c386c05c133 | 17,765 | E | a schema reference; pb01_watchlist UNKNOWN | ADJ | permitted | count |
+| R41 | README.md | 5329666bbd1c0cb46cdf7e0e264670ead9e74cc6 | 5,384 | E | the first of the four files ChatGPT verified (answer sheet section 3); EOD or watchlist text UNKNOWN | ADJ | permitted | count |
+| R42 | docs/audit/deployment_evidence_pb01_shadow_14jul2026.md | daac5f901b582ffbb5d39538e4187f81114b1d9d | 5,722 | E | a deployment record, likely to hold host values | EXC | permitted; host-type: counts only, never read | count only (OQ-06) |
+| R43 | docs/audit/pb01_simulation_feasibility_2026-07-24.md | 8c1e2686d7e7b82d2777a23c0e16b70a965fb11f | 10,879 | E | a feasibility study: design intent, not source | EXC | permitted | no |
+| R44 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 139,403 | B | no direct hand-off from the EOD route (C-008 9.4, EP-09) | EXC (C-008's; pointer) | permitted | no |
+| R45 | v3_chain/runner.py | a782f91f2f4f1afe12c75072708e2a26316eed3f | 20,092 | A | the decision-chain shadow worker (B-006 TH8; C-008), not the EOD route | EXC (C-008's) | permitted | no |
+| R46 | v3_chain/score.py | 8270d49812543497e3ef37b4d4444e9165138541 | 10,379 | - | V3 scoring, by name (C-008; D topics) | EXC | permitted | no |
+| R47 | v3_chain/truncate.py | 1d11b0b7c3b5fbd9f480a49f4c743885033a99ae | 4,580 | - | V3 truncation, by name (D topics) | EXC | permitted | no |
+| R48 | v3_chain/forward_shadow.py | dc96649f0a9f66683abe27728213d1d062cf3a2c | 5,017 | - | the V3 forward shadow, by name (C-008; D topics) | EXC | permitted | no |
+| R49 | tests/unit/test_v3_pb01_gates_score.py | 8af37d3f579cb5a66c84d19780afa2a66eb7a157 | 9,074 | E | PB-01 gates and score (D topics) | EXC | permitted | no |
+| R50 | tests/unit/test_pb01_registration.py | 80f63d22be64667c1315aad6653caf50c164fa2e | 4,229 | E | PB-01's registration in the two scanner files (C-001 4.1: lines 47 to 49; C-001 11: lines 31 to 92) | EXC (C-001's; cited) | permitted | no |
+| R51 | tests/unit/test_v3_chain.py | d0711c45b279786e5b3df609d5bad5f8db2235c5 | 16,713 | E | the V3 chain (C-008) | EXC | permitted | no |
+| R52 | config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | 1,795 | B | the twin URL file, with no effect identified (C-001 4.2 and 4.4) | EXC (C-001's) | permitted | no |
+| R53 | tests/unit/test_strategy_direction_routing.py | febe85d94bcc5ff54facd47d16cfd1f8c3a57123 | 1,653 | E | direction routing, by name (matched "routing"; C-010's Stage 0 listed it as CONDITIONAL) | EXC (C-010's) | permitted | no |
+| R54 | Appendix A, X1: config/strategies/positional_*.yaml (3 files) | Appendix A | - | B | delivery strategies on intraday-type keys, which take the intraday path (C-001 4.2; A-009 8) | EXC unless OQ-01 (b) | permitted | no |
+| R55 | Appendix A, X2: docs/v3/ (9 files) | Appendix A | - | E | V3 design plans and gap maps: design intent, not source | EXC | permitted | no |
+| R56 | Appendix A, X3: EOD-named files of other end-of-day subjects (18 files) | Appendix A | - | - | the 15:17 square-off, the stale-signal cleanup, the broker reconcile and the verify job, with their tests and records (A-011 9, 10 and 18; B-005 11; B-010; C-006 8.3; C-007 6.4 and 7) | EXC (INTERPRETATION from the names and those manuals) | permitted | no |
+| R57 | Appendix A, X4: daily-named files of other subjects (18 files) | Appendix A | - | - | reports, statistics, daily-loss rules and a candle-fetch test, with their tests and records; one test names a "daily gate" whose subject the name does not establish | EXC (by name) | permitted | no |
+| R58 | Appendix A, X5: schedule and cron tooling (23 files) | Appendix A | - | - | crontab generation, drift checks, the watchdog, report rendering, the cron officer's approval samples, and their tests (R20 to R24 hold the registry, the crontab and the checker) | EXC (by name) | permitted; the two systemd files counts only | no |
+| R59 | Appendix A, X6: schema and migration tooling (6 files) | Appendix A | - | - | the analytics schema, migration guards, their tests and two records (B-003) | EXC (B-003's) | permitted | no |
+| R60 | Appendix A, X7: position-, carry- and swing-named files (12 files) | Appendix A | - | - | position sizing, carried positions, an incident record | EXC (by name) | permitted | no |
+| R61 | Appendix A, X8: scanner-, webhook-, pre-market-, V3-tool- and capture-named files (19 files) | Appendix A | - | - | scanner attribution and checks (C-001, C-010), the limiter and degrade tests (C-002, C-003), a webhook test script, pre-market briefs, V3 parity and soak tools, a metrics-baseline capture | EXC (by name) | permitted; one host-type record counts only; one image | no |
+
+Tests (all as text only; none is run): IN R08 and R09; ADJ R26 to R32; EXC R49 to R51, R53 and those in X3 to X8.
+Documents and records: ADJ R33 to R41 (counts only); EXC R42 (never read), R43, X2 and the records in X3 to X8.
+
+==============================================================================================================================
+4. A AND B: WHAT THE INVENTORY CAN AND CANNOT ESTABLISH (prompt action 4; answer sheet sections 4 and 8)
+==============================================================================================================================
+4.1 From path names and metadata at the pin (FACT for the names only; a name proves nothing about behaviour)
+- A, by name: v3_chain/watchlist_capture.py and its test are the only paths naming a watchlist; v3_chain/pb01_entry.py and
+  v3_chain/pb01_runner.py name PB-01 stages.
+- B, by name: tests/unit/test_v3_eod_route.py is the only path naming an "eod route"; "route" occurs in one other path name
+  (tests/unit/test_strategy_direction_routing.py, direction routing); no path name contains "dispatch", "signal type",
+  "timeframe" or "end of day". The other EOD-named files name the end-of-day square-off, cleanup, broker reconcile and verify
+  jobs and their tests and records (X3); the daily-named files name reports, statistics, daily-loss rules, a candle job, a
+  runbook and their tests and records (R25, R39, X4).
+- The relation of A and B: UNKNOWN / NOT ESTABLISHED from the inventory. No path name or metadata shows a call, an import or a
+  shared table.
+4.2 From the frozen manuals at this pin (HISTORICAL; cited, not re-read; C-011 has not re-verified any of it)
+- B, the routing by type: an "eod"-type key leaves the intraday path in the receiver after authentication and the
+  unknown-scanner check and before the kill-switch, backpressure and entry-window gates (signals/webhook_receiver.py lines 556
+  to 564; C-001 7.1 step 5, which keeps the routing by type for C-001 and gives the route to C-011; C-003 7.3 and 10.4; C-004
+  T-18; C-006 4.1; A-011 12; B-008 3). The only "eod"-type key is pb01_breakout_retest; the other 15 take the default
+  "intraday" (C-001 4.1 and 5.2; A-009 8). The setting watchlist.playbook_scanner says in its schema comment that it binds
+  the eod route, but has no reader; the binding is made by scanner_type (C-001 4.4, D-04: KNOWN DEFECT / AMBIGUITY).
+- A, the capture path: _handle_eod parses the body with checks of its own, applies the aliases and submits (scanner key,
+  symbol, triggered_at) to the capture worker per symbol, or records a fail-safe miss when no worker is bound; it answers 400
+  for a malformed body, 200 "watchlist disabled" without a worker, otherwise 200 with the counts (C-001 7.5 and T-10; C-002 9
+  row 7 and 11; C-004 T-18). The worker writes pb01_watchlist rows with source = the key (C-001 7.5). The receiver takes the
+  worker in its constructor and by the late binding set_eod_capture; the worker is wired when watchlist.enabled is true
+  (C-004 9.1; C-002 6.1; B-006 TH9). One heartbeat row, "pb01_capture", is written per alert and records "queued", not
+  "captured" (C-002 11; B-007 11).
+- The route's guards: it bypasses the three intake guards and relies on its table's unique key on symbol and trading date
+  (C-005 10.2; BK-08); it checks no expiry, dedup cache or fingerprint, and the capture worker's own handling was not read
+  (C-003 6.5 and L-01; C-009 14). An EOD alert answers 200 with accepted = the symbol count and creates no signals row, so
+  webhook_audit counts it as accepted (C-001 8, A-L5, and D-06: KNOWN DEFECT / AMBIGUITY).
+- The next consumer: the PB-01 entry stage (pb01-entry), whose durable state is the watchlist row's status (B-006 TH10 and
+  11). Its own window is 09:20 to 11:00 from the configuration (B-008 3; A-008 16); the strategy file's window is 09:25 to
+  11:00 (A-008 16; B-009 4). It writes would-be records only (A-008 16). The PB-01 stage is rehydrated at start when enabled
+  (A-011 14) and stopped at shutdown (A-011 11; B-011 5).
+- So the frozen record ties B to A: the type branch hands "eod" keys to the capture path (A-002 12: "EOD scanner signals were
+  routed to a watchlist/EOD path and never entered the intraday queue", FACT there, at the baseline; A-008 8).
+- Records (RECORD-DERIVED, each true for its own date; cited from the frozen manuals): PB-01's 17:00 alerts from 13-Jul met a
+  closed port, because the service then stopped at 16:00 (C-002 12 and 14, R6; B-001 7.2); the stop time became configurable
+  on 25-Jul, now 17:35 (A-003 5; A-011 4); webhook_audit holds 5 PB-01 POSTs, one a night, 27 to 31-Jul (C-001 4.5 and R-02;
+  C-002 14, R7). HISTORICAL (Rama): PB-01 was a placeholder and nothing was traded from it (A-003 11). UNKNOWN: whether the
+  system traded next day on stored EOD signals (A-002 12).
+- Counts at this pin already recorded (FACT only for their pattern and scope): scanner_type occurs in 8 files of s_all (15
+  lines): config/scan_webhook_map.yaml 1, core/config_loader.py 4, signals/webhook_receiver.py 1, two tests
+  (tests/unit/test_c6_auth_collapse.py 2, tests/unit/test_v3_eod_route.py 2) and three records (R33 2, R36 2, R38 1)
+  (C-010 S1-1, Q08); no name beginning eod_route, eod_signal or daily_signal occurs in the 869 code files, tests included
+  (C-008 9.4, EP-09: search Q28, positive control Q53).
+4.3 What "Daily" means: OPEN QUESTION (OQ-01)
+- Not used as evidence of what "Daily" means: the presence of eod_capture (answer sheet section 3) and any handover clue.
+- HISTORICAL (project documents of 21-Sep-2026 on the same baseline; not legacy source): the master agenda names C-011
+  "EOD / Daily signal routing" without a description; the current-system baseline of the same day
+  (CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt) has a section 7, "EOD / DAILY SCANNER ROUTING", on scanners
+  declared with scanner_type "eod", speaks there of "an EOD/Daily signal", and titles its section 40 "EOD / DAILY SHUTDOWN".
+  INTERPRETATION: in that document "EOD / Daily" pairs the two words as one meaning, end of day, and the agenda title may come
+  from it. Neither document establishes behaviour.
+- HISTORICAL (A-008 18): "Daily" is also Chartink's candle timeframe; the scanners used the forming current-day daily values.
+- UNKNOWN / NOT ESTABLISHED by C-011: whether any other file writes or reads pb01_watchlist, binds the capture worker or
+  compares the eod type (S1-1); whether a scheduled job acts on the watchlist or the PB-01 stages (S1-1's counts in R20 and
+  R21); whether the EOD route reaches the receiver's _process_signal (BK-30; C-007 BM-12); whether the workers ran on the
+  production host and which rows existed (Q-44; outside the repository).
+
+==============================================================================================================================
+5. PROPOSED BOUNDED STAGE 1 READING SEQUENCE (prompt action 6; nothing below has been read)
+==============================================================================================================================
+Every step through the gated masked reader, the read lock lifted only for the authorised step (W1 for S1-1, W2 for S1-2, as
+  at C-010) and relocked after it, every read and search logged at its pinned blob.
+
+S1-1 (count-only, if authorised by name; per-file counts, no line printed; every zero result with a positive control, as at
+  C-010):
+  Terms: T1 eod_capture (it also matches set_eod_capture); T2 pb01_watchlist; T3 _handle_eod; T4 WatchlistCapture;
+  T5 pb01[_-](capture|entry); T6 watchlist (a superset: it also matches other watch lists, for example the entry gate's);
+  T7 daily_candles; T8 ["']eod["'] (the type literal).
+  Scopes: the four C-010 lists, unchanged: s_all 1,260, s_rt 281, s_tests 486 and s_cfg 41 (their SHA-256 values are recorded
+  in C-010_CLAUDE_STAGE1_EVIDENCE_SHEET_24-OCT-2026.txt; the lists were rechecked against them on 25-Oct, equal). 8 terms x 4
+  scopes = 32 searches. s_all holds every file of section 3 except one image; the two July 2026 queue records are outside it.
+  Not repeated (cited as HISTORICAL counts at this pin, section 4.2): scanner_type (C-010 Q08) and the eod_route, eod_signal
+  and daily_signal names (C-008 Q28).
+  Question: which files bind the capture worker, write or read the watchlist rows, start the PB-01 stages or compare the type
+  literal, so that no producer or consumer of the route is missed (design-log lesson of 24-Oct-2026 from C-008: find every
+  occurrence of the name). S1-1 is also the completeness check for files that no path name matched.
+
+S1-2 (bounded reads, in this order; maximum printed lines in brackets; ranges from the frozen manuals' citations at this pin):
+  1. R01 signals/webhook_receiver.py 551:564 [14]: where an "eod" key leaves the intraday path (B). 751:835 [85]: the EOD
+     handler, its checks, answers and hand-off (A's producer; the union of the ranges cited by C-001 7.5 and A-L5, C-002 11,
+     C-005 10.2 and B-007 11). One grep of T1 [bounded by S1-1]: the constructor parameter, set_eod_capture and every use.
+  2. R02 v3_chain/watchlist_capture.py 86:178 [93]: the worker's start, its submit path, the row write, the stored source,
+     duplicate handling and the caught error (B-006 TH9; C-001 7.5; C-003 6.5, "not read").
+  3. R03 core/schema.sql: one grep of T2 [bounded by S1-1], then the pb01_watchlist CREATE TABLE block [at most 40]: the
+     fields and the unique key (C-005 10.2; BK-08).
+  4. R04 main.py 3712:3755 [44] and one grep of T1 [bounded by S1-1]: when the worker and the entry stage start, and how the
+     receiver is given the worker (B-006 TH9 and TH10; C-002 6.1).
+  5. R05 config/system_config.yaml 619:630 [12] and R06 config/scan_webhook_map.yaml 84:84 [1]: the activation settings and
+     the eod-type key.
+  6. R07 v3_chain/pb01_entry.py 117:125 [9] and one grep of T2 [bounded by S1-1]: the next consumer's pickup of the rows (the
+     boundary only; OQ-02).
+  7. R08 and R09, as text: one grep each for the test names [at most 20 lines each]; a test body only where its name bears on
+     a stated point, and only by a new authorisation.
+  8. Files outside R01 to R09 that S1-1 finds with T1 to T5: one grep per file of the matching term [bounded by S1-1], at
+     most 6 files; a read beyond the grep only by a new authorisation.
+  Schedule files R20 and R21 and records R33 to R41: S1-1's counts only; R33's headings only if authorised (OQ-06); R42 never
+  read.
+  Limits: ranges of 298 printed lines at most; greps bounded by S1-1's per-file counts. If S1-1's counts would take S1-2 past
+  400 printed lines, Claude stops and reports before S1-2.
+Cross-file dependencies to trace: configuration (scanner_type eod; watchlist.enabled) -> main.py (the wiring and the late
+  binding) -> receiver (the type branch, then _handle_eod and the submit per symbol) -> capture worker (the pb01_watchlist
+  row) -> schema (the table's key) -> the PB-01 entry stage (the pickup; boundary).
+Deliberately excluded: the entry stage's decisions, gates, scores, would-be records and candidate expiry (A-008, C-009 CC-07,
+  the D topics); the V3 decision chain (C-008); the end-of-day square-off, cleanup, reconcilers and reports (A-011, B-005,
+  B-010, C-006, C-007); protected paths; images; the two July 2026 queue records; host-type and deployment records beyond
+  counts; the docs/v3 design files.
+
+==============================================================================================================================
+6. OVERLAPS WITH C-001 TO C-010 AND OTHER ESTABLISHED REFERENCES (prompt action 7; answer sheet section 5)
+==============================================================================================================================
+Cited as established adjacent references; none is reopened, and no new evidence against any of them was found by name.
+- C-001: 4.1, 4.2 and 5.2 (the map's only explicit scanner_type, line 84; the schema; entries 13 to 15 are DELIVERY
+  strategies on intraday-type keys); 4.4 and D-04 (watchlist.playbook_scanner, no reader); 7.1 step 5 (the routing by type,
+  C-001's; the route, C-011's); 7.5 and T-10 (the EOD route, owner C-011); 8, A-L5 and D-06 (EOD alerts counted as accepted;
+  no signals row); 4.5 and 9.1, R-02 (PB-01's 5 POSTs, 27 to 31-Jul); 11 (the EOD route's and PB-01's tests).
+- C-002: 6.1 (the late binding set_eod_capture); 9 row 7 (the route's answers); 10.7 (the heartbeat row per EOD alert); 11
+  (the hand-off); 12 and 14, R3, R6 and R7 (the 17:00 alerts against a closed port; the first PB-01 audit row, 27-Jul); 16
+  (the tests); 17, T7 (_handle_eod; next consumer the worker, C-011's).
+- C-003: 6.5 and L-01 (the EOD route checks none of the expiry check, the dedup cache and the fingerprint; the capture
+  worker's own handling not read); 7.3 and 10.4 (authentication before the unknown-scanner check and the EOD route; tests pin
+  both).
+- C-004: 9.1 (the constructor takes eod_capture; the docstring's WR3 leaves it out); 14 and T-18 in 16.2 (the route's own
+  checks; owner C-011).
+- C-005: 10.2, 13 and 16 (the route bypasses the three intake guards; its own unique symbol/date key; BM-06 = BK-08).
+- C-006: 4.1 (the gate order: the EOD branch fifth, before the kill-switch, queue-depth and entry-window gates); the queue,
+  which the EOD route does not use (A-002 12, at the baseline).
+- C-007: 1 (owner C-011 for the EOD route) and 11.2, BM-12 = BK-30 (whether the route reaches _process_signal).
+- C-008: 9.4, EP-09 (no direct hand-off to the processor; Q28); the decision chain (B-006 TH8) is not the route.
+- C-009: 1 (PB01 candidate expiry out of its scope); 8, CC-07 (the PB01 entry poller's expiry: NOT COMPARABLE with signal
+  expiry) and BK-46 (owners D-003, D-014 and D-015); 14 (C-003 L-01: the EOD route without an expiry check).
+- C-010: 1 (the EOD route out of its scope, C-011's); R22 (watchlist_capture.py, C-011's); S1-1 Q08 (scanner_type in 8 files).
+- Section A and B manuals: A-002 12 and 15; A-003 5 and 11; A-007 4 (pb01: LONG, INTRADAY, enabled false, CO_PLUS_TGT);
+  A-008 3, 8, 16, 17 and 18; A-009 3 and 8; A-011 4, 11, 12 and 14, with erratum E-8; B-001 7.2 and erratum E-4 (PB-01
+  posted from 27-Jul); B-003 5 and 10; B-006 3 (TH9, TH10) and 11; B-007 11; B-008 3; B-009 4; B-011 5 and 6; B-012 7.1.
+- Governance: VP-14 ("EOD 'analyse today, trade tomorrow': capture Chartink signals after 17:00, store them, confirm next day,
+  then trade"; raised at A-002; Ratify at: C-011); VP-25 (the service window by V2's needs, "post-market only if VP-14 is
+  adopted"; Ratify at: M-002); BK-08 and BK-30 (owner C-011; OPEN); Q-44 (a) (whether the PB-01 workers ran on the production
+  host; a DR-016 audit lead, owning topic K-009; its note of 19-Oct cites a records-repository record of a 14-Jul "PB-01
+  SHADOW flip" and calls the threads' running an INTERPRETATION).
+
+==============================================================================================================================
+7. UNRESOLVED SCOPE QUESTIONS AND EVIDENCE GAPS (prompt action 8; recommended option first; none decided here)
+==============================================================================================================================
+- OQ-01 (blocking): what "Daily" covers. (a) The eod-type route only: the receiver's type branch, the EOD handler, the
+  capture worker, the watchlist rows and their pickup by the PB-01 entry stage, reading "EOD / Daily" as one end-of-day
+  meaning (the INTERPRETATION of section 4.3) (Recommended); (b) also the delivery (positional) strategies, which arrive as
+  intraday-type keys and take the intraday path (C-001 4.2; that path is documented by C-002 to C-010); (c) "Daily" as
+  Chartink's daily-candle timeframe, a property of the scanner definitions (A-008 17 and 18; C-001), not a route; (d) another
+  meaning ChatGPT or Rama names (for example the post-market daily jobs, which are B-010's).
+- OQ-02 (blocking): the downstream boundary. (a) C-011 ends where the PB-01 entry stage picks up a watchlist row (the hand-off
+  and the row's state); the entry stage's decisions, would-be records and candidate expiry stay with A-008, C-009 (CC-07) and
+  the D topics (Recommended); (b) C-011 also documents the entry stage's decisions.
+- OQ-03 (blocking for Stage 1): method. (a) Authorise S1-1 by name (the eight terms, the four scopes, positive controls) and
+  then S1-2 (section 5), in two lock windows (Recommended); (b) S1-2 only, with greps limited to R01 to R09 and no counts.
+- OQ-04 (non-blocking): VP-14 names C-011 as its ratification point. (a) Do not ratify it at C-011: record C-011's legacy
+  facts against it as a tracking note, as was done for VP-45 at C-010 (not ratified there; ChatGPT's Stage 1 authorisation,
+  OQ-03); V2 design is outside C-011 (Recommended); (b) ratify it at C-011.
+- OQ-05 (non-blocking): BK-08 and BK-30 name C-011. (a) Record C-011's evidence against each and keep both OPEN unless
+  ChatGPT's reconciliation closes one by a note (Recommended); (b) leave them outside C-011. For BK-30, C-001 A-L5 already
+  records that an EOD alert creates no signals row (HISTORICAL); S1-2 step 1 would show whether the handler reaches
+  _process_signal.
+- OQ-06 (non-blocking): records and deployment files. (a) R20, R21 and the records R33 to R41 counted only; one heading grep
+  (lines beginning "#") of R33 if authorised; R42 never read (Recommended); (b) bounded reads of R33 to R35.
+- OQ-07 (non-blocking): Q-44 (a), whether the PB-01 workers ran on the production host and from when. (a) Keep it a DR-016
+  audit lead (owning topic K-009); the repository cannot answer it (Recommended).
+Evidence gaps (UNKNOWN / NOT ESTABLISHED until Stage 1, if authorised):
+- the EOD handler's exact lines at the pin: the frozen manuals cite five overlapping ranges (751 to 804; 776 to 834; 751 to
+  835; 799 to 804; 801 to 832);
+- the watchlist table's fields and key, and every writer and reader of the table;
+- the capture worker's submit path and duplicate handling (C-003 6.5: not read);
+- any second producer of watchlist rows, or a scheduled job acting on them;
+- whether the strategy file's window, 09:25 to 11:00, has any effect on the PB-01 entry stage, whose own window is 09:20 to
+  11:00 (both HISTORICAL: A-008 16; B-008 3; B-009 4);
+- what the tests R08 and R09 assert;
+- outside the repository: what ran on the host and which rows existed (Q-44); whether any next-day trade came from a stored
+  EOD signal (A-002 12).
+
+==============================================================================================================================
+8. COMPLETION DECLARATION (answer sheet section 6; prompt output C)
+==============================================================================================================================
+- The repository ref stayed pinned at 970aabf3c78d777d9d34549e021f7c8e756c7bdb throughout (git ls-remote at 08:47:53 IST;
+  the clone's HEAD rechecked at 09:12 IST).
+- No source contents were read in Stage 0: no legacy blob was opened, printed, searched or counted for C-011; nothing was
+  fetched (local objects 8,920 at C-010 and at 09:12 IST; protected blobs present 0). No module behaviour was analysed.
+- No code, test, script or migration of the legacy project was run.
+- No live service, VM, broker, webhook endpoint, Chartink account, credential, host record or database was accessed.
+- No file was changed in either repository; no commit or push was made; no V2 design or implementation work was done.
+- STOP: no Stage 1 analysis and no manual drafting began. Waiting for ChatGPT's reconciliation and an explicit authorisation
+  of any later evidence pass.
+
+==============================================================================================================================
+APPENDIX A. PATH-NAME SEARCH RESULTS AND GROUPED ROWS
+==============================================================================================================================
+Path-name searches (case-insensitive, over all 1,438 paths; protected paths counted, never listed; the regular expressions
+  are in Claude's working file c011/meta/pathname_hits.json, reproducible from the saved listing):
+| Term (case-insensitive) | Paths | Protected (counted only) | Permitted |
+|---|---|---|---|
+| eod (as a word part) | 22 | 1 | 21 |
+| end of day | 0 | 0 | 0 |
+| daily | 22 | 2 | 20 |
+| watchlist | 2 | 0 | 2 |
+| captur | 5 | 0 | 5 |
+| pb01 (pb_01, pb-01) | 12 | 0 | 12 |
+| v3 (as a word part) | 30 | 0 | 30 |
+| route, routing, router | 2 | 0 | 2 |
+| dispatch | 0 | 0 | 0 |
+| signal type | 0 | 0 | 0 |
+| timeframe | 0 | 0 | 0 |
+| webhook | 8 | 2 | 6 |
+| scanner or chartink | 9 | 0 | 9 |
+| position(al) and a separator, swing, btst, carry | 16 | 1 | 15 |
+| schedul or cron | 30 | 0 | 30 |
+| schema or migrat | 12 | 2 | 10 |
+| next day, pre-market | 3 | 0 | 3 |
+Distinct paths: 150 permitted paths matched at least one term (the rows of section 3 and the lists below); 7 protected paths
+  matched (8 term matches; all under docs). Not term-matched but listed from the frozen manuals: main.py,
+  config/system_config.yaml, core/config_loader.py, core/state_store.py, strategies/taxonomy.py,
+  tests/unit/test_c6_auth_collapse.py, docs/audit/integrity_audit_2026.md, docs/audit/service_window_configurable_25jul2026.md,
+  docs/audit/followup_investigation_15jul2026.md, README.md and signals/signal_processor.py.
+
+Grouped rows (full pinned blobs; bytes from the local object store):
+X1 (R54; config/strategies/positional_*.yaml; 3 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| config/strategies/positional_momentum_long.yaml | 7a46596fac63e73dc56949da04212b8d6dffa002 | 1,310 | - |
+| config/strategies/positional_sector_rotation.yaml | b110bd594203692317aa68b3c60915d4224e2a20 | 1,315 | - |
+| config/strategies/positional_swing_long.yaml | 597193f8076a8c7b3d9c1234e55e09ee8502696f | 1,291 | - |
+
+X2 (R55; docs/v3/; 9 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md | 25d260107eb110766eaec21e874c0fa890dde4f8 | 27,256 | - |
+| docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md | 3d3e30df6219dbde7c94773be718b341616ee81c | 29,163 | - |
+| docs/v3/V3_STEP4B_PARITY_ARTIFACT.md | 85020ba1cb3766044c38f20d485fe84f97e9537d | 5,365 | - |
+| docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md | 6cd5e099ccd29bac00487fb1226e42df130a70bb | 18,833 | - |
+| docs/v3/V3_STEP5_RISK_SIZING_GAPMAP.md | 63daddf6108f939c7edf68f185d1d2e9ddab4522 | 8,705 | - |
+| docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md | 45d6c3d91f43258069e38ea067da6c0a3bc9609b | 22,283 | - |
+| docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md | c9a9988048b4c1e9f72e22741473948c2b498402 | 8,507 | - |
+| docs/v3/V3_STEP8_TRADE_MGMT_GAPMAP.md | 2c74a4f7e02da20eb074e4d74f2c9a9ce6f57acf | 9,953 | - |
+| docs/v3/V3_STEP9_EXIT_ENGINE_GAPMAP.md | d009b69388a24241f789f0691e7d0f32351bc77f | 8,728 | - |
+
+X3 (R56; EOD-named files of other end-of-day subjects; 18 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | 85,123 | - |
+| scripts/eod_cleanup.py | ab658108e443b7121d886f98b94c5058c42253b0 | 12,698 | - |
+| scripts/eod_broker_reconcile.py | 266cac23afecf2c85516ac48212b9a0c7f849b2c | 22,502 | - |
+| scripts/eod_verify.py | 36d774addd0d0dbf6223311689d295870b62be68 | 10,518 | - |
+| docs/audit/eod_email_findings_06aug2026.md | 604110307f3d4fca55af7586cf3598461489df74 | 10,153 | - |
+| docs/audit/ledger6_eod_verify_measurement_03aug2026.md | 4cc491179a5aec39d10c7742fb1fd8c0a820af99 | 7,586 | - |
+| docs/design/p1_eod_broker_reconcile_build_design_02jul2026.md | 1a2141b4e1ab97aab3f9d5d1f8d339b9f9d86f6d | 12,412 | - |
+| docs/design/p1_eod_broker_sync_assessment_02jul2026.md | 701dd2a463b01c1a1fb060ba7a0cc1ed55cbacdf | 14,538 | - |
+| tests/crash_test/ct140_eod_failure.py | e247949c0b8bee0fed863070574cb12526d4ae6e | 4,498 | - |
+| tests/unit/test_alert_direction_eod_29jun.py | 34dc6272637d6f4bb942d59297dd074291158e63 | 7,806 | - |
+| tests/unit/test_eod_broker_reconcile.py | 5b901785dbe3ea1880b297f3498cef6193011ee5 | 9,338 | - |
+| tests/unit/test_eod_lifecycle_pipeline_aware.py | 24011f7a0a365a8976f0295c5318fc414f52b7cc | 26,459 | - |
+| tests/unit/test_eod_squareoff.py | 788a2878c251b802f24fd06e2bd15b98931910eb | 92,710 | - |
+| tests/unit/test_eod_verify_honest.py | 0de8d028ff32eaebacf2341b8901fba18e67da71 | 6,297 | - |
+| tests/unit/test_fix063_two_pass_eod.py | bc5203c849032255a9a30d9989ce697a2c6a286a | 9,133 | - |
+| tests/unit/test_fix073_eod_entry_cutoff.py | 8b0f79aa3e6d250d8e304d5c08746db70dbfd0f2 | 13,826 | - |
+| tests/unit/test_fix130_eod_pre_alert.py | 96d4da4c7b95606d12c167d6dcd5736183e8effd | 6,516 | - |
+| tests/unit/test_fix135_eod_cleanup.py | 062b4d6a262f7702b259057464e66413fa7d9f9a | 15,616 | - |
+
+X4 (R57; daily-named files of other subjects; 18 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| core/daily_stats.py | 36fdf6b07b84888915af31bc71dc1077ef1c8167 | 3,446 | - |
+| reports/daily_report.py | ad40268a655b7c2860c8e31da4b7f2c0ff85d168 | 84,776 | - |
+| reports/daily_trade_review.py | c448b7976964a14caf0061016c239c6a3d7cabad | 151,981 | - |
+| docs/archive/FIXES_DAILY_REPORT_2026_05_18.md | 51db9bf2d70680bc777872c3159b6b3d99f374a0 | 4,122 | - |
+| docs/audit/daily_report_classification_fix_18jul2026.md | bb6bb86c220d7f2492e3fe853cd427a87eb55c1d | 18,455 | - |
+| docs/audit/daily_report_ledger_order_25jul2026.md | 4f5393b403fad566e3cd917f4c826f67aa97da20 | 6,796 | - |
+| docs/audit/daily_report_redesign_phase0_data_audit_30jun2026.md | d483f257969526292050dd10d8029eb9247e5f79 | 22,118 | - |
+| docs/audit/f1_daily_loss_after_halt_21jul2026.md | fc772e135315850b0e6cc039484222245fb86e6f | 4,607 | - |
+| docs/audit/q9_batch1_daily_loss_wired_18jul2026.md | 181902d58041d0fe601962a84e703829b4102611 | 9,142 | - |
+| docs/design/b1_daily_loss_unrealized_mtm_design_02jul2026.md | 9dbf6362ed850b4430e4db143e65ea198b8f51b7 | 12,739 | - |
+| tests/integration/test_q9_daily_loss_limit_wired.py | a9abe2ca3e74cb6bc84712565d8910ce3bacea53 | 18,842 | - |
+| tests/unit/test_daily_report.py | 3d79475d11d99cb0e6c653e8241c8ffca87d3a75 | 64,012 | - |
+| tests/unit/test_daily_stats.py | 087809405e0419c39f916036d4f111c7afbb5906 | 2,801 | - |
+| tests/unit/test_daily_symbol_stats.py | 92431cdcc48d8d2f560f7f71b132569959090e7a | 2,379 | - |
+| tests/unit/test_daily_trade_review.py | 7681a7130f679df6c5d41c8f12d4d1f4c51e0c4e | 65,169 | - |
+| tests/unit/test_fetch_daily_candles_indices.py | aeb92213573172574dd5955c904456012ec0fe00 | 6,489 | - |
+| tests/unit/test_fix128_daily_loss_sequence.py | 381097affc735c33e449b1bb764ebda339b1f9f4 | 9,597 | - |
+| tests/unit/test_tick2_pipeline_scoped_daily_gate.py | bc12039ea309bc40568bab58f0b8a73172bdc5b5 | 14,554 | subject not established by the name |
+
+X5 (R58; schedule and cron tooling; 23 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| scripts/generate_crontab.py | 87da2a32343bd3e73f2c20955ed88943af74bb03 | 17,382 | - |
+| scripts/check_cron_drift.py | ef206bb1e6df632c0a399234a5ce08525875a277 | 11,152 | - |
+| scripts/cron_report_render.py | 2a7d7f15bdcb016bcf1b68bf987fc37852e03553 | 28,975 | - |
+| scripts/cron_watchdog.py | adb771faf15c758a9a95bde54f643580648d66c9 | 2,930 | - |
+| deploy/systemd/cron-watchdog.service | 99e18ff4da31fe2c18f48a6aafb52e5f5f98b422 | 749 | deployment file: counts only |
+| deploy/systemd/cron-watchdog.timer | f73ecfc5012c0434bc4964aafbc9e4534a565ec4 | 441 | deployment file: counts only |
+| docs/approvals/cron_officer/20-Jun-2026/README.md | da4839fdd1ade1bf0cd1e8bc5030ab6ea3dc8c94 | 1,676 | - |
+| docs/approvals/cron_officer/20-Jun-2026/dryrun_friday_19jun.html | f73892f9b98b4c72dbfa244af2d55d483e79f398 | 30,809 | - |
+| docs/approvals/cron_officer/20-Jun-2026/sample_clean_eod.html | d084f1030526fd468be7ef41514c0304ac8c08e4 | 11,363 | also matched "eod" |
+| docs/approvals/cron_officer/20-Jun-2026/sample_morning_briefing.html | 43023c4cf43c877a9b8e252a80fe8d13145e7ee0 | 4,325 | - |
+| docs/archive/CRON_FIX_2026_05_18.md | d4d186c11498d3349194e919cfc8c622dfcee63a | 4,370 | - |
+| tests/unit/test_check_cron_drift_content.py | 1d1543c05e475681f361629008f8c424acad5d67 | 6,123 | - |
+| tests/unit/test_cron_alerts.py | 7d169309b93e2777081cb49fc6dffe111e45d5f2 | 7,470 | - |
+| tests/unit/test_cron_officer.py | 5d0ba8a1304daa4ec409690a7e786ccf1d580b14 | 9,028 | - |
+| tests/unit/test_cron_officer_phase3.py | 8ec31a422c3193abc4514eaf81b469fe46eb9a36 | 7,882 | - |
+| tests/unit/test_cron_officer_preflight_banner.py | 0c497da19240f96778aa113a07e6cfd43219d5b0 | 3,128 | - |
+| tests/unit/test_cron_officer_revision.py | e35432b4d0bd5bce91423e5849d0ac708f97d17e | 17,478 | - |
+| tests/unit/test_cron_officer_security.py | 390a3b82a64d9e14708724d1ba0792c1af07e830 | 1,120 | - |
+| tests/unit/test_cron_registry.py | 19ac9ceab642f4698209f553ae25633e8523214b | 12,807 | - |
+| tests/unit/test_f3_cron_drift_markers.py | bd6a69b40e19d69fa3ea1953c614e0604adec649 | 2,547 | - |
+| tests/unit/test_generate_crontab.py | cc5b112a761aa12a3922ef807c499b955f39f579 | 7,674 | - |
+| tests/unit/test_scheduled_kill_severity.py | dfd99be528863e525f904950f0b138f40f7b103d | 9,550 | - |
+| tests/unit/test_scheduled_report_severity.py | ee28de8fba5d95b0ced824d2f43b187da3c6e945 | 6,674 | - |
+
+X6 (R59; schema and migration tooling; 6 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| core/analytics_schema.sql | 57deb055f4db78d0c016505971a0ce4be040d7a2 | 5,370 | - |
+| docs/audit/db_schema_review_15jun2026.md | 733b88b598f8ad4e94729ff6ffa30d7d2cf2b997 | 15,188 | - |
+| docs/audit/migration_on_open_rule_14jul2026.md | 205a00dc96e1dd75663b412bbfad9b2ef93294fa | 9,224 | - |
+| tests/unit/test_migration_guard.py | beb577ec2f6a2c308c0c4e85cfceb5175f66b056 | 5,420 | - |
+| tests/unit/test_migrations.py | d43c9b0867497a712b48781a83f2e1fd76c13e5d | 25,854 | - |
+| tests/unit/test_schema_version_failfast.py | 900c025ca0e570254d1d4245206d3ea5ff6191aa | 4,285 | - |
+
+X7 (R60; position-, carry- and swing-named files; 12 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| broker/position_helpers.py | 0e9646da6036f47e63fecf2105308a94d6a413e7 | 4,530 | - |
+| capital/position_sizer.py | f92eace8d6e30eae2f2f57a0e244fb6873e538f3 | 43,742 | - |
+| docs/audit/paper_overnight_carry_26jul2026.md | 9f406844b6434a2a74d2b270b883cf149b7782aa | 14,684 | - |
+| docs/audit/slice25_decomposition_26jul2026.md | 2bf759d367cdf88bf0a5522a15c1d9e0b40a4417 | 13,097 | - |
+| docs/incident/2026-09-03_naked_position_ANANTRAJ.md | 1cf75adc49bbd8d79365b12fc0ecb293645683dd | 25,461 | - |
+| tests/crash_test/test_position_sizer_edges.py | 555c221e2f675825ed5128ae210855380181e880 | 3,591 | - |
+| tests/unit/test_fix135_strategy_position_cap.py | 32ac3ccbaa92900dbb764f04d19a77cc23683491 | 6,502 | - |
+| tests/unit/test_fix1_carried_position_rehydrate.py | 0d98d94aec06606885a37db6c60bbc66053c46cf | 29,021 | - |
+| tests/unit/test_ni5_position_sizer_policy_required.py | e66dd841f7a43f3f554253d5283f8dd2c741a006 | 7,331 | - |
+| tests/unit/test_paper_carry_blind_spot.py | ba888040ba3a4208ef776fcfe296f955ee55512f | 8,837 | - |
+| tests/unit/test_position_sizer.py | 94b32d93d728fec1578045f54fe304e2a8e28815 | 55,337 | - |
+| tests/unit/test_position_sizer_delivery_contract.py | 289050cb1250c5c7683dc4110f6908e768b29c47 | 4,605 | - |
+
+X8 (R61; scanner-, webhook-, pre-market-, V3-tool- and capture-named files; 19 files):
+| Path | Pinned blob | Bytes | Note |
+|---|---|---|---|
+| ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | 37,345 | - |
+| ops_dashboard/frontend/templates/scanner_attribution.html | 3be742f4a25006fa66ffd690622878d7041677aa | 44,482 | - |
+| ops_dashboard/tests/test_screen21_scanner_attribution.py | 67e64047b4650b0964aa30be8a541e37f24e689b | 58,277 | - |
+| docs/audit/approval_final_19aug/S21_scanner_attribution.png | 9add5d0287e83aa549d28e254dfa7ec5035ca938 | - | image; not in the local store |
+| docs/audit/bk1_long_short_scanner_analysis_17jul2026.md | 19d21462119917252c3b46183a69786284e6419b | 10,543 | - |
+| docs/audit/c2_chartink_ip_investigation_03jul2026.md | 86fa405ff6ef0679c8fac62b0948d74f84b93aa9 | 6,177 | host-type record (A-010 2): counts only |
+| scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | 9,181 | - |
+| tests/unit/test_preflight_scanner.py | 9e089d81ca7630d12c36a4620c36453bd08df292 | 15,835 | - |
+| scripts/test_webhook.py | 048ac3c0f5d9aadd430ee31d6d747df468af6205 | 320 | - |
+| tests/unit/test_c2_webhook_lockdown.py | a136dfbb56a9300e02ad069c59808308e2a9689e | 3,728 | - |
+| tests/unit/test_s4_webhook_degrade.py | 59f31e2e2e226bf3d7d2ddae6a34d99c1608256d | 5,364 | - |
+| scripts/gemini_premarket_brief.py | f1d617c9dada1d2cefc334c599d0863295841343 | 10,080 | - |
+| scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | 7,743 | - |
+| tests/unit/test_gemini_premarket_brief.py | 3b15430dad2fdd019ddbd0e3d4f96325d6607450 | 11,278 | - |
+| scripts/v3_hardgate_parity_recompute.py | 3623a42b0d15854049d397567cc0cacd01bcb79b | 10,995 | - |
+| scripts/v3_shadow_soak_report.py | f4e59d87274c35831649c01f6be61b1c23ec78bd | 20,416 | - |
+| tests/unit/test_v3_hardgate_parity.py | eb7701307a6e686f571bd94b6c4aaa5c60e57271 | 5,651 | - |
+| scripts/capture_metrics_baseline.py | e926cc4a6f1e1cf8f85fab7556e4a6a1fa4d63ff | 12,277 | - |
+| tests/unit/test_capture_metrics_baseline.py | bd4db773a1281d1a396ce4c882c1759aeedf38d6 | 14,000 | - |

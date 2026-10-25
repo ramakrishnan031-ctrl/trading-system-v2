@@ -1,0 +1,59 @@
+CLAUDE RESEARCH PROMPT — C-011 STAGE 0
+EOD / DAILY SIGNAL ROUTING
+Date: 25-Oct-2026
+
+TASK
+Perform Stage 0 only: source inventory and a proposed bounded reading sequence for the C-011 legacy manual. Do not analyse individual modules yet. Return the completed answer sheet and STOP for ChatGPT reconciliation.
+
+AUTHORITATIVE REPOSITORY
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Commit URL:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot/commit/970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Use this exact commit for all inventory metadata. Do not substitute the default branch, another commit, a VM, or a live system.
+
+WHY THESE CANDIDATES ARE BEING INVENTORIED
+At the pinned commit, direct GitHub fetch verified:
+- README.md — blob 5329666bbd1c0cb46cdf7e0e264670ead9e74cc6
+- signals/webhook_receiver.py — blob 0f15a0ab033529d80d9c14c993a5077690b72871
+- signals/signal_processor.py — blob 7fab0a02a302770ac72bbbd662549d5c091086c1
+- config/system_config.yaml — blob bf742ae5c81c60614370361998e6a102a1064ff7
+
+The receiver documentation mentions an optional `eod_capture` dependency / `WatchlistCaptureWorker`; the processor documentation identifies a downstream queue worker. These are search/inventory clues only, not established C-011 behaviour.
+
+STAGE 0 ACTIONS
+1. Confirm the repository and exact pinned commit.
+2. Inventory repository paths and metadata only. Use the repository tree / path names / blob metadata as available. Do not read source bodies to infer behaviour.
+3. Find likely in-scope and adjacent paths using names/metadata related to:
+   - EOD, end-of-day, daily, watchlist, capture;
+   - signal routing, scanner/webhook, route, signal type, timeframe, strategy dispatch;
+   - startup/wiring and configuration;
+   - persistence/schema and scheduled jobs/cron/tasks;
+   - focused tests and existing documentation/audit records.
+4. Distinguish the EOD capture/watchlist path from any Daily/EOD scanner or signal-routing path. Do not assume they are the same. If the inventory cannot establish the relationship, label it UNKNOWN / NOT ESTABLISHED.
+5. Include exact paths and pinned blob SHAs where available. Classify candidates as likely in-scope, adjacent dependency, or excluded, with brief reasons.
+6. Propose a short, bounded Stage 1 reading sequence, specifying the intended order and why each group is needed. Keep it limited to C-011.
+7. Note overlaps with C-002 through C-010, particularly C-009 expiry and C-010 scanner-to-strategy mapping. Treat those manuals as established adjacent references; do not reopen them.
+8. List unresolved scope questions and evidence gaps. Do not answer them by guessing.
+
+REQUIRED OUTPUT
+Return:
+A. Completed `C-011_STAGE0_ANSWER_SHEET_25-OCT-2026.txt`.
+B. A concise inventory summary in your response, including the proposed Stage 1 reading sequence.
+C. A clear STOP statement confirming that no Stage 1 analysis or manual drafting began.
+
+STRICT BOUNDARIES
+- Stage 0 only: no module behaviour analysis and no conclusions about runtime routing.
+- Do not read source contents during this pass; inventory path names, metadata and blob IDs only. If a path cannot be identified from metadata, mark it UNKNOWN / NOT ESTABLISHED rather than opening code to guess.
+- No tests, execution, environment inspection, or broad audit.
+- No manual drafting, edits, commits, or pushes.
+- Do not access any VM, host, broker, webhook endpoint, Chartink service, credentials, or live system.
+- Do not perform V2 design or implementation.
+- Do not expose secrets or credential-shaped values.
+- Do not add extra investigation stages or expand the scope beyond C-011.
+
+FACT DISCIPLINE
+Use FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT, and OPEN QUESTION where relevant. A filename, comment, docstring, or inferred relationship is not proof of runtime behaviour.
+
+STOP after delivering the inventory and proposed reading sequence. Wait for ChatGPT to reconcile and explicitly authorise any later evidence pass.

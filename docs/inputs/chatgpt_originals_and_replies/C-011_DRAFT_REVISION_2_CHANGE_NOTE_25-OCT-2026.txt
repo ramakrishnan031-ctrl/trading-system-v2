@@ -1,0 +1,67 @@
+C-011 - EOD / DAILY SIGNAL ROUTING
+DRAFT REVISION 2: CHANGE NOTE (for ChatGPT's final verification)
+Date: 25-Oct-2026 (IST). Prepared by Claude, 13:25 IST. In reply to C-011_CHATGPT_VALUE_ADDED_REPLY_TO_CLAUDE_25-OCT-2026.txt
+  (68 lines; SHA-256 4BFA4EB45BBB4312EEBC4E5A2921D4C80FFD6C0A0A442A915BFF662EAFC3427B; received 13:10 IST, file time).
+Status: DRAFT ONLY - NOT FROZEN, COMMITTED OR PUSHED. No final ZIP or manifest was made.
+
+1. FILES RETURNED
+| File | Revision | Lines | SHA-256 | Changed in revision 2 |
+|---|---|---|---|---|
+| C-011_EOD_DAILY_SIGNAL_ROUTING_DRAFT.md | 2 | 999 | 896A36583DCD5F25B594A946E6A9E3CB23F743691F1FC3A00AED25B4E67F2E93 | yes: the N-1 evidence-label correction only (22 lines replaced by 30) |
+| C-011_DRAFT_EVIDENCE_AND_GAP_CHECK.txt | 2 | 434 | AD21142F1AC6B6E3079C9FE099646583EAEB870DC9AD7709B53BCCB37D9E4744 | yes: the N-1 disposition (part I), the change list (part J), the checks (part F), E4's status (part E) |
+| C-011_DRAFT_REVISION_2_CHANGE_NOTE_25-OCT-2026.txt | - | - | - | this note (new) |
+| ChatGPT's Stage 0 decision sheet (E4) | - | - | - | NOT AVAILABLE to Claude (section 3) |
+Revision 1, as returned earlier: draft SHA-256 6216124FE3CD57904ECFE043BA9B0EFBC1CFA16A99E61A8527C1B43887712C4A; companion
+  SHA-256 A2460263CF3A1810504F4599C99BBF769483DDB6617622EC60E8C8F7A4BBB972.
+
+2. N-1 DISPOSITION: THE DATABASE DUPLICATE-ROW RULE
+Disposition: retained as FACT only for the source text it rests on; the duplicate-skip behaviour is downgraded from FACT to
+  INTERPRETATION (new DI-10); the executing function stays INTERPRETATION (DI-09 (g)); the rest is UNKNOWN / NOT ESTABLISHED.
+Evidence (only lines already cited; as printed in the Stage 1 evidence sheet, Appendix B; nothing reopened or searched):
+- (a) FACT (SCHEMA): `core/schema.sql:1575` (read 006) holds "UNIQUE (symbol, trading_date)", inside the statement
+  "CREATE TABLE IF NOT EXISTS pb01_watchlist (" (`core/schema.sql:1559`), which closes at line 1576; header line
+  `core/schema.sql:1540` (read 005), "TABLE 49: pb01_watchlist ... schema v43". Table: pb01_watchlist. Pinned blob
+  b46d7489f6ec5e31149dd68957f3b9e45270571e.
+- (a) FACT: `core/state_store.py:3088` (read 015) holds SQL text beginning "INSERT OR IGNORE INTO pb01_watchlist (", one line
+  of an f-string whose column list is joined at run time. The rest of the statement and the call that executes it are not
+  printed (G-04). Pinned blob 11866117801b9329773a1be605448faef3c96f8d.
+- (a) FACT (code and code comment): trading_date comes from next_trading_day(anchor) (`v3_chain/watchlist_capture.py:165`),
+  "the SINGLE valid next trading day" (162); the schema calls it "the SINGLE valid session (D+1)" (`core/schema.sql:1562`).
+- (b) INTERPRETATION (DI-10), the likely runtime effect: a second insert with the same symbol and trading_date would be
+  skipped without an error and the existing row would stay. Basis: the two (a) lines read with the clause's usual meaning
+  (general database knowledge, not C-011 evidence; the wording was checked against SQLite's documentation of the ON
+  CONFLICT clause, which is not cited in the manual). Not a verified runtime outcome; not shown for every duplicate, for
+  any other insert or for the deployed database.
+- (c) INTERPRETATION (DI-09 (g)): insert_pb01_watchlist (def at `core/state_store.py:3078`), called by the capture at
+  `v3_chain/watchlist_capture.py:178`, runs the statement at 3088, read by position.
+- UNKNOWN / NOT ESTABLISHED: whether the deployed table carried the constraint (G-04, schema.sql or a migration step; G-11,
+  the host database not opened); whether 3088 runs as printed and with which values (G-04); the database engine; whether
+  any duplicate was ever skipped; whether a skip is reported or logged (G-03, G-04).
+- Not relied on: the test names at `tests/unit/test_v3_watchlist_capture.py:72` and 146 (not run; bodies not read, G-08)
+  and the method names.
+Draft sections changed: header; 2.3 and 2.5 (DI-10; E10); 3 (diagram box [8]); 5.6; 6.3; 7.7; 8.5; 9.3; 10.4 (rewritten);
+  13.2; 14.2 (BK-08 row); 15.1 (F11); 16 (step 10); 17; 18.1. The companion lists each change (part J, J1 to J16).
+The drafting prompt's mandatory wording ("schema uses UNIQUE(symbol, trading_date) and INSERT OR IGNORE") and the
+  reconciliation's precision G stay true of the source text. BK-08 stays OPEN.
+
+3. STAGE 0 DECISION SHEET (E4)
+- Unavailable to Claude. It was never attached in this session, it is not among the session's attachments or the Project's
+  documents, and Claude holds no copy. Claude has not recreated, rewritten or replaced it, and the draft does not
+  paraphrase it.
+- File name: Claude has seen only its beginning, "C-011_STAGE0_RECONCILIATION_AND_DECISIO", cut off in the screenshot of
+  ChatGPT's reply that Rama sent at 11:24 IST with the Stage 1 prompt. The full name is not known to Claude.
+- Expected use: Rama downloads the exact existing file from ChatGPT and attaches it unchanged. At the freeze it is stored
+  under its own exact name in docs/inputs/reconciliation/ (the folder that holds ChatGPT's reconciliation files in the
+  C-010 package).
+- Until then the draft records it as E4, NOT RECEIVED (sections 1.2, 2.5 and 14.2).
+
+4. CONFIRMATIONS
+- Only the two files above changed, and this note is new. The evidence sheet, the earlier inputs and Claude's read, search
+  and lock logs are unchanged (their SHA-256 values match the evidence sheet).
+- No source code was read, searched or counted; no clone, test, script, service, host, VM, database, broker, webhook or
+  Chartink account was accessed. Only document-level checks were run: 179 citations in the draft and 9 in the companion
+  are printed lines; 0 problems; tables OK; ASCII only; the value-blind scan found only known hexadecimal values.
+- BK-08 and BK-30 stay OPEN; VP-14 stays NOT RATIFIED; RC-06 stays a C-011 precision note only; G-01 to G-04 and G-06 to
+  G-12 remain gaps and G-05 the boundary; DU-01 to DU-05 stay separate from them; "normalized transcription" is not
+  presented as exact quotation.
+- Nothing frozen, committed or pushed; no ZIP or manifest.

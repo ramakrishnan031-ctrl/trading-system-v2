@@ -1,0 +1,1070 @@
+C-011 - EOD / DAILY SIGNAL ROUTING
+STAGE 1 EVIDENCE SHEET: S1-1 COUNT-ONLY SEARCHES AND S1-2 BOUNDED READS (for ChatGPT's reconciliation)
+Date of work: 25-Oct-2026 (IST). Prepared by Claude. Prompt received 11:24 IST (file time); lock windows W1 11:28:57 to
+  11:33:26 and W2 11:35:40 to 11:36:13 IST (lock log).
+Controlling scope: C-011_STAGE1_CLAUDE_PROMPT_DRAFT_25-OCT-2026.txt (69 lines; SHA-256
+  7868FE4E2C65FA723F5B61D0C10D706826868974529EB17F3AFBCB05E1830515), received from Rama with a screenshot of ChatGPT's reply
+  recommending OQ-01 to OQ-03 (ChatGPT's review and decision sheet itself was not attached and is not used here).
+Authorisation reading: the prompt opens only after Rama approves OQ-01 (the single EOD-type route), OQ-02 (the boundary at
+  the PB-01 entry stage's pickup) and OQ-03 (S1-1, then S1-2). Rama forwarded the prompt after ChatGPT asked him to confirm
+  before sending it, and his standing rule is that once ChatGPT is satisfied no separate approval step is needed. Claude took
+  that as the approval of the three points as worded in the prompt. Everything done was read-only, masked and logged.
+Status: S1-1 and S1-2 done inside the line budget; the read lock is engaged again (11:36:13 IST). No manual drafted; nothing
+  frozen. STOPPED for ChatGPT's reconciliation.
+Security: the masked outputs of the authorised reads only; for the searches, counts and file names only. No credential, token,
+  account or client identifier, host or address, deployed path, mailbox or person name other than Rama's is reproduced;
+  protected paths are counted, never named. Claude's working folder is written as <SCRATCHPAD>.
+Characters: the sheet is ASCII except the verbatim printed lines of Appendix B, which keep the source's own characters
+  (arrows, dashes, a star, warning signs).
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- S1-1 (section 2): 32 count-only searches (T1 to T8 over the four C-010 scopes, their SHA-256 values checked first) and 4
+  positive controls for the 4 zero results. 104 files of s_all match at least one term. No line was printed.
+- Budget (section 3): the plan's maximum was 388 printed lines (ranges 298, greps 90), under the 400-line stop, so S1-2 ran:
+  20 reads of 15 files, 340 lines printed. The schema block closed within 20 lines, so its second part was not read.
+- The route at the pin (section 4; FACT for the lines read): the scanner map types one entry "eod" (line 84); the receiver,
+  after its unknown-key 404, returns to _handle_eod for an "eod"-typed key (562 to 564); _handle_eod checks the body (400s),
+  hands each symbol to the capture worker's submit, writes one "pb01_capture" heartbeat and answers 200, or answers 200
+  "watchlist disabled" when no worker is bound; submit only queues in memory; the worker's thread computes LEVEL from its
+  own daily candles, skips a same-day breakout before the close, stamps trading_date as the next trading day and inserts a
+  PENDING pb01_watchlist row with source = the scanner key through INSERT OR IGNORE, against UNIQUE (symbol, trading_date);
+  the PB-01 entry stage reads today's pending rows. main.py builds and binds both components only when _watchlist_on holds,
+  inside a try that leaves both None on any error.
+- A and B (section 5): at the pin the code joins them: the type branch is the capture path's entrance, and the capture worker
+  is the handler's only hand-off in the lines read. The source itself calls the eod-type alert "a DAILY/EOD alert" (FACT,
+  code comments), in line with OQ-01 as approved.
+- BK-30 (section 6, RC-13): the EOD route returns at line 564, and neither _handle_eod nor its heartbeat helper calls
+  _process_signal or holds signals SQL (FACT for the lines read; one called parser not read). BK-08 (RC-12): duplicates are
+  stopped by the table's UNIQUE (symbol, trading_date) and INSERT OR IGNORE; the date is the next trading day.
+- Reconciliation (section 6): 22 frozen statements checked; none conflicts; one precision note (C-002 10.7: a malformed EOD
+  alert gets no heartbeat row); new detail where C-003 6.5 had left the worker unread; one stale line pointer in
+  config/expected_managers.yaml (KNOWN DEFECT, minor); one OPEN QUESTION (who applies watchlist.capture_fetch_lookback_days).
+- Gaps (section 7): G-01 to G-12, each needing its own authorisation; questions Q-A to Q-C for ChatGPT, none blocking.
+- Declaration (section 8): exactly the reads and searches listed; nothing run, contacted, changed, committed or pushed.
+
+==============================================================================================================================
+1. REPOSITORY, PIN, LOCK WINDOWS AND FILES READ (prompt output 1)
+==============================================================================================================================
+- Repository ramakrishnan031-ctrl/trading-system-prod-snapshot, pinned commit 970aabf3c78d777d9d34549e021f7c8e756c7bdb (FACT):
+  the clone's HEAD is the pin (checked by run_s11_c011.py at 11:29:16 IST and again after W2); git ls-remote showed the
+  remote's HEAD and main at the pin at 08:47:53 IST (Stage 0) and again at 11:46:39 IST. Tree listing: 1,438 entries, SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5, unchanged.
+- Clone and store: partial (blob:none) sparse clone; 8,920 local objects (1,257 blobs, 1,537 commits, 6,126 trees) before W1,
+  after W1 and after W2; protected blobs present 0 (sensitive_check.py) each time. Every one of the 1,260 files of s_all
+  equals its pinned blob (git hash-object --no-filters, 1,260 of 1,260, before the first search).
+- Lock windows (<SCRATCHPAD>/c011/lock_log.tsv, SHA-256 797E417B5F9C74BAC6AAD1AEE7C7BAB3AC9C2CBA42619278DAC96B2615C3ACBD):
+  LK-1 unlock 11:28:57; LK-2 relock 11:33:26 (W1, S1-1); LK-3 unlock 11:35:40; LK-4 relock 11:36:13 (W2, S1-2). The reader's
+  SHA-256 is 23CB24D3...19FB when locked and AA9C9433...C74A when unlocked; after each relock a read attempt and a count
+  attempt were both refused by the lock.
+- Gate tests (W1 and W2, both PASSED; <SCRATCHPAD>/c011/gate/gate_test_W1.txt and gate_test_W2.txt): the 102 protected paths,
+  the two July 2026 queue records, a path sharing a protected blob, 14 rule-shaped names and a name outside the tree were each
+  refused; the 12 counts-only files of the prompt (config/cron_registry.yaml, deploy/cron/trading-system.cron and the records
+  R33 to R42 of the Stage 0 answers) were each refused by name, so no read could reach them; the printed-line cap was tested
+  on synthetic text; the C-011 logs and the clone were unchanged by the test.
+- Tools (C-011 copies of the C-010 tools, under <SCRATCHPAD>/c011/tools): cread_c011.py (the gated masked reader; adds the
+  counts-only refusals and a cap on a grep's printed lines), ccount_c011.py (count-only search), lock_c011.py,
+  gate_test_c011.py, run_s11_c011.py, plan_s12_c011.py and run_s12_c011.py.
+
+Files read (prompt output 1: each read file with its pinned blob):
+| File | Pinned blob | Bytes | Lines (reader) | Reads | Printed (distinct lines) |
+|---|---|---|---|---|---|
+| signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 59,565 | 1,208 | 001, 002, 003 | 103 |
+| v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | 11,490 | 245 | 004 | 93 |
+| core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | 104,053 | 1,655 | 005, 006 | 23 |
+| main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | 208,758 | 4,294 | 007, 008 | 45 |
+| config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | 55,901 | 754 | 009 | 12 |
+| config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | 3,067 | 85 | 010 | 1 |
+| v3_chain/pb01_entry.py | cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | 18,217 | 372 | 011, 012 | 15 |
+| tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | 5,761 | 130 | 013 | 5 |
+| tests/unit/test_v3_watchlist_capture.py | 8b50580570a92305ed5a7a6c45e726faee801768 | 6,849 | 165 | 014 | 9 |
+| core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 153,466 | 3,356 | 015 | 6 |
+| config/expected_managers.yaml | ff4d65d5f9b5a5ddfcc8cac7b812c770da555a3c | 22,155 | 387 | 016 | 6 |
+| scripts/v3_shadow_soak_report.py | f4e59d87274c35831649c01f6be61b1c23ec78bd | 20,416 | 427 | 017 | 7 |
+| core/migrations.py | cc39e811e48a9eec823c20b70d343278a6b33eef | 21,663 | 445 | 018 | 1 |
+| ops_dashboard/backend/services/system_logs.py | 773006336224f33ac8b3a7edc0e4e54969284c0e | 28,559 | 633 | 019 | 1 |
+| tests/unit/test_v3_pb01_e2e.py | e0c81020c1614982400b8d62166b8333151d7819 | 5,220 | 118 | 020 | 6 |
+
+==============================================================================================================================
+2. S1-1 COUNT-ONLY RESULTS (prompt output 2; no line printed)
+==============================================================================================================================
+- Method: ccount_c011.py runs the filter's grep over a listed scope and keeps per-file counts of matching lines (a line with
+  two matches counts once), as at C-005 to C-010; each expression is case-sensitive and matched on the raw line; each matched
+  file is checked against its pinned blob. Count-only scanning is the defined exception that Rama set on 24-Oct-2026 (12:10
+  IST) for authorisations that name it, as this prompt's S1-1 does: the tool reads each file's bytes to count and prints
+  counts only; no source file was opened for viewing in W1.
+- Scopes: the four C-010 lists, unchanged: s_all 1,260, s_rt 281, s_tests 486 and s_cfg 41, each equal to its SHA-256 recorded
+  in C-010_CLAUDE_STAGE1_EVIDENCE_SHEET_24-OCT-2026.txt (checked before the first search; the run stops otherwise). s_rt,
+  s_tests and s_cfg are disjoint parts of s_all, and every subset count equals the s_all count of the same files (checked).
+  The two July 2026 queue records are outside s_all. R42 and docs/SYSTEM_MAP.md are inside s_all and were counted, never read.
+- Not repeated (HISTORICAL counts at this pin): scanner_type in 8 files of s_all, 15 lines (C-010 S1-1, Q08); no name beginning
+  eod_route, eod_signal or daily_signal in the 869 code files (C-008 9.4, Q28).
+- Results (search log <SCRATCHPAD>/c011/search_log.tsv, SHA-256
+  A48451CAC40EF6EC1546E58008BB264471D543FC5D657CC271A40A38EF283556; per-file counts with pinned blobs in Appendix A):
+
+| Search | Logged (IST) | Term | Expression | Scope | Files searched | Files matched | Matching lines |
+|---|---|---|---|---|---|---|---|
+| Q01 | 11:29:34 | T1 | eod_capture | s_all | 1,260 | 11 | 40 |
+| Q02 | 11:29:53 | T2 | pb01_watchlist | s_all | 1,260 | 30 | 95 |
+| Q03 | 11:30:10 | T3 | _handle_eod | s_all | 1,260 | 7 | 15 |
+| Q04 | 11:30:29 | T4 | WatchlistCapture | s_all | 1,260 | 9 | 14 |
+| Q05 | 11:30:48 | T5 | pb01[_-](capture\|entry) | s_all | 1,260 | 24 | 71 |
+| Q06 | 11:31:06 | T6 | watchlist | s_all | 1,260 | 59 | 350 |
+| Q07 | 11:31:24 | T7 | daily_candles | s_all | 1,260 | 46 | 119 |
+| Q08 | 11:31:42 | T8 | ["']eod["'] | s_all | 1,260 | 11 | 27 |
+| Q09 | 11:31:47 | T1 | eod_capture | s_rt | 281 | 2 | 10 |
+| Q10 | 11:31:51 | T2 | pb01_watchlist | s_rt | 281 | 8 | 34 |
+| Q11 | 11:31:56 | T3 | _handle_eod | s_rt | 281 | 1 | 2 |
+| Q12 | 11:32:00 | T4 | WatchlistCapture | s_rt | 281 | 3 | 5 |
+| Q13 | 11:32:05 | T5 | pb01[_-](capture\|entry) | s_rt | 281 | 4 | 27 |
+| Q14 | 11:32:09 | T6 | watchlist | s_rt | 281 | 12 | 110 |
+| Q15 | 11:32:14 | T7 | daily_candles | s_rt | 281 | 7 | 19 |
+| Q16 | 11:32:19 | T8 | ["']eod["'] | s_rt | 281 | 5 | 12 |
+| Q17 | 11:32:25 | T1 | eod_capture | s_tests | 486 | 2 | 15 |
+| Q18 | 11:32:32 | T2 | pb01_watchlist | s_tests | 486 | 4 | 23 |
+| Q19 | 11:32:38 | T3 | _handle_eod | s_tests | 486 | 0 | 0 |
+| Q20 | 11:32:44 | T4 | WatchlistCapture | s_tests | 486 | 2 | 5 |
+| Q21 | 11:32:50 | T5 | pb01[_-](capture\|entry) | s_tests | 486 | 4 | 5 |
+| Q22 | 11:32:56 | T6 | watchlist | s_tests | 486 | 11 | 80 |
+| Q23 | 11:33:02 | T7 | daily_candles | s_tests | 486 | 2 | 8 |
+| Q24 | 11:33:08 | T8 | ["']eod["'] | s_tests | 486 | 4 | 13 |
+| Q25 | 11:33:09 | T1 | eod_capture | s_cfg | 41 | 0 | 0 |
+| Q26 | 11:33:10 | T2 | pb01_watchlist | s_cfg | 41 | 2 | 3 |
+| Q27 | 11:33:10 | T3 | _handle_eod | s_cfg | 41 | 0 | 0 |
+| Q28 | 11:33:11 | T4 | WatchlistCapture | s_cfg | 41 | 1 | 1 |
+| Q29 | 11:33:12 | T5 | pb01[_-](capture\|entry) | s_cfg | 41 | 1 | 4 |
+| Q30 | 11:33:12 | T6 | watchlist | s_cfg | 41 | 4 | 15 |
+| Q31 | 11:33:13 | T7 | daily_candles | s_cfg | 41 | 3 | 7 |
+| Q32 | 11:33:14 | T8 | ["']eod["'] | s_cfg | 41 | 0 | 0 |
+
+| Control | Logged (IST) | For (zero result) | Term run again | Scope | Files matched | Matching lines | Same per-file counts as |
+|---|---|---|---|---|---|---|---|
+| Q33 | 11:33:20 | Q19 | T1 eod_capture | s_tests | 2 | 15 | Q17 |
+| Q34 | 11:33:21 | Q25 | T2 pb01_watchlist | s_cfg | 2 | 3 | Q26 |
+| Q35 | 11:33:21 | Q27 | T2 pb01_watchlist | s_cfg | 2 | 3 | Q26 |
+| Q36 | 11:33:22 | Q32 | T2 pb01_watchlist | s_cfg | 2 | 3 | Q26 |
+
+- Zero results (FACT only for the expression and the scope): _handle_eod occurs in no test file (Q19) and in no s_cfg file
+  (Q27); eod_capture (Q25) and the quoted literal eod (Q32) occur in no s_cfg file. Each zero has its positive control.
+- Candidate producer, consumer and wiring files surfaced by the counts (roles are INTERPRETATION from the counts and names
+  until read; the reads of section 4 settle those that were read):
+  - runtime files with T2 pb01_watchlist (s_rt, 8 files): main.py 7, core/state_store.py 6, v3_chain/pb01_entry.py 6,
+    scripts/v3_shadow_soak_report.py 7, v3_chain/watchlist_capture.py 4, signals/webhook_receiver.py 2, core/migrations.py 1,
+    ops_dashboard/backend/services/system_logs.py 1;
+  - binding and class names: eod_capture in signals/webhook_receiver.py 8 and main.py 2 (the only runtime files);
+    WatchlistCapture in main.py 2, signals/webhook_receiver.py 2, v3_chain/watchlist_capture.py 1 and
+    config/expected_managers.yaml 1; _handle_eod in signals/webhook_receiver.py 2 (the only runtime file);
+  - thread and heartbeat names (T5): main.py 20, config/expected_managers.yaml 4, v3_chain/pb01_entry.py 3,
+    v3_chain/watchlist_capture.py 2, signals/webhook_receiver.py 2;
+  - the quoted literal eod (T8), 27 lines in 11 files: besides the receiver (3; 2 printed) and the capture worker (1; not
+    printed), main.py 4 (none printed), core/config_loader.py 2, ops/control_tower/freshness.py 2, two tests (the EOD route's
+    2; test_c6_auth_collapse.py 2), tests/unit/test_fix128_daily_loss_sequence.py 7, tests/unit/test_control_tower_phase1b.py
+    2 and two records (1 each); relation to the route UNKNOWN for the files not read; the control-tower and daily-loss files
+    are other subjects by name (INTERPRETATION);
+  - daily_candles (T7) in 46 files, among them v3_chain/watchlist_capture.py 2 (the capture worker) and the candle job
+    scripts/fetch_daily_candles.py 6; the rest are other subjects by name (regime, S&R, reports, records).
+
+==============================================================================================================================
+3. S1-1 STOP CONDITION AND THE S1-2 PLAN
+==============================================================================================================================
+- The plan (<SCRATCHPAD>/c011/s12/s12_plan.json, SHA-256 564E391B0DB38DADF2B34643753ECF58946EEE89CB79AED02D74DFE29A64E1F6,
+  derived only from the S1-1 results, s11_results.json, SHA-256
+  9952D7DF0B292790397FE27224476DD6D07F0A9DC4107CA5C3DD288D0BBD4A47) bounds every operation: a range by its length; a T-term
+  grep by the file's S1-1 count for the same expression (it must print exactly that count); the schema block at 20 plus 20
+  lines; each test-name grep at 20 lines; each step-8 grep at the sum of its terms' S1-1 counts. Maximum: 298 + 90 = 388
+  printed lines, at or under 400, so S1-2 was run in W2.
+- Step 8 (at most six files outside R01 to R09 that S1-1 found with T1 to T5; one grep each): chosen as the five runtime and
+  configuration files found (they bear on what the code does) and the one test that runs the capture-to-entry chain end to
+  end: core/state_store.py, config/expected_managers.yaml, scripts/v3_shadow_soak_report.py, core/migrations.py,
+  ops_dashboard/backend/services/system_logs.py and tests/unit/test_v3_pb01_e2e.py. Each grep is the union of the T1 to T5
+  expressions found in the file. Left at their counts (24 files; reading any of them needs a separate authorisation; six are
+  the counts-only records R33 to R38, and docs/SYSTEM_MAP.md is a host-type record):
+  - PATHS.md (T1 1, T5 1)
+  - docs/MASTER_PENDING_28-Jul-2026.txt (T2 1, T5 1)
+  - docs/MASTER_PENDING_30-Jul-2026.md (T2 1, T5 1)
+  - docs/MONDAY_27-JUL_CARD.txt (T2 2, T5 3)
+  - docs/SYSTEM_MAP.md (T1 2, T2 2, T3 1, T5 3)
+  - docs/audit/STOP_PROCEDURE_05-Aug-2026.md (T5 2)
+  - docs/audit/day_reconstruction_15jul2026.md (T2 1)
+  - docs/audit/effect_verification_contract_01aug2026.md (T2 2, T4 1, T5 3)
+  - docs/audit/eod_capture_safety_2026-07-24.md (T1 1, T2 4, T3 2, T5 1)
+  - docs/audit/followup_investigation_15jul2026.md (T3 1)
+  - docs/audit/integrity_audit_2026.md (T2 1, T3 2)
+  - docs/audit/item4_partA_inventory_survey_05aug2026.md (T5 8)
+  - docs/audit/ma2_ms3_md1_25jul2026.md (T5 3)
+  - docs/audit/migration_on_open_rule_14jul2026.md (T2 1)
+  - docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md (T2 4)
+  - docs/audit/pb01_simulation_feasibility_2026-07-24.md (T1 1, T2 3, T4 1, T5 3)
+  - docs/audit/receiver_auth_c6_scoping_2026-07-25.md (T1 5, T2 1, T3 2, T4 1, T5 2)
+  - docs/audit/service_window_configurable_25jul2026.md (T1 2, T2 3)
+  - docs/audit/service_window_extension_2026-07-24.md (T2 1, T5 1)
+  - docs/audit/silent_failure_gaps_2026-07-25.md (T1 3, T2 3, T3 5, T5 2)
+  - docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md (T5 1)
+  - tests/unit/test_c6_auth_collapse.py (T1 11, T2 2, T5 1)
+  - tests/unit/test_v3_pb01_entry.py (T2 2, T5 2)
+  - tests/unit/test_v3_pb01_runner.py (T5 1)
+
+==============================================================================================================================
+4. S1-2 READS AND THE TRACE (prompt outputs 3 and 4)
+==============================================================================================================================
+4.1 Operations (read log <SCRATCHPAD>/c011/code_read_log.tsv, SHA-256
+  FC335A878A1E6BBE5013302E97E8971AB87730599B51DE50245A75A26C6A35F7; each output equals its evidence file
+  <SCRATCHPAD>/c011/evidence/NNN.txt and is given verbatim in Appendix B):
+| Read | Op | Step | Logged (IST) | File | Pinned blob | Operation | Bound | Printed | File lines | Evidence SHA-256 (12) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 001 | O01 | 1 | 11:35:59 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | range 551:564 | 14 | 14 | 1,208 | 8A27BFDD245C |
+| 002 | O02 | 1 | 11:35:59 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | range 751:835 | 85 | 85 | 1,208 | CB34076AC2FD |
+| 003 | O03 | 1 | 11:36:00 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | grep T1 | 8 | 8 | 1,208 | A1D0CB1785EB |
+| 004 | O04 | 2 | 11:36:00 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | range 86:178 | 93 | 93 | 245 | 9265C0C9D7DA |
+| 005 | O05 | 3 | 11:36:01 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | grep T2 | 5 | 5 | 1,655 | A0558EB4259E |
+| 006 | O06 | 3 | 11:36:01 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | range 1559:1578 | 20 | 20 | 1,655 | 3B62E4B005C4 |
+| 007 | O08 | 4 | 11:36:02 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | range 3712:3755 | 44 | 44 | 4,294 | 5624459D6AF3 |
+| 008 | O09 | 4 | 11:36:03 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | grep T1 | 2 | 2 | 4,294 | C88B01BD4A98 |
+| 009 | O10 | 5 | 11:36:03 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | range 619:630 | 12 | 12 | 754 | 536362CFB139 |
+| 010 | O11 | 5 | 11:36:04 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | range 84:84 | 1 | 1 | 85 | D70F38DBBA75 |
+| 011 | O12 | 6 | 11:36:04 | v3_chain/pb01_entry.py | cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | range 117:125 | 9 | 9 | 372 | 4E508431A690 |
+| 012 | O13 | 6 | 11:36:05 | v3_chain/pb01_entry.py | cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | grep T2 | 6 | 6 | 372 | 3E7BE506C339 |
+| 013 | O14 | 7 | 11:36:05 | tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | grep test names | 20 | 5 | 130 | 08B7CEBC7585 |
+| 014 | O15 | 7 | 11:36:06 | tests/unit/test_v3_watchlist_capture.py | 8b50580570a92305ed5a7a6c45e726faee801768 | grep test names | 20 | 9 | 165 | 3804B66FB638 |
+| 015 | O16 | 8 | 11:36:06 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | grep T2 | 6 | 6 | 3,356 | A4DBEBBE1A2A |
+| 016 | O17 | 8 | 11:36:07 | config/expected_managers.yaml | ff4d65d5f9b5a5ddfcc8cac7b812c770da555a3c | grep T2, T4 and T5 (one grep of their union) | 7 | 6 | 387 | 51F4A48FFE92 |
+| 017 | O18 | 8 | 11:36:07 | scripts/v3_shadow_soak_report.py | f4e59d87274c35831649c01f6be61b1c23ec78bd | grep T2 | 7 | 7 | 427 | 87A0F32A830A |
+| 018 | O19 | 8 | 11:36:08 | core/migrations.py | cc39e811e48a9eec823c20b70d343278a6b33eef | grep T2 | 1 | 1 | 445 | 0ACA5208862B |
+| 019 | O20 | 8 | 11:36:08 | ops_dashboard/backend/services/system_logs.py | 773006336224f33ac8b3a7edc0e4e54969284c0e | grep T2 | 1 | 1 | 633 | 6FE01015F339 |
+| 020 | O21 | 8 | 11:36:09 | tests/unit/test_v3_pb01_e2e.py | e0c81020c1614982400b8d62166b8333151d7819 | grep T2, T4 and T5 (one grep of their union) | 7 | 6 | 118 | 255E047D1AF3 |
+- Printed lines in total: 340 of the 388 allowed (the schema block's second part, O07, was skipped: the statement closed at
+  line 1576). The two union greps printed 6 of 7 lines each (a line matched two terms). The test-name greps printed 5 and 9.
+
+4.2 Labels: FACT (the lines read at the pin; FACT (CONFIG), (SCHEMA), (CODE COMMENT) and (TEST SOURCE) mark the kind of line);
+  HISTORICAL (a frozen V2 manual at this pin, cited, not re-read); INTERPRETATION (an inference, its basis stated); UNKNOWN / NOT
+  ESTABLISHED; KNOWN DEFECT; OPEN QUESTION. A statement takes the label of its weakest support. Line citations are written
+  `path:line` or `path:first-last` and cite only lines printed by the reads of 4.1 (checked).
+
+4.3 Trace, step by step (input, logic and guards, output, storage or hand-off, next consumer)
+TR-01 Scanner type (configuration)
+  Source: config/scan_webhook_map.yaml, key scanner_type. Lines: `config/scan_webhook_map.yaml:84`.
+  Logic: the value eod, with the comment "DAILY/EOD alert -> routed to the watchlist ONLY, never the intraday order path".
+  Output and hand-off: an eod-typed map entry at load. Next consumer: the receiver's type branch (TR-05).
+  Label: FACT (CONFIG), its comment included, for line 84. Which key holds line 84 (pb01_breakout_retest) and that it is the only explicit
+  scanner_type: HISTORICAL (C-001 4.1; A-009 8); line 84 alone does not show the key.
+TR-02 Watchlist settings (configuration)
+  Source: config/system_config.yaml, block watchlist. Lines: `config/system_config.yaml:619-630`.
+  Logic: enabled true, with the comment "master gate (paper+live): false = capture worker + entry-stage monitor NOT
+  constructed -> an EOD webhook is captured to nothing"; playbook_scanner "pb01_breakout_retest" ("the eod scanner this
+  watchlist owns"); level_lookback_sessions 20; capture_fetch_lookback_days 60; entry_start "09:20"; entry_end "11:00";
+  entry_tf "5minute"; gap_guard_pct 0.03; poll_interval_sec 20.0. The block's own first comment says "default-OFF"; this
+  file sets it on.
+  Output: the loaded watchlist settings. Next consumer: main.py's wiring (TR-03); the capture worker (level_lookback_sessions,
+  `v3_chain/watchlist_capture.py:155`); the entry stage (TR-14). Label: FACT (CONFIG), its comments included.
+  Paper and live: no branch in the lines read; the comment at 620 says the gate applies to both.
+TR-03 Start-up wiring
+  Source: main.py, start-up code. Lines: `main.py:3712-3755`; T1 lines `main.py:3706` (a comment) and `main.py:3747`.
+  Input: _watchlist_on and _watchlist_cfg (set before line 3712, not read), store, market_windows, the shared fetch function.
+  Logic and guards: both names start as None; only if _watchlist_on: build one OhlcFetcher (lookback from the V3
+  configuration's fetch_lookback_days, default 180; cache time 0; logger "pb01_watchlist"), the WatchlistCaptureWorker (with
+  the watchlist settings, the store, the fetcher, market_windows, the IST clock and the S&R zone settings), _pb01_would_be
+  (a would-be recorder, by its name; class name masked by the reader) and the entry stage with on_confirm =
+  _pb01_would_be.record (class name masked); then
+  webhook_receiver.set_eod_capture(the worker) ("EOD alerts now captured"), start the worker, start the entry stage ("the
+  row status IS the durable state (restart-safe)"); log "PB-01 watchlist: ENABLED ... (SHADOW / ANALYSIS-ONLY, NO order
+  path)". Any exception: log "pb01 watchlist wiring failed (continuing without it)" and set both back to None.
+  Output: two daemon threads (TR-08, TR-14) and the receiver's worker binding (TR-04). Next consumers: the receiver and the
+  entry stage.
+  Label: FACT for the lines read. How _watchlist_on is computed: UNKNOWN / NOT ESTABLISHED (G-01). INTERPRETATION from the
+  order of the lines: a failure after the worker is built (for example in the entry stage) leaves the receiver unbound,
+  because the binding (3747) comes after all three constructions (3734, 3738, 3743).
+TR-04 The receiver's worker binding
+  Source: signals/webhook_receiver.py, the constructor and set_eod_capture. Lines: `signals/webhook_receiver.py:161`,
+  `signals/webhook_receiver.py:195`, `signals/webhook_receiver.py:1156`, `signals/webhook_receiver.py:1160`.
+  Logic: the constructor takes eod_capture, default None (its comment: "None -> EOD alerts are a fail-safe miss") and keeps it
+  as self._eod_capture; set_eod_capture replaces it. Next consumer: _handle_eod (TR-06).
+  Label: FACT. The T1 grep printed all 8 lines of the term in this file. In main.py, eod_capture occurs on two lines only
+  (3706, 3747; S1-1 and read 008); whether the constructor call passes a worker by position: not read (UNKNOWN, G-01).
+TR-05 The receiver's type branch
+  Source: signals/webhook_receiver.py, inside _process_request (the function's name: HISTORICAL, C-002 17, T5).
+  Lines: `signals/webhook_receiver.py:551-564`.
+  Input: scanner_name (the path key) and raw_body.
+  Logic and guards: a key that is not in the map returns 404 ("Unknown scanner") (553 to 554); then the map entry's
+  scanner_type, default "intraday" when the attribute is absent, is compared with "eod"; if equal, the function returns
+  self._handle_eod(scanner_name, raw_body) (562 to 564), so nothing after line 564 runs for that request.
+  Output: the handler's answer. Next consumer: _handle_eod (TR-06).
+  Label: FACT. The comment above (556 to 561) calls an "eod" scanner "a DAILY/EOD alert", captured "to the WATCHLIST only",
+  skipping the entry-window gate and "NEVER enqueued to the intraday signal_queue" (FACT (CODE COMMENT)). The steps before
+  line 551 (authentication) and after line 564 (kill switch, queue depth, entry window): not read; HISTORICAL (C-003 7.3;
+  C-006 4.1; B-008 3).
+TR-06 The EOD handler
+  Source: signals/webhook_receiver.py, _handle_eod. Lines: `signals/webhook_receiver.py:751-804`.
+  Input: scanner_name and raw_body (the docstring: authentication already ran in _process_request).
+  Logic and guards, in order: JSON parse, else 400 "Malformed JSON" (757 to 760); a JSON object, else 400 (761 to 762); the
+  fields stocks, trigger_prices and triggered_at present, else 400 (763 to 765); triggered_at parsed by
+  _parse_eod_triggered_at, else 400 "Invalid triggered_at" (767 to 769); stocks a string, else 400 (771 to 773); symbols =
+  the comma-separated parts, stripped, empty ones dropped (774). No worker bound: a warning, one heartbeat (status FAILED,
+  functional status DISABLED) and 200 {"accepted": 0, "captured": 0, "detail": "watchlist disabled"} (778 to 788).
+  Otherwise, per symbol: the alias map, looked up in upper case (792); submit(scanner_name, symbol, triggered_at); captured
+  counts the True answers; a submit exception is logged and the loop goes on (793 to 798); an info log (799 to 800); one
+  heartbeat (functional status EMPTY_NO_DATA when nothing was queued) (801 to 803); 200 {"accepted": number of symbols,
+  "captured": number queued} (804).
+  Output: the HTTP answer. Hand-off: the capture worker's submit (TR-09); the heartbeat (TR-07). Next consumer: the worker.
+  Label: FACT. trigger_prices must be present, but its value is not used in lines 751 to 804. Lines 751 to 804 hold no
+  signals SQL, no call to _process_signal and no use of the intraday queue; _parse_eod_triggered_at is called (767) but its
+  body was not read (G-02).
+TR-07 The EOD heartbeat
+  Source: signals/webhook_receiver.py, _record_eod_heartbeat. Lines: `signals/webhook_receiver.py:806-834`.
+  Logic: record_heartbeat("pb01_capture", status, functional_status, message "scanner=... symbols=... queued=...") imported
+  from utils.cron_heartbeat; every exception swallowed (a warning logged). The docstring: the row "RECORDS *QUEUED*, NOT
+  CAPTURED"; "The watchlist row count remains the only proof the worker finished"; observability "must never be able to
+  break the thing it observes".
+  Output: one heartbeat row per call (two call sites: 786 and 801; the 400 answers return before either). Storage: the
+  heartbeat table through utils/cron_heartbeat.py (not read; HISTORICAL: C-002 11, B-007 11). Label: FACT.
+TR-08 The capture worker's thread
+  Source: v3_chain/watchlist_capture.py, start and stop. Lines: `v3_chain/watchlist_capture.py:86-103`.
+  Logic: start does nothing if a thread exists, else starts a daemon thread named "pb01-capture" running _run; stop sets the
+  stop event, puts a sentinel and joins for at most 3 seconds. Next: _run (TR-10). Label: FACT.
+TR-09 Submit
+  Source: v3_chain/watchlist_capture.py, submit. Lines: `v3_chain/watchlist_capture.py:105-118`.
+  Input: scanner_name, symbol and triggered_at, by keyword ("called by the webhook EOD route").
+  Logic: put_nowait on the worker's queue and return True; a full queue: a warning "dropping ... (fail-safe miss)" and False;
+  any other exception: an error and False; it never raises into the request thread.
+  Output: True or False. Storage: the in-memory queue only. Next: _run (TR-10).
+  Label: FACT. The queue's size is set outside the lines read (UNKNOWN, G-03). INTERPRETATION: a 200 answer's "captured"
+  counts symbols queued, not rows written (as the docstring of TR-07 says).
+TR-10 The worker loop
+  Source: v3_chain/watchlist_capture.py, _run. Lines: `v3_chain/watchlist_capture.py:121-134`.
+  Logic: until stopped, take an item with a 1-second timeout; skip the sentinel; call _capture(*item); an exception is logged
+  ("one broken symbol must NEVER kill the worker") and the loop goes on; task_done always. Next: _capture (TR-11). Label: FACT.
+TR-11 Capture of one symbol
+  Source: v3_chain/watchlist_capture.py, _capture. Lines: `v3_chain/watchlist_capture.py:136-178`.
+  Input: scanner_name, symbol, triggered_at.
+  Logic and guards: breakout_date = triggered_at's date, else today's date; none: skip (138 to 141). "SETTLED-ONLY": a
+  breakout dated today before the market close is skipped as "a FORMING daily candle (intraday firing)" (143 to 151). LEVEL is
+  computed "from OUR OWN settled daily candles (never the payload price)": the daily candles are fetched and
+  compute_breakout_level applied with level_lookback_sessions; too few sessions: skip (153 to 160). trading_date = the next
+  trading day after the breakout's EOD ("holiday-aware", "the anti-rehydration stamp") (162 to 165). The nearest 30m or 1h
+  S&R zone to LEVEL is recorded (167 to 168).
+  Output: the row symbol, trading_date, level, breakout_date, source = scanner_name, sr_zone_json, status PENDING,
+  outcome_json None, captured_at and created_at = now (172 to 177). Hand-off: store.insert_pb01_watchlist(row) (178).
+  Next: the store (TR-12).
+  Label: FACT for the lines read. The helpers (_safe_now, _market_closed, _fetch, compute_breakout_level,
+  _breakout_eod_dt, _nearest_zone_json, next_trading_day) and lines 179 to 245 (what follows the insert): not read (G-03).
+TR-12 The store
+  Source: core/state_store.py, insert_pb01_watchlist, get_pb01_watchlist_for_date and update_pb01_watchlist_status.
+  Lines: `core/state_store.py:3078`, `core/state_store.py:3088`, `core/state_store.py:3094`, `core/state_store.py:3101`,
+  `core/state_store.py:3109`, `core/state_store.py:3117`.
+  Logic: "INSERT OR IGNORE INTO pb01_watchlist" (the insert returns a bool); "SELECT * FROM pb01_watchlist WHERE trading_date
+  = ?"; "UPDATE pb01_watchlist SET status = ?, outcome_json = ?, consumed_at = ?".
+  Next consumers: the entry stage (TR-14); the soak report (TR-16). Label: FACT for the six lines; the rest of the three
+  methods (what the bool means, how pending_only is applied): not read (G-04).
+TR-13 The table
+  Source: core/schema.sql, pb01_watchlist. Lines: `core/schema.sql:1540`, `core/schema.sql:1559-1576`,
+  `core/schema.sql:1578-1579`.
+  Logic: "TABLE 49 ... schema v43"; columns id, symbol, trading_date ("the SINGLE valid session (D+1)"; "ANTI-REHYDRATION key:
+  load discards trading_date != today"), level ("highest daily HIGH of the 20 sessions BEFORE the breakout day (WE compute it;
+  never the payload)"), breakout_date, source (scanner name), sr_zone_json, status (default PENDING; CHECK PENDING, CONSUMED,
+  EXPIRED_WINDOW, INVALIDATED, SKIPPED_GAP), outcome_json, captured_at, created_at, consumed_at; UNIQUE (symbol,
+  trading_date); an index on trading_date.
+  Label: FACT (SCHEMA); the column comments FACT (CODE COMMENT).
+TR-14 The PB-01 entry stage's pickup (the boundary)
+  Source: v3_chain/pb01_entry.py. Lines: `v3_chain/pb01_entry.py:117-125`, `v3_chain/pb01_entry.py:151`,
+  `v3_chain/pb01_entry.py:326`; docstring and argument lines `v3_chain/pb01_entry.py:5`, `v3_chain/pb01_entry.py:12`,
+  `v3_chain/pb01_entry.py:18`, `v3_chain/pb01_entry.py:84`.
+  Logic: start does nothing if a thread exists, else starts a daemon thread "pb01-entry" and logs its window and poll; the
+  pickup reads get_pb01_watchlist_for_date(today, pending_only=True) (151); the docstring: "RESTART-SAFE by RE-DERIVATION -
+  the pb01_watchlist ROW is the durable state" (12), and it speaks of "a row stamped for another trading_date" (18; the
+  sentence is cut by the grep); the schema's comment says the load discards trading_date != today (TR-13); a later call to
+  update_pb01_watchlist_status (326; its arguments not printed).
+  Output: today's PENDING rows. Next: the entry stage's decisions, excluded by OQ-02. Label: FACT for the lines printed.
+TR-15 Expected managers (configuration)
+  Source: config/expected_managers.yaml. Lines: `config/expected_managers.yaml:130-131`, `config/expected_managers.yaml:135-137`,
+  `config/expected_managers.yaml:140`.
+  Logic: entries pb01_capture_worker (class v3_chain.watchlist_capture.WatchlistCaptureWorker; "acted_means: a pb01_watchlist
+  ROW written - rows, never queued=") and pb01_entry_stage (class name masked; "effect_point:
+  v3_chain/pb01_entry.py:318 _terminate (update_pb01_watchlist_status :322)").
+  Label: FACT (CONFIG). Who reads this file: not read (G-07). KNOWN DEFECT (minor, a stale pointer): the effect_point names
+  line 322 for update_pb01_watchlist_status, while the call is at line 326 at the pin (TR-14; read 012).
+TR-16 A read-only consumer off the route
+  Source: scripts/v3_shadow_soak_report.py, _pb01_watchlist_rows. Lines: `scripts/v3_shadow_soak_report.py:280-281`,
+  `scripts/v3_shadow_soak_report.py:293`, `scripts/v3_shadow_soak_report.py:297`, `scripts/v3_shadow_soak_report.py:308`,
+  `scripts/v3_shadow_soak_report.py:321`, `scripts/v3_shadow_soak_report.py:323`.
+  Logic: "Read-only load of pb01_watchlist rows"; "SELECT symbol, trading_date, status FROM pb01_watchlist"; when no rows: a
+  printed hint to enable watchlist.enabled and capture a PB-01 EOD alert. Label: FACT for the lines printed.
+TR-17 Other mentions
+  core/migrations.py: one line naming "v43 pb01_watchlist (Step 10b PB-01 overnight watchlist)" (`core/migrations.py:89`);
+  whether a migration step creates or alters the table is not shown (G-04). ops_dashboard/backend/services/system_logs.py: the
+  name in a tuple with "quality_scorer" and "sr_detector" (`ops_dashboard/backend/services/system_logs.py:79`);
+  INTERPRETATION: a list of logger names (main.py's PB-01 logger is "pb01_watchlist", `main.py:3731`). Label: FACT for the
+  lines.
+TR-18 Tests (as text; none run)
+  tests/unit/test_v3_eod_route.py: five tests (`tests/unit/test_v3_eod_route.py:59`, `tests/unit/test_v3_eod_route.py:72`,
+  `tests/unit/test_v3_eod_route.py:82`, `tests/unit/test_v3_eod_route.py:93`, `tests/unit/test_v3_eod_route.py:113`): the route
+  captures and bypasses the entry window; an intraday scanner stays window-gated; the fail-safe when the watchlist is
+  disabled; the late binding; a malformed payload is rejected. tests/unit/test_v3_watchlist_capture.py: nine tests
+  (`tests/unit/test_v3_watchlist_capture.py:39` to `tests/unit/test_v3_watchlist_capture.py:146`): LEVEL is the highest high
+  of the 20 sessions before the breakout; it ignores the breakout day and later; none with too little history; the store's
+  UNIQUE (symbol, trading_date); a stale date is not loaded; a status update; a settled EOD capture persists a row; a forming
+  intraday candle is skipped; a repeat firing is deduplicated. tests/unit/test_v3_pb01_e2e.py: it "Wires the REAL pieces the
+  way main.py does" (`tests/unit/test_v3_pb01_e2e.py:4`), reads rows back by trading date
+  (`tests/unit/test_v3_pb01_e2e.py:90`) and asserts a status CONSUMED (`tests/unit/test_v3_pb01_e2e.py:103`).
+  Label: FACT (TEST SOURCE) for the names and printed lines; what each test asserts beyond its name: not read (G-08).
+
+==============================================================================================================================
+5. CAPTURE PATH AND SCANNER-TYPE ROUTING: WHAT THE CODE DOES AND DOES NOT ESTABLISH (prompt output 5)
+==============================================================================================================================
+Established at the pin (FACT for the lines read):
+- One route, in this order: map line 84 (TR-01) -> type branch, returning at line 564 (TR-05) -> _handle_eod's checks and
+  answers (TR-06) -> submit, an in-memory queue (TR-09) -> the worker thread (TR-10) -> _capture (TR-11) ->
+  INSERT OR IGNORE (TR-12) into pb01_watchlist, UNIQUE (symbol, trading_date) (TR-13) -> the entry stage's read of today's
+  pending rows (TR-14). The scanner-type routing (B) is the capture path's (A) entrance, and the capture worker's submit is
+  the handler's only hand-off in the lines read.
+- Activation: the worker is bound and both threads started only on the _watchlist_on branch of main.py, inside a try that
+  leaves them None on any error (TR-03); unbound, an EOD alert still answers 200 with "watchlist disabled" and a FAILED,
+  DISABLED heartbeat (TR-06). The configuration sets watchlist.enabled to true (TR-02).
+- Timing: the request thread only queues; the level, the date stamp and the row are made later on the worker thread
+  (TR-09 to TR-11). A same-day firing before the close is skipped; the row is stamped for the next trading day; the entry
+  stage reads rows of the current day only (TR-11, TR-13, TR-14).
+- Duplicates: none of the intake guards (expiry, dedup cache, fingerprint) is on this route (TR-06); a second capture of the
+  same symbol for the same next trading day is ignored by INSERT OR IGNORE against the UNIQUE key (TR-12, TR-13).
+- Naming: the source calls the eod-type alert "a DAILY/EOD alert" (`signals/webhook_receiver.py:556`,
+  `signals/webhook_receiver.py:752`, `config/scan_webhook_map.yaml:84`), and the capture works on settled daily candles
+  (TR-11). INTERPRETATION: "EOD / Daily" in the topic's title names this one route, as OQ-01 was approved.
+Not established (UNKNOWN / NOT ESTABLISHED unless stated):
+- How _watchlist_on and _watchlist_cfg are derived (G-01), and whether main.py passes a worker to the constructor by position.
+- Other callers of submit or other writers of pb01_watchlist: in runtime files the term occurs in 8 files; every SQL line
+  printed is in core/state_store.py (INSERT, SELECT, UPDATE) or the soak report (SELECT); six T2 lines were not printed
+  (main.py 3, v3_chain/watchlist_capture.py 3), and "submit(" was not searched.
+- The worker's queue size, its helpers and what follows the insert (G-03); the store methods' bodies (G-04).
+- The entry stage beyond the pickup (excluded by OQ-02) and whether anything else consumes its confirmations.
+- Production: whether the threads ran on the host, which alerts arrived after 27-Jul and which rows existed (Q-44, K-009;
+  HISTORICAL records: 5 PB-01 POSTs, 27 to 31-Jul, C-001 4.5).
+
+==============================================================================================================================
+6. RECONCILIATION WITH THE FROZEN MANUALS (prompt output 6; nothing corrected here)
+==============================================================================================================================
+| ID | Frozen statement (manual, section) | C-011 evidence | Result |
+|---|---|---|---|
+| RC-01 | C-001 7.1 step 5: an "eod" key leaves before the kill, backpressure and window gates (556 to 564) | TR-05: the return at 564 | CONSISTENT (the gates after 564 not re-read) |
+| RC-02 | C-001 7.5 and T-10: _handle_eod parses, aliases, submits (key, symbol, triggered_at) or records a fail-safe miss; rows with source = the key; wired when watchlist.enabled is true | TR-06; TR-11 (source = scanner_name); TR-03 | CONSISTENT; the code's condition _watchlist_on not read (G-01); the configuration comment at 620 agrees |
+| RC-03 | C-001 4.4 and D-04: watchlist.playbook_scanner has no reader; the binding is made by scanner_type | TR-05 (563); TR-02 (621) | CONSISTENT (no reader search repeated) |
+| RC-04 | C-001 8, A-L5 and D-06: an EOD alert answers 200 with accepted = the symbol count; no signals row | TR-06 (788, 804); no signals SQL in 751 to 834 | CONSISTENT |
+| RC-05 | C-002 9 row 7: the route's 400s and 200s, "watchlist disabled" without a worker | TR-06 | CONSISTENT |
+| RC-06 | C-002 10.7: "the cron_heartbeat row per EOD alert (S5 and S6 for the EOD route)" | TR-06, TR-07: a heartbeat only after the body checks pass (786, 801); the 400 answers (760 to 773) write none | PRECISION NOTE: per EOD alert that passes the handler's checks. No erratum proposed; for ChatGPT (Q-B) |
+| RC-07 | C-002 11: submit per symbol; one "pb01_capture" row recording queued; a fail-safe miss without a worker | TR-06, TR-07 | CONSISTENT; detail: the fail-safe branch also writes a row (FAILED, DISABLED) |
+| RC-08 | C-002 6.1: the worker bound late by set_eod_capture (main.py 3747) | TR-03, TR-04 | CONSISTENT |
+| RC-09 | C-003 6.5 and L-01: the route checks no expiry, dedup cache or fingerprint; the worker's handling not read | TR-06; TR-09 to TR-13 | CONSISTENT; NEW DETAIL for the part C-003 left unread: no age check in the worker; a same-day pre-close breakout skipped; a repeat for the same next trading day ignored by the key. No change to C-003 proposed |
+| RC-10 | C-004 9.1: the constructor takes eod_capture | TR-04 (161) | CONSISTENT (the module docstring not re-read) |
+| RC-11 | C-004 T-18: own checks; only stocks type-checked; alias applied; no price check | TR-06 (757 to 774, 792) | CONSISTENT; detail: trigger_prices required present, value unused |
+| RC-12 | C-005 10.2, BM-06 = BK-08: the route bypasses the three guards; its table's own unique symbol/date key | TR-12, TR-13 | CONSISTENT; precision: the date in the key is the next trading day (D+1), not the alert's date |
+| RC-13 | C-007 11.2, BM-12 = BK-30: whether the EOD route reaches _process_signal (not traced) | TR-05 (return at 564); TR-06, TR-07: no _process_signal call, no signals SQL; the parser at 767 not read | NEW EVIDENCE for BK-30; it stays OPEN unless ChatGPT closes it by a note (OQ-05 (a) of Stage 0) |
+| RC-14 | C-008 9.4, EP-09: no direct hand-off from the EOD route to the processor | TR-05, TR-06 | CONSISTENT |
+| RC-15 | C-009 14 (with C-003 L-01): the EOD route has no expiry check | TR-06 | CONSISTENT; the worker's settled-only skip is a different time rule (not signal expiry) |
+| RC-16 | B-006 3, TH9 and TH10, and 11: threads pb01-capture and pb01-entry, guards at 87 and 118, the error caught at 131, watchlist.enabled (620), poll 20 s (630), the row as durable state (3749) | TR-03, TR-08, TR-10, TR-14, TR-02 | CONSISTENT |
+| RC-17 | B-008 3: the entry stage's window 09:20 to 11:00 (configuration 619 to 627) | TR-02 (626 to 627) | CONSISTENT |
+| RC-18 | A-008 16: capture to a watchlist (ANALYSIS ONLY); next morning 09:20 to 11:00 on 5-minute candles; would-be records only | TR-02 (620, 626 to 628); TR-03 (on_confirm = the would-be recorder; the log text "NO order path") | CONSISTENT |
+| RC-19 | A-002 12: EOD scanner signals routed to a watchlist path, never the intraday queue | TR-05; TR-06 | CONSISTENT |
+| RC-20 | B-007 11: the receiver's "pb01_capture" row per EOD alert (801 to 832) | TR-07 | CONSISTENT (the precision of RC-06 applies) |
+| RC-21 | C-001 11 and C-002 16: test_v3_eod_route.py's tests at lines 39 to 119 and 59 to 113 | TR-18 (names at 59 to 113) | CONSISTENT |
+| RC-22 | A-011 14: the PB-01 stage rehydrated at start when enabled | TR-14 (12, 151) | CONSISTENT (by re-derivation from the row) |
+
+==============================================================================================================================
+7. EVIDENCE GAPS AND QUESTIONS NEEDING SEPARATE AUTHORISATION (prompt output 7)
+==============================================================================================================================
+Gaps (each a bounded read or search that this prompt did not authorise; none was attempted):
+Lines holding a term in the files read but not printed (from S1-1's counts against the printed lines):
+| File | Term: printed / counted (not printed) |
+|---|---|
+| signals/webhook_receiver.py | T4 1/2 (1); T6 7/9 (2); T8 2/3 (1) |
+| v3_chain/watchlist_capture.py | T2 1/4 (3); T4 0/1 (1); T5 1/2 (1); T6 3/8 (5); T7 0/2 (2); T8 0/1 (1) |
+| core/schema.sql | T6 5/6 (1) |
+| main.py | T2 4/7 (3); T5 10/20 (10); T6 12/22 (10); T8 0/4 (4) |
+| config/system_config.yaml | T2 0/1 (1); T6 2/3 (1) |
+| config/scan_webhook_map.yaml | none |
+| v3_chain/pb01_entry.py | T5 1/3 (2); T6 6/7 (1) |
+| tests/unit/test_v3_eod_route.py | T1 1/4 (3); T6 1/5 (4); T8 0/2 (2) |
+| tests/unit/test_v3_watchlist_capture.py | T2 0/16 (16); T4 0/2 (2); T6 0/19 (19) |
+| core/state_store.py | T6 6/9 (3) |
+| config/expected_managers.yaml | T6 3/9 (6) |
+| scripts/v3_shadow_soak_report.py | T6 7/10 (3) |
+| core/migrations.py | none |
+| ops_dashboard/backend/services/system_logs.py | none |
+| tests/unit/test_v3_pb01_e2e.py | T6 4/6 (2) |
+- G-01 main.py: the lines before 3712 that set _watchlist_on and _watchlist_cfg; the receiver's constructor call; the term
+  lines not printed (above), among them the stops at shutdown (HISTORICAL: B-006 3, lines 1720 to 1729).
+- G-02 signals/webhook_receiver.py: _parse_eod_triggered_at (called at 767); lines 1157 to 1159 of set_eod_capture; the term
+  lines not printed (above).
+- G-03 v3_chain/watchlist_capture.py: lines 1 to 85 (constructor, queue size, imports) and 179 to 245 (what follows the
+  insert; the helpers), which hold the term lines not printed (above).
+- G-04 core/state_store.py: the three methods' bodies (3078 to about 3125); core/migrations.py: whether a step creates or
+  alters the table.
+- G-05 the entry stage beyond the pickup: excluded by OQ-02; listed only so that the boundary is visible.
+- G-06 OPEN QUESTION: watchlist.capture_fetch_lookback_days (60, `config/system_config.yaml:624`): no reader in the lines
+  read; the shared fetcher's lookback comes from the V3 configuration's fetch_lookback_days, default 180 (`main.py:3730`), and
+  _fetch's body was not read. Whether the 60-day setting has any effect is UNKNOWN (G-03 would settle it).
+- G-07 config/expected_managers.yaml: who reads it and whether the stale effect_point (TR-15) matters.
+- G-08 the tests' bodies (what each asserts beyond its name).
+- G-09 files left at their counts: the 24 of section 3 and the T7 and T8 files outside the route (section 2).
+- G-10 R33's headings (OQ-06 of Stage 0): not authorised in this prompt; not read. R42 never read.
+- G-11 outside the repository: what ran on the production host and which rows existed (Q-44; a DR-016 audit lead).
+- G-12 config/system_config.yaml: the pb01_watchlist line and the other watchlist line outside 619 to 630 (above).
+Questions for ChatGPT (recommended option first; none blocks the reconciliation):
+- Q-A Draft the C-011 manual from this evidence, keeping G-01 to G-04, G-06 and G-12 as UNKNOWN (Recommended); or authorise
+  one more bounded pass first (G-01: a count and one grep of _watchlist_on in main.py; G-03: lines 1 to 85 and 179 to 245 of
+  the capture worker, 152 lines; G-04: the three store methods, about 50 lines).
+- Q-B RC-06: record the heartbeat precision in the C-011 manual only (Recommended); or propose an erratum to C-002 10.7.
+- Q-C BK-08 and BK-30: record this evidence and keep both OPEN (Recommended, as OQ-05 (a)); or close either by a note.
+
+==============================================================================================================================
+8. DECLARATION (prompt output 8)
+==============================================================================================================================
+- Read: only the 20 operations of section 4.1 (15 files at their pinned blobs; 340 printed lines, masked), in W2.
+- Searched: only the 32 searches and 4 positive controls of section 2 (counts only), in W1.
+- Not read: everything else, in particular the protected paths, the two July 2026 queue records, R33 to R42 (counts only; R42
+  never read), config/cron_registry.yaml and deploy/cron/trading-system.cron (counts only), docs/SYSTEM_MAP.md and PATHS.md
+  (counts only), the 24 files of section 3, every test body and every line outside the ranges and greps of section 4.1.
+- No test, script, migration or service was run; no VM, host, broker, webhook endpoint, Chartink account, database or live
+  system was contacted; nothing was fetched into the clone (8,920 objects throughout; protected blobs 0).
+- No edit, commit, push or deployment; no V2 design; no frozen C-001 to C-010 conclusion reopened (section 6 records
+  consistency and new detail only).
+- STOP: the C-011 manual is not drafted or frozen. Waiting for ChatGPT's reconciliation.
+
+==============================================================================================================================
+APPENDIX A. S1-1 PER-FILE COUNTS OVER s_all (matching lines; every file with a match; zeros shown as 0)
+==============================================================================================================================
+Scope: rt = s_rt, tests = s_tests, cfg = s_cfg, other = the rest of s_all (documents, records, other files). The s_rt, s_tests
+  and s_cfg searches give the same counts for their files (checked), so this table holds all 32 searches.
+| Path | Pinned blob | Scope | T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| PATHS.md | e6a1ba7c1cb65b199f0d0460e846c6fbc75b9de8 | other | 1 | 0 | 0 | 0 | 1 | 6 | 6 | 0 |
+| config/cron_registry.yaml | 42ff638145ba8c05eba907a33d5b391ae3fc6910 | cfg | 0 | 0 | 0 | 0 | 0 | 0 | 4 | 0 |
+| config/expected_managers.yaml | ff4d65d5f9b5a5ddfcc8cac7b812c770da555a3c | cfg | 0 | 2 | 0 | 1 | 4 | 9 | 0 | 0 |
+| config/index_universe.yaml | 416d1eb723c555573dc12f71a78c7bd17afde6ed | cfg | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | cfg | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| config/strategies/pb01_breakout_retest.yaml | eedf5cac5ed5132665160a1aac9cce30cf4a38ed | cfg | 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 |
+| config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | cfg | 0 | 1 | 0 | 0 | 0 | 3 | 0 | 0 |
+| core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | rt | 0 | 0 | 0 | 0 | 0 | 9 | 0 | 2 |
+| core/migrations.py | cc39e811e48a9eec823c20b70d343278a6b33eef | rt | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
+| core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | other | 0 | 5 | 0 | 0 | 0 | 6 | 0 | 0 |
+| core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | rt | 0 | 6 | 0 | 0 | 0 | 9 | 0 | 0 |
+| deploy/cron/trading-system.cron | f8399b40bfa71e35e27746e46cd463171615477a | cfg | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/MASTER_PENDING_28-Jul-2026.txt | eea6d0bf66d95847686f7c19989b4f07085d5266 | other | 0 | 1 | 0 | 0 | 1 | 2 | 0 | 0 |
+| docs/MASTER_PENDING_30-Jul-2026.md | 9cdb7b697a2ff67aeed56569a9cbea4d7683a8a3 | other | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 |
+| docs/MONDAY_27-JUL_CARD.txt | 5dbf17f52936e57927ea24a7c2d069e70e0fbec1 | other | 0 | 2 | 0 | 0 | 3 | 6 | 0 | 0 |
+| docs/SYSTEM_MAP.md | c251f7c7a29383d817e75673c93ba36c4f5a9285 | other | 2 | 2 | 1 | 0 | 3 | 11 | 8 | 0 |
+| docs/approvals/cron_officer/20-Jun-2026/dryrun_friday_19jun.html | f73892f9b98b4c72dbfa244af2d55d483e79f398 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/STOP_PROCEDURE_05-Aug-2026.md | dc6e0825c753d438eaf624842a32be3b8e61e2e9 | other | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 |
+| docs/audit/audit_05jul2026.md | a6074fe7fa054310f4fe278c26b753f52c5eb7bb | other | 0 | 0 | 0 | 0 | 0 | 0 | 4 | 0 |
+| docs/audit/audit_b_phase9_ops_phase10_security_16jul2026.md | 6454c632ba7120f2bb6fd1f26f9deea33fba5bc1 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/batch1_done_16jul2026.md | 9ef6ea656255e1e4cb8bccfb0d195fa137eb8f3f | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/batch3_done_17jul2026.md | b97db4f5ad68b8e57d1a00ffad4b837ac70161ab | other | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/audit/batch_classification_16jul2026.md | 270cae06cff5dc2b89ee771b25aee39a36348072 | other | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 0 |
+| docs/audit/c1_credential_exposure_inventory_02jul2026.md | 09ae82e68cb7d333da8404f3208574d01bc1ec4d | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/c6_auth_collapse_25jul2026.md | 4c01b1db5751b599539afe9146f8f66d4e61bca4 | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/audit/daily_report_classification_fix_18jul2026.md | bb6bb86c220d7f2492e3fe853cd427a87eb55c1d | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/daily_report_redesign_phase0_data_audit_30jun2026.md | d483f257969526292050dd10d8029eb9247e5f79 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/day_reconstruction_15jul2026.md | 931fb0a9f786dfaf9edcaa2bf6a6d72ec04907ce | other | 0 | 1 | 0 | 0 | 0 | 3 | 1 | 0 |
+| docs/audit/deployment_evidence_pb01_shadow_14jul2026.md | daac5f901b582ffbb5d39538e4187f81114b1d9d | other | 0 | 0 | 0 | 0 | 0 | 3 | 0 | 0 |
+| docs/audit/effect_verification_contract_01aug2026.md | 24157f5b2713c7a1d511152bf7bd555b21cdb978 | other | 0 | 2 | 0 | 1 | 3 | 4 | 0 | 0 |
+| docs/audit/eod_capture_safety_2026-07-24.md | db5c44612170fd9732049a2f40667b477eeeb2bc | other | 1 | 4 | 2 | 0 | 1 | 14 | 0 | 1 |
+| docs/audit/fixes_15jul2026.md | 2e9b17e97512ba89db89ed6900f36de4902e06a0 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/followup_investigation_15jul2026.md | 01008d209aff7a5c65c34207e0b3e84a06ba65c9 | other | 0 | 0 | 1 | 0 | 0 | 1 | 0 | 0 |
+| docs/audit/full_system_audit_04july2026.md | fafb3babdda40faae1f4bf426653af6a99a72022 | other | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 0 |
+| docs/audit/integrity_audit_2026.md | 25a738f2a9a77ed37374dce367e5fd8e848efd8a | other | 0 | 1 | 2 | 0 | 0 | 7 | 0 | 1 |
+| docs/audit/item4_partA_inventory_survey_05aug2026.md | 2146daf73095096fdbe9080bdaa448b898ba273e | other | 0 | 0 | 0 | 0 | 8 | 11 | 0 | 0 |
+| docs/audit/ledger11_secrets_surface_measurement_04aug2026.md | 0cfb24a6947a3f2e83364f314ab296fd49172f1b | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/ma2_ms3_md1_25jul2026.md | 0778cc3640a665ce46778c49776096cb50d24ff6 | other | 0 | 0 | 0 | 0 | 3 | 0 | 1 | 0 |
+| docs/audit/migration_on_open_rule_14jul2026.md | 205a00dc96e1dd75663b412bbfad9b2ef93294fa | other | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/audit/mk3_fk_enforcement_25jul2026.md | 3a3851069c347f136e9de3e172e4d655dadb3f05 | other | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 0 |
+| docs/audit/monday_post_session_results_20jul2026.md | 7494bf9140ee8b67ef5af8190ccfd290ec54cef8 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/monitoring_hardening_15jul2026.md | ec8e06425c61becb5b1b20ef05ed110b363a1b27 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md | adf589da731440a1a81d6dfee5570cc1ee0b1702 | other | 0 | 4 | 0 | 0 | 0 | 8 | 0 | 0 |
+| docs/audit/pb01_simulation_feasibility_2026-07-24.md | 8c1e2686d7e7b82d2777a23c0e16b70a965fb11f | other | 1 | 3 | 0 | 1 | 3 | 4 | 0 | 0 |
+| docs/audit/pending_reconciliation_14jul2026.md | 2d7298b6368947be6be2fddf1d9c3412d4829f78 | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/audit/q10_part_b_backfill_20jul2026.md | e5cfe3280012315d8b389b0c3ae6c94fae01e377 | other | 0 | 0 | 0 | 0 | 0 | 0 | 6 | 0 |
+| docs/audit/receiver_auth_c6_scoping_2026-07-25.md | 25c1ddb480685a73d1eef0728ad5b2dcc5927c1b | other | 5 | 1 | 2 | 1 | 2 | 7 | 0 | 0 |
+| docs/audit/regime_computability_verification_20jul2026.md | 3927b41befc0b5f85666c810a650c4da06eba6ab | other | 0 | 0 | 0 | 0 | 0 | 0 | 5 | 0 |
+| docs/audit/regime_direction_preference_investigation_20jul2026.md | 7ac202a8f51abd98ebf5b833db3bcae4e3237c3a | other | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/audit/regime_phase0_index_ingestion_17jul2026.md | 6de7e91de3ae09eee1d20387d7394feb1209b055 | other | 0 | 0 | 0 | 0 | 0 | 0 | 8 | 0 |
+| docs/audit/regime_phase1_investigation_18jul2026.md | 053c6e0282684951f2edd55e01513041bce7a929 | other | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 0 |
+| docs/audit/regime_thesis_validation_18jul2026.md | c3d5daff5cded5dff143d7538ee1f367498b7fb7 | other | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/audit/secondary_filtration_execution_pipeline_audit.md | 5d405fa4205948405537c9672921b44d7b62be4c | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/audit/service_window_configurable_25jul2026.md | 41c2843b7526a5e3380c01a29030336214da2917 | other | 2 | 3 | 0 | 0 | 0 | 3 | 0 | 0 |
+| docs/audit/service_window_extension_2026-07-24.md | 189c4f8726419232ecc64a14b94d5c3ed56c0160 | other | 0 | 1 | 0 | 0 | 1 | 1 | 0 | 0 |
+| docs/audit/silent_failure_gaps_2026-07-25.md | d4911f93211b90776147e45d0003815ac30bc7e3 | other | 3 | 3 | 5 | 0 | 2 | 10 | 0 | 0 |
+| docs/audit/sweep_done_17jul2026.md | 71b5770daf255cda8b85334de1b21b7739a5fdab | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/system_flow_review_15jun2026.md | 80f7dd814e8f967c4703b9ab9a3702980ffd7499 | other | 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 |
+| docs/audit/system_security_audit_02jul2026.md | bb702ab267706da71fe47a1c8466ac9aba61dfa1 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/tick_candle_dormancy_25jul2026.md | 364064b48ce68ae7f5dc9c39698ca826c6e17956 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/audit/trade_review_txt_retirement_STOP_25jul2026.md | f99c90254aa56eb77aaa31233831b45ed0864a5b | other | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 0 |
+| docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md | 78c628a0c8fe61a22c8974c403fa0776f3ff308a | other | 0 | 0 | 0 | 0 | 1 | 8 | 0 | 0 |
+| docs/crash_test_info_04jun2026.md | 5ddea962749830b9f38dce42bdc3a195d4d580f4 | other | 0 | 0 | 0 | 0 | 0 | 2 | 2 | 0 |
+| docs/decisions/03_d2_strategic_direction.md | 76daa1b5a2951e948c7a01d61694509e71d0ef98 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/decisions/07_regime_enable.md | 78a21efc384453f3c165ba1a1e33a6a71779d860 | other | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/decisions/ACTIONS_not_decisions.md | c22a5f5350836b3b7abcbf6841cf1fd2a1096bd0 | other | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| docs/design/sizing/config_surface_review_06aug2026.md | 97ca1443b286c7e17dc8507b4c19873dca0136ee | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/design/sizing/delivery_config_surface_06aug2026.md | b4b73a6f2c6dc33f3e4580a48130219a84dc672a | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md | ade01ef8071729bf92c0a1d3339da1629595c171 | other | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md | 25d260107eb110766eaec21e874c0fa890dde4f8 | other | 0 | 0 | 0 | 0 | 0 | 3 | 0 | 0 |
+| docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md | 3d3e30df6219dbde7c94773be718b341616ee81c | other | 0 | 0 | 0 | 0 | 0 | 14 | 0 | 0 |
+| docs/v3/V3_STEP9_EXIT_ENGINE_GAPMAP.md | d009b69388a24241f789f0691e7d0f32351bc77f | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | rt | 2 | 7 | 0 | 2 | 20 | 22 | 0 | 4 |
+| ops/control_tower/freshness.py | 04b3cd96f5f380ec6bbf4419b5cd20266cfb9b18 | rt | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 2 |
+| ops_dashboard/backend/services/system_logs.py | 773006336224f33ac8b3a7edc0e4e54969284c0e | rt | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
+| ops_dashboard/docs/G2a_capacity_inventory.md | 4c30b148dafc96af76a930420ce77538f16514f9 | other | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| regime/engine.py | d9cdd9366857163ba5db1358585c57ea49d82c2f | rt | 0 | 0 | 0 | 0 | 0 | 0 | 4 | 0 |
+| screening/entry_gate.py | 46b173171bdfeba48af641b67a361618e5acba58 | rt | 0 | 0 | 0 | 0 | 0 | 30 | 0 | 0 |
+| scripts/fetch_daily_candles.py | 4a149615dc48ad1342f5b406d4728728631dd7c8 | rt | 0 | 0 | 0 | 0 | 0 | 0 | 6 | 0 |
+| scripts/preflight/checks/broker.py | 2dbb0c627ed4376c5ba0bf91095d73f48cdbf9a1 | rt | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 |
+| scripts/reconstruct_excursions.py | 056a1577e96bc7f3a27437c3fa5c583b3f2ff8a1 | rt | 0 | 0 | 0 | 0 | 0 | 0 | 3 | 0 |
+| scripts/v3_shadow_soak_report.py | f4e59d87274c35831649c01f6be61b1c23ec78bd | rt | 0 | 7 | 0 | 0 | 0 | 10 | 0 | 0 |
+| signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | rt | 8 | 2 | 2 | 2 | 2 | 9 | 0 | 3 |
+| sr_detector/zone_builder.py | 976721417531869b88502577247f529474cb82ee | rt | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| tests/unit/test_c6_auth_collapse.py | b5ac355e9af35cb48afcb83fbe6124de3bf6603d | tests | 11 | 2 | 0 | 0 | 1 | 8 | 0 | 2 |
+| tests/unit/test_control_tower_phase1b.py | 8d3856d76dbe6867ab6fe13330472df0379b0968 | tests | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 2 |
+| tests/unit/test_entry_gate.py | ab1a956af8329142bb5b3c1b728f6c5eab6ae564 | tests | 0 | 0 | 0 | 0 | 0 | 35 | 0 | 0 |
+| tests/unit/test_eod_squareoff.py | 788a2878c251b802f24fd06e2bd15b98931910eb | tests | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| tests/unit/test_fetch_daily_candles_indices.py | aeb92213573172574dd5955c904456012ec0fe00 | tests | 0 | 0 | 0 | 0 | 0 | 0 | 2 | 0 |
+| tests/unit/test_fix128_daily_loss_sequence.py | 381097affc735c33e449b1bb764ebda339b1f9f4 | tests | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
+| tests/unit/test_fix133_entry_windows.py | 39a4b89973333809f2b7eceed1cc93212f60fbcc | tests | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| tests/unit/test_fix136_batch9.py | 20d59c50759e1cd0ef8693be1fdff437707755f9 | tests | 0 | 0 | 0 | 0 | 0 | 0 | 6 | 0 |
+| tests/unit/test_order_monitor.py | 064f4b8cea5e6a0e5ecc0a28bb3e22f5b755688b | tests | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| tests/unit/test_smart_tgt_manager.py | 024a8adee85fca45a0ea235970211bd237d7f0a2 | tests | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| tests/unit/test_v3_eod_route.py | 2d0dc40716187a3d7649fa8bc1ef598aec13d23d | tests | 4 | 0 | 0 | 0 | 0 | 5 | 0 | 2 |
+| tests/unit/test_v3_pb01_e2e.py | e0c81020c1614982400b8d62166b8333151d7819 | tests | 0 | 3 | 0 | 3 | 1 | 6 | 0 | 0 |
+| tests/unit/test_v3_pb01_entry.py | 2330afee2c4bbe4f52d48a825bbfbc56dedfc0d1 | tests | 0 | 2 | 0 | 0 | 2 | 2 | 0 | 0 |
+| tests/unit/test_v3_pb01_gates_score.py | 8af37d3f579cb5a66c84d19780afa2a66eb7a157 | tests | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| tests/unit/test_v3_pb01_runner.py | a4cc9f09e9cc490de792d1ede9aa742827cce6e3 | tests | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+| tests/unit/test_v3_watchlist_capture.py | 8b50580570a92305ed5a7a6c45e726faee801768 | tests | 0 | 16 | 0 | 2 | 0 | 19 | 0 | 0 |
+| v3_chain/pb01_entry.py | cbfd4752525fe1f5d6c5e0959a950ea4a8c303f8 | rt | 0 | 6 | 0 | 0 | 3 | 7 | 0 | 0 |
+| v3_chain/pb01_runner.py | e87a5aa964643f1eae5fad90eeb1e0993b5829e0 | rt | 0 | 0 | 0 | 0 | 0 | 3 | 0 | 0 |
+| v3_chain/score.py | 8270d49812543497e3ef37b4d4444e9165138541 | rt | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | rt | 0 | 4 | 0 | 1 | 2 | 8 | 2 | 1 |
+Column totals (matching lines, s_all): T1 40; T2 95; T3 15; T4 14; T5 71; T6 350; T7 119; T8 27.
+
+==============================================================================================================================
+APPENDIX B. S1-2 OUTPUTS (verbatim, masked)
+==============================================================================================================================
+Each read: a header, then every printed line exactly as the masked reader printed it ("N: text", N the line number at the
+  pin) after a four-space indent, then the filter's mask counts (a grep's counts cover the whole file, a range's only the
+  range; no masked value is reproduced or inferred).
+Security record (masked shapes; none was printed in a printed line except the class names masked as <ALNUM>):
+| Read | File | Operation | Mask counts (grep: whole file; range: the range only) |
+|---|---|---|---|
+| 001 | signals/webhook_receiver.py | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 002 | signals/webhook_receiver.py | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 003 | signals/webhook_receiver.py | grep | masks: {'HOSTTOK': 1, 'CLIENTID': 3, 'KV': 2, 'IPV4': 1} ; stage-2 masks: {} |
+| 004 | v3_chain/watchlist_capture.py | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 005 | core/schema.sql | grep | masks: {'HOSTTOK': 0, 'CLIENTID': 1} ; stage-2 masks: {} |
+| 006 | core/schema.sql | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 007 | main.py | range | masks: {'HOSTTOK': 0, 'ALNUM': 6} ; stage-2 masks: {} |
+| 008 | main.py | grep | masks: {'HOSTTOK': 0, 'CLIENTID': 19, 'KV': 10, 'ALNUM': 8, 'IPV4': 1} ; stage-2 masks: {} |
+| 009 | config/system_config.yaml | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 010 | config/scan_webhook_map.yaml | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 011 | v3_chain/pb01_entry.py | range | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 012 | v3_chain/pb01_entry.py | grep | masks: {'HOSTTOK': 0, 'ALNUM': 7} ; stage-2 masks: {} |
+| 013 | tests/unit/test_v3_eod_route.py | grep | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 014 | tests/unit/test_v3_watchlist_capture.py | grep | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 015 | core/state_store.py | grep | masks: {'HOSTTOK': 0, 'CLIENTID': 1} ; stage-2 masks: {} |
+| 016 | config/expected_managers.yaml | grep | masks: {'HOSTTOK': 0, 'ALNUM': 3} ; stage-2 masks: {} |
+| 017 | scripts/v3_shadow_soak_report.py | grep | masks: {'HOSTTOK': 0} ; stage-2 masks: {} |
+| 018 | core/migrations.py | grep | masks: {'HOSTTOK': 0, 'KV': 1, 'CLIENTID': 1} ; stage-2 masks: {} |
+| 019 | ops_dashboard/backend/services/system_logs.py | grep | masks: {'HOSTTOK': 0, 'B32': 1} ; stage-2 masks: {} |
+| 020 | tests/unit/test_v3_pb01_e2e.py | grep | masks: {'HOSTTOK': 0, 'ALNUM': 8} ; stage-2 masks: {} |
+
+Read 001 | O01 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | range 551:564
+    551:         # WR4: scanner_name must be in scan_webhook_map
+    552:         known_scanners: dict[str, Any] = self._config.scan_webhook_map.scanners
+    553:         if scanner_name not in known_scanners:
+    554:             return jsonify({"error": f"Unknown scanner: {scanner_name!r}"}), 404
+    555: 
+    556:         # V3 Step 10b — STRUCTURAL EOD ROUTING. An "eod" scanner (a DAILY/EOD alert) is
+    557:         # captured to the WATCHLIST only: it SKIPS the intraday entry-window gate (a
+    558:         # post-close alert is legitimate) and is NEVER enqueued to the intraday
+    559:         # signal_queue — so it is structurally INCAPABLE of the intraday order path
+    560:         # (constraint #1). Default "intraday" → this is a single skipped attribute read
+    561:         # → the live path is BYTE-IDENTICAL.
+    562:         _entry = known_scanners.get(scanner_name)
+    563:         if getattr(_entry, "scanner_type", "intraday") == "eod":
+    564:             return self._handle_eod(scanner_name, raw_body)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 002 | O02 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | range 751:835
+    751:     def _handle_eod(self, scanner_name: str, raw_body: bytes):
+    752:         """Route a DAILY/EOD scanner alert to the watchlist capture worker. Self-contained
+    753:         (does NOT touch the intraday parse, so that path stays byte-identical). Parses the
+    754:         Chartink payload, then hands each symbol to `eod_capture.submit()` — which does the
+    755:         heavy LEVEL fetch/compute OFF the request thread (WR1). NEVER enqueues to the
+    756:         intraday signal_queue. Auth already ran in _process_request before this."""
+    757:         try:
+    758:             body = json.loads(raw_body)
+    759:         except (json.JSONDecodeError, ValueError) as exc:
+    760:             return jsonify({"error": f"Malformed JSON: {exc}"}), 400
+    761:         if not isinstance(body, dict):
+    762:             return jsonify({"error": "Request body must be a JSON object"}), 400
+    763:         for field in ("stocks", "trigger_prices", "triggered_at"):
+    764:             if field not in body:
+    765:                 return jsonify({"error": f"Missing required field: {field!r}"}), 400
+    766: 
+    767:         triggered_at = self._parse_eod_triggered_at(str(body["triggered_at"]).strip())
+    768:         if triggered_at is None:
+    769:             return jsonify({"error": "Invalid triggered_at"}), 400
+    770: 
+    771:         stocks_raw = body["stocks"]
+    772:         if not isinstance(stocks_raw, str):
+    773:             return jsonify({"error": "stocks must be a comma-separated string"}), 400
+    774:         symbols = [s.strip() for s in stocks_raw.split(",") if s.strip()]
+    775: 
+    776:         # watchlist disabled (no capture worker) → a fail-SAFE miss (logged, never silent):
+    777:         # an empty watchlist = no PB-01 next day, never a bad trade.
+    778:         if self._eod_capture is None:
+    779:             self._log.warning(
+    780:                 "EOD alert %s: watchlist disabled (no capture worker) → fail-safe miss "
+    781:                 "for %d symbol(s)", scanner_name, len(symbols))
+    782:             # C3 (25-Jul-2026): THIS is the branch that used to be invisible. A boot-wiring
+    783:             # failure leaves _eod_capture None, the 17:00 alert still answers 200, and next
+    784:             # morning an empty pb01_watchlist looks exactly like "no breakouts". FAILED +
+    785:             # func=DISABLED makes the two distinguishable in one query.
+    786:             self._record_eod_heartbeat(scanner_name, len(symbols), 0,
+    787:                                        status="FAILED", functional_status="DISABLED")
+    788:             return jsonify({"accepted": 0, "captured": 0, "detail": "watchlist disabled"}), 200
+    789: 
+    790:         captured = 0
+    791:         for raw_symbol in symbols:
+    792:             symbol = self._alias_map.get(raw_symbol.upper(), raw_symbol)
+    793:             try:
+    794:                 if self._eod_capture.submit(
+    795:                         scanner_name=scanner_name, symbol=symbol, triggered_at=triggered_at):
+    796:                     captured += 1
+    797:             except Exception as exc:   # a capture-submit error must never break the response
+    798:                 self._log.error("EOD capture submit failed for %s: %s", symbol, exc)
+    799:         self._log.info("EOD alert %s: %d symbol(s) → %d queued for capture",
+    800:                        scanner_name, len(symbols), captured)
+    801:         self._record_eod_heartbeat(
+    802:             scanner_name, len(symbols), captured,
+    803:             functional_status=("EMPTY_NO_DATA" if captured == 0 else None))
+    804:         return jsonify({"accepted": len(symbols), "captured": captured}), 200
+    805: 
+    806:     def _record_eod_heartbeat(self, scanner_name: str, symbols: int, queued: int,
+    807:                               status: str = "SUCCESS",
+    808:                               functional_status: Optional[str] = None) -> None:
+    809:         """C3 (25-Jul-2026): one cron_heartbeat row per EOD alert, so the 17:00 capture
+    810:         stops being invisible.
+    811: 
+    812:         ⚠️ RECORDS *QUEUED*, NOT CAPTURED. `submit()` hands the symbol to the capture
+    813:         worker, which does the LEVEL fetch/compute OFF the request thread (WR1). So
+    814:         `queued=N` proves the alert ARRIVED, authenticated, parsed, and was accepted —
+    815:         it does NOT prove any row reached `pb01_watchlist`. The watchlist row count
+    816:         remains the only proof the worker finished. The message says `queued=` and not
+    817:         `captured=` precisely so nobody later reads this as capture confirmation.
+    818: 
+    819:         ⛔ THIS IS THE SIGNAL INGRESS. Every failure mode is swallowed: `record_heartbeat`
+    820:         already returns False rather than raising, and this adds a belt-and-braces except
+    821:         so that no DB hiccup, no import error and no bad argument can turn a 200 into a
+    822:         500. Observability must never be able to break the thing it observes.
+    823:         """
+    824:         try:
+    825:             from utils.cron_heartbeat import record_heartbeat
+    826:             record_heartbeat(
+    827:                 "pb01_capture", status=status, functional_status=functional_status,
+    828:                 message=f"scanner={scanner_name} symbols={symbols} queued={queued}",
+    829:             )
+    830:         except Exception as exc:   # never let observability break the request path
+    831:             try:
+    832:                 self._log.warning("pb01_capture heartbeat failed (ignored): %s", exc)
+    833:             except Exception:
+    834:                 pass
+    835: 
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 003 | O03 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | grep, expression: eod_capture
+    161:         eod_capture: Any = None,   # V3 Step 10b: WatchlistCaptureWorker (None → EOD alerts are a fail-safe miss)
+    195:         self._eod_capture = eod_capture
+    754:         Chartink payload, then hands each symbol to `eod_capture.submit()` — which does the
+    778:         if self._eod_capture is None:
+    783:             # failure leaves _eod_capture None, the 17:00 alert still answers 200, and next
+    794:                 if self._eod_capture.submit(
+    1156:     def set_eod_capture(self, eod_capture) -> None:
+    1160:         self._eod_capture = eod_capture
+    masks: {'HOSTTOK': 1, 'CLIENTID': 3, 'KV': 2, 'IPV4': 1} | stage-2 masks: {}
+
+Read 004 | O04 | v3_chain/watchlist_capture.py | blob 25a1f084eada | 245 lines | range 86:178
+    86:     def start(self) -> None:
+    87:         if self._worker is not None:
+    88:             return
+    89:         self._stop.clear()
+    90:         self._worker = threading.Thread(target=self._run, name="pb01-capture", daemon=True)
+    91:         self._worker.start()
+    92:         self._safe_log("info", "pb01 watchlist capture worker started")
+    93: 
+    94:     def stop(self, timeout: float = 3.0) -> None:
+    95:         self._stop.set()
+    96:         try:
+    97:             self._q.put_nowait(_SENTINEL)
+    98:         except queue.Full:
+    99:             pass
+    100:         w = self._worker
+    101:         if w is not None:
+    102:             w.join(timeout=timeout)
+    103:         self._worker = None
+    104: 
+    105:     # ── enqueue (called by the webhook EOD route; fast, guarded) ──────────────
+    106:     def submit(self, *, scanner_name: str, symbol: str, triggered_at) -> bool:
+    107:         """Enqueue one EOD breakout symbol for capture. Returns False (logged) if the
+    108:         queue is full — a missed capture is fail-SAFE (an empty watchlist = no PB-01 the
+    109:         next day), never a bad trade. Never raises into the request thread."""
+    110:         try:
+    111:             self._q.put_nowait((scanner_name, symbol, triggered_at))
+    112:             return True
+    113:         except queue.Full:
+    114:             self._safe_log("warning", "pb01 capture queue full, dropping %s (fail-safe miss)", symbol)
+    115:             return False
+    116:         except Exception as exc:
+    117:             self._safe_log("error", "pb01 capture submit error (ignored): %s", exc)
+    118:             return False
+    119: 
+    120:     # ── background worker ─────────────────────────────────────────────────────
+    121:     def _run(self) -> None:
+    122:         while not self._stop.is_set():
+    123:             try:
+    124:                 item = self._q.get(timeout=1.0)
+    125:             except queue.Empty:
+    126:                 continue
+    127:             try:
+    128:                 if item is _SENTINEL:
+    129:                     continue
+    130:                 self._capture(*item)
+    131:             except Exception as exc:   # one broken symbol must NEVER kill the worker
+    132:                 self._safe_log("error", "pb01 capture error (ignored): %s", exc)
+    133:             finally:
+    134:                 self._q.task_done()
+    135: 
+    136:     def _capture(self, scanner_name: str, symbol: str, triggered_at) -> None:
+    137:         now = self._safe_now()
+    138:         breakout_date = triggered_at.date() if triggered_at is not None else (now.date() if now else None)
+    139:         if breakout_date is None:
+    140:             self._safe_log("warning", "pb01 capture %s: no breakout_date → skip", symbol)
+    141:             return
+    142: 
+    143:         # SETTLED-ONLY: a breakout on a FORMING daily candle (intraday firing) is not yet
+    144:         # a settled EOD result → skip (fail-safe). Settled iff the breakout session has
+    145:         # closed: an earlier date, or today at/after market close.
+    146:         if now is not None and breakout_date == now.date() and not self._market_closed(now):
+    147:             self._safe_log(
+    148:                 "info", "pb01 capture %s: breakout_date %s is a FORMING session "
+    149:                 "(now %s < close) → SKIP premature (await settled EOD)",
+    150:                 symbol, breakout_date, now.time())
+    151:             return
+    152: 
+    153:         # Compute LEVEL from OUR OWN settled daily candles (never the payload price).
+    154:         daily = self._fetch(symbol, [_TF_DAY]).get(_TF_DAY) or []
+    155:         level = compute_breakout_level(daily, breakout_date, self._cfg.level_lookback_sessions)
+    156:         if level is None:
+    157:             self._safe_log(
+    158:                 "warning", "pb01 capture %s: < %d prior daily sessions before %s → skip",
+    159:                 symbol, self._cfg.level_lookback_sessions, breakout_date)
+    160:             return
+    161: 
+    162:         # trading_date = the SINGLE valid next trading day (holiday-aware) = the anti-
+    163:         # rehydration stamp. next_trading_day takes a datetime at/after the breakout EOD.
+    164:         anchor = self._breakout_eod_dt(breakout_date)
+    165:         trading_date = self._mw.next_trading_day(anchor).isoformat()
+    166: 
+    167:         # Record the nearest 30m/1h S&R zone to LEVEL (validation programme; fail-safe).
+    168:         sr_zone_json = self._nearest_zone_json(symbol, level)
+    169: 
+    170:         now_iso = (now or self._safe_now())
+    171:         now_iso = now_iso.isoformat() if now_iso is not None else ""
+    172:         row = {
+    173:             "symbol": symbol, "trading_date": trading_date, "level": level,
+    174:             "breakout_date": breakout_date.isoformat(), "source": scanner_name,
+    175:             "sr_zone_json": sr_zone_json, "status": "PENDING", "outcome_json": None,
+    176:             "captured_at": now_iso, "created_at": now_iso,
+    177:         }
+    178:         inserted = self._store.insert_pb01_watchlist(row)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 005 | O05 | core/schema.sql | blob b46d7489f6ec | 1,655 lines | grep, expression: pb01_watchlist
+    1540: -- TABLE 49: pb01_watchlist   (V3 Step 10b — PB-01 overnight watchlist, schema v43)
+    1559: CREATE TABLE IF NOT EXISTS pb01_watchlist (
+    1578: CREATE INDEX IF NOT EXISTS idx_pb01_watchlist_trading_date
+    1579:     ON pb01_watchlist(trading_date);
+    1590: -- PURE ADDITION (same pattern as v43 pb01_watchlist / v38 retest_state); no
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 006 | O06 | core/schema.sql | blob b46d7489f6ec | 1,655 lines | range 1559:1578
+    1559: CREATE TABLE IF NOT EXISTS pb01_watchlist (
+    1560:     id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    1561:     symbol        TEXT NOT NULL,
+    1562:     trading_date  TEXT NOT NULL,           -- YYYY-MM-DD IST; the SINGLE valid session (D+1).
+    1563:                                            -- ANTI-REHYDRATION key: load discards trading_date != today.
+    1564:     level         REAL NOT NULL,           -- retest LEVEL = highest daily HIGH of the 20 sessions
+    1565:                                            -- BEFORE the breakout day (WE compute it; never the payload).
+    1566:     breakout_date TEXT NOT NULL,           -- YYYY-MM-DD IST; the session whose daily close cleared LEVEL.
+    1567:     source        TEXT NOT NULL,           -- scanner name (pb01_breakout_retest).
+    1568:     sr_zone_json  TEXT,                    -- nearest 30m/1h sr_detector zone to LEVEL (S&R validation programme).
+    1569:     status        TEXT NOT NULL DEFAULT 'PENDING'
+    1570:                   CHECK (status IN ('PENDING','CONSUMED','EXPIRED_WINDOW','INVALIDATED','SKIPPED_GAP')),
+    1571:     outcome_json  TEXT,                    -- entry-stage outcome detail (confirmation candle / gap / expiry ts).
+    1572:     captured_at   TEXT NOT NULL,           -- ISO-8601 IST at capture (EOD).
+    1573:     created_at    TEXT NOT NULL,           -- ISO-8601 IST row-insert.
+    1574:     consumed_at   TEXT,                    -- ISO-8601 IST when CONSUMED/EXPIRED/INVALIDATED/SKIPPED.
+    1575:     UNIQUE (symbol, trading_date)
+    1576: );
+    1577: 
+    1578: CREATE INDEX IF NOT EXISTS idx_pb01_watchlist_trading_date
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 007 | O08 | main.py | blob 445fb0d8237a | 4,294 lines | range 3712:3755
+    3712:     pb01_capture_worker = None
+    3713:     pb01_entry_stage = None
+    3714:     if _watchlist_on:
+    3715:         try:
+    3716:             from core.config_loader import <ALNUM>
+    3717:             from sr_detector.fetch import OhlcFetcher
+    3718:             from sr_detector.zone_builder import build_scoring_params, build_zone_knobs
+    3719:             from v3_chain.pb01_entry import <ALNUM>
+    3720:             from v3_chain.pb01_runner import <ALNUM>
+    3721:             from v3_chain.watchlist_capture import WatchlistCaptureWorker
+    3722:             _wl_v3_cfg = _v3_cfg if _v3_cfg is not None else <ALNUM>()
+    3723:             _wl_knobs = build_zone_knobs(_sr_cfg)
+    3724:             _wl_scoring = build_scoring_params(_sr_cfg)
+    3725:             # ONE fetcher over the shared closure: lookback covers the structural fetch;
+    3726:             # cache_ttl=0 keeps the entry stage's 5-min poll FRESH (the daily/30-min inputs
+    3727:             # are memoized at the VALUE level in the entry stage → fetched once per symbol).
+    3728:             _wl_fetcher = OhlcFetcher(
+    3729:                 _sr_fetch_fn, instrument_cache,
+    3730:                 lookback_days=int(getattr(_wl_v3_cfg, "fetch_lookback_days", 180)),
+    3731:                 logger=get_logger("pb01_watchlist"), now_fn=time_authority.now_ist,
+    3732:                 cache_ttl_sec=0.0)
+    3733:             effect_telemetry.register_constructed("ohlc_fetchers")  # B2 (idempotent)
+    3734:             pb01_capture_worker = WatchlistCaptureWorker(
+    3735:                 config=_watchlist_cfg, store=store, fetcher=_wl_fetcher,
+    3736:                 market_windows=market_windows, logger=get_logger("pb01_watchlist"),
+    3737:                 now_fn=time_authority.now_ist, zone_knobs=_wl_knobs, zone_scoring=_wl_scoring)
+    3738:             _pb01_would_be = <ALNUM>(
+    3739:                 config=_watchlist_cfg, v3_cfg=_wl_v3_cfg, fetcher=_wl_fetcher,
+    3740:                 zone_knobs=_wl_knobs, zone_scoring=_wl_scoring,
+    3741:                 logger=get_logger("pb01_watchlist"), now_fn=time_authority.now_ist,
+    3742:                 regime_runner=market_regime_runner)   # as-of regime snapshot (None when OFF)
+    3743:             pb01_entry_stage = <ALNUM>(
+    3744:                 config=_watchlist_cfg, v3_cfg=_wl_v3_cfg, store=store, fetcher=_wl_fetcher,
+    3745:                 market_windows=market_windows, on_confirm=_pb01_would_be.record,
+    3746:                 logger=get_logger("pb01_watchlist"), now_fn=time_authority.now_ist)
+    3747:             webhook_receiver.set_eod_capture(pb01_capture_worker)   # EOD alerts now captured
+    3748:             pb01_capture_worker.start()
+    3749:             pb01_entry_stage.start()      # the row status IS the durable state (restart-safe)
+    3750:             _log.info("V3 Step 10b PB-01 watchlist: ENABLED — capture + entry stage started "
+    3751:                       "(SHADOW / ANALYSIS-ONLY, NO order path)")
+    3752:         except Exception as exc:   # never let the watchlist break startup
+    3753:             _log.error("pb01 watchlist wiring failed (continuing without it): %s", exc)
+    3754:             pb01_capture_worker = None
+    3755:             pb01_entry_stage = None
+    masks: {'HOSTTOK': 0, 'ALNUM': 6} | stage-2 masks: {}
+
+Read 008 | O09 | main.py | blob 445fb0d8237a | 4,294 lines | grep, expression: eod_capture
+    3706:     # eod_capture=None (a fail-safe miss) + no entry-stage daemon → BYTE-IDENTICAL. When
+    3747:             webhook_receiver.set_eod_capture(pb01_capture_worker)   # EOD alerts now captured
+    masks: {'HOSTTOK': 0, 'CLIENTID': 19, 'KV': 10, 'ALNUM': 8, 'IPV4': 1} | stage-2 masks: {}
+
+Read 009 | O10 | config/system_config.yaml | blob bf742ae5c81c | 754 lines | range 619:630
+    619: watchlist:                    # V3 Step 10b — PB-01 overnight watchlist + next-morning entry stage (default-OFF; byte-identical while off)
+    620:   enabled: true              # ★ master gate (paper+live): false = capture worker + entry-stage monitor NOT constructed → an EOD webhook is captured to nothing (BYTE-IDENTICAL). ANALYSIS ONLY — no position/capital/CNC/GTT; PB-01 stays enabled:false (fail-closed) regardless
+    621:   playbook_scanner: "pb01_breakout_retest"   # the eod scanner this watchlist owns (→ the pb01_breakout_retest strategy)
+    622:   # capture (EOD, day D) — ALL SEEDS
+    623:   level_lookback_sessions: 20       # LEVEL = highest daily HIGH of the N sessions BEFORE the breakout day
+    624:   capture_fetch_lookback_days: 60   # how far back to fetch daily candles to compute LEVEL (calendar days)
+    625:   # next-morning entry stage (day D+1) — ALL SEEDS (calibrate: when do retests confirm?)
+    626:   entry_start: "09:20"        # first 5-min candle must CLOSE before any confirmation (spec §7)
+    627:   entry_end: "11:00"          # next-morning retest thesis expired by mid-morning
+    628:   entry_tf: "5minute"         # retest timeframe (built via candle_math.resample)
+    629:   gap_guard_pct: 0.03         # SKIPPED_GAP if open > LEVEL × (1 + this)
+    630:   poll_interval_sec: 20.0     # entry-stage candle poll cadence (off the hot path)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 010 | O11 | config/scan_webhook_map.yaml | blob 54dd98d75f27 | 85 lines | range 84:84
+    84:     scanner_type: eod   # DAILY/EOD alert → routed to the watchlist ONLY, never the intraday order path
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 011 | O12 | v3_chain/pb01_entry.py | blob cbfd4752525f | 372 lines | range 117:125
+    117:     def start(self) -> None:
+    118:         if self._worker is not None:
+    119:             return
+    120:         self._stop.clear()
+    121:         self._worker = threading.Thread(target=self._run, name="pb01-entry", daemon=True)
+    122:         self._worker.start()
+    123:         self._safe_log("info", "pb01 entry stage started (window %s-%s, poll %.0fs)",
+    124:                        getattr(self._cfg, "entry_start", "?"),
+    125:                        getattr(self._cfg, "entry_end", "?"), self._poll)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 012 | O13 | v3_chain/pb01_entry.py | blob cbfd4752525f | 372 lines | grep, expression: pb01_watchlist
+    5: config SEEDS), it monitors the symbols captured overnight (the `pb01_watchlist`) for the
+    12:   • RESTART-SAFE by RE-DERIVATION — the `pb01_watchlist` ROW is the durable state
+    18:     (`get_pb01_watchlist_for_date(today)`); a row stamped for another trading_date can
+    84:         store,                  # StateStore (get/update pb01_watchlist)
+    151:             rows = self._store.get_pb01_watchlist_for_date(today, pending_only=True)
+    326:             self._store.update_pb01_watchlist_status(
+    masks: {'HOSTTOK': 0, 'ALNUM': 7} | stage-2 masks: {}
+
+Read 013 | O14 | tests/unit/test_v3_eod_route.py | blob 2d0dc4071618 | 130 lines | grep, expression: ^\s*(class Test|(async )?def test_)
+    59: def test_eod_route_captures_and_bypasses_entry_window():
+    72: def test_intraday_scanner_still_entry_window_gated():
+    82: def test_eod_route_failsafe_when_watchlist_disabled():
+    93: def test_set_eod_capture_late_binds_the_worker():
+    113: def test_eod_route_rejects_malformed_payload():
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 014 | O15 | tests/unit/test_v3_watchlist_capture.py | blob 8b50580570a9 | 165 lines | grep, expression: ^\s*(class Test|(async )?def test_)
+    39: def test_level_is_max_high_of_20_before_breakout():
+    46: def test_level_ignores_breakout_day_and_later():
+    53: def test_level_none_when_insufficient_history():
+    72: def test_store_dedupe_unique_symbol_trading_date():
+    81: def test_g_no_rehydration_stale_date_not_loaded():
+    91: def test_store_update_status():
+    124: def test_capture_settled_eod_persists_row():
+    135: def test_capture_skips_forming_intraday_candle():
+    146: def test_capture_dedupes_repeat_firing():
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 015 | O16 | core/state_store.py | blob 11866117801b | 3,356 lines | grep, expression: pb01_watchlist
+    3078:     def insert_pb01_watchlist(self, row: dict) -> bool:
+    3088:                 f"INSERT OR IGNORE INTO pb01_watchlist ({', '.join(cols)}) "
+    3094:     def get_pb01_watchlist_for_date(
+    3101:         q = "SELECT * FROM pb01_watchlist WHERE trading_date = ?"
+    3109:     def update_pb01_watchlist_status(
+    3117:                 "UPDATE pb01_watchlist SET status = ?, outcome_json = ?, consumed_at = ? "
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 016 | O17 | config/expected_managers.yaml | blob ff4d65d5f9b5 | 387 lines | grep, expression: pb01_watchlist|WatchlistCapture|pb01[_-](capture|entry)
+    130:   - name: pb01_capture_worker
+    131:     class: v3_chain.watchlist_capture.WatchlistCaptureWorker
+    135:     acted_means: "a pb01_watchlist ROW written — rows, never queued= (memory silent_failure_gaps_25jul)"
+    136:   - name: pb01_entry_stage
+    137:     class: v3_chain.pb01_entry.<ALNUM>
+    140:     effect_point: "v3_chain/pb01_entry.py:318 _terminate (update_pb01_watchlist_status :322)"
+    masks: {'HOSTTOK': 0, 'ALNUM': 3} | stage-2 masks: {}
+
+Read 017 | O18 | scripts/v3_shadow_soak_report.py | blob f4e59d87274c | 427 lines | grep, expression: pb01_watchlist
+    280: def _pb01_watchlist_rows(since: str | None) -> list:
+    281:     """Read-only load of pb01_watchlist rows (the capture/entry OUTCOME distribution).
+    293:             f"SELECT symbol, trading_date, status FROM pb01_watchlist {where} "
+    297:         print(f"  (pb01_watchlist read unavailable: {exc})")
+    308:       1. The capture/entry OUTCOME distribution from pb01_watchlist — the KEY UNKNOWN is
+    321:     rows = _pb01_watchlist_rows(since)
+    323:         print("  (no pb01_watchlist rows — enable watchlist.enabled + capture a PB-01 EOD alert)")
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 018 | O19 | core/migrations.py | blob cc39e811e48a | 445 lines | grep, expression: pb01_watchlist
+    89:                  v43 pb01_watchlist (Step 10b PB-01 overnight watchlist),
+    masks: {'HOSTTOK': 0, 'KV': 1, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 019 | O20 | ops_dashboard/backend/services/system_logs.py | blob 773006336224 | 633 lines | grep, expression: pb01_watchlist
+    79:                           "quality_scorer", "sr_detector", "pb01_watchlist")),
+    masks: {'HOSTTOK': 0, 'B32': 1} | stage-2 masks: {}
+
+Read 020 | O21 | tests/unit/test_v3_pb01_e2e.py | blob e0c81020c161 | 118 lines | grep, expression: pb01_watchlist|WatchlistCapture|pb01[_-](capture|entry)
+    4: Wires the REAL pieces the way main.py does — WatchlistCaptureWorker (EOD) → pb01_watchlist
+    20: from v3_chain.pb01_entry import <ALNUM>
+    22: from v3_chain.watchlist_capture import WatchlistCaptureWorker
+    85:     capture = WatchlistCaptureWorker(
+    90:     rows = store.get_pb01_watchlist_for_date(TRADING.isoformat())
+    103:     assert store.get_pb01_watchlist_for_date(TRADING.isoformat())[0]["status"] == "CONSUMED"
+    masks: {'HOSTTOK': 0, 'ALNUM': 8} | stage-2 masks: {}

@@ -1,0 +1,69 @@
+CLAUDE RESEARCH PROMPT — C-011 STAGE 1 (DRAFT; DO NOT RUN UNTIL RAMA APPROVES)
+EOD / DAILY SIGNAL ROUTING
+Date: 25-Oct-2026
+
+AUTHORISATION GATE
+This is a draft only. Do not begin until Rama explicitly approves:
+OQ-01: C-011 covers the single EOD-type route, not all daily-timeframe or daily-job behaviour.
+OQ-02: the downstream boundary ends at PB-01 entry-stage pickup of the persisted watchlist row; entry decisions/expiry/execution are excluded.
+OQ-03: the bounded S1-1 count-only pass followed by S1-2 reads is authorised.
+If approval is absent or changes any point, STOP and request revised authorisation. This prompt is not itself approval.
+
+AUTHORITATIVE SOURCE
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Use this exact commit only; do not use a later commit, a drifting default branch, VM or live system.
+
+APPROVED SCOPE (subject to the gate)
+Trace only:
+scanner-type configuration -> startup wiring -> receiver type branch/EOD handler -> capture worker -> pb01_watchlist schema/state -> PB-01 entry-stage pickup.
+Do not expand “Daily” to all Chartink daily-candle timeframe semantics or all daily scheduled jobs. Exclude positional/delivery strategies on the intraday path, reports, daily-loss logic, candle-fetch jobs, square-off, cleanup, broker reconciliation, the V3 decision chain and trade execution.
+
+S1-1 — COUNT-ONLY SEARCHES
+Use the four existing C-010 scopes unchanged: s_all (1,260), s_rt (281), s_tests (486), s_cfg (41). Verify saved SHA-256 identities before use. If they cannot be verified, stop; do not reconstruct or silently substitute lists.
+Run eight terms over each of the four scopes (32 searches):
+T1 eod_capture (including set_eod_capture)
+T2 pb01_watchlist
+T3 _handle_eod
+T4 WatchlistCapture
+T5 pb01[_-](capture|entry)
+T6 watchlist
+T7 daily_candles
+T8 ["']eod["']
+Record per-file occurrence counts only; print no matching source lines. For every zero result, record a suitable positive control. Do not repeat earlier scanner_type and eod_route/eod_signal/daily_signal counts; cite existing C-010/C-008 records as historical counts.
+Report the full count table including zeros and identify candidate producer/consumer/wiring files surfaced by the counts. Do not open source files during S1-1.
+
+S1-1 STOP CONDITION
+Before S1-2, calculate the maximum printed-line total implied by bounded ranges and greps. If it would exceed 400 lines, STOP and report the counts and revised line budget; do not begin S1-2 until separately authorised. Use the designated read lock/authorisation window for S1-1, log every query and scope, then relock.
+
+S1-2 — BOUNDED READS, ONLY IF WITHIN LIMIT
+Read only these pinned ranges/blocks, in order:
+1. signals/webhook_receiver.py lines 551–564 and 751–835; plus bounded grep of T1 for constructor parameter, set_eod_capture and all uses.
+2. v3_chain/watchlist_capture.py lines 86–178.
+3. core/schema.sql: bounded grep of T2, then the pb01_watchlist CREATE TABLE block, maximum 40 lines.
+4. main.py lines 3712–3755 plus bounded grep of T1.
+5. config/system_config.yaml lines 619–630 and config/scan_webhook_map.yaml line 84.
+6. v3_chain/pb01_entry.py lines 117–125 plus bounded grep of T2. Document pickup boundary only, not entry decisions.
+7. tests/unit/test_v3_eod_route.py and tests/unit/test_v3_watchlist_capture.py: grep test names only, at most 20 lines per file. Do not read test bodies without separate authorisation.
+8. For no more than six additional files surfaced by S1-1 terms T1–T5, perform one bounded grep per file only. Any broader read requires new authorisation.
+
+OTHER LIMITS
+- config/cron_registry.yaml, deploy/cron/trading-system.cron and docs/audit records R33–R41: counts only. R33 headings may be read only with separate authorisation. Never read R42. Do not print host/deployment values.
+- Never read protected paths or expose secrets, tokens, credentials, account/client identifiers, host/address values or deployed project paths.
+- Do not run tests, scripts, migrations or services. No VM, host, broker, webhook endpoint, Chartink account, database or live-system access.
+- No edits, commits, pushes, deployment, V2 design or implementation.
+- Do not reopen frozen C-001 to C-010 conclusions unless genuinely new direct evidence warrants a specific exception and new authorisation.
+
+EVIDENCE OUTPUT
+Return a Stage 1 evidence sheet containing:
+1. Exact pinned repository/commit and blob SHA for every read file.
+2. S1-1 counts and positive controls, including zero results.
+3. For every supported claim: source path, function/class or configuration key, exact line reference, input, logic/guard, output, storage/handoff and next consumer; paper/live differences only if directly established.
+4. Clear labels: FACT, HISTORICAL, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, KNOWN DEFECT and OPEN QUESTION.
+5. A capture-path vs scanner-type-routing trace stating what the code does and does not establish.
+6. Reconciliation list against frozen manuals; do not silently correct apparent conflicts.
+7. Evidence gaps and questions requiring separate authorisation.
+8. Declaration of exactly what was read/searched and what was not read.
+
+STOP
+Do not draft or freeze the C-011 manual. Return the evidence sheet and stop for ChatGPT's reconciliation. No investigation beyond this bounded scope.

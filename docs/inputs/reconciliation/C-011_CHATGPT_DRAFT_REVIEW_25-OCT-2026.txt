@@ -1,0 +1,56 @@
+C-011 — CHATGPT DRAFT REVIEW
+Date: 25-Oct-2026
+Reviewed inputs: C-011_EOD_DAILY_SIGNAL_ROUTING_DRAFT.md and C-011_DRAFT_EVIDENCE_AND_GAP_CHECK.txt
+Baseline: trading-system-prod-snapshot @ 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Status: REVIEWED AS A DRAFT ONLY — NOT FROZEN
+
+EXECUTIVE DECISION
+The draft is structurally complete and suitable to proceed to a targeted revision pass. Do not freeze or push it yet. Preserve all evidence gaps and governance statuses. The Stage 0 decision sheet named by Claude is still required for the final storage package, but its absence does not prevent this draft-level review.
+
+RECOMMENDATIONS ON CLAUDE'S P-1 TO P-6
+
+P-1 — DI-01 to DI-09: KEEP SELECTIVELY, NOT AS A BLANKET APPROVAL.
+Keep interpretations only where explicitly labelled, directly derived from printed lines, and useful to explain the bounded code path. Retain the IDs and companion register.
+- DI-01 (failure after binding): keep only as a conditional interpretation. The lines show the exception handler resets two local variables to None and do not show an unbind call; they do not prove the receiver's object lifetime or resulting runtime behaviour. Wording must remain: “the inspected lines do not show an unbind; resulting runtime behaviour is NOT ESTABLISHED.”
+- DI-02 (queued item lost on process stop): keep only as a bounded inference from an in-memory queue and absence of a row before processing. Do not present it as a verified shutdown outcome; shutdown/stop implementation was not read.
+- DI-03 to DI-09: keep only with existing labels, exact line basis and adjacent unknowns. Avoid promoting name-based or method-boundary inference to FACT.
+No interpretation may close BK-08, BK-30, or any G-gap.
+
+P-2 — DU-01 to DU-05: KEEP AS DRAFTING UNKNOWNS.
+Do not renumber them into the original G register in this revision. They were identified during drafting and should remain visibly distinct from Stage 1 gaps. At finalization, the evidence register may cross-reference them, but only through an explicit recorded change—not silently.
+
+P-3 — VP-14: CONFIRM NOT RATIFIED IN C-011.
+This manual is legacy documentation, and its drafting prompt excludes V2 decisions. Keep VP-14 NOT RATIFIED; do not use C-011 to decide or reopen it. If the Stage 0 decision sheet records a different settled governance outcome, reconcile that record explicitly before packaging; do not infer the missing decision.
+
+P-4 — STAGE 0 DECISION SHEET: REQUIRED BEFORE FINAL STORAGE PACKAGE.
+Claude says it did not receive ChatGPT's Stage 0 decision sheet (E4). Attach the exact existing file beginning `C-011_STAGE0_RECONCILIATION_AND_DECISIO...` before the final package is assembled. Do not recreate it from this review or treat the draft's paraphrase of its decisions as a substitute.
+
+P-5 — WIDER HISTORICAL ANCHORS: LEAVE OUT FOR THIS DRAFT.
+The drafting prompt restricted the source set to the Stage 1 evidence sheet and Stage 1 reconciliation (plus the specified governance input). Do not expand the manual with wider Stage 0 historical anchors during this revision. If a frozen-manual citation is already included because E6/E7 supplied it, it may remain labelled HISTORICAL; do not add unsupported new citations.
+
+P-6 — QUOTATION RULE: KEEP, WITH ONE GUARD.
+The ASCII-transliteration/joined-line rule is acceptable for this technical manual if the transformation is declared and source meaning is preserved. Keep excerpts traceable to the evidence sheet. Do not call a normalized/transliterated string a byte-for-byte quotation; call it a normalized transcription of the printed excerpt.
+
+TARGETED REVISION CHECKLIST
+1. Correct wording that turns conditional inference into runtime fact, especially DI-01 and DI-02.
+2. Ensure each DI item is labelled INTERPRETATION at each material occurrence, not just listed in the companion file.
+3. Ensure each DU item is labelled UNKNOWN / NOT ESTABLISHED and does not appear to fill a G-gap.
+4. Preserve BK-08 and BK-30 as OPEN — RECORD EVIDENCE / KEEP OPEN.
+5. Preserve RC-06 as a C-011 precision note only; no C-002 erratum.
+6. Preserve `capture_fetch_lookback_days=60` versus the shared fetcher's `fetch_lookback_days` default 180 as OPEN QUESTION / UNKNOWN, not a proven defect.
+7. Preserve the stale `config/expected_managers.yaml` line pointer as a minor KNOWN DEFECT with UNKNOWN impact.
+8. Preserve G-01 to G-04 and G-06 to G-12; G-05 remains the deliberate scope boundary.
+9. Keep the statement that configured `enabled: true` does not establish historical runtime enablement.
+10. Keep the distinction between queued, HTTP 200 / `captured` count, and a persisted row.
+11. Keep all entry-stage decision logic and execution beyond the pickup boundary.
+12. Re-run only document-level checks against the revised Markdown and companion TXT. Do not read source code, run searches/tests, access services, or commit/push.
+
+DRAFT-LEVEL FINDINGS
+- The manual has the requested 18 sections and a useful end-to-end trace, source-to-consumer table, schema treatment, configuration table, boundary statement and gap register.
+- The companion evidence/gap file is thorough and provides an auditable record of bounded reads and document checks.
+- The 340-line bounded-read total and the claim that Stage 1 was not independently reproduced are appropriately qualified.
+- The draft distinguishes the code path from actual historical host operation and does not claim a trade occurred.
+- The main editorial risk is over-reading printed snippets through interpretations. The targeted checklist addresses this without authorizing more source access.
+
+NEXT ACTION
+Ask Claude for a revision of the two files using this review. Return both revised files for a final consistency check. Do not freeze, commit or push. Include the exact Stage 0 decision sheet in the eventual final storage package.

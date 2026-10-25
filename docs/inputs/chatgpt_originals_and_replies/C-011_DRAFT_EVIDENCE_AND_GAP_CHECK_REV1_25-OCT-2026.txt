@@ -1,0 +1,380 @@
+C-011 - EOD / DAILY SIGNAL ROUTING
+DRAFT EVIDENCE AND GAP CHECK, REVISION 1 (companion to C-011_EOD_DAILY_SIGNAL_ROUTING_DRAFT.md, revision 1; for ChatGPT's
+  final consistency check)
+Date of work: 25-Oct-2026 (IST). Prepared by Claude. Review received 12:52 IST (file time); draft revision 1 saved 13:00:16
+  IST (file time); document-level checks run 13:00 to 13:10 IST (clock).
+Controlling input of revision 1: C-011_CHATGPT_DRAFT_REVIEW_25-OCT-2026.txt (E9; 56 lines, 5,842 bytes; SHA-256
+  BF81ABC7587DC52719D30665F58CA4E45E3041974301E838274C5CC2A24AC44C).
+Controlling inputs of revision 0: C-011_MANUAL_DRAFTING_PROMPT_25-OCT-2026.txt (E8; 59 lines, 4,256 bytes; SHA-256
+  2E6D873795F86D766D68C82380BB1C61041961304CB547BB1768FDA43F2BE8E1) and C-011_STAGE1_CHATGPT_RECONCILIATION_25-OCT-2026.txt
+  (E7; 52 lines, 5,705 bytes; SHA-256 2AB7F6099473F090E2D9452011B7EC2EFE92698E76D142FE3D02CB86134C3B85).
+Draft checked: C-011_EOD_DAILY_SIGNAL_ROUTING_DRAFT.md, revision 1 (991 lines, 110,179 bytes; SHA-256
+  6216124FE3CD57904ECFE043BA9B0EFBC1CFA16A99E61A8527C1B43887712C4A). Revision 0 as reviewed: 984 lines, 103,820 bytes;
+  SHA-256 0EF25850640561BF845593265CC025942F42C8F4F85776A7C728750F8D326BBE. This file's revision 0 as reviewed: SHA-256
+  E0DCFEB527E6E2E7D547C7B4294A513FA788EF2C7496E806691B1C4F5A34D33C.
+Primary evidence: C-011_CLAUDE_STAGE1_EVIDENCE_SHEET_25-OCT-2026.txt (E6; 1,070 lines; SHA-256
+  47B5BF679B195ECA9E68F1D17E997FC1DFFB150C51103704149C426480D9D5B1), with its Appendix B (the 340 printed lines).
+Status: DRAFT ONLY. Nothing frozen, committed or pushed; no V2 decision. STOPPED for ChatGPT's final consistency check.
+Security: no credential, token, account or client identifier, host or address, deployed path, mailbox or person name other
+  than Rama's is reproduced; protected paths are not named; masked values are not reproduced or inferred.
+Characters: ASCII only. E-numbers are the draft's evidence set (draft, section 2.5).
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Revision 1 applies ChatGPT's targeted revision checklist (E9, items 1 to 12) and its outcomes for P-1 to P-6; part H lists
+  every change. No section was added or removed: the draft keeps the 18 required sections in the required order (checked).
+- Sources: unchanged. E6 and E7 under E8; E3 (Claude's Stage 0 answers) only for governance items (VP-14 and OQ-04 to
+  OQ-07); E9 for the revision instructions and its governance confirmations. No legacy file was read, searched or counted;
+  no frozen V2 manual, V2 governance file, host, service, database, broker, webhook or Chartink account was opened or
+  contacted; only document-level checks were run (part F).
+- Interpretations: DI-01 to DI-09 kept selectively, as the review asks. DI-01 is now a conditional interpretation carrying
+  the review's sentence ("the inspected lines do not show an unbind; resulting runtime behaviour is NOT ESTABLISHED"); DI-02
+  is a bounded inference, not a verified shutdown outcome. Every material use of a DI item carries the INTERPRETATION label,
+  its line basis and the unknown next to it (a check confirms the label on every line that uses a DI ID).
+- Unknowns: DU-01 to DU-05 stay drafting unknowns, labelled UNKNOWN / NOT ESTABLISHED at every use, not renumbered into the
+  G register, and none fills a G gap (part D; draft 14.5).
+- Unsupported claims: none found (part B). Gaps: G-01 to G-04 and G-06 to G-12 kept; G-05 remains the scope boundary.
+- Governance (part E): BK-08 and BK-30 OPEN - RECORD EVIDENCE / KEEP OPEN; RC-06 a C-011 precision note only, no C-002
+  erratum; the stale pointer a minor KNOWN DEFECT with UNKNOWN impact; G-06 an OPEN QUESTION, not a proven defect; VP-14
+  NOT RATIFIED (confirmed by E9); E4 still required, unchanged, before the final storage package.
+- Points for the final consistency check: N-1 and N-2 (part G); neither blocks.
+
+==============================================================================================================================
+PART A. MANDATORY PRECISION (drafting prompt, "MANDATORY PRECISION") - where each point is applied in revision 1
+==============================================================================================================================
+| # | Point (prompt) | Draft sections | How |
+|---|---|---|---|
+| A1 | submit = queued in memory, not database capture; HTTP 200 and captured do not prove row persistence | 6.5, 8.3, 9.4, 15.1 (F12), 16 (step 5) | 6.5 states the prompt's two sentences in its words; the heartbeat docstring is transcribed (9.1) |
+| A2 | heartbeat attempted only after validation reaches a call site; 400s get none; no-worker path FAILED/DISABLED and still 200 | 9.1, 9.2, 6.2, 15.1 (F02, F03) | 9.1 states the prompt's three sentences in its words; the matrix (9.2) shows each path |
+| A3 | the inspected EOD branch returns before intraday queue processing; no _process_signal, signals SQL or intraday enqueue in the inspected handler; no generalising | 5.3, 13.1 (RC-13), 14.2 (BK-30) | worded as "the inspected EOD path", not "impossible anywhere"; the unread parser and untraced indirect paths named |
+| A4 | LEVEL from the worker's own daily candles, not payload price; level_lookback_sessions 20; helpers and post-insert code not read | 7.4, 7.7, 3 | the comments' definition marked as comments; compute_breakout_level and lines 179 to 245 UNKNOWN (G-03); the link of self._cfg to the block labelled DI-09 (c) |
+| A5 | row stamped for the next trading day; UNIQUE (symbol, trading_date) and INSERT OR IGNORE; no claim that every duplicate scenario is resolved | 7.5, 10.4, 15.1 (F11) | 10.4 lists what the key does not settle (DI-06 to DI-08, now conditional; ignored inserts unobservable in the lines read) |
+| A6 | capture_fetch_lookback_days 60 versus fetch_lookback_days default 180; use of the 60-day setting UNKNOWN, not a proven defect | 11.4, 14.3, 14.4 (G-06) | labelled OPEN QUESTION / UNKNOWN; "not a proven defect" stated |
+| A7 | enabled: true, historical runtime state UNKNOWN; wiring depends on _watchlist_on; its derivation and the constructor call not read | 11.3, 11.1, 5.7, 4.2 (W02) | 11.3 states the prompt's sentences; G-01 named |
+| A8 | expected_managers stale pointer, 322 versus 326; impact UNKNOWN because its reader was not established | 14.1, 11.5, 5.8 | labelled KNOWN DEFECT (minor), as the reconciliation classifies it; impact UNKNOWN (G-07) |
+| A9 | BK-08 and BK-30: record evidence, keep OPEN | 14.2, 10.4, 5.3, 13.1, 13.2, header | both rows read "RECORD EVIDENCE / KEEP OPEN" |
+| A10 | heartbeat wording precision recorded in C-011; no C-002 erratum | 9.5, 13.1 (RC-06), 14.2 | "recorded in C-011 only; no C-002 erratum" |
+| A11 | G-01 to G-04 and G-06 to G-12 preserved; no inference fills them | 14.4; part C below | the sheet's gap texts kept; drafting unknowns kept separate (DU-01 to DU-05) |
+| A12 | no additional source reading | header; part F | Claude's read, search and lock logs unchanged (F8); no clone or source access in revision 1 (F9) |
+
+==============================================================================================================================
+PART B. SECTION BY SECTION: EVIDENCE, REMAINING UNKNOWNS, UNSUPPORTED CLAIMS (revision 1)
+==============================================================================================================================
+Line numbers are the printed lines of E6, Appendix B (reads 001 to 020). "None found" means the checks of part F and a full
+read-through found no statement in the section without support in E6, E7, E8 or (for governance only) E3 and E9.
+"Revision 1" notes what changed in the section (part H has the full list).
+
+Section 1 - Purpose and scope
+  Evidence: E6 header (the approval reading of OQ-01 to OQ-03); E7 section 4 (OQ-01 to OQ-03 outcomes, transcribed); E8
+    scope (transcribed); E6 section 5 (the "DAILY/EOD alert" naming; INTERPRETATION); receiver 556 and 752, map 84; S1-1 Q07
+    counts (daily_candles: 46 files; scripts/fetch_daily_candles.py 6 lines).
+  Remaining unknowns: the out-of-scope items G-05, G-09, G-10 and G-11.
+  Unsupported claims: none found.
+  Revision 1: 1.2 states that E4 was not received and is not paraphrased or recreated (H7).
+
+Section 2 - Baseline and evidence method
+  Evidence: E6 sections 1 to 4 and 8; E7 section 1 (transcribed). The S1-1 totals table equals E6's search table; the
+    evidence-set rows equal the files' SHA-256 values and line counts (F1).
+  Remaining unknowns: none new; the limits are stated in 2.6.
+  Unsupported claims: none found.
+  Revision 1: the DI and DU label rules added to 2.3 (H4, H5); 2.4 rewritten as "normalized transcription, not a
+    byte-for-byte copy" (H6); E9 added to 2.5 and the E4 row reworded (H7, H8).
+
+Section 3 - End-to-end route diagram
+  Evidence: TR-01 and TR-03 to TR-14; every file:line in the diagram is a printed line (F1).
+  Remaining unknowns: how the map is loaded (not read); the queue's size (G-03); helper bodies (G-03); store bodies (G-04).
+  Unsupported claims: none found. The phrase "the 17:00 alert" is transcribed from the code comments (receiver 783, 809),
+    not stated as a fact about the host.
+  Revision 1: DI-09 (c) and (g) labelled in boxes [6] and [7] (H4).
+
+Section 4 - Source-to-consumer trace table
+  Evidence: TR-01 to TR-18 (E6 4.3), re-tabulated as hops H01 to H13 and W01 to W03; all cited lines printed (F1).
+  Remaining unknowns: G-01, G-03, G-04, G-07, G-08.
+  Unsupported claims: none found.
+  Revision 1: DI-09 (g) labelled in H11, DI-09 (h) in H13, DI-09 (c) in W01 (H4).
+
+Section 5 - Component details
+  Evidence: reads 001 to 020 (excerpts checked line by line, F1); HISTORICAL as E6 cites it: C-001 4.1, A-009 8 (the key of
+    map line 84), C-010 S1-1 Q08 (scanner_type count), C-001 4.4 and D-04 (no playbook_scanner reader), C-002 17 and T5
+    (_process_request). Blob IDs and file line counts equal E6 section 1 (F7).
+  Remaining unknowns: G-02 (the parser; set_eod_capture 1157 to 1159), G-03, G-04, G-07, G-08; DU-05 (UNKNOWN / NOT
+    ESTABLISHED: schema 1541 to 1558).
+  Unsupported claims: none found. Drafting interpretation: DI-09 (g), labelled.
+  Revision 1: transcription labels in 5.3 and 5.4 (H6); "Who reads this file: UNKNOWN (G-07)" in 5.8; DU-05 labelled (H5).
+
+Section 6 - Inputs, validations, guards and HTTP responses
+  Evidence: receiver 551 to 554 and 751 to 804 (reads 001, 002); HISTORICAL C-003 7.3, C-004 T-18, C-003 6.5 and L-01, C-005
+    10.2, C-002 9 row 7, C-001 8, A-L5 and D-06 (all as E6 cites them).
+  Remaining unknowns: G-02 (the parser's formats and time zone); the alias map's content (UNKNOWN); DU-02 (UNKNOWN / NOT
+    ESTABLISHED).
+  Unsupported claims: none found. Drafting interpretations: DI-05 and DI-06, labelled, with line basis and "NOT ESTABLISHED"
+    for whether such alerts or spellings arrived.
+  Revision 1: DI-05 and DI-06 reworded conditionally (H3).
+
+Section 7 - LEVEL and trading-date logic, with the uninspected helpers listed
+  Evidence: worker 136 to 178 (read 004); config 623 (read 009); schema 1562 to 1566 (read 006); test names 39, 46, 53 (read
+    014); E7 precision D; RC-09 and RC-15 (no age check; not a signal-expiry rule).
+  Remaining unknowns: G-02; G-03 (every helper body, the constructor, 179 to 245); G-06; the helper table in 7.7 lists 14
+    helpers or objects, each with its gap; DU-03 and DU-04 labelled UNKNOWN / NOT ESTABLISHED.
+  Unsupported claims: none found. Drafting interpretations: DI-03 (conditional), DI-04, DI-09 (a), (b), (c), (g), (h).
+  Revision 1: DI-03 reworded conditionally at both uses (H3); DI-09 (g) and (h) labelled in the helper table (H4).
+
+Section 8 - In-memory queue, asynchronous worker and failure handling
+  Evidence: worker 86 to 134 (read 004); receiver 754 to 755, 776 to 777, 797 to 798 (read 002); pb01_entry 12 and 121
+    (reads 011, 012); main.py 3749 (read 007); HISTORICAL B-006 3 (stops at shutdown); E7 precision A.
+  Remaining unknowns: G-01 (whether, when and how stop is called at shutdown), G-03 (queue type and size); what happens to
+    the queue and the daemon thread when the process stops (NOT ESTABLISHED).
+  Unsupported claims: none found. Drafting interpretations: DI-02 (bounded), DI-09 (f), DI-09 (g) in 8.5.
+  Revision 1: 8.6 rewritten: the stop() facts and the G-01 unknown separated from DI-02, which is now a bounded inference
+    and "not a verified shutdown outcome" (H2).
+
+Section 9 - Heartbeat, logging and observability semantics
+  Evidence: receiver 779 to 834 (read 002); worker log lines 92 to 158 (read 004); pb01_entry 123 (read 011); main.py 3731,
+    3736, 3741, 3746, 3750 to 3753 (read 007); expected_managers 135 (read 016); HISTORICAL C-002 10.7 and 11, B-007 11; E7
+    precision B and section 4 (RC-06).
+  Remaining unknowns: DU-03 (UNKNOWN / NOT ESTABLISHED: utils/cron_heartbeat.py, the log destinations, the receiver's
+    logger); no insert log in the lines read (G-03).
+  Unsupported claims: none found.
+  Revision 1: transcription labels in 9.1 and 9.3 (H6); DU-03 labelled at 9.1 and 9.3 (H5).
+
+Section 10 - pb01_watchlist schema and duplicate key
+  Evidence: schema 1540, 1559 to 1579, 1590 (reads 005, 006); store 3078 to 3117 (read 015); worker 165 and 172 to 178 (read
+    004); pb01_entry 326 (read 012); soak report 293 (read 017); migrations 89 (read 018); e2e test 90 (read 020); test names
+    72 and 146 (read 014); E7 precision G and section 4 (BK-08); E6 section 5 (other writers not established).
+  Remaining unknowns: G-03 and G-04 (whether an ignored insert is reported or logged; the bodies); G-08; the alias map.
+  Unsupported claims: none found. Drafting interpretations: DI-06, DI-07, DI-08 (each conditional, with line basis and an
+    unknown); DI-09 (g) and (h).
+  Revision 1: 10.3 and 10.4 separate the statement (FACT) from its method by position (DI-09 (g)); 10.5 and 10.6 label
+    DI-09 (g) and (h) (H3, H4).
+
+Section 11 - Startup wiring and configuration
+  Evidence: config 619 to 630 (read 009); main.py 3706 and 3712 to 3755 (reads 007, 008); expected_managers 130 to 140 (read
+    016); HISTORICAL C-001 7.5 and T-10, C-001 4.4 and D-04, B-008 3, A-008 16, B-006 3; E7 precisions E and F; E6 TR-03
+    (the failure-before-binding INTERPRETATION).
+  Remaining unknowns: G-01 (_watchlist_on, _watchlist_cfg, the constructor call, the inputs defined before 3712, whether
+    anything else binds a worker); G-06 (OPEN QUESTION); G-07; G-11; G-12; DU-04.
+  Unsupported claims: none found. Drafting interpretations: DI-01 (conditional), DI-09 (c), (d), (e).
+  Revision 1: DI-01 reworded with the review's sentence (H1); the TR-03 interpretation qualified (H3); DI-09 (c) at line
+    623 of the table and the would-be recorder's name reading labelled (H4); table header "normalized transcription" (H6).
+
+Section 12 - PB-01 pickup boundary
+  Evidence: pb01_entry 5, 12, 18, 84, 117 to 125, 151, 326 (reads 011, 012); store 3094, 3101 (read 015); schema 1563 (read
+    006); main.py 3745, 3749, 3751 (read 007); config 620, 630 (read 009); HISTORICAL A-011 14, A-008 16; E6 section 5.
+  Remaining unknowns: DU-01 (UNKNOWN / NOT ESTABLISHED: how today is derived; how often 151 runs); G-04 (pending_only); G-05
+    (beyond the boundary).
+  Unsupported claims: none found. Drafting interpretations: DI-09 (d) and (h). The entry stage's decisions are named only
+    as the next consumer, as OQ-02 requires.
+  Revision 1: DI-09 (d) labelled in 12.1; DU-01 labelled in 12.2; "would be read"; the call at 326 described as code whose
+    run is beyond the boundary (H3, H4, H5).
+
+Section 13 - Reconciliation against the frozen C-001 to C-010 manuals
+  Evidence: E6 section 6 (RC-01 to RC-22, kept with E6's wording; a column added for E7's outcomes); E7 sections 3 and 4.
+  Remaining unknowns: none new; frozen statements not re-read (HISTORICAL).
+  Unsupported claims: none found. No change in revision 1.
+
+Section 14 - Known defect and open questions
+  Evidence: expected_managers 140 and pb01_entry 326 (reads 016, 012); E7 section 4 (KNOWN DEFECT (minor); BK-08; BK-30;
+    RC-06); E6 section 7 (G-01 to G-12, in E6's words, internal cross-references dropped); E3 sections 6 and 7 (VP-14,
+    OQ-04, OQ-05, OQ-07); E9 P-2 and P-3.
+  Remaining unknowns: G-01 to G-12; DU-01 to DU-05; whether "_terminate" is at line 318 (not printed).
+  Unsupported claims: none found.
+  Revision 1: the VP-14 row records E9's confirmation and the E4 condition (H7); 14.5 labels each DU item and states its
+    separation from the G register (H5).
+
+Section 15 - Source-established failure behaviour versus historical host behaviour NOT ESTABLISHED
+  Evidence: F01 to F11 from printed lines (reads 001, 002, 004, 006, 015); F12 from E7 precision A; F13 from E6 TR-03; F14 to
+    F16 from DI-01 to DI-03; host items from E6 sections 5 and 7 (G-11; Q-44; HISTORICAL C-001 4.5: 5 PB-01 POSTs, 27 to
+    31-Jul).
+  Remaining unknowns: everything about the host (G-01, G-11); the outcomes of F13 to F16 (NOT ESTABLISHED).
+  Unsupported claims: none found. No host behaviour is asserted.
+  Revision 1: F11 and F13 to F16 reworded as conditional or bounded, each with its unknown (H1 to H4).
+
+Section 16 - End-to-end walkthrough (illustrative)
+  Evidence: the cited printed lines of each step (F1); symbols only (K, D, N, X, Y, L(X), L(Y), Z(X), Z(Y), T); no market
+    value.
+  Remaining unknowns: G-02 (the parser's accepted form), G-03, G-04, DU-01.
+  Unsupported claims: none found. The illustration's assumptions are marked "assumed for the illustration" (steps 4, 6 and
+    7). The two formatted outputs in step 5 are illustrations, not transcriptions (F3).
+  Revision 1: steps 7, 9, 10 and 13 labelled (DI-09 (c), (g), (h); DI-08; DU-01) and put in the conditional (H3, H4, H11).
+
+Section 17 - Source and line-reference index
+  Evidence: E6 section 1 (blobs, file line counts) and Appendix B; each row's line list equals what its read printed, and all
+    20 reads appear (F6).
+  Remaining unknowns: none. Unsupported claims: none found. No change in revision 1.
+
+Section 18 - Glossary and cross-references
+  Evidence: terms as used in sections 1 to 17; the frozen-manual citations are those of E6 (F4); governance items as in
+    part E.
+  Remaining unknowns: none. Unsupported claims: none found.
+  Revision 1: rows for INSERT OR IGNORE, pickup, would-be recorder and DI/DU revised; "normalized transcription" added
+    (H4, H6).
+
+==============================================================================================================================
+PART C. GAP REGISTER (E6 section 7; kept as gaps; where each appears in revision 1)
+==============================================================================================================================
+| Gap | What is not established (E6 wording, shortened) | Draft sections | Filled by any statement? |
+|---|---|---|---|
+| G-01 | main.py before 3712 (_watchlist_on, _watchlist_cfg), the receiver's constructor call, term lines not printed | 4.2, 5.1, 5.7, 7.7, 8.6, 11.1, 11.2, 11.3, 11.6, 13.1, 14.4, 15.1, 15.2, 18.1 | no |
+| G-02 | _parse_eod_triggered_at; set_eod_capture 1157 to 1159; term lines not printed | 5.1, 5.3, 5.7, 6.3, 7.2, 7.7, 14.4, 16 | no |
+| G-03 | capture worker lines 1 to 85 and 179 to 245 (constructor, queue size, imports, helpers, post-insert) | 3, 4.1, 5.1, 7.2 to 7.7, 8.2, 8.4, 8.5, 9.3, 10.4, 11.4, 14.4, 15.1, 16 | no |
+| G-04 | the three store methods' bodies; whether a migration creates or alters the table | 4.1, 5.1, 5.6, 5.8, 7.7, 10.4, 10.6, 12.2, 14.4, 15.1, 16 | no |
+| G-05 | the entry stage beyond the pickup (excluded by OQ-02) | 1.4, 5.1, 12.4, 14.4 | not applicable (the boundary) |
+| G-06 | OPEN QUESTION: who applies capture_fetch_lookback_days (60) | 7.4, 7.7, 11.1, 11.4, 14.3, 14.4, 14.5 | no |
+| G-07 | who reads config/expected_managers.yaml; whether the stale effect_point matters | 4.3, 5.8, 9.4, 11.5, 14.1, 14.4 | no |
+| G-08 | the tests' bodies | 4.3, 5.8, 10.4, 14.4 | no |
+| G-09 | files left at their counts (the 24 of E6 section 3; T7 and T8 files outside the route) | 1.3, 1.4, 14.4 | no |
+| G-10 | R33's headings (not authorised); R42 never read | 1.4, 14.4 | no |
+| G-11 | what ran on the production host; which rows existed (Q-44; a DR-016 audit lead) | 1.4, 11.3, 14.2, 14.4, 15.2 | no |
+| G-12 | the pb01_watchlist line and the other watchlist line of config/system_config.yaml outside 619 to 630 | 5.1, 14.4 | no |
+(The label definitions in draft 2.3 also name the range G-01 to G-12.)
+Check of the interpretations against the gaps: DI-02 leaves G-01 open; DI-03, DI-04, DI-08 and DI-09 (b), (c) and (f) leave
+  G-03 open; DI-09 (a) leaves G-02 open; DI-09 (g) and (h) leave G-04 open; DI-01 and the TR-03 interpretation leave G-01
+  open. None states what an unread line contains, none closes BK-08 or BK-30, and none fills a G gap.
+
+==============================================================================================================================
+PART D. STATEMENTS FIRST MADE IN THE DRAFT (kept selectively per E9 P-1 and P-2)
+==============================================================================================================================
+Drafting interpretations (label INTERPRETATION at every use; none is FACT, none is a runtime observation):
+| ID | Statement (revision 1 wording, short) | Basis (printed lines) | Unknown next to it | Draft sections |
+|---|---|---|---|---|
+| DI-01 | conditional: if a failure occurred at 3748 to 3751, after the binding at 3747, the except branch would set main.py's two variables to None; the inspected lines do not show an unbind; resulting runtime behaviour is NOT ESTABLISHED | main.py 3747, 3752 to 3755 | G-01; the runtime outcome NOT ESTABLISHED | 11.2, 15.1 (F14) |
+| DI-02 | bounded: the queue is in memory and a row is written only when a capture reaches the insert; the lines read show no other place a queued item is kept, so an item still queued when the process stopped would get no row from those lines; not a verified shutdown outcome | worker 111, 178 (and 94 to 103, 121 to 134); pb01_entry 12; main.py 3749 | G-01 (the shutdown sequence); the queue and daemon thread at process stop NOT ESTABLISHED | 8.6, 15.1 (F15) |
+| DI-03 | conditional: if the clock gave None, the condition at 146 would be false (no settled-only skip) and now_iso would be empty text (171) | worker 137 to 146, 170 to 171 | whether the clock can give None: UNKNOWN (G-03) | 7.3, 7.6, 15.1 (F16) |
+| DI-04 | lines 136 to 178 compare no close price with LEVEL, although the schema comment defines breakout_date as the session whose close cleared LEVEL; the breakout date is the alert's date | worker 136 to 178; schema 1566 | whether a helper checks it: UNKNOWN (G-03) | 7.2 |
+| DI-05 | conditional: an alert with no symbol would be answered 200 with accepted 0 and captured 0 and an EMPTY_NO_DATA heartbeat attempt (worker bound), or "watchlist disabled" (none bound) | receiver 774, 778 to 804 | whether such an alert arrived: NOT ESTABLISHED | 6.2 |
+| DI-06 | a symbol not in the alias map keeps its incoming spelling (no case folding in the lines read), so spellings the map does not unify would be different key values | receiver 792; schema 1561, 1575 | the alias map's content UNKNOWN; whether such spellings arrived NOT ESTABLISHED | 6.2, 10.4 |
+| DI-07 | source is not in the key: two eod-typed keys capturing one symbol for one trading date would leave one row (one eod-typed entry exists: HISTORICAL C-001 4.1) | schema 1575; worker 174 | whether the host ever had two: NOT ESTABLISHED | 10.4 |
+| DI-08 | the lines read show no step that removes a repeat before the worker, so each queued repeat would be captured again up to the insert, which the key would ignore | worker 106 to 118, 136 to 178; store 3088 | what follows the insert UNKNOWN (G-03); whether repeats arrived NOT ESTABLISHED | 10.4, 16 (step 10) |
+| DI-09 | readings by name or by position: (a) on this route breakout_date is triggered_at's date; (b) self._mw is the market_windows main.py passes; (c) self._cfg is the watchlist block, so the session count is 20; (d) the entry stage's self._poll is poll_interval_sec; (e) "default-OFF" means the value when the key is absent; (f) one worker thread takes one item at a time; (g) each SQL statement belongs to the method whose def line precedes it; (h) so the pickup's query is the SELECT at 3101 | (a) receiver 767 to 769, 793 to 795, worker 138; (b) worker 165, main.py 3736; (c) worker 155, main.py 3735, config 623; (d) pb01_entry 125, config 630; (e) config 619 to 620; (f) worker 90, 121 to 134; (g), (h) store 3078 to 3117, pb01_entry 151 | (a) G-02; (b), (c), (f) G-03; (d) the stage's constructor not printed; (e) the code default not read; (g), (h) G-04 | (a) 7.2; (b) 7.5; (c) 3, 4.2, 7.4, 11.1, 16; (d) 11.1, 12.1; (e) 11.1; (f) 8.4; (g) 3, 4.1, 5.6, 7.7, 8.5, 10.3 to 10.5, 15.1, 16, 18.1; (h) 4.1, 7.7, 10.5, 10.6, 12.2, 16 |
+Drafting unknowns (label UNKNOWN / NOT ESTABLISHED at every use; not new evidence; not numbered into the G register):
+| ID | Not established | Beside (does not fill) | Draft sections |
+|---|---|---|---|
+| DU-01 | how the entry stage derives today for the pickup, and how often line 151 runs | v3_chain/pb01_entry.py lines not printed (the file of G-05) | 12.2, 14.5, 16 |
+| DU-02 | what the web framework does with an exception raised outside the handler's try blocks | the server code (not read; no G number) | 6.2, 14.5 |
+| DU-03 | utils/cron_heartbeat.py (storage, return value; HISTORICAL storage only); the receiver's logger and the log destinations | not read (no G number) | 7.7, 9.1, 9.3, 14.5 |
+| DU-04 | sr_detector/fetch.py (OhlcFetcher) and the shared fetch function: candle source; how lookback_days is applied | G-01 and G-06 (settles neither) | 7.7, 14.5 |
+| DU-05 | core/schema.sql lines 1541 to 1558, between the table's header line and its CREATE statement | not printed (no G number) | 5.1, 14.5 |
+Per E9 P-2, any later cross-reference of a DU item into the evidence register needs an explicit, recorded change.
+
+==============================================================================================================================
+PART E. GOVERNANCE ITEMS (none closed, none decided)
+==============================================================================================================================
+- OQ-01 to OQ-03: as approved; E7 section 4 confirms the scope, the boundary and that Stage 1 is complete. Q-A to Q-C of E6
+  are settled by E7.
+- BK-08 and BK-30: OPEN - RECORD EVIDENCE / KEEP OPEN (E7 section 4; E9 checklist item 4). No interpretation closes either.
+- RC-06: precision recorded in C-011 only; no C-002 erratum (E7 B and section 4; E9 item 5; draft 9.5).
+- KNOWN DEFECT (minor): the stale effect_point (E7 section 4; E9 item 7; draft 14.1). Nothing repaired; impact UNKNOWN.
+- G-06: OPEN QUESTION / UNKNOWN, not a proven defect (E7 E; E9 item 6; draft 11.4).
+- VP-14: NOT RATIFIED; E9 P-3 confirms it is not decided or reopened in C-011 (draft 14.2).
+- E4 (ChatGPT's Stage 0 decision sheet): required, as the exact existing file, before the final storage package (E9 P-4).
+  It is not recreated, and the draft does not paraphrase it. If it records a different settled governance outcome, that is
+  to be reconciled explicitly before packaging (E9 P-3).
+- Q-44 (a): unchanged; a DR-016 audit lead (topic K-009), as Stage 0's OQ-07 (a) recommended.
+- Wider HISTORICAL anchors from Stage 0: none added (E9 P-5; F4).
+- No V2 decision, repair, tuning or design anywhere in the draft.
+
+==============================================================================================================================
+PART F. DOCUMENT-LEVEL CHECKS RUN ON REVISION 1 (13:00 to 13:10 IST; results)
+==============================================================================================================================
+Files opened in revision 1: E9 in full; the two revision 0 files; E6, E7, E8 and E3 by the checker only. No source file,
+  clone, frozen manual, governance file, host or service.
+F1 <SCRATCHPAD>/c011/tools/check_manual_c011.py (opens no legacy file; reads E6, E7, E8, E9, E3 and the input files):
+   - 178 file:line citations (backticked, and those in the diagram): every cited line was printed by a Stage 1 read; where
+     a read number is given next to a citation, that read printed the lines;
+   - 62 numbered excerpt lines in the 10 excerpt blocks (the 11th fenced block is the diagram): each equals its printed line
+     after the stated normalization;
+   - 148 transcribed passages checked against the printed text, E6's prose, E7, E8 and E9: 145 found; the other 3 are not
+     transcriptions of the source: the draft's marker "(cut by the grep)" and the two formatted outputs of step 5;
+   - the 8 rows of the S1-1 totals table equal E6's search table (32 searches); the 8 evidence-set rows with a file (E1, E2,
+     E3, E5 to E9) equal their files' SHA-256 values and line counts; the 18 section headings are numbered 1 to 18 in the
+     required order.
+F2 IDs: every TR-, RC-, G-, OQ-, BK-, VP-, DR-, K- and Q- identifier in the draft occurs in E6, E7, E8, E9 or E3.
+F2b Labels (new in revision 1): every line of the draft that uses a DI ID carries the INTERPRETATION label, and every line
+   that uses a DU ID carries UNKNOWN or NOT ESTABLISHED (lines that only name the ranges are exempt): 0 problems.
+F3 The 3 unmatched items of F1 checked by hand (none is presented as source text). In this file, text in quotation marks
+   is the draft's own wording or E9's, not source text.
+F4 Frozen-manual citations: the 43 manual-and-section pairs of the draft are all among the 44 pairs of E6's prose; no
+   frozen manual was opened; no wider Stage 0 anchor was added (E9 P-5).
+F5 Characters and links: 0 non-ASCII bytes in both files; no web address and no session link in either.
+F6 Index (draft section 17): 22 rows; each line list equals the lines its read printed; all 20 reads appear.
+F7 Blob IDs and file line counts quoted in the draft (23 mentions) equal E6 section 1.
+F8 Claude's records unchanged since E6 (a document-level hash check): read log (20 rows; SHA-256
+   FC335A878A1E6BBE5013302E97E8971AB87730599B51DE50245A75A26C6A35F7), search log (36 rows; SHA-256
+   A48451CAC40EF6EC1546E58008BB264471D543FC5D657CC271A40A38EF283556) and lock log (4 rows; SHA-256
+   797E417B5F9C74BAC6AAD1AEE7C7BAB3AC9C2CBA42619278DAC96B2615C3ACBD); the reader still locked (SHA-256
+   23CB24D3F97220D3B38F6B529EB731D12138DE3D4856BA808780C31F4AAA19FB); 20 evidence files.
+F9 Clone: not re-checked in revision 1, because E9 item 12 limits the re-run to document-level checks; no step of revision 1
+   touched it. Its last check, for revision 0 (12:40:55 IST): HEAD = the pin; 8,920 local objects; never-open blobs 0.
+F10 Tables: check_md.py OK for both files (every table row has its header's column count).
+F11 Value-blind scan (scan_ids.py, then classify_scan_c011.py; neither prints a value): scan_ids.py reports 48 shapes (37
+   in the draft, 11 here), every one a long hexadecimal value, and allows the legacy pin (2 more occurrences, both in the
+   draft). classify_scan_c011.py classifies all 50: 23 pinned blob IDs of the listing, 2 the pin, 25 SHA-256 values (the
+   C-011 inputs, the listing, Claude's records, the locked reader and the two revisions); 0 unclassified. No client-ID,
+   address, mail or credential shape was found.
+F12 Bare numbers: every number in the draft's text that is not a printed line is a count, size, section number, HTTP code,
+   date part or an explicitly unread range (179 to 245, 1157 to 1159, 1541 to 1558, 318, about 3125; HISTORICAL 1720 to
+   1729) (heuristic check, reviewed by hand).
+F13 Difference from revision 0: 75 lines replaced by 82 (diff); every change is listed in part H.
+
+==============================================================================================================================
+PART G. OUTCOMES OF P-1 TO P-6 (E9) AND POINTS FOR THE FINAL CONSISTENCY CHECK
+==============================================================================================================================
+| Point | E9 outcome | Applied in revision 1 |
+|---|---|---|
+| P-1 | keep DI-01 to DI-09 selectively; DI-01 conditional with the stated sentence; DI-02 bounded; DI-03 to DI-09 with labels, line basis and unknowns | H1 to H4; F2b |
+| P-2 | keep DU-01 to DU-05 as drafting unknowns; do not renumber into the G register | H5; draft 14.5 |
+| P-3 | VP-14 NOT RATIFIED in C-011 | H7; draft 14.2 |
+| P-4 | E4 required, as the exact existing file, before the final storage package; not recreated | H7; draft 1.2, 2.5, 14.2 |
+| P-5 | no wider Stage 0 anchors | none added (F4) |
+| P-6 | keep the rule; call the text a normalized transcription, not a byte-for-byte quotation | H6; draft 2.4, 18.1 |
+- N-1 (for ChatGPT): following the review's "Avoid promoting ... method-boundary inference to FACT", the draft keeps the
+  INSERT OR IGNORE statement (3088) and the UNIQUE key (1575) as FACT, and labels only the assignment of the statements at
+  3088, 3101 and 3117 to their methods as INTERPRETATION by position (DI-09 (g) and (h)). The reconciliation's precision G
+  and the prompt's mandatory wording are unchanged. Recommended: accept.
+- N-2 (for Rama): E4 is still to be attached, unchanged, for the final storage package.
+
+==============================================================================================================================
+PART H. REVISION 1 CHANGE LIST (each change mapped to E9's checklist item or point)
+==============================================================================================================================
+H1 (item 1; P-1, DI-01): 11.2 and 15.1 (F14): DI-01 is now conditional and carries "the inspected lines do not show an
+   unbind; resulting runtime behaviour is NOT ESTABLISHED"; the claim that the receiver would keep the worker object and
+   the remark on the worker's thread are removed.
+H2 (item 1; P-1, DI-02): 8.6 rewritten: the stop() facts (95 to 103, 122) and the UNKNOWN shutdown sequence (G-01) stand
+   apart from DI-02, which is now a bounded inference from the in-memory queue (111) and the insert (178), stated as "not a
+   verified shutdown outcome"; 15.1 (F15) likewise.
+H3 (item 1): conditional wording elsewhere: DI-03 (7.3, 7.6, F16); DI-05 and DI-06 (6.2); DI-06, DI-07, DI-08 (10.4) with
+   line basis and NOT ESTABLISHED; the TR-03 interpretation (11.2, F13) qualified with "whether anything else binds a
+   worker is NOT ESTABLISHED (G-01)"; 12.2 "would be read"; 10.3 and 12.4: the call at 326 described as code whose run is
+   beyond the boundary; steps 10 and 13 put in the conditional.
+H4 (item 2; P-1): INTERPRETATION at each material use: DI-09 (c) added in 3, 4.2 (W01), 11.1 (line 623) and 16 (step 7);
+   DI-09 (g) in 3, 4.1 (H11), 7.7, 8.5, 10.3, 10.4, 10.5, 15.1 (F11), 16 (step 9) and 18.1; DI-09 (h) in 4.1 (H13), 7.7,
+   10.5, 10.6 and 16 (step 13); DI-09 (d) in 12.1; the would-be recorder's name reading (E6 TR-03) in 11.2 and 18.1; the
+   label rule stated in 2.3.
+H5 (item 3; P-2): UNKNOWN / NOT ESTABLISHED at each DU use: 5.1 (DU-05), 7.7 (DU-03, DU-04), 9.1 and 9.3 (DU-03), 12.2 and
+   16 (DU-01), 14.5 (all); 14.5 now states that the DU items are not numbered into the G register, fill no gap, and need an
+   explicit recorded change for any later cross-reference; DU-04 "does not settle" G-06; the rule stated in 2.3.
+H6 (P-6): 2.4 rewritten: quoted text and excerpt lines are normalized transcriptions, not byte-for-byte copies, the
+   normalization is listed, and the exact bytes are in E6 Appendix B; transcription labels in 5.3, 5.4, 9.1, 9.3 and the
+   11.1 table header; glossary entry added.
+H7 (P-3, P-4): 14.2 VP-14 row: E9's confirmation, and E4's condition (reconcile explicitly if it records a different
+   settled outcome; not inferred); 1.2 and 2.5: E4 not received, not recreated or paraphrased; to be supplied unchanged.
+H8 (evidence set): E9 added to 2.5; the header states revision 1, its inputs, revision 0's SHA-256 and this part H.
+H9 (items 4 to 11): checked unchanged: BK-08 and BK-30 OPEN (14.2); RC-06 (9.5); G-06 (11.4, 14.3); the KNOWN DEFECT
+   (14.1); the G gaps (14.4); enabled: true versus runtime (11.3); queued versus 200 / captured versus a persisted row
+   (6.5); the pickup boundary (12.4).
+H10 (item 12): document-level checks only (part F); no source, search, test, service, commit or push.
+H11 (walkthrough): the illustration's assumptions marked in steps 4, 6 and 7.
+H12 (wording): 4.1 (H13) and 7.7 rows reworded so that each SQL statement is FACT and its method assignment is labelled; 8.6
+   stop() facts given line by line; "Who reads this file: UNKNOWN (G-07)" (5.8); the 10.2 consumed_at row names the UPDATE
+   statement; the glossary rows for INSERT OR IGNORE, pickup, would-be recorder and DI/DU revised.
+
+==============================================================================================================================
+DECLARATION
+==============================================================================================================================
+- Revision 1 used only E9 for its instructions, the two revision 0 files, and E6, E7, E8 and E3 as before. No legacy source
+  was read, searched or counted; no test, script, migration or service was run; no host, VM, broker, webhook endpoint,
+  Chartink account or database was contacted.
+- No fix, tuning, cleanup, V2 design, implementation, deployment, commit or push. BK-08 and BK-30 stay OPEN; VP-14 is not
+  ratified; G-01 to G-04 and G-06 to G-12 remain gaps; G-05 remains the boundary.
+- STOP: both revised files are returned for ChatGPT's final consistency check. Nothing is frozen.

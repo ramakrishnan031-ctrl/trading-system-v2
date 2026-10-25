@@ -1,0 +1,59 @@
+CLAUDE TASK — DRAFT C-011 LEGACY MANUAL FROM RECONCILED STAGE 1 EVIDENCE
+Date: 25-Oct-2026
+Status: Documentation drafting only. Do not perform more source analysis.
+
+BASELINE
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Primary evidence: C-011_CLAUDE_STAGE1_EVIDENCE_SHEET_25-OCT-2026.txt
+Reviewer reconciliation: C-011_STAGE1_CHATGPT_RECONCILIATION_25-OCT-2026.txt
+
+TASK
+Prepare a detailed Markdown technical booklet/manual for C-011 — EOD / Daily Signal Routing. This documents the dead legacy system factually; it is not redesign.
+
+STRICT BOUNDARIES
+Use only the supplied evidence sheet and reconciliation. Do not read more source, rerun searches, inspect additional files, run tests, or access any host/VM/service/database/broker/webhook/Chartink. No fixes, tuning, cleanup, V2 design, implementation, deployment, commit or push. Do not expose secrets, tokens, account/client identifiers, host/address values or deployed paths. Do not silently close BK-08/BK-30 or make V2 decisions.
+
+SCOPE
+Trace only:
+scanner-type configuration -> receiver branch -> EOD handler -> capture-worker submission -> in-memory queue -> daily-candle LEVEL calculation/guards (as directly established) -> pb01_watchlist row/schema -> PB-01 entry-stage pickup boundary.
+Stop at pickup. Do not explain PB-01 entry decisions or execution beyond identifying the next consumer.
+
+REQUIRED MANUAL STRUCTURE
+1. Purpose and scope
+2. Baseline and evidence method
+3. End-to-end route diagram
+4. Source-to-consumer trace table
+5. Component details
+6. Inputs, validations, guards and HTTP responses
+7. LEVEL and trading-date logic, with uninspected helpers explicitly listed
+8. In-memory queue, asynchronous worker and failure handling
+9. Heartbeat/logging/observability semantics
+10. pb01_watchlist schema and duplicate key
+11. Startup wiring and configuration
+12. PB-01 pickup boundary
+13. Reconciliation against frozen C-001 to C-010 manuals
+14. Known defect and open questions
+15. Source-established failure behaviour versus historical host behaviour NOT ESTABLISHED
+16. End-to-end walkthrough with an illustrative example and no invented market values
+17. Source/line-reference index
+18. Glossary and cross-references
+
+MANDATORY PRECISION
+- Successful submit means queued in memory, not database capture. HTTP 200 and `captured` do not prove row persistence.
+- Heartbeat is attempted only after handler validation reaches a heartbeat call site. Invalid requests returning 400 do not get a heartbeat. The no-worker path records FAILED/DISABLED and still returns 200.
+- In the inspected EOD branch, the receiver returns before normal intraday queue processing; the inspected handler does not call `_process_signal`, write to signals SQL, or enqueue to the intraday queue. Do not generalise beyond inspected code.
+- LEVEL is computed from the worker's own daily candles, not payload price. `level_lookback_sessions` is 20. Helper bodies and post-insert code were not read.
+- Row is stamped for the next trading day; schema uses UNIQUE(symbol, trading_date) and INSERT OR IGNORE. Do not imply every duplicate scenario is resolved.
+- `capture_fetch_lookback_days: 60` is configured, while main.py's shared fetcher uses V3 `fetch_lookback_days`, default 180. Whether the 60-day setting is used is UNKNOWN, not a proven defect.
+- Config says `enabled: true`, but historical runtime state is UNKNOWN. Wiring depends on `_watchlist_on`, whose derivation and receiver constructor call were not read.
+- `config/expected_managers.yaml` has a stale line pointer (322 versus inspected call at 326). Record the stale pointer; impact is UNKNOWN because the file's reader was not established.
+- BK-08 and BK-30: record evidence and keep OPEN.
+- Heartbeat wording precision: record in C-011; no C-002 erratum.
+- Preserve G-01 to G-04 and G-06 to G-12 as gaps; no inference may fill them.
+- No additional source reading is authorised.
+
+DELIVERABLES
+1. `C-011_EOD_DAILY_SIGNAL_ROUTING_DRAFT.md`
+2. `C-011_DRAFT_EVIDENCE_AND_GAP_CHECK.txt`, listing each section's evidence, remaining unknowns and unsupported claims.
+Do not freeze, commit or push. Stop after returning both files for ChatGPT reconciliation.

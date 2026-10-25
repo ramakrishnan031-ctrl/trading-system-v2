@@ -1,0 +1,46 @@
+C-011 — STAGE 0 RECONCILIATION & DECISION SHEET
+Date: 25-Oct-2026
+Status: Stage 0 reconciliation complete; Stage 1 NOT YET AUTHORISED BY RAMA.
+
+1. REVIEW RESULT
+The Stage 0 answer sheet is detailed and bounded. It confirms the pinned legacy baseline, inventories candidate files with blob IDs, separates likely in-scope from adjacent/excluded paths, and stops before source-content analysis. No additional Stage 0 inventory work is presently required.
+
+The proposed evidence chain for Stage 1 is:
+configuration/scanner type -> startup wiring -> webhook receiver -> capture worker -> watchlist schema/row -> PB-01 entry-stage pickup.
+This is a hypothesis to verify from source, not yet a behavioural conclusion.
+
+2. DISTINCTIONS TO PRESERVE
+- FACT (inventory only): path names and blob metadata identify candidates; they do not prove runtime behaviour.
+- HISTORICAL (from frozen manuals, not re-verified by C-011): the prior manuals describe an EOD-type branch handing off to a capture/watchlist path, with PB-01 pickup downstream.
+- UNKNOWN / NOT ESTABLISHED: exact implementation at the pin, all producers/readers, any scheduled job acting on watchlist rows, whether the production host ran the workers, and whether a stored EOD signal resulted in a next-day trade.
+- Host execution and historical database state are outside this repository-only source pass.
+
+3. RECOMMENDED ANSWERS TO THE THREE BLOCKING QUESTIONS
+OQ-01 — Meaning of “Daily”
+RECOMMENDATION: Define C-011 as the single legacy EOD-type route: the `eod` scanner-type branch, capture/watchlist hand-off, and downstream PB-01 entry-stage pickup boundary. Treat “EOD / Daily” in the manual title as the project's combined label for this route, not a claim that all Chartink daily-candle timeframe behaviour or all daily scheduled jobs belong to C-011.
+Exclude positional/delivery strategies arriving on the intraday route; Chartink candle-timeframe semantics except where needed to disambiguate the route; daily candle-fetch jobs, reports, daily-loss logic, square-off, cleanup and broker reconciliation. Cross-reference established manuals.
+
+OQ-02 — Downstream boundary
+RECOMMENDATION: End C-011 where the PB-01 entry stage picks up a persisted watchlist row. Document the hand-off and row/state boundary only. Exclude PB-01 entry decisions, gates, scores, candidate expiry, would-be records and trade execution; cross-reference A-008/C-009 and later D topics.
+
+OQ-03 — Stage 1 method
+RECOMMENDATION: Authorise the proposed S1-1 count-only pass followed by the bounded S1-2 reads, using the exact terms, four existing C-010 scopes, positive controls, line ranges, limits and stop conditions in Claude's answer sheet. Preserve the two distinct authorisation/lock windows. If counts would make S1-2 exceed 400 printed lines, Claude must stop and report before reading. No unbounded searches, tests, broad audit, live/host access, edits, commits or pushes.
+
+These are recommendations, not silently frozen governance decisions. Rama should confirm or amend OQ-01, OQ-02 and OQ-03 before using the companion Stage 1 prompt.
+
+4. OTHER OPEN ITEMS
+- OQ-04: Do not ratify VP-14 in this legacy documentation pass. Record relevant evidence; leave V2 governance to its designated process.
+- OQ-05: Record evidence against BK-08 and BK-30; leave them OPEN unless direct evidence and separate reconciliation justify closure.
+- OQ-06: Retain count-only treatment for schedule/deployment/audit records. Do not inspect protected or host/deployment material.
+- OQ-07: Keep the question of what ran on the historical production host in its separate audit topic; this repository pass cannot establish it.
+
+5. QUALITY / GOVERNANCE CHECKS
+- Treat C-001 to C-010 as established adjacent references; do not reopen frozen findings without genuinely new direct evidence.
+- Keep `signals/signal_processor.py` excluded unless Stage 1 produces a specific bounded reason and new authorisation is obtained.
+- Do not infer that the strategy's configured window and entry-stage window are equivalent. Preserve the discrepancy as historical evidence; report effective behaviour only if authorised source establishes it.
+- Keep `pb01_capture` heartbeat status (“queued”, not “captured”) distinct from proof of row persistence or downstream pickup.
+- An accepted HTTP response does not prove a signal row was created, a watchlist row was consumed, or a trade occurred.
+- Do not reproduce secrets, protected path names, host values or credential-shaped material.
+
+6. NEXT STEP
+No more Stage 0 inventory work is needed on the supplied evidence. After Rama confirms or amends OQ-01/OQ-02/OQ-03, use the companion Stage 1 prompt. Claude must return an evidence sheet for reconciliation before C-011 manual drafting or freezing.

@@ -1,0 +1,52 @@
+C-011 — STAGE 1 RECONCILIATION
+Date: 25-Oct-2026
+Baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Decision: Stage 1 is sufficient to draft the factual C-011 manual, with evidence gaps preserved. No further source-reading pass is recommended now.
+
+1. METHOD / SCOPE REVIEW
+Claude reports 32 count-only searches over the four existing C-010 scopes, plus four positive controls for zero results. Scope identities were checked. The planned maximum was 388 printed lines; actual output was 340 lines across 20 operations and 15 files. The schema block ended at line 1576, so the planned additional schema read was skipped. Locking was re-engaged after both windows. No tests, scripts, services, live endpoints, VM/host, database or broker were run/contacted; no source was changed, committed or pushed.
+Assessment: this appears compliant with the Stage 1 prompt based on Claude's evidence sheet; this is not an independent reproduction of its local command logs.
+
+2. CORE ROUTE SUPPORTED BY THE PINNED READS
+scanner map marks an entry scanner_type=eod
+-> receiver returns directly to _handle_eod
+-> handler validates/parses request and submits each symbol
+-> submit queues in memory (not a database capture)
+-> background worker fetches daily candles and derives LEVEL from its own data, rejects a same-day pre-close/forming-session capture, computes next trading date, and attempts to insert a PENDING row
+-> pb01_watchlist stores the row, with UNIQUE(symbol, trading_date) and INSERT OR IGNORE
+-> PB-01 entry stage reads today's pending rows.
+This establishes a code path at the pinned commit, not that the production host ran it or that any trade occurred.
+
+Key source references:
+- config/scan_webhook_map.yaml:84 — scanner_type=eod.
+- signals/webhook_receiver.py:551-564 — known-scanner guard and early EOD return.
+- signals/webhook_receiver.py:751-804 — handler validation, submit and HTTP response.
+- signals/webhook_receiver.py:806-834 — heartbeat semantics.
+- v3_chain/watchlist_capture.py:86-178 — worker, in-memory queue and row construction.
+- core/schema.sql:1559-1576 — schema, status constraint and uniqueness.
+- main.py:3712-3755 — conditional construction and binding.
+- config/system_config.yaml:619-630 — watchlist settings.
+- core/state_store.py:3078, 3088, 3094, 3101, 3109, 3117 — insert/select/update references; method bodies not read.
+- v3_chain/pb01_entry.py:117-125, 151, 326 — thread start, today's pending-row pickup and later status-update reference.
+
+3. PRECISIONS TO CARRY INTO THE MANUAL
+A. A successful submit means queued in memory, not captured to the database. HTTP 200 and the response's `captured` count do not prove row persistence. The heartbeat explicitly says queued, not captured; worker processing may later skip or fail.
+B. Heartbeat is not literally written for every inbound EOD HTTP alert. Malformed/invalid requests return 400 before heartbeat call sites. State precisely: a heartbeat is attempted for requests that pass handler validation and reach one of the call sites. The no-worker path records FAILED/DISABLED and still returns 200. Record this precision in C-011 only; do not issue a C-002 erratum on this evidence alone.
+C. The inspected EOD branch returns from _process_request at line 564. The inspected _handle_eod block does not call _process_signal, write to signals SQL, or enqueue to the intraday signal queue. Say “not in the inspected EOD path,” not “impossible anywhere in the system.”
+D. LEVEL comes from the worker's own daily candles, not the payload price; level_lookback_sessions is configured as 20. Helper implementations and post-insert handling were not read, so do not invent their exact behaviour.
+E. `capture_fetch_lookback_days: 60` is configured, while main.py constructs the shared fetcher using V3 `fetch_lookback_days`, default 180. Whether the 60-day setting is consumed is UNKNOWN / NOT ESTABLISHED, not a proven defect.
+F. Wiring depends on `_watchlist_on`; its derivation and the receiver constructor call were not read. Config `enabled: true` does not prove actual historical runtime enablement.
+G. UNIQUE(symbol, trading_date) plus INSERT OR IGNORE establishes a row-key duplicate guard, not proof that every duplicate scenario was tested or every failed insert is observable.
+
+4. GOVERNANCE / OPEN ITEMS
+- OQ-01 scope is supported: “EOD / Daily” names this one EOD-type route, not every daily-candle job/timeframe.
+- OQ-02 boundary remains at PB-01 entry-stage pickup; entry decisions and execution stay excluded.
+- OQ-03 bounded Stage 1 is complete.
+- BK-08: RECORD EVIDENCE / KEEP OPEN. The table key and INSERT OR IGNORE are established; do not silently close the wider historical duplicate question.
+- BK-30: RECORD EVIDENCE / KEEP OPEN. The inspected route bypasses normal signal-processing in this branch, but the parser helper and other indirect/system-wide possibilities were not fully traced.
+- RC-06: record heartbeat precision in C-011 only; no C-002 erratum.
+- KNOWN DEFECT (minor): config/expected_managers.yaml has a stale line pointer (322 versus inspected call at 326 at this pin). Operational impact is UNKNOWN because its reader was not established.
+- Preserve G-01 to G-04 and G-06 to G-12 as evidence gaps. No V2 decisions or repairs are implied.
+
+5. NEXT STEP
+Draft the detailed C-011 Markdown manual from the existing Stage 1 evidence sheet only. Do not reopen source files or rerun searches. Label FACT, HISTORICAL, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, KNOWN DEFECT and OPEN QUESTION. Include exact source paths/lines, a scope/evidence-limitations section and an evidence-gap checklist. Return a draft for ChatGPT reconciliation; do not freeze or push.
