@@ -1,0 +1,52 @@
+C-010 — STAGE 1D RECONCILIATION AND NEXT-STEP INSTRUCTION
+Date: 24-Oct-2026
+Purpose: Reconcile Claude's Stage 1D evidence sheet. This is not the C-010 manual and does not authorise new source reads.
+
+1. CHATGPT RECONCILIATION
+Status: ACCEPTED WITH QUALIFICATIONS.
+
+The submitted evidence supports the bounded Stage 1D execution record:
+- The pinned baseline is reported as 970aabf3c78d777d9d34549e021f7c8e756c7bdb, matching the established legacy baseline.
+- The accepted authorisation hash was recorded before the checks/searches/reads.
+- Claude reports all 30 named synthetic test cases passed, with no unlisted test ID or FAIL.
+- The approved three-file list governed the reads; the reported gate checks passed; 8 reads printed 205 lines against a 310-line cap.
+- The read lock was re-engaged at E-32. No legacy code/tests were run, no live/host/broker/Chartink/database access occurred, and no repository change/commit/push was reported.
+These are reconciled from Claude's evidence sheet; ChatGPT has not independently rerun Claude's tools or verified the remote workspace.
+
+2. MAIN FINDING — trades.strategy ON THE E1 PATH
+Accepted as INTERPRETATION, not a runtime observation:
+At the pinned repository baseline, the documented E1/main path supports the conclusion that trades.strategy is supplied with the strategy name resolved from the scanner map entry, rather than the scanner key. The evidence chain is:
+scanner-map entry -> Step 2 strategy_name resolution -> _process_one / _admit_and_place -> OrderPlacer.place(strategy=...) -> OrderManager.create_trade(strategy=...) -> fifth bound INSERT value for trades.strategy.
+
+Important qualifications preserved from the evidence:
+- Some call-argument membership and function membership are inferred from partial grep/range output or definition order, not all independently printed as complete call blocks.
+- The create_trade call target is inferred because the repository-wide bounded count found one definition with that name.
+- No stored trade row, deleted host, live execution, or trading-day outcome was examined. This is not proof of what any historical runtime instance actually stored.
+- The source lines are FACT at the pinned baseline; the end-to-end conclusion remains INTERPRETATION under the agreed evidence labels.
+
+3. OPEN ITEMS — DO NOT CLOSE OR SILENTLY EXPAND
+- O-7 / OQ-1D-01: The gate, retest and allocator entry paths pass strategy names from other fields (entry.strategy_name, parked.strategy, candidate.strategy_name). The upstream origins of those fields remain NOT ESTABLISHED. No conclusion about their provenance or runtime reachability beyond the already cited frozen historical records.
+- O-8 / OQ-1D-02: The bounded count found a second create_trade( occurrence in orders/order_manager.py, but that line was counted, not printed. Its meaning remains UNKNOWN / NOT ESTABLISHED. It does not change the identified OrderPlacer call on the E1 path.
+- OQ-1C-01 (scripts/t2_cnc_gtt_realtest.py) remains untouched and open.
+- Earlier open questions remain unchanged unless the evidence sheet explicitly resolves them.
+- BK-27 remains OPEN. VP-45 remains NOT RATIFIED. The C-010 manual has not started.
+
+4. PROCESS / CONTROL REVIEW
+No new Stage 1D deviation is reported. The report says the prior D-2 process deviation and O-6 scope/control inconsistency remain recorded, with the Stage 1D controls addressing their execution within this bounded run. Do not erase those historical entries merely because this run passed its gates.
+The evidence sheet contains repeated register IDs (for example R13, R14, R17, R19, R20, R23, R24 are reused for multiple rows). Treat this as a presentation/register-key ambiguity to flag for later clerical reconciliation, not as evidence that the source findings are wrong. Do not renumber or rewrite the historical register in this stage.
+The report also states that four KV-shaped values were masked and not examined; whether any is a real credential is NOT ESTABLISHED and outside C-010. Do not attempt to identify or inspect them.
+
+5. NEXT STEP — PROPOSAL ONLY
+Ask Claude to submit a Stage 1E proposal only, before any search/read. The proposal should address only:
+A. OQ-1D-01: identify the minimum source evidence needed to trace the origins of the three strategy-name fields on the gate, retest and allocator paths.
+B. OQ-1D-02: identify the minimum bounded evidence needed to classify the second create_trade( occurrence in orders/order_manager.py.
+C. Explicitly state whether each question can be answered with a tightly bounded read list and line budget; if not, state UNKNOWN / NOT ESTABLISHED and stop rather than widening scope.
+D. Include fixed approved paths, exact search/read operations, per-operation line caps, total line cap, named synthetic test IDs, integrity/pin checks, lock/unlock/relock sequence, refusal tests, output manifest, and stop conditions.
+E. Keep OQ-1C-01 and all unrelated open questions out of scope. Do not inspect scripts/t2_cnc_gtt_realtest.py.
+F. No source read, search, test against legacy source, manual drafting, V2 design, code change, commit or push under a proposal-only request.
+G. Preserve FACT / HISTORICAL / INTERPRETATION / UNKNOWN / KNOWN DEFECT labels. Do not convert field names or historical reachability notes into proven runtime behaviour.
+
+ChatGPT must review and explicitly authorise any Stage 1E execution proposal before Claude unlocks or reads anything. Until then, the read lock remains engaged.
+
+6. SHORT MESSAGE TO CLAUDE
+“Stage 1D reconciled and accepted with qualifications. The E1-path conclusion that trades.strategy receives the resolved strategy name is accepted as INTERPRETATION at the pinned baseline, not as a runtime observation. O-7/OQ-1D-01 and O-8/OQ-1D-02 remain open; OQ-1C-01 remains untouched. BK-27 stays OPEN; VP-45 stays NOT RATIFIED; no manual drafting. Prepare a Stage 1E proposal only for OQ-1D-01 and OQ-1D-02, including exact scope, fixed read list, caps, tests, lock controls and stop conditions. Do not search or read anything until ChatGPT reviews and authorises the proposal.”

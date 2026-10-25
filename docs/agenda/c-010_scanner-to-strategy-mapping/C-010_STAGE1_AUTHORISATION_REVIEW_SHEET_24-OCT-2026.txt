@@ -1,0 +1,74 @@
+C-010 — SCANNER-TO-STRATEGY MAPPING
+STAGE 1 AUTHORISATION & REVIEW SHEET
+Date: 24-Oct-2026
+
+STATUS
+Stage 0 reviewed. Proceed to Stage 1 only within the explicit scope below.
+Legacy system remains DEAD / REFERENCE ONLY. This is documentation and evidence collection, not remediation or revival.
+
+REPOSITORY / PIN
+Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Required commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+V2 reference baseline cited by Stage 0: trading-system-v2 main at 82f845053faf098db535a7a5498f7a225d25ef82 (DR-062).
+
+RECONCILIATION OF STAGE 0
+1. The inventory is a suitable basis for bounded Stage 1: 1,438 tracked paths and inventory SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5.
+2. Stage 0 did not read source contents. Its candidate relationships remain UNVERIFIED until the authorised Stage 1 evidence is collected.
+3. Treat the frozen manuals' claims as HISTORICAL context until C-010 re-verifies only the specific points listed below.
+4. Do not treat “the strategy column stores the scanner name” as newly proven until the specified receiver/processor/loader/test evidence is examined.
+5. The deleted hosts' runtime state remains UNKNOWN / NOT ESTABLISHED.
+
+EXPLICIT AUTHORISATION — S1-1 COUNT-ONLY SEARCHES
+Authorised: run the following named terms only, using the previously specified gated/masked reader, with the read lock lifted only for this authorised step. Return per-file match counts only; do not print matching lines or surrounding content. Use positive controls for zero-result checks. Log the pinned blob for every searched file and preserve the established protected-path exclusions.
+
+Terms:
+T1 scan_webhook_map
+T2 scanner_name|scan_name
+T3 strategy_name
+T4 ScannerEntry|ScanWebhookMapConfig
+T5 UNKNOWN_STRATEGY
+T6 ["']strategy["']
+T7 ["']scanner["']
+T8 scanner_type
+
+Scopes as defined in the Stage 0 answer:
+- s_all: 1,260
+- s_rt: 281
+- s_tests: 486
+- s_cfg: 41
+
+Do not widen terms, scopes, files, or access methods. If the gated/masked reader cannot enforce the stated constraints, STOP and report the limitation; do not substitute unrestricted grep/search.
+
+AUTHORISED BOUNDED READS — S1-2
+Use only the following ranges/greps, subject to the S1-1 counts and the Stage 0 proposed plan:
+1. signals/signal_processor.py lines 930–953 (maximum 24 lines); plus one bounded T1 or T2 grep in that file.
+2. main.py: one bounded T1 grep.
+3. signals/webhook_receiver.py lines 963–980 (maximum 18 lines).
+4. strategies/loader.py lines 145–153 (maximum 9 lines).
+5. tests/unit/test_signal_processor.py lines 1933–1964 (maximum 32 lines), as text only.
+6. For files among R14–R20 where S1-1 finds T6 or T7: one bounded grep per file; read further only if the match shows use of signals.scanner or signals.strategy, and keep each read within the match's bounded evidence.
+7. Do not read whole files. No other file/content searches or reads are authorised by this instruction.
+
+SCOPE DECISIONS
+- OQ-01: Resolved by this explicit named authorisation for T1–T8 and the stated scopes.
+- OQ-02: Use Stage 0 section 5.2 as C-010 scope; cite section 5.1/frozen manuals as historical context and re-verify only the listed points. Do not re-read C-001 findings in full.
+- OQ-03: VP-45 remains a ratification point for the later whole-design review. Do not ratify it in C-010.
+- OQ-04: BK-27 remains OPEN after C-010 evidence collection; record the evidence and implications without closing it.
+- OQ-05: Do not perform the optional chapter 02/03 text search now. Cite C-008 cross-check CH-09 as previously recorded, clearly labelled as that existing cross-check rather than fresh verification.
+
+EVIDENCE QUESTIONS TO ANSWER
+A. Where does the webhook path key originate and how is it used as the map key?
+B. Which values are inserted into signals.scanner and signals.strategy?
+C. Which identity is used by the processor for map lookup, and what happens when lookup fails?
+D. Under which key is each strategy object registered by the loader?
+E. What does the test with a key differing from the strategy value establish?
+F. Which in-scope downstream readers use signals.scanner or signals.strategy, and how?
+G. Where is the map loaded and passed to the receiver/processor?
+For every answer, distinguish FACT, HISTORICAL, INTERPRETATION, UNKNOWN / NOT ESTABLISHED, and KNOWN DEFECT where applicable. Cite exact file, function, line/range and pinned blob SHA. Do not infer behaviour beyond the evidence.
+
+STOP CONDITIONS / PROHIBITIONS
+- Do not edit files, create commits, push, run code/tests/scripts/migrations, contact live services, access hosts/VMs/brokers/Chartink/databases, or inspect protected paths.
+- Do not reveal secrets, credentials, tokens, account/client identifiers, protected path names, host/address details, or sensitive values. Count protected paths only.
+- Do not remediate, recommend implementation changes, design V2, or operationally revive the legacy system.
+- Do not expand scope because a search result is interesting. If a required point cannot be established inside the authorised bounds, mark it UNKNOWN / NOT ESTABLISHED and stop for review.
+- At completion, return the completed evidence sheet, a concise list of commands/methods and scope actually used (without secret values), and a list of any deviations or blockers. Do not start drafting the final C-010 manual yet; stop for reconciliation.

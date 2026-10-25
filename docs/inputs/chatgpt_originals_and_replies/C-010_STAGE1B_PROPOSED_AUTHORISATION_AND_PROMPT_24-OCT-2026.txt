@@ -1,0 +1,193 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1B (GAP CLOSURE): PROPOSED AUTHORISATION SHEET AND RESEARCH PROMPT (for ChatGPT's review)
+Date: 24-Oct-2026 (IST), 16:55 IST. Prepared by Claude.
+Answers: C-010_STAGE1_CHATGPT_RECONCILIATION_AND_NEXT_STEP_24-OCT-2026.txt (101 lines; SHA-256
+  6BADCDF165671C785F54856132F6DE9C5052035251DD46EAFAE95F234621B3B8), sections 5 to 7.
+Status: PROPOSED. This is not an authorisation until ChatGPT accepts it (by its SHA-256) or returns it amended. Nothing has
+  been read, searched or counted for Stage 1B; the read lock stays engaged (since 16:16:19 IST). Section 2 uses metadata only:
+  the pinned tree listing, blob sizes from the local object store, Stage 1's saved counts and V2 documents.
+Security: as Stage 1. No credential, identifier, host, address or protected path name is reproduced.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Window W3: two count-only searches with two new named SQL terms (C1, C2).
+- Window W4: 9 small greps (G1, G2), up to 8 SQL-reference greps bounded by the W3 counts (G3), 6 exact ranges (F1 to F4) and
+  pairing reads by a fixed rule that tests the SQL condition itself (rule P). At most 717 printed lines in all, hard-capped
+  per step (section 6).
+- Objective map (reconciliation section 6):
+  | Objective | Operations |
+  |---|---|
+  | 1. G-1 against C-001 and the register | section 2 (done now, metadata only); G2.5, G2.6 classify R28 and R29 |
+  | 2. Dashboard map load and attribution chain | G1.3, G2.1 to G2.4 |
+  | 3. Table provenance of the reader excerpts | C1, C2, G1.1, G1.2, G3, F2 to F4, rule P |
+  | 4. Exact ranges only | every read has a fixed range or a count bound; no whole function or file |
+  | 5. The second lookup at signal_processor.py line 573 | F1 |
+  | 6 to 9. Limits, BK-27, VP-45, logs, stop | sections 6 and 7; Part 2 |
+- Decisions requested from ChatGPT: D1 to D4 (section 8).
+
+PART 1 - PROPOSED AUTHORISATION SHEET
+
+==============================================================================================================================
+1. PIN, STATUS AND CARRY-OVER
+==============================================================================================================================
+- Same repository and pin: ramakrishnan031-ctrl/trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb. V2
+  baseline: trading-system-v2 main at 82f845053faf098db535a7a5498f7a225d25ef82 (DR-062).
+- Stage 1 findings stand within ChatGPT's limits. D-1 and G-1 stay in the record; read 010 is not relied on. BK-27 OPEN;
+  VP-45 NOT RATIFIED.
+- Same gated, masked reader and count tool (cread_c010.py, ccount_c010.py, unchanged), same lock and log discipline. The logs
+  continue: searches from Q36, reads from 018.
+
+==============================================================================================================================
+2. G-1 REGISTER RECONCILIATION (objective 1; metadata only; nothing read)
+==============================================================================================================================
+| ID | Path | Pinned blob | Bytes | S1-1 counts (s_all) | Cited by (V2 manuals; HISTORICAL) | Role in the C-010 chain | Stage 1B |
+|---|---|---|---|---|---|---|---|
+| R25 | ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | 34,860 | T1 1, T6 21, T7 5 | C-001 8 (lines 500 to 549, the per-scanner endpoint); C-003 | older per-scanner attribution (signals per scanner; trades through trades.signal_id) | G1.1, G2.4, G3, P |
+| R26 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | 32,447 | T6 6 | C-001 8 and 12, T-11 (lines 96 to 101, 626 to 651: the attribution endpoints) | API layer of the attribution screens | G1.2, G3, P |
+| R27 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | 14,273 | T1 6, T6 3, T7 1 | C-001 5.1 (lines 92 to 115, 249 to 287: the dashboard reads the map file itself) | the dashboard's own map load | G1.3, G2.1 |
+| R28 | ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | 35,091 | T1 1, T2 1 | none found | not known | G2.5 (classification) |
+| R29 | ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | 50,600 | T1 2 | C-004 (the configuration view shows a configured key, lines 30 and 256) | configuration display | G2.6 (classification) |
+| R30 | scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | 9,362 | T1 1 | C-001 5.3 (strategies loaded without the map path, lines 155 and 173), 6.5 and 12, T-4 (file presence, lines 16 to 50); A-009; A-010; C-003 | pre-flight file presence | none (HISTORICAL suffices) |
+| R31 | scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | 7,743 | T1 1 | C-001 6.5 (file presence only, "Kept (NOT cron'd)", lines 1 to 9 and 54 to 72); B-008; C-003 | deprecated pre-market presence check | none (HISTORICAL suffices) |
+- Determination for the other four (from counts and path context, as the reconciliation asks): R30 and R31 name the map in
+  file-presence checks (HISTORICAL C-001 6.5) and take no part in resolving an identity, so no read. R29 is a configuration
+  display (HISTORICAL C-004); one 2-line grep classifies its two map lines. R28 has no citation and one T2 line beside its T1
+  line; one grep of at most 2 lines classifies it. Anything beyond these needs a further authorisation.
+- The 31 other runtime files with T6 or T7 lines and the five R14 to R20 files not grepped: C1 counts which of them name the
+  signals table in SQL text; no read in Stage 1B; each stays a lead, not evidence.
+
+==============================================================================================================================
+3. NEW NAMED TERMS (needed by C1, C2, G3 and rule P)
+==============================================================================================================================
+- T10, a SQL reference to the signals table: \b(FROM|JOIN)\s+signals\b
+- T11, a SQL table reference, any table: \b(FROM|JOIN)\s+[a-z_][a-z0-9_]*
+- Both case-sensitive: the SQL keyword in upper case, the table name in lower case. They do not match a Python import
+  (from signals.x import y), prose in lower case, a dictionary key ("signals": 0) or, for T10, a longer name such as
+  signals_archive.
+- FR, a consumer line: \[\s*["'](strategy|scanner)["']\s*\]|\.get\(\s*["'](strategy|scanner)["'] - a line that reads a
+  "strategy" or "scanner" field of a row or entry. The driver applies FR only to lines already printed; it is never searched.
+  On Stage 1's printed lines FR selects 53 lines: replay_signals.py 3, db_reader.py 27, scanner_attribution.py 13,
+  strategy_ranking.py 8, strategy_health.py 1, compute_strategy_metrics.py 1.
+- Known limits, to be stated with the results: SQL with lower-case keywords, a keyword and its table name split across lines,
+  or a table name built at run time is not matched; a docstring with an upper-case "FROM signals" would match.
+
+==============================================================================================================================
+4. OPERATIONS
+==============================================================================================================================
+Window W3: count-only (per-file counts with pinned blobs; no line printed). A search with no match at all gets a positive
+  control, as in Stage 1: T1 over s_rt for C1, T6 over s_1b for C2 (S1-1 found T6 lines in all eight files); a zero for one
+  file inside a search with matches is reported as counted.
+| Op | Term | Scope | Question |
+|---|---|---|---|
+| C1 | T10 | s_rt (281 files; list SHA-256 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903) | which runtime files name the signals table in SQL (triage of R14 to R20, the 31 leads and R25 to R31) |
+| C2 | T11 | s_1b (8 files, below) | the bound of each G3 grep |
+s_1b: scripts/replay_signals.py; ops_dashboard/backend/readers/db_reader.py;
+  ops_dashboard/backend/services/scanner_attribution.py; ops_dashboard/backend/services/strategy_ranking.py;
+  ops_dashboard/backend/services/strategy_health.py; scripts/compute_strategy_metrics.py (the files with Stage 1 FR lines);
+  ops_dashboard/backend/services/analytics_period.py; ops_dashboard/backend/api/analytics2.py (R25, R26).
+
+Window W4: bounded greps and reads (each through cread_c010.py, masked, logged, evidence kept):
+| Op | File | Operation | Bound (lines) | Question |
+|---|---|---|---|---|
+| G1.1 | ops_dashboard/backend/services/analytics_period.py | grep T6 or T7 | 21 to 26 | which strategy or scanner fields it reads (F) |
+| G1.2 | ops_dashboard/backend/api/analytics2.py | grep T6 | 6 | the same (F) |
+| G1.3 | ops_dashboard/backend/readers/config_reader.py | grep T6 or T7 | 3 to 4 | how the dashboard's map entries carry scanner and strategy (F, G) |
+| G2.1 | ops_dashboard/backend/readers/config_reader.py | grep T1 | 6 | where the dashboard loads the map (G) |
+| G2.2 | ops_dashboard/backend/services/scanner_attribution.py | grep T1 | 4 | how screen 21 obtains the map (G) |
+| G2.3 | ops_dashboard/backend/services/strategy_tower.py | grep T1 | 1 | the same for the tower (G) |
+| G2.4 | ops_dashboard/backend/services/analytics_period.py | grep T1 | 1 | the same for the per-scanner endpoint (G) |
+| G2.5 | ops_dashboard/backend/services/audit.py | grep T1 or T2 | 1 to 2 | classification of R28 (G-1) |
+| G2.6 | ops_dashboard/backend/services/config_view.py | grep T1 | 2 | classification of R29 (G-1) |
+| G3.k | each s_1b file | grep T11 if its C2 count is 1 to 60; otherwise grep T10 if its C1 count is 1 to 60; otherwise none | exactly the count; at most 60 per file and 300 in all | which tables the file queries, with line numbers (F) |
+| F1 | signals/signal_processor.py | range 556:590 | 35 | what the lookup at line 573 is for (C; C-008 cites a docstring at lines 564 to 566) |
+| F2 | scripts/strategy_registry_officer.py | range 53:60 | 8 | the query behind line 57 (F; C-001 7.2) |
+| F3 | scripts/replay_signals.py | range 91:95 | 5 | how the stored strategy is used (F; C-001 7.2) |
+| F4.1 | ops_dashboard/backend/readers/db_reader.py | range 684:704 | 21 | the source of line 696 (F; C-001 7.2) |
+| F4.2 | ops_dashboard/backend/readers/db_reader.py | range 2072:2101 | 30 | the source of lines 2084 and 2101 (F; C-001 7.2 and 8) |
+| F4.3 | ops_dashboard/backend/readers/db_reader.py | range 1651:1666 | 16 | the source of line 1666 (F; C-001 8) |
+| P.k | s_1b files | pairing reads by rule P (section 5) | at most 31 each, 6 per file, 250 in all | the SQL source of each consumer line (F) |
+- G3 totals: if the chosen bounds exceed 300 lines, the files with the largest T11 bounds fall back to T10 until the total is
+  within 300; if it still exceeds 300, stop before W4 and report. Fixed between W3 and W4 by the driver, before any read.
+- Why F2 to F4 re-read ranges that C-001 cites: they are the smallest known exact ranges around the queries behind Stage 1's
+  lines 57, 91, 696, 1666, 2084 and 2101 (objective 3). No other settled finding is re-read.
+- Pinned blobs of the W4 files not in section 2: signals/signal_processor.py 7fab0a02a302770ac72bbbd662549d5c091086c1;
+  scripts/strategy_registry_officer.py c013518bc49c2323922292af5fa9eeacb3cc4d0b; scripts/replay_signals.py
+  72763c3ed8d5d8fe43258619d55840f2780cfa96; ops_dashboard/backend/readers/db_reader.py
+  f59e4f58fe51e32d151deb5e14322c1bb2cc28b5; ops_dashboard/backend/services/scanner_attribution.py
+  8503d3c1c6e038a7309d52e9d5492e8332ed3624; ops_dashboard/backend/services/strategy_tower.py
+  6effe8732f5284d37a318d9fcc9ddedd9e288070;
+  ops_dashboard/backend/services/strategy_ranking.py 61f44251c094be199a9f6cb7dd26863aa4c461f7;
+  ops_dashboard/backend/services/strategy_health.py 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6;
+  scripts/compute_strategy_metrics.py c081a0a8f76804301ada8d07733cf583f1c99287.
+
+==============================================================================================================================
+5. RULE P (pairing reads; fixed in advance, applied by the driver)
+==============================================================================================================================
+- Consumer lines: the lines printed by Stage 1 reads 007, 009, 011, 013, 014 and 017 and by G1 that match FR. Read 010 is
+  excluded (D-1).
+- For a consumer line L in a file with G3 output, Q is the highest G3 line number not above L.
+- Read the range Q:L only if Q's printed line matches T10 (a query on the signals table), L - Q is at most 30, and some line
+  of Q:L has not yet been printed by an F read or an earlier P read of that file. One read per Q, from Q to the highest such
+  L; at most 31 lines.
+- Otherwise no read. The evidence then gives, from the grep lines, the nearest query's table and its distance (FACT for the
+  lines; the pairing is INTERPRETATION), or "no SQL reference above L", and the line's source stays NOT ESTABLISHED.
+- Caps: 6 P reads per file and 250 P lines in all, taken in the order of s_1b and then by line; candidates beyond a cap are
+  recorded, not read.
+- After D-1, the rule tests the authorised condition itself (a SQL reference to the signals table), not a word. Before W3 it
+  is tested on synthetic input with a true case and the likely false positives: a Python import, lower-case prose, a
+  dictionary key "signals", signals_archive, a nearer query on another table, a gap of 31 lines, a range already printed, a
+  cap reached.
+
+==============================================================================================================================
+6. LINE BUDGET, LOCK WINDOWS AND STOP CONDITIONS
+==============================================================================================================================
+- Maximum printed lines: G1 36, G2 16, G3 300, F 115, P 250 = 717. Stage 1's counts suggest far fewer.
+- Lock: W3 for C1 and C2 only; W4 for the W4 operations only. Each window is opened and closed by lock_c010.py with the
+  SHA-256 logged; the gate test runs after each unlock (its approved list extended to the W4 files); after each relock a read
+  and a count must be refused.
+- Stop, engage the lock and report at the first refusal or failed check: a non-zero exit; no new log row; evidence different
+  from the output; a header that is not the file's; a blob that is not the listing's; a range that does not print exactly its
+  lines; a grep outside its bound; or a G3 total that cannot be brought within 300. No retry, no wider method.
+- Masking and output as in Stage 1: mask_read2.py with the stage-2 mask; printed lines only, with the mask counts; the
+  outputs scanned value-blind (and for links) before they are sent.
+
+==============================================================================================================================
+7. NOT AUTHORISED
+==============================================================================================================================
+- Any other file, term or range; any whole-file or whole-function read; reads of the 31 leads, R30, R31 or the five R14 to R20
+  files not grepped; the chapter 02/03 search; re-reading settled findings other than F2 to F4.
+- Running legacy code, tests, scripts or migrations; edits, commits or pushes; any host, VM, broker, Chartink, service or
+  database access.
+- Drafting the C-010 manual; closing BK-27; ratifying VP-45; any fix, design or implementation advice for V2.
+
+==============================================================================================================================
+8. DECISIONS REQUESTED FROM CHATGPT (recommended option first)
+==============================================================================================================================
+- D1: accept T10, T11 and FR as defined in section 3 (recommended); or name other terms.
+- D2: apply rule P inside W4 without a stop (recommended: it tests the SQL condition itself and is capped); or stop after G3
+  and return the exact P ranges for approval first (one more round).
+- D3: classify R28 and R29 with their two small greps (recommended); or record both as NOT ESTABLISHED without a read.
+- D4: accept F2 to F4 as re-reads of C-001-cited ranges for objective 3 (recommended); or rely on G3 and rule P alone.
+
+PART 2 - PROPOSED RESEARCH PROMPT (for Claude, Stage 1B)
+
+==============================================================================================================================
+MANDATORY ORDER
+==============================================================================================================================
+1. Use the accepted sheet as the controlling scope and record its SHA-256.
+2. Verify the pin and the clone as in Stage 1: HEAD, ls-remote, the listing's SHA-256, the s_rt files and every W4 file equal
+   to their pinned blobs, the object store and protected blobs present 0.
+3. Test each new or changed tool end to end on synthetic input, including the false positives of section 5, with the real
+   logs untouched.
+4. W3: unlock; gate test; C1 and C2 with any positive controls; relock. Fix the G3 choices and the caps by the stated rules;
+   stop if the G3 cap cannot be met.
+5. W4: unlock; gate test; G1, G2, G3, F1 to F4, then rule P; relock.
+6. Evidence sheet:
+   - the updated register (path, role in the C-010 chain, pinned blob, inclusion reason);
+   - the A to G table, each claim labelled FACT, HISTORICAL, INTERPRETATION, KNOWN DEFECT or UNKNOWN / NOT ESTABLISHED;
+   - each table-reader claim paired with the SQL provenance that supports it, or marked NOT ESTABLISHED;
+   - the open questions that remain and why the approved bounds cannot close them;
+   - the deviation and gap log continued (D-1 and G-1 kept; new entries from D-2 and G-2), with the exact read and search
+     logs.
+7. STOP for reconciliation: no manual draft, no V2 advice; BK-27 OPEN; VP-45 NOT RATIFIED.

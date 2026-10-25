@@ -1,0 +1,84 @@
+C-010 STAGE 1C — CHATGPT RECONCILIATION
+Date: 24-Oct-2026 (IST)
+Basis: C-010_CLAUDE_STAGE1C_EVIDENCE_SHEET_24-OCT-2026.txt and accompanying screenshot.
+Purpose: reconcile bounded Stage 1C results; do not draft the C-010 manual or authorise further reads.
+
+1. RECONCILIATION DECISION
+
+Stage 1C is reconciled with explicit qualifications. The bounded source observations are accepted as reported, subject to the evidence labels below. This is NOT a clean-process sign-off: two process/control deviations must remain visible in the record. The read lock must remain engaged.
+
+No C-010 manual is authorised to start yet. BK-27 remains OPEN. VP-45 remains NOT RATIFIED. No V2 design or implementation is authorised.
+
+2. FINDINGS ACCEPTED, WITH EVIDENCE LABELS PRESERVED
+
+A. OQ-1B-05 — identity stored in trades.strategy
+- FACT: signal_processor.py lines 1446–1460 pass strategy=strategy_name to self._placer.place(...), at line 1455.
+- FACT: order_manager.py lines 214–244 show INSERT INTO trades; the strategy column is fifth in the column list and its corresponding value is the fifth bound placeholder.
+- NOT ESTABLISHED: the actual value supplied to that placeholder; the route from OrderPlacer.place(...) to this insert; whether strategy_name remains unchanged between the earlier lookup and the placement call; and the enclosing function for the insert.
+- HISTORICAL: A-008 section 21 records trades.strategy as a consumer of the YAML strategy name.
+- Do not convert the conditional interpretation (“if passed unchanged…”) into a factual manual statement. This is the most consequential remaining C-010 gap.
+
+B. OQ-1B-03 — dashboard Screen 21 scanner entries
+- FACT: scanner_attribution.py calls config_reader.get_scanner_registry(cfg) at line 293.
+- FACT: config_reader.py defines get_scanner_registry at line 249, after the ADDITIVE comment; the module-level function list also includes get_scan_webhook_map at line 92.
+- FACT: the bounded search found no get_scan_webhook_map call in scanner_attribution.py.
+- INTERPRETATION: lines 252–285 form get_scanner_registry’s body by definition order; lines 298–299 consume the returned registry. Lines 294–297 were not read, so the final link to those entries remains an interpretation, not a fully traced data flow.
+- Manual may state the direct call as FACT and keep the returned-entry link qualified.
+
+C. OQ-1B-02 — replay signal rows
+- FACT: run_replay assigns signals = fetch_signals(...) at line 191, iterates signals at line 195, and calls replay_one_signal(...) at line 196.
+- FACT: the named functions and these call lines are present in the bounded output.
+- INTERPRETATION: by definition order, the query at line 46 is in fetch_signals and consumer lines 75–95 are in replay_one_signal.
+- NOT ESTABLISHED: fetch_signals’s return statement and replay_one_signal’s parameter binding were not read. Do not claim those missing links as directly verified.
+
+D. OQ-1B-04
+- D9 was declined. No caller search was run. Keep callers of _evidence_strategy_for NOT ESTABLISHED; its docstring does not prove absence of callers.
+
+3. EXECUTION SUMMARY
+
+The evidence sheet reports:
+- Pinned legacy HEAD and remote main matched 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Accepted authorisation and proposal SHA-256 values were recorded before the searches/reads.
+- W5 and W6 produced 8 reads and 76 printed lines against the 191-line ceiling.
+- The read lock was re-engaged after W5 and W6, with refusal checks reported.
+- No legacy code/tests/scripts/migrations were run; no host, VM, broker, Chartink, service or database was accessed; no repository files were changed or pushed.
+These are reported execution facts from Claude’s evidence sheet; ChatGPT has reconciled the submitted report, not independently rerun Claude’s workspace checks.
+
+4. PROCESS / CONTROL DEVIATIONS — KEEP VISIBLE
+
+D-2 — Synthetic test coverage was not exactly as authorised.
+The accepted proposal listed a non-identifier name and T21 counts of 0 and exactly 9 among the synthetic cases. The evidence sheet says those cases were not run exactly as written; a missing name and a count of 13 were tested instead. Claude explains that some cases are unreachable under the implementation and that the real run had identifier names and count 4.
+Reconciliation: record as a process deviation, not a demonstrated source-result error. Do not say every specifically listed synthetic case passed. For future authorisations, test every named case or obtain a documented amendment before execution.
+
+O-6 — Dynamic G6 scope and seven-file gate list did not align.
+The accepted proposal allowed G6 to grep each s_rt file whose count qualified, up to the stated cap. That rule selected scripts/t2_cnc_gtt_realtest.py, which was outside the seven named files in the gate-test approved list. The reader’s own checks admitted it, and only its one matching line was printed and recorded as a lead; no follow-on read occurred.
+Reconciliation: this was within the dynamic G6 search rule, but it exposed a mismatch between that rule and the separately described seven-file gate list. Record it as a control/scope-definition inconsistency, not silently as “no deviation.” The lead is not part of the proven placement chain and its insert columns/values remain NOT ESTABLISHED. Do not inspect it further without a separate authorisation.
+
+R-1 and R-2 — record corrections
+Retain the corrections to the proposal’s stated preparation time and to how earlier mask counts were described. They do not change printed evidence, but preserve the corrections in the audit trail.
+
+Security-shaped value in the test-like script
+The evidence sheet says a KV-shaped value was detected in the file, masked, never printed or examined, and whether it is a real credential is NOT ESTABLISHED. Keep that value out of all outputs. Do not investigate it under C-010.
+
+5. WHAT MAY BE RECORDED IN C-010 NOW
+
+- Screen 21 directly calls get_scanner_registry(cfg), not get_scan_webhook_map, in the inspected code at the pinned commit; the registry-to-entry link remains partly interpretive.
+- Replay call/loop structure is established at the shown lines; function containment is by definition-order interpretation; return/parameter binding is not established.
+- The processor’s strategy argument and the trades insert’s strategy-column placeholder position are established separately; the identity actually stored in trades.strategy is NOT ESTABLISHED.
+- The second trades INSERT string in scripts/t2_cnc_gtt_realtest.py is only a lead. Its role and live reach are not established.
+- D-2, O-6, R-1 and R-2 must remain in the deviation/gap record.
+
+6. NEXT STEP — PROPOSAL ONLY, NO READ AUTHORISED
+
+The single most material unresolved question is still OQ-1B-05: what value reaches trades.strategy and how the processor’s place(...) call reaches the insert.
+
+Ask Claude to prepare a Stage 1D PROPOSED authorisation sheet only, with the read lock engaged and no source reads/searches. It should propose the smallest bounded chain needed to establish:
+1. the function and argument/binding list for the order_manager.py INSERT (including the fifth bound value);
+2. the precise hand-off from OrderPlacer.place(...) to that insert, stopping at the first proven boundary if another hop would exceed the proposed cap;
+3. only if necessary, whether strategy_name can be reassigned or is in a different enclosing function between the already cited processor lines.
+
+The proposal must specify exact pinned files/blobs, line ranges, line caps, test cases, lock/gate path rules, stop conditions and evidence labels. Resolve the dynamic-G6 versus approved-list gate inconsistency in the proposed controls without expanding the substantive research scope. Do not include OQ-1B-03 or OQ-1B-02 follow-up reads unless Claude explains why they materially change the manual; they can remain qualified/open.
+
+ChatGPT must review the Stage 1D proposal before any new read or search. No manual drafting yet.
+
+END

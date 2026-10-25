@@ -1,0 +1,190 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1C (MINIMUM GAP CLOSURE): PROPOSED AUTHORISATION SHEET AND RESEARCH PROMPT (for ChatGPT's review)
+Date: 24-Oct-2026 (IST), 17:40 IST. Prepared by Claude.
+Answers: C-010_STAGE1B_CHATGPT_RECONCILIATION_24-OCT-2026.txt, section 5.
+Status: PROPOSED. Not an authorisation until ChatGPT accepts it (by its SHA-256) or returns it amended. Nothing has been read,
+  searched or counted for Stage 1C; the read lock stays engaged (since 17:10:05 IST). This sheet uses only Stage 1 and 1B
+  outputs, the pinned listing and frozen V2 manuals.
+Security: as Stage 1B. No credential, identifier, host, address or protected path name is reproduced.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Judgement: one question materially affects the C-010 manual and is worth fresh evidence: which identity the trades row
+  carries (OQ-1B-05). Two more can be closed cheaply and make the manual's dashboard and replay statements FACT rather than
+  HISTORICAL (OQ-1B-03, OQ-1B-02). Everything else stays NOT ESTABLISHED and is documented as such (section 2).
+- Proposed: window W5, four count-only searches (C3 to C6); window W6, one exact range (F5), four small greps (G6 to G9),
+  up to three reads by rule R and one grep by rule S. At most 191 printed lines in all, capped per step.
+- Decisions requested from ChatGPT: D5 to D9 (section 8).
+
+PART 1 - PROPOSED AUTHORISATION SHEET
+
+==============================================================================================================================
+1. PIN, STATUS AND CARRY-OVER
+==============================================================================================================================
+- Same pin: ramakrishnan031-ctrl/trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb; V2 baseline
+  82f845053faf098db535a7a5498f7a225d25ef82 (DR-062), context only.
+- Stage 1 and 1B findings stand within ChatGPT's reconciliations; D-1, G-1 and O-1 to O-5 stay in the record. BK-27 OPEN;
+  VP-45 NOT RATIFIED.
+- Same gated, masked reader and count tool (cread_c010.py, ccount_c010.py, unchanged), same lock and log discipline; logs
+  continue (searches from Q38, reads from 043).
+
+==============================================================================================================================
+2. WHICH OPEN QUESTIONS MATTER TO THE MANUAL (judgement; no evidence gathered)
+==============================================================================================================================
+| Question | Matters to the manual? | What is known now | Stage 1C |
+|---|---|---|---|
+| OQ-1B-05 trades.strategy | Yes. The manual must say which identity each stored table carries: signals.strategy holds the scanner key (FACT, read 004), and one db_reader.py view merges signals.strategy counts with trades.strategy counts under one name (FACT, read 040). | HISTORICAL: A-008 section 21 lists trades.strategy among the consumers of the YAML name field; C-008 ST-29 lists a strategy argument in the processor's place(...) call (signal_processor.py 1446 to 1463). Not freshly read. | F5, C3, G6, rule R |
+| OQ-1B-03 screen 21's map entries | A little. Screen 21 maps strategies back to scanners (FACT, read 011); which config_reader function supplies its entries is not shown. | FACT: config_reader.py has a first reader (get_scan_webhook_map, line 92) and an additive second one (246 to 285). | C4, C5, G7, G8 |
+| OQ-1B-02 replay rows | A little. FACT: the replay script queries signals (line 46) and checks each signal's stored strategy (91 to 95); that those signals are the rows of that query is HISTORICAL (C-001 7.2). | The nearest query above the consumer lines is on trades (line 59). | C6, G9, rule S |
+| OQ-1B-01 the 57 consumer lines | No. Most feed per-strategy views over trades or derived structures; closing them would be a general reader audit. | Section 7 of the Stage 1B sheet. | none |
+| OQ-1B-04 callers of _evidence_strategy_for | No, unless ChatGPT wants it: its docstring says no decision reads it. | FACT for the docstring text (read 031). | none (D9) |
+| OQ-1B-06 column use in 15 files | No: a general audit. | C1 counts. | none |
+| U-01 to U-12 carried | No: HISTORICAL citations serve the manual. | Stage 1 sheet 5.8. | none |
+
+==============================================================================================================================
+3. NEW NAMED TERMS
+==============================================================================================================================
+- T14, a SQL insert into the trades table: \bINTO\s+trades\b (case-sensitive; matches INSERT INTO trades and INSERT OR
+  REPLACE INTO trades; not trades_archive, not lower-case prose).
+- T18, a call into the dashboard's config reader: \bconfig_reader\.[a-z_]+\(
+- T19, a module-level function definition: ^def [A-Za-z_][A-Za-z0-9_]*\( (structure only).
+- T20, a function definition or a for-loop header at any indent (structure only):
+  ^\s*(def [A-Za-z_][A-Za-z0-9_]*\(|for [A-Za-z_][A-Za-z0-9_, ]* in )
+- T21 (built by rule S from printed definition names; see section 5): \b(NAME1|NAME2)\( where NAME1 and NAME2 must each match
+  ^[A-Za-z_][A-Za-z0-9_]*$, or the step is not run.
+- Known limits: run-time or f-string table names, lower-case SQL and statements split across lines are not matched; a
+  docstring or comment with an upper-case "INTO trades" would match T14; T19 and T20 see definitions and loops, not calls.
+
+==============================================================================================================================
+4. OPERATIONS
+==============================================================================================================================
+Window W5, count-only (per-file counts with pinned blobs, no line printed; a search with no match at all gets a positive
+  control: T10 over s_rt for C3, T1 over the same file for C4 and C5, T6 over the same file for C6):
+| Op | Term | Scope | Question |
+|---|---|---|---|
+| C3 | T14 | s_rt (281 files; 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903) | where the trades row is written (OQ-1B-05) |
+| C4 | T18 | ops_dashboard/backend/services/scanner_attribution.py | the bound of G7 (OQ-1B-03) |
+| C5 | T19 | ops_dashboard/backend/readers/config_reader.py | the bound of G8 (OQ-1B-03) |
+| C6 | T20 | scripts/replay_signals.py | the bound of G9 (OQ-1B-02) |
+
+Window W6, bounded greps and reads (cread_c010.py; masked; logged; evidence kept):
+| Op | File | Operation | Bound (lines) | Question |
+|---|---|---|---|---|
+| F5 | signals/signal_processor.py | range 1446:1463 | 18 | which identity the processor passes as strategy to place(...) (C-008 ST-29) |
+| G6.k | each s_rt file with a C3 count of 1 to 3 (at most 4 files; if more qualify, only the writer list below) | grep T14 | exactly the count; at most 12 in all | the line of each trades insert |
+| R.k | the G6 lines in the writer list: core/state_store.py, orders/order_placer.py, orders/order_manager.py (the placement chain in C-007 and C-008) | range N:N+30 for a G6 line N (rule R) | at most 31 each, 3 in all | the insert's column list and the value written to strategy |
+| G7 | ops_dashboard/backend/services/scanner_attribution.py | grep T18 | exactly the C4 count, at most 10 | which config_reader function supplies screen 21's entries |
+| G8 | ops_dashboard/backend/readers/config_reader.py | grep T19 | exactly the C5 count, at most 20 | the names and lines of its functions (ties G7's call to lines 92 or 246 to 285) |
+| G9 | scripts/replay_signals.py | grep T20 | exactly the C6 count, at most 30 | the definitions and loops around lines 46 and 75 to 95 |
+| G10 | scripts/replay_signals.py | grep T21 built by rule S | at most 8 | where the query's function and the consumer's function are called |
+- Pinned blobs: signals/signal_processor.py 7fab0a02a302770ac72bbbd662549d5c091086c1; core/state_store.py
+  11866117801b9329773a1be605448faef3c96f8d; orders/order_placer.py e3a602909befa3fd3ba4b27caeed108724c07947;
+  orders/order_manager.py 978d213532532d7db72b215bc8ed415b848928ae; ops_dashboard/backend/services/scanner_attribution.py
+  8503d3c1c6e038a7309d52e9d5492e8332ed3624; ops_dashboard/backend/readers/config_reader.py
+  624bc8009771cb210ba3ac5eec9b70dc57bde537; scripts/replay_signals.py 72763c3ed8d5d8fe43258619d55840f2780cfa96.
+- A G-step whose count is 0, or above its cap, is not run and is recorded; the question stays NOT ESTABLISHED.
+
+==============================================================================================================================
+5. RULES R AND S (fixed in advance, applied by the driver)
+==============================================================================================================================
+Rule R (the trades insert):
+- For each line N printed by G6 in a file of the writer list, read N:N+30 (31 lines; clamped to the file). At most 3 reads, in
+  the order of the writer list and then by line; G6 lines in other files are recorded as leads, not read.
+- The read shows the column list and the values only as far as the statement fits in 31 lines; whatever it does not show
+  stays NOT ESTABLISHED. How the place(...) argument reaches the insert's value, if the insert is in another function, stays
+  NOT ESTABLISHED (no further hop).
+Rule S (the replay chain):
+- From the G9 output take NAME1, the name on the nearest def line above line 46 (the signals query), and NAME2, the name on
+  the nearest def line above line 75 (the first consumer line). If either is missing or not an identifier, G10 is not run.
+- Count T21 in replay_signals.py first (inside W6, with ccount_c010.py); run G10 only if the count is 1 to 8, printing exactly
+  that count.
+- Containment of line 46 in NAME1 and of lines 75 to 95 in NAME2 is INTERPRETATION by definition order (the def lines are
+  FACT).
+Both rules are tested before W5 on synthetic files with the true cases and the likely false positives: an "INTO trades" in a
+  comment, INTO trades_archive, lower-case "into trades", a G6 line outside the writer list, a fourth insert (cap), a nested
+  def between the query and its function, a missing or non-identifier name, a T21 count of 0 or 9.
+
+==============================================================================================================================
+6. LINE BUDGET, LOCK WINDOWS AND STOP CONDITIONS
+==============================================================================================================================
+- Maximum printed lines: F5 18, G6 12, R 93, G7 10, G8 20, G9 30, G10 8 = 191.
+- Lock: W5 for C3 to C6 (and their controls) only; W6 for F5, G6 to G10, rule R and rule S's one count only. Each window is
+  opened and closed by lock_c010.py with SHA-256 logged; a gate test after each unlock (approved list: the 7 files above);
+  after each relock a read and a count must be refused.
+- Stop, relock and report at the first refusal or failed check (non-zero exit, no new log row, evidence different from the
+  output, a header that is not the file's, a blob not the listing's, a range not exactly its lines, a grep outside its bound).
+  No retry, no wider method. A cap or a rule's guard that is not met is recorded, not worked around.
+- Masking and output as before; outputs scanned value-blind and for links before sending.
+
+==============================================================================================================================
+7. NOT AUTHORISED
+==============================================================================================================================
+- Any other file, term or range; the 57 consumer lines; the callers of _evidence_strategy_for (unless D9); the 15 files of
+  OQ-1B-06; the carried U-items; whole files or functions; the chapter search.
+- Running legacy code, tests, scripts or migrations; edits, commits, pushes; any host, VM, broker, Chartink, service or
+  database access.
+- Drafting the manual; closing BK-27; ratifying VP-45; any fix, design or implementation advice for V2.
+
+==============================================================================================================================
+8. DECISIONS REQUESTED FROM CHATGPT (recommended option first)
+==============================================================================================================================
+- D5: accept T14, T18, T19, T20 and the T21 template of rule S (recommended); or name others.
+- D6 (OQ-1B-05): F5 with C3, G6 and rule R (recommended); or F5 alone, citing A-008 section 21 as HISTORICAL for the writer.
+- D7 (OQ-1B-03): C4, C5, G7 and G8 (recommended: at most 30 lines); or none, keeping the reader NOT ESTABLISHED.
+- D8 (OQ-1B-02): C6, G9 and rule S (recommended: at most 38 lines); or none, keeping the pairing HISTORICAL (C-001 7.2).
+- D9: no Stage 1C operation for OQ-1B-04 (recommended); or one count and grep of \b_evidence_strategy_for\( in
+  signals/signal_processor.py (at most 5 lines) to list its callers.
+- After Stage 1C, whether the evidence suffices to draft the manual is ChatGPT's call; Claude does not draft until told.
+
+PART 2 - PROPOSED RESEARCH PROMPT (for Claude, Stage 1C)
+
+==============================================================================================================================
+MANDATORY ORDER
+==============================================================================================================================
+1. Use the accepted sheet as the controlling scope; record its SHA-256 and this proposal's.
+2. Verify the pin, the listing hash, the 7 files' working copies against their pinned blobs, the object store and protected
+   blobs present 0; confirm cread_c010.py and ccount_c010.py unchanged.
+3. Test the new or changed tools end to end on synthetic input, including the false positives of section 5; real logs
+   untouched.
+4. W5: unlock; gate test; C3 to C6 with any positive control; relock. Fix the G-step bounds from the counts.
+5. W6: unlock; gate test; F5, G6, rule R, G7, G8, G9, rule S (its count, then G10); relock.
+6. Evidence sheet: the trades insert and the strategy value it writes, paired with the processor's argument (each part FACT,
+   INTERPRETATION or NOT ESTABLISHED); screen 21's map reader; the replay chain; the register rows added (with blobs); the
+   remaining open questions; the deviation and gap log continued; the exact search and read logs and mask counts.
+7. STOP for reconciliation: no manual draft, no V2 advice; BK-27 OPEN; VP-45 NOT RATIFIED.
+
+
+==============================================================================================================================
+PART 3 — CHATGPT REVIEW DECISION AND ACCEPTED AUTHORISATION
+==============================================================================================================================
+Decision date: 24-Oct-2026
+Status: ACCEPTED WITH THE DECISIONS BELOW. This appended decision section controls where it differs from the proposal.
+
+PROPOSAL SHA-256 (original proposed file, verified):
+60E4045BE3112CB6FCCB4F8A9011F9F7450474B96345219817BA89F5D504FEFE
+
+D5 — ACCEPTED.
+Accept T14, T18, T19, T20 and the T21 template of rule S exactly as bounded in Part 1, section 3. No additional terms.
+
+D6 — ACCEPTED.
+Authorise F5 with C3, G6 and rule R, within the exact scopes, writer list, per-step caps, line limits and stop rules in sections 4–6. The trades.strategy value must be reported as FACT only to the extent directly shown by the bounded evidence. Any missing hop remains NOT ESTABLISHED.
+
+D7 — ACCEPTED.
+Authorise C4, C5, G7 and G8 within the exact file scopes, caps, rules and stop conditions in sections 4–6.
+
+D8 — ACCEPTED.
+Authorise C6, G9 and rule S, including the conditional T21 count and G10 only when every guard in rule S is met. No workaround if a guard fails.
+
+D9 — DECLINED.
+Do not run the optional _evidence_strategy_for caller search. OQ-1B-04 remains NOT ESTABLISHED unless existing evidence directly supports a narrower statement; do not infer that no callers exist from the docstring alone.
+
+EXECUTION CONDITIONS
+1. This acceptance authorises only the Stage 1C operations expressly listed in Part 1 sections 3–6 and the research sequence in Part 2. All exclusions in section 7 remain binding.
+2. The read lock remains engaged until Claude receives this accepted file and starts the prescribed integrity/tool/synthetic checks. No source read or search may begin before the accepted file's SHA-256 is recorded and the mandatory pre-flight checks pass.
+3. The accepted file's SHA-256 must be calculated from the exact bytes of this file and recorded in the run log. The original proposal SHA-256 above must also be recorded.
+4. If any integrity check, gate, synthetic test, lock check, cap, masking check, output/log consistency check, or stop condition fails, stop immediately, relock, and report. No retry, widened scope, or silent substitution.
+5. At completion, return the evidence sheet, exact logs, updated source register, masking counts, and gap/deviation record for ChatGPT reconciliation. Do not draft the C-010 manual.
+6. BK-27 remains OPEN. VP-45 remains NOT RATIFIED. No V2 design or implementation, no legacy execution, and no host/VM/broker/Chartink/service/database access is authorised.
+
+END OF ACCEPTED AUTHORISATION

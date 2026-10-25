@@ -1,0 +1,882 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1B EVIDENCE SHEET: GAP CLOSURE (W3 counts, W4 greps and reads; for ChatGPT's reconciliation)
+Date of work: 24-Oct-2026 (IST), 17:08 to 17:18 IST. Prepared by Claude.
+Controlling scope: C-010_STAGE1B_CHATGPT_ACCEPTED_AUTHORISATION_24-OCT-2026.txt (54 lines; SHA-256
+  A7A554AB5D30530D2C43512B045370A2AAF57744B6A3E025F4F8042DE0AA39F9), received from Rama at 17:08 IST. It accepts
+  C-010_STAGE1B_PROPOSED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt with D1 to D4; that file's SHA-256, which the acceptance
+  notes was not provided, is EE4A09E7B5B4A7BF4B6BA4A5ACC03E92A5C5DB87A30E669E5DB5F7A66BEC6A3A (193 lines), unchanged since
+  delivery.
+Status: W3 and W4 done; the read lock is engaged again (17:10:05 IST). STOPPED for ChatGPT's reconciliation. No C-010 manual
+  is drafted; BK-27 stays OPEN; VP-45 is NOT RATIFIED.
+Security: the masked outputs of the authorised reads only; counts and file names for the searches. No credential, token,
+  account or client identifier, host or address, deployed path, mailbox or person name other than Rama's is reproduced;
+  protected paths are counted, never named. Claude's working folder is written as <SCRATCHPAD>.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Integrity (section 1): pin, remote tip, listing hash, the 281 working files of s_rt and the W4 files, the object store and
+  the protected-blob check all as required; the Stage 1B tools passed 27 synthetic checks before W3, with the true case and
+  every stated false positive.
+- W3 (section 4): C1, T10 over s_rt: 18 files, 61 lines; C2, T11 over s_1b: 4 files, 192 lines. Neither search was empty, so
+  no positive control was needed.
+- W4 (sections 5 and 6): 25 reads (018 to 042), 292 printed lines against the 717-line ceiling: G1 35, G2 16, G3 35, F 115, P
+  91. db_reader.py's G3 fell back to T10 by rule (its T11 count, 184, is above 60). No refusal, no failed check, no cap
+  reached.
+- Rule P (section 7): 73 consumer lines classified; 13 paired by 6 pairing reads (all in db_reader.py) and 3 already shown by
+  the F reads; their query is now shown for 16 lines (11 on the signals table, 5 on trades or orders). The other 57 stay NOT
+  ESTABLISHED, each with its recorded reason.
+- Findings added (section 8; FACT unless marked):
+  - F. db_reader.py's per-strategy views of signals group by signals.strategy (lines 617, 691, 1058, 2097, 3979, 4050 and
+    4100) and its per-scanner views by signals.scanner (2077 to 2079; trades to signals.scanner at 1661 to 1663); its other
+    per-strategy views read trades.strategy (1073, 1674 to 1678, 3982 to 3988). One view merges signals, orders and trades
+    counts under one name (3991 to 4010).
+  - F. The registry officer reads the distinct values of both signals.scanner and signals.strategy into one set of names (read
+    032). The replay script queries signals (line 46) and skips a signal whose stored strategy is not a loaded strategy name
+    (read 033); which query feeds its consumer lines is NOT ESTABLISHED by rule P.
+  - F. scanner_attribution.py, analytics_period.py, analytics2.py, strategy_ranking.py and strategy_health.py contain no
+    counted SQL table reference; compute_strategy_metrics.py queries trades and strategy_metrics only.
+  - G. The dashboard reads the map itself: config_reader.get_scan_webhook_map parses config/scan_webhook_map.yaml under the
+    dashboard's config_dir into {scanner: strategy} (reads 020, 021); strategy_tower.py, analytics_period.py and
+    config_view.py call it (reads 023, 024, 026).
+  - C. The second lookup at signal_processor.py line 573 is in _evidence_strategy_for, an evidence-capture helper that
+    resolves a scanner's strategy as Step 2 does and returns None instead of rejecting (read 031). Within that file, line 208
+    is the only assignment to self._scan_webhook_map.
+  - G-1: R25 to R31 are in the register; R28 (audit.py) and R29 (config_view.py) are classified; R30 and R31 not read (D3).
+- No new deviation. Observations O-1 to O-4 record how the stated limits worked out (section 10). Remaining open questions:
+  section 9.
+
+==============================================================================================================================
+1. INTEGRITY AND PIN (FACT)
+==============================================================================================================================
+- HEAD of the clone = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; git ls-remote of the repository at 17:08:40 IST: HEAD and
+  refs/heads/main both the pin.
+- Tree listing: 1,438 entries, SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5.
+- Scopes: s_rt 281 (SHA-256 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903); s_1b 8 (SHA-256
+  F5D614D1E749ADBCEF0E4445B50B85317839A7539540C3228279923CACE507CA). Working files: 281 of 281 (s_rt and the 14 W4 files, all
+  inside s_rt) equal to their pinned blobs (git hash-object --no-filters, 17:09:16 IST, by the W3 driver); every W4 read
+  checked its own file again (git ls-tree and git hash-object).
+- Object store before W3 and after W4: 1,257 blobs, 1,537 commits, 6,126 trees; protected blobs present 0 (sensitive_check.py
+  exit 0). Nothing fetched.
+- Read lock: engaged before E-9, between E-12 and E-13, and after E-16 (cread_c010.py SHA-256
+  BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7); each relock was followed by a refused read and a refused
+  count.
+- Tool integrity: cread_c010.py and ccount_c010.py unchanged since Stage 1 (section 11 lists every tool's SHA-256).
+
+==============================================================================================================================
+2. METHOD, LOCK WINDOWS AND GATE TESTS
+==============================================================================================================================
+| Step | Time (IST) | Action | Result |
+|---|---|---|---|
+| E-9 | 17:09:07 | unlock (W3) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-10 | 17:09:07 to 17:09:16 | gate test W3 (gate_test_c010b.py) | PASSED: 102 protected paths, 2 July records, the shared blob, 14 rule-shaped names, a name not in the tree and a malformed range refused; 4 bad lists refused by the count tool; 14 W4 paths admitted |
+| E-11 | 17:09:16 to 17:09:20 | W3: C1 (Q36) and C2 (Q37) | 18 / 61 and 4 / 192 (files / lines); no control needed |
+| E-12 | 17:09:20 | relock | a read and a count then refused |
+| E-13 | 17:09:48 | unlock (W4) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-14 | 17:09:48 to 17:09:56 | gate test W4 | PASSED (the same checks) |
+| E-15 | 17:09:56 to 17:10:05 | W4: G1, G2, G3, F1 to F4.3, rule P | reads 018 to 042; 292 lines |
+| E-16 | 17:10:05 | relock | a read and a count then refused |
+
+- Tools: the Stage 1 reader and count tool unchanged; new for Stage 1B: gate_test_c010b.py (approved list and window names
+  only), run_s1b_counts_c010.py, plan_s1b_c010.py, run_s1b_reads_c010.py. Before W3, test_tools_c010b.py ran 27 checks on
+  synthetic files with the real expressions, all passed: the counts driver (correct run, positive control, wrong blob), the
+  plan (bounds, T10 fallback, 300-line cap, unmeetable cap), the reads driver (the true case; an import line, lower-case
+  prose, a dictionary key "signals", signals_archive, a nearer trades query, gaps of 31 and 40 lines, a range already printed,
+  the cap; a grep above its bound, a short range, a changed Stage 1 evidence file and a changed plan each stop the run) and
+  the gate test on an unlocked test copy. The real logs were unchanged by the tests.
+- The reads driver recomputed the plan from the saved counts and ran only if it was identical; it checked the six Stage 1
+  evidence files used for consumer lines (007, 009, 011, 013, 014, 017) against their log rows before any read.
+
+==============================================================================================================================
+3. UPDATED SOURCE REGISTER (path, role in the C-010 chain, pinned blob, inclusion reason, evidence held)
+==============================================================================================================================
+R01 to R24 from the Stage 0 answer; R25 to R31 added for G-1 (metadata in the Stage 1B proposal, section 2). "Evidence held"
+  lists C-010's own reads (read numbers) and counts; HISTORICAL citations are in section 8.
+| ID | Path | Pinned blob | Role in the C-010 chain | Inclusion reason | Evidence held |
+|---|---|---|---|---|---|
+| R01 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | map copy, Step 2 lookup, the evidence helper | named; C-001 7.4, C-008 ST-08 | reads 001, 002, 031 |
+| R02 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | the INSERT of signals.scanner and signals.strategy | named; C-001 7.2 (BK-27) | read 004; counts |
+| R03 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | where the map is passed | C-008 W-02 | read 003 |
+| R04 | strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | strategy registration key | A-008, B-002 M22 | read 005 |
+| R05 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | the map entries | C-001 4.2, 4.3 | counts only (HISTORICAL for content) |
+| R06 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | the map schema | C-001 5.2 | counts only |
+| R07 | config/strategies/*.yaml (16 files) | see the Stage 1 companion file | each strategy's name | C-001 4.4, B-002 M22 | counts only (blobs in the Stage 1 companion file) |
+| R08 | strategies/schema.py | 22530161a5ee5a24bd85a7701b45269b3f2bacdb | the strategy model | A-008 | counts only |
+| R09 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | settings near the map | C-001 4.4 (D-04) | counts only |
+| R10 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | the signals columns | C-007 2.1 | counts only |
+| R11 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | later writers of signals | C-001 7.2 | counts only (T10 4) |
+| R12 | config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | the twin URL file | C-001 6 | counts only |
+| R13 | config/strategy_direction_registry.yaml | b03f4ed0c90043840f339fc9b5dac6cca93bf736 | a second name-keyed list | C-001 4.3 | counts only |
+| R13 | core/strategy_direction.py | 0e6f8b6686f393dcf38ddf036e565190cec0863a | the same | C-001 4.3 | counts only |
+| R14 | scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | reader of the stored identity | C-001 7.2 | reads 007, 027, 033 |
+| R14 | scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | reader of the stored identity | C-001 7.2 | reads 008, 032 |
+| R15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | dashboard queries on signals | C-001 7.2, 8 | reads 009, 028, 034 to 042 (read 010 not relied on) |
+| R16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | screen 21 | C-001 8 | reads 011, 022, 029 |
+| R17 | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a44ec610647daf9dced6079a64d77 | per-strategy view | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | the tower build | C-001 8 | reads 012, 023 |
+| R17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | per-strategy ranking | path name | read 013 |
+| R17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | per-strategy health | path name | read 014 |
+| R17 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d956e2943e5710deadfa68b43b2e1 | per-strategy score | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/api/strategies.py | 8fac396665d64d425a28944eec27744247fc5c6c | strategy API | path name | read 015 |
+| R18 | capital/strategy_governor.py | d17193c569c1d2e2890d2047b03cf9d0ae825e8d | per-strategy rule key | C-008 | read 016 |
+| R19 | scripts/strategy_status.py | d15942ccde89d30e45df310a643ba0dacec17bce | per-strategy report | path name | counts only (no T6/T7) |
+| R19 | scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | per-strategy metrics | path name | reads 017, 030 |
+| R20 | strategies/__init__.py | ee3a2879f0fa022d22fdd62d9aed206964b3e64b | package | path name | counts only (no T6/T7) |
+| R20 | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | taxonomy | path name | counts only (no T6/T7) |
+| R21 | strategies/control.py | b6eecb480b83471149fb9362bafc980c967ff6c9 | the step after the lookup | C-008 ST-09 | none (C-008's) |
+| R22 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | the EOD route's stored key | C-001 T-10 | none (C-011's) |
+| R23 | scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | connectivity checks | C-001 6 | none (C-001's) |
+| R23 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | the same | C-001 6 | none (C-001's) |
+| R24 | core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | alert-name prefix | C-001 4.3 | none (other topic) |
+| R24 | orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | EOD direction map | C-001 7.4 | none (other topic) |
+| R24 | signals/entry_throttle.py | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | throttle key | C-001 7.4 | none (other topic) |
+| T | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | the key-differs test | C-001 7.2 | read 006 |
+| T | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | a plain-dict test map | C-001 11 | counts only |
+| T | tests/unit/test_config_loader.py | 8f245c35a047794c00ffe21e53c178b5928af890 | the map model | C-001 5.2 | counts only |
+| R25 | ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | older per-scanner attribution | C-001 8 (G-1) | reads 018, 024; no counted SQL (C1 0, C2 0) |
+| R26 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | attribution endpoints | C-001 8, 12 (G-1) | read 019; no counted SQL |
+| R27 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | the dashboard's own map load | C-001 5.1 (G-1) | reads 020, 021 |
+| R28 | ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | none in the chain (two comment lines) | T1 and T2 lines (G-1) | read 025 |
+| R29 | ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | displays the map | C-004 (G-1) | read 026 |
+| R30 | scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | pre-flight file presence | C-001 5.3, 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R31 | scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | deprecated presence check | C-001 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+
+==============================================================================================================================
+4. W3 COUNT-ONLY RESULTS (no line printed)
+==============================================================================================================================
+C1 (Q36): T10 \b(FROM|JOIN)\s+signals\b over s_rt: 18 files, 61 lines.
+| File | Pinned blob | T10 lines | Group |
+|---|---|---|---|
+| core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 4 | one of the 31 leads |
+| ops/control_tower/freshness.py | 04b3cd96f5f380ec6bbf4419b5cd20266cfb9b18 | 2 | no T6 or T7 line (not a lead) |
+| ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | 27 | R14 to R20 |
+| orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1 | no T6 or T7 line (not a lead) |
+| reports/daily_trade_review.py | c448b7976964a14caf0061016c239c6a3d7cabad | 1 | one of the 31 leads |
+| scripts/backup_restore_drill.py | fe12a5efcb8a8a5a6c72be00549b009fed8227a5 | 2 | no T6 or T7 line (not a lead) |
+| scripts/check_vm_state.py | b9f362ae378b00cc968a1c09145b0843bba31d28 | 3 | no T6 or T7 line (not a lead) |
+| scripts/eod_cleanup.py | ab658108e443b7121d886f98b94c5058c42253b0 | 5 | no T6 or T7 line (not a lead) |
+| scripts/fetch_daily_candles.py | 4a149615dc48ad1342f5b406d4728728631dd7c8 | 1 | no T6 or T7 line (not a lead) |
+| scripts/forward_shadow_record.py | 6c57c0e155332905d75e4a10cd78ea1e97a6ee1f | 1 | one of the 31 leads |
+| scripts/gemini_trade_coach.py | 6d42f71d5d89e6e48c0584eeeb662caf2883421d | 1 | one of the 31 leads |
+| scripts/generate_screened_stocks_csv.py | 3e6b5896bbc33a5909cbc76b719752bc8d4b9746 | 1 | no T6 or T7 line (not a lead) |
+| scripts/healthcheck_server.py | c094b5eb402353be5c74b569620aae0943cfad8b | 4 | no T6 or T7 line (not a lead) |
+| scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 1 | R14 to R20 |
+| scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | 1 | R14 to R20 |
+| scripts/system_manager.py | 04e776e60f988f47f11753c42577ffd0c428adaf | 3 | one of the 31 leads |
+| scripts/trade_journal.py | 59309f9a767ab0700a9e169c7b8e2610f7e55efd | 2 | one of the 31 leads |
+| signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | 1 | named read (R02) |
+
+- Triage (FACT, count-only, with the limits stated in section 3 of the proposal): of the 15 R14 to R20 files, 3 name the
+  signals table in SQL text (replay_signals.py 1, strategy_registry_officer.py 1, db_reader.py 27) and 12 do not; of the 31
+  leads, 6 do (core/state_store.py 4, reports/daily_trade_review.py 1, scripts/forward_shadow_record.py 1,
+  scripts/gemini_trade_coach.py 1, scripts/system_manager.py 3, scripts/trade_journal.py 2) and 25 do not; none of the 7 G-1
+  files does; 8 further runtime files without T6 or T7 lines do, and so does the receiver (R02: 1 line, not read; its INSERT
+  INTO signals is not a FROM or JOIN form). A count of 0 is not proof that a file never reads the signals table (clarification
+  5): lower-case SQL, split lines and run-time table names are not counted.
+
+C2 (Q37): T11 \b(FROM|JOIN)\s+[a-z_][a-z0-9_]* over s_1b (8 files): 4 files, 192 lines.
+| File | Pinned blob | T11 lines | T10 lines (C1) | G3 choice (rule) |
+|---|---|---|---|---|
+| scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | 3 | 1 | T11 grep, 3 lines |
+| ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | 184 | 27 | T10 grep, 27 lines (T11 above 60) |
+| ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | 1 | 0 | T11 grep, 1 line |
+| ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | 0 | 0 | none (both counts 0) |
+| ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | 0 | 0 | none (both counts 0) |
+| scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | 4 | 0 | T11 grep, 4 lines |
+| ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | 0 | 0 | none (both counts 0) |
+| ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | 0 | 0 | none (both counts 0) |
+
+- G3 total: 35 lines, within 300; no fallback for the total was needed.
+
+==============================================================================================================================
+5. W4 OPERATIONS AND LINE BUDGET
+==============================================================================================================================
+| Op | Read | Time | File | Pinned blob | Operation | Bound | Printed | Masks (whole-file counts) |
+|---|---|---|---|---|---|---|---|---|
+| G1.1 | 018 | 17:09:56 | ops_dashboard/backend/services/analytics_period.py | 594236faaef7 | grep T6 or T7 | 21-26 | 25 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G1.2 | 019 | 17:09:56 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de1 | grep T6 | 6 | 6 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G1.3 | 020 | 17:09:57 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771 | grep T6 or T7 | 3-4 | 4 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G2.1 | 021 | 17:09:57 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771 | grep T1 | 6 | 6 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G2.2 | 022 | 17:09:58 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e0 | grep T1 | 4 | 4 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G2.3 | 023 | 17:09:58 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f52 | grep T1 | 1 | 1 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G2.4 | 024 | 17:09:58 | ops_dashboard/backend/services/analytics_period.py | 594236faaef7 | grep T1 | 1 | 1 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G2.5 | 025 | 17:09:59 | ops_dashboard/backend/services/audit.py | f772aa60f53a | grep T1 or T2 | 1-2 | 2 | masks: {'HOSTTOK': 0, 'B32': 1} / stage-2 masks: {} |
+| G2.6 | 026 | 17:09:59 | ops_dashboard/backend/services/config_view.py | 0d4929a1c990 | grep T1 | 2 | 2 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G3.1 | 027 | 17:09:59 | scripts/replay_signals.py | 72763c3ed8d5 | grep T11 | 3 | 3 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G3.2 | 028 | 17:10:00 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | grep T10 | 27 | 27 | masks: {'HOSTTOK': 0, 'LONGNUM': 1} / stage-2 masks: {} |
+| G3.3 | 029 | 17:10:00 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e0 | grep T11 | 1 | 1 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G3.6 | 030 | 17:10:00 | scripts/compute_strategy_metrics.py | c081a0a8f768 | grep T11 | 4 | 4 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F1 | 031 | 17:10:01 | signals/signal_processor.py | 7fab0a02a302 | range 556:590 | 35 | 35 | masks: {'HOSTTOK': 0, 'CLIENTID': 1} / stage-2 masks: {} |
+| F2 | 032 | 17:10:01 | scripts/strategy_registry_officer.py | c013518bc49c | range 53:60 | 8 | 8 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F3 | 033 | 17:10:01 | scripts/replay_signals.py | 72763c3ed8d5 | range 91:95 | 5 | 5 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F4.1 | 034 | 17:10:02 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 684:704 | 21 | 21 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F4.2 | 035 | 17:10:02 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 2072:2101 | 30 | 30 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F4.3 | 036 | 17:10:03 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 1651:1666 | 16 | 16 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.1 | 037 | 17:10:03 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 617:621 | 5 | 5 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.2 | 038 | 17:10:03 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 1058:1081 | 24 | 24 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.3 | 039 | 17:10:04 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 1662:1681 | 20 | 20 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.4 | 040 | 17:10:04 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 3979:4008 | 30 | 30 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.5 | 041 | 17:10:05 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 4050:4055 | 6 | 6 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| P.2.6 | 042 | 17:10:05 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | range 4100:4105 | 6 | 6 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G3.4 | - | - | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094 | none: T11 count 0 and T10 count 0: neither is 1 to 60 | - | 0 | - |
+| G3.5 | - | - | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a | none: T11 count 0 and T10 count 0: neither is 1 to 60 | - | 0 | - |
+| G3.7 | - | - | ops_dashboard/backend/services/analytics_period.py | 594236faaef7 | none: T11 count 0 and T10 count 0: neither is 1 to 60 | - | 0 | - |
+| G3.8 | - | - | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de1 | none: T11 count 0 and T10 count 0: neither is 1 to 60 | - | 0 | - |
+
+| Step | Printed | Cap |
+|---|---|---|
+| G1 | 35 | 36 |
+| G2 | 16 | 16 |
+| G3 | 35 | 300 |
+| F | 115 | 115 |
+| P | 91 | 250 |
+| total | 292 | 717 |
+
+- P reads per file: db_reader.py 6 (the cap is 6; no candidate was left by the cap); none elsewhere. Every read is at most 31
+  lines. Each output equals its evidence file and its log row (<SCRATCHPAD>/c010/evidence/018.txt to 042.txt).
+
+==============================================================================================================================
+6. OUTPUTS (verbatim, masked)
+==============================================================================================================================
+Each read: its header (the reader's line count), then every line exactly as the masked reader printed it ("N: text", N the
+  line number at the pin) after a four-space indent, then the mask counts (whole-file counts). Some lines carry non-ASCII
+  characters as in the source (for example in reads 021, 022, 028, 029 and 031).
+
+Read 018 | G1.1 | ops_dashboard/backend/services/analytics_period.py | blob 594236faaef7 | 666 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    109:     metrics = _aggregate(rows, lambda r: r.get("strategy"), "strategy")
+    110:     by_name = {m["strategy"]: m for m in metrics}
+    118:             m["strategy"]))
+    119:         rankings[mode] = [m["strategy"] for m in ordered]
+    147: _PNL_FILTERS = ("strategy", "symbol", "trade_type", "direction")
+    221:     if f.get("strategy"):
+    222:         out = [r for r in out if (r.get("strategy") or "") == f["strategy"]]
+    317:     key = {"strategy": lambda r: r.get("strategy"), "symbol": lambda r: r.get("symbol"),
+    320:         dim, key = "strategy", (lambda r: r.get("strategy"))
+    346:         k = (str(r.get("exit_time") or "")[:10], r.get("strategy") or "—",
+    352:             g.update({"date": k[0], "strategy": k[1], "symbol": k[2],
+    369:     return sorted(out, key=lambda m: (m["date"], m["strategy"], m["symbol"]), reverse=True)
+    389:                         attribution_dim="strategy", compare=None, limit=None) -> dict:
+    397:         "strategy": sorted({r["strategy"] for r in all_rows if r.get("strategy")}),
+    402:     active = {"strategy": strategy, "symbol": symbol,
+    423:                 "strategy": r.get("strategy"), "net": round(float(r.get("net_pnl") or 0.0), 2),
+    426:     per_strategy = sorted(_aggregate(rows, lambda r: r.get("strategy"), "strategy"),
+    452:             "best_strategy": per_strategy[0]["strategy"] if per_strategy else None,
+    453:             "worst_strategy": per_strategy[-1]["strategy"] if per_strategy else None,
+    513:         g = trade_agg.setdefault(sc, _blank_agg("scanner", sc))
+    525:         ta = trade_agg.get(sc, _blank_agg("scanner", sc))
+    534:             "scanner": sc,
+    586:             "strategy": r["basic"]["name"], "display_name": r["basic"]["display_name"],
+    635:         "scanner": signal["scanner"] if signal else None,
+    658:             "strategy": t["strategy"], "scanner": scanners.get(t["trade_id"]) or "—",
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 019 | G1.2 | ops_dashboard/backend/api/analytics2.py | blob 8ab626ef7de1 | 691 lines | grep (T6)
+  expression: ["']strategy["']
+    111:         strategy=(request.args.get("strategy") or "").strip() or None,
+    142:         strategy=_arg("strategy"),
+    146:         attribution_dim=(_arg("attr") or "strategy"),
+    166:         "strategy": _arg("strategy"),
+    221:         "strategy": _arg("strategy"),
+    373:             "symbol": _arg("symbol"), "strategy": _arg("strategy"),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 020 | G1.3 | ops_dashboard/backend/readers/config_reader.py | blob 624bc8009771 | 337 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    112:         strategy = entry.get("strategy") if isinstance(entry, dict) else entry
+    281:             strategy, url = entry.get("strategy"), entry.get("chartink_url")
+    284:         out.append({"scanner": str(scanner),
+    285:                     "strategy": str(strategy) if strategy else None,
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 021 | G2.1 | ops_dashboard/backend/readers/config_reader.py | blob 624bc8009771 | 337 lines | grep (T1)
+  expression: scan_webhook_map
+    92: def get_scan_webhook_map(cfg: dict) -> dict:
+    93:     """Parse config/scan_webhook_map.yaml read-only → {scanner: strategy}.
+    99:     path = os.path.join(cfg["paths"]["config_dir"], "scan_webhook_map.yaml")
+    246: # ADDITIVE: `get_scan_webhook_map` above is byte-unchanged and keeps its callers.
+    252:     ⭐ THE URL IS REAL AND READ FROM `config/scan_webhook_map.yaml`. The approved
+    267:     path = os.path.join(cfg["paths"]["config_dir"], "scan_webhook_map.yaml")
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 022 | G2.2 | ops_dashboard/backend/services/scanner_attribution.py | blob 8503d3c1c6e0 | 749 lines | grep (T1)
+  expression: scan_webhook_map
+    8: MEASURED, ⛔ not assumed: `config/scan_webhook_map.yaml` maps 16 scanners onto
+    480:     caption says "All configured scanners" — so it counts `scan_webhook_map`
+    662:     from `scan_webhook_map.yaml`.
+    682:             "source": "config/scan_webhook_map.yaml"}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 023 | G2.3 | ops_dashboard/backend/services/strategy_tower.py | blob 6effe8732f52 | 483 lines | grep (T1)
+  expression: scan_webhook_map
+    96:     scan_map = config_reader.get_scan_webhook_map(cfg)          # scanner -> strategy
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 024 | G2.4 | ops_dashboard/backend/services/analytics_period.py | blob 594236faaef7 | 666 lines | grep (T1)
+  expression: scan_webhook_map
+    504:     scan_map = config_reader.get_scan_webhook_map(cfg)          # scanner -> strategy
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 025 | G2.5 | ops_dashboard/backend/services/audit.py | blob f772aa60f53a | 733 lines | grep (T1|T2)
+  expression: scan_webhook_map|scanner_name|scan_name
+    46: SCANNER. `webhook_audit.scanner_name` is not even SELECTed (see db_reader).
+    66: # file_hashes · nse_holidays · scan_webhook_map · scoring · slippage · system,
+    masks: {'HOSTTOK': 0, 'B32': 1} | stage-2 masks: {}
+
+Read 026 | G2.6 | ops_dashboard/backend/services/config_view.py | blob 0d4929a1c990 | 974 lines | grep (T1)
+  expression: scan_webhook_map
+    137:         "_note": "from config/scan_webhook_map.yaml; excluded from drift",
+    138:         "scan_webhook_map": config_reader.get_scan_webhook_map(cfg),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 027 | G3.1 | scripts/replay_signals.py | blob 72763c3ed8d5 | 244 lines | grep (T11)
+  expression: \b(FROM|JOIN)\s+[a-z_][a-z0-9_]*
+    46:            FROM signals
+    59:         "SELECT qty_filled, entry_actual_price, net_pnl, status FROM trades WHERE trade_id = ?",
+    107:         """SELECT score, tier, status FROM screener_results
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 028 | G3.2 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | grep (T10)
+  expression: \b(FROM|JOIN)\s+signals\b
+    182:             "SELECT COUNT(*) FROM signals WHERE status='DUPLICATE' "
+    191:             "SELECT COUNT(*) FROM signals WHERE received_at LIKE ? "
+    617:             "SELECT strategy, COUNT(*) AS n FROM signals "
+    691:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy, bucket",
+    848:         "FROM signals s LEFT JOIN trades t ON t.signal_id = s.signal_id "
+    1043:         return _count(conn, "SELECT COUNT(*) FROM signals WHERE received_at LIKE ?",
+    1058:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy",
+    1662:             "FROM trades t JOIN signals s ON s.signal_id = t.signal_id "
+    1894:         "FROM trades t LEFT JOIN signals s ON s.signal_id = t.signal_id "
+    1974:                 "FROM signals WHERE substr(received_at,1,10) BETWEEN ? AND ? "
+    2078:             "MAX(received_at) AS last_ts FROM signals "
+    2097:             "SELECT strategy, COUNT(*) AS n FROM signals "
+    2194:             "SELECT " + fam + " AS family, COUNT(*) AS n FROM signals s "
+    2209:             "FROM signals s JOIN trades t ON t.signal_id = s.signal_id "
+    2246:             "status, rejection_reason, webhook_payload FROM signals WHERE signal_id = ?",
+    3102:         "LEFT JOIN signals s ON s.signal_id = t.signal_id "
+    3505:                 "FROM signals WHERE substr(received_at,1,10) BETWEEN ? AND ? "
+    3698:                 f"FROM signals WHERE signal_id IN ({_in_clause(tuple(ids))})",
+    3824:             "FROM signals s WHERE s.received_at LIKE ? "
+    3902:             "FROM signals s WHERE s.received_at LIKE ?",
+    3909:             "FROM signals s JOIN trades t ON t.signal_id = s.signal_id "
+    3955:         signals = _count(conn, "SELECT COUNT(*) FROM signals WHERE received_at LIKE ?",
+    3979:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy",
+    4027:                         "FROM signals WHERE substr(received_at,1,10) BETWEEN ? AND ? "
+    4050:             "FROM signals WHERE substr(received_at,1,10) BETWEEN ? AND ? "
+    4071:                         "FROM signals WHERE received_at LIKE ? GROUP BY m"),
+    4100:             "SELECT strategy, status, COUNT(*) AS n FROM signals "
+    masks: {'HOSTTOK': 0, 'LONGNUM': 1} | stage-2 masks: {}
+
+Read 029 | G3.3 | ops_dashboard/backend/services/scanner_attribution.py | blob 8503d3c1c6e0 | 749 lines | grep (T11)
+  expression: \b(FROM|JOIN)\s+[a-z_][a-z0-9_]*
+    542:         # ⭐ The alternative — counting orders through `signals JOIN trades`, one
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 030 | G3.6 | scripts/compute_strategy_metrics.py | blob c081a0a8f768 | 353 lines | grep (T11)
+  expression: \b(FROM|JOIN)\s+[a-z_][a-z0-9_]*
+    93:         FROM trades
+    138:         FROM trades
+    167:         SELECT DISTINCT strategy FROM trades
+    189:         SELECT sharpe FROM strategy_metrics
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 031 | F1 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 556:590
+    556: 
+    557:     # ------------------------------------------------------------------
+    558:     # Batch 1: forward evidence capture (OBSERVER — never affects a decision)
+    559:     # ------------------------------------------------------------------
+    560:     def _evidence_strategy_for(self, scanner_name) -> Optional[str]:
+    561:         """Batch 1 P2 identity ONLY -- ⛔ never read by a decision.
+    562: 
+    563:         The strategy `scanner_name` maps to, resolved EXACTLY as _process_one's
+    564:         Step 2 resolves it (same map, same extraction). A reject raised BEFORE
+    565:         Step 2 has no `strategy_name` bound yet -- measured on production,
+    566:         4,168 of 48,934 P2 rejects (all SHADOW_INNING_ACTIVE). The map is the
+    567:         processor's own copy, never written after __init__, so this is Step 2's
+    568:         answer, not a guess. None when the map cannot name it: the record is then
+    569:         FAILED, which is the truth -- the pipeline rejected a signal it could not
+    570:         attribute.
+    571:         """
+    572:         try:
+    573:             entry = (getattr(self, "_scan_webhook_map", None) or {}).get(scanner_name)
+    574:             if entry is None:
+    575:                 return None
+    576:             name = (entry.get("strategy") if isinstance(entry, dict)
+    577:                     else getattr(entry, "strategy", str(entry)))
+    578:             return str(name) if name else None
+    579:         except Exception:  # noqa: <CLIENTID>
+    580:             return None
+    581: 
+    582:     def _evidence_capture(self, capture_point: str, payload) -> None:
+    583:         """Emit one evidence record. ⛔ NEVER raises, ⛔ never blocks admission.
+    584: 
+    585:         Parity with `_sr_observe` below: wrapped, logged, swallowed. The recorder
+    586:         is wrapped internally too, so this is belt-and-braces on purpose — an
+    587:         evidence bug must never be able to reject a signal.
+    588:         """
+    589:         try:
+    590:             # ⛔ EVERY lookup lives inside the guard. The gate caught the
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 032 | F2 | scripts/strategy_registry_officer.py | blob c013518bc49c | 306 lines | range 53:60
+    53: def _distinct_signal_names(conn) -> Set[str]:
+    54:     """Scanner + strategy names that have ever appeared in signals (a new scanner that
+    55:     fired but has no YAML/registry entry is exactly what auto-detection must catch)."""
+    56:     names: Set[str] = set()
+    57:     for col in ("scanner", "strategy"):
+    58:         try:
+    59:             for (v,) in conn.execute(f"SELECT DISTINCT {col} FROM signals WHERE {col} IS NOT NULL"):
+    60:                 if v:
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 033 | F3 | scripts/replay_signals.py | blob 72763c3ed8d5 | 244 lines | range 91:95
+    91:     strategy_name = signal["strategy"]
+    92:     if strategy_name not in strategies:
+    93:         result["replay_decision"] = "SKIPPED"
+    94:         result["replay_reason"] = f"Strategy '{strategy_name}' not in current config"
+    95:         return result
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 034 | F4.1 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 684:704
+    684: def strategy_signal_funnel(cfg: dict, today: str) -> dict:
+    685:     """Per-strategy stored-signal funnel today: {strategy: {accepted, rejected,
+    686:     duplicated, expired, stored, last_signal}}."""
+    687:     with _ro(cfg) as conn:
+    688:         rows = conn.execute(
+    689:             "SELECT strategy, " + _bucket_case_sql() + " AS bucket, COUNT(*) AS n, "
+    690:             "MAX(received_at) AS last_ts "
+    691:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy, bucket",
+    692:             (today + "%",),
+    693:         ).fetchall()
+    694:     out: dict = {}
+    695:     for r in rows:
+    696:         s = out.setdefault(r["strategy"], {
+    697:             "accepted": 0, "rejected": 0, "duplicated": 0, "expired": 0,
+    698:             "stored": 0, "last_signal": None,
+    699:         })
+    700:         s[r["bucket"]] = int(r["n"])
+    701:         s["stored"] += int(r["n"])
+    702:         if s["last_signal"] is None or (r["last_ts"] and r["last_ts"] > s["last_signal"]):
+    703:             s["last_signal"] = r["last_ts"]
+    704:     return out
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 035 | F4.2 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 2072:2101
+    2072: def signals_scanner_funnel_range(cfg: dict, from_date: str, to_date: str) -> dict:
+    2073:     """Per-scanner stored-signal funnel over [from_date, to_date] (received day):
+    2074:     {scanner: {accepted, rejected, duplicated, expired, stored, last_signal}}."""
+    2075:     with _ro(cfg) as conn:
+    2076:         rows = conn.execute(
+    2077:             "SELECT scanner, " + _bucket_case_sql() + " AS bucket, COUNT(*) AS n, "
+    2078:             "MAX(received_at) AS last_ts FROM signals "
+    2079:             "WHERE substr(received_at,1,10) BETWEEN ? AND ? GROUP BY scanner, bucket",
+    2080:             (from_date, to_date),
+    2081:         ).fetchall()
+    2082:     out: dict = {}
+    2083:     for r in rows:
+    2084:         s = out.setdefault(r["scanner"], {"accepted": 0, "rejected": 0, "duplicated": 0,
+    2085:                                           "expired": 0, "stored": 0, "last_signal": None})
+    2086:         s[r["bucket"]] = int(r["n"])
+    2087:         s["stored"] += int(r["n"])
+    2088:         if s["last_signal"] is None or (r["last_ts"] and r["last_ts"] > s["last_signal"]):
+    2089:             s["last_signal"] = r["last_ts"]
+    2090:     return out
+    2091: 
+    2092: 
+    2093: def strategy_signal_counts_range(cfg: dict, from_date: str, to_date: str) -> dict:
+    2094:     """Per-strategy stored-signal count over a range (Strategy Health trend)."""
+    2095:     with _ro(cfg) as conn:
+    2096:         rows = conn.execute(
+    2097:             "SELECT strategy, COUNT(*) AS n FROM signals "
+    2098:             "WHERE substr(received_at,1,10) BETWEEN ? AND ? GROUP BY strategy",
+    2099:             (from_date, to_date),
+    2100:         ).fetchall()
+    2101:     return {r["strategy"]: int(r["n"]) for r in rows}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 036 | F4.3 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 1651:1666
+    1651: def scanner_for_trades(cfg: dict, trade_ids) -> dict:
+    1652:     """{trade_id: scanner} via ``trades.signal_id → signals.scanner`` — the exact
+    1653:     attribution path (Phase A §3.1; mutual FK schema.sql:105-114). Trades whose
+    1654:     signal row is absent are omitted (honest — no fabricated scanner). SHARED with
+    1655:     the G5c Scanner-Attribution screen."""
+    1656:     ids = tuple(dict.fromkeys(t for t in (trade_ids or []) if t))
+    1657:     if not ids:
+    1658:         return {}
+    1659:     with _ro(cfg) as conn:
+    1660:         rows = conn.execute(
+    1661:             "SELECT t.trade_id AS trade_id, s.scanner AS scanner "
+    1662:             "FROM trades t JOIN signals s ON s.signal_id = t.signal_id "
+    1663:             "WHERE t.trade_id IN (" + _in_clause(ids) + ")",
+    1664:             ids,
+    1665:         ).fetchall()
+    1666:     return {r["trade_id"]: r["scanner"] for r in rows}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 037 | P.2.1 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 617:621
+  rule P: query line 617; consumer lines 621
+    617:             "SELECT strategy, COUNT(*) AS n FROM signals "
+    618:             "WHERE received_at LIKE ? GROUP BY strategy",
+    619:             (today + "%",),
+    620:         ).fetchall()
+    621:     return {r["strategy"]: int(r["n"]) for r in rows}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 038 | P.2.2 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 1058:1081
+  rule P: query line 1058; consumer lines 1061, 1081
+    1058:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy",
+    1059:             (*_RISK_REJECT_STATUSES, *_CAPITAL_REJECT_STATUSES, today + "%"),
+    1060:         ).fetchall()
+    1061:     return {r["strategy"]: {"risk_rej": int(r["risk_rej"]), "capital_rej": int(r["capital_rej"])}
+    1062:             for r in rows}
+    1063: 
+    1064: 
+    1065: def strategy_loss_streaks(cfg: dict) -> dict:
+    1066:     """Per-strategy trailing losing-close streak (rolling, like the global one).
+    1067: 
+    1068:     NULL net_pnl rows are skipped; a win/breakeven ends the streak.
+    1069:     """
+    1070:     states = _CLOSED_STATES
+    1071:     with _ro(cfg) as conn:
+    1072:         rows = conn.execute(
+    1073:             "SELECT strategy, net_pnl FROM trades "
+    1074:             "WHERE status IN (" + _in_clause(states) + ") AND net_pnl IS NOT NULL "
+    1075:             "AND exit_time IS NOT NULL ORDER BY exit_time DESC LIMIT 500",
+    1076:             states,
+    1077:         ).fetchall()
+    1078:     streaks: dict = {}
+    1079:     done: set = set()
+    1080:     for r in rows:
+    1081:         s = r["strategy"]
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 039 | P.2.3 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 1662:1681
+  rule P: query line 1662; consumer lines 1666, 1681
+    1662:             "FROM trades t JOIN signals s ON s.signal_id = t.signal_id "
+    1663:             "WHERE t.trade_id IN (" + _in_clause(ids) + ")",
+    1664:             ids,
+    1665:         ).fetchall()
+    1666:     return {r["trade_id"]: r["scanner"] for r in rows}
+    1667: 
+    1668: 
+    1669: def strategy_sltgt_hits(cfg: dict, today: str) -> dict:
+    1670:     """Per-strategy SL_HIT / TGT_HIT exit counts over trades closed today."""
+    1671:     states = _CLOSED_STATES
+    1672:     with _ro(cfg) as conn:
+    1673:         rows = conn.execute(
+    1674:             "SELECT strategy, "
+    1675:             "COALESCE(SUM(CASE WHEN exit_reason='SL_HIT' THEN 1 ELSE 0 END),0) AS sl_hits, "
+    1676:             "COALESCE(SUM(CASE WHEN exit_reason='TGT_HIT' THEN 1 ELSE 0 END),0) AS tgt_hits "
+    1677:             "FROM trades WHERE status IN (" + _in_clause(states) + ") AND exit_time LIKE ? "
+    1678:             "GROUP BY strategy",
+    1679:             (*states, today + "%"),
+    1680:         ).fetchall()
+    1681:     return {r["strategy"]: {"sl_hits": int(r["sl_hits"]), "tgt_hits": int(r["tgt_hits"])}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 040 | P.2.4 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 3979:4008
+  rule P: query line 3979; consumer lines 3998, 4000, 4004, 4006, 4008
+    3979:             "FROM signals WHERE received_at LIKE ? GROUP BY strategy",
+    3980:             (today + "%",)).fetchall()
+    3981:         orders = conn.execute(
+    3982:             "SELECT t.strategy AS strategy, COUNT(*) AS n FROM orders o "
+    3983:             "JOIN trades t ON t.trade_id = o.trade_id "
+    3984:             "WHERE o.leg='ENTRY' AND o.placed_at LIKE ? GROUP BY t.strategy",
+    3985:             (today + "%",)).fetchall()
+    3986:         trades = conn.execute(
+    3987:             "SELECT strategy, COUNT(*) AS n FROM trades "
+    3988:             "WHERE entry_time LIKE ? GROUP BY strategy",
+    3989:             (today + "%",)).fetchall()
+    3990: 
+    3991:     out: dict = {}
+    3992: 
+    3993:     def _slot(name):
+    3994:         return out.setdefault(str(name), {"strategy": str(name), "signals": 0,
+    3995:                                           "orders": 0, "trades": 0, "last": None})
+    3996: 
+    3997:     for r in sig:
+    3998:         if r["strategy"] is None:
+    3999:             continue
+    4000:         s = _slot(r["strategy"])
+    4001:         s["signals"] = int(r["n"])
+    4002:         s["last"] = r["last"]
+    4003:     for r in orders:
+    4004:         if r["strategy"] is None:
+    4005:             continue
+    4006:         _slot(r["strategy"])["orders"] = int(r["n"])
+    4007:     for r in trades:
+    4008:         if r["strategy"] is None:
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 041 | P.2.5 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 4050:4055
+  rule P: query line 4050; consumer lines 4053, 4055
+    4050:             "FROM signals WHERE substr(received_at,1,10) BETWEEN ? AND ? "
+    4051:             "GROUP BY strategy, d", (start, end)).fetchall()
+    4052:     for r in rows:
+    4053:         if r["strategy"] is None or not r["d"]:
+    4054:             continue
+    4055:         out.setdefault(str(r["strategy"]), {})[str(r["d"])] = int(r["n"])
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 042 | P.2.6 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 4100:4105
+  rule P: query line 4100; consumer lines 4105
+    4100:             "SELECT strategy, status, COUNT(*) AS n FROM signals "
+    4101:             "WHERE received_at LIKE ? AND " + fam + " = 'rejected' "
+    4102:             "GROUP BY strategy, status",
+    4103:             (today + "%",),
+    4104:         ).fetchall()
+    4105:     return [{"strategy": r["strategy"], "status": r["status"], "n": int(r["n"])}
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+==============================================================================================================================
+7. RULE P: EVERY CONSUMER LINE AND ITS OUTCOME
+==============================================================================================================================
+Consumer lines: lines printed by Stage 1 reads 007, 009, 011, 013, 014, 017 and by G1 that match FR (read 010 excluded).
+  "Nearest G3 line": the highest G3 line not above the consumer line, with every table its text names. "Source shown": the
+  table the read shows feeding the consumer line, where a read shows it.
+| File | Line | From | Nearest G3 line (tables named) | Distance | Outcome | Read | Source shown |
+|---|---|---|---|---|---|---|---|
+| replay_signals.py | 75 | 007 | 59 (trades) | 16 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| replay_signals.py | 76 | 007 | 59 (trades) | 17 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| replay_signals.py | 91 | 007 | 59 (trades) | 32 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| db_reader.py | 545 | 009 | 191 (signals) | 354 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 601 | 009 | 191 (signals) | 410 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 607 | 009 | 191 (signals) | 416 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 609 | 009 | 191 (signals) | 418 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 621 | 009 | 617 (signals) | 4 | paired | 037 | signals (617 to 618) |
+| db_reader.py | 696 | 009 | 691 (signals) | 5 | range already printed by an F or earlier P read | 034 (F4.1) | signals (689 to 691) |
+| db_reader.py | 747 | 009 | 691 (signals) | 56 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 786 | 009 | 691 (signals) | 95 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 800 | 009 | 691 (signals) | 109 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 1061 | 009 | 1058 (signals) | 3 | paired | 038 | signals (1058) |
+| db_reader.py | 1081 | 009 | 1058 (signals) | 23 | paired | 038 | trades (1073) |
+| db_reader.py | 1162 | 009 | 1058 (signals) | 104 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 1192 | 009 | 1058 (signals) | 134 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 1666 | 009 | 1662 (signals, trades) | 4 | paired | 039 | trades JOIN signals: s.scanner (1661 to 1663) |
+| db_reader.py | 1681 | 009 | 1662 (signals, trades) | 19 | paired | 039 | trades (1674 to 1678) |
+| db_reader.py | 2084 | 009 | 2078 (signals) | 6 | range already printed by an F or earlier P read | 035 (F4.2) | signals (2077 to 2079) |
+| db_reader.py | 2101 | 009 | 2097 (signals) | 4 | range already printed by an F or earlier P read | 035 (F4.2) | signals (2097 to 2098) |
+| db_reader.py | 3254 | 009 | 3102 (signals) | 152 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 3998 | 009 | 3979 (signals) | 19 | paired | 040 | signals (3979; binding INTERPRETATION) |
+| db_reader.py | 4000 | 009 | 3979 (signals) | 21 | paired | 040 | signals (3979; binding INTERPRETATION) |
+| db_reader.py | 4004 | 009 | 3979 (signals) | 25 | paired | 040 | orders JOIN trades: t.strategy (3982 to 3984) |
+| db_reader.py | 4006 | 009 | 3979 (signals) | 27 | paired | 040 | orders JOIN trades: t.strategy (3982 to 3984) |
+| db_reader.py | 4008 | 009 | 3979 (signals) | 29 | paired | 040 | trades (3987 to 3988) |
+| db_reader.py | 4010 | 009 | 3979 (signals) | 31 | nearest signals query more than 30 lines above | - | NOT ESTABLISHED |
+| db_reader.py | 4053 | 009 | 4050 (signals) | 3 | paired | 041 | signals (4050 to 4051) |
+| db_reader.py | 4055 | 009 | 4050 (signals) | 5 | paired | 041 | signals (4050 to 4051) |
+| db_reader.py | 4105 | 009 | 4100 (signals) | 5 | paired | 042 | signals (4100 to 4102) |
+| scanner_attribution.py | 298 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 299 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 309 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 445 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 492 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 494 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 515 | 011 | - | - | no SQL reference above the line | - | NOT ESTABLISHED |
+| scanner_attribution.py | 618 | 011 | 542 (trades) | 76 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| scanner_attribution.py | 619 | 011 | 542 (trades) | 77 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| scanner_attribution.py | 672 | 011 | 542 (trades) | 130 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| scanner_attribution.py | 674 | 011 | 542 (trades) | 132 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| scanner_attribution.py | 721 | 011 | 542 (trades) | 179 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| scanner_attribution.py | 732 | 011 | 542 (trades) | 190 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| strategy_ranking.py | 164 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 174 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 194 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 223 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 308 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 320 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 354 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_ranking.py | 426 | 013 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| strategy_health.py | 602 | 014 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| compute_strategy_metrics.py | 173 | 017 | 167 (trades) | 6 | nearest query is not on the signals table | - | NOT ESTABLISHED |
+| analytics_period.py | 109 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 110 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 118 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 119 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 221 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 222 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 317 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 320 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 346 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 369 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 397 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 423 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 426 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 452 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 453 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 635 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics_period.py | 658 | G1.1 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| analytics2.py | 111 | G1.2 | - | - | no G3 output for this file | - | NOT ESTABLISHED |
+| config_reader.py | 112 | G1.3 | - | - | no G3 output for this file (not in s_1b) | - | NOT ESTABLISHED |
+| config_reader.py | 281 | G1.3 | - | - | no G3 output for this file (not in s_1b) | - | NOT ESTABLISHED |
+
+- Outcomes: no G3 output for this file 27; paired 13; nearest signals query more than 30 lines above 11; nearest query is not
+  on the signals table 10; no SQL reference above the line 7; range already printed by an F or earlier P read 3; no G3 output
+  for this file (not in s_1b) 2.
+
+==============================================================================================================================
+8. EVIDENCE ANSWERS A TO G (consolidated; Stage 1 claims carried, Stage 1B additions marked 1B)
+==============================================================================================================================
+Labels: FACT (C-010's own counts or reads at the pin); HISTORICAL (a frozen V2 manual at the same pin, cited); INTERPRETATION
+  (Claude's reading of FACT lines; not a behaviour test); UNKNOWN / NOT ESTABLISHED; KNOWN DEFECT (status unchanged). A source
+  line shows code at the pin, not what the deleted hosts ran or what any signal or trade did.
+| Q | Claim | Label | Evidence |
+|---|---|---|---|
+| A | The processor looks its map up with scanner_name (Step 2). | FACT | signal_processor.py 931 to 933; read 001 |
+| A | The key is the URL path segment of POST /webhook/<scanner_name>; an unknown key gets 404. | HISTORICAL | C-001 4.3; C-002 7.1, 7.2, 9 (webhook_receiver.py 406 to 408, 551 to 554) |
+| A | How scanner_name reaches the processor (the queue tuple). | HISTORICAL; not re-read | C-001 12, T-9 |
+| B | The INSERT writes scanner_name into both signals.scanner and signals.strategy. | FACT; KNOWN DEFECT / AMBIGUITY (latent; D-05 = BK-27, OPEN) | webhook_receiver.py 963 to 980; read 004 |
+| B | Each of the 16 map keys equals its strategy at the pin. | HISTORICAL; not re-read | C-001 4.3, 4.4 |
+| B | No runtime writer changes signals.strategy after the insert. | HISTORICAL; not re-read | C-001 7.2 (state_store.py has 4 T10 lines; not read) |
+| C | Three failures of the lookup each raise _PipelineReject("UNKNOWN_STRATEGY", ...). | FACT | signal_processor.py 934 to 953; read 001 |
+| C | The stored status is REJECTED_UNKNOWN_STRATEGY. | HISTORICAL | C-008 4.1, ST-08 |
+| C | 1B: line 573 is in _evidence_strategy_for, in the code section headed "Batch 1: forward evidence capture" (557 to 559), which the same comment marks as an observer that never affects a decision. It resolves a scanner's strategy as Step 2 does (573 to 578) and returns None, not a reject, when it cannot (574 to 575, 578 to 580). | FACT | signal_processor.py 557 to 580; read 031 |
+| C | 1B: its docstring says it is "never read by a decision" and that the map is "never written after __init__". | FACT for the text; the claims themselves NOT ESTABLISHED (callers not read) | signal_processor.py 561 to 571; read 031 |
+| C | 1B: within signal_processor.py the only assignment to self._scan_webhook_map is line 208 (every line naming the map was printed by the T1 grep). | FACT | read 002 (9 of 9 T1 lines) |
+| D | The loader registers each strategy as strategies[cfg.name] = cfg; the map cross-check runs only with a map path. | FACT | loader.py 149, 151 to 153; read 005 |
+| D | cfg.name is the YAML name field; a later duplicate name replaces the earlier one. | HISTORICAL; INTERPRETATION (dictionary assignment) agrees | A-008 4; B-002 M22 |
+| E | The test maps gap_go_short to gap_go_short_v1 and writes its own signals row with the mapped name as strategy. | FACT | test_signal_processor.py 1933 to 1964; read 006 |
+| E | What the test asserts; whether any test covers the receiver INSERT. | UNKNOWN / NOT ESTABLISHED (HISTORICAL: none, C-001 7.2) | - |
+| F | 1B: db_reader.py reads signals.strategy in per-strategy views: counts today (617 to 621), the funnel (684 to 704), risk and capital rejects (1058 to 1061), counts over a range (2093 to 2101), counts by day (4050 to 4055), rejected by status (4100 to 4105), signals today in a merged view (3979, 3997 to 4002). | FACT (query and use); INTERPRETATION for the variable binding where the assignment is above the read (617, 1058, 3979, 4050, 4100) | reads 034, 035, 037, 038, 040, 041, 042 |
+| F | 1B: db_reader.py reads signals.scanner in the per-scanner funnel (2072 to 2090) and maps trades to signals.scanner through trades.signal_id (1651 to 1666). | FACT | reads 035, 036, 039 |
+| F | 1B: other db_reader.py per-strategy views read trades.strategy: loss streaks (1065 to 1081), SL and target hits (1669 to 1681), orders and trades today (3981 to 3989, 4003 to 4008). | FACT | reads 038, 039, 040 |
+| F | 1B: one view merges signals, orders and trades counts into slots keyed by the same name (3991 to 4010). | FACT for the code; INTERPRETATION: with a key different from its strategy, the signals count would sit under the key while the orders and trades counts sit under trades.strategy, whose writer C-010 has not read (no runtime claim) | read 040 |
+| F | 1B: the registry officer reads DISTINCT scanner and DISTINCT strategy from signals into one set of names. | FACT | strategy_registry_officer.py 53 to 60; read 032 |
+| F | 1B: the replay script queries signals (line 46) and skips a signal whose stored strategy is not a loaded strategy (91 to 95). | FACT | reads 027, 033 |
+| F | 1B: which query feeds the replay's consumer lines 75, 76 and 91 (the nearest query above them, line 59, is on trades). | NOT ESTABLISHED by rule P; HISTORICAL: C-001 7.2 (91 to 95 read signals.strategy) | read 027; section 7 |
+| F | 1B: scanner_attribution.py, analytics_period.py, analytics2.py, strategy_ranking.py and strategy_health.py have no counted SQL table reference; their strategy and scanner fields come from elsewhere. | FACT (count-only, limits apply); their sources NOT ESTABLISHED | Q37; C1 |
+| F | 1B: scanner_attribution.py builds strategy-to-scanners from map entries (298 to 299) and names the map file as its source (682). | FACT | reads 011, 022 |
+| F | 1B: analytics_period.py builds per-scanner trade aggregates (513 to 534) and rows with "scanner": scanners.get(t["trade_id"]) (658). | FACT for the lines; INTERPRETATION: consistent with db_reader's trade-to-scanner map (1666); the call is not shown | read 018 |
+| F | 1B: compute_strategy_metrics.py queries trades and strategy_metrics only; line 173 follows SELECT DISTINCT strategy FROM trades (167). | FACT (lines); INTERPRETATION (pairing; 6 lines apart) | read 030 |
+| F | 1B: the 57 consumer lines without a shown source (section 7). | NOT ESTABLISHED | section 7 |
+| G | main.py passes app_config.scan_webhook_map (2458) and app_config.scan_webhook_map.scanners (3585) as scan_webhook_map. | FACT | read 003 |
+| G | The callees: run_all_startup_checks (2458) and the processor's construction (3585); the receiver gets the whole AppConfig. | HISTORICAL | C-001 5.1; C-008 2.1, W-01, W-02 |
+| G | The processor keeps dict(scan_webhook_map) (208). | FACT | read 002 |
+| G | 1B: the dashboard reads the map itself: get_scan_webhook_map(cfg) parses config/scan_webhook_map.yaml under cfg["paths"]["config_dir"] into {scanner: strategy} (92, 93, 99, 112); a second reader builds entries with "scanner" and "strategy" (246 to 285). | FACT for the lines; INTERPRETATION that line 112 belongs to the function at 92 and that 246 to 285 are a second function (the comment at 246 says "ADDITIVE") | config_reader.py; reads 020, 021 |
+| G | 1B: strategy_tower.py (96), analytics_period.py (504) and config_view.py (137 to 138) call get_scan_webhook_map. | FACT | reads 023, 024, 026 |
+| G | 1B: which map file the production dashboard read. | UNKNOWN (HISTORICAL C-001 A-L8) | - |
+| G-1 | 1B: audit.py's two lines are a docstring and a comment (one lists config names; one says webhook_audit.scanner_name is not selected); config_view.py shows the map in the configuration view, "excluded from drift". | FACT for the lines; INTERPRETATION: neither takes part in resolving an identity | reads 025, 026 |
+
+==============================================================================================================================
+9. REMAINING OPEN QUESTIONS (and why the approved bounds cannot close them)
+==============================================================================================================================
+- OQ-1B-01 The source of 57 consumer lines (section 7): 29 are in files without G3 output (27 in s_1b files with no counted
+  SQL, whose rows come from other modules not read; 2 in config_reader.py, a YAML reader outside s_1b); 11 have no signals
+  query within 30 lines above; 10 have a nearer G3 line on another table (4 below real queries on trades: replay_signals.py 59
+  and compute_strategy_metrics.py 167; 6 below the scanner_attribution.py comment at line 542, O-2); 7 have no G3 line above
+  them. Closing them needs reads outside rule P.
+- OQ-1B-02 Which query feeds the replay's consumer lines (75, 76, 91): rule P stops at the nearer trades query (line 59).
+- OQ-1B-03 Which reader feeds screen 21's map entries (scanner_attribution.py 298 to 299, 672 to 675): its T1 lines name the
+  map file but do not show the call.
+- OQ-1B-04 Whether _evidence_strategy_for is read by any decision, and whether anything outside signal_processor.py writes
+  self._scan_webhook_map: callers and other files not read.
+- OQ-1B-05 What trades.strategy holds (the mapped strategy name or the key): its writer is outside C-010's files; it matters
+  to the merged view of 3991 to 4010.
+- OQ-1B-06 Whether the 9 runtime files that name the signals table without T6 or T7 lines, and the 6 such leads among the 31,
+  read the scanner or strategy columns (unquoted column names are not counted by T6 or T7).
+- OQ-1B-07 Carried from Stage 1: the route and 404 (U-01), the queue hand-over (U-02), the enclosing functions of reads 004 to
+  006 (U-03; 1B showed the functions of the db_reader, officer and processor ranges), the status written for UNKNOWN_STRATEGY
+  (U-04), the test's assertions (U-06), the map's key-strategy equality (U-10), later writers (U-11), the deleted hosts
+  (U-12).
+
+==============================================================================================================================
+10. DEVIATION AND GAP LOG (Stage 1 entries kept; nothing overwritten)
+==============================================================================================================================
+- D-1 (Stage 1; kept): read 010 (db_reader.py 3989 to 3999) stays recorded and excluded from conclusions. Stage 1B read 040,
+  made under rule P on a real signals query (line 3979), covers lines 3979 to 4008; the findings cite read 040 only.
+- G-1 (Stage 1; kept): R25 to R31 are now in the register (section 3) with their pinned blobs; R25 to R27 were read within G1,
+  G2 and G3; R28 and R29 classified (G2.5, G2.6); R30 and R31 not read (D3). The register gap is closed; content questions
+  remain in section 9.
+- New deviations in Stage 1B: none. Every operation was in the accepted list, within its bound; no refusal; no failed check.
+- O-1 (how the G3 fallback worked out): db_reader.py's T11 count (184) was above 60, so G3 used T10 and listed only signals
+  queries. Rule P therefore measured distance to the nearest signals query; reads 038, 039 and 040 also showed queries on
+  trades or orders between that query and some consumer lines (1081, 1681, 4004, 4006, 4008). Those lines are reported with
+  the source their read shows (trades, or orders joined to trades), as the rule's reads made visible.
+- O-2 (a stated T11 limit seen once): scanner_attribution.py line 542 is a comment ("counting orders through `signals JOIN
+  trades`"), matched by T11 on "JOIN trades". It is not a query and caused no read (it does not match T10). The six
+  scanner_attribution.py consumer lines below it are listed in section 7 as "nearest query is not on the signals table"; in
+  fact they have no SQL above them.
+- O-3 (a reporting detail): the driver's results file records only the first table named on a G3 line (1662, "FROM trades t
+  JOIN signals s", recorded as trades). Rule P's decision used T10 on the whole line (signals named: a pairing read). Section
+  7 shows every table named on the line.
+- O-4 (the 30-line bound): line 4010 is one line past the bound (distance 31) and was not read under rule P; it belongs to the
+  same loop as 4008 (for r in trades:, 4007; read 040), so its source is INTERPRETATION only.
+- O-5 (FR's reach): FR selects any read of a "strategy" or "scanner" field, including filter and request arguments
+  (analytics2.py 111; analytics_period.py 221 and 222) and map entries (scanner_attribution.py 298 and 299); such lines are
+  listed in section 7 with their outcome and no table is claimed for them.
+
+==============================================================================================================================
+11. EXECUTION RECORD
+==============================================================================================================================
+- Times (IST): authorisation received 17:08; checks and synthetic tests 17:08 to 17:09; W3 17:09:07 to 17:09:20; plan
+  17:09:33; W4 17:09:48 to 17:10:05; this sheet 17:18.
+- Git use on the clone: rev-parse HEAD; cat-file --batch-all-objects --batch-check (object types only); hash-object
+  --no-filters (the 281 s_rt paths, and per file inside cread_c010.py with ls-tree). git ls-remote against the repository. No
+  git status, no other tree-wide or history command, no fetch.
+- V2 documents consulted: none beyond those cited in the Stage 1 sheet and the Stage 1B proposal.
+
+| File | SHA-256 |
+|---|---|
+| <SCRATCHPAD>/c010/tools/cread_c010.py | BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 |
+| <SCRATCHPAD>/c010/tools/ccount_c010.py | 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC |
+| <SCRATCHPAD>/c010/tools/lock_c010.py | 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC |
+| <SCRATCHPAD>/c010/tools/gate_test_c010b.py | 4C48FE3C30B893CA4DA055C0E091269AAF71AD691F6BCA9AC4A4593C72CC2601 |
+| <SCRATCHPAD>/c010/tools/run_s1b_counts_c010.py | 702E0F39327E774995352799FB324C873F28538343DF51698A8BB1C0D3ED310F |
+| <SCRATCHPAD>/c010/tools/plan_s1b_c010.py | 233DC6F260DD991297BB0970A7311EB95763A0E9D7F8CE69DD9863F12F290B7F |
+| <SCRATCHPAD>/c010/tools/run_s1b_reads_c010.py | 7EF71DE882E39A74A8DEE049F19879FB5FBFA4653139DBA6698F7AD764B58780 |
+| <SCRATCHPAD>/c010/tools/test_tools_c010b.py | B422999DD2B713664DFEBBEDF33FEAE5C822D4AFDDD6FEFBBB79F3D4FE8DFD39 |
+| <SCRATCHPAD>/c010/scopes/s_1b.txt | F5D614D1E749ADBCEF0E4445B50B85317839A7539540C3228279923CACE507CA |
+| <SCRATCHPAD>/c010/s1b/s1b_counts.json | C072B0EB27F2D30EBFAF9B16A44501B1735325BC40F890CEA23BB72E6423306C |
+| <SCRATCHPAD>/c010/s1b/s1b_plan.json | C3871C2E315374C1763DE2169022B6C3911DD710B19DF5B6D15F1826279EE3AF |
+| <SCRATCHPAD>/c010/s1b/s1b_reads.json | D2001014230CDCCD626F06DB0144BAD2E1116ED3287DA0FC0E0F5599950E364E |
+| <SCRATCHPAD>/c010/gate/gate_test_W3.txt | 5AFFE17BB2891564DE6FE131D2DF703D68A7477CF92F715CCDF781E4B06AE438 |
+| <SCRATCHPAD>/c010/gate/gate_test_W4.txt | 0701274AA9BDF0021A14C97ADEED6CEE90C65AACFEB83F700DDCEAEAA5C0C333 |
+| <SCRATCHPAD>/c010/test1b_output.txt | FEE47C9DCB1026540B39CE7E13B4CF83AB490C1D432C8F420D42EEA754D9D6C2 |
+| <SCRATCHPAD>/c010/lock_log.tsv | E61A0FEBE68C65E672934CAFCFC243E512D54F9D2686322FB37904693DDFA98B |
+| <SCRATCHPAD>/c010/search_log.tsv | DBDB62628879E8890EA724A72DA65165FC3ED3696B37847990E78A2F577E7F27 |
+| <SCRATCHPAD>/c010/code_read_log.tsv | 5B1865156B69AD1951D257930A4EC044F81A622810D2319896018EC2A3CFD36F |
+
+Search log rows Q36 and Q37 (exact; tab-separated):
+    Q36	2026-10-24T17:09:20+05:30	\b(FROM|JOIN)\s+signals\b	s_rt.txt	4a6302df	281	files searched: 281; files with matches: 18; matching lines: 61	nev0=ok	selftest=ok
+    Q37	2026-10-24T17:09:20+05:30	\b(FROM|JOIN)\s+[a-z_][a-z0-9_]*	s_1b.txt	f5d614d1	8	files searched: 8; files with matches: 4; matching lines: 192	nev0=ok	selftest=ok
+Read log rows 018 to 042 (exact; tab-separated):
+    018	2026-10-24T17:09:56+05:30	grep	["']strategy["']|["']scanner["']	ops_dashboard/backend/services/analytics_period.py	594236faaef703a556f9e8f902fcaad18cf426c6	match	666	25	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b34e58b84633
+    019	2026-10-24T17:09:57+05:30	grep	["']strategy["']	ops_dashboard/backend/api/analytics2.py	8ab626ef7de17a79a057c494fa3ca1aaf05193ad	match	691	6	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=951a71f30b1a
+    020	2026-10-24T17:09:57+05:30	grep	["']strategy["']|["']scanner["']	ops_dashboard/backend/readers/config_reader.py	624bc8009771cb210ba3ac5eec9b70dc57bde537	match	337	4	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=bb7ae76bfc67
+    021	2026-10-24T17:09:58+05:30	grep	scan_webhook_map	ops_dashboard/backend/readers/config_reader.py	624bc8009771cb210ba3ac5eec9b70dc57bde537	match	337	6	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=40300f82800d
+    022	2026-10-24T17:09:58+05:30	grep	scan_webhook_map	ops_dashboard/backend/services/scanner_attribution.py	8503d3c1c6e038a7309d52e9d5492e8332ed3624	match	749	4	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=310334ffd4e4
+    023	2026-10-24T17:09:58+05:30	grep	scan_webhook_map	ops_dashboard/backend/services/strategy_tower.py	6effe8732f5284d37a318d9fcc9ddedd9e288070	match	483	1	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=16c54f7a5466
+    024	2026-10-24T17:09:59+05:30	grep	scan_webhook_map	ops_dashboard/backend/services/analytics_period.py	594236faaef703a556f9e8f902fcaad18cf426c6	match	666	1	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b7532b2e99af
+    025	2026-10-24T17:09:59+05:30	grep	scan_webhook_map|scanner_name|scan_name	ops_dashboard/backend/services/audit.py	f772aa60f53ad4a40407918f5b9b85ef3b146f59	match	733	2	masks: {'HOSTTOK': 0, 'B32': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b7bbc849c74d
+    026	2026-10-24T17:09:59+05:30	grep	scan_webhook_map	ops_dashboard/backend/services/config_view.py	0d4929a1c9908a18af771efe33f55d5a0ad04d9c	match	974	2	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=8267858cb68a
+    027	2026-10-24T17:10:00+05:30	grep	\b(FROM|JOIN)\s+[a-z_][a-z0-9_]*	scripts/replay_signals.py	72763c3ed8d5d8fe43258619d55840f2780cfa96	match	244	3	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=e88307dda7d0
+    028	2026-10-24T17:10:00+05:30	grep	\b(FROM|JOIN)\s+signals\b	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	27	masks: {'HOSTTOK': 0, 'LONGNUM': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=69589b4758b2
+    029	2026-10-24T17:10:00+05:30	grep	\b(FROM|JOIN)\s+[a-z_][a-z0-9_]*	ops_dashboard/backend/services/scanner_attribution.py	8503d3c1c6e038a7309d52e9d5492e8332ed3624	match	749	1	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=d33398281810
+    030	2026-10-24T17:10:01+05:30	grep	\b(FROM|JOIN)\s+[a-z_][a-z0-9_]*	scripts/compute_strategy_metrics.py	c081a0a8f76804301ada8d07733cf583f1c99287	match	353	4	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=ad7aef78af70
+    031	2026-10-24T17:10:01+05:30	range	556:590	signals/signal_processor.py	7fab0a02a302770ac72bbbd662549d5c091086c1	match	2704	35	masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=beab3ddf85b2
+    032	2026-10-24T17:10:01+05:30	range	53:60	scripts/strategy_registry_officer.py	c013518bc49c2323922292af5fa9eeacb3cc4d0b	match	306	8	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=42fe33d8ae39
+    033	2026-10-24T17:10:02+05:30	range	91:95	scripts/replay_signals.py	72763c3ed8d5d8fe43258619d55840f2780cfa96	match	244	5	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=ef692c690cae
+    034	2026-10-24T17:10:02+05:30	range	684:704	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	21	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=bb3511bbcbbb
+    035	2026-10-24T17:10:02+05:30	range	2072:2101	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	30	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=8d12b37e11fd
+    036	2026-10-24T17:10:03+05:30	range	1651:1666	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	16	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b218cbb70c5d
+    037	2026-10-24T17:10:03+05:30	range	617:621	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	5	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=c3c56c3475fd
+    038	2026-10-24T17:10:04+05:30	range	1058:1081	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	24	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=5523c8c0a894
+    039	2026-10-24T17:10:04+05:30	range	1662:1681	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	20	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=f19e3d7d7ddd
+    040	2026-10-24T17:10:05+05:30	range	3979:4008	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	30	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=7b683536e276
+    041	2026-10-24T17:10:05+05:30	range	4050:4055	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	6	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=cccc176e8e5e
+    042	2026-10-24T17:10:05+05:30	range	4100:4105	ops_dashboard/backend/readers/db_reader.py	f59e4f58fe51e32d151deb5e14322c1bb2cc28b5	match	4206	6	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=e9a8be837f6e
+Lock log rows E-9 to E-16 (exact; tab-separated):
+    E-9	2026-10-24T17:09:07+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1B_CHATGPT_ACCEPTED_AUTHORISATION_24-OCT-2026.txt (A7A554AB...39F9): window W3, C1 and C2 count-only only
+    E-12	2026-10-24T17:09:20+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W3 ended: C1 and C2 done; W4 only after the plan check
+    E-13	2026-10-24T17:09:48+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1B_CHATGPT_ACCEPTED_AUTHORISATION_24-OCT-2026.txt (A7A554AB...39F9): window W4, G1 G2 G3 F1-F4.3 and rule P only (s1b_plan.json C3871C2E...E3AF)
+    E-16	2026-10-24T17:10:05+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W4 ended: Stage 1B reads done; no further read without a new authorisation
+
+==============================================================================================================================
+12. COMPLETION DECLARATION
+==============================================================================================================================
+- Only the operations of the accepted Stage 1B authorisation were run: C1 and C2 in W3; G1, G2, G3, F1 to F4.3 and rule P in
+  W4. The read lock is engaged.
+- No legacy code, test, script or migration was run; no host, VM, broker, Chartink, service or database was accessed; no
+  protected path was opened; no secret value is reproduced.
+- No file was changed in either repository; no commit or push was made.
+- Stopping here for ChatGPT's reconciliation. The C-010 manual is not started.

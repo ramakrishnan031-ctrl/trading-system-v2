@@ -1,0 +1,1496 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1 EVIDENCE SHEET: S1-1 COUNT-ONLY SEARCHES AND S1-2 BOUNDED READS (for ChatGPT's reconciliation)
+Date of work: 24-Oct-2026 (IST), 15:58 to 16:29 IST. Prepared by Claude.
+Controlling scope: C-010_STAGE1_AUTHORISATION_REVIEW_SHEET_24-OCT-2026.txt (74 lines; SHA-256
+  6C2CAD96C1A595F6EC67CDD11CB62B600F8D79637682373034D15BF2B92F5732), with C-010_STAGE1_CLAUDE_RESEARCH_PROMPT_24-OCT-2026.txt
+  (24 lines; SHA-256 DCC277DA8F3BB3F04D4CE3718798C75AD2095B75CFA7D8B1323EB8E76BF1D87C); both received from Rama at 15:58 IST.
+Status: S1-1 and S1-2 done; the read lock is engaged again (16:16:19 IST). STOPPED for ChatGPT's reconciliation. The C-010
+  manual is not drafted; VP-45 is not ratified (OQ-03); BK-27 stays OPEN (OQ-04); the chapter 02/03 search was not run
+  (OQ-05).
+Security: the masked outputs of the authorised reads only; for the searches, counts and file names only. No credential, token,
+  account or client identifier, host or address, deployed path, mailbox or person name other than Rama's is reproduced;
+  protected paths are counted, never named. Claude's working folder is written as <SCRATCHPAD>.
+Companion file: C-010_STAGE1_SEARCHED_FILES_PINNED_BLOBS_24-OCT-2026.txt (each of the 1,260 searched files with its pinned
+  blob and the working-file check).
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Pin verified (section 1): trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb, still the tip of main
+  (16:05 IST); the tree listing is unchanged; each of the 1,260 searched working files equals its pinned blob.
+- S1-1 (section 3): the 32 authorised count-only searches (T1 to T8 over s_all 1,260, s_rt 281, s_tests 486 and s_cfg 41) in
+  lock window W1 (16:12:45 to 16:15:35 IST); 3 zero results (T4 in s_cfg, T5 in s_cfg, T7 in s_cfg), each with a positive
+  control (T1 in s_cfg run again, same per-file counts); no line printed; every search covered its whole scope. Completed
+  within the stated controls, so S1-2 went ahead.
+- S1-2 (section 4): 17 gated, masked reads in lock window W2 (16:16:03 to 16:16:19 IST), 176 printed lines, every operation
+  within its bound: the six reads of items 1 to 5, ten one-grep reads of R14 to R20 files that S1-1 found with T6 or T7 (item
+  6; the other five files have neither and were not grepped) and one further read (D-1). No refusal, no failed check.
+- Deviation D-1 (section 6): the further-read rule, fixed before W1, treated any printed line containing the word "signals" as
+  showing use of the signals table. At ops_dashboard/backend/readers/db_reader.py line 3994 "signals" is a dictionary key, so
+  one 11-line read (read 010, lines 3989 to 3999) was made although the authorisation's condition was not met. Proposed: read
+  010 is recorded and not relied on; no answer in section 5 uses it.
+- Gap G-1 (section 6): the Stage 0 register left out three dashboard files that C-001 cites for this topic
+  (ops_dashboard/backend/services/analytics_period.py, ops_dashboard/backend/api/analytics2.py,
+  ops_dashboard/backend/readers/config_reader.py) and four runtime files that name the map; S1-1 counted them; none was read.
+- Findings (section 5; FACT unless marked):
+  - A. The key reaches the processor's lookup as scanner_name (line 933). Its origin as the URL path segment and the
+    receiver's 404 check are HISTORICAL (C-001 4.3; C-002 7.1 and 7.2), not re-read.
+  - B. The receiver's INSERT writes one variable, scanner_name, into both signals.scanner and signals.strategy: BK-27 (C-001
+    D-05) re-verified at the source line; BK-27 stays OPEN.
+  - C. The processor's Step 2 looks scanner_name up in its own copy of the map, takes the entry's strategy (a dict's
+    "strategy" key or an object's strategy attribute), then the strategy object by that name; each of its three failures
+    raises _PipelineReject("UNKNOWN_STRATEGY", ...) with its own message.
+  - D. The loader registers each strategy object as strategies[cfg.name] = cfg; the map cross-check runs only when a map path
+    is passed.
+  - E. The processor test at lines 1933 to 1964 maps key gap_go_short to strategy gap_go_short_v1 and writes its own signals
+    row with the mapped name as strategy; it does not go through the receiver's INSERT. What it asserts is outside the range.
+  - F. Ten of the 15 R14 to R20 files key rows or map entries by "strategy" or "scanner"; no printed line shows the table the
+    rows come from, so their use of signals.scanner or signals.strategy is NOT ESTABLISHED by C-010 (HISTORICAL from C-001 at
+    the same lines). scanner_attribution.py builds a strategy-to-scanners list from the map entries (lines 298 to 299).
+  - G. main.py passes app_config.scan_webhook_map.scanners (line 3585) and app_config.scan_webhook_map (line 2458) as
+    scan_webhook_map; the processor keeps dict(scan_webhook_map) (line 208). The callees are HISTORICAL (C-001, C-008).
+- Not established within the bounds (section 5.8): 12 points, among them the enclosing functions of four ranges, how
+  "UNKNOWN_STRATEGY" becomes the stored status, a second lookup of the map in the processor (line 573), and the source table
+  of every dashboard row read.
+
+==============================================================================================================================
+1. REPOSITORY IDENTITY AND PIN (FACT)
+==============================================================================================================================
+- Repository ramakrishnan031-ctrl/trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb; no other commit or
+  branch was used.
+- Local clone (the C-009 one: partial, filter blob:none, sparse checkout): HEAD = the pin; the commit object gives tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa, parent 056905b861b22f034da07baeed969fe0daeb3cb7, committed 2026-09-11 02:05:13 IST
+  (read from the commit object; committer name and address not printed); remote origin = the repository above.
+- git ls-remote of the repository at 16:05:22 IST: HEAD and refs/heads/main both 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Tree listing used by the gate: 1,438 entries, SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5, the
+  value recorded since C-005.
+- Working files: s_all holds s_rt, s_tests and s_cfg (pairwise disjoint). Each of its 1,260 files equals its pinned blob (git
+  hash-object --no-filters --stdin-paths at 16:05 IST, and again by the S1-1 driver at 16:12:54 IST: 1,260 of 1,260). The
+  companion file lists every searched path with its pinned blob.
+- Local object store before, between and after the windows: 1,257 blobs, 1,537 commits, 6,126 trees (8,920 objects); protected
+  blobs present: 0 (sensitive_check.py exit 0). Nothing was fetched.
+- V2 baseline: trading-system-v2 main at 82f845053faf098db535a7a5498f7a225d25ef82 (DR-062); not changed by this step.
+
+==============================================================================================================================
+2. METHOD AND CONTROLS
+==============================================================================================================================
+2.1 Tools (in <SCRATCHPAD>/c010/tools; SHA-256 in section 8)
+- cread_c010.py: copy of cread_c009.py (C-009, accepted) with only the log and evidence folders and the lock comment changed.
+  A read passes the self-test and the gate (path shape, never-open pattern, the two July records, the pinned listing, the
+  shared protected blob, the local-store check), the read lock, the tree entry and the working file against the pinned blob
+  (git ls-tree and git hash-object on that one file), then mr.py (mask_read2.py plus the stage-2 mask); it logs one row and
+  keeps the output as evidence.
+- ccount_c010.py: copy of ccount_c009.py with three changes: the c010 folders; it refuses while the read lock is engaged (the
+  authorisation lifts the lock for this step); each per-file count carries the file's pinned blob. It runs count_grep.py
+  (mask_read2.py --grep over the list), which prints per-file counts and file names, never a line.
+- run_s11_c010.py: the S1-1 driver (the 32 searches in a fixed order, the positive controls, checks before and after).
+  plan_s12_c010.py: derives the S1-2 operations from the S1-1 counts by the rules of S1-2_RULES.txt, fixed before W1.
+  run_s12_c010.py: the S1-2 driver; it recomputes the plan and runs only that, applies the further-read rule and stops at the
+  first failed check.
+- lock_c010.py: lifts or engages the lock as a step of its own (one line of cread_c010.py), logs the SHA-256 before and after,
+  and after a relock checks that a read and a count are both refused. gate_test_c010.py: the refusal-only gate test, run in
+  each window before the first search or read.
+- Tested before W1 on synthetic input (test_tools_c010.py: simulated count and read outputs in a separate folder; the real
+  logs untouched): ccount locked, unlocked and with a protected path; run_s11 correct, with a wrong blob and with a differing
+  control; the plan and run_s12 correct (with a further read for a line naming the table), with a grep above its bound, a
+  short range and a changed plan; the gate test on an unlocked test copy. All passed (lesson of C-009 ERR-1).
+
+2.2 Lock windows (<SCRATCHPAD>/c010/lock_log.tsv)
+| Step | Time (IST) | Action | cread_c010.py SHA-256 before -> after | Window and result |
+|---|---|---|---|---|
+| E-1 | 16:12:45 | unlock | bd93a1f1699ccfef... -> 8d36219a06c03e98... | W1 opened: S1-1 only |
+| E-2 | 16:12:45 to 16:12:54 | gate test W1 | - | PASSED |
+| E-3 | 16:12:54 to 16:15:35 | S1-1 | - | Q01 to Q35 (32 searches, 3 controls) |
+| E-4 | 16:15:35 | relock | 8d36219a06c03e98... -> bd93a1f1699ccfef... | W1 closed; a read and a count then refused by the lock |
+| E-5 | 16:16:03 | unlock | bd93a1f1699ccfef... -> 8d36219a06c03e98... | W2 opened: S1-2 only |
+| E-6 | 16:16:03 to 16:16:12 | gate test W2 | - | PASSED |
+| E-7 | 16:16:12 to 16:16:19 | S1-2 | - | reads 001 to 017 |
+| E-8 | 16:16:19 | relock | 8d36219a06c03e98... -> bd93a1f1699ccfef... | W2 closed; a read and a count then refused by the lock |
+
+- No read was made in W1 (the read log's first row is at 16:16:12 IST, in W2); no count was made in W2 (the search log's last
+  row is at 16:15:35 IST, in W1).
+- Gate test, both windows (outputs <SCRATCHPAD>/c010/gate/gate_test_W1.txt and gate_test_W2.txt): never-open pattern identical
+  to sensitive_check.py; the 102 protected paths refused (the same set as the C-009 reference list); the two July records
+  refused; the path sharing a protected blob refused; 14 rule-shaped invented names refused; a name not in the tree refused; a
+  malformed range refused; ccount_c010.py refused four bad lists; gate() admitted the 20 S1-2 candidate files (no file
+  opened); the logs and the object store unchanged by the test.
+
+2.3 Terms, scopes and rules
+- Terms exactly as authorised, as case-sensitive regular expressions matched on the raw line: T1 scan_webhook_map; T2
+  scanner_name|scan_name; T3 strategy_name; T4 ScannerEntry|ScanWebhookMapConfig; T5 UNKNOWN_STRATEGY; T6 ["']strategy["']; T7
+  ["']scanner["']; T8 scanner_type.
+- Scopes exactly as in the Stage 0 answer (list SHA-256): s_all 1,260
+  (E875219180F307FD529AC7780CB3B4C6D32CBC201D48041EE89C2C97150AAF69); s_rt 281
+  (4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903); s_tests 486
+  (A6C4978E1A14E441461C0A6A30B7D8FD476C85465FF8FC4727E9A3211E467581); s_cfg 41
+  (A423CD8CE9D1EBF861CDB0976F17E23F293767F34A5E97BCE0828D5CDC1F5268).
+- Positive control for each zero result: the first authorised term (by number) that is positive in the same scope, run again;
+  it must be positive and give the same per-file counts as its first run.
+- S1-2: operations O1 to O8 of S1-2_RULES.txt (section 4.1), fixed before W1 and applied mechanically.
+
+==============================================================================================================================
+3. S1-1 COUNT-ONLY RESULTS (no line printed; per-file counts with pinned blobs in appendix A)
+==============================================================================================================================
+3.1 Files with matches / matching lines (search ID)
+| Term | s_all (1,260) | s_rt (281) | s_tests (486) | s_cfg (41) |
+|---|---|---|---|---|
+| T1 | 57 / 199 (Q01) | 15 / 55 (Q09) | 20 / 79 (Q17) | 2 / 11 (Q25) |
+| T2 | 73 / 319 (Q02) | 17 / 141 (Q10) | 32 / 116 (Q18) | 3 / 8 (Q26) |
+| T3 | 53 / 227 (Q03) | 25 / 160 (Q11) | 18 / 47 (Q19) | 2 / 3 (Q27) |
+| T4 | 4 / 16 (Q04) | 2 / 10 (Q12) | 2 / 6 (Q20) | 0 / 0 (Q28) |
+| T5 | 12 / 27 (Q05) | 2 / 6 (Q13) | 5 / 12 (Q21) | 0 / 0 (Q29) |
+| T6 | 109 / 488 (Q06) | 43 / 247 (Q14) | 51 / 214 (Q22) | 1 / 1 (Q30) |
+| T7 | 45 / 97 (Q07) | 15 / 25 (Q15) | 29 / 68 (Q23) | 0 / 0 (Q31) |
+| T8 | 8 / 15 (Q08) | 2 / 5 (Q16) | 2 / 4 (Q24) | 1 / 1 (Q32) |
+
+3.2 Positive controls (one for each zero result)
+| Control | For | Term run again | Scope | Files / lines | Same per-file counts as |
+|---|---|---|---|---|---|
+| Q33 | Q28 (T4, 0 files) | T1 | s_cfg | 2 / 11 | Q25 |
+| Q34 | Q29 (T5, 0 files) | T1 | s_cfg | 2 / 11 | Q25 |
+| Q35 | Q31 (T7, 0 files) | T1 | s_cfg | 2 / 11 | Q25 |
+
+- Every search reported files searched = its scope size (35 of 35); every matched file is in its scope with the pinned blob of
+  the listing (checked by the driver for each output line).
+
+3.3 Counts in the files read or cited (s_all; FACT, count-only)
+| File | Blob | T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 |
+|---|---|---|---|---|---|---|---|---|---|
+| signals/signal_processor.py | 7fab0a02a302 | 9 | 28 | 58 | 0 | 5 | 16 | 0 | 0 |
+| main.py | 445fb0d8237a | 2 | 0 | 0 | 0 | 0 | 4 | 0 | 0 |
+| signals/webhook_receiver.py | 0f15a0ab0335 | 2 | 58 | 0 | 0 | 0 | 0 | 0 | 1 |
+| strategies/loader.py | 99e83b192021 | 11 | 3 | 5 | 0 | 0 | 3 | 0 | 0 |
+| tests/unit/test_signal_processor.py | 3ec0ea84392a | 7 | 5 | 5 | 0 | 6 | 5 | 0 | 0 |
+| scripts/replay_signals.py | 72763c3ed8d5 | 0 | 0 | 4 | 0 | 0 | 3 | 2 | 0 |
+| scripts/strategy_registry_officer.py | c013518bc49c | 0 | 0 | 0 | 0 | 0 | 1 | 2 | 0 |
+| ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | 0 | 10 | 3 | 0 | 0 | 27 | 2 | 0 |
+| ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e0 | 4 | 0 | 0 | 0 | 0 | 14 | 3 | 0 |
+| ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| ops_dashboard/backend/services/strategy_tower.py | 6effe8732f52 | 1 | 0 | 0 | 0 | 0 | 1 | 1 | 0 |
+| ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094 | 0 | 0 | 0 | 0 | 0 | 12 | 0 | 0 |
+| ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a | 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 |
+| ops_dashboard/backend/services/strategy_score.py | 79c55db1987d | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ops_dashboard/backend/api/strategies.py | 8fac396665d6 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 |
+| capital/strategy_governor.py | d17193c569c1 | 0 | 0 | 16 | 0 | 0 | 1 | 0 | 0 |
+| scripts/strategy_status.py | d15942ccde89 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| scripts/compute_strategy_metrics.py | c081a0a8f768 | 0 | 0 | 8 | 0 | 0 | 3 | 0 | 0 |
+| strategies/__init__.py | ee3a2879f0fa | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| strategies/taxonomy.py | 069644bc1bdb | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 |
+| config/scan_webhook_map.yaml | 54dd98d75f27 | 1 | 2 | 1 | 0 | 0 | 0 | 0 | 1 |
+| core/config_loader.py | 8635bca77531 | 5 | 1 | 0 | 8 | 0 | 0 | 0 | 4 |
+| core/state_store.py | 11866117801b | 0 | 4 | 4 | 0 | 0 | 2 | 0 | 0 |
+| core/schema.sql | b46d7489f6ec | 0 | 4 | 4 | 0 | 0 | 0 | 0 | 0 |
+| strategies/schema.py | 22530161a5ee | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+3.4 What the counts alone show (FACT, count-only; nothing read beyond section 4)
+- T1 (the map's name) occurs in 15 runtime files (s_rt): core/config_loader.py 5; main.py 2;
+  ops_dashboard/backend/readers/config_reader.py 6; ops_dashboard/backend/services/analytics_period.py 1;
+  ops_dashboard/backend/services/audit.py 1; ops_dashboard/backend/services/config_view.py 2;
+  ops_dashboard/backend/services/scanner_attribution.py 4; ops_dashboard/backend/services/strategy_tower.py 1;
+  scripts/preflight/checks/config_integrity.py 1; scripts/preflight_scanner_check.py 1; scripts/premarket_healthcheck.py 1;
+  signals/signal_processor.py 9; signals/webhook_receiver.py 2; strategies/loader.py 11; utils/startup_checks.py 8. Six of
+  them are in no Stage 0 register row (G-1).
+- T4 (the map's schema classes) occurs only in core/config_loader.py (8 lines), utils/startup_checks.py (2) and two test files
+  (tests/unit/test_config_loader.py 5, tests/unit/test_startup_checks.py 1); none in s_cfg (Q28; control Q33).
+- T5 occurs in two runtime files: signals/signal_processor.py (5 lines; three of them are read in O1) and
+  scripts/generate_screened_stocks_csv.py (1); in five test files (12 lines; tests/unit/test_signal_processor.py 6) and in
+  five records (PATHS.md and four audit records); none in s_cfg (Q29; control Q34).
+- T8 occurs in two runtime files, core/config_loader.py (4) and signals/webhook_receiver.py (1), and once in
+  config/scan_webhook_map.yaml; the EOD route by scanner_type is C-011's (pointer only).
+- T6 or T7 occurs in 44 runtime files: 10 of the 15 R14 to R20 files (grepped in S1-2), three files of the named reads
+  (main.py 4 T6 lines, not grepped for T6; signals/signal_processor.py 16; strategies/loader.py 3) and 31 others (3.5), none
+  read. T7 is absent from s_cfg (Q31; control Q35).
+- T2 and T3 are frequent in the two pipeline files: signals/webhook_receiver.py T2 58 lines; signals/signal_processor.py T2 28
+  and T3 58 lines. Only the lines printed by O1, O2 and O4 were read.
+
+3.5 Runtime files with T6 or T7 lines outside R14 to R20 and the named reads (count-only, not read)
+  capital/performance_allocator.py (T6 1, T7 0); capital/shadow_engine.py (T6 1, T7 0); core/evidence_contract.py (T6 4, T7
+  0); core/state_store.py (T6 2, T7 0); ops_dashboard/backend/api/analytics.py (T6 1, T7 1);
+  ops_dashboard/backend/api/analytics2.py (T6 6, T7 0); ops_dashboard/backend/api/operations.py (T6 1, T7 1);
+  ops_dashboard/backend/api/trading.py (T6 12, T7 2); ops_dashboard/backend/readers/config_reader.py (T6 3, T7 1);
+  ops_dashboard/backend/services/analytics_period.py (T6 21, T7 5); ops_dashboard/backend/services/execution_analytics.py (T6
+  11, T7 0); ops_dashboard/backend/services/holdings.py (T6 7, T7 0); ops_dashboard/backend/services/live_activity.py (T6 12,
+  T7 0); ops_dashboard/backend/services/operations.py (T6 2, T7 1); ops_dashboard/backend/services/slippage_analytics.py (T6
+  9, T7 0); ops_dashboard/backend/services/trade_logs.py (T6 9, T7 0); orders/eod_squareoff.py (T6 1, T7 0);
+  orders/shadow_tracker.py (T6 3, T7 0); orders/slippage_recorder.py (T6 2, T7 0); reports/daily_report.py (T6 11, T7 1);
+  reports/daily_trade_review.py (T6 25, T7 0); screening/retest_monitor.py (T6 3, T7 0); screening/secondary_screener.py (T6
+  1, T7 0); screening/step_executor.py (T6 0, T7 1); scripts/forward_shadow_record.py (T6 2, T7 0);
+  scripts/gemini_premarket_brief.py (T6 2, T7 0); scripts/gemini_trade_coach.py (T6 2, T7 0); scripts/system_manager.py (T6 2,
+  T7 0); scripts/trade_journal.py (T6 1, T7 1); sr_detector/detector.py (T6 1, T7 0); v3_chain/models.py (T6 1, T7 1).
+- These counts include any quoted "strategy" or "scanner" string (for example a dictionary key for a trades or orders row), so
+  they bound the possible readers from above; which of them read signals.scanner or signals.strategy is NOT ESTABLISHED.
+
+==============================================================================================================================
+4. S1-2 BOUNDED READS
+==============================================================================================================================
+4.1 Operations and bounds (S1-2_RULES.txt, SHA-256 8F23B354D05E8B60F87B133CA72C30521E854CEE0A5FDBAFBCB2508E7C08124A, fixed
+  before W1; plan s12_plan.json, SHA-256 3B8943C9BD701F2BB99A23A40921C5CA0C71A8BB4E882FCDD127B5BEF297D92D, derived from
+  s11_results.json, SHA-256 4CE81D931EE49A14495E4145C0DE65B10D575BB16A0968A38EE131BB4FA3B41D)
+- O1 signal_processor.py range 930:953 (item 1); O2 one grep there, T1 if its T1 count is 1 or more, else T2 (item 1); O3
+  main.py one T1 grep (item 2); O4 webhook_receiver.py range 963:980 (item 3); O5 loader.py range 145:153 (item 4); O6
+  test_signal_processor.py range 1933:1964, text only (item 5). A single-term grep must print exactly its S1-1 count.
+- O7 (item 6, first clause): for each R14 to R20 file, with a = its T6 count and b = its T7 count: no grep if a + b = 0; T6 if
+  only a > 0; T7 if only b > 0; one grep of T6|T7 if both, printing from max(a, b) to a + b lines (a line can match both).
+- O8 (item 6, second clause): a further range of at most 11 lines (5 before, 5 after) only around a printed O7 line containing
+  the word "signals", at most 3 per file. See D-1 for how this rule worked out.
+
+| Op | Item | Read | Time | File | Pinned blob | Operation | Bound | Printed |
+|---|---|---|---|---|---|---|---|---|
+| O1 | 1 | 001 | 16:16:12 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | range 930:953 | 24 | 24 |
+| O2 | 1 | 002 | 16:16:12 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | grep T1 | 9 | 9 |
+| O3 | 2 | 003 | 16:16:13 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | grep T1 | 2 | 2 |
+| O4 | 3 | 004 | 16:16:13 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | range 963:980 | 18 | 18 |
+| O5 | 4 | 005 | 16:16:14 | strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | range 145:153 | 9 | 9 |
+| O6 | 5 | 006 | 16:16:14 | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | range 1933:1964 | 32 | 32 |
+| O7.01 | 6 | 007 | 16:16:14 | scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | grep T6 or T7 | 3-5 | 4 |
+| O7.02 | 6 | 008 | 16:16:15 | scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | grep T6 or T7 | 2-3 | 2 |
+| O7.03 | 6 | 009 | 16:16:15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | grep T6 or T7 | 27-29 | 29 |
+| O8.03.1 | 6 | 010 | 16:16:16 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | range 3989:3999 | 11 | 11 |
+| O7.04 | 6 | 011 | 16:16:16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | grep T6 or T7 | 14-17 | 15 |
+| O7.06 | 6 | 012 | 16:16:16 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | grep T6 or T7 | 1-2 | 2 |
+| O7.07 | 6 | 013 | 16:16:17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | grep T6 | 12 | 12 |
+| O7.08 | 6 | 014 | 16:16:17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | grep T6 | 2 | 2 |
+| O7.10 | 6 | 015 | 16:16:17 | ops_dashboard/backend/api/strategies.py | 8fac396665d64d425a28944eec27744247fc5c6c | grep T6 | 1 | 1 |
+| O7.11 | 6 | 016 | 16:16:18 | capital/strategy_governor.py | d17193c569c1d2e2890d2047b03cf9d0ae825e8d | grep T6 | 1 | 1 |
+| O7.13 | 6 | 017 | 16:16:18 | scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | grep T6 | 3 | 3 |
+| O7.05 | 6 | - | - | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a44ec610647daf9dced6079a64d77 | none: T6 and T7 counts 0 | - | 0 |
+| O7.09 | 6 | - | - | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d956e2943e5710deadfa68b43b2e1 | none: T6 and T7 counts 0 | - | 0 |
+| O7.12 | 6 | - | - | scripts/strategy_status.py | d15942ccde89d30e45df310a643ba0dacec17bce | none: T6 and T7 counts 0 | - | 0 |
+| O7.14 | 6 | - | - | strategies/__init__.py | ee3a2879f0fa022d22fdd62d9aed206964b3e64b | none: T6 and T7 counts 0 | - | 0 |
+| O7.15 | 6 | - | - | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | none: T6 and T7 counts 0 | - | 0 |
+
+- Printed lines in total: 176 (94 in ranges, 82 in greps). Each output equals its evidence file and its log row
+  (<SCRATCHPAD>/c010/evidence/001.txt to 017.txt; code_read_log.tsv).
+
+4.2 Outputs (verbatim, masked)
+Each read: its header (the reader's line count is the file's newline count plus one when the file ends with a newline), then
+  every line exactly as the masked reader printed it ("N: text", N the line number at the pin) after a four-space indent, then
+  the filter's mask counts, which are whole-file counts, not counts of the printed lines. One printed line carries a non-ASCII
+  character as in the source (read 009, line 3254, a dash).
+
+Read 001 | O1 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 930:953
+    930:             # ----------------------------------------------------------
+    931:             # Step 2: Strategy lookup (SPW3)
+    932:             # ----------------------------------------------------------
+    933:             map_entry = self._scan_webhook_map.get(scanner_name)
+    934:             if map_entry is None:
+    935:                 raise _PipelineReject(
+    936:                     "UNKNOWN_STRATEGY",
+    937:                     f"No entry in scan_webhook_map for scanner {scanner_name!r}",
+    938:                 )
+    939:             strategy_name = (
+    940:                 map_entry.get("strategy") if isinstance(map_entry, dict)
+    941:                 else getattr(map_entry, "strategy", str(map_entry))
+    942:             )
+    943:             if strategy_name is None:
+    944:                 raise _PipelineReject(
+    945:                     "UNKNOWN_STRATEGY",
+    946:                     f"scan_webhook_map entry for {scanner_name!r} has no 'strategy' key",
+    947:                 )
+    948:             strategy_obj = self._strategies.get(strategy_name)
+    949:             if strategy_obj is None:
+    950:                 raise _PipelineReject(
+    951:                     "UNKNOWN_STRATEGY",
+    952:                     f"Strategy {strategy_name!r} not in loaded strategies",
+    953:                 )
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 002 | O2 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | grep (T1)
+  expression: scan_webhook_map
+    29:     SPW1 -- Module 30 wiring update: strategies + scan_webhook_map + screener
+    30:     SPW2 -- Constructor: strategies/scan_webhook_map/screener/scorer required
+    143:             scan_webhook_map=webhook_map,      # {scanner: {"strategy": name}}
+    166:         scan_webhook_map: Dict[str, Any],   # SPW2: {scanner_name: {"strategy": name}}
+    208:         self._scan_webhook_map: Dict[str, Any] = dict(scan_webhook_map)
+    573:             entry = (getattr(self, "_scan_webhook_map", None) or {}).get(scanner_name)
+    933:             map_entry = self._scan_webhook_map.get(scanner_name)
+    937:                     f"No entry in scan_webhook_map for scanner {scanner_name!r}",
+    946:                     f"scan_webhook_map entry for {scanner_name!r} has no 'strategy' key",
+    masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+
+Read 003 | O3 | main.py | blob 445fb0d8237a | 4,294 lines | grep (T1)
+  expression: scan_webhook_map
+    2458:         scan_webhook_map=app_config.scan_webhook_map,
+    3585:         scan_webhook_map=app_config.scan_webhook_map.scanners,
+    masks: {'HOSTTOK': 0, 'CLIENTID': 19, 'KV': 10, 'ALNUM': 8, 'IPV4': 1} | stage-2 masks: {}
+
+Read 004 | O4 | signals/webhook_receiver.py | blob 0f15a0ab0335 | 1,208 lines | range 963:980
+    963:         try:
+    964:             with self._store.transaction() as cur:
+    965:                 cur.execute(
+    966:                     """
+    967:                     INSERT INTO signals
+    968:                       (signal_id, symbol, scanner, strategy,
+    969:                        triggered_at, received_at, expires_at,
+    970:                        status, fingerprint, fingerprint_date, trigger_price,
+    971:                        webhook_payload)
+    972:                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    973:                     """,
+    974:                     (
+    975:                         signal_id, symbol, scanner_name, scanner_name,
+    976:                         triggered_at_iso, received_at_iso, expires_at_iso,
+    977:                         "QUEUED", fingerprint, today_iso, price,
+    978:                         webhook_payload,
+    979:                     ),
+    980:                 )
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 005 | O5 | strategies/loader.py | blob 99e83b192021 | 214 lines | range 145:153
+    145:                     "at the entry gate (no load-time rewrite; MIS-only enforced at the "
+    146:                     "broker product chokepoint)",
+    147:                     cfg.name, cfg.intent,
+    148:                 )
+    149:             strategies[cfg.name] = cfg
+    150: 
+    151:         # S10: cross-validate against scan_webhook_map
+    152:         if scan_webhook_map_path is not None:
+    153:             self._validate_scan_webhook_map(scan_webhook_map_path, strategies)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 006 | O6 | tests/unit/test_signal_processor.py | blob 3ec0ea84392a | 2,501 lines | range 1933:1964
+    1933:     proc, _, store = _make_proc(
+    1934:         sizer=sizer, placer=placer,
+    1935:         strategies={"gap_go_short_v1": _SELL_STRATEGY},
+    1936:         scan_webhook_map={"gap_go_short": {"strategy": "gap_go_short_v1"}},
+    1937:     )
+    1938: 
+    1939:     entry = WatchEntry(
+    1940:         signal_id="sig_gate_002",
+    1941:         symbol="HDFCBANK",
+    1942:         direction="SHORT",
+    1943:         trigger_price=1500.0,
+    1944:         entry_price=1502.0,
+    1945:         sl_price=1530.0,
+    1946:         tgt_price=1440.0,
+    1947:         tolerance_pct=0.005,
+    1948:         timeout_sec=300,
+    1949:         strategy_name="gap_go_short_v1",
+    1950:         tier="HIGH",
+    1951:         scanner_name="gap_go_short",
+    1952:         intent="INTRADAY",
+    1953:         added_at=datetime.now(),
+    1954:     )
+    1955: 
+    1956:     with store.transaction() as cur:
+    1957:         cur.execute(
+    1958:             "INSERT OR IGNORE INTO signals "
+    1959:             "(signal_id, symbol, scanner, strategy, triggered_at, "
+    1960:             "received_at, expires_at, status, fingerprint, fingerprint_date) "
+    1961:             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    1962:             ("sig_gate_002", "HDFCBANK", "gap_go_short", "gap_go_short_v1",
+    1963:              "2026-04-15 10:00:00", "2026-04-15 10:00:00", "2026-04-15 10:01:00",
+    1964:              "PROCESSING", "fp_gate_002", "2026-04-15"),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 007 | O7.01 | scripts/replay_signals.py | blob 72763c3ed8d5 | 244 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    75:         "strategy": signal["strategy"],
+    76:         "scanner": signal["scanner"],
+    91:     strategy_name = signal["strategy"]
+    209:         "signal_id", "symbol", "strategy", "scanner", "trigger_price",
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 008 | O7.02 | scripts/strategy_registry_officer.py | blob c013518bc49c | 306 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    57:     for col in ("scanner", "strategy"):
+    145:                 "scanner": name,
+    masks: {'HOSTTOK': 0, 'CLIENTID': 5} | stage-2 masks: {}
+
+Read 009 | O7.03 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    545:     return [{"strategy": r["strategy"],
+    601:         out[r["strategy"]] = {
+    607:         out.setdefault(r["strategy"], {"trades": 0, "wins": 0, "losses": 0,
+    609:         out[r["strategy"]]["open_count"] = int(r["open_count"])
+    621:     return {r["strategy"]: int(r["n"]) for r in rows}
+    696:         s = out.setdefault(r["strategy"], {
+    747:     return {r["strategy"]: {k: (int(r[k]) if k != "last_failed_ts" else r[k])
+    786:         out[r["strategy"]] = d
+    800:     return {r["strategy"]: {"margin": float(r["margin"]), "open_count": int(r["open_count"])}
+    1061:     return {r["strategy"]: {"risk_rej": int(r["risk_rej"]), "capital_rej": int(r["capital_rej"])}
+    1081:         s = r["strategy"]
+    1162:         "per_strategy": [{"strategy": r["strategy"], "net": round(float(r["net"]), 2),
+    1192:         "per_strategy": [{"strategy": r["strategy"], "value": round(float(r["v"] or 0), 2),
+    1666:     return {r["trade_id"]: r["scanner"] for r in rows}
+    1681:     return {r["strategy"]: {"sl_hits": int(r["sl_hits"]), "tgt_hits": int(r["tgt_hits"])}
+    2084:         s = out.setdefault(r["scanner"], {"accepted": 0, "rejected": 0, "duplicated": 0,
+    2101:     return {r["strategy"]: int(r["n"]) for r in rows}
+    3254:         name = r.get("strategy") or "—"
+    3255:         agg = by_strategy.setdefault(name, {"strategy": name, "trades": 0,
+    3994:         return out.setdefault(str(name), {"strategy": str(name), "signals": 0,
+    3998:         if r["strategy"] is None:
+    4000:         s = _slot(r["strategy"])
+    4004:         if r["strategy"] is None:
+    4006:         _slot(r["strategy"])["orders"] = int(r["n"])
+    4008:         if r["strategy"] is None:
+    4010:         _slot(r["strategy"])["trades"] = int(r["n"])
+    4053:         if r["strategy"] is None or not r["d"]:
+    4055:         out.setdefault(str(r["strategy"]), {})[str(r["d"])] = int(r["n"])
+    4105:     return [{"strategy": r["strategy"], "status": r["status"], "n": int(r["n"])}
+    masks: {'HOSTTOK': 0, 'LONGNUM': 1} | stage-2 masks: {}
+
+Read 010 | O8.03.1 | ops_dashboard/backend/readers/db_reader.py | blob f59e4f58fe51 | 4,206 lines | range 3989:3999
+  further read for line 3994 of O7.03 (D-1: not relied on)
+    3989:             (today + "%",)).fetchall()
+    3990: 
+    3991:     out: dict = {}
+    3992: 
+    3993:     def _slot(name):
+    3994:         return out.setdefault(str(name), {"strategy": str(name), "signals": 0,
+    3995:                                           "orders": 0, "trades": 0, "last": None})
+    3996: 
+    3997:     for r in sig:
+    3998:         if r["strategy"] is None:
+    3999:             continue
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 011 | O7.04 | ops_dashboard/backend/services/scanner_attribution.py | blob 8503d3c1c6e0 | 749 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    298:         if entry["strategy"]:
+    299:             scanners_of.setdefault(entry["strategy"], []).append(entry["scanner"])
+    309:         rej_by_strategy.setdefault(r["strategy"], {})[r["status"]] = r["n"]
+    325:             "strategy": name,
+    445:         return (0 if v is not None else 1, -(v if v is not None else 0), r["strategy"])
+    492:     health_of = {r["strategy"]: r["health"] for r in rows}
+    494:                    if health_of.get(e["strategy"]) == "Disabled")
+    515:     return {"strategy": pick["strategy"], "display_name": pick["display_name"],
+    618:         ordered = sorted(vals, key=lambda r: (-r[metric], r["strategy"]))[:3]
+    619:         out[key] = [{"rank": i, "strategy": r["strategy"],
+    672:         strat = e["strategy"]
+    674:         rows.append({"scanner": e["scanner"], "url": e["chartink_url"],
+    675:                      "strategy": strat,
+    721:             r.get("display_name") or r.get("strategy"),
+    732:         mapping.append([m["scanner"], _cell(m["url"]), _cell(m["strategy"]),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 012 | O7.06 | ops_dashboard/backend/services/strategy_tower.py | blob 6effe8732f52 | 483 lines | grep (T6|T7)
+  expression: ["']strategy["']|["']scanner["']
+    324:         "scanner": s,
+    480:             return {"today": tower["today"], "strategy": r,
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 013 | O7.07 | ops_dashboard/backend/services/strategy_ranking.py | blob 61f44251c094 | 436 lines | grep (T6)
+  expression: ["']strategy["']
+    164:                if (meta.get(r.get("strategy")) or {}).get("trade_type") == want]
+    174:     metrics = analytics_period._aggregate(kept, lambda r: r.get("strategy"), "strategy")
+    194:     by_name = {m["strategy"]: m for m in metrics}
+    223:         prev_by_name = {m["strategy"]: m for m in prev_metrics}
+    235:             "strategy": name,
+    308:         return (0 if v is not None else 1, -(v if v is not None else 0), r["strategy"])
+    320:     return {"strategy": pick["strategy"], "display_name": pick["display_name"],
+    354:     fmt = lambda r: {"strategy": r["strategy"], "display_name": r["display_name"],  # noqa: <CLIENTID>
+    377:                             % (_n(above, "strategy", "strategies"),
+    383:                             % (_n(declining, "strategy", "strategies"),
+    389:                             % (_n(len(neg_roi), "strategy", "strategies"),
+    426:             cell(r.get("rank")), r.get("display_name") or r.get("strategy"),
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 014 | O7.08 | ops_dashboard/backend/services/strategy_health.py | blob 8a7264e5db2a | 611 lines | grep (T6)
+  expression: ["']strategy["']
+    242:             "strategy": name,
+    602:             r.get("display_name") or r.get("strategy"),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 015 | O7.10 | ops_dashboard/backend/api/strategies.py | blob 8fac396665d6 | 58 lines | grep (T6)
+  expression: ["']strategy["']
+    54:         payload, strategy=_arg("strategy"), status=_arg("status"),
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 016 | O7.11 | capital/strategy_governor.py | blob d17193c569c1 | 197 lines | grep (T6)
+  expression: ["']strategy["']
+    136:                 "strategy": strategy_name,
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 017 | O7.13 | scripts/compute_strategy_metrics.py | blob c081a0a8f768 | 353 lines | grep (T6)
+  expression: ["']strategy["']
+    173:     return [r["strategy"] for r in rows if r["strategy"]]
+    209:             "strategy": strategy_name,
+    259:             "strategy": strat,
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+==============================================================================================================================
+5. EVIDENCE ANSWERS A TO G
+==============================================================================================================================
+Labels: FACT - from C-010's own S1-1 counts or S1-2 reads at the pin (file, lines, blob; read number); HISTORICAL - a frozen
+  V2 manual's finding at the same pin, cited and not re-verified here unless said; INTERPRETATION - Claude's reading of FACT
+  lines, not a test of behaviour; UNKNOWN / NOT ESTABLISHED - outside the authorised evidence; KNOWN DEFECT - a frozen defect,
+  its status unchanged. Blobs: signal_processor.py 7fab0a02a302, webhook_receiver.py 0f15a0ab0335, main.py 445fb0d8237a,
+  loader.py 99e83b192021, test_signal_processor.py 3ec0ea84392a (full IDs in 4.1).
+
+5.1 A. Where the webhook path key originates and how it is used as the map key
+- FACT: In the processor's Step 2 (comment "# Step 2: Strategy lookup (SPW3)", signals/signal_processor.py line 931) the map
+  is looked up with scanner_name: map_entry = self._scan_webhook_map.get(scanner_name) (line 933; read 001). The comment on
+  the map parameter describes it as {scanner_name: {"strategy": name}} (line 166; read 002).
+- FACT: The receiver's INSERT takes the same name, scanner_name, as the value of both scanner and strategy
+  (signals/webhook_receiver.py line 975; read 004).
+- FACT (count-only): signals/webhook_receiver.py has 2 T1 lines and 58 T2 lines (Q01, Q02); none was read.
+- HISTORICAL: The key is the path segment of POST /webhook/<scanner_name>, tested exactly and case-sensitively against the map
+  keys; a segment that is not a key gets HTTP 404 (C-001 4.3; C-002 7.1, 7.2 and 9: signals/webhook_receiver.py lines 406 to
+  408 and 551 to 554). The receiver reads the map from the whole AppConfig (C-001 5.1: main.py lines 3407 to 3415;
+  webhook_receiver.py line 552). The processor's scanner_name comes from the queue tuple (C-001 12, T-9: signal_processor.py
+  lines 867 to 887). The optional alert name (scan_name) is only a cross-check against the segment (C-001 4.3; C-002 8.3).
+- INTERPRETATION: Within the lines read, one identifier, scanner_name, is both the stored identity at the receiver and the map
+  key at the processor; no line read derives another identifier from it before the lookup.
+- UNKNOWN / NOT ESTABLISHED: by C-010's own reads: the route declaration, the receiver's membership test and 404, and the
+  hand-over of scanner_name from the receiver to the processor.
+
+5.2 B. Which values are inserted into signals.scanner and signals.strategy
+- FACT: signals/webhook_receiver.py lines 963 to 980 (read 004): inside with self._store.transaction() as cur:, INSERT INTO
+  signals (signal_id, symbol, scanner, strategy, triggered_at, received_at, expires_at, status, fingerprint, fingerprint_date,
+  trigger_price, webhook_payload) with twelve placeholders, and the values (signal_id, symbol, scanner_name, scanner_name,
+  triggered_at_iso, received_at_iso, expires_at_iso, "QUEUED", fingerprint, today_iso, price, webhook_payload). The scanner
+  and strategy columns both receive scanner_name; no mapped strategy name appears in the statement.
+- KNOWN DEFECT / AMBIGUITY (latent): C-001 D-05 = BK-27 (re-verified by C-007 2.1) is re-verified here at the source line.
+  BK-27 stays OPEN (OQ-04).
+- HISTORICAL: no effect at the pin because each of the 16 keys equals its strategy (C-001 4.3, 4.4; the map file was not read
+  in C-010); no runtime writer updates signals.strategy later (C-001 7.2: core/state_store.py lines 1424, 2996 and 3057). S1-1
+  counts 2 T6 lines and 4 T3 lines in core/state_store.py; not read.
+- UNKNOWN / NOT ESTABLISHED: the enclosing function (its def line is outside lines 963 to 980); C-001 12 (T-8) places the
+  insert in the per-symbol acceptance, signals/webhook_receiver.py lines 892 to 1072 (HISTORICAL).
+
+5.3 C. Which identity the processor uses for the lookup, and what happens when it fails
+- FACT: signals/signal_processor.py lines 930 to 953 (read 001): (1) map_entry = self._scan_webhook_map.get(scanner_name)
+  (933); if None: _PipelineReject("UNKNOWN_STRATEGY", f"No entry in scan_webhook_map for scanner {scanner_name!r}") (934 to
+  938). (2) strategy_name = map_entry.get("strategy") if isinstance(map_entry, dict) else getattr(map_entry, "strategy",
+  str(map_entry)) (939 to 942); if None: _PipelineReject("UNKNOWN_STRATEGY", f"scan_webhook_map entry for {scanner_name!r} has
+  no 'strategy' key") (943 to 947). (3) strategy_obj = self._strategies.get(strategy_name) (948); if None:
+  _PipelineReject("UNKNOWN_STRATEGY", f"Strategy {strategy_name!r} not in loaded strategies") (949 to 953). The map lookup
+  uses the scanner key; the strategy lookup uses the entry's strategy value.
+- FACT: a second lookup of the same map by scanner_name exists at line 573: entry = (getattr(self, "_scan_webhook_map", None)
+  or {}).get(scanner_name) (read 002).
+- HISTORICAL: the code is SignalProcessor._process_one, Step 2 (C-001 7.4; C-008 4.1, ST-08); each failure ends as
+  REJECTED_UNKNOWN_STRATEGY (C-008 ST-08; C-001 5.2: a mapped strategy with no YAML is rejected per signal); self._strategies
+  is the processor's copy of the loaded strategies, made at construction (C-008 2.1, W-04: lines 207 to 208).
+- INTERPRETATION: the dict branch serves a plain-dict map (the test of 5.5 passes one); the attribute branch serves objects.
+  For an object without a strategy attribute the default str(map_entry) becomes the name, and the third check would reject it
+  unless a strategy had that name. The second message names a 'strategy' key, so it fits a dict entry.
+- UNKNOWN / NOT ESTABLISHED: how _PipelineReject's code "UNKNOWN_STRATEGY" becomes the stored status (handler outside the
+  bounds); what the lookup at line 573 is for and which function holds it (C-008 cites a docstring at lines 564 to 566 about
+  rejects raised before Step 2, HISTORICAL; line 573's use is not established).
+
+5.4 D. Under which key the loader registers each strategy object
+- FACT: strategies/loader.py line 149 (read 005): strategies[cfg.name] = cfg, so each strategy object is registered under
+  cfg.name. Lines 151 to 153: "# S10: cross-validate against scan_webhook_map", then if scan_webhook_map_path is not None:
+  self._validate_scan_webhook_map(scan_webhook_map_path, strategies): the map cross-check runs only when a map path is passed.
+  Lines 145 to 148 end a call whose arguments include cfg.name and cfg.intent, with a message on intent enforcement at the
+  entry gate and the broker product chokepoint; its start is outside the range.
+- HISTORICAL: cfg.name is the strategy YAML's name field; every *.yaml is loaded in sorted order, and a later file with the
+  same name replaces the earlier one without error (A-008 4; B-002 M22, citing line 149); the 16 names equal their file stems
+  (C-001 4.4); no boot or pre-flight caller passes the map path (A-008 erratum E-1; A-009; C-001 5.3, D-01).
+- INTERPRETATION: registration by key replaces an earlier entry with the same name (Python dictionary assignment), which
+  agrees with M22.
+- UNKNOWN / NOT ESTABLISHED: the enclosing method's name (line 153 calls self._validate_scan_webhook_map, so the code is a
+  method; its def line is outside the range).
+
+5.5 E. What the test with a key different from its strategy value establishes
+- FACT: tests/unit/test_signal_processor.py lines 1933 to 1964 (read 006; read as text, nothing run): the processor is built
+  with strategies {"gap_go_short_v1": _SELL_STRATEGY} and scan_webhook_map {"gap_go_short": {"strategy": "gap_go_short_v1"}}
+  (1933 to 1937): key gap_go_short, strategy gap_go_short_v1. A WatchEntry is built with strategy_name "gap_go_short_v1" and
+  scanner_name "gap_go_short" (1939 to 1954). The test then writes its own row: INSERT OR IGNORE INTO signals (signal_id,
+  symbol, scanner, strategy, ...) with scanner "gap_go_short", strategy "gap_go_short_v1" and status "PROCESSING" (1956 to
+  1964).
+- FACT: so the fixture holds a plain-dict map whose key differs from its strategy, and the fixture's signals row stores the
+  mapped strategy name in signals.strategy, which the receiver's INSERT does not (5.2); the row is written by the test, not by
+  the receiver.
+- HISTORICAL: "no test covers the production insert" (C-001 7.2); not re-verified by C-010.
+- INTERPRETATION: the WatchEntry fixture points to a test of the watch path, where processing takes "the strategy named in the
+  WatchEntry" (C-008 9.1: signal_processor.py lines 2050 to 2093, HISTORICAL).
+- UNKNOWN / NOT ESTABLISHED: the test's name and what it asserts (both outside lines 1933 to 1964).
+
+5.6 F. Which in-scope downstream readers (R14 to R20) use signals.scanner or signals.strategy, and how
+| Reg | File | Blob | T6 / T7 | Read | What the printed lines show (FACT) | Table shown | HISTORICAL |
+|---|---|---|---|---|---|---|---|
+| R14 | scripts/replay_signals.py | 72763c3ed8d5 | 3 / 2 | 007 (4 lines) | builds a dict with "strategy": signal["strategy"] and "scanner": signal["scanner"] (75, 76); strategy_name = signal["strategy"] (91); a list of names "signal_id", "symbol", "strategy", "scanner", "trigger_price" (209) | no | C-001 7.2: lines 91 to 95 read signals.strategy as the strategy |
+| R14 | scripts/strategy_registry_officer.py | c013518bc49c | 1 / 2 | 008 (2 lines) | for col in ("scanner", "strategy"): (57); "scanner": name (145) | no | C-001 7.2: lines 53 to 60 read signals.strategy as the strategy |
+| R15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51 | 27 / 2 | 009 (29 lines) | 27 lines key results by r["strategy"] (for example 696, 2101); two by r["scanner"]: {r["trade_id"]: r["scanner"] for r in rows} (1666) and per-scanner accepted, rejected and duplicated buckets (2084) | no | C-001 7.2: 684 to 704 and 2093 to 2101 (per-strategy funnel and counts from signals.strategy); C-001 8: 659 to 704, and 2267 to 2281, 2072 to 2090 and 1651 to 1666 for the per-scanner endpoint (webhook_audit by scanner_name, signals per scanner, trades through trades.signal_id to signals.scanner) |
+| R16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e0 | 14 / 3 | 011 (15 lines) | from map entries: if entry["strategy"]: scanners_of.setdefault(entry["strategy"], []).append(entry["scanner"]) (298, 299); mapping rows with e["scanner"], e["chartink_url"] and the strategy (672 to 675, 732); rej_by_strategy keyed by r["strategy"] and r["status"] (309); health by strategy (492, 494) | no | C-001 8: screen 21 is built (275 to 423) from the tower build, the map file and db_reader results; mapping panel (652 to 682) |
+| R17 | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a | 0 / 0 | not grepped (rule O7) | no quoted "strategy" or "scanner" string (Q06, Q07) | - | - |
+| R17 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f52 | 1 / 1 | 012 (2 lines) | "scanner": s (324); "strategy": r in a returned dict (480) | no | C-001 8: the tower build used by screen 21 (91 to 116) |
+| R17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094 | 12 / 0 | 013 (12 lines) | rows aggregated by r.get("strategy") through analytics_period._aggregate (174); other lines build or sort per-strategy results | no | - |
+| R17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a | 2 / 0 | 014 (2 lines) | "strategy": name in a result (242); a display fallback (602) | no | - |
+| R17 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d | 0 / 0 | not grepped (rule O7) | no quoted "strategy" or "scanner" string (Q06, Q07) | - | - |
+| R17 | ops_dashboard/backend/api/strategies.py | 8fac396665d6 | 1 / 0 | 015 (1 line) | passes strategy=_arg("strategy") with status (54) | no | - |
+| R18 | capital/strategy_governor.py | d17193c569c1 | 1 / 0 | 016 (1 line) | "strategy": strategy_name in a dict (136) | no | - |
+| R19 | scripts/strategy_status.py | d15942ccde89 | 0 / 0 | not grepped (rule O7) | no quoted "strategy" or "scanner" string (Q06, Q07) | - | - |
+| R19 | scripts/compute_strategy_metrics.py | c081a0a8f768 | 3 / 0 | 017 (3 lines) | [r["strategy"] for r in rows if r["strategy"]] (173); "strategy" in two dicts (209, 259) | no | - |
+| R20 | strategies/__init__.py | ee3a2879f0fa | 0 / 0 | not grepped (rule O7) | no quoted "strategy" or "scanner" string (Q06, Q07) | - | - |
+| R20 | strategies/taxonomy.py | 069644bc1bdb | 0 / 0 | not grepped (rule O7) | no quoted "strategy" or "scanner" string (Q06, Q07) | - | - |
+- FACT: none of the 71 printed O7 lines names the table its rows come from; so whether these files read signals.scanner or
+  signals.strategy is NOT ESTABLISHED by C-010's authorised evidence.
+- FACT: scanner_attribution.py maps strategies back to scanners from the map entries, allowing several scanners per strategy
+  (298 to 299), and shows each entry's scanner, URL and strategy in its mapping rows (672 to 675).
+- HISTORICAL: C-001 7.2 and 8 place the reads of signals.strategy and signals.scanner in replay_signals.py,
+  strategy_registry_officer.py and db_reader.py at the ranges in the table; scanner_attribution.py and strategy_tower.py build
+  screen 21 from those results and the map. C-010's grep lines fall inside the cited ranges (replay 91; registry officer 57;
+  db_reader 696, 1666, 2084, 2101): consistent with C-001, not a re-verification of the table.
+- INTERPRETATION: if those sites read signals.strategy (HISTORICAL), they attribute by the stored scanner key (5.2), which
+  equals the strategy name only while each key equals its strategy.
+- UNKNOWN / NOT ESTABLISHED: the source table of every printed line; any use of the identity by the five files without T6 or
+  T7 lines (for example unquoted SQL column names or attributes); the 31 other runtime files with T6 or T7 lines (3.5) and the
+  G-1 files, none read.
+- Deviation D-1: read 010 (db_reader.py lines 3989 to 3999) is not relied on.
+
+5.7 G. Where the map is loaded and passed to the receiver and the processor
+- FACT: main.py (read 003): its only two T1 lines (S1-1 count 2) are scan_webhook_map=app_config.scan_webhook_map, (2458) and
+  scan_webhook_map=app_config.scan_webhook_map.scanners, (3585); the calls they belong to are not in the printed lines.
+- FACT: signals/signal_processor.py (read 002): a parameter scan_webhook_map: Dict[str, Any], with the comment "# SPW2:
+  {scanner_name: {"strategy": name}}" (166), kept as self._scan_webhook_map: Dict[str, Any] = dict(scan_webhook_map) (208), a
+  shallow copy of the mapping passed. The module's notes list the map among the constructor's required inputs (29, 30: "SPW2
+  -- Constructor: strategies/scan_webhook_map/screener/scorer required"); line 143, scan_webhook_map=webhook_map, # {scanner:
+  {"strategy": name}}, is an argument in a call whose context is not printed. HISTORICAL: lines 207 to 208 are the copies made
+  at construction (C-008 2.1, W-04).
+- HISTORICAL: the map is loaded once per start, at Phase 0b, by load_all (C-001 5.1: main.py lines 2196 to 2202), with no
+  reload; main.py lines 2458 to 2460 pass it to run_all_startup_checks; the receiver is given the whole AppConfig (main.py
+  lines 3407 to 3415) and reads the map at webhook_receiver.py line 552; line 3585 is inside the processor's construction
+  (C-008 2.1, W-01 and W-02: main.py lines 3574 to 3623, "the scanner map's scanners"); the dashboard reads the map file
+  itself on each call (C-001 5.1: ops_dashboard/backend/readers/config_reader.py lines 92 to 115).
+- INTERPRETATION: taken together, the processor works on a dict copy of app_config.scan_webhook_map.scanners made at
+  construction, so the map in force for processing is the one loaded at the start; the map values there are schema objects
+  (C-001 4.3: a dict of ScannerEntry), which the attribute branch of 5.3 serves.
+- UNKNOWN / NOT ESTABLISHED: by C-010's own reads: the callees of lines 2458 and 3585; the receiver's access to the map; the
+  dashboard's load (G-1).
+
+5.8 UNKNOWN / NOT ESTABLISHED within the authorised bounds (consolidated)
+- U-01 The route declaration, the receiver's membership test against the map keys and its 404 (A; HISTORICAL C-001 4.3,
+  C-002).
+- U-02 How scanner_name travels from the receiver to the processor (A; HISTORICAL C-001 12, T-9).
+- U-03 The enclosing functions of reads 001 (HISTORICAL: _process_one), 004, 005 and 006 (their def lines are outside the
+  ranges).
+- U-04 How "UNKNOWN_STRATEGY" becomes the stored REJECTED_UNKNOWN_STRATEGY (C; HISTORICAL C-008 ST-08).
+- U-05 What the second map lookup at signal_processor.py line 573 is for (C).
+- U-06 What the test of 5.5 asserts, and whether any test covers the receiver's strategy value (E; HISTORICAL C-001 7.2:
+  none).
+- U-07 Which table each printed reader line comes from (F; HISTORICAL C-001 7.2 and 8 for the cited ranges).
+- U-08 Whether the five R14 to R20 files without T6 or T7 lines, the 31 other runtime files of 3.5 and the G-1 files use the
+  stored identity (F).
+- U-09 The callees of main.py lines 2458 and 3585, and the receiver's and the dashboard's map access (G; HISTORICAL C-001 5.1,
+  C-008 2.1).
+- U-10 That each of the 16 map keys equals its strategy at the pin (B; HISTORICAL C-001 4.3; the map file was not read).
+- U-11 That no runtime writer changes signals.strategy after the insert (B; HISTORICAL C-001 7.2; core/state_store.py not
+  read).
+- U-12 What the deleted hosts ran (UNKNOWN beyond the repository, W-7).
+
+5.9 The chapter cross-check (OQ-05)
+- Cited, not freshly verified: C-008's cross-check row CH-09 records that chapter 02 (line 952) lists "scanner->strategy
+  lookup ... scan_webhook_map" in the pipeline, CONSISTENT with C-008 4.1
+  (C-008_CHAPTER_02_03_CROSS_CHECK_REV3_24-OCT-2026.md). No chapter search was run.
+
+==============================================================================================================================
+6. DEVIATIONS, GAPS AND BLOCKERS
+==============================================================================================================================
+- D-1 (process deviation; W2, 16:16:16 IST). Rule O8, fixed before W1, took "a printed line that contains the word signals" as
+  a match that shows use of the signals table. At ops_dashboard/backend/readers/db_reader.py line 3994 the word is a
+  dictionary key of a per-strategy slot ({"strategy": str(name), "signals": 0, ...}), not the table, so the authorisation's
+  condition ("the match shows use of signals.scanner or signals.strategy") was not met; the driver still read lines 3989 to
+  3999 (read 010, 11 lines, within the rule's bound, masked, nothing sensitive). The lines show a loop over rows of sig that
+  skips rows whose "strategy" is None; the query that fills sig is outside the read, so the read establishes nothing about the
+  table. Proposed treatment: read 010 stays recorded and is not relied on; no answer in section 5 uses it. The synthetic test
+  had covered the true case only.
+  Lesson proposed for V2_DESIGN_LOG: a mechanical trigger for a conditional read must test the condition itself (here, the
+  table name in a query, such as FROM signals or signals.strategy), and must be tried before the window on a likely false
+  positive (a dictionary key with the same word) as well as on a true case.
+- G-1 (Stage 0 register gap, found from the S1-1 counts). Three dashboard files that frozen manuals cite for this topic were
+  not in the Stage 0 register: ops_dashboard/backend/services/analytics_period.py (C-001 8: per-scanner attribution; T1 1, T6
+  21, T7 5 in s_rt), ops_dashboard/backend/api/analytics2.py (C-001 8: the attribution endpoints; T6 6) and
+  ops_dashboard/backend/readers/config_reader.py (C-001 5.1: the dashboard's own map load; T1 6, T6 3, T7 1). Four more
+  runtime files name the map and are in no register row: ops_dashboard/backend/services/audit.py (T1 1),
+  ops_dashboard/backend/services/config_view.py (T1 2), scripts/preflight/checks/config_integrity.py (T1 1) and
+  scripts/premarket_healthcheck.py (T1 1). None was read (outside the authorised list). For ChatGPT: whether C-010 needs any
+  of them or cites C-001 for them.
+- Blockers: none. The gated, masked reader and every stated control applied exactly; no refusal; no failed check.
+
+==============================================================================================================================
+7. SCOPE DECISIONS APPLIED
+==============================================================================================================================
+- OQ-01: only T1 to T8 over the four scopes, counts only, with positive controls. OQ-02: section 5.2 of the Stage 0 answer as
+  the scope; frozen findings cited as HISTORICAL; only the listed points re-verified; C-001 not re-read in full (targeted
+  look-ups of the cited sections only, section 8).
+- OQ-03: VP-45 not ratified. OQ-04: BK-27 OPEN, evidence recorded (5.2). OQ-05: CH-09 cited (5.9), no chapter search.
+- Not done: drafting of the C-010 manual; any fix, design or implementation advice; any edit, commit or push; any run of
+  legacy code, tests, scripts or migrations; any host, VM, broker, Chartink, live-service or database access; any protected
+  path.
+
+==============================================================================================================================
+8. EXECUTION RECORD (methods and hashes; no secret value)
+==============================================================================================================================
+- Times (IST): inputs received 15:58; pin checks and the blob register 16:05; synthetic tests 16:10; W1 16:12:45 to 16:15:35;
+  plan 16:15:51; W2 16:16:03 to 16:16:19; this sheet 16:29.
+- Git use on the clone: rev-parse HEAD; cat-file -p of the commit object (tree, parent and committer time read; name and
+  address not printed); config --get remote.origin.url; cat-file --batch-all-objects --batch-check (object types only);
+  hash-object --no-filters (the 1,260 s_all paths; and per file inside cread_c010.py with ls-tree). git ls-remote against the
+  repository. No git status, no other tree-wide or history command, no fetch.
+- Legacy content reached Claude only through the S1-2 reads of section 4 (masked); the searches returned counts.
+- V2 documents consulted for citations (targeted look-ups in the local clone of trading-system-v2 at 82f8450): C-001_manual.md
+  sections 4.3, 4.4, 5.1, 5.3, 7.2, 7.4, 8, 10 and 12; C-002_manual.md 7.1, 7.2, 9; C-007_manual.md 2.1; C-008_manual.md 2.1,
+  4.1, 9.1; C-008_CHAPTER_02_03_CROSS_CHECK_REV3_24-OCT-2026.md (CH-09); B-002_manual.md (M22); A-008_manual.md section 4 and
+  erratum E-1.
+
+| File | SHA-256 |
+|---|---|
+| <SCRATCHPAD>/c010/tools/cread_c010.py | BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 |
+| <SCRATCHPAD>/c010/tools/ccount_c010.py | 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC |
+| <SCRATCHPAD>/c010/tools/run_s11_c010.py | 6A64C22FEFDB544D6CDD9E6C2EB0F85FF420DF9F3CE9C4B02131ADE9330A050B |
+| <SCRATCHPAD>/c010/tools/plan_s12_c010.py | 8E243A913DE563B45EFE74AB996D0919482C239448852606FE48F7DAA6231E9E |
+| <SCRATCHPAD>/c010/tools/run_s12_c010.py | C0B074F9741A0D8AAED632DF8BFC577B5CE3090794B3F8D9B5BB1F93B803B0A3 |
+| <SCRATCHPAD>/c010/tools/lock_c010.py | 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC |
+| <SCRATCHPAD>/c010/tools/gate_test_c010.py | 02243075750F344FE2D0488BA2B5B6CB8CEBC31986A1CF94B97FE45994FB18C0 |
+| <SCRATCHPAD>/c010/tools/test_tools_c010.py | C827A5AF4714F42BF41491C0BEDDCBBB60452E8776159B316250EACB4F2A73E0 |
+| <SCRATCHPAD>/c010/s12/S1-2_RULES.txt | 8F23B354D05E8B60F87B133CA72C30521E854CEE0A5FDBAFBCB2508E7C08124A |
+| <SCRATCHPAD>/c010/s11/scope_blob_register.tsv | 4CC0405AE8D08532C2CECFE4581682E6A784BD7F881B6EF98ABEE0A4EC59A46C |
+| <SCRATCHPAD>/c010/s11/s11_results.json | 4CE81D931EE49A14495E4145C0DE65B10D575BB16A0968A38EE131BB4FA3B41D |
+| <SCRATCHPAD>/c010/s12/s12_plan.json | 3B8943C9BD701F2BB99A23A40921C5CA0C71A8BB4E882FCDD127B5BEF297D92D |
+| <SCRATCHPAD>/c010/s12/s12_results.json | BE1332FB2DFD4D70E3587FA309D90E337B5972127480E8F22F7DFD388B026F25 |
+| <SCRATCHPAD>/c010/gate/gate_test_W1.txt | 79638D16F1C33CE523C0E15D3241FC5891CD04ACF56A68F4F73319E7CA033654 |
+| <SCRATCHPAD>/c010/gate/gate_test_W2.txt | D8B682D19CD5FF2CD1C4564868A148746785F1ED75518E90F22274A681490246 |
+| <SCRATCHPAD>/c010/lock_log.tsv | 6A0DECEE890C718433E8BE3345604C63177AC32B800C07F3A922B61CE62AA82E |
+| <SCRATCHPAD>/c010/search_log.tsv | 9F238A9E653144BBA6144EF89B19D14BEA822084DDC5132EB610A8B5A8D203D0 |
+| <SCRATCHPAD>/c010/code_read_log.tsv | 68EF3085E1878DE5BFD7522587C497BFF35EA52B11A74CBC20E259F0D6F2FD91 |
+| <SCRATCHPAD>/bin/mr.py | B0BD3D87CF51D1CBAB4FE09F868F1BACC082E684AFE4155515C37788969F4F48 |
+| <SCRATCHPAD>/bin/count_grep.py | 31AF8CA5903370BF935B57DCB4FDCDBDA343F99226AA50580C495CA2C124362B |
+| tools/mask_read2.py (shared reader tools) | BC0B715DF0267BCFD0EA23E17E52E487D16C7F447A92076E0F6AB4AB1C3F17F7 |
+| tools/mask_read_lib.py (shared reader tools) | CCC8D5BE22AE2E928F5E2D3A42B2D70821EBE8EA318DF936DBEAC1EFE9C74BB8 |
+| tools/sensitive_check.py (shared reader tools) | E36C1382B05129E5A2B1382AF60981B9352C8AE4DCA40D29F90629AAC998A337 |
+| tools/scan_ids.py (shared reader tools) | 8217536996866BBB93A31ECE81C71193C53E1EA286B2054B1645C994329ACA16 |
+
+- cread_c010.py locked (now) = before E-1 = after E-4 and E-8:
+  bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7; unlocked during W1 and W2:
+  8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245.
+
+==============================================================================================================================
+9. COMPLETION DECLARATION
+==============================================================================================================================
+- Only the authorised S1-1 searches and S1-2 reads were run, with D-1 as recorded; the read lock is engaged.
+- No code, test, script or migration of the legacy project was run; no live service, VM, host, broker, Chartink account,
+  database or protected path was accessed; no secret value is reproduced.
+- No file was changed in either repository; no commit or push was made.
+- Stopping here for ChatGPT's reconciliation. The C-010 manual is not started.
+
+==============================================================================================================================
+APPENDIX A. S1-1 PER-FILE COUNTS (count, path, pinned blob to 12 characters; full IDs in the companion file)
+==============================================================================================================================
+
+Q01 | T1 | scan_webhook_map | s_all | files searched 1,260; files with matches 57; matching lines 199
+      1  PATHS.md  e6a1ba7c1cb6
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+      5  core/config_loader.py  8635bca77531
+      2  docs/01_system_architecture.md  603fd3cbd220
+      1  docs/02_strategy_yaml_guide.md  ba662a5c1431
+      2  docs/CONFIG_GUIDE.md  1e4f7ee17440
+      3  docs/SYSTEM_MAP.md  c251f7c7a293
+      6  docs/audit/audit_05jul2026.md  a6074fe7fa05
+      2  docs/audit/eod_capture_safety_2026-07-24.md  db5c44612170
+      1  docs/audit/followup_investigation_15jul2026.md  01008d209aff
+      5  docs/audit/integrity_audit_2026.md  25a738f2a9a7
+      2  docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md  adf589da7314
+      2  docs/audit/receiver_auth_c6_scoping_2026-07-25.md  25c1ddb48068
+      5  docs/audit/secondary_filtration_execution_pipeline_audit.md  5d405fa42059
+      5  docs/audit/strategy_direction_investigation_17jul2026.md  6082b5d79929
+      2  docs/crash_test_info_04jun2026.md  5ddea9627498
+      1  docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md  ade01ef80717
+     10  docs/locked_decisions.yaml  2908b09fb546
+      2  docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md  25d260107eb1
+      2  main.py  445fb0d8237a
+      6  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+      1  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+      1  ops_dashboard/backend/services/audit.py  f772aa60f53a
+      2  ops_dashboard/backend/services/config_view.py  0d4929a1c990
+      4  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      5  ops_dashboard/docs/G2b1_strategy_attribution.md  55a9f8cbc1d7
+      2  ops_dashboard/docs/G5_REDESIGN_PHASE_A.md  cc0c029cdeba
+      3  ops_dashboard/docs/G5_REDESIGN_PHASE_B.md  cfb9f7c59f90
+      2  ops_dashboard/frontend/templates/scanner_attribution.html  3be742f4a250
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      7  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      1  scripts/preflight/checks/config_integrity.py  bff5d236a754
+      1  scripts/preflight_scanner_check.py  3151263d6e24
+      1  scripts/premarket_healthcheck.py  c81fc21e5749
+      9  signals/signal_processor.py  7fab0a02a302
+      2  signals/webhook_receiver.py  0f15a0ab0335
+     11  strategies/loader.py  99e83b192021
+      4  tests/integration/conftest.py  a6180190235f
+      1  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+     11  tests/unit/test_config_loader.py  8f245c35a047
+      1  tests/unit/test_e4_event_loop_safety.py  db8cb8b39f02
+      2  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_fix067_ms1_fresh_anchor.py  479cb646bc76
+      1  tests/unit/test_fix074_numeric_cast.py  4f5d3cc814bd
+      1  tests/unit/test_fix134_backpressure.py  463f7af7922f
+      2  tests/unit/test_main.py  da7bbb911113
+      5  tests/unit/test_pb01_registration.py  80f63d22be64
+      2  tests/unit/test_phase4_trade_type_gate.py  69f0b6b6bb74
+      1  tests/unit/test_preflight_scanner.py  9e089d81ca76
+      7  tests/unit/test_signal_processor.py  3ec0ea84392a
+      1  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+     12  tests/unit/test_startup_checks.py  bd92db4a856e
+     13  tests/unit/test_strategies.py  a17ae20faa67
+      1  tests/unit/test_v3_eod_route.py  2d0dc4071618
+      4  tests/unit/test_webhook_receiver.py  7b377abb85d6
+      8  utils/startup_checks.py  61ff67676d82
+
+Q02 | T2 | scanner_name|scan_name | s_all | files searched 1,260; files with matches 73; matching lines 319
+      1  allocation/models.py  f27120285491
+      1  config/chartink_scanners.yaml  de82a8269c2c
+      2  config/scan_webhook_map.yaml  54dd98d75f27
+      1  core/config_loader.py  8635bca77531
+      1  core/exceptions.py  1eeac5842084
+      4  core/schema.sql  b46d7489f6ec
+      4  core/state_store.py  11866117801b
+      1  docs/04_db_schema_reference.md  0218e152b77e
+      1  docs/05_incident_response.md  a2928767318e
+      3  docs/SYSTEM_MAP.md  c251f7c7a293
+      2  docs/audit/audit_05jul2026.md  a6074fe7fa05
+      2  docs/audit/eod_capture_safety_2026-07-24.md  db5c44612170
+      1  docs/audit/followup_investigation_15jul2026.md  01008d209aff
+      5  docs/audit/integrity_audit_2026.md  25a738f2a9a7
+      4  docs/audit/p3s14_investigation_17jul2026.md  960d7c5f6661
+      1  docs/audit/pb01_simulation_feasibility_2026-07-24.md  8c1e2686d7e7
+      8  docs/audit/receiver_auth_c6_scoping_2026-07-25.md  25c1ddb48068
+      2  docs/audit/refused_posts_403_investigation_23jul2026.md  6c96c81a7f78
+      4  docs/audit/secondary_filtration_execution_pipeline_audit.md  5d405fa42059
+      1  docs/audit/silent_failure_gaps_2026-07-25.md  d4911f93211b
+      3  docs/audit/strategy_direction_investigation_17jul2026.md  6082b5d79929
+      3  docs/crash_test_info_04jun2026.md  5ddea9627498
+      1  docs/gui_project/G0_BACKEND_INVESTIGATION_REPORT.md  ade01ef80717
+      5  docs/locked_decisions.yaml  2908b09fb546
+      1  docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md  25d260107eb1
+     10  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      1  ops_dashboard/backend/services/audit.py  f772aa60f53a
+      5  ops_dashboard/docs/G2b1_strategy_attribution.md  55a9f8cbc1d7
+      1  ops_dashboard/docs/G3_0_CONTROL_PLANE_INVESTIGATION.md  a1a5a430bff1
+      1  ops_dashboard/frontend/templates/audit.html  6e177000afd8
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      2  ops_dashboard/tests/test_screen13_audit.py  02d47ba78c34
+      1  ops_dashboard/tests/test_screen20_strategy_health.py  f9fa19114fb2
+      3  screening/entry_gate.py  46b173171bdf
+      5  screening/secondary_screener.py  b6f8ff7223ad
+      1  scripts/load_test_signals.py  47d74e172b35
+      4  scripts/preflight_scanner_check.py  3151263d6e24
+     28  signals/signal_processor.py  7fab0a02a302
+     58  signals/webhook_receiver.py  0f15a0ab0335
+      3  strategies/loader.py  99e83b192021
+      1  tests/crash_test/ct143_afternoon_inject.py  225fce0708d7
+      1  tests/crash_test/ct145_rapid_crash.py  0e05883af498
+      4  tests/crash_test/ct_day2_isolated.py  96a879eba2e9
+      1  tests/crash_test/scenarios/ct036.yaml  0ba338441dcd
+      7  tests/crash_test/signal_injector.py  b4bb2ef9c8f6
+      3  tests/integration/conftest.py  a6180190235f
+      4  tests/integration/test_end_to_end_smoke.py  7dc4554968d6
+      4  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      1  tests/integration/test_hardening_scenarios.py  d87da7ab9ed6
+      1  tests/integration/test_q9_sizing_floors_caps_wired.py  8099ef87e1fe
+      6  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+      1  tests/unit/test_daily_trade_review.py  7681a7130f67
+      1  tests/unit/test_e4_event_loop_safety.py  db8cb8b39f02
+      1  tests/unit/test_entry_gate.py  ab1a956af832
+      4  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_fix134_backpressure.py  463f7af7922f
+      1  tests/unit/test_hard_gate.py  83388f2e371d
+      1  tests/unit/test_load_test_signals.py  72ffa6861dfe
+      1  tests/unit/test_mis_blocklist.py  4960f825965e
+      1  tests/unit/test_nocil_prefill.py  533236b2606b
+      2  tests/unit/test_preflight_scanner.py  9e089d81ca76
+     10  tests/unit/test_secondary_screener.py  e8e2ddb2a77d
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      3  tests/unit/test_startup_checks.py  bd92db4a856e
+      3  tests/unit/test_state_store.py  323327dd51e7
+      1  tests/unit/test_step_executor.py  82cfe6819362
+      1  tests/unit/test_v3_chain.py  d0711c45b279
+      3  tests/unit/test_v3_eod_route.py  2d0dc4071618
+     38  tests/unit/test_webhook_receiver.py  7b377abb85d6
+     15  utils/startup_checks.py  61ff67676d82
+      1  v3_chain/models.py  159e319d8c91
+      1  v3_chain/runner.py  a782f91f2f4f
+      4  v3_chain/watchlist_capture.py  25a1f084eada
+
+Q03 | T3 | strategy_name | s_all | files searched 1,260; files with matches 53; matching lines 227
+      1  allocation/models.py  f27120285491
+     11  capital/performance_allocator.py  ca7cfb0692c9
+     16  capital/strategy_governor.py  d17193c569c1
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+      1  core/evidence_contract.py  29fb84bc690d
+      4  core/schema.sql  b46d7489f6ec
+      4  core/state_store.py  11866117801b
+      1  core/strategy_direction.py  0e6f8b6686f3
+      1  docs/MASTER_PENDING_01-Aug-2026.md  9ec017e3fd7c
+      3  docs/SYSTEM_MAP.md  c251f7c7a293
+      1  docs/audit/batch3_done_17jul2026.md  b97db4f5ad68
+      3  docs/audit/full_system_audit_04july2026.md  fafb3babdda4
+      1  docs/audit/secondary_filtration_execution_pipeline_audit.md  5d405fa42059
+      2  docs/locked_decisions.yaml  2908b09fb546
+      1  docs/report_data_contract.md  450b0dfe8d53
+      3  docs/slippage_intelligence.md  a2e8eab78fab
+      2  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      3  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      1  ops_dashboard/backend/services/slippage_analytics.py  6589bef40ec7
+      1  ops_dashboard/backend/services/strategy_meta.py  8d7324317a3a
+      6  ops_dashboard/tests/conftest.py  ea440c793186
+     12  orders/shadow_tracker.py  850722541f41
+      2  orders/slippage_recorder.py  19d1b6c2d4b3
+      2  reports/daily_report.py  ad40268a655b
+      1  reports/daily_trade_review.py  c448b7976964
+      3  screening/entry_gate.py  46b173171bdf
+      2  screening/retest_monitor.py  26639d6ed5dd
+     17  screening/secondary_screener.py  b6f8ff7223ad
+      8  scripts/compute_strategy_metrics.py  c081a0a8f768
+      4  scripts/replay_signals.py  72763c3ed8d5
+      2  scripts/system_manager.py  04e776e60f98
+     58  signals/signal_processor.py  7fab0a02a302
+      5  strategies/loader.py  99e83b192021
+      1  strategies/taxonomy.py  069644bc1bdb
+      1  tests/integration/test_hardening_scenarios.py  d87da7ab9ed6
+      1  tests/unit/test_alert_direction_eod_29jun.py  34dc6272637d
+      1  tests/unit/test_daily_trade_review.py  7681a7130f67
+      1  tests/unit/test_entry_gate.py  ab1a956af832
+     12  tests/unit/test_evidence_contract.py  93668c5e53c8
+      2  tests/unit/test_fix135_strategy_position_cap.py  32ac3ccbaa92
+      1  tests/unit/test_h7_strategy_cap_toctou.py  6bdbf4d41d32
+      3  tests/unit/test_h8_shadow_tracker_strategy_column.py  ed7c605630ad
+      2  tests/unit/test_main.py  da7bbb911113
+      1  tests/unit/test_portfolio_allocator.py  13c1c1338752
+      1  tests/unit/test_signal_alert_capital_vocabulary.py  4af3496455d9
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      2  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+      2  tests/unit/test_slippage_recorder.py  9f5489062193
+      3  tests/unit/test_sr_detector_observer.py  46020a54e7f8
+      2  tests/unit/test_sr_v2_divert.py  191e94efecef
+      1  tests/unit/test_v3_chain.py  d0711c45b279
+      1  v3_chain/models.py  159e319d8c91
+      1  v3_chain/runner.py  a782f91f2f4f
+
+Q04 | T4 | ScannerEntry|ScanWebhookMapConfig | s_all | files searched 1,260; files with matches 4; matching lines 16
+      8  core/config_loader.py  8635bca77531
+      5  tests/unit/test_config_loader.py  8f245c35a047
+      1  tests/unit/test_startup_checks.py  bd92db4a856e
+      2  utils/startup_checks.py  61ff67676d82
+
+Q05 | T5 | UNKNOWN_STRATEGY | s_all | files searched 1,260; files with matches 12; matching lines 27
+      1  PATHS.md  e6a1ba7c1cb6
+      3  docs/audit/audit_05jul2026.md  a6074fe7fa05
+      2  docs/audit/integrity_audit_2026.md  25a738f2a9a7
+      2  docs/audit/secondary_filtration_execution_pipeline_audit.md  5d405fa42059
+      1  docs/audit/signal_mortality_census_19jul2026.md  9f9db37223c3
+      1  scripts/generate_screened_stocks_csv.py  3e6b5896bbc3
+      5  signals/signal_processor.py  7fab0a02a302
+      1  tests/integration/test_end_to_end_smoke.py  7dc4554968d6
+      1  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      3  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_main.py  da7bbb911113
+      6  tests/unit/test_signal_processor.py  3ec0ea84392a
+
+Q06 | T6 | ["']strategy["'] | s_all | files searched 1,260; files with matches 109; matching lines 488
+      1  capital/performance_allocator.py  ca7cfb0692c9
+      1  capital/shadow_engine.py  7d19b400f902
+      1  capital/strategy_governor.py  d17193c569c1
+      4  core/evidence_contract.py  29fb84bc690d
+      2  core/state_store.py  11866117801b
+      1  docs/SYSTEM_MAP.md  c251f7c7a293
+      2  docs/archive/FIXES_DAILY_REPORT_2026_05_18.md  51db9bf2d706
+      2  docs/audit/full_system_audit_04july2026.md  fafb3babdda4
+      1  docs/locked_decisions.yaml  2908b09fb546
+      4  main.py  445fb0d8237a
+      1  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      6  ops_dashboard/backend/api/analytics2.py  8ab626ef7de1
+      1  ops_dashboard/backend/api/operations.py  f0161f728a38
+      1  ops_dashboard/backend/api/strategies.py  8fac396665d6
+     12  ops_dashboard/backend/api/trading.py  f39618aeb5c6
+      3  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+     27  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+     21  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+     11  ops_dashboard/backend/services/execution_analytics.py  5dffbcc2b05c
+      7  ops_dashboard/backend/services/holdings.py  143090c16d5e
+     12  ops_dashboard/backend/services/live_activity.py  ceeb30c7862f
+      2  ops_dashboard/backend/services/operations.py  fc3c56df96e3
+     14  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      9  ops_dashboard/backend/services/slippage_analytics.py  6589bef40ec7
+      2  ops_dashboard/backend/services/strategy_health.py  8a7264e5db2a
+     12  ops_dashboard/backend/services/strategy_ranking.py  61f44251c094
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      9  ops_dashboard/backend/services/trade_logs.py  5a9b1954bfb8
+      1  ops_dashboard/docs/G2b1_strategy_attribution.md  55a9f8cbc1d7
+      3  ops_dashboard/frontend/templates/execution.html  4f027e5ee7a4
+      1  ops_dashboard/frontend/templates/orders.html  9828dcc7e9e5
+      3  ops_dashboard/frontend/templates/pnl_analytics.html  8e768146287f
+      2  ops_dashboard/frontend/templates/positions.html  e46b36f35a5f
+      1  ops_dashboard/frontend/templates/scanner_attribution.html  3be742f4a250
+      2  ops_dashboard/frontend/templates/signals.html  32a26458f0e3
+      2  ops_dashboard/frontend/templates/slippage.html  e483c023421e
+      2  ops_dashboard/frontend/templates/strategies.html  f9be10815a8c
+      2  ops_dashboard/frontend/templates/trade_explorer.html  d6dd63a3d363
+      2  ops_dashboard/frontend/templates/trade_logs.html  1fd578637f43
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      4  ops_dashboard/tests/test_api_contract.py  347e90bbd555
+      4  ops_dashboard/tests/test_g2b2_screens.py  abaae2fac796
+      2  ops_dashboard/tests/test_g5c_analytics.py  6562ea13fb8a
+      1  ops_dashboard/tests/test_g5d_operations.py  04deea4d9dbb
+      4  ops_dashboard/tests/test_screen03_strategies.py  fbd649ba2667
+      2  ops_dashboard/tests/test_screen04_signals.py  5960824438e9
+      2  ops_dashboard/tests/test_screen05_orders.py  2786f7aece30
+     11  ops_dashboard/tests/test_screen06_positions.py  cf5097879982
+     11  ops_dashboard/tests/test_screen07_trades.py  eb5eb857296c
+      1  ops_dashboard/tests/test_screen08_capital_risk.py  f52bc0d6f80d
+      5  ops_dashboard/tests/test_screen09_pnl_analytics.py  dbbc726cd6cb
+      4  ops_dashboard/tests/test_screen14_trade_logs.py  cc7949f4bbda
+      1  ops_dashboard/tests/test_screen18_live_activity.py  803bf3fb0070
+      3  ops_dashboard/tests/test_screen19_strategy_ranking.py  6cece022f0c7
+      3  ops_dashboard/tests/test_screen20_strategy_health.py  f9fa19114fb2
+     15  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      2  ops_dashboard/tests/test_screen22_holdings.py  cf02b6a60bcb
+      1  ops_dashboard/tests/test_strategy_tower.py  28fffddcc441
+      1  ops_dashboard/tests/test_trading_modules.py  c7c3894aff74
+      1  orders/eod_squareoff.py  54f6cd622335
+      3  orders/shadow_tracker.py  850722541f41
+      2  orders/slippage_recorder.py  19d1b6c2d4b3
+     11  reports/daily_report.py  ad40268a655b
+     25  reports/daily_trade_review.py  c448b7976964
+      3  screening/retest_monitor.py  26639d6ed5dd
+      1  screening/secondary_screener.py  b6f8ff7223ad
+      3  scripts/compute_strategy_metrics.py  c081a0a8f768
+      2  scripts/forward_shadow_record.py  6c57c0e15533
+      2  scripts/gemini_premarket_brief.py  f1d617c9dada
+      2  scripts/gemini_trade_coach.py  6d42f71d5d89
+      3  scripts/replay_signals.py  72763c3ed8d5
+      1  scripts/strategy_registry_officer.py  c013518bc49c
+      2  scripts/system_manager.py  04e776e60f98
+      1  scripts/trade_journal.py  59309f9a767a
+     16  signals/signal_processor.py  7fab0a02a302
+      1  sr_detector/detector.py  a8500c48c8ac
+      3  strategies/loader.py  99e83b192021
+      1  tests/integration/conftest.py  a6180190235f
+      1  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      5  tests/unit/test_alert_direction_eod_29jun.py  34dc6272637d
+     26  tests/unit/test_daily_report.py  3d79475d11d9
+     16  tests/unit/test_daily_trade_review.py  7681a7130f67
+      2  tests/unit/test_e3_hygiene.py  5ae2231ce106
+      5  tests/unit/test_eod_lifecycle_pipeline_aware.py  24011f7a0a36
+      3  tests/unit/test_eod_squareoff.py  788a2878c251
+     31  tests/unit/test_evidence_contract.py  93668c5e53c8
+      3  tests/unit/test_fix067_ms1_fresh_anchor.py  479cb646bc76
+      3  tests/unit/test_fix133_replay_signals.py  dd8123e31fb1
+      1  tests/unit/test_fix133_trade_journal.py  2ae1b4d3cf37
+      2  tests/unit/test_fix134_strategy_metrics.py  2675d0bd39d9
+      3  tests/unit/test_fix136_batch9.py  20d59c50759e
+      1  tests/unit/test_fix137_batch10.py  7465e3fe74f0
+      2  tests/unit/test_fix148_broker_gaps.py  a36a1ba42f6c
+      2  tests/unit/test_fund_manager.py  890969aef2d7
+      2  tests/unit/test_gate8_sector_toctou.py  3fbfab57933c
+      2  tests/unit/test_mc1_live_seed_rehydrate.py  6e5b9158fa12
+      2  tests/unit/test_order_reconciler.py  fc16c0cee145
+      2  tests/unit/test_phase4_trade_type_gate.py  69f0b6b6bb74
+      2  tests/unit/test_preflight_scanner.py  9e089d81ca76
+      2  tests/unit/test_risk_engine.py  5eea70eea26e
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      1  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+      4  tests/unit/test_slippage_recorder.py  9f5489062193
+      1  tests/unit/test_sr_detector_backfill.py  04909d89653a
+      2  tests/unit/test_state_store.py  323327dd51e7
+      1  tests/unit/test_strategy_direction_routing.py  febe85d94bcc
+      1  tests/unit/test_v3_pb01_e2e.py  e0c81020c161
+      1  tests/unit/test_v3_pb01_runner.py  a4cc9f09e9cc
+      1  v3_chain/models.py  159e319d8c91
+
+Q07 | T7 | ["']scanner["'] | s_all | files searched 1,260; files with matches 45; matching lines 97
+      1  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      1  ops_dashboard/backend/api/operations.py  f0161f728a38
+      2  ops_dashboard/backend/api/trading.py  f39618aeb5c6
+      1  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+      2  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      5  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+      1  ops_dashboard/backend/services/operations.py  fc3c56df96e3
+      3  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      4  ops_dashboard/frontend/templates/scanner_attribution.html  3be742f4a250
+      1  ops_dashboard/tests/test_api_contract.py  347e90bbd555
+      1  ops_dashboard/tests/test_closure_screens04_08.py  3e4906807c80
+      1  ops_dashboard/tests/test_g5b_reuse.py  d9f8e128eade
+      3  ops_dashboard/tests/test_g5c_analytics.py  6562ea13fb8a
+      2  ops_dashboard/tests/test_g5d_operations.py  04deea4d9dbb
+      2  ops_dashboard/tests/test_screen03_strategies.py  fbd649ba2667
+      1  ops_dashboard/tests/test_screen04_signals.py  5960824438e9
+      2  ops_dashboard/tests/test_screen05_orders.py  2786f7aece30
+      3  ops_dashboard/tests/test_screen06_positions.py  cf5097879982
+      5  ops_dashboard/tests/test_screen07_trades.py  eb5eb857296c
+      3  ops_dashboard/tests/test_screen09_pnl_analytics.py  dbbc726cd6cb
+      4  ops_dashboard/tests/test_screen10_slippage.py  6fa174f690b9
+      3  ops_dashboard/tests/test_screen11_execution.py  5516c7812377
+      3  ops_dashboard/tests/test_screen13_audit.py  02d47ba78c34
+      7  ops_dashboard/tests/test_screen14_trade_logs.py  cc7949f4bbda
+      3  ops_dashboard/tests/test_screen15_system_logs.py  1c2721e2df84
+      1  ops_dashboard/tests/test_screen16_config.py  152d2fdfc3c0
+      3  ops_dashboard/tests/test_screen17_export.py  bbd196ba4067
+      2  ops_dashboard/tests/test_screen18_live_activity.py  803bf3fb0070
+      1  ops_dashboard/tests/test_screen19_strategy_ranking.py  6cece022f0c7
+      3  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      1  ops_dashboard/tests/test_strategy_tower.py  28fffddcc441
+      1  ops_dashboard/tests/test_trading_modules.py  c7c3894aff74
+      1  reports/daily_report.py  ad40268a655b
+      1  screening/step_executor.py  d83b04860f0f
+      2  scripts/replay_signals.py  72763c3ed8d5
+      2  scripts/strategy_registry_officer.py  c013518bc49c
+      1  scripts/trade_journal.py  59309f9a767a
+      2  tests/crash_test/scenario_runner.py  20fbd27f336d
+      3  tests/unit/test_daily_report.py  3d79475d11d9
+      1  tests/unit/test_fix130_strategy_governor.py  e6d9a5c6c9e4
+      3  tests/unit/test_fix133_replay_signals.py  dd8123e31fb1
+      2  tests/unit/test_fix136_batch9.py  20d59c50759e
+      1  tests/unit/test_fix137_batch10.py  7465e3fe74f0
+      1  v3_chain/models.py  159e319d8c91
+
+Q08 | T8 | scanner_type | s_all | files searched 1,260; files with matches 8; matching lines 15
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+      4  core/config_loader.py  8635bca77531
+      2  docs/audit/eod_capture_safety_2026-07-24.md  db5c44612170
+      1  docs/audit/followup_investigation_15jul2026.md  01008d209aff
+      2  docs/audit/integrity_audit_2026.md  25a738f2a9a7
+      1  signals/webhook_receiver.py  0f15a0ab0335
+      2  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+      2  tests/unit/test_v3_eod_route.py  2d0dc4071618
+
+Q09 | T1 | scan_webhook_map | s_rt | files searched 281; files with matches 15; matching lines 55
+      5  core/config_loader.py  8635bca77531
+      2  main.py  445fb0d8237a
+      6  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+      1  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+      1  ops_dashboard/backend/services/audit.py  f772aa60f53a
+      2  ops_dashboard/backend/services/config_view.py  0d4929a1c990
+      4  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      1  scripts/preflight/checks/config_integrity.py  bff5d236a754
+      1  scripts/preflight_scanner_check.py  3151263d6e24
+      1  scripts/premarket_healthcheck.py  c81fc21e5749
+      9  signals/signal_processor.py  7fab0a02a302
+      2  signals/webhook_receiver.py  0f15a0ab0335
+     11  strategies/loader.py  99e83b192021
+      8  utils/startup_checks.py  61ff67676d82
+
+Q10 | T2 | scanner_name|scan_name | s_rt | files searched 281; files with matches 17; matching lines 141
+      1  allocation/models.py  f27120285491
+      1  core/config_loader.py  8635bca77531
+      1  core/exceptions.py  1eeac5842084
+      4  core/state_store.py  11866117801b
+     10  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      1  ops_dashboard/backend/services/audit.py  f772aa60f53a
+      3  screening/entry_gate.py  46b173171bdf
+      5  screening/secondary_screener.py  b6f8ff7223ad
+      1  scripts/load_test_signals.py  47d74e172b35
+      4  scripts/preflight_scanner_check.py  3151263d6e24
+     28  signals/signal_processor.py  7fab0a02a302
+     58  signals/webhook_receiver.py  0f15a0ab0335
+      3  strategies/loader.py  99e83b192021
+     15  utils/startup_checks.py  61ff67676d82
+      1  v3_chain/models.py  159e319d8c91
+      1  v3_chain/runner.py  a782f91f2f4f
+      4  v3_chain/watchlist_capture.py  25a1f084eada
+
+Q11 | T3 | strategy_name | s_rt | files searched 281; files with matches 25; matching lines 160
+      1  allocation/models.py  f27120285491
+     11  capital/performance_allocator.py  ca7cfb0692c9
+     16  capital/strategy_governor.py  d17193c569c1
+      1  core/evidence_contract.py  29fb84bc690d
+      4  core/state_store.py  11866117801b
+      1  core/strategy_direction.py  0e6f8b6686f3
+      2  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      3  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      1  ops_dashboard/backend/services/slippage_analytics.py  6589bef40ec7
+      1  ops_dashboard/backend/services/strategy_meta.py  8d7324317a3a
+     12  orders/shadow_tracker.py  850722541f41
+      2  orders/slippage_recorder.py  19d1b6c2d4b3
+      2  reports/daily_report.py  ad40268a655b
+      1  reports/daily_trade_review.py  c448b7976964
+      3  screening/entry_gate.py  46b173171bdf
+      2  screening/retest_monitor.py  26639d6ed5dd
+     17  screening/secondary_screener.py  b6f8ff7223ad
+      8  scripts/compute_strategy_metrics.py  c081a0a8f768
+      4  scripts/replay_signals.py  72763c3ed8d5
+      2  scripts/system_manager.py  04e776e60f98
+     58  signals/signal_processor.py  7fab0a02a302
+      5  strategies/loader.py  99e83b192021
+      1  strategies/taxonomy.py  069644bc1bdb
+      1  v3_chain/models.py  159e319d8c91
+      1  v3_chain/runner.py  a782f91f2f4f
+
+Q12 | T4 | ScannerEntry|ScanWebhookMapConfig | s_rt | files searched 281; files with matches 2; matching lines 10
+      8  core/config_loader.py  8635bca77531
+      2  utils/startup_checks.py  61ff67676d82
+
+Q13 | T5 | UNKNOWN_STRATEGY | s_rt | files searched 281; files with matches 2; matching lines 6
+      1  scripts/generate_screened_stocks_csv.py  3e6b5896bbc3
+      5  signals/signal_processor.py  7fab0a02a302
+
+Q14 | T6 | ["']strategy["'] | s_rt | files searched 281; files with matches 43; matching lines 247
+      1  capital/performance_allocator.py  ca7cfb0692c9
+      1  capital/shadow_engine.py  7d19b400f902
+      1  capital/strategy_governor.py  d17193c569c1
+      4  core/evidence_contract.py  29fb84bc690d
+      2  core/state_store.py  11866117801b
+      4  main.py  445fb0d8237a
+      1  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      6  ops_dashboard/backend/api/analytics2.py  8ab626ef7de1
+      1  ops_dashboard/backend/api/operations.py  f0161f728a38
+      1  ops_dashboard/backend/api/strategies.py  8fac396665d6
+     12  ops_dashboard/backend/api/trading.py  f39618aeb5c6
+      3  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+     27  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+     21  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+     11  ops_dashboard/backend/services/execution_analytics.py  5dffbcc2b05c
+      7  ops_dashboard/backend/services/holdings.py  143090c16d5e
+     12  ops_dashboard/backend/services/live_activity.py  ceeb30c7862f
+      2  ops_dashboard/backend/services/operations.py  fc3c56df96e3
+     14  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      9  ops_dashboard/backend/services/slippage_analytics.py  6589bef40ec7
+      2  ops_dashboard/backend/services/strategy_health.py  8a7264e5db2a
+     12  ops_dashboard/backend/services/strategy_ranking.py  61f44251c094
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      9  ops_dashboard/backend/services/trade_logs.py  5a9b1954bfb8
+      1  orders/eod_squareoff.py  54f6cd622335
+      3  orders/shadow_tracker.py  850722541f41
+      2  orders/slippage_recorder.py  19d1b6c2d4b3
+     11  reports/daily_report.py  ad40268a655b
+     25  reports/daily_trade_review.py  c448b7976964
+      3  screening/retest_monitor.py  26639d6ed5dd
+      1  screening/secondary_screener.py  b6f8ff7223ad
+      3  scripts/compute_strategy_metrics.py  c081a0a8f768
+      2  scripts/forward_shadow_record.py  6c57c0e15533
+      2  scripts/gemini_premarket_brief.py  f1d617c9dada
+      2  scripts/gemini_trade_coach.py  6d42f71d5d89
+      3  scripts/replay_signals.py  72763c3ed8d5
+      1  scripts/strategy_registry_officer.py  c013518bc49c
+      2  scripts/system_manager.py  04e776e60f98
+      1  scripts/trade_journal.py  59309f9a767a
+     16  signals/signal_processor.py  7fab0a02a302
+      1  sr_detector/detector.py  a8500c48c8ac
+      3  strategies/loader.py  99e83b192021
+      1  v3_chain/models.py  159e319d8c91
+
+Q15 | T7 | ["']scanner["'] | s_rt | files searched 281; files with matches 15; matching lines 25
+      1  ops_dashboard/backend/api/analytics.py  d8e9d100e1be
+      1  ops_dashboard/backend/api/operations.py  f0161f728a38
+      2  ops_dashboard/backend/api/trading.py  f39618aeb5c6
+      1  ops_dashboard/backend/readers/config_reader.py  624bc8009771
+      2  ops_dashboard/backend/readers/db_reader.py  f59e4f58fe51
+      5  ops_dashboard/backend/services/analytics_period.py  594236faaef7
+      1  ops_dashboard/backend/services/operations.py  fc3c56df96e3
+      3  ops_dashboard/backend/services/scanner_attribution.py  8503d3c1c6e0
+      1  ops_dashboard/backend/services/strategy_tower.py  6effe8732f52
+      1  reports/daily_report.py  ad40268a655b
+      1  screening/step_executor.py  d83b04860f0f
+      2  scripts/replay_signals.py  72763c3ed8d5
+      2  scripts/strategy_registry_officer.py  c013518bc49c
+      1  scripts/trade_journal.py  59309f9a767a
+      1  v3_chain/models.py  159e319d8c91
+
+Q16 | T8 | scanner_type | s_rt | files searched 281; files with matches 2; matching lines 5
+      4  core/config_loader.py  8635bca77531
+      1  signals/webhook_receiver.py  0f15a0ab0335
+
+Q17 | T1 | scan_webhook_map | s_tests | files searched 486; files with matches 20; matching lines 79
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      7  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      4  tests/integration/conftest.py  a6180190235f
+      1  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+     11  tests/unit/test_config_loader.py  8f245c35a047
+      1  tests/unit/test_e4_event_loop_safety.py  db8cb8b39f02
+      2  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_fix067_ms1_fresh_anchor.py  479cb646bc76
+      1  tests/unit/test_fix074_numeric_cast.py  4f5d3cc814bd
+      1  tests/unit/test_fix134_backpressure.py  463f7af7922f
+      2  tests/unit/test_main.py  da7bbb911113
+      5  tests/unit/test_pb01_registration.py  80f63d22be64
+      2  tests/unit/test_phase4_trade_type_gate.py  69f0b6b6bb74
+      1  tests/unit/test_preflight_scanner.py  9e089d81ca76
+      7  tests/unit/test_signal_processor.py  3ec0ea84392a
+      1  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+     12  tests/unit/test_startup_checks.py  bd92db4a856e
+     13  tests/unit/test_strategies.py  a17ae20faa67
+      1  tests/unit/test_v3_eod_route.py  2d0dc4071618
+      4  tests/unit/test_webhook_receiver.py  7b377abb85d6
+
+Q18 | T2 | scanner_name|scan_name | s_tests | files searched 486; files with matches 32; matching lines 116
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      2  ops_dashboard/tests/test_screen13_audit.py  02d47ba78c34
+      1  ops_dashboard/tests/test_screen20_strategy_health.py  f9fa19114fb2
+      1  tests/crash_test/ct143_afternoon_inject.py  225fce0708d7
+      1  tests/crash_test/ct145_rapid_crash.py  0e05883af498
+      4  tests/crash_test/ct_day2_isolated.py  96a879eba2e9
+      1  tests/crash_test/scenarios/ct036.yaml  0ba338441dcd
+      7  tests/crash_test/signal_injector.py  b4bb2ef9c8f6
+      3  tests/integration/conftest.py  a6180190235f
+      4  tests/integration/test_end_to_end_smoke.py  7dc4554968d6
+      4  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      1  tests/integration/test_hardening_scenarios.py  d87da7ab9ed6
+      1  tests/integration/test_q9_sizing_floors_caps_wired.py  8099ef87e1fe
+      6  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+      1  tests/unit/test_daily_trade_review.py  7681a7130f67
+      1  tests/unit/test_e4_event_loop_safety.py  db8cb8b39f02
+      1  tests/unit/test_entry_gate.py  ab1a956af832
+      4  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_fix134_backpressure.py  463f7af7922f
+      1  tests/unit/test_hard_gate.py  83388f2e371d
+      1  tests/unit/test_load_test_signals.py  72ffa6861dfe
+      1  tests/unit/test_mis_blocklist.py  4960f825965e
+      1  tests/unit/test_nocil_prefill.py  533236b2606b
+      2  tests/unit/test_preflight_scanner.py  9e089d81ca76
+     10  tests/unit/test_secondary_screener.py  e8e2ddb2a77d
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      3  tests/unit/test_startup_checks.py  bd92db4a856e
+      3  tests/unit/test_state_store.py  323327dd51e7
+      1  tests/unit/test_step_executor.py  82cfe6819362
+      1  tests/unit/test_v3_chain.py  d0711c45b279
+      3  tests/unit/test_v3_eod_route.py  2d0dc4071618
+     38  tests/unit/test_webhook_receiver.py  7b377abb85d6
+
+Q19 | T3 | strategy_name | s_tests | files searched 486; files with matches 18; matching lines 47
+      6  ops_dashboard/tests/conftest.py  ea440c793186
+      1  tests/integration/test_hardening_scenarios.py  d87da7ab9ed6
+      1  tests/unit/test_alert_direction_eod_29jun.py  34dc6272637d
+      1  tests/unit/test_daily_trade_review.py  7681a7130f67
+      1  tests/unit/test_entry_gate.py  ab1a956af832
+     12  tests/unit/test_evidence_contract.py  93668c5e53c8
+      2  tests/unit/test_fix135_strategy_position_cap.py  32ac3ccbaa92
+      1  tests/unit/test_h7_strategy_cap_toctou.py  6bdbf4d41d32
+      3  tests/unit/test_h8_shadow_tracker_strategy_column.py  ed7c605630ad
+      2  tests/unit/test_main.py  da7bbb911113
+      1  tests/unit/test_portfolio_allocator.py  13c1c1338752
+      1  tests/unit/test_signal_alert_capital_vocabulary.py  4af3496455d9
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      2  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+      2  tests/unit/test_slippage_recorder.py  9f5489062193
+      3  tests/unit/test_sr_detector_observer.py  46020a54e7f8
+      2  tests/unit/test_sr_v2_divert.py  191e94efecef
+      1  tests/unit/test_v3_chain.py  d0711c45b279
+
+Q20 | T4 | ScannerEntry|ScanWebhookMapConfig | s_tests | files searched 486; files with matches 2; matching lines 6
+      5  tests/unit/test_config_loader.py  8f245c35a047
+      1  tests/unit/test_startup_checks.py  bd92db4a856e
+
+Q21 | T5 | UNKNOWN_STRATEGY | s_tests | files searched 486; files with matches 5; matching lines 12
+      1  tests/integration/test_end_to_end_smoke.py  7dc4554968d6
+      1  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      3  tests/unit/test_evidence_contract.py  93668c5e53c8
+      1  tests/unit/test_main.py  da7bbb911113
+      6  tests/unit/test_signal_processor.py  3ec0ea84392a
+
+Q22 | T6 | ["']strategy["'] | s_tests | files searched 486; files with matches 51; matching lines 214
+      2  ops_dashboard/tests/conftest.py  ea440c793186
+      4  ops_dashboard/tests/test_api_contract.py  347e90bbd555
+      4  ops_dashboard/tests/test_g2b2_screens.py  abaae2fac796
+      2  ops_dashboard/tests/test_g5c_analytics.py  6562ea13fb8a
+      1  ops_dashboard/tests/test_g5d_operations.py  04deea4d9dbb
+      4  ops_dashboard/tests/test_screen03_strategies.py  fbd649ba2667
+      2  ops_dashboard/tests/test_screen04_signals.py  5960824438e9
+      2  ops_dashboard/tests/test_screen05_orders.py  2786f7aece30
+     11  ops_dashboard/tests/test_screen06_positions.py  cf5097879982
+     11  ops_dashboard/tests/test_screen07_trades.py  eb5eb857296c
+      1  ops_dashboard/tests/test_screen08_capital_risk.py  f52bc0d6f80d
+      5  ops_dashboard/tests/test_screen09_pnl_analytics.py  dbbc726cd6cb
+      4  ops_dashboard/tests/test_screen14_trade_logs.py  cc7949f4bbda
+      1  ops_dashboard/tests/test_screen18_live_activity.py  803bf3fb0070
+      3  ops_dashboard/tests/test_screen19_strategy_ranking.py  6cece022f0c7
+      3  ops_dashboard/tests/test_screen20_strategy_health.py  f9fa19114fb2
+     15  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      2  ops_dashboard/tests/test_screen22_holdings.py  cf02b6a60bcb
+      1  ops_dashboard/tests/test_strategy_tower.py  28fffddcc441
+      1  ops_dashboard/tests/test_trading_modules.py  c7c3894aff74
+      1  tests/integration/conftest.py  a6180190235f
+      1  tests/integration/test_full_signal_flow.py  376a2ee815f7
+      5  tests/unit/test_alert_direction_eod_29jun.py  34dc6272637d
+     26  tests/unit/test_daily_report.py  3d79475d11d9
+     16  tests/unit/test_daily_trade_review.py  7681a7130f67
+      2  tests/unit/test_e3_hygiene.py  5ae2231ce106
+      5  tests/unit/test_eod_lifecycle_pipeline_aware.py  24011f7a0a36
+      3  tests/unit/test_eod_squareoff.py  788a2878c251
+     31  tests/unit/test_evidence_contract.py  93668c5e53c8
+      3  tests/unit/test_fix067_ms1_fresh_anchor.py  479cb646bc76
+      3  tests/unit/test_fix133_replay_signals.py  dd8123e31fb1
+      1  tests/unit/test_fix133_trade_journal.py  2ae1b4d3cf37
+      2  tests/unit/test_fix134_strategy_metrics.py  2675d0bd39d9
+      3  tests/unit/test_fix136_batch9.py  20d59c50759e
+      1  tests/unit/test_fix137_batch10.py  7465e3fe74f0
+      2  tests/unit/test_fix148_broker_gaps.py  a36a1ba42f6c
+      2  tests/unit/test_fund_manager.py  890969aef2d7
+      2  tests/unit/test_gate8_sector_toctou.py  3fbfab57933c
+      2  tests/unit/test_mc1_live_seed_rehydrate.py  6e5b9158fa12
+      2  tests/unit/test_order_reconciler.py  fc16c0cee145
+      2  tests/unit/test_phase4_trade_type_gate.py  69f0b6b6bb74
+      2  tests/unit/test_preflight_scanner.py  9e089d81ca76
+      2  tests/unit/test_risk_engine.py  5eea70eea26e
+      5  tests/unit/test_signal_processor.py  3ec0ea84392a
+      1  tests/unit/test_slice2_strategy_control.py  4df7c9923a9b
+      4  tests/unit/test_slippage_recorder.py  9f5489062193
+      1  tests/unit/test_sr_detector_backfill.py  04909d89653a
+      2  tests/unit/test_state_store.py  323327dd51e7
+      1  tests/unit/test_strategy_direction_routing.py  febe85d94bcc
+      1  tests/unit/test_v3_pb01_e2e.py  e0c81020c161
+      1  tests/unit/test_v3_pb01_runner.py  a4cc9f09e9cc
+
+Q23 | T7 | ["']scanner["'] | s_tests | files searched 486; files with matches 29; matching lines 68
+      1  ops_dashboard/tests/test_api_contract.py  347e90bbd555
+      1  ops_dashboard/tests/test_closure_screens04_08.py  3e4906807c80
+      1  ops_dashboard/tests/test_g5b_reuse.py  d9f8e128eade
+      3  ops_dashboard/tests/test_g5c_analytics.py  6562ea13fb8a
+      2  ops_dashboard/tests/test_g5d_operations.py  04deea4d9dbb
+      2  ops_dashboard/tests/test_screen03_strategies.py  fbd649ba2667
+      1  ops_dashboard/tests/test_screen04_signals.py  5960824438e9
+      2  ops_dashboard/tests/test_screen05_orders.py  2786f7aece30
+      3  ops_dashboard/tests/test_screen06_positions.py  cf5097879982
+      5  ops_dashboard/tests/test_screen07_trades.py  eb5eb857296c
+      3  ops_dashboard/tests/test_screen09_pnl_analytics.py  dbbc726cd6cb
+      4  ops_dashboard/tests/test_screen10_slippage.py  6fa174f690b9
+      3  ops_dashboard/tests/test_screen11_execution.py  5516c7812377
+      3  ops_dashboard/tests/test_screen13_audit.py  02d47ba78c34
+      7  ops_dashboard/tests/test_screen14_trade_logs.py  cc7949f4bbda
+      3  ops_dashboard/tests/test_screen15_system_logs.py  1c2721e2df84
+      1  ops_dashboard/tests/test_screen16_config.py  152d2fdfc3c0
+      3  ops_dashboard/tests/test_screen17_export.py  bbd196ba4067
+      2  ops_dashboard/tests/test_screen18_live_activity.py  803bf3fb0070
+      1  ops_dashboard/tests/test_screen19_strategy_ranking.py  6cece022f0c7
+      3  ops_dashboard/tests/test_screen21_scanner_attribution.py  67e64047b465
+      1  ops_dashboard/tests/test_strategy_tower.py  28fffddcc441
+      1  ops_dashboard/tests/test_trading_modules.py  c7c3894aff74
+      2  tests/crash_test/scenario_runner.py  20fbd27f336d
+      3  tests/unit/test_daily_report.py  3d79475d11d9
+      1  tests/unit/test_fix130_strategy_governor.py  e6d9a5c6c9e4
+      3  tests/unit/test_fix133_replay_signals.py  dd8123e31fb1
+      2  tests/unit/test_fix136_batch9.py  20d59c50759e
+      1  tests/unit/test_fix137_batch10.py  7465e3fe74f0
+
+Q24 | T8 | scanner_type | s_tests | files searched 486; files with matches 2; matching lines 4
+      2  tests/unit/test_c6_auth_collapse.py  b5ac355e9af3
+      2  tests/unit/test_v3_eod_route.py  2d0dc4071618
+
+Q25 | T1 | scan_webhook_map | s_cfg | files searched 41; files with matches 2; matching lines 11
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+     10  docs/locked_decisions.yaml  2908b09fb546
+
+Q26 | T2 | scanner_name|scan_name | s_cfg | files searched 41; files with matches 3; matching lines 8
+      1  config/chartink_scanners.yaml  de82a8269c2c
+      2  config/scan_webhook_map.yaml  54dd98d75f27
+      5  docs/locked_decisions.yaml  2908b09fb546
+
+Q27 | T3 | strategy_name | s_cfg | files searched 41; files with matches 2; matching lines 3
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+      2  docs/locked_decisions.yaml  2908b09fb546
+
+Q28 | T4 | ScannerEntry|ScanWebhookMapConfig | s_cfg | files searched 41; files with matches 0; matching lines 0
+
+Q29 | T5 | UNKNOWN_STRATEGY | s_cfg | files searched 41; files with matches 0; matching lines 0
+
+Q30 | T6 | ["']strategy["'] | s_cfg | files searched 41; files with matches 1; matching lines 1
+      1  docs/locked_decisions.yaml  2908b09fb546
+
+Q31 | T7 | ["']scanner["'] | s_cfg | files searched 41; files with matches 0; matching lines 0
+
+Q32 | T8 | scanner_type | s_cfg | files searched 41; files with matches 1; matching lines 1
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+
+Q33 | T1 | scan_webhook_map | s_cfg | files searched 41; files with matches 2; matching lines 11; positive control for Q28
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+     10  docs/locked_decisions.yaml  2908b09fb546
+
+Q34 | T1 | scan_webhook_map | s_cfg | files searched 41; files with matches 2; matching lines 11; positive control for Q29
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+     10  docs/locked_decisions.yaml  2908b09fb546
+
+Q35 | T1 | scan_webhook_map | s_cfg | files searched 41; files with matches 2; matching lines 11; positive control for Q31
+      1  config/scan_webhook_map.yaml  54dd98d75f27
+     10  docs/locked_decisions.yaml  2908b09fb546

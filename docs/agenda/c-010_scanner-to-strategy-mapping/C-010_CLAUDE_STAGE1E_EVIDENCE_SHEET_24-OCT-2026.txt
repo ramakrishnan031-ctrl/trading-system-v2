@@ -1,0 +1,361 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1E EVIDENCE SHEET (LAST EVIDENCE STEP): G17 AND THE OTHER ENTRY PATHS AS DECIDED (W9; for ChatGPT's reconciliation)
+Date of work: 24-Oct-2026 (IST), 19:19 to 19:39 IST. Prepared by Claude.
+Controlling scope: C-010_STAGE1E_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt (219 lines, 20,512 bytes; SHA-256
+  C268255F29A68F3BA82F6666943E70D98EA7251AC83497BC1F63D09EFE2E49B7), received from Rama at 19:19 IST: ChatGPT's Part 3 accepts
+  D13 and D14 and declines D15. Its first 188 lines are byte-identical to
+  C-010_STAGE1E_PROPOSED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt, whose SHA-256
+  20D0F773CCD2AB3796B52E92FAFBE23B50ACF5306E407279AA04C9A4DDD7B845 equals the value Part 3 records. Both SHA-256 values were
+  written to the run log at 19:20:14 IST, before any check, search or read (section 9).
+Status: W9 done; the read lock is engaged again (19:23:53 IST). STOPPED for ChatGPT's reconciliation. No C-010 manual is
+  drafted; BK-27 stays OPEN; VP-45 is NOT RATIFIED; no V2 design or implementation advice is given.
+Security: the masked output of the one authorised read only. No credential, token, account or client identifier, host or
+  address, deployed path, mailbox or person name other than Rama's is reproduced; protected paths are counted, never named;
+  the KV-shaped values are counted only. Claude's working folder is written as <SCRATCHPAD>.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Integrity (section 1): both SHA-256 values recorded first; pin, remote tip, listing hash, the approved file's working copy,
+  the object store and the protected-blob check all as required; the reader and the count tool unchanged. D15 was recorded as
+  declined in c010/s1e/decisions.json ({"D15": false}). All 10 named test cases (TC-31 to TC-40) printed ok by their IDs
+  against the accepted file before W9.
+- W9 (sections 2, 4 and 5): unlock E-33; gate test E-34 PASSED, admitting exactly orders/order_manager.py; G17, read 059: grep
+  T23 printed exactly 2 lines, 12 and 175 (bound 2; line 175 among them); relock E-36, after which a read and a count were
+  both refused. 2 printed lines against the 2-line cap. Nothing was counted; nothing in allocation/portfolio_allocator.py was
+  counted or read (D15 declined). No refusal, no failed check.
+- OQ-1D-02, answered (6.1): the second create_trade( line is line 12. Its text is FACT; it is not a definition line and not a
+  comment line (FACT, from its characters); it is a line of a multi-line string, most likely the module docstring, so its
+  "create_trade(" is text, not a call (INTERPRETATION); it lies before the file's first definition (67), in no function or
+  class (INTERPRETATION, definition order); what it documents beyond its text is NOT ESTABLISHED. So Q47's 3 lines in s_rt are
+  a docstring line (12), the definition (175) and the placer's call (order_placer.py 996), the only create_trade( call line in
+  s_rt (INTERPRETATION). The E1 finding is unchanged.
+- OQ-1D-01, recorded as decided (6.2): E2 gate path UNKNOWN / NOT ESTABLISHED (D14); E3 retest path NOT ESTABLISHED beyond the
+  processor-side lines already held (D14); E4 allocator path from held lines only, the allocator hand-off NOT ESTABLISHED and
+  no mode inferred (D15 declined). No read was made for them.
+- Deviations (section 8): one clerical, R-3 (a time typed by hand in the run log, corrected by an added row; the same slip in
+  Claude's working notes). Remaining unknowns, for the manual: section 7. Claude proposes no further C-010 stage.
+
+==============================================================================================================================
+1. INTEGRITY AND PIN (FACT)
+==============================================================================================================================
+- Authorisation: the accepted file's SHA-256 (C268255F29A68F3BA82F6666943E70D98EA7251AC83497BC1F63D09EFE2E49B7, from its exact
+  bytes) and the proposal's (20D0F773CCD2AB3796B52E92FAFBE23B50ACF5306E407279AA04C9A4DDD7B845) were recorded in the run log at
+  19:20:14 IST; the accepted file's first 17,100 bytes equal the proposal byte for byte, and Part 3 follows.
+- HEAD of the clone = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; git ls-remote of the repository at 19:20:14 IST: HEAD and
+  refs/heads/main both the pin. Tree listing: 1,438 entries, SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5.
+- Working file: orders/order_manager.py equal to its pinned blob 978d213532532d7db72b215bc8ed415b848928ae (git hash-object
+  --no-filters) in the pre-flight (19:20:14 IST) and after W9 (19:24:56 IST); read 059 checked it again inside the reader (git
+  ls-tree and git hash-object).
+- Object store in the pre-flight and after W9 (19:24:56 IST): 1,257 blobs, 1,537 commits, 6,126 trees; protected blobs present
+  0 (sensitive_check.py). Nothing fetched.
+- Read lock: engaged before E-33 and after E-36 (cread_c010.py SHA-256
+  BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7); the relock was followed by a refused read and a refused
+  count.
+- Tool integrity: cread_c010.py and ccount_c010.py unchanged since Stage 1 (section 9 lists every tool's SHA-256).
+- Decision file: c010/s1e/decisions.json = {"D15": false} (SHA-256
+  9773551C2788E337B4CD41179FB341C0353163DF38115EB21600EBA3489F97CB), written at 19:22:29 IST after the acceptance and before
+  any test, search or read. It is the only input written after the acceptance; everything else written since is a log or
+  output of the run, or this sheet and its builder.
+
+==============================================================================================================================
+2. METHOD, LOCK WINDOW, TESTS AND GATE TEST
+==============================================================================================================================
+| Step | Time (IST) | Action | Result |
+|---|---|---|---|
+| tests | 19:22:29 to 19:22:46 | test_tools_c010e.py on the accepted file | PASSED: 10 of 10 listed TC-IDs ok (12 checks, 0 FAIL); output c010/s1e/test1e_output.txt |
+| E-33 | 19:23:44 | unlock (W9) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-34 | 19:23:44 to 19:23:52 | gate test W9 (gate_test_c010e.py) | PASSED: 102 protected paths, 2 July records, the shared blob, 14 rule-shaped names, a name not in the tree and a malformed range refused; 4 bad lists refused by the count tool; exactly the 1 approved path admitted |
+| E-35 | 19:23:52 to 19:23:53 | W9: G17 (run_s1e_c010.py) | read 059; 2 lines (12, 175); nothing else run |
+| E-36 | 19:23:53 | relock | a read and a count then refused |
+
+- Tools (new for Stage 1E, built at 19:11 to 19:14 IST, after the proposal was delivered and before the acceptance):
+  s1e_scope_c010.py (the one definition of the approved list, the terms, the caps, the fixed line 175 and decision D15, read
+  from the decision file), gate_test_c010e.py (the Stage 1D gate test with the approved list taken from that file and window
+  W9), run_s1e_c010.py (the W9 driver) and test_tools_c010e.py. The Stage 1 reader and count tool are unchanged.
+- D-2 control: test_tools_c010e.py reads the controlling sheet's "- TC-NN" lines (TC-31 to TC-40; Part 3 adds none) and passes
+  only if every listed ID has an ok check, none has a FAIL and no check carries an unlisted ID; a crashing test group prints
+  FAIL. Before the acceptance (19:13:54 to 19:14:45 IST, against the proposal) all 10 printed ok, and three deliberately
+  broken copies of the tools (the line-175 check removed, the path check removed, the control term changed) were each caught
+  by the expected case (TC-33, TC-34, TC-37). The real logs were unchanged by every test run.
+- O-6 control: the approved read list is defined once, in s1e_scope_c010.py, from the decision file; with D15 declined it is
+  orders/order_manager.py alone. The gate test admitted exactly this path; the driver checked G17's path against the list
+  before calling the reader; no count list was used (s_pa, written for D15, stayed unused).
+- The driver checked the lock row (E-33, unlock, with the unlocked reader's SHA-256) and that the read log ended at 058 before
+  G17. It would have stopped on a non-zero exit, a missing log row, evidence different from the output, a wrong header, a blob
+  different from the listing, a grep outside its bound of 2, line 175 missing from G17's lines, a path outside the approved
+  list or a total above the 2-line cap (none occurred).
+
+==============================================================================================================================
+3. UPDATED SOURCE REGISTER (path, role in the C-010 chain, pinned blob, inclusion reason, evidence held)
+==============================================================================================================================
+R01 to R34 and the T rows as in the Stage 1D sheet (section 3); "1E:" marks what Stage 1E adds. R35 to R37 are new: the files
+  where the paths held NOT ESTABLISHED in 6.2 would continue; they were not read (their blobs are the pinned listing's, and
+  C-008 1.1 lists the same). The repeated IDs (R13, R14, R17, R19, R20, R23, R24) are kept as they are, flagged for clerical
+  reconciliation in the manual's register. "Evidence held" lists C-010's own reads (read numbers) and counts.
+| ID | Path | Pinned blob | Role in the C-010 chain | Inclusion reason | Evidence held |
+|---|---|---|---|---|---|
+| R01 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | map copy, Step 2 lookup, the evidence helper; 1C: the place(...) call; 1D: strategy_name from Step 2 through _process_one and _admit_and_place; 1E: the E2, E3 and E4 lines recorded in 6.2 | named; C-001 7.4, C-008 ST-08; 1C: C-008 ST-29; 1D: C-008 4, 18; 1E: C-008 2.2, 9 | reads 001, 002, 031; 1C: read 043; 1D: reads 057, 058 (Q45, Q46); 1E: no new read |
+| R02 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | the INSERT of signals.scanner and signals.strategy | named; C-001 7.2 (BK-27) | read 004; counts |
+| R03 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | where the map is passed | C-008 W-02 | read 003 |
+| R04 | strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | strategy registration key | A-008, B-002 M22 | read 005 |
+| R05 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | the map entries | C-001 4.2, 4.3 | counts only (HISTORICAL for content) |
+| R06 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | the map schema | C-001 5.2 | counts only |
+| R07 | config/strategies/*.yaml (16 files) | see the Stage 1 companion file | each strategy's name | C-001 4.4, B-002 M22 | counts only (blobs in the Stage 1 companion file) |
+| R08 | strategies/schema.py | 22530161a5ee5a24bd85a7701b45269b3f2bacdb | the strategy model | A-008 | counts only |
+| R09 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | settings near the map | C-001 4.4 (D-04) | counts only |
+| R10 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | the signals columns | C-007 2.1 | counts only |
+| R11 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | later writers of signals; 1C: in rule R's writer list | C-001 7.2; 1C: C-007, C-008 | counts only (T10 4); 1C: no T14 line (Q38); 1D: no create_trade( line (Q47) |
+| R12 | config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | the twin URL file | C-001 6 | counts only |
+| R13 | config/strategy_direction_registry.yaml | b03f4ed0c90043840f339fc9b5dac6cca93bf736 | a second name-keyed list | C-001 4.3 | counts only |
+| R13 | core/strategy_direction.py | 0e6f8b6686f393dcf38ddf036e565190cec0863a | the same | C-001 4.3 | counts only |
+| R14 | scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | reader of the stored identity | C-001 7.2 | reads 007, 027, 033; 1C: reads 049, 050 (Q41, Q42) |
+| R14 | scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | reader of the stored identity | C-001 7.2 | reads 008, 032 |
+| R15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | dashboard queries on signals | C-001 7.2, 8 | reads 009, 028, 034 to 042 (read 010 not relied on) |
+| R16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | screen 21 | C-001 8 | reads 011, 022, 029; 1C: read 047 (Q39) |
+| R17 | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a44ec610647daf9dced6079a64d77 | per-strategy view | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | the tower build | C-001 8 | reads 012, 023 |
+| R17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | per-strategy ranking | path name | read 013 |
+| R17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | per-strategy health | path name | read 014 |
+| R17 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d956e2943e5710deadfa68b43b2e1 | per-strategy score | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/api/strategies.py | 8fac396665d64d425a28944eec27744247fc5c6c | strategy API | path name | read 015 |
+| R18 | capital/strategy_governor.py | d17193c569c1d2e2890d2047b03cf9d0ae825e8d | per-strategy rule key | C-008 | read 016 |
+| R19 | scripts/strategy_status.py | d15942ccde89d30e45df310a643ba0dacec17bce | per-strategy report | path name | counts only (no T6/T7) |
+| R19 | scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | per-strategy metrics | path name | reads 017, 030 |
+| R20 | strategies/__init__.py | ee3a2879f0fa022d22fdd62d9aed206964b3e64b | package | path name | counts only (no T6/T7) |
+| R20 | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | taxonomy | path name | counts only (no T6/T7) |
+| R21 | strategies/control.py | b6eecb480b83471149fb9362bafc980c967ff6c9 | the step after the lookup | C-008 ST-09 | none (C-008's) |
+| R22 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | the EOD route's stored key | C-001 T-10 | none (C-011's) |
+| R23 | scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | connectivity checks | C-001 6 | none (C-001's) |
+| R23 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | the same | C-001 6 | none (C-001's) |
+| R24 | core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | alert-name prefix | C-001 4.3 | none (other topic) |
+| R24 | orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | EOD direction map | C-001 7.4 | none (other topic) |
+| R24 | signals/entry_throttle.py | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | throttle key | C-001 7.4 | none (other topic) |
+| T | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | the key-differs test | C-001 7.2 | read 006 |
+| T | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | a plain-dict test map | C-001 11 | counts only |
+| T | tests/unit/test_config_loader.py | 8f245c35a047794c00ffe21e53c178b5928af890 | the map model | C-001 5.2 | counts only |
+| R25 | ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | older per-scanner attribution | C-001 8 (G-1) | reads 018, 024; no counted SQL (C1 0, C2 0) |
+| R26 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | attribution endpoints | C-001 8, 12 (G-1) | read 019; no counted SQL |
+| R27 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | the dashboard's own map load; 1C: its function list | C-001 5.1 (G-1) | reads 020, 021; 1C: read 048 (Q40) |
+| R28 | ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | none in the chain (two comment lines) | T1 and T2 lines (G-1) | read 025 |
+| R29 | ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | displays the map | C-004 (G-1) | read 026 |
+| R30 | scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | pre-flight file presence | C-001 5.3, 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R31 | scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | deprecated presence check | C-001 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R32 | orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1C: the INSERT INTO trades (strategy column); 1D: inside OrderManager.create_trade (175), which binds its strategy parameter 5th; 1E: its other create_trade( line, 12, is a string line before the first definition, most likely the module docstring, so the file holds no create_trade( call line (INTERPRETATION, 6.1) | rule R's writer list (C-007, C-008); C-007 1.1 lists the same blob (770 lines); 1E: D13 | 1C: reads 044, 046 (Q38); 1D: reads 051, 052, 053 (Q43; Q47, Q48); 1E: read 059 (G17) |
+| R33 | orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 1C: OrderPlacer.place, the callee of the processor's place(...) (HISTORICAL); 1D: its create_trade call (996) with strategy=strategy (1000); 1E: line 996 the only create_trade( call line in s_rt (INTERPRETATION, 6.1) | rule R's writer list; C-008 ST-29, 17 | 1C: counts only (Q38); 1D: reads 054, 055, 056 (Q44; Q47); 1E: no new read |
+| R34 | scripts/t2_cnc_gtt_realtest.py | 4034ecd18b2d6c5ccf84419316db964a533eb7f1 | 1C: a lead: a second "INSERT INTO trades" string; no part in the chain shown | G6 by its rule (an s_rt file with a C3 count of 1); C-007 1.1, 4.1 | 1C: read 045 (1 line; rule R: a lead); 1D, 1E: not inspected |
+| R35 | screening/entry_gate.py | 46b173171bdfeba48af641b67a361618e5acba58 | 1E: where E2's WatchEntry comes from: the gate_state rows reloaded at start and released (HISTORICAL) | C-008 2.2 (E2), EP-02 (KNOWN DEFECT); D14 | none: not read (D14); UNKNOWN / NOT ESTABLISHED |
+| R36 | screening/retest_monitor.py | 26639d6ed5dddb1140f0868bb9f937cad5379f82 | 1E: where E3's parked comes from: the divert's parking write and the confirm hand-off (HISTORICAL) | C-008 2.2 (E3), ST-15, EP-05; D14 | none: not read (D14); NOT ESTABLISHED |
+| R37 | allocation/portfolio_allocator.py | cb27a82e757f2d8aba4400ec0949611b0c340e2d | 1E: E4's allocator hand-off between the candidate the processor builds and the one admit_prepared receives (HISTORICAL) | C-008 2.2 (E4), ST-19, EP-07; D15 declined | none: not counted or read (D15 declined); NOT ESTABLISHED |
+
+==============================================================================================================================
+4. W9 OPERATION, LINE BUDGET AND MASK COUNTS
+==============================================================================================================================
+| Op | Read | Time | File | Pinned blob | Operation | Bound | Printed | Mask counts (scanned lines: the whole file for a grep) |
+|---|---|---|---|---|---|---|---|---|
+| G17 | 059 | 19:23:52 | orders/order_manager.py | 978d21353253 | grep T23 | 2 | 2 | masks: {'HOSTTOK': 0, 'CLIENTID': 1} / stage-2 masks: {} |
+| C12, C13, G18, G19 | - | - | allocation/portfolio_allocator.py | - | not run (D15 declined) | - | 0 | - |
+
+| Step | Printed | Cap |
+|---|---|---|
+| G17 | 2 | 2 |
+| total | 2 | 2 |
+
+- The output equals its evidence file and its log row (<SCRATCHPAD>/c010/evidence/059.txt; the evidence hash in the log row
+  was checked again after W9). No search ID was used: the search log still ends at Q48.
+- Mask counts (FACT, from the reader's footer; a grep counts the whole file): CLIENTID 1 and HOSTTOK 0, the same as read 051's
+  whole-file count for the same blob. Neither printed line carries a masking placeholder: the reader's placeholders are its
+  own fixed tokens, such as <CLIENTID> or <MASKED>, and "<hex32>" on line 12 is not one of them, so it is source text. Stage-2
+  masks: none.
+
+==============================================================================================================================
+5. OUTPUT (verbatim, masked)
+==============================================================================================================================
+The header (the reader's line count), then each line exactly as the masked reader printed it ("N: text", N the line number at
+  the pin) after a four-space indent, then the mask counts (whole file). Line 12 carries two non-ASCII characters as in the
+  source: an ellipsis (U+2026) and an arrow (U+2192).
+
+Read 059 | G17 | orders/order_manager.py | blob 978d21353253 | 770 lines | grep (T23)
+  expression: \bcreate_trade\(
+    12:     OMgr2 -- create_trade(…) → trade_id (trd_<hex32>). Assigns trade_id
+    175:     def create_trade(
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+==============================================================================================================================
+6. EVIDENCE ANSWERS (labels as fixed in section 8 of the accepted sheet and in Part 3)
+==============================================================================================================================
+Labels: FACT (C-010's own counts or reads at the pin); HISTORICAL (a frozen V2 manual at the same pin, cited); INTERPRETATION
+  (Claude's reading of FACT lines; not a behaviour test); UNKNOWN / NOT ESTABLISHED; KNOWN DEFECT (status unchanged). A source
+  line shows code at the pin, not what the deleted hosts ran or what any signal or trade did.
+
+6.1 OQ-1D-02: the second create_trade( line in orders/order_manager.py (D13; read 059)
+| Item | Claim | Label | Evidence |
+|---|---|---|---|
+| the two lines | Q47's two T23 lines in order_manager.py are 12 and 175; 175 is the definition of create_trade. | FACT | read 059; Q47; read 051 |
+| text | Line 12 as printed (section 5): four spaces, then "OMgr2 -- create_trade(", an ellipsis (U+2026), ") ", an arrow (U+2192) and " trade_id (trd_<hex32>). Assigns trade_id". | FACT | read 059 |
+| form: not a definition, not a comment | Its first non-blank characters are "OMgr2", not "def", "class" or "#"; the line holds no quote character. | FACT (its characters) | read 059 |
+| form: a string line, not a call | Python accepts an ellipsis character or an arrow only inside a string or a comment; as the line is not a comment, it is a line of a multi-line string, so its "create_trade(" is text, not a call. | INTERPRETATION (Python's syntax applied to the FACT line; the file was not compiled or run, and the string's first and last lines were not printed) | read 059 |
+| position | Line 12 precedes the file's first definition or class line (67, class OrderInsertSpec); read 051 printed all 18 such lines (Q43 counted 18). So it lies in no function or class, and a string at that place is most likely the module docstring. | INTERPRETATION (definition order; position) | reads 051, 059; Q43 |
+| use | What line 12 refers to, or how its text continues, beyond the line itself. | NOT ESTABLISHED (no further read) | - |
+
+- Consequence: Q47 counted 3 T23 lines in s_rt's 281 files: order_manager.py 12 (a string line, as above), order_manager.py
+  175 (the definition, FACT) and order_placer.py 996 (trade_id = self._om.create_trade(, FACT, read 054). So within s_rt,
+  order_placer.py 996 is the only create_trade( call line. Label: INTERPRETATION, as it rests on the reading of line 12 and on
+  T23's reach (a call written with a space before the parenthesis, or made under another name, is not counted).
+- The E1 finding (Stage 1D 8.2, INTERPRETATION) and its hop d (the call target by its unique name; the type of self._om not
+  read) are unchanged. O-8 stays in the record with this outcome.
+
+6.2 OQ-1D-01: the other entry paths, recorded as decided (D14 and D15; no read)
+| Path | Held: C-010's own FACT lines (read 057 unless stated) | HISTORICAL spans and INTERPRETATION | Recorded as | Reason (Part 3) |
+|---|---|---|---|---|
+| E2 gate (continue_from_gate) | 2051 strategy_name = entry.strategy_name  # type: ignore[attr-defined]; 2052 strategy_obj = self._strategies.get(strategy_name); 2056 f"Strategy {strategy_name!r} not in loaded strategies",; 2260 strategy=strategy_name,. No assignment statement to strategy_name between 2051 and 2260: the T3 lines between are a lookup (2052), a message (2056), arguments (2090, 2141), keyword arguments (2160; 2194: strategy_name=strategy_name,) and a dictionary value (2242). FACT within T3's reach; INTERPRETATION that 2194 is a keyword argument (its call's first line not printed). | C-008 2.2 and EP-01: E2 is continue_from_gate(entry, release_ltp), and 2050 to 2093 "the strategy named in the WatchEntry; control; strategy window; governor", mirroring ST-08 to ST-11 (ST-08: a strategy not loaded gives REJECTED_UNKNOWN_STRATEGY). INTERPRETATION: 2051 and 2052 are in that span; 2056 is the message of that reject (2053 to 2055 not printed; the same pattern as E1's 948 to 953, read 001); 2260 is an argument of the place() call at 2251 (B-009 7). C-008 EP-02, KNOWN DEFECT: no runtime file calls EntryGate.add(); E2 runs only for a gate_state row reloaded at start and released with PRICE_HIT; whether such rows existed is not established. | UNKNOWN / NOT ESTABLISHED | D14: the stored gate-state values cannot be established by the authorised source reads, and the relevant writer has no runtime caller in the frozen historical record |
+| E3 retest (continue_from_retest) | 1046 sl_price=sl_price, strategy_name=strategy_name,; 2387 strategy_name = parked.strategy; 2407 strategy_obj = self._strategies.get(strategy_name); 2409 raise _PipelineReject("UNKNOWN_STRATEGY", f"Strategy {strategy_name!r} not loaded"); 2557 reservation_id=reservation_id, strategy=strategy_name,. No assignment statement to strategy_name between 2387 and 2557: the T3 lines between are a lookup (2407), a reject (2409), arguments (2428, 2477), keyword arguments (2493; 2515: symbol=symbol, strategy_name=strategy_name, score=None,) and a dictionary value (2544). FACT within T3's reach; INTERPRETATION that 2515 holds keyword arguments (its call's first line not printed). | C-008 ST-15: the retest divert is 1037 to 1056 (with screening/retest_monitor.py 303 to 379), only with a diverter whose enabled is true, and none is set. C-008 2.2: E3 is continue_from_retest(parked), called by the monitor's on_confirm, only on CONFIRMED, after it releases the parking row (2375 to 2384); EP-04: 2407 to 2430 mirror ST-08 to ST-11. INTERPRETATION: 1046 is an argument of the divert call (its first line not printed); 2387 and 2407 to 2409 are on E3; 2557 is an argument of the place() call at 2553 (B-009 7). C-008 EP-05: with the repository configuration E3 has no caller. | NOT ESTABLISHED beyond the processor-side lines held | D14: tracing the value requires multiple module and storage hops (the parking write, the stored parking row, the confirm hand-off) |
+| E4 allocator (admit_prepared) | 1155 and 1165 signal_id, symbol, scanner_name, strategy_name, strategy_obj,; 1619 def _build_candidate(self, signal_id, symbol, scanner_name, strategy_name,; 1640 signal_id=signal_id, symbol=symbol, strategy_name=strategy_name, side=side,; 1654 self._admit_and_place( (read 058); 1656 scanner_name=p.scanner_name, strategy_name=candidate.strategy_name,. No T3 line between 1619 and 1640 (FACT within T3's reach). | C-008 ST-19: the allocator hook is 1145 to 1172; OB-02: the candidate copy is built at 1619 to 1644; 2.2 and EP-08: E4 is admit_prepared(candidate), 1646 to 1704, which reuses _admit_and_place. INTERPRETATION: 1155 and 1165 are arguments of calls in the hook, in the order of _build_candidate's parameters (1619); 1640 gives the candidate the parameter's strategy_name; 1656 is an argument of the call at 1654 (1655 not printed). | From held evidence only; the allocator hand-off NOT ESTABLISHED | D15 declined: allocation/portfolio_allocator.py not counted or read; no inference about whether E4 runs, or in which mode, from comments |
+
+6.3 What 6.1 and 6.2 leave for trades.strategy (INTERPRETATION; no new read)
+- On E1, E2 and E3, a strategy name passed on to place() has passed the processor's lookup in its loaded strategies (E1 948 to
+  953, read 001; E2 2052 and 2056; E3 2407 and 2409; for E2 and E3 as read in 6.2). From place() on, the hops are those Stage
+  1D traced for E1 (8.1 c1 to f), with the one create_trade( call line of 6.1. So if a trade is placed on E2 or E3,
+  trades.strategy takes that path's strategy_name, a loaded strategy's name; which name, and where the stored row got it,
+  stays NOT ESTABLISHED (6.2).
+- On E4, the processor builds the candidate from the strategy_name of the E1 run it is in (1155, 1165, 1619, 1640; no
+  assignment to strategy_name between 939 and those lines, Stage 1D a1), and admit_prepared passes candidate.strategy_name on
+  to _admit_and_place (1656), whose tail to the column is E1's (Stage 1D a4 to f). Whether the candidate admitted is the
+  candidate built, with its name unchanged, is the allocator hand-off that stays NOT ESTABLISHED.
+- None of this is a statement that E2, E3 or E4 ran on any day, or in which mode.
+
+6.4 Effect on earlier answers (their rows are not edited)
+- Stage 1D sheet, 8.1 hop d and 8.2: unchanged; 6.1 adds that order_manager.py itself holds no create_trade( call line.
+- Stage 1D sheet, 8.3 (O-7): its lines are now recorded path by path in 6.2, with the statuses D14 and D15 set.
+- Stage 1D reconciliation, item 3 (O-8, "Its meaning remains UNKNOWN / NOT ESTABLISHED"): answered at the labels of 6.1; only
+  the use of line 12 beyond its text stays NOT ESTABLISHED.
+
+==============================================================================================================================
+7. REMAINING UNKNOWNS (the record for the manual; no read is proposed for any of them)
+==============================================================================================================================
+| ID | Question | Status after Stage 1E | Why it stays open |
+|---|---|---|---|
+| OQ-1D-01 (E2) | The source of entry.strategy_name (2051) on the gate path. | UNKNOWN / NOT ESTABLISHED | D14 (6.2); C-008 EP-02, KNOWN DEFECT |
+| OQ-1D-01 (E3) | The source of parked.strategy (2387) on the retest path. | NOT ESTABLISHED beyond the processor-side lines 1046, 2387 to 2409 and 2557 | D14 (6.2): several module and storage hops |
+| OQ-1D-01 (E4) | The allocator hand-off between the candidate built at 1619 to 1640 and candidate.strategy_name at 1656. | NOT ESTABLISHED; no mode inferred | D15 declined (6.2) |
+| OQ-1D-02 | The second create_trade( line in order_manager.py. | ANSWERED: line 12, a string line before the first definition (INTERPRETATION); its use beyond its text NOT ESTABLISHED | D13 (6.1) |
+| OQ-1B-05 | What trades.strategy holds. | E1: the resolved strategy name (INTERPRETATION, Stage 1D 8.2); E2 to E4: as 6.3 | What would make E1 FACT is unchanged: the first lines of the calls holding signal_processor.py 1046, 1184 and 1373; the definitions between 867 and 1455; those between order_placer.py 871 and 996; the type of self._om |
+| OQ-1C-01 | What scripts/t2_cnc_gtt_realtest.py writes to trades (line 234 and after; the lead). | open; not inspected | out of scope (Part 3, condition 8) |
+| OQ-1B-04 | Whether any decision reads _evidence_strategy_for; whether anything outside signal_processor.py writes self._scan_webhook_map. | NOT ESTABLISHED (D9) | callers and other files not read |
+| OQ-1B-03 | How registry reaches the entries at scanner_attribution.py 298 to 299 (lines 294 to 297). | open (narrowed by 1C) | a read outside the accepted rules |
+| OQ-1B-02 | fetch_signals's return line (between 46 and 54) and replay_one_signal's parameter list (from 66). | open (narrowed by 1C) | a read outside the accepted rules |
+| OQ-1B-01 | The source of 57 consumer lines (Stage 1B section 7). | open | reads outside rule P |
+| OQ-1B-06 | Whether the 9 runtime files that name the signals table without T6 or T7 lines, and the 6 such leads among the 31, read the scanner or strategy columns. | open | unquoted column names are not counted by T6 or T7 |
+| OQ-1B-07 | Carried from Stage 1: U-01 (route and 404), U-02 (queue hand-over), U-03 (enclosing functions of reads 004 to 006), U-04 (status written for UNKNOWN_STRATEGY), U-06 (the test's assertions), U-10 (the map's key-strategy equality), U-11 (later writers), U-12 (the deleted hosts). | open | as recorded in the Stage 1B sheet, section 9 |
+| security record | The KV-shaped values masked by the reader: 1 in scripts/t2_cnc_gtt_realtest.py (Stage 1C, read 045) and 4 in orders/order_placer.py (Stage 1D, reads 054, 056). | NOT ESTABLISHED whether any is a real credential; outside C-010 | not to be identified or inspected (Stage 1D reconciliation, item 4) |
+| runtime | What any deleted host ran, or what any stored signal or trade row holds. | NOT ESTABLISHED | no stored row, deployed host or trading day was examined; every finding describes the source at the pin |
+| bookmarks | BK-27; VP-45. | BK-27 OPEN; VP-45 NOT RATIFIED | not C-010 evidence decisions |
+
+==============================================================================================================================
+8. DEVIATION AND GAP LOG (earlier entries kept; nothing overwritten)
+==============================================================================================================================
+- D-1, G-1 and O-1 to O-5 (Stages 1 and 1B), D-2, O-6, R-1 and R-2 (Stage 1C, with ChatGPT's reconciled wording: D-2 a process
+  deviation; O-6 a control and scope-definition inconsistency), and O-7 and O-8 (Stage 1D): kept as recorded.
+- How the controls for D-2 and O-6 worked out in Stage 1E: every one of TC-31 to TC-40 printed ok by its ID against the
+  accepted file before W9, with no unlisted ID and no FAIL; the approved list was the only source of readable paths, the gate
+  test admitted exactly its 1 file, and the one read was on it (section 2).
+- R-3 (new; clerical; the run log and Claude's notes only). The run log's synthetic-test row gives "19:21 IST", a time typed
+  by hand; the test output was written at 19:22:46 IST, after the decision file (19:22:29 IST) and before the unlock (19:23:44
+  IST), so the order of the steps is not affected. The row was left as written and a correction row added (19:25:08 IST). One
+  cosmetic point in the same log: the E-33 and E-36 rows repeat their step ID (the window prefix and the lock tool's own
+  output). Claude's working notes gave the time of the tests against the proposal as 19:20 IST; they ran from 19:13:54 to
+  19:14:45 IST (the session record), and a correction row was added to the notes (19:37:17 IST) in the same way. Lesson: every
+  time in a log or a note is taken from the clock or a file time, never typed.
+- Otherwise none: every operation was in the accepted list and within its bound; no refusal; no failed check; no cap or guard
+  reached.
+- O-7 outcome: recorded path by path (6.2) with the statuses D14 and D15 set. O-8 outcome: answered (6.1).
+- Register keys: the repeated IDs are kept as they are (Stage 1D reconciliation, item 4); R35 to R37 take new IDs.
+
+==============================================================================================================================
+9. EXECUTION RECORD
+==============================================================================================================================
+- Times (IST): accepted file received 19:19:54 (its file time); both SHA-256 values recorded 19:20:14; integrity checks
+  19:20:14; decision file 19:22:29; synthetic tests to 19:22:46; W9 19:23:44 to 19:23:53; after-window checks 19:24:56;
+  run-log correction row 19:25:08; this sheet 19:39.
+- Git use on the clone: rev-parse HEAD; cat-file --batch-all-objects --batch-check (object types only; in the after-window
+  check git printed its standard partial-clone notice on standard error, and the object counts were unchanged, so nothing was
+  fetched); hash-object --no-filters on orders/order_manager.py (pre-flight, after W9, and inside cread_c010.py with ls-tree);
+  the gate test's own checks, as in Stage 1D. git ls-remote against the repository. No git status, no other tree-wide or
+  history command, no fetch.
+- V2 documents relied on (frozen, in trading-system-v2 at 82f845053faf098db535a7a5498f7a225d25ef82): C-008 sections 1.1 (the
+  three blobs of R35 to R37), 2.2, 4.1 (ST-08, ST-15, ST-19), 9.1 (EP-01, EP-02), 9.2 (EP-04, EP-05), 9.3 (EP-07, EP-08) and
+  10 (OB-02); section 18 was read again and is not cited; the searches of C-008 for these entries also showed other rows, not
+  relied on. B-009 section 7 is cited as in the Stage 1D sheet (8.3), not read again. Nothing else.
+
+Run log (<SCRATCHPAD>/c010/s1e/run_log.txt; exact, as written during the run):
+    C-010 Stage 1E run log (Claude's workspace)
+    accepted file: C-010_STAGE1E_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt SHA-256 C268255F29A68F3BA82F6666943E70D98EA7251AC83497BC1F63D09EFE2E49B7 lines 219 bytes 20512 (recorded 19:20:14 IST)
+    original proposal: SHA-256 20D0F773CCD2AB3796B52E92FAFBE23B50ACF5306E407279AA04C9A4DDD7B845 (stated in the acceptance: 20D0F773CCD2AB3796B52E92FAFBE23B50ACF5306E407279AA04C9A4DDD7B845)
+    accepted file Parts 1-2 equal to the proposal: yes
+    HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+    ls-remote: HEAD=970aabf3c78d777d9d34549e021f7c8e756c7bdb refs/heads/main=970aabf3c78d777d9d34549e021f7c8e756c7bdb  at 19:20:14 IST
+    listing SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5 rows 1438
+    objects:  1257 blob; 1537 commit; 6126 tree;
+    protected check: never-open blobs present locally: 0  (must be 0)
+    working file orders/order_manager.py: equal 978d213532532d7db72b215bc8ed415b848928ae
+    cread_c010.py BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 (Stage 1: BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7) locked: 1
+    ccount_c010.py 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC (Stage 1: 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC)
+    tool s1e_scope_c010.py 4CE24426E9B73BF8C5C50BB88D33F6A69518E00CDEDE1C53404FB253CABFF5AE
+    tool gate_test_c010e.py 3779325C6D1FCE2E1BE569B40E15581ACAA852ABB3B99FCD1652B0C0AAB32363
+    tool run_s1e_c010.py F659F00A7DD4D438BB6D1375FCF1CA0E3E4B4F77A1411C5A07B5B31AB75F3F51
+    tool test_tools_c010e.py 94816B5734B02BFEA98BF260C06CFE7CF50F39CEB95AC3C3361C9DBF5ADAC696
+    tool lock_c010.py 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC
+    logs before: code_read_log.tsv 58 rows (last 058); search_log.tsv 48 rows (last Q48); lock_log.tsv 16 rows (last E-32	relock)
+    decision file c010/s1e/decisions.json {"D15": false} (D15 DECLINED in Part 3) SHA-256 9773551C2788E337B4CD41179FB341C0353163DF38115EB21600EBA3489F97CB written 19:22:29 IST
+    synthetic tests 19:21 IST against the accepted file: test_tools_c010e.py exit 0, 12 ok checks, 0 FAIL; SYNTHETIC TESTS (STAGE 1E) PASSED: every listed test case printed ok; output s1e/test1e_output.txt SHA-256 39DEA57BDDAB568F35F064DC5FA65BB66905C3A15D0457E10E8584813186BCAE
+    pre-flight result: all checks passed (integrity, decision file, TC-31 to TC-40 ok); W9 may open
+    W9 E-33 E-33 2026-10-24T19:23:44+05:30 unlock: bd93a1f1699ccfef -> 8d36219a06c03e98
+    W9 E-34 gate test W9 PASSED (s1e/w9_E34_gate.txt; admitted 1: the approved list, orders/order_manager.py)
+    W9 E-35 19:23:52 G17 read 059 orders/order_manager.py grep (T23): printed 2 (bound 2-2); masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+    W9 E-35 19:23:53 W9 done: 1 reads, 2 printed lines, 0 counts; not run: none
+    W9 E-36 E-36 2026-10-24T19:23:53+05:30 relock: 8d36219a06c03e98 -> bd93a1f1699ccfef; lock check passed: both attempts refused by the lock
+    results s1e/s1e_results.json SHA-256 E22542D855D95C70EB5E641F02DA2257352D98905788DCC70A1D33E7850DE703
+    after W9 (19:24:56 IST): HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb; objects  1257 blob; 1537 commit; 6126 tree;; never-open blobs present locally: 0  (must be 0); cread_c010.py bd93a1f1699ccfef (locked 1); ccount_c010.py 9911033b14e0dc72; working file orders/order_manager.py 978d213532532d7db72b215bc8ed415b848928ae; decision file 9773551c2788e337; evidence 059 SHA-256 prefix aac91783dce1 (log row: evidence=aac91783dce1)
+    logs: code_read_log.tsv 59 rows (059 new), search_log.tsv 48 rows (none new), lock_log.tsv 18 rows (E-33, E-36 new)
+    correction (19:25:08 IST): the synthetic-test line above says 19:21 IST; that time was typed by hand and is wrong. The test output file s1e/test1e_output.txt was written at 19:22:46 IST, after the decision file (19:22:29 IST) and before the unlock E-33 (19:23:44 IST). The line is left as written; this row corrects it.
+
+| File | SHA-256 |
+|---|---|
+| <SCRATCHPAD>/c010/tools/cread_c010.py | BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 |
+| <SCRATCHPAD>/c010/tools/ccount_c010.py | 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC |
+| <SCRATCHPAD>/c010/tools/lock_c010.py | 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC |
+| <SCRATCHPAD>/c010/tools/s1e_scope_c010.py | 4CE24426E9B73BF8C5C50BB88D33F6A69518E00CDEDE1C53404FB253CABFF5AE |
+| <SCRATCHPAD>/c010/tools/gate_test_c010e.py | 3779325C6D1FCE2E1BE569B40E15581ACAA852ABB3B99FCD1652B0C0AAB32363 |
+| <SCRATCHPAD>/c010/tools/run_s1e_c010.py | F659F00A7DD4D438BB6D1375FCF1CA0E3E4B4F77A1411C5A07B5B31AB75F3F51 |
+| <SCRATCHPAD>/c010/tools/test_tools_c010e.py | 94816B5734B02BFEA98BF260C06CFE7CF50F39CEB95AC3C3361C9DBF5ADAC696 |
+| <SCRATCHPAD>/c010/tools/build_s1e_evidence_c010.py | E16C7C89FCEF7AB9F8AFAC3528C56E57F799D959C7999C30DBA3FC643467313F |
+| <SCRATCHPAD>/c010/scopes/s_pa.txt | AC6C0F93923C532D82A1024FF9443A4ABE8C6DB47E3F2A4115C582CB3D395FED |
+| <SCRATCHPAD>/c010/s1e/decisions.json | 9773551C2788E337B4CD41179FB341C0353163DF38115EB21600EBA3489F97CB |
+| <SCRATCHPAD>/c010/s1e/s1e_results.json | E22542D855D95C70EB5E641F02DA2257352D98905788DCC70A1D33E7850DE703 |
+| <SCRATCHPAD>/c010/s1e/w9_E34_gate.txt | 7857E3D0868FD1218269679C1DD3F9EA86BCB01589423646480AAD932C6755D4 |
+| <SCRATCHPAD>/c010/s1e/test1e_output.txt | 39DEA57BDDAB568F35F064DC5FA65BB66905C3A15D0457E10E8584813186BCAE |
+| <SCRATCHPAD>/c010/s1e/run_log.txt | 5603BEB32AFF82D54BBFAB65C65CBBD81A53B0612241F7F87D08A2A161DF04C6 |
+| <SCRATCHPAD>/c010/evidence/059.txt | AAC91783DCE10169886025467955109D98C769DAC12104E7B8B94CF79CB39E40 |
+| <SCRATCHPAD>/c010/lock_log.tsv | 563187BA98FCA05BDE7A4E25912D3363B4DB3815F678B8B9707EA260AC095D06 |
+| <SCRATCHPAD>/c010/search_log.tsv | 70A219B6535CD0F6874E1CA6E8756F4338347444B00B6E0CB4F1BCAC74F86475 |
+| <SCRATCHPAD>/c010/code_read_log.tsv | BC7072D6F2BCF2694348A5A1438B7064F42660014BE9D8F0AB0851C6E04D1C94 |
+
+Read log row 059 (exact; tab-separated):
+    059	2026-10-24T19:23:53+05:30	grep	\bcreate_trade\(	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	2	masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=aac91783dce1
+Lock log rows E-33 and E-36 (exact; tab-separated):
+    E-33	2026-10-24T19:23:44+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1E_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt (SHA-256 C268255F29A68F3BA82F6666943E70D98EA7251AC83497BC1F63D09EFE2E49B7): window W9, G17 only
+    E-36	2026-10-24T19:23:53+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W9 done: G17 run; lock re-engaged
+Search log: no new row (it ends at Q48, as before W9).
+
+==============================================================================================================================
+10. COMPLETION DECLARATION
+==============================================================================================================================
+- Only G17 was run, in W9, as Part 3 authorises. Nothing was counted; allocation/portfolio_allocator.py was not counted or
+  read; screening/entry_gate.py and screening/retest_monitor.py were not read. The read lock is engaged.
+- No legacy code, test, script or migration was run; no host, VM, broker, Chartink, service or database was accessed; no
+  protected or excluded path was opened, and scripts/t2_cnc_gtt_realtest.py was not inspected; no secret value is reproduced.
+- No file was changed in either repository; no commit or push was made.
+- Claude proposes no further C-010 stage. Stopping here for ChatGPT's reconciliation: the C-010 manual is not started, and
+  Claude drafts it only once ChatGPT reconciles Stage 1E and explicitly authorises it. BK-27 stays OPEN; VP-45 is NOT
+  RATIFIED; OQ-1C-01 is untouched.

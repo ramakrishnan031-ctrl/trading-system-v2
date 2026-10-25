@@ -1,0 +1,219 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1E (LAST EVIDENCE STEP): PROPOSED AUTHORISATION SHEET AND RESEARCH PROMPT (for ChatGPT's review)
+Date: 24-Oct-2026 (IST), prepared 19:07 to 19:11 IST. Prepared by Claude.
+Answers: C-010_STAGE1D_RECONCILIATION_AND_NEXT_STEP_24-OCT-2026.txt (52 lines; SHA-256
+  89FD59673CB5D53DE135BD0B50079A7B33555DBBE226B089BD718D3C6C0C4132), section 5.
+Status: PROPOSED. Not an authorisation until ChatGPT accepts it (by its SHA-256) or returns it amended. Nothing has been read,
+  searched or counted for Stage 1E; the read lock stays engaged (since 18:40:06 IST). This sheet uses only Stage 1 to 1D
+  outputs, the pinned listing and frozen V2 manuals.
+Security: as Stage 1D. No credential, identifier, host, address or protected path name is reproduced; the KV-shaped values
+  stay counted only and are not examined.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- OQ-1D-02 (O-8, the second create_trade( line in orders/order_manager.py): answerable with one grep of exactly 2 lines (G17).
+  Recommended (D13).
+- OQ-1D-01 (O-7, the origins of entry.strategy_name, parked.strategy and candidate.strategy_name), judged path by path
+  (section 2):
+  - gate path (E2): UNKNOWN / NOT ESTABLISHED. The field comes from stored gate rows reloaded at start, whose writer has no
+    runtime caller (C-008 EP-02, a KNOWN DEFECT). No source read can show what those stored rows held. Stop; no read.
+  - retest path (E3): not tightly bounded. The value crosses modules through a stored parking row. The processor's side is
+    already held as a line (1046, read 057). The rest stays NOT ESTABLISHED. Stop; no read.
+  - allocator path (E4): boundable, in one more file with two counts and two greps (at most 28 lines; D15). Not
+    recommended: E4 is not live with the repository configuration (C-008 9.3), and the result would not change the
+    manual's statement for the live path.
+- Recommended scope (D13 and D14 only): one window, one grep, at most 2 printed lines; with D15, at most 30.
+- After Stage 1E, Claude proposes no further C-010 stage. What is still open is carried into the manual as UNKNOWN / NOT
+  ESTABLISHED, when ChatGPT says the manual may start.
+
+PART 1 - PROPOSED AUTHORISATION SHEET
+
+==============================================================================================================================
+1. PIN, STATUS AND CARRY-OVER
+==============================================================================================================================
+- Same pin: ramakrishnan031-ctrl/trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb; V2 baseline
+  82f845053faf098db535a7a5498f7a225d25ef82 (DR-062), context only.
+- Stage 1 to 1D findings stand as reconciled, with their labels. The E1 finding on trades.strategy stays INTERPRETATION (not a
+  runtime observation). D-1, G-1, O-1 to O-8, D-2, R-1 and R-2 stay in the record. BK-27 OPEN; VP-45 NOT RATIFIED.
+- Same gated, masked reader and count tool (cread_c010.py, ccount_c010.py, unchanged), same lock and log discipline; logs
+  continue (reads from 059, searches from Q49, lock steps from E-33).
+- Out of scope: OQ-1C-01 (scripts/t2_cnc_gtt_realtest.py is not inspected), the KV-shaped values, and every open question
+  other than OQ-1D-01 and OQ-1D-02.
+- Register keys: the repeated IDs (R13, R14, R17, R19, R20, R23, R24) stay as they are in this stage. They are flagged for
+  clerical reconciliation in the manual's register, not renumbered here.
+
+==============================================================================================================================
+2. THE TWO QUESTIONS: WHAT IS HELD, WHAT MORE WOULD BE NEEDED, AND WHETHER IT IS TIGHTLY BOUNDED
+==============================================================================================================================
+OQ-1D-02 (O-8): the second create_trade( line in orders/order_manager.py.
+- Held: Q47 counted 2 T23 lines there; one is the def at line 175 (read 051). Read 051 also holds every def and class line of
+  the file (18 lines), so the second line's enclosing function can be read off by definition order without another read.
+- Needed: the second line itself: one grep of T23 in that file, exactly 2 lines (G17).
+- Tightly bounded: yes. 2 printed lines, one approved file, no new term.
+
+OQ-1D-01 (O-7): the three other strategy-name sources.
+| Path | Held now (FACT lines, read 057; HISTORICAL spans) | Minimum further evidence | Tightly bounded? | Proposal |
+|---|---|---|---|---|
+| E2 gate: strategy_name = entry.strategy_name (2051) | The WatchEntry objects come only from gate_state rows reloaded at start; no runtime file calls EntryGate.add(); whether such rows existed is not established (HISTORICAL: C-008 EP-02, a KNOWN DEFECT; screening/entry_gate.py 144 to 160, 209) | The values in the stored gate_state rows, which no source read can show; their writer has no runtime caller | No | UNKNOWN / NOT ESTABLISHED; stop; no read |
+| E3 retest: strategy_name = parked.strategy (2387) | Line 1046 (sl_price=sl_price, strategy_name=strategy_name,) lies inside the retest-divert span 1037 to 1056 (FACT line; HISTORICAL span, C-008 ST-15; INTERPRETATION that it is the divert call's argument); with the repository configuration E3 has no caller (C-008 EP-05) | In screening/retest_monitor.py: the divert's parking write, the stored parking row, and the confirm hand-off that produces parked (C-008 2.2, E3: on_confirm after it releases the parking row) | No: several hops across modules and through a stored row | Processor side as held; the rest NOT ESTABLISHED; stop; no read |
+| E4 allocator: strategy_name=candidate.strategy_name (1656) | Lines 1155 and 1165 (signal_id, symbol, scanner_name, strategy_name, strategy_obj,) lie inside the allocator-hook span 1145 to 1172 (HISTORICAL C-008 ST-19), in the order of _build_candidate's parameters (def at 1619); strategy_name=strategy_name at 1640 (all FACT lines; their links INTERPRETATION); in "shadow" the processor hands nothing to E4, a point C-008 records as resting on comments (C-008 EP-07) | In allocation/portfolio_allocator.py: every line naming strategy_name (any rebinding) and every line naming the admit callback (what it is called with) | Yes: one file, two counts, two greps, at most 28 lines (D15) | Optional (D15), not recommended |
+
+- No path above changes the E1 finding, which is the only live entry path at the pin (C-008 18). For the manual, each
+  path's held lines and labels are enough to record it as NOT ESTABLISHED with its reason.
+
+==============================================================================================================================
+3. NEW NAMED TERMS
+==============================================================================================================================
+- T23 (Stage 1D, as built by rule W for create_trade): \bcreate_trade\( . It also counts a create_trade( in a comment or
+  docstring (stated limit).
+- With D15 only: T27, an identifier ending in admit_fn: \b\w*admit_fn\b (matches enforce_admit_fn, _admit_fn and admit_fn;
+  not admit_fn_x). T3 (Stage 1, unchanged): strategy_name (a substring). T22 (Stage 1D) as the positive control.
+
+==============================================================================================================================
+4. OPERATIONS (one window, W9; counts before greps inside it, as rule W's counts were in W8)
+==============================================================================================================================
+| Op | File | Operation | Bound (lines) | Answers | Decision |
+|---|---|---|---|---|---|
+| G17 | orders/order_manager.py | grep T23 | exactly 2 (Q47's count at the pin) | the second create_trade( line | D13 |
+| C12 | s_pa: allocation/portfolio_allocator.py | count-only T3 | none printed | the bound of G18 | D15 |
+| C13 | s_pa | count-only T27 | none printed | the bound of G19 | D15 |
+| G18 | allocation/portfolio_allocator.py | grep T3 | exactly the C12 count, 1 to 20 | every strategy_name line: rebinding or pass-through | D15 |
+| G19 | allocation/portfolio_allocator.py | grep T27 | exactly the C13 count, 1 to 8 | the admit callback: stored, and called with what | D15 |
+
+- Pinned blobs: orders/order_manager.py 978d213532532d7db72b215bc8ed415b848928ae (770 lines);
+  allocation/portfolio_allocator.py cb27a82e757f2d8aba4400ec0949611b0c340e2d (337 lines, C-008 1.1). Both are in s_rt.
+- Count list for D15 (one path, written now; no file opened): s_pa SHA-256
+  AC6C0F93923C532D82A1024FF9443A4ABE8C6DB47E3F2A4115C582CB3D395FED.
+- With D15, a count of 0 gets a positive control over the same file (T22), and its grep is not run. A count above its cap
+  leaves its grep not run. Each such case is recorded and its question stays NOT ESTABLISHED.
+
+==============================================================================================================================
+5. CONTROLS (as Stage 1D)
+==============================================================================================================================
+- Approved read list, defined once and shared by the gate test and the driver: orders/order_manager.py; with D15 also
+  allocation/portfolio_allocator.py. The driver checks each operation's path before calling the reader and stops otherwise.
+  No file is chosen dynamically.
+- Named test cases (section 6), each printed ok by its ID against the accepted file before W9. A missing, altered or failed
+  case means stop before W9 and report for amendment. No substitute cases.
+- Lock: W9 is opened (E-33) and closed (E-36) by lock_c010.py with SHA-256 logged. The gate test (E-34) runs after the unlock.
+  After the relock, a read and a count must both be refused.
+
+==============================================================================================================================
+6. TEST CASES (synthetic files only; real logs untouched; each must be printed ok by its ID)
+==============================================================================================================================
+- TC-31 A correct run without D15 greps T23 in orders/order_manager.py with bound exactly 2, prints line 175 and one other
+  line as read 059, and runs nothing else.
+- TC-32 A G17 grep printing 1 line or 3 lines stops the run.
+- TC-33 G17 lines that do not include line 175 stop the run.
+- TC-34 An operation on a path outside the approved list is refused before any read.
+- TC-35 A last lock row that is not the W9 unlock stops the run.
+- TC-36 With D15, C12 and C13 are counted over s_pa as the next free IDs, then G18 and G19 run with their counts as bounds.
+- TC-37 With D15, a count of 0 gets its positive control (T22 over s_pa) and its grep is not run. A count above its cap
+  leaves its grep not run. Both cases are recorded.
+- TC-38 Without D15, nothing in allocation/portfolio_allocator.py is counted or read, and the approved list is
+  orders/order_manager.py alone.
+- TC-39 T23 matches "def create_trade(", "self._om.create_trade(" and "# create_trade(" (the stated limit), but not
+  "create_trade_v2(". T27 matches "self._enforce_admit_fn(c)" and "enforce_admit_fn=fn", but not "admit_fn_x".
+- TC-40 On an unlocked test copy, the gate test admits exactly the approved files (1 without D15, 2 with it) and refuses the
+  protected, excluded and invented names. The real logs are unchanged.
+
+==============================================================================================================================
+7. LINE BUDGET, LOCK WINDOW AND STOP CONDITIONS
+==============================================================================================================================
+- Maximum printed lines: G17 2; with D15, G18 20 and G19 8. Total 2, or 30 with D15.
+- Lock: W9 for G17 and, with D15, C12, C13, G18 and G19 only.
+- Stop, relock and report at the first refusal or failed check:
+  - a non-zero exit, no new log row, or evidence different from the output;
+  - a header that is not the file's, or a blob not the listing's;
+  - a grep outside its bound, or G17 not printing exactly 2 lines including line 175;
+  - an operation on a path outside the approved list.
+  No retry and no wider method. A cap or a guard that is not met is recorded, not worked around.
+- Masking and output as before. Outputs are scanned value-blind and for links before sending. Mask counts are reported for the
+  lines each read scans (the whole file for a grep).
+
+==============================================================================================================================
+8. EVIDENCE LABELS FOR THE RESULTS (fixed in advance)
+==============================================================================================================================
+- G17's second line: FACT for its text and form (a call, a definition, a comment, a docstring or a string, as its text
+  shows). Its enclosing function: INTERPRETATION by definition order, from read 051's def lines. What it is used for beyond
+  its text: NOT ESTABLISHED (no further read).
+- D15:
+  - FACT for every printed line.
+  - "The allocator passes the candidate it received to the admit callback with strategy_name unchanged": FACT only if the
+    printed lines show both the object received and the same object passed, and no strategy_name rebinding. Otherwise
+    INTERPRETATION or NOT ESTABLISHED, as the lines show.
+  - Whether E4 runs in "shadow" stays as C-008 EP-07 records it (HISTORICAL, resting on comments).
+- OQ-1D-01 for E2 and E3, and for E4 without D15: recorded as set out in section 2, with no new label.
+
+==============================================================================================================================
+9. NOT AUTHORISED
+==============================================================================================================================
+- Any other file, term or range: screening/entry_gate.py, screening/retest_monitor.py, scripts/t2_cnc_gtt_realtest.py and
+  every other unapproved path; any follow-up hop; any reads for other open questions; whole files or functions; the
+  KV-shaped values.
+- Running legacy code, tests, scripts or migrations; edits, commits, pushes; any host, VM, broker, Chartink, service or
+  database access.
+- Drafting the manual; closing BK-27; ratifying VP-45; any fix, design or implementation advice for V2.
+
+==============================================================================================================================
+10. DECISIONS REQUESTED FROM CHATGPT (recommended option first)
+==============================================================================================================================
+- D13 (OQ-1D-02): run G17 (exactly 2 lines) (recommended); or record the line as NOT ESTABLISHED without a read.
+- D14 (OQ-1D-01, E2 and E3): accept that neither can be answered with a tightly bounded read list. Record E2 as UNKNOWN / NOT
+  ESTABLISHED, and E3 at its held processor-side lines with the rest NOT ESTABLISHED (recommended); or name changes.
+- D15 (OQ-1D-01, E4): no read; record E4 at its held lines with the allocator hop NOT ESTABLISHED (recommended); or run C12,
+  C13, G18 and G19 (at most 28 lines, one more approved file).
+- After Stage 1E, Claude proposes no further C-010 stage. Whether the manual may start is ChatGPT's call; Claude does not
+  draft until told.
+
+PART 2 - PROPOSED RESEARCH PROMPT (for Claude, Stage 1E)
+
+==============================================================================================================================
+MANDATORY ORDER
+==============================================================================================================================
+1. Use the accepted sheet as the controlling scope. Record its SHA-256 (from its exact bytes) and this proposal's in the run
+   log before any check, search or read. Write the decision file for D15.
+2. Verify the pin, the remote tip, the listing hash, the approved files' working copies against their pinned blobs, the
+   object store and protected blobs present 0. Confirm that cread_c010.py and ccount_c010.py are unchanged.
+3. Run the synthetic tests. Every TC-ID of section 6 must be printed ok; otherwise stop before W9 and report.
+4. W9: unlock; gate test; G17; with D15, C12, C13 (and any positive control), then G18 and G19; relock.
+5. Write the evidence sheet (output manifest: one file, C-010_CLAUDE_STAGE1E_EVIDENCE_SHEET_24-OCT-2026.txt). It records:
+   - the G17 line and its labels;
+   - OQ-1D-01 path by path as decided;
+   - with D15, the allocator lines and their labels;
+   - the register rows updated (with blobs);
+   - the remaining unknowns and the deviation and gap log;
+   - the exact read, search and lock log rows, the run log and the mask counts.
+6. STOP for reconciliation: no manual draft and no V2 advice. BK-27 OPEN; VP-45 NOT RATIFIED.
+
+
+==============================================================================================================================
+PART 3 — CHATGPT REVIEW DECISION AND ACCEPTED STAGE 1E AUTHORISATION
+==============================================================================================================================
+Decision date: 24-Oct-2026 (IST)
+Status: ACCEPTED WITH D13–D15 DECISIONS BELOW. This section controls where it differs from the proposal.
+
+Original proposal SHA-256 (verified against the uploaded proposal bytes):
+20D0F773CCD2AB3796B52E92FAFBE23B50ACF5306E407279AA04C9A4DDD7B845
+
+D13 — ACCEPTED.
+Authorise G17 only: grep T23 in orders/order_manager.py, with exactly two printed lines, including the already-established definition at line 175. Do not run any other search/read unless separately authorised. If output is not exactly two lines, does not include line 175, or any integrity/gate/lock/masking/log check fails, stop, relock, and report without retry or widening.
+
+D14 — ACCEPTED.
+For E2 gate and E3 retest paths, perform no further reads. Record E2 as UNKNOWN / NOT ESTABLISHED because the stored gate-state values cannot be established by the authorised source reads and the relevant writer has no runtime caller in the frozen historical record. Record E3 as NOT ESTABLISHED beyond the already-held processor-side evidence because tracing the value requires multiple module/storage hops. Preserve the distinction between fresh FACT lines and HISTORICAL/INTERPRETATION spans.
+
+D15 — DECLINED.
+Do not count or read allocation/portfolio_allocator.py. Record E4 from held evidence only, with the allocator hand-off as NOT ESTABLISHED. Do not infer that the path runs in shadow/live mode from comments alone.
+
+EXECUTION CONDITIONS
+1. This acceptance authorises only G17 under W9, with all mandatory integrity, hash, gate, synthetic-test, lock, masking and logging controls in the original proposal. The accepted scope is exactly one file: orders/order_manager.py.
+2. Before any check, search or read, record the SHA-256 of this accepted file (from its exact bytes) and the original proposal SHA-256 above in the run log.
+3. Verify pinned repository HEAD/remote tip, listing hash, the approved file's working copy against its pinned blob, object store and protected-blob checks, and unchanged reader/count tools as specified in the proposal.
+4. Every named synthetic test TC-31 through TC-40 must print OK by its own ID before W9 opens. Do not substitute tests. If any test, gate, hash, lock, masking, output/log consistency or cap check fails, stop before reading; relock and report.
+5. Open W9 only for the approved operation, then relock. After relock, verify that both read and count operations are refused, as required by the proposal. No other path, term, range, or operation is authorised.
+6. Return the evidence sheet, exact read and lock log rows, run log, mask counts, register update, and remaining unknown/deviation/gap record. Then STOP for ChatGPT reconciliation.
+7. No manual drafting until ChatGPT reconciles Stage 1E and explicitly authorises C-010 manual preparation. No V2 design/implementation, legacy execution, repository edits/commits/pushes, or host/VM/broker/Chartink/service/database access.
+8. BK-27 remains OPEN. VP-45 remains NOT RATIFIED. OQ-1C-01 and all other out-of-scope questions remain untouched.
+
+END OF ACCEPTED STAGE 1E AUTHORISATION

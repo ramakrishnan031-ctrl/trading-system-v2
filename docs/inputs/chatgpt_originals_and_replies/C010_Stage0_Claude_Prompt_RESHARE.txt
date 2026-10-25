@@ -1,0 +1,58 @@
+CLAUDE RESEARCH PROMPT — C-010 STAGE 0
+Scanner-to-Strategy Mapping
+Date: 24-Oct-2026 (IST)
+
+ROLE
+Document the dead legacy system as it actually existed. You are preparing a factual technical manual, not fixing or redesigning the system.
+
+AUTHORITATIVE SOURCE
+Use only this pinned legacy production repository and commit for the initial inventory:
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+C-010 TOPIC
+“Scanner -> strategy mapping”.
+The existing handover includes bookmark BK-27: “strategy column stores the scanner name”. This is only a lead to verify in a later stage; do not treat it as proven from the wording alone.
+
+YOUR TASK NOW: STAGE 0 ONLY
+Complete the accompanying C-010 Stage 0 Answer Sheet. Establish the source inventory, candidates, and bounded reading method. Do not start analyzing individual modules yet.
+
+ALLOWED IN STAGE 0
+- Verify repository identity and pinned commit.
+- Obtain a complete tracked-file/path inventory at that commit.
+- Inspect path names, file metadata, blob IDs, and counts only.
+- Search for candidate filenames/paths using terms such as scanner, scan_name, scanner_name, strategy, strategy_name, scan_webhook_map, mapping, strategy lookup.
+- Record candidate paths and proposed bounded read ranges for a later stage.
+- Note overlaps with adjacent C topics without deciding their behavior.
+
+NOT ALLOWED
+- Do not open or read source-code contents in Stage 0.
+- Do not quote code, inspect matching source lines, or infer behavior from comments, filenames, or documentation titles.
+- Do not run tests, scripts, application code, or database queries.
+- Do not access or contact any VM/host, broker, webhook, Chartink service, live system, host records, or external runtime.
+- Do not inspect, expose, or reproduce credentials or secrets.
+- Do not modify files, create commits, push, or draft/finalize the C-010 manual.
+- Do not design V2, recommend code changes, or change scanner configuration.
+
+INITIAL CANDIDATE PATHS TO CHECK (existence is not assumed)
+- signals/webhook_receiver.py
+- signals/signal_processor.py
+- config/system_config.yaml
+- all tracked paths under strategies/
+- tests with names suggesting scanner, strategy, webhook, or mapping coverage
+- relevant tracked docs/audit records, if any
+
+REQUIRED OUTPUT
+Complete the answer sheet with:
+1. Repository/ref verification evidence.
+2. Inventory method and total tracked-file count.
+3. Candidate path inventory with blob SHA and metadata where available.
+4. A bounded proposed Stage 1 reading order; for each file, state only the question it may answer.
+5. Scope boundaries, adjacent-topic overlaps, unknowns, and exclusions.
+6. Explicit declaration that no source contents were read and no operational actions occurred.
+
+FACT DISCIPLINE
+Separate FACT, UNKNOWN / NOT ESTABLISHED, INTERPRETATION, HISTORICAL, KNOWN DEFECT, and OPEN QUESTION. Do not convert BK-27 into a fact without source evidence. Preserve uncertainty.
+
+STOP CONDITION
+After completing the Stage 0 Answer Sheet, return it plus a concise inventory summary and STOP. Do not begin Stage 1 or the manual until ChatGPT has reconciled the inventory and prepared the next bounded instruction. No extra approval ceremony is needed; this is simply the agreed staged research workflow.

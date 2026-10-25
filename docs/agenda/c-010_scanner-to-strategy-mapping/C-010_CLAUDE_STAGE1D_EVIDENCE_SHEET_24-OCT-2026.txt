@@ -1,0 +1,681 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1D EVIDENCE SHEET: THE trades.strategy CHAIN (W7 counts, W8 greps and reads; for ChatGPT's reconciliation)
+Date of work: 24-Oct-2026 (IST), 18:38 to 18:48 IST. Prepared by Claude.
+Controlling scope: C-010_STAGE1D_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt (303 lines, 25,964 bytes; SHA-256
+  3F4ED2D24DA9C8307A7BDA8915336AEA91E018DD3837C20A139D75F7DFF58895), received from Rama at 18:38 IST: ChatGPT's Part 3 accepts
+  D10, D11 and D12 as proposed. Its first 267 lines are byte-identical to
+  C-010_STAGE1D_PROPOSED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt, whose SHA-256
+  82C9E265D37A97C3D48C7664B372C4712BE77C2ADB6A330D123456AED32EF46E equals the value Part 3 records. Both SHA-256 values were
+  written to the run log at 18:38:35 IST, before any check, search or read (section 11).
+Status: W7 and W8 done; the read lock is engaged again (18:40:06 IST). STOPPED for ChatGPT's reconciliation. No C-010 manual
+  is drafted; BK-27 stays OPEN; VP-45 is NOT RATIFIED; no V2 design or implementation advice is given.
+Security: the masked outputs of the authorised reads only; counts and file names for the searches. No credential, token,
+  account or client identifier, host or address, deployed path, mailbox or person name other than Rama's is reproduced;
+  protected paths are counted, never named; the KV-shaped values are counted only. Claude's working folder is written as
+  <SCRATCHPAD>.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Integrity (section 1): both SHA-256 values recorded first; pin, remote tip, listing hash, the approved files' and s_rt's
+  working copies, the object store and the protected-blob check all as required. D11 was recorded as accepted in
+  c010/s1d/decisions.json. All 30 named test cases (TC-01 to TC-30) printed ok by their IDs against the accepted file before
+  W7.
+- W7 (section 4): C7, T22 in order_manager.py, 18 lines; C8, T25 in order_placer.py, 26; C9, T3 in signal_processor.py, 58 (as
+  Stage 1 counted); C10, T26 there, 5. No search was empty, so no positive control was needed.
+- W8 (sections 5 to 7): 8 reads (051 to 058) and rule W's 2 counts, 205 printed lines against the 310-line cap: G11 18, F6 39,
+  F7 27, G12 1, F8 31, G13 26, G15 58, G16 5. Rule V found create_trade at order_manager.py 175; rule W found one call in the
+  placer and no other definition of the name in s_rt. No refusal, no failed check, no cap reached, no step left unrun.
+- Finding (section 8): on the live E1 path at the pin, trades.strategy is written from the strategy name that Step 2 resolves
+  from the scanner's map entry, carried unchanged through _process_one, _admit_and_place, OrderPlacer.place and
+  OrderManager.create_trade: the strategy identity, not the scanner key. Label: INTERPRETATION under the fixed rule, because
+  parts of several hops rest on INTERPRETATION (function membership by definition order or HISTORICAL span; three argument
+  lines read as keyword arguments without their calls' first lines; the call target by its unique name). Every hop's own lines
+  are FACT, and no hop on the E1 path is NOT ESTABLISHED.
+- FACT within that chain: create_trade binds its keyword-only strategy parameter (181) as the 5th of 30 bound values (247),
+  the one the strategy column takes; the placer's only create_trade call passes strategy=strategy (1000), and the strategy
+  parameter at 882 has no other binding line before it; _admit_and_place takes strategy_name as a keyword-only parameter
+  (1278); before line 1184 the only assignment statement to strategy_name is Step 2's line 939, and there is none between 1278
+  and 1455 (lines 1046 and 1373 read as keyword arguments: INTERPRETATION).
+- Observations (section 10): O-7, the three other entry paths pass strategy names from other fields (gate, retest, allocator),
+  whose sources are NOT ESTABLISHED; O-8, a second create_trade( line in order_manager.py was counted, not printed. No new
+  deviation. Remaining open questions: section 9.
+
+==============================================================================================================================
+1. INTEGRITY AND PIN (FACT)
+==============================================================================================================================
+- Authorisation: the accepted file's SHA-256 (3F4ED2D24DA9C8307A7BDA8915336AEA91E018DD3837C20A139D75F7DFF58895, from its exact
+  bytes) and the proposal's (82C9E265D37A97C3D48C7664B372C4712BE77C2ADB6A330D123456AED32EF46E) were recorded in the run log at
+  18:38:35 IST; the accepted file's first 22,593 bytes equal the proposal byte for byte, and Part 3 follows.
+- HEAD of the clone = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; git ls-remote of the repository at 18:38:36 IST: HEAD and
+  refs/heads/main both the pin. Tree listing: 1,438 entries, SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5.
+- Working files: the 3 approved files at 18:38 IST (pre-flight) and all 281 of s_rt with them at 18:39:29 IST (the W7 driver)
+  equal to their pinned blobs (git hash-object --no-filters); every W8 read checked its own file again (git ls-tree and git
+  hash-object). Count lists s_om, s_op, s_sp and s_rt unchanged (SHA-256 as in the accepted sheet, section 4).
+- Object store before W7 and after W8 (18:41:59 IST): 1,257 blobs, 1,537 commits, 6,126 trees; protected blobs present 0
+  (sensitive_check.py exit 0). Nothing fetched.
+- Read lock: engaged before E-25, between E-28 and E-29, and after E-32 (cread_c010.py SHA-256
+  BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7); each relock was followed by a refused read and a refused
+  count.
+- Tool integrity: cread_c010.py and ccount_c010.py unchanged since Stage 1 (section 11 lists every tool's SHA-256).
+- Decision file: c010/s1d/decisions.json = {"D11": true} (SHA-256
+  F62706C5D223C8A0C5CBB4B0A7849F21837BD1C7BE25F72D67786FC2D61B429C), written at 18:38:46 IST after the acceptance and before
+  any test, search or read; it is the only file written after the acceptance apart from the logs and outputs of the run.
+
+==============================================================================================================================
+2. METHOD, LOCK WINDOWS, TESTS AND GATE TESTS
+==============================================================================================================================
+| Step | Time (IST) | Action | Result |
+|---|---|---|---|
+| tests | 18:38:46 to 18:39:11 | test_tools_c010d.py on the accepted file | PASSED: 30 of 30 listed TC-IDs ok (35 checks, 0 FAIL); output c010/s1d/test1d_output.txt |
+| E-25 | 18:39:21 | unlock (W7) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-26 | 18:39:21 to 18:39:29 | gate test W7 (gate_test_c010d.py) | PASSED: 102 protected paths, 2 July records, the shared blob, 14 rule-shaped names, a name not in the tree and a malformed range refused; 4 bad lists refused by the count tool; exactly the 3 approved paths admitted |
+| E-27 | 18:39:29 to 18:39:30 | W7: C7 to C10 (Q43 to Q46) | 1 / 18, 1 / 26, 1 / 58, 1 / 5 (files / lines); no control needed |
+| E-28 | 18:39:30 | relock | a read and a count then refused |
+| plan | 18:39:41 | plan_s1d_c010.py | 4 greps planned; none not run; approved list orders/order_manager.py, orders/order_placer.py, signals/signal_processor.py |
+| E-29 | 18:39:50 | unlock (W8) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-30 | 18:39:50 to 18:39:58 | gate test W8 | PASSED (the same checks) |
+| E-31 | 18:39:58 to 18:40:06 | W8: G11, rule V (F6, F7), rule W (Q47, Q48, G12, F8), G13, G15, G16 | reads 051 to 058; 205 lines |
+| E-32 | 18:40:06 | relock | a read and a count then refused |
+
+- Tools (new for Stage 1D, built and tested after the proposal was delivered and before the acceptance): s1d_scope_c010.py
+  (the one definition of the approved list, the lists, terms, caps and fixed lines), gate_test_c010d.py (the Stage 1C gate
+  test with the approved list taken from that file and windows W7 and W8), run_s1d_counts_c010.py, plan_s1d_c010.py,
+  run_s1d_reads_c010.py (rules V and W) and test_tools_c010d.py. The Stage 1 reader and count tool are unchanged.
+- D-2 control: test_tools_c010d.py reads the controlling sheet's "- TC-NN" lines and passes only if every listed ID has an ok
+  check, none has a FAIL and no check carries an unlisted ID; a crashing test group prints FAIL. Before the acceptance, four
+  deliberately broken copies of the tools (rule V taking the first def, no path check, a 5-line F8 lead-in, no inside-range
+  check) were each caught by the expected case (TC-10, TC-23, TC-18, TC-19). The real logs were unchanged by every test run.
+- O-6 control: the approved read list (orders/order_manager.py, orders/order_placer.py, signals/signal_processor.py) is
+  defined once, in s1d_scope_c010.py. The gate tests admitted exactly these 3 paths; the plan refused nothing (all planned
+  paths approved); the reads driver checked each of the 8 reads' paths before calling the reader; rule W's counts named no
+  file outside the list (no lead).
+- The reads driver recomputed the plan from the saved counts and ran only if it was identical, after checking the lock row and
+  the unlocked reader's SHA-256; it would have stopped on a non-zero exit, a missing log row, evidence different from the
+  output, a wrong header, a blob different from the listing, a range not exactly its lines, a grep outside its bound, a path
+  outside the approved list or rule W's counts missing the def line (none occurred).
+
+==============================================================================================================================
+3. UPDATED SOURCE REGISTER (path, role in the C-010 chain, pinned blob, inclusion reason, evidence held)
+==============================================================================================================================
+R01 to R34 and the T rows as in the Stage 1C sheet (section 3); "1D:" marks what Stage 1D adds. "Evidence held" lists C-010's
+  own reads (read numbers) and counts; HISTORICAL citations are in section 8.
+| ID | Path | Pinned blob | Role in the C-010 chain | Inclusion reason | Evidence held |
+|---|---|---|---|---|---|
+| R01 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | map copy, Step 2 lookup, the evidence helper; 1C: the place(...) call; 1D: strategy_name from Step 2 through _process_one and _admit_and_place | named; C-001 7.4, C-008 ST-08; 1C: C-008 ST-29; 1D: C-008 4, 18 | reads 001, 002, 031; 1C: read 043; 1D: reads 057, 058 (Q45, Q46) |
+| R02 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | the INSERT of signals.scanner and signals.strategy | named; C-001 7.2 (BK-27) | read 004; counts |
+| R03 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | where the map is passed | C-008 W-02 | read 003 |
+| R04 | strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | strategy registration key | A-008, B-002 M22 | read 005 |
+| R05 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | the map entries | C-001 4.2, 4.3 | counts only (HISTORICAL for content) |
+| R06 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | the map schema | C-001 5.2 | counts only |
+| R07 | config/strategies/*.yaml (16 files) | see the Stage 1 companion file | each strategy's name | C-001 4.4, B-002 M22 | counts only (blobs in the Stage 1 companion file) |
+| R08 | strategies/schema.py | 22530161a5ee5a24bd85a7701b45269b3f2bacdb | the strategy model | A-008 | counts only |
+| R09 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | settings near the map | C-001 4.4 (D-04) | counts only |
+| R10 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | the signals columns | C-007 2.1 | counts only |
+| R11 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | later writers of signals; 1C: in rule R's writer list | C-001 7.2; 1C: C-007, C-008 | counts only (T10 4); 1C: no T14 line (Q38); 1D: no create_trade( line (Q47) |
+| R12 | config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | the twin URL file | C-001 6 | counts only |
+| R13 | config/strategy_direction_registry.yaml | b03f4ed0c90043840f339fc9b5dac6cca93bf736 | a second name-keyed list | C-001 4.3 | counts only |
+| R13 | core/strategy_direction.py | 0e6f8b6686f393dcf38ddf036e565190cec0863a | the same | C-001 4.3 | counts only |
+| R14 | scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | reader of the stored identity | C-001 7.2 | reads 007, 027, 033; 1C: reads 049, 050 (Q41, Q42) |
+| R14 | scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | reader of the stored identity | C-001 7.2 | reads 008, 032 |
+| R15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | dashboard queries on signals | C-001 7.2, 8 | reads 009, 028, 034 to 042 (read 010 not relied on) |
+| R16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | screen 21 | C-001 8 | reads 011, 022, 029; 1C: read 047 (Q39) |
+| R17 | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a44ec610647daf9dced6079a64d77 | per-strategy view | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | the tower build | C-001 8 | reads 012, 023 |
+| R17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | per-strategy ranking | path name | read 013 |
+| R17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | per-strategy health | path name | read 014 |
+| R17 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d956e2943e5710deadfa68b43b2e1 | per-strategy score | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/api/strategies.py | 8fac396665d64d425a28944eec27744247fc5c6c | strategy API | path name | read 015 |
+| R18 | capital/strategy_governor.py | d17193c569c1d2e2890d2047b03cf9d0ae825e8d | per-strategy rule key | C-008 | read 016 |
+| R19 | scripts/strategy_status.py | d15942ccde89d30e45df310a643ba0dacec17bce | per-strategy report | path name | counts only (no T6/T7) |
+| R19 | scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | per-strategy metrics | path name | reads 017, 030 |
+| R20 | strategies/__init__.py | ee3a2879f0fa022d22fdd62d9aed206964b3e64b | package | path name | counts only (no T6/T7) |
+| R20 | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | taxonomy | path name | counts only (no T6/T7) |
+| R21 | strategies/control.py | b6eecb480b83471149fb9362bafc980c967ff6c9 | the step after the lookup | C-008 ST-09 | none (C-008's) |
+| R22 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | the EOD route's stored key | C-001 T-10 | none (C-011's) |
+| R23 | scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | connectivity checks | C-001 6 | none (C-001's) |
+| R23 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | the same | C-001 6 | none (C-001's) |
+| R24 | core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | alert-name prefix | C-001 4.3 | none (other topic) |
+| R24 | orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | EOD direction map | C-001 7.4 | none (other topic) |
+| R24 | signals/entry_throttle.py | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | throttle key | C-001 7.4 | none (other topic) |
+| T | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | the key-differs test | C-001 7.2 | read 006 |
+| T | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | a plain-dict test map | C-001 11 | counts only |
+| T | tests/unit/test_config_loader.py | 8f245c35a047794c00ffe21e53c178b5928af890 | the map model | C-001 5.2 | counts only |
+| R25 | ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | older per-scanner attribution | C-001 8 (G-1) | reads 018, 024; no counted SQL (C1 0, C2 0) |
+| R26 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | attribution endpoints | C-001 8, 12 (G-1) | read 019; no counted SQL |
+| R27 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | the dashboard's own map load; 1C: its function list | C-001 5.1 (G-1) | reads 020, 021; 1C: read 048 (Q40) |
+| R28 | ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | none in the chain (two comment lines) | T1 and T2 lines (G-1) | read 025 |
+| R29 | ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | displays the map | C-004 (G-1) | read 026 |
+| R30 | scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | pre-flight file presence | C-001 5.3, 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R31 | scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | deprecated presence check | C-001 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R32 | orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1C: the INSERT INTO trades (strategy column); 1D: inside OrderManager.create_trade (175), which binds its strategy parameter 5th | rule R's writer list (C-007, C-008); C-007 1.1 lists the same blob (770 lines) | 1C: reads 044, 046 (Q38); 1D: reads 051, 052, 053 (Q43; Q47, Q48) |
+| R33 | orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 1C: OrderPlacer.place, the callee of the processor's place(...) (HISTORICAL); 1D: its create_trade call (996) with strategy=strategy (1000) | rule R's writer list; C-008 ST-29, 17 | 1C: counts only (Q38); 1D: reads 054, 055, 056 (Q44; Q47) |
+| R34 | scripts/t2_cnc_gtt_realtest.py | 4034ecd18b2d6c5ccf84419316db964a533eb7f1 | 1C: a lead: a second "INSERT INTO trades" string; no part in the chain shown | G6 by its rule (an s_rt file with a C3 count of 1); C-007 1.1, 4.1 | 1C: read 045 (1 line; rule R: a lead); 1D: not inspected |
+
+==============================================================================================================================
+4. W7 COUNT-ONLY RESULTS (no line printed)
+==============================================================================================================================
+| Op | Search | Term | Scope (file) | Pinned blob | Files | Lines | Sets the bound of |
+|---|---|---|---|---|---|---|---|
+| C7 | Q43 | T22 (definition or class lines) | orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1 | 18 | G11 (cap 60) |
+| C8 | Q44 | T25 \bstrategy\b | orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 1 | 26 | G13 (cap 40) |
+| C9 | Q45 | T3 strategy_name | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 1 | 58 | G15 (cap 60) |
+| C10 | Q46 | T26 (the two E1 functions) | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | 1 | 5 | G16 (cap 8) |
+
+- C9 equals the Stage 1 count of T3 in signal_processor.py (Q11, 58), as expected for the unchanged pinned file. No search was
+  empty, so no positive control was run.
+
+==============================================================================================================================
+5. W8 OPERATIONS, LINE BUDGET AND MASK COUNTS
+==============================================================================================================================
+| Op | Read | Time | File | Pinned blob | Operation | Bound | Printed | Mask counts (scanned lines: the whole file for a grep, the range for a range read) |
+|---|---|---|---|---|---|---|---|---|
+| G11 | 051 | 18:39:58 | orders/order_manager.py | 978d21353253 | grep T22 | 18 | 18 | masks: {'HOSTTOK': 0, 'CLIENTID': 1} / stage-2 masks: {} |
+| F6 | 052 | 18:39:58 | orders/order_manager.py | 978d21353253 | range 175:213 | 39 | 39 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| F7 | 053 | 18:39:59 | orders/order_manager.py | 978d21353253 | range 245:271 | 27 | 27 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| W.1 | - | 18:39:59 | s_rt (281 files) | - | count-only Q47 of T23 (rule W) | none printed | 0 (3 lines in 2 files) | - |
+| W.2 | - | 18:40:01 | s_rt (281 files) | - | count-only Q48 of T24 (rule W) | none printed | 0 (1 line in 1 file) | - |
+| G12 | 054 | 18:40:04 | orders/order_placer.py | e3a602909bef | grep T23 | 1 | 1 | masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} / stage-2 masks: {} |
+| F8.1 | 055 | 18:40:05 | orders/order_placer.py | e3a602909bef | range 986:1016 | 31 | 31 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G13 | 056 | 18:40:05 | orders/order_placer.py | e3a602909bef | grep T25 | 26 | 26 | masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} / stage-2 masks: {} |
+| G15 | 057 | 18:40:05 | signals/signal_processor.py | 7fab0a02a302 | grep T3 | 58 | 58 | masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} / stage-2 masks: {} |
+| G16 | 058 | 18:40:06 | signals/signal_processor.py | 7fab0a02a302 | grep T26 | 5 | 5 | masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} / stage-2 masks: {} |
+
+| Step | Printed | Cap |
+|---|---|---|
+| G11 | 18 | 60 |
+| F6 | 39 | 45 |
+| F7 | 27 | 31 |
+| G12 | 1 | 4 |
+| F8 | 31 | 62 |
+| G13 | 26 | 40 |
+| G15 | 58 | 60 |
+| G16 | 5 | 8 |
+| total | 205 | 310 |
+
+- Each output equals its evidence file and its log row (<SCRATCHPAD>/c010/evidence/051.txt to 058.txt; the evidence hash in
+  each log row was checked again after W8).
+- Mask counts (FACT, from the reader's footers): the three ranges (052, 053, 055), HOSTTOK 0 and nothing else. The greps count
+  the whole file: order_manager.py (051) CLIENTID 1; order_placer.py (054, 056) ALNUM 4, CLIENTID 10 and KV 4;
+  signal_processor.py (057, 058) CLIENTID 7 and ALNUM 2. None of these lies on a printed line: no masking placeholder appears
+  in any output. KV is the reader's secret-shaped key=value category; the 4 KV-shaped values in order_placer.py were masked,
+  never printed and not examined, and whether any is a real credential is NOT ESTABLISHED and outside C-010 (recorded
+  value-blind, for the security record, as in Stage 1C). Stage-2 masks: none in all 8 reads.
+
+==============================================================================================================================
+6. OUTPUTS (verbatim, masked)
+==============================================================================================================================
+Each read: its header (the reader's line count), then every line exactly as the masked reader printed it ("N: text", N the
+  line number at the pin) after a four-space indent, then the mask counts (whole file for a grep, the range for a range read).
+  Lines longer than this sheet's width are kept whole; one printed line carries a non-ASCII character as in the source (read
+  056, line 293, an arrow).
+
+Read 051 | G11 | orders/order_manager.py | blob 978d21353253 | 770 lines | grep (T22)
+  expression: ^\s*(async\s+)?(def|class)\s+[A-Za-z_][A-Za-z0-9_]*
+    67: class OrderInsertSpec:
+    116: class OrderManager:
+    124:     def __init__(
+    148:     def _on_order_status_changed(self, event: OrderStatusChanged) -> None:
+    175:     def create_trade(
+    272:     def record_exits_verification(
+    289:     def insert_order(
+    339:     def insert_orders_atomic(
+    393:     def record_entry_fill(
+    434:     def _compute_and_store_latency(self, trade_id: str, filled_at: str) -> None:
+    446:         def _parse(ts: Optional[str]) -> Optional[datetime]:
+    454:         def _ms(t_start: Optional[datetime], t_end: Optional[datetime]) -> Optional[int]:
+    508:     def close_trade(
+    709:     def update_trade_status(self, trade_id: str, status: str) -> None:
+    718:     def link_signal_trade(self, signal_id: str, trade_id: str) -> None:
+    726:     def update_order_status(
+    756:     def get_trade(self, trade_id: str) -> Optional[Dict]:
+    763:     def get_orders_for_trade(self, trade_id: str) -> List[Dict]:
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 052 | F6 | orders/order_manager.py | blob 978d21353253 | 770 lines | range 175:213
+  rule V: D_I 175 (create_trade); range 175:213 (every line from the def to 213)
+    175:     def create_trade(
+    176:         self,
+    177:         *,
+    178:         signal_id: str,
+    179:         symbol: str,
+    180:         direction: str,         # "LONG" | "SHORT"
+    181:         strategy: str,
+    182:         sector: Optional[str],
+    183:         qty: int,
+    184:         entry_target_price: float,
+    185:         sl_initial: float,
+    186:         tgt_initial: float,
+    187:         order_protocol: str,    # "CO_PLUS_TGT" | "LIMIT_TRIPLE"
+    188:         margin_reserved: float,
+    189:         risk_amount: float,
+    190:         reservation_id: Optional[str] = None,  # EF-5
+    191:         mode: Optional[str] = None,  # v14: PAPER | LIVE
+    192:         tolerance_fraction_used: Optional[float] = None,  # Phase 3a: resolved sl_fraction
+    193:         tolerance_source: Optional[str] = None,           # Phase 3a: which override rule won
+    194:         sizing_breakdown: Optional[dict] = None,          # Diary #4: PositionSizer.breakdown (sizing audit)
+    195:         tgt_risk_reward_applied: Optional[float] = None,  # Slice 1: strategy R:R frozen at placement
+    196:     ) -> str:
+    197:         """
+    198:         Insert a new trade row with status=PENDING_FILL. Returns trade_id.
+    199: 
+    200:         OMgr2: trade_id is assigned here via new_trade_id().
+    201:         EF-5: reservation_id is the fm_ledger reservation that funded this
+    202:         trade. Nullable for callers predating the column (recovered trades
+    203:         via reconciler). Populated by order_placer from the signal pipeline.
+    204:         Phase 3a: tolerance_fraction_used / tolerance_source record which entry-
+    205:         slippage override rule applied (Symbol > Strategy > Band > Global); both
+    206:         nullable (NULL for non-sl_fraction modes / recovered trades).
+    207:         """
+    208:         trade_id = new_trade_id()
+    209:         now = now_ist().isoformat()
+    210:         bd = sizing_breakdown or {}  # Diary #4: sizing-audit fields (NULL if absent)
+    211:         with self._store.transaction() as cur:
+    212:             cur.execute(
+    213:                 """
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 053 | F7 | orders/order_manager.py | blob 978d21353253 | 770 lines | range 245:271
+  rule V: D_N 272; range 245:271
+    245:                 """,
+    246:                 (
+    247:                     trade_id, signal_id, symbol, direction, strategy, sector,
+    248:                     qty,
+    249:                     entry_target_price,
+    250:                     sl_initial, tgt_initial,
+    251:                     margin_reserved, risk_amount,
+    252:                     now, now,
+    253:                     order_protocol,
+    254:                     reservation_id, mode,
+    255:                     tolerance_fraction_used, tolerance_source,
+    256:                     bd.get("tier_multiplier_mode"), bd.get("tier_weight_applied"), bd.get("perf_weight_applied"),
+    257:                     bd.get("flat_value_rs_used"), bd.get("qty_by_risk"), bd.get("qty_by_capital"),
+    258:                     bd.get("qty_by_concentration"), bd.get("qty_by_flat"), bd.get("binding_constraint"),
+    259:                     bd.get("actual_position_value_rs"),
+    260:                     tgt_risk_reward_applied,
+    261:                 ),
+    262:             )
+    263:         self._log.info(
+    264:             "trade_created",
+    265:             extra={
+    266:                 "trade_id": trade_id, "signal_id": signal_id,
+    267:                 "symbol": symbol, "direction": direction,
+    268:             },
+    269:         )
+    270:         return trade_id
+    271: 
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 054 | G12 | orders/order_placer.py | blob e3a602909bef | 4,707 lines | grep (T23)
+  expression: \bcreate_trade\(
+    996:         trade_id = self._om.create_trade(
+    masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}
+
+Read 055 | F8.1 | orders/order_placer.py | blob e3a602909bef | 4,707 lines | range 986:1016
+  rule W: G12 line 996; range 986:1016 (L-10 to L+20)
+    986:             _band_price = (signal_trigger_price
+    987:                            if (signal_trigger_price and signal_trigger_price > 0)
+    988:                            else entry_price)
+    989:             _band0 = get_price_band(_band_price, self._slippage_bands)
+    990:             _tol_fraction, _tol_source = resolve_slippage_fraction(
+    991:                 _scfg0, symbol, strategy, _band0)
+    992: 
+    993:         # OP4: create trade row FIRST (status=PENDING_FILL)
+    994:         # EF-5: thread reservation_id so the trades row records which fm_ledger
+    995:         # reservation funded it; simplifies rehydrate and audit.
+    996:         trade_id = self._om.create_trade(
+    997:             signal_id=signal_id,
+    998:             symbol=symbol,
+    999:             direction=direction,
+    1000:             strategy=strategy,
+    1001:             sector=self._resolve_trade_sector(symbol),  # F1 (16-Jul): populate at insert from instrument_cache (frozen; UNKNOWN-bucketed + DQ-alerted)
+    1002:             qty=qty,
+    1003:             entry_target_price=entry_price,
+    1004:             sl_initial=sl_price,
+    1005:             tgt_initial=tgt_price,
+    1006:             order_protocol=order_protocol,
+    1007:             margin_reserved=margin_reserved,
+    1008:             risk_amount=risk_amount,
+    1009:             reservation_id=reservation_id,
+    1010:             mode=self._mode,
+    1011:             tolerance_fraction_used=_tol_fraction,   # Phase 3a
+    1012:             tolerance_source=_tol_source,            # Phase 3a
+    1013:             sizing_breakdown=sizing_breakdown,       # Diary #4: sizing audit
+    1014:             tgt_risk_reward_applied=tgt_risk_reward, # Slice 1: strategy R:R frozen at placement
+    1015:         )
+    1016: 
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 056 | G13 | orders/order_placer.py | blob e3a602909bef | 4,707 lines | grep (T25)
+  expression: \bstrategy\b
+    33:             Future: per-strategy config via scanner_configs.
+    254:     strategy: str,
+    260:     ``"strategy:gap_fade"`` / ``"band:0-100"`` / ``"global"``. Pure (no I/O).
+    271:         if strategy and strategy in by_strategy:
+    272:             return by_strategy[strategy], f"strategy:{strategy}"
+    293:       * by_strategy keys that match no loaded strategy (likely typo → silently ignored)."""
+    319:                     f"slippage override by_strategy[{strat!r}] is not a loaded strategy "
+    339:                    when supplied (Phase 3a per symbol/strategy/band resolution),
+    518:         tgt_risk_reward: float = 0.0,   # Slice 1: strategy R:R; 0.0/falsy -> fill uses _rr_ratio fallback
+    882:         strategy: str = "",
+    887:         tgt_risk_reward: Optional[float] = None,  # Slice 1: originating strategy's R:R, frozen for the fill-time TGT recalc
+    991:                 _scfg0, symbol, strategy, _band0)
+    1000:             strategy=strategy,
+    1014:             tgt_risk_reward_applied=tgt_risk_reward, # Slice 1: strategy R:R frozen at placement
+    1604:                         # Slice 1: freeze the strategy R:R so the fill-time TGT
+    2718:                 # Slice 1: TGT retry must use the same strategy R:R as placement
+    2848:         the original strategy-requested level.
+    2871:         # SL stays anchored to original strategy level.
+    2876:             # Slice 1: honour THIS trade's strategy R:R (fallback 2.0 + WARNING).
+    3145:         the original strategy-requested level (embedded in CO bracket).
+    3165:         # SL stays anchored to original strategy level (in CO bracket).
+    3170:             # Slice 1: honour THIS trade's strategy R:R (fallback 2.0 + WARNING).
+    3569:             # Slice 1: honour THIS trade's strategy R:R (fallback 2.0 + WARNING).
+    4158:         Prefer the originating strategy's ratio, frozen at placement (carried on
+    4163:         visible. This is what makes the broker TGT honour each strategy's
+    4175:                 "reason": "no strategy tgt_risk_reward (recovered / pre-v35 trade)",
+    masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}
+
+Read 057 | G15 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | grep (T3)
+  expression: strategy_name
+    165:         strategies: Dict[str, Any],         # SPW2: {strategy_name: StrategyConfig}
+    490:         strategy_name: str,
+    535:                 f"Strategy: {strategy_name} | Score: {score_str}\n"
+    565:         Step 2 has no `strategy_name` bound yet -- measured on production,
+    618:         strategy_name: str,
+    644:                 strategy=strategy_name,
+    744:     def _enforce_strategy_position_cap(self, strategy_name: str, strategy_obj) -> None:
+    766:             (strategy_name,),
+    770:         reserved = self._fm.count_live_reservations_for_strategy(strategy_name)
+    776:                 f"{strategy_name} at cap: {effective - 1}/{max_strat_pos} open+in-flight "
+    939:             strategy_name = (
+    943:             if strategy_name is None:
+    948:             strategy_obj = self._strategies.get(strategy_name)
+    952:                     f"Strategy {strategy_name!r} not in loaded strategies",
+    987:                     strategy_name, now.time()
+    1046:                     sl_price=sl_price, strategy_name=strategy_name,
+    1139:                         signal_id, symbol, scanner_name, strategy_name, strategy_obj,
+    1155:                             signal_id, symbol, scanner_name, strategy_name, strategy_obj,
+    1165:                             signal_id, symbol, scanner_name, strategy_name, strategy_obj,
+    1184:                     strategy_name=strategy_name, strategy_obj=strategy_obj, side=side,
+    1204:                 # A reject raised before Step 2 has no `strategy_name` bound yet,
+    1278:         self, ac, *, signal_id, symbol, scanner_name, strategy_name, strategy_obj,
+    1311:             self._enforce_strategy_position_cap(strategy_name, strategy_obj)
+    1330:                     strategy=strategy_name,   # H-7 (Wave-5): tag for the per-strategy cap
+    1373:             strategy_name=strategy_name,
+    1428:                 "signal_id": signal_id, "symbol": symbol, "strategy": strategy_name,
+    1455:                 strategy=strategy_name,
+    1552:             strategy_name=strategy_name,
+    1578:     def _build_v3_signal(self, signal_id, symbol, scanner_name, strategy_name,
+    1593:             strategy_name=strategy_name, side=side, intent=strategy_obj.intent,
+    1619:     def _build_candidate(self, signal_id, symbol, scanner_name, strategy_name,
+    1640:             signal_id=signal_id, symbol=symbol, strategy_name=strategy_name, side=side,
+    1656:                 scanner_name=p.scanner_name, strategy_name=candidate.strategy_name,
+    1667:                 "strategy": getattr(candidate, "strategy_name", None),
+    1719:                 "strategy": getattr(candidate, "strategy_name", None),
+    2051:             strategy_name = entry.strategy_name  # type: ignore[attr-defined]
+    2052:             strategy_obj = self._strategies.get(strategy_name)
+    2056:                     f"Strategy {strategy_name!r} not in loaded strategies",
+    2090:                     strategy_name, now.time()
+    2141:                 self._enforce_strategy_position_cap(strategy_name, strategy_obj)
+    2160:                         strategy=strategy_name,   # H-7 (Wave-5): tag for the per-strategy cap
+    2194:                 strategy_name=strategy_name,
+    2242:                     "signal_id": signal_id, "symbol": symbol, "strategy": strategy_name,
+    2260:                     strategy=strategy_name,
+    2298:                 strategy_name=strategy_name,
+    2321:                 # From the WatchEntry: the local `strategy_name` is bound only
+    2324:                 "strategy": getattr(entry, "strategy_name", None),
+    2387:         strategy_name = parked.strategy
+    2407:             strategy_obj = self._strategies.get(strategy_name)
+    2409:                 raise _PipelineReject("UNKNOWN_STRATEGY", f"Strategy {strategy_name!r} not loaded")
+    2428:                 paused, pause_reason = self._strategy_governor.check(strategy_name, now.time())
+    2477:                 self._enforce_strategy_position_cap(strategy_name, strategy_obj)
+    2493:                         strategy=strategy_name)   # H-7 (Wave-5): tag for the per-strategy cap
+    2515:                 symbol=symbol, strategy_name=strategy_name, score=None,
+    2544:                     "signal_id": signal_id, "symbol": symbol, "strategy": strategy_name,
+    2557:                     reservation_id=reservation_id, strategy=strategy_name,
+    2589:                 symbol=symbol, strategy_name=strategy_name, score=None,
+    2600:                 "signal_id": signal_id, "symbol": symbol, "strategy": strategy_name,
+    masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+
+Read 058 | G16 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | grep (T26)
+  expression: \b(_process_one|_admit_and_place)\(
+    466:             self._process_one(signal_tuple)
+    867:     def _process_one(self, signal_tuple) -> None:
+    1182:                 self._admit_and_place(
+    1277:     def _admit_and_place(
+    1654:             self._admit_and_place(
+    masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+
+==============================================================================================================================
+7. RULES V AND W: OUTCOMES
+==============================================================================================================================
+- Rule V on G11's 18 lines: def lines above 214 at 124, 148, 175 (class lines 67 and 116 skipped); NAME_I = create_trade, D_I
+  = 175; D_N = 272 (the first G11 line after 244). F6 = 175:213 (39 lines, within 45, so every line from the def to 213 was
+  printed); F7 = 245:271.
+- Rule W: T23 = \bcreate_trade\( counted as Q47 at 18:39:59: orders/order_manager.py 2, orders/order_placer.py 1; T24 =
+  ^\s*(async\s+)?def\s+create_trade\s*\( counted as Q48 at 18:40:01: orders/order_manager.py 1. Both include
+  order_manager.py's def line; T24 finds no other definition of create_trade in s_rt (not ambiguous); no file outside the
+  approved list was counted (no lead).
+- G12: the placer's T23 count is 1, within 1 to 4; G12 printed line 996; F8: line 996: read 055 (986:1016).
+
+==============================================================================================================================
+8. EVIDENCE ANSWERS (each hop labelled as section 8 of the accepted sheet fixes)
+==============================================================================================================================
+Labels: FACT (C-010's own counts or reads at the pin); HISTORICAL (a frozen V2 manual at the same pin, cited); INTERPRETATION
+  (Claude's reading of FACT lines; not a behaviour test); UNKNOWN / NOT ESTABLISHED; KNOWN DEFECT (status unchanged). A source
+  line shows code at the pin, not what the deleted hosts ran or what any signal or trade did.
+
+8.1 The chain, hop by hop (the accepted sheet's section 2 table completed; E1 path)
+| Hop | Lines | Claim | Label | Evidence |
+|---|---|---|---|---|
+| a | signal_processor.py 933 to 953 | Step 2 sets strategy_name = map_entry.get("strategy") for a dict entry, else getattr(map_entry, "strategy", str(map_entry)) (939 to 942), and rejects UNKNOWN_STRATEGY unless the name is in self._strategies (948 to 953). | FACT (Stage 1) | read 001 |
+| a1 | 939 to 1184 (T3 lines 943, 948, 952, 987, 1046, 1139, 1155, 1165) | Before line 1184, line 939 (strategy_name = () is the only assignment statement to strategy_name. The T3 lines between are a condition (943), parts of other statements (948, 952, 987, 1139, 1155, 1165) and a keyword-argument line (1046: sl_price=sl_price, strategy_name=strategy_name,). | FACT within T3's reach (every line spelling strategy_name was printed); INTERPRETATION that 1046 is a keyword argument (its call's first line is not printed) | read 057 |
+| a2 | 867, 1277 | _process_one is defined at 867 and _admit_and_place at 1277; lines 939 and 1182 lie between them. | FACT for the def lines; INTERPRETATION that 939 and 1182 are in _process_one (definition order) | read 058 |
+| a3 | 1182, 1184 | _process_one calls self._admit_and_place( at 1182; line 1184 passes strategy_name=strategy_name. | FACT for both lines; INTERPRETATION that 1184 is an argument of the call opened at 1182 (1183 not printed) | reads 057, 058 |
+| a4 | 1277 to 1278 | _admit_and_place takes strategy_name as a keyword-only parameter ("self, ac, *, signal_id, symbol, scanner_name, strategy_name, strategy_obj, ..."). | FACT | reads 057, 058 |
+| a5 | 1278 to 1455 (T3 lines 1311, 1330, 1373, 1428) | No assignment statement to strategy_name between the parameter and line 1455. The T3 lines between are an argument (1311), keyword arguments (1330: strategy=strategy_name,; 1373: strategy_name=strategy_name,) and a dictionary value (1428). | FACT within T3's reach; INTERPRETATION that 1373 is a keyword argument (its call's first line is not printed) | read 057 |
+| a6 | 1277, 1455 | Line 1455 lies after def _admit_and_place (1277) and before the next definition T3 shows (1578). | INTERPRETATION that 1455 is in _admit_and_place (definition order) | reads 057, 058 |
+| b | signal_processor.py 1446 to 1460 | self._placer.place(...) passes strategy=strategy_name (1455). | FACT (Stage 1C) | read 043 |
+| c1 | order_placer.py 882 | A parameter strategy: str = "" at 882. | FACT for the line; INTERPRETATION that it is place()'s parameter (HISTORICAL: place() at 871, C-008 4.1 ST-29) | read 056 |
+| c2 | 882 to 1000 | The only other T25 lines between 882 and 1000 are 887 (a comment on another parameter) and 991 (a use: an argument of resolve_slippage_fraction); neither binds strategy. | FACT within T25's reach | read 056 |
+| c3 | 996 to 1015 | The placer's only create_trade( line is 996: trade_id = self._om.create_trade( with keyword arguments to 1015, among them strategy=strategy (1000). | FACT | reads 054, 055; Q47 (order_placer.py 1) |
+| c4 | 993, 996 | Line 996 lies in OrderPlacer.place; the comment above the call reads "OP4: create trade row FIRST (status=PENDING_FILL)" (993). | FACT for the lines; INTERPRETATION for the membership (HISTORICAL: place() begins at 871 and its docstring begins "Create trade, place entry orders", 891; C-008 4.1, 8 SS-02) | read 055 |
+| d | order_placer.py 996 | self._om.create_trade reaches OrderManager.create_trade: order_manager.py holds the only definition of create_trade in s_rt. | INTERPRETATION (unique definition by name; the type of self._om not read) | Q48 (order_manager.py 1) |
+| e1 | order_manager.py 175 to 198 | create_trade(self, *, signal_id, symbol, direction, strategy: str, ...) at 175, strategy at 181; docstring: "Insert a new trade row with status=PENDING_FILL. Returns trade_id." (198). | FACT | reads 051, 052 |
+| e2 | 175 to 271 | The INSERT belongs to create_trade: F6 printed every line from 175 to 213, with no other def; the signature closes at 196 (") -> str:") and no body line (197 to 213) is dedented to the def's level; the statement is the cur.execute call opened at 212 and closed at 262; return trade_id (270). | FACT (as fixed in advance) | reads 052, 046, 053 |
+| e3 | 181 to 247 | strategy is not rebound between the parameter and the statement (182 to 213 printed; 214 to 244 are the SQL text). | FACT | reads 052, 046 |
+| f | 215, 230, 247 | The argument tuple (246 to 261) binds 30 values to the 30 "?" in order; its 5th item is strategy (247), the value of the 5th "?" (230), which the INSERT puts into the 5th column, strategy (215). | FACT, by position | reads 046, 053 |
+
+8.2 What trades.strategy holds (the rule fixed in section 8 of the accepted sheet and in Part 3)
+- On the E1 path at the pin, OrderManager.create_trade writes trades.strategy from its strategy parameter, which
+  OrderPlacer.place passes on from its own strategy parameter, which the processor sets to strategy_name: the name Step 2
+  resolves from the scanner's map entry, which must be a key of the processor's loaded strategies (948 to 953; a parameter
+  comment at line 165 reads "SPW2: {strategy_name: StrategyConfig}", read 057). So the column carries the strategy identity,
+  not the scanner key.
+- Label: INTERPRETATION. Every hop's own lines are FACT; these parts rest on INTERPRETATION: a1 and a5 (lines 1046 and 1373
+  read as keyword arguments), a2 and a6 (membership by definition order), a3 (line 1184 read without 1183), c1 and c4
+  (membership of 882 and 996 in place(), HISTORICAL span) and d (the call target by its unique name). No hop on the E1 path is
+  NOT ESTABLISHED. This agrees with A-008 21 (HISTORICAL), which lists trades.strategy among the consumers of the YAML name
+  field.
+- Not a runtime observation: no stored row, deployed host or trading day was examined.
+
+8.3 The other entry paths (observation O-7; no read was added for them)
+- B-009 7 lists three callers of place(): signal_processor.py 1446, 2251 and 2553 (HISTORICAL). Read 057 shows
+  strategy=strategy_name at 2260 and 2557, 9 and 4 lines below the other two calls (INTERPRETATION that they are their
+  arguments; 2251 and 2553 not printed), with strategy_name = entry.strategy_name on the gate path (2051) and strategy_name =
+  parked.strategy on the retest path (2387); the allocator path calls _admit_and_place (1654) with
+  strategy_name=candidate.strategy_name (1656; INTERPRETATION that it belongs to that call, 1655 not printed). FACT for these
+  lines; where those fields come from is NOT ESTABLISHED.
+- HISTORICAL (C-008 18): at the pin only E1 is wired as a live entry path; the gate path is reachable only from reloaded gate
+  rows, the retest path is not wired with the repository flag, and the processor hands nothing to the allocator path in
+  "shadow".
+
+8.4 Effect on earlier answers (their rows are not edited)
+- Stage 1C sheet, 8.1 (OQ-1B-05): its rows "1 to 2", "3", "3 to 5", "6" and "Result" are answered by 8.1 and 8.2 here; its
+  conditional statement is now a labelled finding at INTERPRETATION, reached through the fixed rule rather than by assumption.
+- Stage 1B sheet, F row on the merged view (db_reader.py 3991 to 4010): its INTERPRETATION now rests on 8.2: the signals count
+  there is keyed by signals.strategy, which holds the scanner key (FACT, read 004; BK-27), and the trades counts by
+  trades.strategy, which holds the resolved strategy name (INTERPRETATION, 8.2). The two names coincide only where a map key
+  equals its strategy (HISTORICAL: all 16 at the pin, C-001 4.3, 4.4).
+
+==============================================================================================================================
+9. REMAINING OPEN QUESTIONS
+==============================================================================================================================
+- OQ-1B-05 (answered for E1 at INTERPRETATION by 1D) What would make the E1 chain FACT: the first lines of the calls holding
+  signal_processor.py 1046, 1184 and 1373; the definitions between signal_processor.py 867 and 1455; the definitions between
+  order_placer.py 871 and 996; the type of self._om. No read is proposed here.
+- OQ-1D-01 (new; O-7) The sources of entry.strategy_name (2051), parked.strategy (2387) and candidate.strategy_name (1656) on
+  the gate, retest and allocator paths.
+- OQ-1D-02 (new; O-8) What the second create_trade( line in order_manager.py is (Q47 counted 2 there; only the def line is
+  known).
+- OQ-1C-01 (the lead in scripts/t2_cnc_gtt_realtest.py): unchanged; not inspected.
+- OQ-1B-02 and OQ-1B-03 (qualified, as reconciled), OQ-1B-04 (D9) and OQ-1B-01, OQ-1B-06, OQ-1B-07: unchanged.
+
+==============================================================================================================================
+10. DEVIATION AND GAP LOG (earlier entries kept; nothing overwritten)
+==============================================================================================================================
+- D-1, G-1 and O-1 to O-5 (Stages 1 and 1B), and D-2, O-6, R-1 and R-2 (Stage 1C, with ChatGPT's reconciled wording: D-2 a
+  process deviation; O-6 a control and scope-definition inconsistency): kept as recorded.
+- How the Stage 1D controls for D-2 and O-6 worked out: every one of TC-01 to TC-30 printed ok by its ID against the accepted
+  file before W7, with no unlisted ID and no FAIL; the approved list was the only source of readable paths, the gate tests
+  admitted exactly its 3 files, and every read was on one of them (section 2).
+- New deviations in Stage 1D: none. Every operation was in the accepted list and within its bound; no refusal; no failed
+  check; no cap or guard reached; every planned step ran.
+- O-7 (Stage 1D; the other entry paths): read 057, printed for chain 3, also shows the strategy names that the gate, retest
+  and allocator paths pass (8.3). They are recorded as lines only; their sources are open (OQ-1D-01); no read was added.
+- O-8 (Stage 1D; a count, not a line): Q47 counted 2 create_trade( lines in order_manager.py; G12 was authorised for the
+  placer only, so the second line (not the def at 175) was not printed and is open (OQ-1D-02). It does not affect the placer's
+  call, whose target definition is the only one in s_rt (Q48).
+
+==============================================================================================================================
+11. EXECUTION RECORD
+==============================================================================================================================
+- Times (IST): accepted file received 18:38; both SHA-256 values recorded 18:38:35; pre-flight 18:38 to 18:39 (decision file
+  18:38:46; synthetic tests to 18:39:11); W7 18:39:21 to 18:39:30; plan 18:39:41; W8 18:39:50 to 18:40:06; after-window checks
+  18:41:59; this sheet 18:48.
+- Git use on the clone: rev-parse HEAD; cat-file --batch-all-objects --batch-check (object types only); hash-object
+  --no-filters (the 3 approved files in the pre-flight, the 281 s_rt paths by the W7 driver, and per file inside cread_c010.py
+  with ls-tree). git ls-remote against the repository. No git status, no other tree-wide or history command, no fetch.
+- V2 documents consulted (frozen, in trading-system-v2 at 82f845053faf098db535a7a5498f7a225d25ef82): A-008 section 21; B-009
+  section 7; C-001 sections 4.3 and 4.4; C-008 sections 4.1 (ST-29), 8 (SS-02) and 18. Nothing else.
+
+Run log (<SCRATCHPAD>/c010/s1d/run_log.txt; exact, as written during the run):
+    C-010 Stage 1D run log (Claude's workspace)
+    accepted file: C-010_STAGE1D_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt SHA-256 3F4ED2D24DA9C8307A7BDA8915336AEA91E018DD3837C20A139D75F7DFF58895 lines 303 bytes 25964 (recorded 18:38:35 IST)
+    original proposal: SHA-256 82C9E265D37A97C3D48C7664B372C4712BE77C2ADB6A330D123456AED32EF46E (stated in the acceptance: 82C9E265D37A97C3D48C7664B372C4712BE77C2ADB6A330D123456AED32EF46E)
+    accepted file Parts 1-2 equal to the proposal: yes
+    HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+    ls-remote: HEAD=970aabf3c78d777d9d34549e021f7c8e756c7bdb refs/heads/main=970aabf3c78d777d9d34549e021f7c8e756c7bdb  at 18:38:36 IST
+    listing SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5 rows 1438
+    objects:  1257 blob; 1537 commit; 6126 tree;
+    protected check: never-open blobs present locally: 0  (must be 0)
+    working file orders/order_manager.py: equal 978d213532532d7db72b215bc8ed415b848928ae
+    working file orders/order_placer.py: equal e3a602909befa3fd3ba4b27caeed108724c07947
+    working file signals/signal_processor.py: equal 7fab0a02a302770ac72bbbd662549d5c091086c1
+    cread_c010.py BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 (Stage 1: BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7) locked: 1
+    ccount_c010.py 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC (Stage 1: 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC)
+    list s_om B3639E5337934EB927BCB503A260BC744E31AA604FE22BF528B3EB3600C93C65 rows 1
+    list s_op 4E550AF8F432C21B6286A24FBC9A5261ECBFB68CA7224382D872A5A2648133F9 rows 1
+    list s_sp 68DDCAA2380ACCC0849E020FC892B1E6005003ACDDF003EF6B448607C7D814E6 rows 1
+    list s_rt 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903 rows 281
+    tool s1d_scope_c010.py 9AA4252BB0B7C12324EF06EB3517AC4008739A9C9BD9B5A3249AEDA081057928
+    tool gate_test_c010d.py 13180D1466BE2BBFF384362A1F6AF93A8C528A7A814254BD5703FE8195BECD45
+    tool run_s1d_counts_c010.py 8189EC111AF5B41CB4F8EF54D548565A7FA62AF7D7F272EB242CB13CBFF641D0
+    tool plan_s1d_c010.py 601144B8EA7EF4D6639A8460EC0DAAF0C4ACA464CD6B8B1E6454658B7B31FC90
+    tool run_s1d_reads_c010.py D86F02183A62073795E7B1B9DE45164D0B81AC920AB8EABA3EDA48E06E0CB753
+    tool test_tools_c010d.py F4C1B7F8002175D43EF745EDDE9B4F30B1B5EDEA4827FFC26BA67E7F773071C7
+    tool lock_c010.py 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC
+    logs before: code_read_log.tsv 50 rows; search_log.tsv 42 rows (last Q42); lock_log.tsv 12 rows (last E-24	relock)
+    decisions s1d/decisions.json {"D11": true} (D11 ACCEPTED in Part 3) SHA-256 F62706C5D223C8A0C5CBB4B0A7849F21837BD1C7BE25F72D67786FC2D61B429C written 18:38:46 IST
+    synthetic tests 18:39:11 IST against the accepted file: test_tools_c010d.py exit 0, 35 ok checks, 0 FAIL; SYNTHETIC TESTS (STAGE 1D) PASSED: every listed test case printed ok; output s1d/test1d_output.txt SHA-256 94F1EFC98A02E08D54FE8FD2AC5C67D52959A7B2CC38F6F24CC589A5AC103B7F
+    pre-flight result: all checks passed (integrity, decisions, TC-01 to TC-30 ok); W7 may open
+    W7 E-25 2026-10-24T18:39:21+05:30 unlock: bd93a1f1699ccfef -> 8d36219a06c03e98
+    W7 E-26 gate test W7 PASSED (s1d/w7_E26_gate.txt; admitted 3: the approved list)
+    W7 E-27 18:39:29 pre-checks: lock lifted (E-25), D11 True, HEAD = pin, 4 lists unchanged, 281 of 281 working files (s_rt and the approved files) equal to the pin, objects {'blob': 1257, 'commit': 1537, 'tree': 6126}, protected-blob check exit 0
+    W7 E-27 Q43 18:39:29 C7 T22 s_om: files 1 lines 18
+    W7 E-27 Q44 18:39:29 C8 T25 s_op: files 1 lines 26
+    W7 E-27 Q45 18:39:29 C9 T3 s_sp: files 1 lines 58
+    W7 E-27 Q46 18:39:30 C10 T26 s_sp: files 1 lines 5
+    W7 E-27 18:39:30 W7 searches done: 4 searches, 0 positive controls; objects unchanged; results saved
+    W7 E-28 2026-10-24T18:39:30+05:30 relock: 8d36219a06c03e98 -> bd93a1f1699ccfef; lock check passed
+    counts s1d/s1d_counts.json SHA-256 EF28C7169BD50DF0D523F7D96ED17FC38FC046573AB8B6936E22E3224A59C34D; no positive control needed (no zero search)
+    plan s1d/s1d_plan.json SHA-256 CF328DD7FC2C3B9C61A489EAFE7477A19D63E6D425F125A1777BE0C24EEAED5A at 18:39:41 IST: G11 orders/order_manager.py grep T22 bound 18-18;G13 orders/order_placer.py grep T25 bound 26-26;G15 signals/signal_processor.py grep T3 bound 58-58;G16 signals/signal_processor.py grep T26 bound 5-5;approved read list: orders/order_manager.py, orders/order_placer.py, signals/signal_processor.py;
+    W8 E-29 2026-10-24T18:39:50+05:30 unlock: bd93a1f1699ccfef -> 8d36219a06c03e98
+    W8 E-30 gate test W8 PASSED (s1d/w8_E30_gate.txt; admitted 3: the approved list)
+    W8 E-31 18:39:58 G11 read 051 orders/order_manager.py grep (T22): printed 18 (bound 18-18); masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+    W8 E-31 18:39:58 F6 read 052 orders/order_manager.py range (175:213): printed 39 (bound 39-39); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W8 E-31 18:39:59 F7 read 053 orders/order_manager.py range (245:271): printed 27 (bound 27-27); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W8 E-31 18:39:59 rule W count Q47 \bcreate_trade\(: 3 lines in 2 files
+    W8 E-31 18:40:01 rule W count Q48 ^\s*(async\s+)?def\s+create_trade\s*\(: 1 lines in 1 files
+    W8 E-31 18:40:04 G12 read 054 orders/order_placer.py grep (T23): printed 1 (bound 1-1); masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}
+    W8 E-31 18:40:05 F8.1 read 055 orders/order_placer.py range (986:1016): printed 31 (bound 31-31); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W8 E-31 18:40:05 G13 read 056 orders/order_placer.py grep (T25): printed 26 (bound 26-26); masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}
+    W8 E-31 18:40:05 G15 read 057 signals/signal_processor.py grep (T3): printed 58 (bound 58-58); masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+    W8 E-31 18:40:06 G16 read 058 signals/signal_processor.py grep (T26): printed 5 (bound 5-5); masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}
+    W8 E-31 18:40:06 W8 done: 8 reads, 205 printed lines; rule V: NAME_I create_trade at line 175; rule W: 1 lines
+    W8 E-32 2026-10-24T18:40:06+05:30 relock: 8d36219a06c03e98 -> bd93a1f1699ccfef; lock check passed
+    results s1d/s1d_reads.json SHA-256 483A98872B465F4C24434E6AA92B250E7B64877B0E23B3BD10DBCA225ADEDF7F
+    after W8 (18:41:59 IST): HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb; objects  1257 blob; 1537 commit; 6126 tree;; never-open blobs present locally: 0  (must be 0); cread_c010.py bd93a1f1699ccfef (locked 1); ccount_c010.py 9911033b14e0dc72
+    logs: code_read_log.tsv 58 rows (051 to 058 new), search_log.tsv 48 rows (Q43 to Q48 new), lock_log.tsv 16 rows (E-25, E-28, E-29, E-32 new)
+
+| File | SHA-256 |
+|---|---|
+| <SCRATCHPAD>/c010/tools/cread_c010.py | BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 |
+| <SCRATCHPAD>/c010/tools/ccount_c010.py | 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC |
+| <SCRATCHPAD>/c010/tools/lock_c010.py | 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC |
+| <SCRATCHPAD>/c010/tools/s1d_scope_c010.py | 9AA4252BB0B7C12324EF06EB3517AC4008739A9C9BD9B5A3249AEDA081057928 |
+| <SCRATCHPAD>/c010/tools/gate_test_c010d.py | 13180D1466BE2BBFF384362A1F6AF93A8C528A7A814254BD5703FE8195BECD45 |
+| <SCRATCHPAD>/c010/tools/run_s1d_counts_c010.py | 8189EC111AF5B41CB4F8EF54D548565A7FA62AF7D7F272EB242CB13CBFF641D0 |
+| <SCRATCHPAD>/c010/tools/plan_s1d_c010.py | 601144B8EA7EF4D6639A8460EC0DAAF0C4ACA464CD6B8B1E6454658B7B31FC90 |
+| <SCRATCHPAD>/c010/tools/run_s1d_reads_c010.py | D86F02183A62073795E7B1B9DE45164D0B81AC920AB8EABA3EDA48E06E0CB753 |
+| <SCRATCHPAD>/c010/tools/test_tools_c010d.py | F4C1B7F8002175D43EF745EDDE9B4F30B1B5EDEA4827FFC26BA67E7F773071C7 |
+| <SCRATCHPAD>/c010/tools/build_s1d_evidence_c010.py | 96220EB4940E230B3895D4A543555C403B643B4B0D675871AB6B030A88079D3C |
+| <SCRATCHPAD>/c010/scopes/s_om.txt | B3639E5337934EB927BCB503A260BC744E31AA604FE22BF528B3EB3600C93C65 |
+| <SCRATCHPAD>/c010/scopes/s_op.txt | 4E550AF8F432C21B6286A24FBC9A5261ECBFB68CA7224382D872A5A2648133F9 |
+| <SCRATCHPAD>/c010/scopes/s_sp.txt | 68DDCAA2380ACCC0849E020FC892B1E6005003ACDDF003EF6B448607C7D814E6 |
+| <SCRATCHPAD>/c010/scopes/s_rt.txt | 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903 |
+| <SCRATCHPAD>/c010/s1d/decisions.json | F62706C5D223C8A0C5CBB4B0A7849F21837BD1C7BE25F72D67786FC2D61B429C |
+| <SCRATCHPAD>/c010/s1d/s1d_counts.json | EF28C7169BD50DF0D523F7D96ED17FC38FC046573AB8B6936E22E3224A59C34D |
+| <SCRATCHPAD>/c010/s1d/s1d_plan.json | CF328DD7FC2C3B9C61A489EAFE7477A19D63E6D425F125A1777BE0C24EEAED5A |
+| <SCRATCHPAD>/c010/s1d/s1d_reads.json | 483A98872B465F4C24434E6AA92B250E7B64877B0E23B3BD10DBCA225ADEDF7F |
+| <SCRATCHPAD>/c010/s1d/w7_E26_gate.txt | CCBE0BDE767EF4E232083338C7D6155AB5DD1B6FFC1327C89C956FB22C865990 |
+| <SCRATCHPAD>/c010/s1d/w8_E30_gate.txt | E5FFBADEE09B1E8666D0F4DD1610A8E8F039CBECF9A548FD40BD010466187C6E |
+| <SCRATCHPAD>/c010/s1d/test1d_output.txt | 94F1EFC98A02E08D54FE8FD2AC5C67D52959A7B2CC38F6F24CC589A5AC103B7F |
+| <SCRATCHPAD>/c010/s1d/run_log.txt | 3E92639EBC1ED181F906897CE54F494351FB9AF6F9CE2C094CB26BBEB09FB851 |
+| <SCRATCHPAD>/c010/lock_log.tsv | 0343810A6A8E66FC218DBE57686F504B8DBE12F57F401A272C9E5BF9D42E0BFF |
+| <SCRATCHPAD>/c010/search_log.tsv | 70A219B6535CD0F6874E1CA6E8756F4338347444B00B6E0CB4F1BCAC74F86475 |
+| <SCRATCHPAD>/c010/code_read_log.tsv | F2E373F92E25BC481FD48EFB73BEB36FAEC9DD3F341DC43448E19F58324208AD |
+
+Search log rows Q43 to Q48 (exact; tab-separated):
+    Q43	2026-10-24T18:39:29+05:30	^\s*(async\s+)?(def|class)\s+[A-Za-z_][A-Za-z0-9_]*	s_om.txt	b3639e53	1	files searched: 1; files with matches: 1; matching lines: 18	nev0=ok	selftest=ok
+    Q44	2026-10-24T18:39:29+05:30	\bstrategy\b	s_op.txt	4e550af8	1	files searched: 1; files with matches: 1; matching lines: 26	nev0=ok	selftest=ok
+    Q45	2026-10-24T18:39:30+05:30	strategy_name	s_sp.txt	68ddcaa2	1	files searched: 1; files with matches: 1; matching lines: 58	nev0=ok	selftest=ok
+    Q46	2026-10-24T18:39:30+05:30	\b(_process_one|_admit_and_place)\(	s_sp.txt	68ddcaa2	1	files searched: 1; files with matches: 1; matching lines: 5	nev0=ok	selftest=ok
+    Q47	2026-10-24T18:40:01+05:30	\bcreate_trade\(	s_rt.txt	4a6302df	281	files searched: 281; files with matches: 2; matching lines: 3	nev0=ok	selftest=ok
+    Q48	2026-10-24T18:40:04+05:30	^\s*(async\s+)?def\s+create_trade\s*\(	s_rt.txt	4a6302df	281	files searched: 281; files with matches: 1; matching lines: 1	nev0=ok	selftest=ok
+Read log rows 051 to 058 (exact; tab-separated):
+    051	2026-10-24T18:39:58+05:30	grep	^\s*(async\s+)?(def|class)\s+[A-Za-z_][A-Za-z0-9_]*	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	18	masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=c8f39bdb0dfc
+    052	2026-10-24T18:39:59+05:30	range	175:213	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	39	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=ae121cd985aa
+    053	2026-10-24T18:39:59+05:30	range	245:271	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	27	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=fcf0723dceec
+    054	2026-10-24T18:40:05+05:30	grep	\bcreate_trade\(	orders/order_placer.py	e3a602909befa3fd3ba4b27caeed108724c07947	match	4707	1	masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=82b8f47eb78f
+    055	2026-10-24T18:40:05+05:30	range	986:1016	orders/order_placer.py	e3a602909befa3fd3ba4b27caeed108724c07947	match	4707	31	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=f4969cd099d3
+    056	2026-10-24T18:40:05+05:30	grep	\bstrategy\b	orders/order_placer.py	e3a602909befa3fd3ba4b27caeed108724c07947	match	4707	26	masks: {'HOSTTOK': 0, 'ALNUM': 4, 'CLIENTID': 10, 'KV': 4} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=9dbe5f617c6a
+    057	2026-10-24T18:40:06+05:30	grep	strategy_name	signals/signal_processor.py	7fab0a02a302770ac72bbbd662549d5c091086c1	match	2704	58	masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=cbe2096a4842
+    058	2026-10-24T18:40:06+05:30	grep	\b(_process_one|_admit_and_place)\(	signals/signal_processor.py	7fab0a02a302770ac72bbbd662549d5c091086c1	match	2704	5	masks: {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=75831da271e6
+Lock log rows E-25, E-28, E-29 and E-32 (exact; tab-separated):
+    E-25	2026-10-24T18:39:21+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1D_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt (SHA-256 3F4ED2D24DA9C8307A7BDA8915336AEA91E018DD3837C20A139D75F7DFF58895): window W7, C7 to C10 count-only and their positive controls only
+    E-28	2026-10-24T18:39:30+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W7 done: C7 to C10 counted; lock re-engaged before the plan
+    E-29	2026-10-24T18:39:50+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1D_ACCEPTED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt (SHA-256 3F4ED2D24DA9C8307A7BDA8915336AEA91E018DD3837C20A139D75F7DFF58895): window W8, G11, rule V (F6, F7), rule W (two counts, G12, F8), G13, G15 and G16 only
+    E-32	2026-10-24T18:40:06+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W8 done: G11, rule V, rule W, G12, F8, G13, G15 and G16 run; lock re-engaged
+
+==============================================================================================================================
+12. COMPLETION DECLARATION
+==============================================================================================================================
+- Only the operations of the accepted Stage 1D authorisation were run: C7 to C10 in W7; G11, F6, F7, rule W's counts (Q47,
+  Q48), G12, F8.1, G13, G15 and G16 in W8. The read lock is engaged.
+- No legacy code, test, script or migration was run; no host, VM, broker, Chartink, service or database was accessed; no
+  protected or excluded path was opened, and scripts/t2_cnc_gtt_realtest.py was not inspected; no secret value is reproduced.
+- No file was changed in either repository; no commit or push was made.
+- Stopping here for ChatGPT's reconciliation. The C-010 manual is not started; BK-27 stays OPEN; VP-45 is NOT RATIFIED.

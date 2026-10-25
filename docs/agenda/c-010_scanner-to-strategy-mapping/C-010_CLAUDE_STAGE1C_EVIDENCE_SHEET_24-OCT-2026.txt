@@ -1,0 +1,566 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1C EVIDENCE SHEET: MINIMUM GAP CLOSURE (W5 counts, W6 greps and reads; for ChatGPT's reconciliation)
+Date of work: 24-Oct-2026 (IST), 17:40 to 18:00 IST. Prepared by Claude.
+Controlling scope: C-010_STAGE1C_ACCEPTED_AUTHORIZATION_AND_PROMPT_24-OCT-2026.txt (190 lines, 17,565 bytes; SHA-256
+  3B0E95C1EA368A690755CC903966B13F446F428331B9FFCFF8C52208CB1FF753), received from Rama at 17:40 IST: ChatGPT's Part 3 accepts
+  D5 to D8 and declines D9. Its first 155 lines are byte-identical to
+  C-010_STAGE1C_PROPOSED_AUTHORISATION_AND_PROMPT_24-OCT-2026.txt, whose SHA-256
+  60E4045BE3112CB6FCCB4F8A9011F9F7450474B96345219817BA89F5D504FEFE equals the value Part 3 records. Both SHA-256 values were
+  written to the run log at 17:40:37 IST, before any check, search or read (section 11).
+Status: W5 and W6 done; the read lock is engaged again (17:45:14 IST). STOPPED for ChatGPT's reconciliation. No C-010 manual
+  is drafted; BK-27 stays OPEN; VP-45 is NOT RATIFIED; no V2 design or implementation advice is given.
+Security: the masked outputs of the authorised reads only; counts and file names for the searches. No credential, token,
+  account or client identifier, host or address, deployed path, mailbox or person name other than Rama's is reproduced;
+  protected paths are counted, never named. Claude's working folder is written as <SCRATCHPAD>.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Integrity (section 1): both SHA-256 values recorded first; pin, remote tip, listing hash, the 281 working files of s_rt
+  (which hold all 7 Stage 1C files), the object store and the protected-blob check all as required. The Stage 1C tools passed
+  their 21 synthetic checks again at 17:43:41 IST; D-2 records the stated test cases that were not run as worded (a
+  non-identifier name; a T21 count of 0 or of exactly 9).
+- W5 (section 4): C3, T14 over s_rt: 2 files, 2 lines (orders/order_manager.py 1, scripts/t2_cnc_gtt_realtest.py 1; none in
+  core/state_store.py or orders/order_placer.py); C4 1, C5 12 and C6 8 lines in their one file each. No search was empty, so
+  no positive control was needed.
+- W6 (sections 5 to 7): 8 reads (043 to 050), 76 printed lines against the 191-line cap: F5 18, G6 2, R 31, G7 1, G8 12, G9 8,
+  G10 4. Rule R read one insert and recorded one lead; every guard of rule S was met (names fetch_signals and
+  replay_one_signal; T21 count 4), so G10 ran. No refusal, no failed check, no cap reached.
+- Findings (section 8):
+  - OQ-1B-05, trades.strategy: FACT that the processor passes strategy=strategy_name to self._placer.place(...)
+    (signal_processor.py 1455) and that order_manager.py's INSERT INTO trades (214 to 244) puts its 5th bound parameter into
+    the strategy column. The parameter's value and the path from place(...) to that insert are NOT ESTABLISHED, so what
+    trades.strategy holds stays NOT ESTABLISHED (HISTORICAL: A-008 21 lists trades.strategy among the consumers of the
+    strategy's YAML name field).
+  - OQ-1B-03, screen 21: FACT that scanner_attribution.py calls config_reader.get_scanner_registry(cfg) (293), the
+    module-level function at config_reader.py 249 that follows the "ADDITIVE" comment (246), and never names
+    get_scan_webhook_map. That the entries at 298 to 299 are the registry's is INTERPRETATION (294 to 297 not read).
+  - OQ-1B-02, replay: FACT that line 191 assigns signals = fetch_signals(...), 195 loops over it and 196 passes each item to
+    replay_one_signal(...). By definition order the signals query (46) is in fetch_signals and the consumer lines (75 to 95)
+    are in replay_one_signal (INTERPRETATION); fetch_signals's return line and replay_one_signal's parameters are NOT
+    ESTABLISHED.
+  - OQ-1B-04: no operation (D9 declined); it stays NOT ESTABLISHED, not inferred from the docstring.
+- Deviation and gap log (section 10): D-2, a process deviation in the synthetic tests with no effect on any result; O-6, G6
+  reached a file outside the gate test's named list, by its own rule; record corrections R-1 (a header time) and R-2 (the
+  mask-count label of the Stage 1 and 1B sheets). Remaining open questions: section 9.
+
+==============================================================================================================================
+1. INTEGRITY AND PIN (FACT)
+==============================================================================================================================
+- Authorisation: the accepted file's SHA-256 (3B0E95C1EA368A690755CC903966B13F446F428331B9FFCFF8C52208CB1FF753, from its exact
+  bytes) and the proposal's (60E4045BE3112CB6FCCB4F8A9011F9F7450474B96345219817BA89F5D504FEFE) were recorded in the run log at
+  17:40:37 IST; the accepted file's first 14,768 bytes equal the proposal byte for byte, and Part 3 follows.
+- HEAD of the clone = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; git ls-remote of the repository at 17:40:38 IST: HEAD and
+  refs/heads/main both the pin.
+- Tree listing: 1,438 entries, SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5.
+- Scopes: s_rt 281 (SHA-256 4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903); s_sa, s_cr and s_rp, one file
+  each (SHA-256 36C8535D3541F0B3B7531285902B37378A75931EAAD6E4516DC0AF1C6C4E2B6A,
+  33D3A2D8DFF7A90EF32C951885A40CA749147F7631B0BEB755FE0542A8FC4A61 and
+  A41A769C32A8575E828848202465075D5B17C84F77BD5B7F3F49131657BA0A78). Working files: the 7 Stage 1C files at 17:40 IST
+  (pre-flight) and all 281 of s_rt at 17:44:00 IST (the W5 driver) equal to their pinned blobs (git hash-object --no-filters);
+  every W6 read checked its own file again (git ls-tree and git hash-object).
+- Object store before W5 and after W6 (17:49:28 IST): 1,257 blobs, 1,537 commits, 6,126 trees; protected blobs present 0
+  (sensitive_check.py exit 0). Nothing fetched.
+- Read lock: engaged before E-17, between E-20 and E-21, and after E-24 (cread_c010.py SHA-256
+  BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7); each relock was followed by a refused read and a refused
+  count.
+- Tool integrity: cread_c010.py and ccount_c010.py unchanged since Stage 1 (section 11 lists every tool's SHA-256).
+
+==============================================================================================================================
+2. METHOD, LOCK WINDOWS AND GATE TESTS
+==============================================================================================================================
+| Step | Time (IST) | Action | Result |
+|---|---|---|---|
+| E-17 | 17:43:51 | unlock (W5) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-18 | 17:43:51 to 17:44:00 | gate test W5 (gate_test_c010c.py) | PASSED: 102 protected paths, 2 July records, the shared blob, 14 rule-shaped names, a name not in the tree and a malformed range refused; 4 bad lists refused by the count tool; the 7 Stage 1C paths admitted |
+| E-19 | 17:44:00 to 17:44:03 | W5: C3 to C6 (Q38 to Q41) | 2 / 2, 1 / 1, 1 / 12, 1 / 8 (files / lines); no control needed |
+| E-20 | 17:44:03 | relock | a read and a count then refused |
+| plan | 17:44:49 | plan_s1c_c010.py | 6 operations; none not run |
+| E-21 | 17:45:02 | unlock (W6) | bd93a1f1699ccfef... -> 8d36219a06c03e98... |
+| E-22 | 17:45:02 to 17:45:10 | gate test W6 | PASSED (the same checks) |
+| E-23 | 17:45:10 to 17:45:13 | W6: F5, G6, rule R, G7, G8, G9, rule S (Q42), G10 | reads 043 to 050; 76 lines |
+| E-24 | 17:45:14 | relock | a read and a count then refused |
+
+- Tools: the Stage 1 reader and count tool unchanged; new for Stage 1C: gate_test_c010c.py (approved list and window names
+  only), run_s1c_counts_c010.py, plan_s1c_c010.py and run_s1c_reads_c010.py (rules R and S). test_tools_c010c.py ran 21 checks
+  on synthetic files with the real expressions at 17:35 IST (before the acceptance) and again at 17:43:41 IST (after it,
+  before W5), all passed: the counts driver (a correct run in which an upper-case comment is counted and trades_archive and
+  lower-case prose are not; a positive control; a wrong blob), the plan (G6 bounds and the writer-list fallback; the G7 to G9
+  caps), the reads driver (rule R: an insert, an "INTO trades" comment and a second writer's insert read, writers first, a
+  fourth writer line held at the cap and a non-writer line recorded as a lead; rule S: the true case, a nested def, no def
+  above line 46 and a T21 count above 8; a grep above its bound and a changed plan each stop the run) and the gate test on an
+  unlocked test copy. The real logs were unchanged by the tests. D-2 records the cases not run as worded.
+- The reads driver recomputed the plan from the saved counts and ran only if it was identical, after checking the lock row and
+  the unlocked reader's SHA-256; it stopped on any non-zero exit, missing log row, evidence different from the output, wrong
+  header, blob different from the listing, range not exactly its lines or grep outside its bound (none occurred).
+
+==============================================================================================================================
+3. UPDATED SOURCE REGISTER (path, role in the C-010 chain, pinned blob, inclusion reason, evidence held)
+==============================================================================================================================
+R01 to R31 and the T rows as in the Stage 1B sheet (section 3); "1C:" marks what Stage 1C adds; R32 to R34 are new. "Evidence
+  held" lists C-010's own reads (read numbers) and counts; HISTORICAL citations are in section 8.
+| ID | Path | Pinned blob | Role in the C-010 chain | Inclusion reason | Evidence held |
+|---|---|---|---|---|---|
+| R01 | signals/signal_processor.py | 7fab0a02a302770ac72bbbd662549d5c091086c1 | map copy, Step 2 lookup, the evidence helper; 1C: the place(...) call | named; C-001 7.4, C-008 ST-08; 1C: C-008 ST-29 | reads 001, 002, 031; 1C: read 043 |
+| R02 | signals/webhook_receiver.py | 0f15a0ab033529d80d9c14c993a5077690b72871 | the INSERT of signals.scanner and signals.strategy | named; C-001 7.2 (BK-27) | read 004; counts |
+| R03 | main.py | 445fb0d8237a6d535ed00e5eb968c8176efd74f3 | where the map is passed | C-008 W-02 | read 003 |
+| R04 | strategies/loader.py | 99e83b192021297a3df472840728b88123c7b891 | strategy registration key | A-008, B-002 M22 | read 005 |
+| R05 | config/scan_webhook_map.yaml | 54dd98d75f276f9b82027707702df2ee619b11f7 | the map entries | C-001 4.2, 4.3 | counts only (HISTORICAL for content) |
+| R06 | core/config_loader.py | 8635bca77531515561ee48cf92677883a5e30782 | the map schema | C-001 5.2 | counts only |
+| R07 | config/strategies/*.yaml (16 files) | see the Stage 1 companion file | each strategy's name | C-001 4.4, B-002 M22 | counts only (blobs in the Stage 1 companion file) |
+| R08 | strategies/schema.py | 22530161a5ee5a24bd85a7701b45269b3f2bacdb | the strategy model | A-008 | counts only |
+| R09 | config/system_config.yaml | bf742ae5c81c60614370361998e6a102a1064ff7 | settings near the map | C-001 4.4 (D-04) | counts only |
+| R10 | core/schema.sql | b46d7489f6ec5e31149dd68957f3b9e45270571e | the signals columns | C-007 2.1 | counts only |
+| R11 | core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | later writers of signals; 1C: in rule R's writer list | C-001 7.2; 1C: C-007, C-008 | counts only (T10 4); 1C: no T14 line (Q38) |
+| R12 | config/chartink_scanners.yaml | de82a8269c2c913e027dad5bd3a92c59222d8eaa | the twin URL file | C-001 6 | counts only |
+| R13 | config/strategy_direction_registry.yaml | b03f4ed0c90043840f339fc9b5dac6cca93bf736 | a second name-keyed list | C-001 4.3 | counts only |
+| R13 | core/strategy_direction.py | 0e6f8b6686f393dcf38ddf036e565190cec0863a | the same | C-001 4.3 | counts only |
+| R14 | scripts/replay_signals.py | 72763c3ed8d5d8fe43258619d55840f2780cfa96 | reader of the stored identity | C-001 7.2 | reads 007, 027, 033; 1C: reads 049, 050 (Q41, Q42) |
+| R14 | scripts/strategy_registry_officer.py | c013518bc49c2323922292af5fa9eeacb3cc4d0b | reader of the stored identity | C-001 7.2 | reads 008, 032 |
+| R15 | ops_dashboard/backend/readers/db_reader.py | f59e4f58fe51e32d151deb5e14322c1bb2cc28b5 | dashboard queries on signals | C-001 7.2, 8 | reads 009, 028, 034 to 042 (read 010 not relied on) |
+| R16 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e038a7309d52e9d5492e8332ed3624 | screen 21 | C-001 8 | reads 011, 022, 029; 1C: read 047 (Q39) |
+| R17 | ops_dashboard/backend/services/strategy_meta.py | 8d7324317a3a44ec610647daf9dced6079a64d77 | per-strategy view | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/services/strategy_tower.py | 6effe8732f5284d37a318d9fcc9ddedd9e288070 | the tower build | C-001 8 | reads 012, 023 |
+| R17 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094be199a9f6cb7dd26863aa4c461f7 | per-strategy ranking | path name | read 013 |
+| R17 | ops_dashboard/backend/services/strategy_health.py | 8a7264e5db2a2aacade9a4bbabe1ef99e5a5ebe6 | per-strategy health | path name | read 014 |
+| R17 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d956e2943e5710deadfa68b43b2e1 | per-strategy score | path name | counts only (no T6/T7) |
+| R17 | ops_dashboard/backend/api/strategies.py | 8fac396665d64d425a28944eec27744247fc5c6c | strategy API | path name | read 015 |
+| R18 | capital/strategy_governor.py | d17193c569c1d2e2890d2047b03cf9d0ae825e8d | per-strategy rule key | C-008 | read 016 |
+| R19 | scripts/strategy_status.py | d15942ccde89d30e45df310a643ba0dacec17bce | per-strategy report | path name | counts only (no T6/T7) |
+| R19 | scripts/compute_strategy_metrics.py | c081a0a8f76804301ada8d07733cf583f1c99287 | per-strategy metrics | path name | reads 017, 030 |
+| R20 | strategies/__init__.py | ee3a2879f0fa022d22fdd62d9aed206964b3e64b | package | path name | counts only (no T6/T7) |
+| R20 | strategies/taxonomy.py | 069644bc1bdb464ffe5faec31f710acdc02e4837 | taxonomy | path name | counts only (no T6/T7) |
+| R21 | strategies/control.py | b6eecb480b83471149fb9362bafc980c967ff6c9 | the step after the lookup | C-008 ST-09 | none (C-008's) |
+| R22 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | the EOD route's stored key | C-001 T-10 | none (C-011's) |
+| R23 | scripts/preflight_scanner_check.py | 3151263d6e247b04884e9fbe99f3cd0e44725167 | connectivity checks | C-001 6 | none (C-001's) |
+| R23 | utils/startup_checks.py | 61ff67676d8230640a2aafb6bd6d75d7a185fbb6 | the same | C-001 6 | none (C-001's) |
+| R24 | core/account_registry.py | d2bdc836cc9a04a99d4d179dba4f46e78213c84c | alert-name prefix | C-001 4.3 | none (other topic) |
+| R24 | orders/eod_squareoff.py | 54f6cd6223353df0e9ad8bc823472f28b19b3818 | EOD direction map | C-001 7.4 | none (other topic) |
+| R24 | signals/entry_throttle.py | b887a4be78a4dcfe3c2541d7528bd3b96ec351ea | throttle key | C-001 7.4 | none (other topic) |
+| T | tests/unit/test_signal_processor.py | 3ec0ea84392a193d18b992ca88df0da5e6235f67 | the key-differs test | C-001 7.2 | read 006 |
+| T | tests/unit/test_webhook_receiver.py | 7b377abb85d644f0f3ff7956385224b43f31ed61 | a plain-dict test map | C-001 11 | counts only |
+| T | tests/unit/test_config_loader.py | 8f245c35a047794c00ffe21e53c178b5928af890 | the map model | C-001 5.2 | counts only |
+| R25 | ops_dashboard/backend/services/analytics_period.py | 594236faaef703a556f9e8f902fcaad18cf426c6 | older per-scanner attribution | C-001 8 (G-1) | reads 018, 024; no counted SQL (C1 0, C2 0) |
+| R26 | ops_dashboard/backend/api/analytics2.py | 8ab626ef7de17a79a057c494fa3ca1aaf05193ad | attribution endpoints | C-001 8, 12 (G-1) | read 019; no counted SQL |
+| R27 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771cb210ba3ac5eec9b70dc57bde537 | the dashboard's own map load; 1C: its function list | C-001 5.1 (G-1) | reads 020, 021; 1C: read 048 (Q40) |
+| R28 | ops_dashboard/backend/services/audit.py | f772aa60f53ad4a40407918f5b9b85ef3b146f59 | none in the chain (two comment lines) | T1 and T2 lines (G-1) | read 025 |
+| R29 | ops_dashboard/backend/services/config_view.py | 0d4929a1c9908a18af771efe33f55d5a0ad04d9c | displays the map | C-004 (G-1) | read 026 |
+| R30 | scripts/preflight/checks/config_integrity.py | bff5d236a75441043ec98969170f91a830d2f9a3 | pre-flight file presence | C-001 5.3, 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R31 | scripts/premarket_healthcheck.py | c81fc21e57497e5b4b33bbf5d1a8270de44988e2 | deprecated presence check | C-001 6.5 (G-1) | none: HISTORICAL suffices (D3) |
+| R32 | orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1C: the INSERT INTO trades (strategy column) | rule R's writer list (C-007, C-008); C-007 1.1 lists the same blob (770 lines) | 1C: reads 044, 046 (Q38: 1 T14 line) |
+| R33 | orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 1C: OrderPlacer.place, the callee of the processor's place(...) (HISTORICAL) | rule R's writer list; C-008 ST-29, 17 | 1C: counts only (Q38: no T14 line) |
+| R34 | scripts/t2_cnc_gtt_realtest.py | 4034ecd18b2d6c5ccf84419316db964a533eb7f1 | 1C: a lead: a second "INSERT INTO trades" string; no part in the chain shown | G6 by its rule (an s_rt file with a C3 count of 1); C-007 1.1, 4.1 | 1C: read 045 (1 line; rule R: a lead) |
+
+==============================================================================================================================
+4. W5 COUNT-ONLY RESULTS (no line printed)
+==============================================================================================================================
+C3 (Q38): T14 \bINTO\s+trades\b over s_rt (281 files): 2 files, 2 lines.
+| File | Pinned blob | T14 lines | In the writer list | G6 |
+|---|---|---|---|---|
+| core/state_store.py | 11866117801b9329773a1be605448faef3c96f8d | 0 | yes | none (count 0) |
+| orders/order_placer.py | e3a602909befa3fd3ba4b27caeed108724c07947 | 0 | yes | none (count 0) |
+| orders/order_manager.py | 978d213532532d7db72b215bc8ed415b848928ae | 1 | yes | G6.1 (rule R reads its line) |
+| scripts/t2_cnc_gtt_realtest.py | 4034ecd18b2d6c5ccf84419316db964a533eb7f1 | 1 | no | G6.2 (rule R records a lead) |
+
+- Limits as stated (proposal section 3): T14 does not see run-time or f-string table names, lower-case SQL or a statement
+  split across string pieces before the table name; an upper-case "INTO trades" in prose would be counted. A count of 0 is not
+  proof that a file never inserts into trades.
+
+| Op | Search | Term | Scope (file) | Files | Lines | Sets the bound of |
+|---|---|---|---|---|---|---|
+| C4 | Q39 | T18 \bconfig_reader\.[a-z_]+\( | ops_dashboard/backend/services/scanner_attribution.py | 1 | 1 | G7 (cap 10) |
+| C5 | Q40 | T19 ^def [A-Za-z_][A-Za-z0-9_]*\( | ops_dashboard/backend/readers/config_reader.py | 1 | 12 | G8 (cap 20) |
+| C6 | Q41 | T20 (definitions and for-loop headers) | scripts/replay_signals.py | 1 | 8 | G9 (cap 30) |
+
+- No search was empty, so no positive control was run (proposal section 4: a control only for a search with no match).
+
+==============================================================================================================================
+5. W6 OPERATIONS, LINE BUDGET AND MASK COUNTS
+==============================================================================================================================
+| Op | Read | Time | File | Pinned blob | Operation | Bound | Printed | Mask counts (scanned lines: the whole file for a grep, the range for a range read) |
+|---|---|---|---|---|---|---|---|---|
+| F5 | 043 | 17:45:10 | signals/signal_processor.py | 7fab0a02a302 | range 1446:1463 | 18 | 18 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G6.1 | 044 | 17:45:11 | orders/order_manager.py | 978d21353253 | grep T14 | 1 | 1 | masks: {'HOSTTOK': 0, 'CLIENTID': 1} / stage-2 masks: {} |
+| G6.2 | 045 | 17:45:11 | scripts/t2_cnc_gtt_realtest.py | 4034ecd18b2d | grep T14 | 1 | 1 | masks: {'HOSTTOK': 0, 'CLIENTID': 10, 'KV': 1} / stage-2 masks: {} |
+| R.1 | 046 | 17:45:11 | orders/order_manager.py | 978d21353253 | range 214:244 | 31 | 31 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G7 | 047 | 17:45:12 | ops_dashboard/backend/services/scanner_attribution.py | 8503d3c1c6e0 | grep T18 | 1 | 1 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G8 | 048 | 17:45:12 | ops_dashboard/backend/readers/config_reader.py | 624bc8009771 | grep T19 | 12 | 12 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| G9 | 049 | 17:45:12 | scripts/replay_signals.py | 72763c3ed8d5 | grep T20 | 8 | 8 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+| S count | - | 17:45:13 | scripts/replay_signals.py | 72763c3ed8d5 | count-only Q42 of T21 (rule S) | 1-8 to run G10 | 0 (count 4) | - |
+| G10 | 050 | 17:45:13 | scripts/replay_signals.py | 72763c3ed8d5 | grep T21 | 4 | 4 | masks: {'HOSTTOK': 0} / stage-2 masks: {} |
+
+| Step | Printed | Cap |
+|---|---|---|
+| F5 | 18 | 18 |
+| G6 | 2 | 12 |
+| R | 31 | 93 |
+| G7 | 1 | 10 |
+| G8 | 12 | 20 |
+| G9 | 8 | 30 |
+| G10 | 4 | 8 |
+| total | 76 | 191 |
+
+- Each output equals its evidence file and its log row (<SCRATCHPAD>/c010/evidence/043.txt to 050.txt; the evidence hash in
+  each log row was checked again after W6).
+- Mask counts (FACT, from the reader's footers; what they cover: R-2): reads 043 and 046 to 050, HOSTTOK 0 and nothing else.
+  Read 044 (a grep of orders/order_manager.py): CLIENTID 1 in the file, none on the printed line. Read 045 (a grep of
+  scripts/t2_cnc_gtt_realtest.py): CLIENTID 10 and KV 1 in the file, none on the printed line. KV is the reader's
+  secret-shaped key=value category: a value of that shape exists somewhere in that script; it was masked, never printed and
+  not examined, and whether it is a real credential is NOT ESTABLISHED and outside C-010 (recorded value-blind, for the
+  security record). Stage-2 masks: none in all 8 reads. No masking placeholder appears in any printed line.
+
+==============================================================================================================================
+6. OUTPUTS (verbatim, masked)
+==============================================================================================================================
+Each read: its header (the reader's line count), then every line exactly as the masked reader printed it ("N: text", N the
+  line number at the pin) after a four-space indent, then the mask counts (R-2). Read 043 line 1459 is longer than this
+  sheet's width and is kept whole.
+
+Read 043 | F5 | signals/signal_processor.py | blob 7fab0a02a302 | 2,704 lines | range 1446:1463
+    1446:             self._placer.place(
+    1447:                 symbol=symbol,
+    1448:                 side=side,
+    1449:                 qty=sizing.qty,
+    1450:                 entry_price=entry_price,  # FIX-067/M-S1: fresh-re-anchored (or stale fallback)
+    1451:                 sl_price=sl_price,
+    1452:                 intent=strategy_obj.intent,
+    1453:                 signal_id=signal_id,
+    1454:                 reservation_id=ac.reservation_id,
+    1455:                 strategy=strategy_name,
+    1456:                 tgt_price=tgt_price,
+    1457:                 signal_trigger_price=trigger_price,  # FIX-128: for slippage guard
+    1458:                 sizing_breakdown=sizing.breakdown,   # Diary #4: sizing audit
+    1459:                 tgt_risk_reward=getattr(strategy_obj, "tgt_risk_reward", None),  # Slice 1: freeze strategy R:R for fill-time TGT recalc (None -> fill falls back to default + WARN)
+    1460:             )
+    1461:             ac.reservation_id = None   # placer owns it now
+    1462:             ac.placed = True   # V3 03.05: mark placement for the enforce tally
+    1463:             self._bump_metric("entries_placed")  # FIX-190 (Bug B)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 044 | G6.1 | orders/order_manager.py | blob 978d21353253 | 770 lines | grep (T14)
+  expression: \bINTO\s+trades\b
+    214:                 INSERT INTO trades (
+    masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+
+Read 045 | G6.2 | scripts/t2_cnc_gtt_realtest.py | blob 4034ecd18b2d | 607 lines | grep (T14)
+  expression: \bINTO\s+trades\b
+    234:             "INSERT INTO trades "
+    masks: {'HOSTTOK': 0, 'CLIENTID': 10, 'KV': 1} | stage-2 masks: {}
+
+Read 046 | R.1 | orders/order_manager.py | blob 978d21353253 | 770 lines | range 214:244
+  rule R: G6 line 214; range 214:244 (31 lines; the file has 770)
+    214:                 INSERT INTO trades (
+    215:                     trade_id, signal_id, symbol, direction, strategy, sector,
+    216:                     qty_planned, qty_filled,
+    217:                     entry_target_price, entry_actual_price,
+    218:                     sl_initial, tgt_initial,
+    219:                     margin_reserved, risk_amount,
+    220:                     created_at, updated_at,
+    221:                     status, entry_mode, order_protocol, recovered_flag,
+    222:                     reservation_id, mode,
+    223:                     tolerance_fraction_used, tolerance_source,
+    224:                     tier_multiplier_mode, tier_weight_applied, perf_weight_applied,
+    225:                     flat_value_rs_used, qty_by_risk, qty_by_capital,
+    226:                     qty_by_concentration, qty_by_flat, binding_constraint,
+    227:                     actual_position_value_rs,
+    228:                     tgt_risk_reward_applied
+    229:                 ) VALUES (
+    230:                     ?, ?, ?, ?, ?, ?,
+    231:                     ?, 0,
+    232:                     ?, NULL,
+    233:                     ?, ?,
+    234:                     ?, ?,
+    235:                     ?, ?,
+    236:                     'PENDING_FILL', 'FULL', ?, 0,
+    237:                     ?, ?,
+    238:                     ?, ?,
+    239:                     ?, ?, ?,
+    240:                     ?, ?, ?,
+    241:                     ?, ?, ?,
+    242:                     ?,
+    243:                     ?
+    244:                 )
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 047 | G7 | ops_dashboard/backend/services/scanner_attribution.py | blob 8503d3c1c6e0 | 749 lines | grep (T18)
+  expression: \bconfig_reader\.[a-z_]+\(
+    293:     registry = config_reader.get_scanner_registry(cfg)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 048 | G8 | ops_dashboard/backend/readers/config_reader.py | blob 624bc8009771 | 337 lines | grep (T19)
+  expression: ^def [A-Za-z_][A-Za-z0-9_]*\(
+    28: def get_system_config(cfg: dict, today: str) -> dict:
+    56: def get_strategies(cfg: dict) -> dict:
+    92: def get_scan_webhook_map(cfg: dict) -> dict:
+    118: def get_min_pass_score(cfg: dict) -> Optional[int]:
+    150: def get_cron_jobs(cfg: dict) -> dict:
+    180: def load_accounts(cfg: dict) -> list:
+    196: def active_account(cfg: dict, account_id: Optional[str] = None) -> dict:
+    219: def dotted(config: dict, path: str, default: Any = None) -> Any:
+    229: def config_meta(cfg: dict, today: str) -> dict:
+    249: def get_scanner_registry(cfg: dict) -> list:
+    298: def get_scoring_weights(cfg: dict) -> dict:
+    311: def get_broker_costs(cfg: dict, broker: Optional[str] = None) -> dict:
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 049 | G9 | scripts/replay_signals.py | blob 72763c3ed8d5 | 244 lines | grep (T20)
+  expression: ^\s*(def [A-Za-z_][A-Za-z0-9_]*\(|for [A-Za-z_][A-Za-z0-9_, ]* in )
+    37: def _log():
+    41: def fetch_signals(store: StateStore, from_date: str, to_date: str) -> List[dict]:
+    54: def fetch_trade_for_signal(store: StateStore, trade_id: str) -> Optional[dict]:
+    65: def replay_one_signal(
+    177: def run_replay(
+    195:     for sig in signals:
+    202: def write_csv(results: List[dict], output_path: Path) -> None:
+    223: def main(argv=None):
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+Read 050 | G10 | scripts/replay_signals.py | blob 72763c3ed8d5 | 244 lines | grep (T21)
+  expression: \b(fetch_signals|replay_one_signal)\(
+    41: def fetch_signals(store: StateStore, from_date: str, to_date: str) -> List[dict]:
+    65: def replay_one_signal(
+    191:     signals = fetch_signals(store, from_date, to_date)
+    196:         row = replay_one_signal(sig, strategies, store, logger)
+    masks: {'HOSTTOK': 0} | stage-2 masks: {}
+
+==============================================================================================================================
+7. RULES R AND S: OUTCOMES
+==============================================================================================================================
+Rule R (every G6 line, writer list first, then by line):
+| G6 line | File | In the writer list | Outcome |
+|---|---|---|---|
+| 214 | orders/order_manager.py | yes | read 046 |
+| 234 | scripts/t2_cnc_gtt_realtest.py | no | outside the writer list: a lead, not read |
+
+- R reads: 1 of at most 3. The statement read by R.1 ends inside its 31 lines (line 244 closes the VALUES list); the argument
+  list that binds its parameters begins after it and was not read.
+
+Rule S (applied by the driver to the G9 output; T21 is written out of a table because it contains a "|"):
+- G9 lines: _log 37, fetch_signals 41, fetch_trade_for_signal 54, replay_one_signal 65, run_replay 177, "for sig in signals:"
+  195, write_csv 202, main 223; every def at column 0, the loop indented.
+- NAME1, the name on the nearest def line above line 46: fetch_signals; NAME2, the nearest above line 75: replay_one_signal;
+  both match ^[A-Za-z_][A-Za-z0-9_]*$.
+- T21 = \b(fetch_signals|replay_one_signal)\(
+- Count Q42 at 17:45:13 over scripts/replay_signals.py: 4 lines, within 1 to 8, so G10 ran: G10 read 050, printed 4 (bound 4).
+
+==============================================================================================================================
+8. EVIDENCE ANSWERS (the three Stage 1C questions; each step labelled)
+==============================================================================================================================
+Labels: FACT (C-010's own counts or reads at the pin); HISTORICAL (a frozen V2 manual at the same pin, cited); INTERPRETATION
+  (Claude's reading of FACT lines; not a behaviour test); UNKNOWN / NOT ESTABLISHED; KNOWN DEFECT (status unchanged). A source
+  line shows code at the pin, not what the deleted hosts ran or what any signal or trade did.
+
+8.1 OQ-1B-05: which identity the trades row carries (D6)
+| Step | Claim | Label | Evidence |
+|---|---|---|---|
+| 1 | Step 2 looks the map entry up by scanner_name (933) and sets strategy_name = map_entry.get("strategy") for a dict entry, else getattr(map_entry, "strategy", str(map_entry)) (939 to 942); it rejects UNKNOWN_STRATEGY when the entry is missing, the name is None or the name is not a loaded strategy (strategy_obj = self._strategies.get(strategy_name), 948). | FACT (Stage 1) | signal_processor.py 933 to 953; read 001 |
+| 2 | The placement call self._placer.place(...) passes strategy=strategy_name (1455), with signal_id=signal_id (1453), intent=strategy_obj.intent (1452) and tgt_risk_reward=getattr(strategy_obj, "tgt_risk_reward", None) (1459). | FACT | signal_processor.py 1446 to 1460; read 043 |
+| 1 to 2 | The strategy_name at 1455 is the value set at 939 to 942. The names match, but lines 954 to 1445 are not read: a reassignment, or a different enclosing function (C-008 4 names two on this path, _process_one and _admit_and_place), is not excluded. | INTERPRETATION; NOT ESTABLISHED as FACT | reads 001, 043; C-008 4 (HISTORICAL) |
+| 3 | place(...) is OrderPlacer.place, orders/order_placer.py 871 to 958, with strategy among its arguments. | HISTORICAL | C-008 4.1 ST-29; C-008 17 |
+| 4 | Of the writer list, only orders/order_manager.py has a T14 line (one, at 214); core/state_store.py and orders/order_placer.py have none. In the rest of s_rt one file has one (scripts/t2_cnc_gtt_realtest.py, a lead). | FACT (count-only; limits in section 4) | Q38; reads 044, 045 |
+| 5 | order_manager.py 214 to 244 is one statement, INSERT INTO trades, with 35 columns and 35 values. By position, the 5th column, strategy (215), takes the 5th value, a bound parameter "?" (230). | FACT | reads 044, 046 |
+| 6 | The value bound to that parameter (the argument list follows line 244, outside rule R's 31 lines) and the function that holds line 214. | NOT ESTABLISHED | - |
+| 3 to 5 | How a place(...) call reaches the insert in order_manager.py. | NOT ESTABLISHED (no further hop authorised) | - |
+| Lead | scripts/t2_cnc_gtt_realtest.py 234 is the string piece "INSERT INTO trades " (the statement continues past the printed line). | FACT for the line; its columns and values NOT ESTABLISHED (rule R: a lead, not read); HISTORICAL: C-007 4.1 calls the script one that seeds its own signals row (test-like, never run, live reach not established) | read 045; C-007 4.1 |
+| Record | A-008 21 lists trades.strategy among the consumers of the strategy's YAML name field ("Identity"). | HISTORICAL | A-008 21 |
+| Result | What trades.strategy holds at the pin is NOT ESTABLISHED by C-010's evidence: FACT reaches the processor's argument (step 2) and the insert's column-to-parameter position (step 5), not the hops between them (step 1 to 2 is INTERPRETATION). For the reconciliation only: if those hops carry strategy_name unchanged, the column holds the name Step 2 resolved, which agrees with A-008 21; that is a conditional INTERPRETATION, not a finding. | NOT ESTABLISHED | - |
+
+8.2 OQ-1B-03: which reader supplies screen 21's map entries (D7)
+| Step | Claim | Label | Evidence |
+|---|---|---|---|
+| 1 | Screen 21 is built by build_scanner_attribution_screen, scanner_attribution.py 275 to 423. | HISTORICAL | C-001 8 |
+| 2 | scanner_attribution.py's only call of the form config_reader.NAME( is line 293: registry = config_reader.get_scanner_registry(cfg). By step 1 it lies inside build_scanner_attribution_screen. | FACT for the call (T18 does not see a call through an imported name); HISTORICAL for the enclosing function | Q39; read 047; C-001 8 |
+| 3 | The file never names get_scan_webhook_map: every line containing "scan_webhook_map" (a substring of that name) was printed in Stage 1B, and the four are prose or a source label (8, 480, 662, 682). | FACT | read 022 (4 of 4 T1 lines) |
+| 4 | config_reader.py's module-level functions, in order: get_system_config 28, get_strategies 56, get_scan_webhook_map 92, get_min_pass_score 118, get_cron_jobs 150, load_accounts 180, active_account 196, dotted 219, config_meta 229, get_scanner_registry 249, get_scoring_weights 298, get_broker_costs 311. | FACT (T19 sees module-level def lines only) | Q40; read 048 |
+| 5 | get_scanner_registry(cfg: dict) -> list (249) follows the module-level comment "# ADDITIVE: `get_scan_webhook_map` above is byte-unchanged and keeps its callers." (246). The Stage 1B lines 252, 267, 281, 284 and 285 (a text line naming config/scan_webhook_map.yaml, the path under cfg["paths"]["config_dir"], each entry's strategy and chartink_url, the appended scanner and strategy entries) lie between 249 and the next module-level def (298). | FACT for the lines and their order; INTERPRETATION that 252 to 285 are get_scanner_registry's body (a nested def or a class would not be seen by T19) | reads 020, 021, 048 |
+| 6 | The entries read at 298 to 299 (entry["strategy"], entry["scanner"]) are the items of registry, 5 lines below the call. | INTERPRETATION; lines 294 to 297 not read | reads 011, 047 |
+| Result | Screen 21's strategy-to-scanners entries come from config_reader.get_scanner_registry, the dashboard's second, additive reader of config/scan_webhook_map.yaml, not from get_scan_webhook_map: FACT for the call (293), the definition (249) and the absence of get_scan_webhook_map from the file; INTERPRETATION for the function's extent (252 to 285) and for the step from registry to the entries (298 to 299). | as marked | - |
+
+8.3 OQ-1B-02: which rows the replay's consumer lines read (D8)
+| Step | Claim | Label | Evidence |
+|---|---|---|---|
+| 1 | replay_signals.py's definitions and loop headers (T20): _log 37, fetch_signals 41, fetch_trade_for_signal 54, replay_one_signal 65, run_replay 177, "for sig in signals:" 195, write_csv 202, main 223. Every def is at column 0; the loop is indented. | FACT (T20 does not see async def, class, while or a comprehension) | Q41; read 049 |
+| 2 | Rule S took NAME1 = fetch_signals (the nearest def above 46) and NAME2 = replay_one_signal (the nearest def above 75); both are identifiers; T21 counted 4 lines (1 to 8), so G10 ran. | FACT (mechanical) | Q42; s1c_reads.json |
+| 3 | T21's 4 lines: the def lines 41 and 65; line 191, signals = fetch_signals(store, from_date, to_date); line 196, row = replay_one_signal(sig, strategies, store, logger). Between them, 195: for sig in signals:. Each function is called once in the file by its name. | FACT (a call through another name is not counted) | reads 049, 050 |
+| 4 | By definition order: the signals query (46) lies between def fetch_signals (41) and the next def (54); the trades query (59) between def fetch_trade_for_signal (54) and def replay_one_signal (65); the consumer lines 75, 76 and 91 to 95, and the screener_results query (107), between def replay_one_signal (65) and def run_replay (177); lines 191 to 196 between def run_replay (177) and def write_csv (202). | FACT for the order; INTERPRETATION that each line belongs to the function whose def precedes it | reads 007, 027, 033, 049, 050 |
+| 5 | fetch_signals returns the rows of its signals query, and the parameter of replay_one_signal that receives sig is the signal read at 75, 76 and 91. | NOT ESTABLISHED (the return line and the parameter list after 65 not read); HISTORICAL: C-001 12 T-14 (signals rows, 41 to 51) and 7.2 | C-001 12, 7.2 |
+| Result | The replay's consumer lines read the items of the list that fetch_signals returns, fetch_signals being the function that holds the signals query: FACT for the call and loop lines, INTERPRETATION for the containment, NOT ESTABLISHED for the return value and the parameter binding. The nearer trades query (59), where rule P stopped in Stage 1B, belongs by definition order to fetch_trade_for_signal, not to the consumer's function. | as marked | - |
+
+8.4 Effect on the Stage 1B answer table (section 8 of that sheet; its rows are not edited)
+- G, "a second reader builds entries with "scanner" and "strategy" (246 to 285)": the second reader is now FACT as the
+  module-level function get_scanner_registry (249), its extent INTERPRETATION by definition order (8.2, step 5). "Line 112
+  belongs to the function at 92" stays INTERPRETATION, now by definition order (no module-level def between 92 and 118; read
+  048).
+- F, "which query feeds the replay's consumer lines 75, 76 and 91": replaced by 8.3 (FACT, INTERPRETATION and NOT ESTABLISHED
+  as marked there).
+- F, "scanner_attribution.py builds strategy-to-scanners from map entries (298 to 299)": the entries' reader is now 8.2 (FACT
+  for the call, INTERPRETATION for the link to 298 to 299).
+- F, the merged view (3991 to 4010): unchanged; its INTERPRETATION still depends on trades.strategy, which stays NOT
+  ESTABLISHED (8.1).
+- C, _evidence_strategy_for's docstring: unchanged; FACT for the text only; its callers NOT ESTABLISHED (D9: not searched; the
+  docstring alone does not show that no caller exists).
+
+==============================================================================================================================
+9. REMAINING OPEN QUESTIONS (and why the accepted bounds cannot close them)
+==============================================================================================================================
+- OQ-1B-05 (narrowed by 1C) The value bound to trades.strategy (the argument list after order_manager.py 244); the path from
+  OrderPlacer.place (HISTORICAL, 871 to 958) to the insert at 214, and the function that holds 214; whether strategy_name is
+  reassigned between signal_processor.py 954 and 1445 or belongs to another function. Each needs a read outside rule R.
+- OQ-1B-03 (narrowed by 1C) How registry reaches the entries at scanner_attribution.py 298 to 299 (lines 294 to 297).
+- OQ-1B-02 (narrowed by 1C) fetch_signals's return line (between 46 and 54) and replay_one_signal's parameter list (from 66).
+- OQ-1C-01 (new; the lead) What scripts/t2_cnc_gtt_realtest.py writes to trades at line 234 and after; rule R records it as a
+  lead (HISTORICAL, C-007 4.1: test-like, never run).
+- OQ-1B-04 (unchanged; D9) Whether any decision reads _evidence_strategy_for, and whether anything outside signal_processor.py
+  writes self._scan_webhook_map: NOT ESTABLISHED, and not inferred from the docstring.
+- OQ-1B-01, OQ-1B-06 and OQ-1B-07: unchanged (Stage 1B sheet, section 9).
+
+==============================================================================================================================
+10. DEVIATION AND GAP LOG (earlier entries kept; nothing overwritten)
+==============================================================================================================================
+- D-1 (Stage 1; kept): read 010 stays recorded and excluded from conclusions.
+- G-1 (Stage 1; kept): the register gap was closed in Stage 1B (R25 to R31); content questions remain in section 9.
+- O-1 to O-5 (Stage 1B; kept as recorded there).
+- D-2 (Stage 1C; a process deviation in the pre-flight tests, found after W6 while this sheet was compiled): section 5 of the
+  accepted sheet lists, among the synthetic test cases, "a missing or non-identifier name, a T21 count of 0 or 9".
+  test_tools_c010c.py exercised a missing name (C3) and a count above 8 with 13 lines (C4); it did not run a non-identifier
+  name, a count of 0 or a count of exactly 9. The first two cannot arise from the rule as built: each name is captured from a
+  def line by an identifier pattern, and that def line itself matches T21, so the count is at least 1. The boundary at 9 was
+  not run; the driver's guard is 1 <= count <= 8 (run_s1c_reads_c010.py, G10_MAX = 8). In the real run neither guard was near
+  its limit (two identifier names; count 4), so no result depends on the cases not run. Lesson for the design log: tick every
+  test case named in an authorisation against a named check before the window, not by category.
+- O-6 (Stage 1C; how G6's rule worked out): G6 reached scripts/t2_cnc_gtt_realtest.py, an s_rt file with a C3 count of 1, as
+  section 4 allows ("each s_rt file with a C3 count of 1 to 3"). It is not one of the 7 files the gate test admits by name
+  (section 6). The reader's own gate, which runs on every call, admitted it on its standing checks (in the pinned listing; not
+  a protected, excluded or shared-blob path; tree entry and working file equal to the pin), and the W5 driver had checked its
+  working file against its pinned blob. One line was printed; rule R recorded it as a lead and read nothing more.
+- R-1 (Stage 1C; a record correction): the Stage 1C proposal's header says it was prepared at 17:40 IST; the file was last
+  written at 17:30:41 IST (file time), before delivery, and Claude's working notes had 17:45. Only the stated time was wrong;
+  the content is unchanged and ChatGPT verified it by SHA-256.
+- R-2 (Stage 1C; a description correction): the Stage 1 sheet (section 4.2) and the Stage 1B sheet (sections 5 and 6) call the
+  reader's mask counts whole-file counts. mask_read2.py counts the lines it scans: the whole file for a grep, the range for a
+  range read. The label held for greps only (for example, read 031's CLIENTID 1 lies inside its range, 556 to 590, and shows
+  there as a placeholder). No count, mask or printed line changes; this sheet labels the counts by what they cover.
+- New deviations in Stage 1C other than D-2: none. Every operation was in the accepted list and within its bound; no refusal;
+  no failed check; no cap reached; the D9 search was not run.
+
+==============================================================================================================================
+11. EXECUTION RECORD
+==============================================================================================================================
+- Times (IST): accepted file received 17:40; both SHA-256 values recorded 17:40:37; pre-flight 17:40 to 17:43 (synthetic tests
+  17:43:41); W5 17:43:51 to 17:44:03; plan 17:44:49; W6 17:45:02 to 17:45:14; after-window checks 17:49:28; this sheet 18:00.
+- Git use on the clone: rev-parse HEAD; cat-file --batch-all-objects --batch-check (object types only); hash-object
+  --no-filters (the 7 Stage 1C files in the pre-flight, the 281 s_rt paths by the W5 driver, and per file inside cread_c010.py
+  with ls-tree). git ls-remote against the repository. No git status, no other tree-wide or history command, no fetch.
+- V2 documents consulted (frozen, in trading-system-v2 at 82f845053faf098db535a7a5498f7a225d25ef82): A-008 section 21; C-001
+  sections 8 and 12 (T-14); C-007 sections 1.1 and 4.1; C-008 sections 4, 4.1 (ST-29) and 17. Nothing else.
+
+Run log (<SCRATCHPAD>/c010/s1c/run_log.txt; exact, as written during the run):
+    C-010 Stage 1C run log (Claude's workspace)
+    accepted file: C-010_STAGE1C_ACCEPTED_AUTHORIZATION_AND_PROMPT_24-OCT-2026.txt SHA-256 3B0E95C1EA368A690755CC903966B13F446F428331B9FFCFF8C52208CB1FF753 lines 190 bytes 17565 (recorded 17:40:37 IST)
+    original proposal: SHA-256 60E4045BE3112CB6FCCB4F8A9011F9F7450474B96345219817BA89F5D504FEFE (stated in the acceptance: 60E4045BE3112CB6FCCB4F8A9011F9F7450474B96345219817BA89F5D504FEFE)
+    accepted file Part 1-2 equal to the proposal: yes
+    HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+    ls-remote: HEAD=970aabf3c78d777d9d34549e021f7c8e756c7bdb refs/heads/main=970aabf3c78d777d9d34549e021f7c8e756c7bdb  at 17:40:38 IST
+    listing SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5 rows 1438
+    objects:    1257 blob    1537 commit    6126 tree 
+    protected check: never-open blobs present locally: 0  (must be 0) exit 0
+    working file signals/signal_processor.py: equal 7fab0a02a302770ac72bbbd662549d5c091086c1
+    working file core/state_store.py: equal 11866117801b9329773a1be605448faef3c96f8d
+    working file orders/order_placer.py: equal e3a602909befa3fd3ba4b27caeed108724c07947
+    working file orders/order_manager.py: equal 978d213532532d7db72b215bc8ed415b848928ae
+    working file ops_dashboard/backend/services/scanner_attribution.py: equal 8503d3c1c6e038a7309d52e9d5492e8332ed3624
+    working file ops_dashboard/backend/readers/config_reader.py: equal 624bc8009771cb210ba3ac5eec9b70dc57bde537
+    working file scripts/replay_signals.py: equal 72763c3ed8d5d8fe43258619d55840f2780cfa96
+    cread_c010.py BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 (Stage 1: BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7) locked: 1
+    ccount_c010.py 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC (Stage 1: 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC)
+    tool gate_test_c010c.py 5DB98FE0A2316A581F2FB934DE350C3170439E04394184F7AA48B652FA2FB8FC
+    tool run_s1c_counts_c010.py 71EC75D5A4C77C403D60739C8F7A2B1519F43E2A81654331A27FD6F8CEEEE207
+    tool plan_s1c_c010.py D333F392096660C5550FF3018CCFDF1A8CF3FECBA614221C63ED76741E058CE7
+    tool run_s1c_reads_c010.py 1F27C4A1AE1E9FA053BC0CC417AD4C9634146E6B0559449FFD5E6E51B748E4F5
+    tool test_tools_c010c.py 84EC72A13FB8F529408BF239A872D5614B5182D658CA9001846EE1794D398807
+    tool lock_c010.py 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC
+    synthetic tests re-run 17:43:41 IST: test_tools_c010c.py exit 0, 21 ok, 0 FAIL, output s1c/test1c_rerun_output.txt SHA-256 B2F8A69736504E703388B7E6FD312F8DF6489AC52F7E71741943B3C1FAE12AB9; real logs untouched (test D2)
+    pre-flight result: all checks passed; W5 may open
+    W5 E-17 2026-10-24T17:43:51+05:30 unlock: bd93a1f1699ccfef -> 8d36219a06c03e98
+    W5 E-18 gate test W5 PASSED (s1c/w5_E18_gate.txt)
+    W5 E-19 17:44:00 pre-checks: lock lifted (E-17), HEAD = pin, 4 lists unchanged, 281 of 281 working files (s_rt and the Stage 1C files) equal to the pin, objects {'blob': 1257, 'commit': 1537, 'tree': 6126}, protected-blob check exit 0
+    W5 E-19 Q38 17:44:00 C3 T14 s_rt: files 2 lines 2
+    W5 E-19 Q39 17:44:02 C4 T18 s_sa: files 1 lines 1
+    W5 E-19 Q40 17:44:03 C5 T19 s_cr: files 1 lines 12
+    W5 E-19 Q41 17:44:03 C6 T20 s_rp: files 1 lines 8
+    W5 E-19 17:44:03 W5 searches done: 4 searches, 0 positive controls; objects unchanged; results saved
+    W5 E-20 2026-10-24T17:44:03+05:30 relock: 8d36219a06c03e98 -> bd93a1f1699ccfef; lock check passed
+    counts s1c/s1c_counts.json SHA-256 EDBAB41E4F4AEAE1224094AADA9446A94E77E86022B572D1E9272BC4ADB08322; no positive control needed (no zero search)
+    plan s1c/s1c_plan.json SHA-256 AE16B8C404F2A94B8931CA8A4C8EEAB7E09643914E4C03371DA334AFF460FED8: F5 signals/signal_processor.py range 1446:1463 bound 18-18;G6.1 orders/order_manager.py grep T14 bound 1-1;G6.2 scripts/t2_cnc_gtt_realtest.py grep T14 bound 1-1;G7 ops_dashboard/backend/services/scanner_attribution.py grep T18 bound 1-1;G8 ops_dashboard/backend/readers/config_reader.py grep T19 bound 12-12;G9 scripts/replay_signals.py grep T20 bound 8-8;
+    W6 E-21 2026-10-24T17:45:02+05:30 unlock: bd93a1f1699ccfef -> 8d36219a06c03e98
+    W6 E-22 gate test W6 PASSED (s1c/w6_E22_gate.txt)
+    W6 E-23 17:45:10 F5 read 043 signals/signal_processor.py range (1446:1463): printed 18 (bound 18-18); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:11 G6.1 read 044 orders/order_manager.py grep (T14): printed 1 (bound 1-1); masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}
+    W6 E-23 17:45:11 G6.2 read 045 scripts/t2_cnc_gtt_realtest.py grep (T14): printed 1 (bound 1-1); masks: {'HOSTTOK': 0, 'CLIENTID': 10, 'KV': 1} | stage-2 masks: {}
+    W6 E-23 17:45:11 R.1 read 046 orders/order_manager.py range (214:244): printed 31 (bound 31-31); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:12 G7 read 047 ops_dashboard/backend/services/scanner_attribution.py grep (T18): printed 1 (bound 1-1); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:12 G8 read 048 ops_dashboard/backend/readers/config_reader.py grep (T19): printed 12 (bound 12-12); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:12 G9 read 049 scripts/replay_signals.py grep (T20): printed 8 (bound 8-8); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:13 rule S count Q42 \b(fetch_signals|replay_one_signal)\(: 4 lines
+    W6 E-23 17:45:13 G10 read 050 scripts/replay_signals.py grep (T21): printed 4 (bound 4-4); masks: {'HOSTTOK': 0} | stage-2 masks: {}
+    W6 E-23 17:45:13 W6 done: 8 reads, 76 printed lines; rule R: 1 reads; rule S: G10 read 050
+    W6 E-24 2026-10-24T17:45:14+05:30 relock: 8d36219a06c03e98 -> bd93a1f1699ccfef; lock check passed
+    results s1c/s1c_reads.json SHA-256 DFCF78749C27A5B63D6D09B3B041F5632224E5DBC692CB80CB729360C6CFDC4B
+    after W6 (17:49:28 IST): HEAD 970aabf3c78d777d9d34549e021f7c8e756c7bdb; objects  1257 blob; 1537 commit; 6126 tree;; never-open blobs present locally: 0  (must be 0); cread_c010.py bd93a1f1699ccfef (locked 1); ccount_c010.py 9911033b14e0dc72
+    logs: code_read_log.tsv 50 rows (043 to 050 new), search_log.tsv 42 rows (Q38 to Q42 new), lock_log.tsv 12 rows (E-17, E-20, E-21, E-24 new)
+
+| File | SHA-256 |
+|---|---|
+| <SCRATCHPAD>/c010/tools/cread_c010.py | BD93A1F1699CCFEFA5B92B4F168CED9963859AE7CD7DBBA0BC308EBF2484B2B7 |
+| <SCRATCHPAD>/c010/tools/ccount_c010.py | 9911033B14E0DC72AC8C524BE95BF289F8D8B7F5E1B34B4B200D15F9414C9FCC |
+| <SCRATCHPAD>/c010/tools/lock_c010.py | 9CB0199E65A86FAFC7CCCD37389983A985640EDFDE4A06FFED9210C5C2C820BC |
+| <SCRATCHPAD>/c010/tools/gate_test_c010c.py | 5DB98FE0A2316A581F2FB934DE350C3170439E04394184F7AA48B652FA2FB8FC |
+| <SCRATCHPAD>/c010/tools/run_s1c_counts_c010.py | 71EC75D5A4C77C403D60739C8F7A2B1519F43E2A81654331A27FD6F8CEEEE207 |
+| <SCRATCHPAD>/c010/tools/plan_s1c_c010.py | D333F392096660C5550FF3018CCFDF1A8CF3FECBA614221C63ED76741E058CE7 |
+| <SCRATCHPAD>/c010/tools/run_s1c_reads_c010.py | 1F27C4A1AE1E9FA053BC0CC417AD4C9634146E6B0559449FFD5E6E51B748E4F5 |
+| <SCRATCHPAD>/c010/tools/test_tools_c010c.py | 84EC72A13FB8F529408BF239A872D5614B5182D658CA9001846EE1794D398807 |
+| <SCRATCHPAD>/c010/tools/build_s1c_evidence_c010.py | 3EC4CA5D9D03B47B30E206711B3DCC1E4837F78C871D0BA7A3C78ABEAB52F3C4 |
+| <SCRATCHPAD>/c010/scopes/s_sa.txt | 36C8535D3541F0B3B7531285902B37378A75931EAAD6E4516DC0AF1C6C4E2B6A |
+| <SCRATCHPAD>/c010/scopes/s_cr.txt | 33D3A2D8DFF7A90EF32C951885A40CA749147F7631B0BEB755FE0542A8FC4A61 |
+| <SCRATCHPAD>/c010/scopes/s_rp.txt | A41A769C32A8575E828848202465075D5B17C84F77BD5B7F3F49131657BA0A78 |
+| <SCRATCHPAD>/c010/s1c/s1c_counts.json | EDBAB41E4F4AEAE1224094AADA9446A94E77E86022B572D1E9272BC4ADB08322 |
+| <SCRATCHPAD>/c010/s1c/s1c_plan.json | AE16B8C404F2A94B8931CA8A4C8EEAB7E09643914E4C03371DA334AFF460FED8 |
+| <SCRATCHPAD>/c010/s1c/s1c_reads.json | DFCF78749C27A5B63D6D09B3B041F5632224E5DBC692CB80CB729360C6CFDC4B |
+| <SCRATCHPAD>/c010/s1c/w5_E18_gate.txt | A2018841486E38CC0904AF68B1A5683BC14CCAC9F196E855D3223020A81EF30F |
+| <SCRATCHPAD>/c010/s1c/w6_E22_gate.txt | 2364D41FEF5DAA8384D82079A118C49C67F3C67F53856D9BBC9F7C8B86F2A726 |
+| <SCRATCHPAD>/c010/s1c/test1c_rerun_output.txt | B2F8A69736504E703388B7E6FD312F8DF6489AC52F7E71741943B3C1FAE12AB9 |
+| <SCRATCHPAD>/c010/s1c/run_log.txt | 857C1DB2FB372C0734CCF9DCD7F3069EE55C053F65D2E4C790EFE7ABC9BA56AF |
+| <SCRATCHPAD>/c010/lock_log.tsv | AABCCAACD572464CA6946FD84BE35DE61676E29C1AEE91AD50F7A26960EE4076 |
+| <SCRATCHPAD>/c010/search_log.tsv | 1E9483AA30D47682DA88373992629690BEF201845ABF38B2400769F9B7FC9F17 |
+| <SCRATCHPAD>/c010/code_read_log.tsv | 0EDB283BD7E45AF8C8E333794709F55D3024B366414328A425821F6FC09AC2C4 |
+
+Search log rows Q38 to Q42 (exact; tab-separated):
+    Q38	2026-10-24T17:44:02+05:30	\bINTO\s+trades\b	s_rt.txt	4a6302df	281	files searched: 281; files with matches: 2; matching lines: 2	nev0=ok	selftest=ok
+    Q39	2026-10-24T17:44:03+05:30	\bconfig_reader\.[a-z_]+\(	s_sa.txt	36c8535d	1	files searched: 1; files with matches: 1; matching lines: 1	nev0=ok	selftest=ok
+    Q40	2026-10-24T17:44:03+05:30	^def [A-Za-z_][A-Za-z0-9_]*\(	s_cr.txt	33d3a2d8	1	files searched: 1; files with matches: 1; matching lines: 12	nev0=ok	selftest=ok
+    Q41	2026-10-24T17:44:03+05:30	^\s*(def [A-Za-z_][A-Za-z0-9_]*\(|for [A-Za-z_][A-Za-z0-9_, ]* in )	s_rp.txt	a41a769c	1	files searched: 1; files with matches: 1; matching lines: 8	nev0=ok	selftest=ok
+    Q42	2026-10-24T17:45:13+05:30	\b(fetch_signals|replay_one_signal)\(	s_rp.txt	a41a769c	1	files searched: 1; files with matches: 1; matching lines: 4	nev0=ok	selftest=ok
+Read log rows 043 to 050 (exact; tab-separated):
+    043	2026-10-24T17:45:11+05:30	range	1446:1463	signals/signal_processor.py	7fab0a02a302770ac72bbbd662549d5c091086c1	match	2704	18	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b9676318f857
+    044	2026-10-24T17:45:11+05:30	grep	\bINTO\s+trades\b	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	1	masks: {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=e06ef447b25f
+    045	2026-10-24T17:45:11+05:30	grep	\bINTO\s+trades\b	scripts/t2_cnc_gtt_realtest.py	4034ecd18b2d6c5ccf84419316db964a533eb7f1	match	607	1	masks: {'HOSTTOK': 0, 'CLIENTID': 10, 'KV': 1} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=56f0a612402a
+    046	2026-10-24T17:45:12+05:30	range	214:244	orders/order_manager.py	978d213532532d7db72b215bc8ed415b848928ae	match	770	31	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=8eb0f95c1c23
+    047	2026-10-24T17:45:12+05:30	grep	\bconfig_reader\.[a-z_]+\(	ops_dashboard/backend/services/scanner_attribution.py	8503d3c1c6e038a7309d52e9d5492e8332ed3624	match	749	1	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=ae8e0c7647bb
+    048	2026-10-24T17:45:12+05:30	grep	^def [A-Za-z_][A-Za-z0-9_]*\(	ops_dashboard/backend/readers/config_reader.py	624bc8009771cb210ba3ac5eec9b70dc57bde537	match	337	12	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=196618958315
+    049	2026-10-24T17:45:13+05:30	grep	^\s*(def [A-Za-z_][A-Za-z0-9_]*\(|for [A-Za-z_][A-Za-z0-9_, ]* in )	scripts/replay_signals.py	72763c3ed8d5d8fe43258619d55840f2780cfa96	match	244	8	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=b0a52c756d53
+    050	2026-10-24T17:45:13+05:30	grep	\b(fetch_signals|replay_one_signal)\(	scripts/replay_signals.py	72763c3ed8d5d8fe43258619d55840f2780cfa96	match	244	4	masks: {'HOSTTOK': 0} | stage-2 masks: {}	nev0=ok	selftest=ok	evidence=8aced3533bed
+Lock log rows E-17, E-20, E-21 and E-24 (exact; tab-separated):
+    E-17	2026-10-24T17:43:51+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1C_ACCEPTED_AUTHORIZATION_AND_PROMPT_24-OCT-2026.txt (SHA-256 3B0E95C1EA368A690755CC903966B13F446F428331B9FFCFF8C52208CB1FF753): window W5, C3 to C6 count-only and their positive controls only
+    E-20	2026-10-24T17:44:03+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W5 done: C3 to C6 counted; lock re-engaged before the plan
+    E-21	2026-10-24T17:45:02+05:30	unlock	before=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	after=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	C-010_STAGE1C_ACCEPTED_AUTHORIZATION_AND_PROMPT_24-OCT-2026.txt (SHA-256 3B0E95C1EA368A690755CC903966B13F446F428331B9FFCFF8C52208CB1FF753): window W6, F5, G6, rule R, G7, G8, G9 and rule S (its count, then G10) only
+    E-24	2026-10-24T17:45:14+05:30	relock	before=8d36219a06c03e98774cae938052b3208bce1ebdacb0ecaa48e2ed4eebeec245	after=bd93a1f1699ccfefa5b92b4f168ced9963859ae7cd7dbba0bc308ebf2484b2b7	W6 done: F5, G6, rule R, G7 to G9 and rule S run; lock re-engaged
+
+==============================================================================================================================
+12. COMPLETION DECLARATION
+==============================================================================================================================
+- Only the operations of the accepted Stage 1C authorisation were run: C3 to C6 in W5; F5, G6.1, G6.2, R.1, G7, G8, G9, rule
+  S's count (Q42) and G10 in W6. The D9 search was not run. The read lock is engaged.
+- No legacy code, test, script or migration was run; no host, VM, broker, Chartink, service or database was accessed; no
+  protected path was opened; no secret value is reproduced.
+- No file was changed in either repository; no commit or push was made.
+- Stopping here for ChatGPT's reconciliation. The C-010 manual is not started; BK-27 stays OPEN; VP-45 is NOT RATIFIED.

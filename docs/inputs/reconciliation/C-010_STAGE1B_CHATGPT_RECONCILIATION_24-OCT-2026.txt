@@ -1,0 +1,79 @@
+C-010 — CHATGPT RECONCILIATION OF STAGE 1B
+Date: 24-Oct-2026
+Status: RECONCILED — BOUNDED FINDINGS ACCEPTED; C-010 MANUAL STILL ON HOLD
+
+1. DECISION
+
+Accept the Stage 1B evidence sheet as the reported record of work performed within the accepted scope. The reported execution stayed within the authorised search/read bounds: two count-only searches; 25 reads (018–042); 292 printed lines against the 717-line ceiling; no reported refusals, failed checks, reached caps, or new deviations. The read lock is reported re-engaged.
+
+This is acceptance of bounded evidence, not independent reproduction of Claude's tool run. ChatGPT verified locally that the SHA-256 values reported for the controlling accepted authorisation and the proposal match the files available in this workspace. The other integrity and gate results remain reported execution evidence; they were not independently rerun here.
+
+Repository baseline:
+ramakrishnan031-ctrl/trading-system-prod-snapshot
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Controlling accepted authorisation SHA-256:
+A7A554AB5D30530D2C43512B045370A2AAF57744B6A3E025F4F8042DE0AA39F9
+Verified against the available file.
+
+Proposed scope SHA-256:
+EE4A09E7B5B4A7BF4B6BA4A5ACC03E92A5C5DB87A30E669E5DB5F7A66BEC6A3A
+Verified against the available file.
+
+2. FINDINGS ACCEPTED WITH EVIDENCE BOUNDARIES
+
+A. Receiver and processor path
+- FACT at the pinned source: webhook_receiver.py's INSERT supplies scanner_name to both signals.scanner and signals.strategy (Stage 1 read 004; carried into the Stage 1B findings table).
+- FACT at the pinned source: signal_processor.py Step 2 looks up scanner_name in the map, obtains a strategy, and checks the strategy registry; the documented unknown-strategy branches raise UNKNOWN_STRATEGY (Stage 1 reads 001; Stage 1B did not broaden this finding).
+- FACT at the pinned source: the second lookup around line 573 is in _evidence_strategy_for and returns None on lookup failure rather than rejecting. The excerpt establishes its stated purpose in the source text, but does not establish whether any decision caller invokes it.
+- These source facts do NOT establish what the deleted production hosts executed or whether any signal, order, trade, or position resulted.
+
+B. Downstream readers
+- FACT: the bounded db_reader.py excerpts establish several views using signals.strategy, views using signals.scanner, trade-to-scanner attribution through trades.signal_id, and separate views using trades.strategy.
+- FACT: one dashboard view merges signals, orders and trades counts under a common key. Its correctness when the stored values differ is not established because the relevant trades.strategy writer was outside this scope.
+- FACT: strategy_registry_officer.py reads distinct scanner and strategy values from signals into one set.
+- FACT: replay_signals.py queries signals and skips a signal when its stored strategy is not a loaded strategy name. The approved rule did not establish which query feeds each of the earlier consumer lines 75, 76 and 91.
+- FACT: the dashboard map loader parses the map into scanner-to-strategy entries; bounded reads show calls from strategy_tower.py, analytics_period.py and config_view.py.
+- Count-only results are discovery evidence only. A zero T10/T11 match does not prove that a file never queries a table. Sources for the 57 unpaired consumer lines remain NOT ESTABLISHED.
+
+C. G-1 and register
+- R25–R31 are now recorded in the source register with pinned blob IDs.
+- R28 audit.py and R29 config_view.py were classified within the approved small greps. The evidence supports treating the observed lines as comments/docstring/configuration display rather than as a demonstrated identity-resolution path; this is a bounded interpretation, not a runtime claim.
+- R30 and R31 were not read, as expressly required by D3. Their limited file-presence role remains HISTORICAL from C-001, not newly verified in Stage 1B.
+
+D. Process and caps
+- Reported: pin, listing hashes, working-file/blob checks, protected-blob check, read/count gates, and 27 synthetic tests passed.
+- Reported: 292 lines total (G1 35; G2 16; G3 35; F 115; P 91), under the approved 717-line total. Per-stage caps were not exceeded.
+- No new deviation is reported. Earlier D-1 remains preserved and excluded from conclusions; earlier G-1 is carried forward and reconciled by the updated register.
+- The audit record must retain the detailed search/read logs and masks. Do not replace the evidence sheet with this summary.
+
+3. OPEN QUESTIONS THAT REMAIN OPEN
+
+1. OQ-1B-01: 57 consumer lines remain NOT ESTABLISHED for their feeding query/source under the deterministic pairing rule. Do not infer their provenance.
+2. OQ-1B-02: replay_signals.py lines 75, 76 and 91 remain unpaired because the nearest counted query is on trades; the signals query/consumer relationship needs a separately authorised, narrow read if required.
+3. OQ-1B-03: the source/call relationship feeding scanner_attribution.py's map entries remains not fully established by the bounded excerpts.
+4. OQ-1B-04: whether _evidence_strategy_for is called by any decision, and whether any other file writes self._scan_webhook_map, remain unknown.
+5. OQ-1B-05: the value written to trades.strategy (mapped strategy name versus scanner key) remains unknown because the writer was outside this scope.
+6. OQ-1B-06: the nine runtime files and six leads without T6/T7 matches may still use relevant columns; their column-level use remains unknown.
+7. Carried Stage 1 questions U-01/U-02/U-03/U-04/U-06/U-10/U-11/U-12 remain open as listed in the evidence sheet. Do not promote historical citations to fresh findings.
+
+4. GOVERNANCE
+
+- BK-27 remains OPEN. The receiver INSERT mismatch is evidenced at the pinned source, but end-to-end operational impact is not established.
+- VP-45 remains NOT RATIFIED.
+- No C-010 manual drafting or freezing is authorised by this reconciliation.
+- No V2 design, implementation, remediation, legacy code execution, or live-system activity is authorised.
+- The manual must eventually label source facts separately from historical citations, interpretations, known defects, and unknowns.
+
+5. NEXT STEP
+
+Do not unlock or read anything further under the Stage 1B authorisation. Stage 1B is complete and the lock is back on.
+
+Prepare a Stage 1C proposal only if further evidence is judged necessary before the C-010 manual can accurately document the mapping chain. It should identify the minimum open questions that materially affect the manual, exact files/ranges/searches, caps, masking, lock windows, and stop rules. Prioritise:
+- the trades.strategy writer and its relationship to the mapped strategy/scanner identity (OQ-1B-05);
+- the map-entry consumer/call path in scanner_attribution.py (OQ-1B-03);
+- replay_signals.py's query-to-consumer relationship (OQ-1B-02).
+
+Do not automatically attempt to close all 57 consumer lines or every open question. First propose the minimum justified scope and keep unresolved claims explicitly NOT ESTABLISHED. Any Stage 1C reads require a separate explicit authorisation. Stop and return that proposal for review before any further reads.
+
+END — C-010 STAGE 1B RECONCILIATION

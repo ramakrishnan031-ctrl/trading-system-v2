@@ -1,0 +1,101 @@
+C-010 — CHATGPT RECONCILIATION OF CLAUDE STAGE 1
+Date: 24-Oct-2026
+Status: RECONCILED WITH FOLLOW-UP REQUIRED — DO NOT DRAFT C-010 MANUAL YET
+
+1. DECISION
+
+Stage 1 is useful and substantially internally consistent for the work actually authorised. Accept its bounded findings as evidence at the pinned legacy baseline, subject to the explicit limitations below. Do not treat Stage 1 as a complete mapping/consumer audit, and do not draft or freeze the C-010 manual yet.
+
+Repository pin reported by Claude:
+trading-system-prod-snapshot
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Claude reports 1,260/1,260 searched working files equal their pinned blobs, 32 count-only searches with three positive controls, and 17 bounded reads producing 176 lines. The companion register identifies the searched paths and pinned blobs. These are reported execution facts from the evidence package; ChatGPT has not independently rerun Claude's tools or repository checks.
+
+2. FINDINGS THAT ARE SUPPORTED BY THE STAGE 1 EVIDENCE
+
+A. Receiver persistence — FACT
+signals/webhook_receiver.py lines 963–980, read 004, shows the INSERT into signals with scanner_name supplied to both the scanner and strategy columns (lines 974–975). The INSERT shown does not substitute the mapped strategy name.
+
+B. Processor mapping — FACT
+signals/signal_processor.py lines 930–953, read 001, looks up scanner_name in self._scan_webhook_map; extracts the entry's strategy value; then looks up that name in self._strategies. Three failure paths raise _PipelineReject with code UNKNOWN_STRATEGY.
+
+C. Strategy registry — FACT
+strategies/loader.py lines 145–153, read 005, shows strategies[cfg.name] = cfg. The displayed lines show map cross-validation only when scan_webhook_map_path is not None; they do not establish whether any particular runtime caller passes it.
+
+D. Test limitation — FACT
+tests/unit/test_signal_processor.py lines 1933–1964, read 006, constructs a test map where scanner key gap_go_short differs from strategy value gap_go_short_v1, then writes its own signals row with the mapped strategy value. This row is written by the test itself, not by webhook_receiver.py. The excerpt does not establish the test's assertion or prove that the receiver's INSERT is covered.
+
+E. Map wiring — FACT WITH BOUNDARY
+The bounded reads show main.py passes app_config.scan_webhook_map and app_config.scan_webhook_map.scanners at two separate locations, and the processor stores dict(scan_webhook_map). The excerpts do not show the enclosing calls/callees. Use C-001/C-008 only as HISTORICAL references unless freshly verified under an approved scope.
+
+F. Downstream consumers — INCOMPLETE
+The R14–R20 excerpts show strategy/scanner dictionary keys and values, but the printed lines do not establish the source table for every reader. Do not state that all these dashboard/script readers consume signals.scanner or signals.strategy solely from the Stage 1 excerpts.
+
+3. GOVERNANCE AND FACT-DISCIPLINE TREATMENT
+
+- BK-27 remains OPEN. The receiver INSERT behavior is freshly evidenced, but the end-to-end operational effect is not established by these excerpts alone. Do not silently promote the finding into a confirmed historical trade impact.
+- VP-45 remains NOT RATIFIED. No V2 design decision is authorised by this reconciliation.
+- The statement that all 16 map keys equal their strategy values remains HISTORICAL from C-001, not freshly verified in Stage 1 because the map file was not read.
+- The claim that no runtime writer later changes signals.strategy remains HISTORICAL from C-001, not freshly re-verified here.
+- The deleted hosts' actual runtime state remains UNKNOWN / NOT ESTABLISHED.
+- The test's name/assertion and whether any test exercises the production receiver INSERT remain UNKNOWN / NOT ESTABLISHED from the authorised excerpts.
+- Do not run legacy code, tests, scripts, migrations, services, or infrastructure. No repair, redesign, implementation, or live-system revival.
+
+4. PROCESS DEVIATION D-1
+
+Claude correctly disclosed that read 010 was triggered by the word "signals" in a dictionary key, rather than evidence that the line referred to the signals database table. The read was outside the authorisation's stated condition. Claude says no Stage 1 conclusion relies on it.
+
+Treatment:
+- Keep read 010 and D-1 in the audit record.
+- Do not rely on read 010 for a factual conclusion.
+- Do not erase or silently relabel the deviation.
+- For any future conditional read, the trigger must test the actual authorised condition (e.g., relevant SQL/table reference), not a broad word match. Pre-window synthetic testing must cover both true positives and likely false positives.
+
+5. GAP G-1 — REQUIRED SCOPE RECONCILIATION
+
+The Stage 1 search counts identified seven runtime files omitted from the Stage 0 register:
+1. ops_dashboard/backend/services/analytics_period.py
+2. ops_dashboard/backend/api/analytics2.py
+3. ops_dashboard/backend/readers/config_reader.py
+4. ops_dashboard/backend/services/audit.py
+5. ops_dashboard/backend/services/config_view.py
+6. scripts/preflight/checks/config_integrity.py
+7. scripts/premarket_healthcheck.py
+
+The first three are particularly relevant because C-001 reportedly cites them for per-scanner attribution/endpoints and dashboard map loading. The other four contain map-name matches but their relevance to the C-010 evidence chain is not established by counts alone.
+
+Recommendation:
+- Add all seven to the C-010 source register with their exact pinned blob IDs from the companion register.
+- Prioritise bounded evidence from the first three.
+- For the other four, first determine from count-only/path context whether they are needed to explain the scanner-to-strategy map's loading, validation, audit, or premarket consumers; do not automatically expand into a general audit of those modules.
+- Also account for the 31 other runtime files with T6/T7 matches and the five R14–R20 files not grepped/read. Their existence is a search lead, not proof that they read the signals table.
+- Any additional source reads require an explicit, bounded follow-up authorisation. The Stage 1 read lock is reported engaged; do not ask Claude to bypass it.
+
+6. PROPOSED NEXT STEP — STAGE 1B, NOT MANUAL DRAFTING
+
+Prepare a new authorisation sheet and research prompt for Rama to review before any further reads. It should be a narrowly bounded gap-closure pass, not permission for open-ended exploration.
+
+Stage 1B objectives:
+1. Reconcile G-1 against C-001 and the Stage 0 register; add exact paths/blob IDs without reading content merely to fill the register.
+2. Verify the dashboard map-load and attribution chain only where required to establish the source and identity of scanner/strategy values.
+3. Resolve table provenance for the already identified downstream reader excerpts, where a small, exact range around the SQL query and row consumption can establish whether the source is signals, trades, webhook_audit, or another table.
+4. Inspect only the exact bounded range(s) needed for the relevant SQL/table source; avoid whole-function or whole-file reads.
+5. Determine whether the second map lookup at signal_processor.py line 573 matters to the scanner-to-strategy mapping chain, only if a bounded excerpt can establish its purpose.
+6. Do not re-read settled findings unless needed to resolve a specific contradiction.
+7. Do not run tests or code. Do not edit, commit, push, access hosts/services, or draft the manual.
+8. Keep BK-27 OPEN unless the approved evidence closes the stated question; keep VP-45 NOT RATIFIED.
+9. Record every scope deviation, refusal, gap, and unknown. Stop and return the evidence sheet plus exact read log for reconciliation.
+
+The authorisation must specify exact files, permitted line ranges or query terms, maximum lines per operation, masked output requirements, lock windows, and stop conditions. It must not rely on a vague instruction such as “read whatever is needed.”
+
+7. REQUIRED OUTPUT FROM STAGE 1B
+
+- Updated source register with path, role in the C-010 evidence chain, pinned blob, and inclusion reason.
+- A-to-G findings table with each claim labelled FACT, HISTORICAL, INTERPRETATION, KNOWN DEFECT, or UNKNOWN / NOT ESTABLISHED.
+- Each table-reader claim paired with the SQL/table provenance that supports it, or explicitly marked NOT ESTABLISHED.
+- An explicit list of remaining open questions and why they cannot be closed within the approved bounds.
+- Deviation and gap log retained, not overwritten.
+- No C-010 manual draft and no V2 design recommendations.
+
+END OF RECONCILIATION

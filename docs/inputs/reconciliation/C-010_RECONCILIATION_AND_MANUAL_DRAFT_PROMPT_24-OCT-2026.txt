@@ -1,0 +1,62 @@
+C-010 — SCANNER-TO-STRATEGY MAPPING
+CHATGPT RECONCILIATION AND MANUAL-DRAFT AUTHORISATION
+Date: 24-Oct-2026 (IST)
+
+DECISION
+Stage 1E is reconciled and accepted with the qualifications below. The C-010 manual may now be drafted from the already-approved evidence set. No further legacy-source reads, searches, counts, or audit stages are authorised or needed for this manual.
+
+RECONCILIATION
+1. The Stage 1E evidence sheet reports that the accepted authorisation hash matched, the pinned legacy baseline remained 970aabf3c78d777d9d34549e021f7c8e756c7bdb, all 10 named synthetic tests passed, the sole authorised G17 operation printed exactly two lines (12 and 175), the lock was restored, and subsequent read/count attempts were refused. Treat these as reported execution evidence from Claude's sheet; do not imply ChatGPT independently reran those checks.
+2. G17 answers OQ-1D-02: line 12 contains the text `create_trade(` but is interpreted as a line within a multi-line string, not a call. This is an INTERPRETATION based on the printed characters and location before the first definition; the string's boundaries were not read. Line 175 is the function definition. The only `create_trade(` call line identified in the bounded repository search is order_placer.py line 996 (INTERPRETATION within the stated search term and scope). Do not promote interpretations into runtime facts.
+3. The live E1 path's `trades.strategy` finding remains INTERPRETATION: the processor's resolved strategy name is passed down the documented path to the insert parameter. Do not claim the database value was observed in a stored row or that a trade actually occurred.
+4. E2 gate path: UNKNOWN / NOT ESTABLISHED. E3 retest path: NOT ESTABLISHED beyond the processor-side lines already held. E4 allocator hand-off: NOT ESTABLISHED; no mode or execution is inferred. Do not investigate these further.
+5. OQ-1C-01 (`scripts/t2_cnc_gtt_realtest.py`) remains uninspected and open. Other open questions listed in Stage 1E section 7 remain open; they are not blockers for a bounded C-010 manual.
+6. R-3 is a documented clerical/process deviation: a manually typed test time was wrong and corrected by an additional record; the reported event order was unaffected. Preserve the original record and correction. Do not erase or silently normalise it.
+7. Repeated source-register IDs (R13, R14, R17, R19, R20, R23, R24) remain as recorded and must be flagged for clerical reconciliation in the manual/register. Do not renumber historical records silently.
+8. BK-27 remains OPEN. VP-45 remains NOT RATIFIED. Do not present either as a settled design decision.
+
+AUTHORISATION TO DRAFT
+Draft the C-010 Scanner-to-Strategy Mapping manual now, using:
+- the reconciled Stage 1 through Stage 1E evidence sheets and their explicitly cited frozen manuals;
+- the source register and pinned blob identities already recorded;
+- the evidence labels and unresolved questions below.
+
+The manual must be a detailed factual technical booklet, but must not expand the investigation. Do not run source searches, reads, counts, tests, legacy code, or tools against the legacy repository. Do not access hosts, VMs, brokers, Chartink, services, or databases. Do not edit, commit, or push either repository. Do not draft V2 design or implementation advice.
+
+REQUIRED MANUAL CONTENT
+- Purpose and scope of scanner-to-strategy mapping in the legacy system.
+- Evidence-bounded chain: scanner/map entry → strategy resolution/lookup → signal processing and entry paths → order placer → order-manager insert parameter → `trades.strategy`.
+- For each hop: source path/function/line where established, input, logic, guard/validation, output/handoff, next consumer, and evidence label.
+- Clearly distinguish the primary E1 path from E2 gate, E3 retest, and E4 allocator paths.
+- Include a concise flow diagram and a source-register table using existing IDs and pinned blobs.
+- Record what is established, what is interpretation, historical context, known defects, unknowns, and open questions.
+- Include the line-12 `create_trade(` string finding and explain why it is not treated as a call, with the interpretation qualification.
+- Record Stage 1E execution controls/results as evidence reported by Claude, not independently reproduced by ChatGPT.
+- Preserve R-3, the earlier deviation/gap records, repeated IDs, and all open questions without silently correcting or closing them.
+- Include paper/live or mode differences only where the frozen evidence establishes them; otherwise state UNKNOWN / NOT ESTABLISHED.
+- Add cross-references to C-001, C-007, C-008, and B-009 only where the evidence sheet cites them.
+- End with remaining unknowns and a clear statement that this is a historical description of the pinned legacy source, not evidence of actual runtime trades or database rows.
+
+FACT DISCIPLINE
+Use these labels consistently:
+FACT — directly shown by the bounded source evidence or recorded execution artifact.
+HISTORICAL — stated in the frozen historical manual/evidence.
+INTERPRETATION — a reasoned reading of source lines, not a runtime observation.
+KNOWN DEFECT — only where already recorded as such.
+UNKNOWN / NOT ESTABLISHED — not demonstrated by the approved evidence.
+OPEN QUESTION — unresolved item retained for the record.
+
+DO NOT
+- Make a new read or search to “complete” the manual.
+- turn assumptions into facts or claim actual stored values/runtime execution;
+- close BK-27, ratify VP-45, or resolve OQ-1C-01;
+- make V2 retention/rejection/redesign decisions;
+- expose secrets or inspect masked KV-shaped values;
+- treat comments alone as proof of runtime behavior.
+
+DELIVERABLE
+Return one complete Markdown file named `C-010_SCANNER_TO_STRATEGY_MAPPING.md` and a short completion note listing:
+- the evidence set used;
+- any editorial cross-reference or register issue retained;
+- confirmation that no further source reads/searches or repository changes were made.
+Stop after returning the draft for ChatGPT review. Do not independently declare the manual frozen.

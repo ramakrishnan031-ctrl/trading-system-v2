@@ -1,0 +1,38 @@
+C-010 MANUAL REVIEW — CHATGPT REVIEW NOTES
+Date: 24-Oct-2026
+Document reviewed: C-010_SCANNER_TO_STRATEGY_MAPPING.md
+Current status: DRAFT revision 0 — NOT FROZEN
+
+DECISION
+The manual is detailed, disciplined about FACT / HISTORICAL / INTERPRETATION / UNKNOWN, and generally stays within the authorised evidence. It is not ready to freeze unchanged. Make the bounded editorial corrections below, then return the revised manual and completion note for final review. Do not reopen source investigation, run further reads, or expand the audit.
+
+ACCEPTED CORE FINDING
+At the pinned legacy commit, the receiver INSERT writes scanner_name into both signals.scanner and signals.strategy (FACT from the authorised read). That scanner_name being the webhook path key is HISTORICAL from C-001/C-002. Step 2 resolves the map entry's strategy and looks up the loaded strategy (FACT). On E1, trades.strategy receiving the resolved strategy name is correctly labelled INTERPRETATION because some call/function-membership hops are not directly established. E2/E3/E4 remain qualified as UNKNOWN / NOT ESTABLISHED. The second create_trade( text line at order_manager.py:12 is appropriately treated as INTERPRETATION, not a call. No runtime trade is claimed.
+
+REQUIRED EDITORIAL CORRECTIONS
+1. Section 11.6 — FACT label is too broad.
+   Current wording combines the count-only finding that five dashboard/service files contain no counted SQL table reference with the claim that “their rows come from other modules”. The first clause is FACT within the defined grep pattern; the second is not established merely by the absence of those matches. Split the sentence:
+   - FACT: name the five files and state only that no SQL table reference matched the bounded count pattern.
+   - UNKNOWN / NOT ESTABLISHED or INTERPRETATION: state that the origin of their rows was not established by this evidence.
+   Do not imply that a bounded zero count proves a complete data lineage.
+
+2. Section 14.1 / 14.2 — OQ-1D-01 is reused for E2, E3 and E4.
+   Keep the substantive open questions unchanged, but make the hierarchy unambiguous: one parent OQ-1D-01 with explicit sub-items (E2, E3, E4), or use clearly distinct sublabels while preserving the original ID in the cross-reference. Do not silently close any of them. Ensure sections 9, 14, 16 and 19 use the same labels.
+
+3. Section 3 and section 18 — register IDs and role text.
+   Retain the repeated R13/R14/R17/R19/R20/R23/R24 IDs as evidence records require, but mark them as unresolved clerical collisions and add a clear freeze-time reconciliation action. Do not renumber or alter the recorded register rows without preserving the original record. Check the flagged R15, R28 and R33 descriptions remain qualified as stated.
+
+4. Section 19 — secret-shaped value counts.
+   The manual appropriately says the values were masked and never examined. Keep counts explicitly tied to the relevant whole-file grep/read record and do not infer that any value is a credential. Ensure the Stage 1E omission of main.py’s count is explicitly described as a record discrepancy, not a newly discovered secret.
+
+FINAL QA BEFORE RETURN
+- Check all internal section/table/figure references and the OQ/PB/UN identifiers after the clerical edits.
+- Confirm no wording promotes an INTERPRETATION or a bounded count into FACT.
+- Confirm the source pin remains 970aabf3c78d777d9d34549e021f7c8e756c7bdb.
+- Preserve the reported execution provenance: ChatGPT has not independently rerun Claude’s checks.
+- Keep BK-27 OPEN and VP-45 NOT RATIFIED.
+- Keep all remaining unknowns visible; do not conduct further reads to resolve them.
+- Return the revised C-010_SCANNER_TO_STRATEGY_MAPPING.md and an updated concise completion note. Do not freeze, commit, push, or edit the legacy repository.
+
+GOVERNANCE
+This is documentation-only. Legacy remains DEAD / REFERENCE ONLY. No V2 design decision is made by this review. Once the revised draft returns, ChatGPT will perform the final review and decide whether it can be frozen.

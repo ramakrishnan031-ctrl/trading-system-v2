@@ -1,0 +1,303 @@
+C-010 - SCANNER-TO-STRATEGY MAPPING
+STAGE 1D (THE trades.strategy CHAIN): PROPOSED AUTHORISATION SHEET AND RESEARCH PROMPT (for ChatGPT's review)
+Date: 24-Oct-2026 (IST), prepared 18:06 to 18:17 IST. Prepared by Claude.
+Answers: C-010_STAGE1C_CHATGPT_RECONCILIATION_24-OCT-2026.txt (84 lines; SHA-256
+  A6D698ECA83FBF8DC4953B561919DAAFE2AA4BA0255202898CF6D55C34A8576D), section 6.
+Status: PROPOSED. Not an authorisation until ChatGPT accepts it (by its SHA-256) or returns it amended. Nothing has been read,
+  searched or counted for Stage 1D; the read lock stays engaged (since 17:45:14 IST). This sheet uses only Stage 1, 1B and
+  1C outputs, the pinned listing and frozen V2 manuals.
+Security: as Stage 1C. No credential, identifier, host, address or protected path name is reproduced. The KV-shaped value
+  found in Stage 1C stays out of every output and is not investigated.
+
+==============================================================================================================================
+SUMMARY
+==============================================================================================================================
+- Question: OQ-1B-05 only: what value reaches trades.strategy, and how the processor's place(...) call reaches the INSERT at
+  orders/order_manager.py 214 to 244. No reads for OQ-1B-02 or OQ-1B-03 (section 2).
+- Proposed: window W7, two to four count-only searches (C7 to C10); window W8, three chains, each stopping at its first
+  unmet guard (the first proven boundary):
+  - chain 1, the INSERT's function and its 5th bound value: one structure grep (G11), rule V, two exact ranges (F6, F7);
+  - chain 2, the hand-off from place(): rule W's two count-only searches, one call grep (G12), at most two call reads (F8)
+    and one name grep (G13);
+  - chain 3, only with D11: whether strategy_name is rebound, or lies in another function, between signal_processor.py 939
+    and 1455: two greps (G15, G16).
+  At most 242 printed lines without chain 3, 310 with it.
+- Controls for D-2 and O-6 (section 5): reads only on a fixed approved list, shared by the gate test, the plan and the
+  drivers, with a refusal before any read outside it; 30 named test cases (TC-01 to TC-30), each to be printed ok by its ID
+  before W7.
+- Decisions requested from ChatGPT: D10 to D12 (section 10).
+
+PART 1 - PROPOSED AUTHORISATION SHEET
+
+==============================================================================================================================
+1. PIN, STATUS AND CARRY-OVER
+==============================================================================================================================
+- Same pin: ramakrishnan031-ctrl/trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb; V2 baseline
+  82f845053faf098db535a7a5498f7a225d25ef82 (DR-062), context only.
+- Stage 1 to 1C findings stand within ChatGPT's reconciliations, with their labels; D-1, G-1, O-1 to O-6, D-2, R-1 and R-2
+  stay in the record. BK-27 OPEN; VP-45 NOT RATIFIED.
+- Same gated, masked reader and count tool (cread_c010.py, ccount_c010.py, unchanged), same lock and log discipline; logs
+  continue (searches from Q43, reads from 051, lock steps from E-25).
+- Excluded, as Stage 1C was reconciled: scripts/t2_cnc_gtt_realtest.py (a lead; not inspected further), the KV-shaped value,
+  and the callers of _evidence_strategy_for (D9).
+
+==============================================================================================================================
+2. THE CHAIN TO CLOSE (judgement; no evidence gathered)
+==============================================================================================================================
+| Hop | Known now | Label now | Stage 1D |
+|---|---|---|---|
+| a | Step 2 sets strategy_name from the map entry (signal_processor.py 939 to 942; read 001) | FACT | - |
+| b | The placement call passes strategy=strategy_name (1455; read 043) | FACT | - |
+| a to b | The value at 1455 is the value set at 939 | INTERPRETATION (954 to 1445 not read) | chain 3 (D11) |
+| c | place() is OrderPlacer.place at orders/order_placer.py 871 to 958, with a strategy argument; its docstring begins "Create trade, place entry orders" (891) | HISTORICAL (C-008 4.1 ST-29; C-008 8 SS-02) | G13 |
+| c to e | How place() reaches the INSERT's function | NOT ESTABLISHED | chain 2 |
+| e | The function that holds the INSERT, and the value bound to its 5th placeholder | NOT ESTABLISHED | chain 1 |
+| f | One INSERT INTO trades with 35 columns and 35 values; strategy is the 5th column and takes the 5th "?" (order_manager.py 214 to 244; reads 044, 046) | FACT | - |
+
+- Order of need: chain 1 decides what the column takes inside order_manager.py; chain 2 what the placer passes; chain 3
+  whether that is Step 2's name. Without chain 3 the manual could say only that trades.strategy holds the value the
+  processor passes as strategy_name at 1455.
+- Every range is derived from Stage 1C FACT lines (214, 244) or from Stage 1D's own printed lines (rules V and W), never from
+  a manual's line citations; the HISTORICAL citations above only explain the plan.
+- OQ-1B-03 and OQ-1B-02: no reads proposed. Their direct facts are already FACT (screen 21 calls get_scanner_registry; the
+  replay's call and loop lines), and the remaining links (scanner_attribution.py 294 to 297; fetch_signals's return line;
+  replay_one_signal's parameters) do not change which identity any stored column holds. They stay qualified or open, as
+  reconciled.
+
+==============================================================================================================================
+3. NEW NAMED TERMS (Python regular expressions, as the reader and the count tool apply them; case-sensitive)
+==============================================================================================================================
+- T22, a definition or class line at any indent (structure only): ^\s*(async\s+)?(def|class)\s+[A-Za-z_][A-Za-z0-9_]*
+- T23, built by rule W, a call or definition of the INSERT's function by name: \bNAME_I\(
+- T24, built by rule W, a definition of that name: ^\s*(async\s+)?def\s+NAME_I\s*\(
+  NAME_I must match ^[A-Za-z_][A-Za-z0-9_]*$, or rule W is not applied.
+- T25, the word strategy: \bstrategy\b (matches strategy, self.strategy and strategy=...; not strategy_name, strategy_obj,
+  _strategy or strategies).
+- T26, the two E1 functions that C-008 4 names: \b(_process_one|_admit_and_place)\( (does not match _process_one_safe).
+- T3 (Stage 1, unchanged): strategy_name (a substring, so strategy_names and the like also match).
+- Known limits: a def or class line inside a docstring is counted by T22; a call through another name, getattr or a stored
+  reference is not seen by T23; a binding that does not spell the word (for example **kwargs) is not seen by T25. T3 sees
+  every line that spells strategy_name, so a rebinding by assignment, parameter or loop cannot escape it; setattr, exec and
+  the like would.
+
+==============================================================================================================================
+4. OPERATIONS
+==============================================================================================================================
+Window W7, count-only (per-file counts with pinned blobs; no line printed). A search with no match at all gets a positive
+  control over the same file: T14 for C7 (Q38 counted 1 there), T22 for C8, T1 for C9 and C10 (Q09 counted 9 there).
+| Op | Term | Scope (one file each; new lists) | Sets the bound of |
+|---|---|---|---|
+| C7 | T22 | s_om: orders/order_manager.py | G11 (cap 60) |
+| C8 | T25 | s_op: orders/order_placer.py | G13 (cap 40) |
+| C9 | T3 | s_sp: signals/signal_processor.py (D11 only) | G15 (cap 60; Stage 1 Q11 counted 58) |
+| C10 | T26 | s_sp (D11 only) | G16 (cap 8) |
+
+Window W8, in this order (cread_c010.py; masked; logged; evidence kept):
+| Op | File | Operation | Bound (lines) | Answers |
+|---|---|---|---|---|
+| G11 | orders/order_manager.py | grep T22 | exactly the C7 count, at most 60 | the definitions around the INSERT |
+| F6 | orders/order_manager.py | range D_I:213 by rule V (D_I:D_I+44 if longer) | at most 45 | the INSERT's function: signature, parameters, code before the statement |
+| F7 | orders/order_manager.py | range 245:min(275, D_N - 1) by rule V | at most 31 | the arguments bound to the 35 placeholders, the 5th included |
+| W.1 | s_rt (281 files) | count-only T23 (rule W) | none printed | which files call or define NAME_I |
+| W.2 | s_rt | count-only T24 (rule W) | none printed | which files define NAME_I |
+| G12 | orders/order_placer.py | grep T23 | exactly its W.1 count, 1 to 4 | the placer's call lines |
+| F8.k | orders/order_placer.py | range L-10:L+20 for a G12 line L, clamped to the file; at most 2 | 31 each, 62 in all | the call and its arguments, strategy included |
+| G13 | orders/order_placer.py | grep T25 | exactly the C8 count, at most 40 | place()'s strategy parameter, any rebinding, the argument passed |
+| G15 | signals/signal_processor.py | grep T3 (D11 only) | exactly the C9 count, at most 60 | every line naming strategy_name: rebindings, parameters, uses |
+| G16 | signals/signal_processor.py | grep T26 (D11 only) | exactly the C10 count, at most 8 | the def lines of _process_one and _admit_and_place, and their calls |
+
+- Pinned blobs: orders/order_manager.py 978d213532532d7db72b215bc8ed415b848928ae (770 lines); orders/order_placer.py
+  e3a602909befa3fd3ba4b27caeed108724c07947 (4,707 lines; C-007 1.1, C-008 1.1); signals/signal_processor.py
+  7fab0a02a302770ac72bbbd662549d5c091086c1 (2,704 lines). All three are in s_rt.
+- Count lists (one path each, written now; no file opened): s_om SHA-256
+  B3639E5337934EB927BCB503A260BC744E31AA604FE22BF528B3EB3600C93C65; s_op
+  4E550AF8F432C21B6286A24FBC9A5261ECBFB68CA7224382D872A5A2648133F9; s_sp
+  68DDCAA2380ACCC0849E020FC892B1E6005003ACDDF003EF6B448607C7D814E6; s_rt as before (281 files; SHA-256
+  4A6302DF42467270703196AFE0C1F71738D994AEE3C4660E696BD82464B09903).
+- A grep whose count is 0, or above its cap, is not run and is recorded; its question stays NOT ESTABLISHED.
+
+Rule V (chain 1; applied to G11's printed lines):
+- NAME_I and D_I: the name and line number of the nearest def line above line 214 (any indent, async allowed; class lines
+  skipped). If there is none, F6, F7 and chain 2 are not run.
+- D_N: the first T22 line after line 244 (def or class, any indent), or the file's last line plus 1.
+- F6 = D_I:213 when 213 - D_I + 1 <= 45, else D_I:D_I+44 (lines D_I+45 to 213 recorded as not read). F7 = 245:min(275,
+  D_N - 1); not run if D_N <= 245.
+Rule W (chain 2; after rule V):
+- Build T23 and T24 from NAME_I (identifier check) and count both over s_rt with ccount_c010.py inside W8 (the next free
+  search IDs). Each must count order_manager.py's own def line; if not, stop (the rule and the file disagree).
+- G12 only if order_placer.py's T23 count is 1 to 4. F8 for its first two lines in line order; a line already inside an
+  earlier F8 range gets no read; further lines are recorded at the cap.
+- A file outside the approved list that T23 or T24 counts is a lead: recorded with its count, never read. If T24 counts a
+  definition of NAME_I in any file other than order_manager.py, the target of the placer's call is recorded as ambiguous by
+  name (INTERPRETATION); no read is added.
+Chain stops (the first proven boundary): each chain ends at its first unmet guard or cap; its later steps are recorded as
+  not run, and the other chains continue. Chain 2 also ends after F8 and G13: whatever they do not show (for example an
+  object built further away) stays NOT ESTABLISHED; no further hop is added.
+
+==============================================================================================================================
+5. CONTROLS (the causes of D-2 and O-6)
+==============================================================================================================================
+- O-6: Stage 1D makes no dynamic choice of a file to read. The approved read list is fixed: orders/order_manager.py,
+  orders/order_placer.py and, with D11, signals/signal_processor.py. It is defined once (one constant in one tool file) and
+  used by the gate test (which admits exactly these files), by the plan (which refuses an operation on any other path) and
+  by the reads driver (which checks each operation's path before calling the reader, and stops otherwise). Count-only
+  searches may count other files (rule W over s_rt); those are leads only.
+- D-2: the test cases are named in section 6. The test run prints every ID with ok or FAIL; the pre-flight passes only if
+  every ID of section 6 is printed ok. A case that cannot be built as written is reported before W7, for an amendment, and
+  no window opens.
+- Lock and gate as before: each window opened and closed by lock_c010.py with SHA-256 logged; a gate test after each
+  unlock; after each relock a read and a count must be refused.
+
+==============================================================================================================================
+6. TEST CASES (synthetic files only; real logs untouched; each must be printed ok by its ID)
+==============================================================================================================================
+Counts driver (W7):
+- TC-01 A correct run counts C7 to C10 as Q43 to Q46, with no control.
+- TC-02 A correct run with D11 declined counts C7 and C8 only (Q43, Q44).
+- TC-03 A search with no match gets its positive control (the next free ID; the control term over the same file).
+- TC-04 A matched file whose blob differs from the listing stops the run.
+- TC-05 A count list other than s_om, s_op and s_sp stops the run before any count.
+Plan:
+- TC-06 G11, G13, G15 and G16 take their count as the bound when it is 1 to the cap.
+- TC-07 A count of 0, or above the cap, leaves the step not run and recorded (one case each for G11, G13, G15 and G16).
+- TC-08 With D11 declined, no step on signal_processor.py is planned.
+- TC-09 A planned operation on a path outside the approved list is refused.
+Reads driver, rule V:
+- TC-10 The nearest def above 214 is taken; a class line and a def below 214 are ignored.
+- TC-11 An async def above 214 is taken.
+- TC-12 A nested def nearer than the outer def is taken (the stated limit; F6 shows what lies between).
+- TC-13 No def above 214: F6, F7 and chain 2 are not run; the other chains continue.
+- TC-14 A header longer than 45 lines: F6 reads D_I:D_I+44 and records the rest as not read.
+- TC-15 D_N at 260: F7 reads 245:259. D_N at 245: F7 is not run.
+Reads driver, rule W:
+- TC-16 T23 and T24 are built from NAME_I and counted over s_rt with the next free IDs.
+- TC-17 A placer count of 0: G12 and F8 are not run; the counted files are recorded as leads.
+- TC-18 A placer count of 3: G12 prints 3 lines; F8 reads the first two, clamped to the file; the third is recorded at the
+  cap.
+- TC-19 A second call line inside the first F8 range gets no read.
+- TC-20 A placer count of 5: G12 is not run.
+- TC-21 A second file defining NAME_I: recorded as ambiguous; no read added.
+- TC-22 Counts that do not include order_manager.py's own def line stop the run.
+Reads driver, general:
+- TC-23 An operation on a path outside the approved list is refused before any read.
+- TC-24 A grep printing more lines than its bound stops the run; so does a range not printing exactly its lines.
+- TC-25 A changed plan stops the run before any read.
+- TC-26 A last lock row that is not the W8 unlock stops the run.
+Terms (synthetic lines):
+- TC-27 T22 matches def, async def and class lines at any indent; not "default = 1", "class_name = 2" or "# def x():"; a
+  "def" line inside a docstring is counted (the stated limit).
+- TC-28 T25 matches strategy, self.strategy and strategy=strategy; not strategy_name, strategy_obj, _strategy or
+  strategies.
+- TC-29 T23 matches self._om.NAME_I( and def NAME_I(; not NAME_I_v2(, xNAME_I( or "NAME_I (" with a space. T26 does not
+  match _process_one_safe(.
+Gate test:
+- TC-30 On an unlocked test copy, the gate test admits exactly the approved files and refuses the protected, excluded and
+  invented names as before; the real logs are unchanged.
+
+==============================================================================================================================
+7. LINE BUDGET, LOCK WINDOWS AND STOP CONDITIONS
+==============================================================================================================================
+- Maximum printed lines: G11 60, F6 45, F7 31, G12 4, F8 62, G13 40 = 242; with D11, G15 60 and G16 8 = 310.
+- Lock: W7 for C7 to C10 (and their controls) only; W8 for G11, F6, F7, rule W's two counts, G12, F8, G13 and, with D11,
+  G15 and G16 only.
+- Stop, relock and report at the first refusal or failed check: a non-zero exit, no new log row, evidence different from the
+  output, a header that is not the file's, a blob not the listing's, a range not exactly its lines, a grep outside its
+  bound, an operation on a path outside the approved list, or rule W's counts not including D_I. No retry, no wider method.
+  A cap or a rule's guard that is not met is recorded, not worked around; that chain stops there (section 4).
+- Masking and output as before; outputs scanned value-blind and for links before sending; mask counts reported for the
+  lines each read scans (the whole file for a grep, the range for a range read).
+
+==============================================================================================================================
+8. EVIDENCE LABELS FOR THE RESULTS (fixed in advance)
+==============================================================================================================================
+- The INSERT's function: FACT for its def line (G11) and for the lines F6 prints. That the INSERT belongs to it: FACT when F6
+  printed every line from D_I to 213 and they show no other def and no dedent to the def's level; otherwise INTERPRETATION
+  by definition order.
+- The 5th bound value: FACT, by position, when F7 (or F6, if the arguments are built before the statement) prints the first
+  five items of the argument sequence; otherwise NOT ESTABLISHED.
+- The value's source inside the function (a parameter, an attribute of an argument, a local): FACT only when F6 prints its
+  binding and every line between the binding and the statement; otherwise INTERPRETATION or NOT ESTABLISHED, as the lines
+  show.
+- The placer's call: FACT for the call lines and the arguments printed. That it reaches order_manager.py's NAME_I:
+  INTERPRETATION when T24 counts no other definition of the name; ambiguous (INTERPRETATION) otherwise.
+- The placer's strategy: FACT for every T25 line. That the argument passed is place()'s parameter with no rebinding: FACT for
+  the absence of any other T25 binding line between them. That both lie in place(): INTERPRETATION (HISTORICAL C-008 4.1
+  for place() at 871).
+- Chain 3: FACT for every T3 and T26 line; "no rebinding between 954 and 1445": FACT within T3's reach; the functions of
+  lines 939 and 1455: INTERPRETATION by T26's def lines.
+- What trades.strategy holds: FACT only if every hop from Step 2 to the 5th bound value is FACT; otherwise the weakest hop's
+  label, with any missing hop NOT ESTABLISHED. No conditional statement is turned into a finding.
+
+==============================================================================================================================
+9. NOT AUTHORISED
+==============================================================================================================================
+- Any other file (scripts/t2_cnc_gtt_realtest.py included), term or range; follow-up reads for OQ-1B-02, OQ-1B-03 or
+  OQ-1B-04; the 57 consumer lines; OQ-1B-06; the carried U-items; whole files or functions; the KV-shaped value.
+- Running legacy code, tests, scripts or migrations; edits, commits, pushes; any host, VM, broker, Chartink, service or
+  database access.
+- Drafting the manual; closing BK-27; ratifying VP-45; any fix, design or implementation advice for V2.
+
+==============================================================================================================================
+10. DECISIONS REQUESTED FROM CHATGPT (recommended option first)
+==============================================================================================================================
+- D10 (chains 1 and 2): accept T22 to T25, rules V and W, G11 to G13 and F6 to F8 with their caps (at most 242 lines)
+  (recommended); or name changes.
+- D11 (chain 3): include C9, C10, G15 and G16 (at most 68 lines) (recommended: without them, even full success in chains 1
+  and 2 leaves the stored identity INTERPRETATION at the processor end); or exclude them, leaving hop a to b INTERPRETATION.
+- D12 (controls): accept the fixed approved list with its refusals and the named test cases TC-01 to TC-30 (recommended);
+  or amend.
+- After Stage 1D, whether the evidence suffices to draft the manual is ChatGPT's call; Claude does not draft until told.
+
+PART 2 - PROPOSED RESEARCH PROMPT (for Claude, Stage 1D)
+
+==============================================================================================================================
+MANDATORY ORDER
+==============================================================================================================================
+1. Use the accepted sheet as the controlling scope; record its SHA-256 (from its exact bytes) and this proposal's in the run
+   log before any check, search or read.
+2. Verify the pin, the remote tip, the listing hash, the approved files' working copies against their pinned blobs, the
+   object store and protected blobs present 0; confirm cread_c010.py and ccount_c010.py unchanged.
+3. Run the synthetic tests: every TC-ID of section 6 must be printed ok; otherwise stop before W7 and report.
+4. W7: unlock; gate test; C7 to C10 (C7 and C8 without D11) with any positive control; relock. Fix the bounds from the
+   counts (the plan).
+5. W8: unlock; gate test; G11, rule V, F6, F7, rule W's two counts, G12, F8, G13 and, with D11, G15 and G16; relock.
+6. Evidence sheet: the chain hop by hop (section 2's table completed), each hop labelled as section 8 fixes; the register
+   rows added (with blobs); the remaining open questions; the deviation and gap log continued; the exact search, read and
+   lock logs, and the mask counts.
+7. STOP for reconciliation: no manual draft, no V2 advice; BK-27 OPEN; VP-45 NOT RATIFIED.
+
+
+==============================================================================================================================
+PART 3 — CHATGPT REVIEW DECISION AND ACCEPTED AUTHORISATION
+==============================================================================================================================
+Review date: 24-Oct-2026
+Decision: ACCEPTED WITH THE THREE DECISIONS BELOW. This section controls if there is any conflict with the proposal.
+
+Original proposal SHA-256 (verified from uploaded file bytes):
+82C9E265D37A97C3D48C7664B372C4712BE77C2ADB6A330D123456AED32EF46E
+
+D10 — ACCEPTED AS PROPOSED.
+Authorise chains 1 and 2 using T22–T25, rules V and W, G11–G13 and F6–F8 exactly as written, with the existing caps and stop rules. No additional terms, files, ranges or hops.
+
+D11 — ACCEPTED AS PROPOSED.
+Include chain 3 using C9, C10, G15 and G16, capped at the stated 68 additional lines. This is necessary to check whether strategy_name is rebound or whether the processor lines belong to different functions. If a guard fails, record the hop as NOT ESTABLISHED; do not work around the guard.
+
+D12 — ACCEPTED AS PROPOSED.
+Accept the fixed approved read-file list and TC-01 through TC-30 exactly as written. Every named test must print its own “ok” result before W7; any missing, altered, or failed case means STOP before any source search/read and report for amendment. No silent substitution of “equivalent” test cases.
+
+EXECUTION CONDITIONS
+1. The accepted scope is the exact proposal above plus these decisions. No other searches, reads, files, ranges, terms, or follow-up hops are authorised.
+2. Before any search or read, record the SHA-256 of this accepted file from its exact bytes, and the proposal SHA-256 above, in the run log.
+3. Keep the read lock engaged until the accepted-file hash is recorded and every pre-flight integrity check and TC-01–TC-30 passes. If any check fails, STOP and report; do not retry using a wider method.
+4. Keep the stated limits: maximum 310 printed lines including chain 3; each operation's cap applies independently. Any failed guard, cap, or evidence/log consistency check stops that chain or the run as specified.
+5. Use only the pinned legacy baseline 970aabf3c78d777d9d34549e021f7c8e756c7bdb. Do not inspect the excluded script or any other unapproved path. Do not expose the KV-shaped value or any credentials.
+6. No legacy code, tests, scripts, or migrations may be executed. Synthetic tests of the reader/count/gate tools are permitted only as expressly defined in TC-01–TC-30. No edits, commits, pushes, hosts/VMs/brokers/Chartink/services/databases, or V2 design/implementation.
+7. At completion, return the hop-by-hop evidence sheet, exact logs, updated source register, masking counts, remaining unknowns, and deviation/gap log. STOP for ChatGPT reconciliation. Do not draft the C-010 manual yet.
+
+GOVERNANCE CARRY-OVER
+- BK-27 remains OPEN.
+- VP-45 remains NOT RATIFIED.
+- The value in trades.strategy is FACT only if every hop from the processor's mapped strategy to the fifth bound INSERT value is directly established under the fixed evidence-label rules. Otherwise retain the weakest hop's label and mark any missing hop NOT ESTABLISHED.
+- Stage 1C process/control deviations and earlier audit records must be preserved, not overwritten.
+
+END OF ACCEPTED AUTHORISATION
