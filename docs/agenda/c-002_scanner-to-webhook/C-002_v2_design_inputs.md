@@ -1,6 +1,6 @@
 # C-002 SCANNER TO WEBHOOK: V2 DESIGN INPUTS (PROPOSED)
 
-Status: PROPOSED / OPEN, first pass 2026-10-21 (revision 0). It stays PROPOSED / OPEN after the C-002 manual's freeze (DR-055, 2026-10-22). Changed at the freeze: this sentence; section 4, question 2's cell; item 5d; section 6 (its heading, its table header and the VP-45, VP-11 and VP-50 rows). Nothing here is a V2 decision (V2_DESIGN_LOG W-1, W-6); it records Rama's inputs of 21-Oct-2026, the questions carried to their owners and Claude's considerations.
+Status: PROPOSED / OPEN, first pass 2026-10-21 (revision 0). It stays PROPOSED / OPEN after the C-002 manual's freeze (DR-055, 2026-10-22). Changed at the freeze: this sentence; section 4, question 2's cell; item 5d; section 6 (its heading, its table header and the VP-45, VP-11 and VP-50 rows). Item 5i's owner text corrected on 2026-10-25 at the Section C close (DR-066, S-3), owner text only. Nothing here is a V2 decision (V2_DESIGN_LOG W-1, W-6); it records Rama's inputs of 21-Oct-2026, the questions carried to their owners and Claude's considerations.
 Labels: LEGACY = what the old system did (C-002_manual.md). RAMA = his words, quoted. DECIDED = an existing register row, quoted. CHATGPT = a point of ChatGPT's reviews, as written there. CLAUDE CONSIDERATION = a question for the owner, not a requirement.
 
 ## 1. Rama's inputs of 21-Oct-2026
@@ -48,7 +48,7 @@ The value-added review's other six questions are covered by questions 2 to 7 abo
 - f. Arrival evidence (VP-11, VP-59): the legacy audit missed the framework's own answers and failed body reads, and recorded refusals by response code only; whether V2 records every arrival at the edge, framework-level refusals included, is for those rows' owners (C-002_manual.md sections 10.2 and 10.3).
 - g. Sender retries (VP-58): no evidence shows that Chartink retried, so a design cannot rely on a sender's retry: an alert that meets a closed port is lost unless the sender tries again (C-002_manual.md sections 12 and 13.1).
 - h. The shared dependency (VP-34): one Chartink login would feed both systems; its outage, a plan limit (U-10) or an edited alert would affect both at once.
-- i. Transport security (C-003): plain HTTP and a query token were the legacy facts (C-002_manual.md sections 5.3 and 7.4); TLS and authentication are C-003's subject.
+- i. Transport security (whole-design review, with VP-50, VP-55, VP-56): plain HTTP and a query token were the legacy facts (C-002_manual.md sections 5.3 and 7.4); C-003 recorded the legacy only (DR-056), and V2's TLS and webhook authentication go to the whole-design review.
 
 ## 6. VP-45, which names C-002, and the rows annotated (V2_DESIGN_LOG.md sections 2 and 3)
 | Row | Status and "Ratify at" (after the freeze) | Tracking note added |

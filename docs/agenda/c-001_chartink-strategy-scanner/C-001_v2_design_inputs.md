@@ -1,6 +1,6 @@
 # C-001 CHARTINK STRATEGY / SCANNER: V2 DESIGN INPUTS (PROPOSED)
 
-Status: PROPOSED / OPEN, first pass 2026-10-21 (revision 0). It stays PROPOSED / OPEN after the C-001 manual's freeze (DR-053, 2026-10-21). Changed at the freeze: this sentence; the owner cells of rows 2, 4 and 7 (owner text only, after the check of every owner cell against the Master Agenda's topic titles; C-001_review_notes.md section 14); section 3's disposition column. Nothing here is a V2 decision. Items become decisions only as register rows at their owning topics (W-6).
+Status: PROPOSED / OPEN, first pass 2026-10-21 (revision 0). It stays PROPOSED / OPEN after the C-001 manual's freeze (DR-053, 2026-10-21). Changed at the freeze: this sentence; the owner cells of rows 2, 4 and 7 (owner text only, after the check of every owner cell against the Master Agenda's topic titles; C-001_review_notes.md section 14); section 3's disposition column. The owner cell of row 11 corrected on 2026-10-25 at the Section C close (DR-066, S-3), owner text only. Nothing here is a V2 decision. Items become decisions only as register rows at their owning topics (W-6).
 Labels: LEGACY = what the old system did (C-001_manual.md). RAMA = his words, quoted. DECIDED = an existing register row, quoted. CLAUDE CONSIDERATION = a question for the owner, not a requirement.
 
 ## 1. Rama's input of 21-Oct-2026
@@ -24,7 +24,7 @@ CLAUDE CONSIDERATION throughout: questions for the owner, not requirements.
 | 8 | The alert-name check was optional and normalised only case, spaces and an account prefix (section 7.6) | Under VP-45's single naming rule, whether the alert name is checked at all once a system-controlled field carries the identity | VP-45; C-002, C-004 |
 | 9 | The webhook carried no side; direction came from the strategy YAML (section 4.3) | Whether V2 keeps direction in the strategy definition only (DR-031 fixes two long and two short intraday strategies) | C-010; VP-08 |
 | 10 | No exchange field at the edge; aliases and exclusions applied there; "NSE" fixed in the code paths read (section 15) | Q-20 as it stands; no new consideration | Q-20; C-004 |
-| 11 | HISTORICAL (Rama, 21-Oct): the alerts posted over plain HTTP, with the shared token in the URL's query string (section 9.2) | How V2 receives Chartink webhooks: the transport, and where the shared secret travels, against what Chartink supports at that time (a current external fact, to be checked and dated then; W-5) | C-002, C-003 |
+| 11 | HISTORICAL (Rama, 21-Oct): the alerts posted over plain HTTP, with the shared token in the URL's query string (section 9.2) | How V2 receives Chartink webhooks: the transport, and where the shared secret travels, against what Chartink supports at that time (a current external fact, to be checked and dated then; W-5) | whole-design review (with VP-50, VP-55, VP-56) |
 | 12 | The dashboard re-read the map file while the trading process kept its start-time copy (section 5.1) | Whether the GUI shows the configuration that the running process loaded | L-010; configuration design (VP-15) |
 
 ## 3. Proposal and question rows that name C-001 (status unchanged)
