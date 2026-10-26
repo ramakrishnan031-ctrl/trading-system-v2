@@ -1,0 +1,76 @@
+D-002 — CHATGPT STAGE 0 REVIEW & SCOPE DECISIONS
+Date: 26-Oct-2026 (IST)
+Status: STAGE 0 ACCEPTED. Stage 1 is authorised only under the bounded scope and read controls below.
+
+1. REVIEW RESULT
+The Stage 0 package is structurally acceptable. The pinned legacy baseline and V2 baseline are clearly distinguished; tree counts and root-tree reconstruction are reported; candidate paths are labelled inventory-only; no legacy module content was read; and the final check reports 11/11 checks passed, no blockers. This is acceptance of the inventory method and package, not independent verification of every underlying Git operation. The reported checks and counts remain Claude's recorded results.
+Citations: D-002_STAGE0_FINAL_CHECK_26-OCT-2026.txt; D-002_SOURCE_INVENTORY_AND_METHOD_26-OCT-2026.txt.
+
+2. GOVERNING SCOPE DECISIONS (resolve OSQ-01 to OSQ-09 for documentation scope only)
+OSQ-01 — D-002 documents the legacy mechanisms that can reject or prevent admission at the hard-gate / eligibility boundary, plus the evidence needed to map their actual place in the pipeline. It does NOT become a catalogue of every refusal in the whole system. Record observed behaviour and handoffs; do not redesign or recommend V2 behaviour.
+
+OSQ-02 — Include the early circuit-proximity reject in D-002's factual gate map because it is an explicit refusal mechanism and BK-54 asks for it. Preserve D-001's mapping as historical and cross-reference it. This is documentation scope, NOT a claim that ownership is settled. If source evidence does not settle the owner, retain OWNER UNRESOLVED / OPEN in the boundary register and carry BK-54 forward.
+
+OSQ-03 — The secondary screener's own step-level refusals, the step-7 age rejection, step-9 circuit check, and scoring/minimum-score rules remain D-003 / D-017 / D-018 territory as applicable. D-002 may record a concise interface/boundary reference when necessary to explain where a hard gate is invoked, but must not absorb their implementation or scoring logic. The phrase “hard reject” in a comment does not determine ownership.
+
+OSQ-04 — Document screening/hard_gate.py's HardGate.evaluate battery and its circuit_proximity_reason interface in D-002 to the extent supported by Stage 1 source evidence. The playbook gate functions and V3/PB01 shadow-chain wiring must be mapped only enough to establish caller/handoff and ownership boundaries; detailed playbook/V3 chain mechanics remain J-010 and the PB01 route remains C-011 unless source/governance evidence establishes otherwise. Do not infer runtime/deployed behaviour from configuration or source alone.
+
+OSQ-05 — Treat eligibility as a D-002 scope requirement because DR-032 names the eligibility pre-check mechanism. Inspect the F&O ban and index-universe candidates only to establish whether and where they participate in the legacy admission path. The learned MIS blocklist remains attributed to C-004/D-003/G-007 as the frozen records state; D-002 may cross-reference it but must not silently take ownership. The static exclusion list at the webhook edge remains C-004 scope. VP-27 remains pending by Rama's prior choice; VP-27 and VP-37 are PROPOSED/V2 governance inputs, not legacy facts or newly ratified decisions.
+
+OSQ-06 — D-002 may document only an evidenced pipeline admission-window rejection relevant to hard rejection. The start/door/window lifecycle and the already documented D-001 window map remain C-008/D-001 cross-references. Do not duplicate or assume ownership of all window layers. Keep B-008's “door and pipeline” split visible.
+
+OSQ-07 — Kill switch, capital/risk gates, strategy circuit breaker, entry throttle, and consecutive-losses gate remain with their established or still-open owners outside D-002. Use boundary references only where needed to show sequencing or distinguish an admission gate from a later risk/operational refusal. Do not open protected or unrelated records to resolve these in Stage 1.
+
+OSQ-08 — D-002 stops at the hard-gate / eligibility-admission result and handoff to downstream screening/scoring. Minimum-score and final Trade/Reject verdict belong to D-003/D-017/D-018 as evidenced by the relevant frozen agenda/records. Do not redefine the final verdict.
+
+OSQ-09 — PB01 gates-score and EOD/PB01 routing belong to the J-010/C-011 boundary, not D-002 implementation. Read only enough of the named PB01 entry/runner files to establish whether a hard-gate call/reference is present and what the handoff is; cross-reference, do not absorb the route.
+
+OSQ-10 — Stage 1 reading plan and safety controls are specified in the accompanying Claude prompt. Stage 1 is evidence gathering only; no tests, scripts, code, database or runtime operations. D-001 evidence may be cited as HISTORICAL for what D-001 previously inspected, but must not substitute for fresh, narrowly scoped source reads where D-002 requires an exact current-at-pin claim.
+
+3. AUTHORISED STAGE 1 FILES
+Primary code/config (bounded/ranged reads at pinned blobs): 
+- screening/hard_gate.py (A01): relevant class/functions and all lines needed to establish complete gate battery and return contract; log exact ranges.
+- screening/secondary_screener.py (A02): only relevant call sites for circuit proximity, HardGate invocation, eligibility handoff and window checks; no broad unrelated read.
+- config/scoring_weights.yaml (A03): only relevant hard-gate/V3 mode and freshness settings.
+- config/system_config.yaml (A04): only relevant entry-gate/circuit-proximity/window/eligibility settings; never expose sensitive values; skip any protected sections.
+- main.py (A05): only relevant construction/wiring and handoff call sites.
+- core/market_windows.py (B04): only relevant window APIs and checks.
+- scripts/fetch_fno_ban.py (B02): inspect source only if the gated masking/read policy permits it; relevant data source, outputs and consumers only, no execution.
+- config/index_universe.yaml (B03): inspect only enough to identify the universe's role; do not dump full symbols or sensitive values into reports.
+- core/mis_blocklist.py (B01): limited boundary read only to establish interface/consumer and distinguish D-003/C-004 ownership; no broad blocklist/value dump.
+- screening/step_executor.py (C02): relevant step-7/step-9 interface only, for boundary confirmation.
+- screening/quality_scorer.py (C03): relevant minimum-score/final-scoring boundary only.
+- screening/entry_gate.py (C04): relevant interface/call sites only, solely to confirm boundary; no ownership assumption.
+- signals/signal_processor.py (C01): relevant pre-flight/consumer handoff only if necessary to trace where admission occurs.
+- v3_chain/pb01_entry.py (A07), v3_chain/pb01_runner.py (A08), v3_chain/runner.py (A09): relevant hard_gate references/call sites only, to map the J-010/C-011 boundary.
+- scripts/v3_hardgate_parity_recompute.py (A06): do not execute. Read only if source cross-reference cannot be established from the above; otherwise record as not read and explain why.
+
+Text-only tests (optional, only if needed to clarify an asserted contract; never run):
+- tests/unit/test_hard_gate.py
+- tests/unit/test_secondary_screener.py
+- tests/unit/test_mis_blocklist.py
+- tests/unit/test_fix135_fno_ban.py
+- tests/unit/test_market_windows.py
+Do not read other tests in this stage unless ChatGPT separately authorises them.
+
+Group E documents: do NOT open the full Group E set. The two named hardgate planning/parity documents may be considered only after their exact paths are checked against the protected-path/secret policy and a value-blind safe-read method is confirmed. If that cannot be guaranteed, do not read them; rely on source code and record the limitation. Do not open the consecutive-losses record, entry-throttle record, locked_decisions.yaml, index, runbook, or unrelated dated records.
+
+4. REQUIRED READ SAFETY / AUDIT TRAIL
+- Confirm each requested path is at the pinned legacy commit and record its blob ID before reading.
+- Use the project's approved gated masking filter only. Do not bypass it or use alternate file-reading methods for legacy content.
+- Before the first read, identify the exact filter entrypoint/version and all token-source inputs it will load. Record each source by safe path/role and whether it exists / is loaded; do not print token-source content or sensitive values. If this cannot be done safely, STOP before reading and report the blocker.
+- For every filter invocation, log the requested path/range, pinned blob, purpose, filter result, masks/counts, and every token-source input loaded. Never claim “only N files read” if token-source files were also loaded; distinguish evidence files from masking inputs.
+- Protected/never-open path check must pass before every read. If a file or output contains a secret, host value, account/client identifier, address, session link or other sensitive data, do not reproduce it; mask or stop as the approved process requires.
+- No host/runtime access, no Git history walk, no GitHub API, no fetch, no code/script/test execution, no database access, no external service contact, and no repository modifications.
+- Do not perform broad content searches. Count-only searches are allowed only if each zero result has a positive control and the exact search is approved/logged. Prefer targeted ranged reads over broad searches.
+- Record UNKNOWN / NOT ESTABLISHED where evidence is incomplete; do not infer runtime behaviour from static source/configuration.
+
+5. REQUIRED STAGE 1 OUTPUTS
+1. Stage 1 source evidence sheet: every claim with exact pinned path, blob ID and line range; separate source fact, historical record, interpretation and unknown.
+2. Read log: every evidence file/range and every masking input loaded; include purpose and mask counts, without sensitive values.
+3. Boundary matrix: D-001, D-002, D-003, D-017, D-018, C-004, C-008, J-010, C-011, capital/risk and operational gates; each row FACT/UNKNOWN/OPEN, no silent ownership transfers.
+4. Updated gap/boundary register: resolve only what source evidence settles; preserve open governance ownership items.
+5. Change note and final check with hashes, counts, limitations and explicit prohibited-action compliance.
+6. ChatGPT handoff summarising evidence and any remaining questions. No manual draft, no freeze, no commit/push.
+
+STOP: Return the Stage 1 evidence package for ChatGPT review. Do not draft D-002_manual.md or alter V2 governance records until separately authorised.

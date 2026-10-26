@@ -1,0 +1,449 @@
+D-002 - HARD REJECTION GATES: STAGE 0 SOURCE INVENTORY AND METHOD
+Date of work: 26-Oct-2026 (IST), 11:34 to 11:54 IST. Prepared by Claude for ChatGPT's review.
+Status: Stage 0 only. No legacy module, configuration file, test, script, document or README was opened, read, searched
+  or run, and no blob was fetched; no count-only search was made either. Candidate paths are inventory leads by name
+  (the prompt's label: "candidate inventory leads-not analysed evidence"), not evidence of what a file does. This is not
+  a D-002 manual and decides nothing for V2.
+Companions: D-002_STAGE0_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt (gap and boundary register),
+  D-002_STAGE0_CHANGE_NOTE_26-OCT-2026.txt (change note), D-002_STAGE0_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt (ChatGPT
+  review handoff), D-002_STAGE0_FINAL_CHECK_26-OCT-2026.txt (the final check). No Rama answer sheet: no question for
+  Rama at Stage 0 (the register, part C).
+Conventions: Claude's working folder is written <SCRATCHPAD>; "the listing" is the saved pinned listing of the legacy
+  tree; "the clone" is Claude's blob-less partial clone of the legacy repository at the pin; never-open paths are
+  counted, never listed. V2 records are cited as path:line at V2 main e163529. Blob IDs are shown by their first 12
+  characters. Quotations are verbatim except that line breaks and runs of spaces are dropped, non-ASCII dashes are shown
+  as "-", and "..." marks words left out.
+Labels: FACT (METADATA) - refs, tree objects and counts from git metadata; FACT (PATH NAME) - a path exists at the pin
+  (a name, not a function); HISTORICAL / RECORD-DERIVED - a statement in a frozen manual or another V2 record, cited and
+  not re-verified here; INTERPRETATION - Claude's reading, marked; UNKNOWN / NOT ESTABLISHED; OPEN QUESTION - listed in
+  the gap and boundary register (OSQ-xx). KNOWN DEFECT is not used: Stage 0 read no legacy content.
+
+========================================================================================================================
+1. INPUT RECEIVED (Rama, 11:34 IST; file time 11:34:18 IST)
+========================================================================================================================
+- D-002_CLAUDE_PROMPT_STAGE0_INVENTORY_ONLY_26-OCT-2026.txt: 65 lines, 4,289 bytes; SHA-256
+  5DDB2FB30B0EFEC0F59A4DAFFA222DA598B7D3B9942D3CEDFF2B8CC5504CE9D4; ChatGPT: Claude's Stage 0 prompt (inventory and
+  workflow only). UTF-8 with a few non-ASCII dashes and quotes, no CR; lines are newline counts.
+With it, ChatGPT's message relayed by Rama: "D-001 is complete, and we can move to D-002. The post-push verification
+  passed: all 37 files match the manifest, with zero mismatches." and "Next step: Give Claude this D-002 Stage 0 prompt.
+  It requires source inventory and workflow preparation only - no individual legacy-module analysis or manual drafting
+  yet. Once Claude returns the inventory package, I'll review it before authorising the next stage." (Rama's note: "Now:
+  26-Oct-2026 Monday at 11:35 am IST"). No other file came with it.
+
+========================================================================================================================
+2. TIMELINE (IST, 26-Oct-2026; times printed by the tools)
+========================================================================================================================
+- 11:25:52 and 11:26:34 D-001 post-push checks on fresh clones of V2 main: PASS (e163529; the result file is
+  D-001_POST_PUSH_GITHUB_VERIFICATION_RESULT_26-OCT-2026.txt). The local V2 clone fast-forwarded to it.
+- 11:34 Rama's message with the D-002 prompt.
+- 11:34:45 ls-remote of the legacy and V2 repositories (section 3).
+- 11:36:08 tree check (tree_check_d002.py): PASSED.
+- Then: path-name scan (pathscan_d002.py) and grouping, then the V2 records; files built at 11:54 (build_s0_d002.py) and
+  checked (check_s0_d002.py; its time is in the final check).
+
+========================================================================================================================
+3. BASELINES AND METADATA (FACT (METADATA))
+========================================================================================================================
+3.1 Legacy production reference (DEAD / REFERENCE ONLY)
+- Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot (public). Branch: main.
+- ls-remote (11:34:45 IST): HEAD and refs/heads/main = 970aabf3c78d777d9d34549e021f7c8e756c7bdb, the pin named by the
+  prompt. No other ref is advertised: no other branch and no tag.
+3.2 The tree at the pin
+- Source: the saved pinned listing (1,438 rows; SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5), saved in Claude's workspace on 24-Oct-2026 and used
+  unchanged at C-010, C-011 and D-001.
+- Proof that it is the whole pinned tree: its 1,438 entries rebuilt bottom-up with `git mktree --missing` in a scratch
+  repository give the root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa, equal to the tree of the pinned commit (`git
+  rev-parse <pin>^{tree}` in the clone: one local commit object, no history walk, no blob).
+- Counts: 1,438 blob entries (1,432 mode 100644, 6 mode 100755; no symlink, no submodule); 125 directory (tree) entries;
+  1,563 entries in all, as at D-001 Stage 0.
+- The GitHub API was not used: it refused this session the legacy tree at D-001 Stage 0 (25-Oct, HTTP 403) and was not
+  tried again; the counts rest on the rebuild.
+3.3 The clone (Claude's workspace)
+- HEAD = the pin. Local objects: 8,920 (1,257 blobs, 1,537 commits, 6,126 trees), by object ID and type only: the store
+  was iterated locally and nothing was fetched. Same figures as at D-001 Stage 0 and Stage 1: no fetch since.
+- Never-open paths in the tree (.env and .env.*, token and session files, gui_config.local.yaml, docs/web_claude/,
+  database and SQLite files, logs, and the standing rules for the accounts, security and reference-data configuration
+  files): 102 (root 1, config 21, docs 80). Never-open blobs present locally: 0. The rules:
+  docs/governance/LEGACY_REFERENCE.md:24 and 25.
+3.4 V2 governance repository
+- ramakrishnan031-ctrl/trading-system-v2: HEAD and main = e16352901a3c8327d03e4074503a670376f4d3fc (ls-remote 11:34:45
+  IST), the D-001 freeze commit the prompt names. Every V2 citation here is at this commit (the local clone, clean).
+3.5 Time and timezone
+- IST (UTC+05:30), from the workspace clock with TZ=Asia/Kolkata.
+
+========================================================================================================================
+4. FILE CATEGORIES AT THE PIN (FACT (PATH NAME); blob entries per top-level folder)
+========================================================================================================================
+alerts 6; allocation 5; broker 13; capital 10; config 51 (never-open 21); core 29; data 3; deploy 29; docs 474
+  (never-open 80); ops 14; ops_dashboard 183; orders 21; regime 4; reports 10; screening 7; scripts 88; signals 4;
+  sr_detector 12; strategies 5; tasks 1; tests 442; utils 5; v3_chain 9; (root files) 13 (never-open 1). Total 1,438. As
+  at D-001 Stage 0.
+
+========================================================================================================================
+5. PATH-NAME SEARCH (FACT (PATH NAME); pathscan_d002.py over the 1,438 paths, case-insensitive)
+========================================================================================================================
+Terms: the agenda title ("Hard rejection gates": T01 to T03), the subjects the V2 records attach to D-002 or to the hard
+  gate (circuit, eligibility and bans, freshness, liquidity, windows: T04, T06 to T08, T15), refusal words (T05), and
+  the neighbouring owners' words, for the boundary (risk and limits, the kill switch, validation, screening, the final
+  decision, V3 and PB01: T09 to T14).
+| Term | Matches | Never-open (counted) | Permitted matches by folder |
+|---|---|---|---|
+| T01 hard | 13 | 0 | docs 5, screening 1, scripts 1, tests 6 |
+| T02 gate | 19 | 1 | docs 4, screening 2, scripts 2, tests 10 |
+| T03 reject | 4 | 0 | config 1, docs 2, tests 1 |
+| T04 circuit | 1 | 0 | tests 1 |
+| T05 admission/permission/guard/block | 21 | 0 | core 1, deploy 2, docs 6, tests 11, utils 1 |
+| T06 eligibility/ban/exclusion | 3 | 0 | config 1, scripts 1, tests 1 |
+| T07 freshness/age/expiry | 10 | 0 | docs 2, ops 1, ops_dashboard 2, scripts 2, tests 3 |
+| T08 liquidity/spread/volume/band | 5 | 0 | docs 3, tests 2 |
+| T09 risk/limit | 18 | 1 | broker 1, capital 1, config 1, docs 3, ops_dashboard 5, orders 1, tests 5 |
+| T10 kill/halt | 27 | 1 | capital 1, docs 10, scripts 1, tests 14 |
+| T11 validation | 11 | 0 | core 1, docs 1, scripts 1, tests 8 |
+| T12 screen | 39 | 1 | docs 2, ops_dashboard 25, screening 7, scripts 1, tests 3 |
+| T13 decision/verdict/final | 64 | 3 | docs 57, ops_dashboard 2, reports 1, tests 1 |
+| T14 v3/pb01 | 35 | 0 | config 1, docs 13, scripts 2, tests 10, v3_chain 9 |
+| T15 window | 7 | 0 | allocation 1, core 1, docs 2, tests 3 |
+Union of the permitted matches: 246 paths, each placed in exactly one group of section 6 (the builder asserts it); 4
+  more paths are listed with no term match because V2 records name them (marked REC): config/scoring_weights.yaml,
+  config/system_config.yaml, main.py, signals/signal_processor.py. Words inside other words also match (for example
+  "gate" in "investigate", "fresh" in "refresh"); such names are in Group F-11. The exact expressions are in
+  pathscan_d002.py.
+
+========================================================================================================================
+6. CANDIDATE PATHS (candidate inventory leads, not analysed evidence; none was opened or read)
+========================================================================================================================
+Columns: ID, path, blob (first 12 characters, from the listing), bytes (C-010's record of the local object store,
+  24-Oct; metadata), then the frozen manuals that cite the path (git grep over the 35 *_manual.md files at e163529) and
+  what the V2 records say about it (HISTORICAL / RECORD-DERIVED). D-001 below means the frozen D-001 manual (DR-067) and
+  its Stage 1 files.
+
+6.1 Group A - the hard gate module and the paths the V2 records connect to it
+A01 screening/hard_gate.py  blob a8e7e2e49675  23,101 bytes
+    cited by the D-001 manual; the 21-Sep record, section 14: "explicit non-score hard admission rules"; D-001 sections
+    6.4 and 7: the HardGate class (evaluate: at-circuit, circuit proximity, freshness, a liquidity no-op),
+    circuit_proximity_reason, and the gate_rr, gate_htf, gate_extreme, gate_confirm and gate_pullback functions
+    ("PLAYBOOK-shadow scope"); read in part in D-001 Stage 1 (lines 1 to 60 and 119 to 176, and one grep, of 467 lines);
+    not read at C-008 (R08)
+A02 screening/secondary_screener.py  blob b6f8ff7223ad  35,461 bytes
+    cited by the A-008, C-004, C-007, C-008, D-001 manuals; D-001 sections 6.4 and 7.3: step 1b calls
+    circuit_proximity_reason (rejects when enabled), and the V3 shadow compare (and the enforce branch) call
+    HardGate.evaluate; read in part at C-008 and D-001; the screener: D-003 (C-004 10.2)
+A03 config/scoring_weights.yaml  blob e9d6ede4c02d  2,610 bytes
+    cited by the A-008, A-009, D-001 manuals; REC: D-001 section 7.4: v3_hardgate_mode "shadow", v3_gate_steps,
+    v3_freshness_max_sec 60.0; A-008 section 12 (the V3 hard-gate re-scale, shadow); read in full in D-001 Stage 1
+A04 config/system_config.yaml  blob bf742ae5c81c  55,901 bytes
+    cited by 30 of the 35 frozen topic manuals; REC: D-001 section 7.5: entry_gate circuit_proximity_reject_enabled
+    true; read in part in D-001 Stage 1
+A05 main.py  blob 445fb0d8237a  208,758 bytes
+    cited by 34 of the 35 frozen topic manuals; REC: D-001 section 7.1: builds HardGate always and passes it to the
+    screener; read in part at C-008 and D-001
+A06 scripts/v3_hardgate_parity_recompute.py  blob 3623a42b0d15  10,995 bytes
+    cited by the D-001 manual; D-001 Stage 1 count Q01: 2 lines name hard_gate or HardGate (not read); the B-003 manual
+    lists it among scripts with direct read-only database access, not scheduled
+A07 v3_chain/pb01_entry.py  blob cbfd4752525f  18,217 bytes
+    cited by the B-006, C-008, C-011, D-001 manuals; D-001 Stage 1 count Q01: 1 line (not read; D-001 G-09; BK-57)
+A08 v3_chain/pb01_runner.py  blob e87a5aa96464  15,333 bytes
+    cited by the C-008, D-001 manuals; D-001 Stage 1 count Q01: 2 lines (not read; D-001 G-09; BK-57)
+A09 v3_chain/runner.py  blob a782f91f2f4f  20,092 bytes
+    cited by the B-006, C-008, D-001 manuals; D-001 Stage 1 count Q01: 1 line (not read); the V3 chain runner (C-008
+    ST-18; J-010)
+
+6.2 Group B - other refusal and eligibility leads, by name or record (owner not settled for D-002)
+B01 core/mis_blocklist.py  blob 1f91fedfbdd4  6,651 bytes
+    cited by the C-004, D-001 manuals; C-004 section 10.3: the learned MIS blocklist and the screener's MIS pre-drop,
+    shadow on the pinned configuration (D-003 and G-007 there); D-001 M10; whether it is the eligibility pre-check of
+    DR-032 (D-002): NOT ESTABLISHED
+B02 scripts/fetch_fno_ban.py  blob 8416cd9c71b1  14,028 bytes
+    no frozen manual cites it; an F&O ban list, by name; the 08:35 job "fetch_fno_ban" in the B-003 and B-008 manuals
+    (job name only); an eligibility lead by name (INTERPRETATION; VP-27 names suspended symbols and surveillance stages
+    as examples)
+B03 config/index_universe.yaml  blob 416d1eb723c5  1,688 bytes
+    cited by the A-009 manual; an index universe, by name (A-009)
+B04 core/market_windows.py  blob 25625e8cd109  13,938 bytes
+    cited by the A-011, B-008, B-009, B-010, C-008, D-001 manuals; C-008 ST-05 and ST-10, the global and strategy
+    windows (A-003, A-008); D-001 M02 and M07; B-008 V2 inputs, row 4: the window layer, "C-008, D-002"
+
+6.3 Group C - neighbours by record or name (for the boundary only; not proposed as D-002 leads)
+C01 signals/signal_processor.py  blob 7fab0a02a302  139,403 bytes; REC: D-001 Layers 1 and 1b (the processor's
+    pre-flight and strategy checks; frozen, DR-067); the C-008 subject
+C02 screening/step_executor.py  blob d83b04860f0f  17,364 bytes; the ten steps (D-001 section 6.5); step 9, the circuit
+    check, is G-14's subject (BK-58: D-002, D-003); D-003 by the agenda name
+C03 screening/quality_scorer.py  blob b125e9ce3243  6,337 bytes; the score and tier (A-008 section 12); D-003 and D-017
+    by the agenda names
+C04 screening/entry_gate.py  blob 46b173171bdf  21,303 bytes; a gate by name, not the hard gate: C-007 and C-008
+    (GATE_WAITING; BK-24); D-001 M18 (its add() has no runtime caller, B-009 D1)
+C05 screening/retest_monitor.py  blob 26639d6ed5dd  19,889 bytes; C-008 ST-15, owner "D topics"; D-015 by the agenda
+    name
+C06 screening/__init__.py  blob f5069dd61fb8  358 bytes; the package marker of screening/
+C07 capital/kill_switch.py  blob 3eb2ece050c3  108,965 bytes; C-008 ST-04, the kill-switch check (I topics); D-001 M01
+C08 capital/risk_engine.py  blob 27af699b5913  46,383 bytes; the 21-Sep record, line 45: "capital/ -> risk gates +
+    position sizing + RESERVE" (F topics by the agenda); risk approval follows screening in its flow (line 1800)
+C09 allocation/window_buffer.py  blob a8b3b5d4dfff  1,075 bytes; J-012 by name
+C10 config/strategies/pb01_breakout_retest.yaml  blob eedf5cac5ed5  3,051 bytes; the PB01 strategy (C-011; J-010)
+C11 v3_chain/ (6 files): J-010 by name; __init__.py 72b84e0f5997; forward_shadow.py dc96649f0a9f; models.py
+    159e319d8c91; score.py 8270d4981254; truncate.py 1d11b0b7c3b5; watchlist_capture.py 25a1f084eada.
+
+6.4 Group D - tests by name (text leads only, if authorised; never run)
+D-a the hard gate and the V3 gates (3): test_hard_gate.py 83388f2e371d; test_v3_hardgate_parity.py eb7701307a6e;
+    test_v3_pb01_gates_score.py 8af37d3f579c (PB01 gates (J-010, C-011)).
+D-b screening and other named gates (5): test_secondary_screener.py e8e2ddb2a77d; test_entry_gate.py ab1a956af832;
+    test_phase4_trade_type_gate.py 69f0b6b6bb74 (the trade-type gate: A-008 by C-008 ST-09);
+    test_tick2_pipeline_scoped_daily_gate.py bc12039ea309 (which gate: not established by name);
+    test_gate8_sector_toctou.py 3fbfab57933c ("gate8": which gate not established by name).
+D-c eligibility, circuit, liquidity and freshness by name (7): test_mis_blocklist.py 4960f825965e;
+    test_fix135_fno_ban.py dbf781b9e1cf; test_fix128_circuit_breaker.py 2b067c5266c0 (which circuit breaker: not
+    established by name); test_fix134_liquidity_check.py 3e3e61d572ec; test_fix135_tick_volume.py 4fe9347477c8;
+    test_fix134_instrument_validation.py f4e7b94656cf; test_fix067_ms1_fresh_anchor.py 479cb646bc76 (a T07 name match;
+    its subject is not established by name).
+D-d entry windows and the door check (3): test_market_windows.py 6ac7f3e67fe8; test_fix133_entry_windows.py
+    39a4b8997333; test_fix065_market_hours_guard.py 529510afceca (a market-hours guard by name (B-008 rows 2 and 4)).
+D-e V3 and PB01 chain (J-010, C-011; boundary only) (8): test_v3_chain.py d0711c45b279; test_v3_pb01_entry.py
+    2330afee2c4b; test_v3_pb01_runner.py a4cc9f09e9cc; test_v3_pb01_e2e.py e0c81020c161; test_v3_eod_route.py
+    2d0dc4071618; test_v3_watchlist_capture.py 8b50580570a9; test_v3_strategy_taxonomy.py bc5c5caed4da;
+    test_pb01_registration.py 80f63d22be64.
+    All 26 Group D paths are under tests/unit/.
+
+6.5 Group E - dated legacy documents by name (HISTORICAL leads; not opened)
+- docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md 6cd5e099ccd2 (the hard gate plan, by name)
+- docs/v3/V3_STEP4B_PARITY_ARTIFACT.md 85020ba1cb37 (step 4B parity, by name (beside A06))
+- docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md adf589da7314
+- docs/audit/ms4_gate1_impact_artifact_13jul2026.md 7f0eabab918a ("gate1": which gate not established by name)
+- docs/audit/consecutive_losses_gate_wired_19jul2026.md ed1ce195194a (a consecutive-losses gate by name (owner not
+  established))
+- docs/audit/band_inversion_investigation_13jul2026.md 9b33a94c393a ("band": meaning not established by name)
+- docs/audit/d3_band_inversion_robustness_19jul2026.md 6cc824a09fd0 ("band": meaning not established by name)
+- docs/audit/r12_allowlist_enumeration_04aug2026.md 5ffa86be2fe1 ("allowlist": subject not established by name)
+- docs/audit/ms4_screener_nulls_and_parked_items_25jul2026.md 8309fbc2a4df (the screener (D-003), by name)
+- docs/decisions/04_d3_min_pass_threshold.md 65b1bed3bcfd (the minimum pass score (D-003, D-017, D-018 by the agenda
+  names))
+- docs/decisions/08_freeze_min_pass_during_measurement.md a8bf59530ed7 (the minimum pass score, as above)
+- docs/decisions/BRIEF_08_freeze_min_pass.md 9e42f1aa614c (the minimum pass score, as above)
+- docs/decisions/10_entry_throttle_admission.md fdf97c54f2dc (the entry throttle (C-008 ST-27, owner open))
+- docs/decisions/00_INDEX.md 0a7139a544a4 (the index of the legacy decision records, by name)
+- docs/locked_decisions.yaml 2908b09fb546 (legacy locked decisions, by name)
+    Dated records may hold host values (earlier topics read such records value-blind only, for example C-004 under
+    DR-057). Which of these do is not established by name (G-07).
+
+6.6 Group F - other matches, not proposed as D-002 leads (the matched word names another subject; INTERPRETATION)
+F-1 the operations dashboard (L-010): 33 paths under ops_dashboard/ (risk and freshness views, decision documents and
+    the screen tests S01 to S22).
+F-2 GUI approval records and screenshots (L-010; images: DR-008) (29): docs/audit/approval_final_19aug/ (24 files: an
+    index, its JSON and 22 screen images); docs/audit/GUI_CLOSURE_DECISION_MATRIX_19-Aug-2026.md;
+    docs/audit/GUI_DECISION_PACK_D1_D2_D3_19-Aug-2026.md; docs/audit/GUI_DECISION_READY_MATRIX_19-Aug-2026.md;
+    docs/audit/GUI_FINAL_CLOSURE_19-Aug-2026.md; docs/audit/GUI_FINAL_CLOSURE_DASHBOARD_19-Aug-2026.md.
+F-3 kill switch, halts and hard kill (I topics) (26): scripts/clear_kill_switch.py; tests/unit/test_kill_switch.py;
+    tests/unit/test_kill_switch_product_filter.py; tests/unit/test_a3_entry_kill_recheck.py;
+    tests/unit/test_clear_kill_switch.py; tests/unit/test_h4_killswitch_retry_rederive.py;
+    tests/unit/test_h5_killswitch_sweep_product.py; tests/unit/test_kill_alerts_delivery_carveout.py;
+    tests/unit/test_kill_persist_timing.py; tests/unit/test_mc8_async_hardkill.py;
+    tests/unit/test_p1_killswitch_cancel_resting.py; tests/unit/test_scheduled_kill_severity.py;
+    tests/integration/test_hard_kill_flatten_chain.py; tests/integration/test_q9_killswitch_lastmile_wired.py;
+    tests/crash_test/test_kill_switch_edges.py; docs/audit/kill_drill_03aug2026.md;
+    docs/audit/kill_persist_busy_timeout_25jul2026.md; docs/audit/mc4_killswitch_lock_16jul2026.md;
+    docs/audit/mc8_async_hardkill_16jul2026.md; docs/audit/q9_batch2_killswitch_toctou_18jul2026.md;
+    docs/audit/q9_coverage_matrix_final_18jul2026.md (Q9 records (kill switch) by name);
+    docs/audit/f1_daily_loss_after_halt_21jul2026.md; docs/audit/f2_dropped_and_halt_reality_25jul2026.md;
+    docs/audit/q4_hard_kill_delivery_decision_30jul2026.md; docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md
+    (an exit rejection and the hard kill, by name); docs/decisions/11_absolute_kill_ladder.md.
+F-4 risk, limits, orders and positions (F, G, H) (17): tests/unit/test_risk_engine.py;
+    tests/integration/test_q9_daily_loss_limit_wired.py; tests/unit/test_ni17_qty_cap_guards_the_output.py;
+    tests/unit/test_t2_limit_paths.py; tests/unit/test_fix129_rejection_handling.py;
+    tests/unit/test_fix129_order_state_validation.py; tests/unit/test_unit3a_leverage_validation.py;
+    orders/order_protocol_limit.py; broker/rate_limiter.py (a broker rate limiter by name; D-001 section 4.4 records the
+    processor's FIX-007 rate-limiter pre-check as not wired (M09, C-006)); config/broker_limits.yaml;
+    tests/unit/test_rate_limiter.py; docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md;
+    docs/audit/limit_triple_modify_path_2026-07-24.md; docs/audit/t2_multi_stock_blockers_28jul2026.md;
+    docs/audit/mr4_block2_order_reconciliation_14jul2026.md; docs/audit/check1_external_close_decision_27jul2026.md;
+    docs/audit/holdings_blind_readers_verdicts_04aug2026.md.
+F-5 configuration validation and preflight (A-009, B-002, B-007) (4): core/config_validator.py;
+    tests/core/test_config_validator.py; tests/unit/test_fix135_strategy_config_validation.py;
+    scripts/preflight/checks/config_sanity.py.
+F-6 tokens and authentication (B-004, M-005) (4): scripts/auto_refresh_token.py;
+    tests/unit/test_fix062_token_invalidation.py; tests/unit/test_h11_invalidate_token_path.py;
+    docs/decisions/RUNBOOK_2fa_seed_vm_only.md (a two-factor runbook by name: not a lead, and not to be opened).
+F-7 operations, trading-day guards, lifecycle and safety tooling (B, L, M) (28): utils/holiday_guard.py;
+    tests/unit/test_holiday_guard.py; tests/unit/test_s1_market_day_guard.py; deploy/hooks/market_hours_guard.sh;
+    deploy/security/bin/copy-guard; scripts/copy_gate.py ("copy gate": subject not established by name);
+    tests/unit/test_copy_gate.py ("copy gate": subject not established by name); ops/control_tower/freshness.py;
+    tests/unit/test_service_window_config.py; docs/audit/service_window_configurable_25jul2026.md;
+    docs/audit/service_window_extension_2026-07-24.md; tests/unit/test_b1_consumer_health_unblocked.py;
+    tests/unit/test_migration_guard.py; tests/unit/test_real_artifact_dir_guard.py;
+    tests/unit/test_terminal_state_write_guard.py; docs/design/terminal_state_write_guard_design_07jul2026.md;
+    tests/unit/test_h3_exit_retry_guard.py; docs/audit/ct_guard_invariant_and_secwatcher_18jul2026.md;
+    tests/crash_test/test_ct_guard_invariant.py; tests/crash_test/state_machine_validator.py;
+    reports/crash_test/day6_ct159_final.md; docs/audit/monitoring_hardening_15jul2026.md;
+    tests/integration/test_hardening_scenarios.py; tests/unit/test_gemini_log_review_hardening.py;
+    tests/unit/test_fix131_telegram_rate_limit.py; docs/audit/stale_queue_entries_25jul2026.md;
+    docs/audit/locked_contract_staleness_sweep_22jul2026.md; tests/unit/test_fix142_final_cleanup.py.
+F-8 V3 and PB01 plans and records other than the hard gate (J-010, C-011) (11):
+    docs/v3/V3_PHASE0_INVESTIGATION_GAP_ANALYSIS.md; docs/v3/V3_STEP5_RISK_SIZING_GAPMAP.md;
+    docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md; docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md;
+    docs/v3/V3_STEP8_TRADE_MGMT_GAPMAP.md; docs/v3/V3_STEP9_EXIT_ENGINE_GAPMAP.md;
+    docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md; scripts/v3_shadow_soak_report.py;
+    docs/audit/deployment_evidence_pb01_shadow_14jul2026.md; docs/audit/pb01_simulation_feasibility_2026-07-24.md;
+    docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md.
+F-9 legacy decision records on other subjects (17): docs/decisions/01_e4_w10_pnl_contract.md;
+    docs/decisions/02_d1_concentration_sizing.md; docs/decisions/03_d2_strategic_direction.md;
+    docs/decisions/05_d4_exit_policy.md; docs/decisions/06_performance_allocator.md; docs/decisions/07_regime_enable.md;
+    docs/decisions/09_prune_retention.md; docs/decisions/ACTIONS_not_decisions.md;
+    docs/decisions/BRIEF_01_e4_w10_pnl_contract.md; docs/decisions/BRIEF_09_prune_retention.md;
+    docs/decisions/DESIGN_09_prune_retention.md; docs/decisions/DESIGN_ct_harness_safety.md;
+    docs/decisions/DESIGN_midnight_day_floor.md; docs/decisions/RUNBOOK_e4_w10_deploy.md;
+    docs/audit/decision_packages_19jul2026.md; docs/audit/decision_readiness_triage_19jul2026.md;
+    docs/audit/regime_thesis_validation_18jul2026.md.
+F-10 the screened-stocks CSV (B-003, C-007) (4): scripts/generate_screened_stocks_csv.py;
+    docs/screened_stocks_csv_workflow.md; tests/unit/test_generate_screened_csv_readonly.py;
+    tests/unit/test_integration_screened_csv_15jul.py.
+F-11 homonyms (the matched letters belong to another word) (7): config/strategies/vwap_rejection_short.yaml ("rejection"
+    names a strategy's pattern); tests/crash_test/vm_investigate.py ("gate" inside "investigate");
+    tests/crash_test/vm_investigate2.py ("gate" inside "investigate"); scripts/refresh_instruments.py ("fresh" inside
+    "refresh"; the instrument master (A-004)); tests/unit/test_refresh_instruments.py ("fresh" inside "refresh");
+    tests/unit/test_refresh_instruments_assert.py ("fresh" inside "refresh");
+    docs/audit/out_of_band_alert_path_verified_25jul2026.md ("band" inside "out_of_band").
+
+========================================================================================================================
+7. RELATED PRIOR RECORDS (HISTORICAL / RECORD-DERIVED; V2 records at e163529; none is new legacy evidence)
+========================================================================================================================
+7.1 The master agenda
+- docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt:289 to 309: "D. TRADE DECISION ENGINE": D-001
+  Pre-filter (line 292), D-002 Hard rejection gates (line 293), D-003 Secondary screening (line 294), then D-004 to
+  D-017 and D-018 Final Trade / Reject decision (line 309). Goal: "Completely revisit the question:" (line 312) "Should
+  this signal become a trade?" (line 313). No agenda text describes D-002 beyond its title.
+7.2 The 21-Sep working-tree record (docs/inputs/legacy_baseline/CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt)
+A baseline document of 21-Sep-2026 on the production snapshot at the pin, by its header; its statements were not
+  verified here. Its words are "hard gate" and "hard gates":
+- line 43: screening as "secondary screener + hard gates + score"; line 45: "risk gates" in capital ("capital/ -> risk
+  gates + position sizing + RESERVE"); line 141: "Secondary screening, hard gates, score/tier, market-data checks."
+- section 14 (line 500), "HARD GATE": "screening/hard_gate.py provides explicit non-score hard admission rules." (line
+  503); its documented checks: "1. At-circuit rejection." (line 507), "2. Circuit-proximity rejection.", "3. Signal
+  freshness.", and "4. Liquidity is currently a NO-OP at this gate; spread remains part of the scored screening steps."
+  (line 510); "The gate returns a verdict rather than raising." (line 512); "hard gates are permission checks;" and
+  "score is qualification/quality information." (lines 515 and 516).
+- section 43, the single-signal view: under the secondary screener, "hard gates" (line 1345) after the MIS learned
+  blocklist and the quote and before the screening steps and the score, then "min score / final verdict" (line 1348);
+  the end-to-end flow puts "secondary screening / hard gates / score" (line 1797) before entry and SL, sizing and risk
+  approval.
+7.3 D-001 Pre-filter (frozen, DR-067; docs/agenda/d-001_pre-filter/D-001_manual.md): what it records about the hard gate
+- Its scope record: "D-001 is a map, not an ownership transfer." (line 26); detailed rules stay with their owners, D-002
+  among them.
+- Section 6.4 (line 180): step 1b of screen() delegates to hard_gate.circuit_proximity_reason, so a function of
+  hard_gate.py is on the screener's default path; it rejects when enabled (section 7.5, line 206: enabled true on the
+  repository configuration).
+- Section 7 (from line 190): main.py always builds HardGate; evaluate checks at-circuit, circuit proximity, freshness
+  (60 s from scoring.v3_freshness_max_sec) and a liquidity no-op; the screener calls it only in the V3 shadow compare
+  (mode "shadow" on the repository configuration, after the score) or the enforce branch; INTERPRETATION (H-06, line
+  214): on the default path the HardGate class decides nothing.
+- Section 7.6 (line 218): hard_gate.py also defines gate_rr, gate_htf, gate_extreme, gate_confirm and gate_pullback,
+  called "PLAYBOOK-shadow scope" (callers UNKNOWN); G-14 (line 350): its "hard reject" comment for the at-circuit rule
+  against the default path, where step 9 only lowers the score - "an observation for D-002 and D-003".
+- Matrix rows: M02 the global entry window (line 278; the window layer "C-008, D-002" by B-008); M10 the MIS pre-drop
+  (line 286; the eligibility pre-check D-002 by DR-032, VP-27 D-002); M12 circuit proximity, OWNER UNRESOLVED (line
+  288); M13 the HardGate battery, J by A-008 and D-002 "by the agenda name (INTERPRETATION)" (line 289).
+- Section 11 (line 322): "Section D: D-002 (named for the window check and the eligibility pre-check; DR-032; VP-27; by
+  the agenda name for the HardGate battery, INTERPRETATION)"; OSQ-03 (line 334) left D-001 and D-002 OPEN.
+- Its Stage 1 read log (docs/agenda/d-001_pre-filter/D-001_STAGE1_FILES_READ_LOG_25-OCT-2026.txt): count Q01 (line 25)
+  found hard_gate or HardGate in 7 of 281 runtime files (main.py, screening/hard_gate.py,
+  screening/secondary_screener.py, scripts/v3_hardgate_parity_recompute.py, v3_chain/pb01_entry.py,
+  v3_chain/pb01_runner.py, v3_chain/runner.py); hard_gate.py (467 lines) was read at lines 1 to 60 (line 183), by one
+  grep (line 185) and at lines 119 to 176 (line 188). The rest was not read.
+7.4 Design log and register (V2 items that name D-002; PROPOSED or DECIDED as marked there)
+- DR-032 (docs/governance/V2_DECISION_REGISTER.md:43, DECIDED): intraday instruments are checked for MIS eligibility
+  against current broker data, a signal that cannot trade as MIS is rejected and never converted to CNC; owned
+  elsewhere: "the eligibility pre-check mechanism (D-002)" (same line).
+- VP-37 (docs/governance/V2_DESIGN_LOG.md:248): products and eligibility; Ratify-at "Intent DECIDED (DR-032); G-002,
+  D-002".
+- VP-27 (docs/governance/V2_DESIGN_LOG.md:238): remove the legacy static symbol blacklist; "V2 decides separately
+  whether and how eligibility controls exist (for example suspended symbols, surveillance stages, broker MIS-blocked
+  symbols)"; left pending by Rama (23-Oct, Option B; DR-057, docs/governance/V2_DECISION_REGISTER.md:68), with D-002 the
+  remaining name in its Ratify-at cell after the Section C close (DR-066, docs/governance/V2_DECISION_REGISTER.md:77);
+  BK-01 (docs/governance/V2_DESIGN_LOG.md:534) OPEN.
+- BK-54 (docs/governance/V2_DESIGN_LOG.md:587, OPEN): the circuit-proximity reject has no recorded owner; "whether D-002
+  "Hard rejection gates" covers it, the battery or both is open"; cross-check D-002 and J. BK-58 (line 591, OPEN): G-14;
+  D-002 and D-003. BK-57 (line 590, OPEN): the PB01 wiring and hard_gate.py references in the PB01 files (C-011, J-010).
+- DR-067 (docs/governance/V2_DECISION_REGISTER.md:78): the D-001 freeze, with OSQ-03 to OSQ-06 and G-14 stored as BK-54
+  to BK-58.
+- No open question (Q-xx) in docs/governance/V2_DESIGN_LOG.md names D-002 in its area; its section 4 has the D-001 row
+  (line 323) and no D-002 row.
+7.5 Other frozen records and V2 inputs
+- C-004 (frozen, DR-057): the static exclusion list (docs/agenda/c-004_validation/C-004_manual.md:202, section 8;
+  rejected at the webhook edge, FIX-C) and MIS eligibility (line 273, section 10.3; the learned MIS blocklist and the
+  screener's pre-drop, shadow on the pinned configuration; "D-003 and G-007 own it"). C-004 V2 inputs
+  (docs/agenda/c-004_validation/C-004_v2_design_inputs.md:22): eligibility controls, owners "D-002, C-004".
+- B-008 V2 inputs (docs/agenda/b-008_market-open/B-008_v2_design_inputs.md:11), row 4: the window "checked at the door
+  and again in the pipeline"; owners "C-008, D-002".
+- C-008 (frozen, DR-061; docs/agenda/c-008_signal-processing/C-008_manual.md:30): owners elsewhere include "D topics
+  (screening and the gate and retest rules)".
+- A-001 (docs/agenda/a-001_system-purpose/A-001_manual.md:44): "secondary screening with hard gates and score"; A-002
+  (docs/agenda/a-002_trading-objectives/A-002_manual.md:96): "Signal qualification | Screening, hard gates, score";
+  A-008 (docs/agenda/a-008_strategy-model/A-008_manual.md:151): "the V3 hard-gate re-scale (scoring v3_hardgate_mode
+  "shadow"; "LIVE follows OLD")" among the shadow layers.
+- B-003 (docs/agenda/b-003_database-state-initialization/B-003_manual.md:230): scripts/v3_hardgate_parity_recompute.py
+  and v3_shadow_soak_report.py listed with direct read-only database access, not scheduled (names only here).
+- A-008 V2 inputs (docs/agenda/a-008_strategy-model/A-008_v2_design_inputs.md:122): carried to "D-001 to D-018
+  (filtration, extension guard, entry timing, ranking)".
+- A homonym, not D-002: B-001 V2 inputs (docs/agenda/b-001_vm-service-startup/B-001_v2_design_inputs.md:93) and VP-67
+  (docs/governance/V2_DESIGN_LOG.md:278) use "hard gate" for start prerequisites (a valid trading day, the start window,
+  the token step, configuration, a single instance), owned by B, M and I topics.
+
+========================================================================================================================
+8. EXISTING D-002 MATERIAL
+========================================================================================================================
+- FACT (V2 at e163529): no docs/agenda/d-002* folder and no tracked file whose name contains D-002 (509 tracked files;
+  38 agenda folders); "D-002" occurs on 104 lines of 33 tracked files, as the agenda title, an owner or a cross-check
+  target (section 7), and in the stored inputs of earlier topics.
+- No V2 record defines "Hard rejection gates" beyond the agenda title (a case-insensitive git grep of the V2 tree at
+  e163529: the phrase is on 9 lines of 8 files, each naming the title or asking about its scope). What the records give
+  D-002 comes in pieces: the eligibility pre-check mechanism (DR-032; VP-37), VP-27's ratification point, the window
+  layer (B-008 row 4, with C-008), and the open questions D-001 handed on (BK-54, BK-58).
+- HISTORICAL: the 18-Sep legacy manual's chapter 06 "Filtering and trade decision" was NOT STARTED in the index supplied
+  on 24-Oct-2026 (C-008 IX-03); its later state: UNKNOWN (the records repository is not a source of this prompt).
+
+========================================================================================================================
+9. PLANNED DOCUMENTATION SEQUENCE (PROPOSED: W-9, W-10 and the D-001 practice)
+========================================================================================================================
+Each step after this one waits for ChatGPT; no module is read before its authorisation.
+- S0 (this step): this inventory, the gap and boundary register, the change note, the ChatGPT review handoff and the
+  final check.
+- S1 ChatGPT's Stage 0 review: confirms or corrects the inventory; settles or narrows OSQ-01 to OSQ-10 (D-002's legacy
+  scope and its boundaries with D-001, D-003, D-018, J and the other owners); names the Stage 1 files, read modes and
+  scopes. A Rama question, if any, goes on an answer sheet then.
+- S2 Stage 1, only as authorised: count-only searches, each zero with a positive control; then gated reads of the named
+  files at their pinned blobs through the masking filter, with every token-source input the filter loads disclosed in
+  the read log (the standing rule of 26-Oct-2026, D-001_RAMA_SCOPE_DECISION_RECORD_26-OCT-2026.txt); a source-evidence
+  file, a files-read log, a boundary matrix, a gap register, a change note and a final check. No test, script or code is
+  run; no host or service is contacted.
+- S3 ChatGPT's Stage 1 reconciliation and, if needed, a scope decision for Rama (as at D-001); then the drafting prompt.
+- S4 D-002_manual.md, revision 0 onwards, each revision after a ChatGPT review: legacy fact only (W-1); cross-topic
+  points as bookmarks (W-9); V2 points as PROPOSED inputs for their owners (W-6); D-001, D-003 and D-018 kept separate;
+  VP-27 and VP-37 and BK-54, BK-57 and BK-58 dispositioned or carried at the close.
+- S5 The final storage package (W-4, W-10): the frozen manual and companions in docs/agenda/ (folder name PROPOSED:
+  d-002_hard-rejection-gates), the register row, the design log updates, rehearsed push commands, one zip. Carried into
+  it from D-001: the post-push result file (to docs/inputs) and the D-001 push line for the design log, section 6. These
+  Stage 0 inputs and files are stored with it in docs/inputs/chatgpt_originals_and_replies/.
+- S6 Rama runs the push commands; Claude verifies GitHub main against the manifest.
+
+========================================================================================================================
+10. NOT DONE AND LIMITS
+========================================================================================================================
+- No legacy file content was opened, read, searched, counted or run, the README included; the masking filter was not
+  run, so there is no token-source input to disclose. No blob was fetched: the clone's object count is unchanged
+  (section 3.3; re-checked in the final check).
+- No legacy history command (no log, show, grep of a revision or ls-tree -l). The only commit-object access was
+  rev-parse of the pin's tree; the object store was listed by ID and type only.
+- The GitHub API was not used; the records and sandbox repositories were not accessed.
+- Frozen manuals and other V2 records are cited, not re-verified against legacy source. D-001's Stage 1 counts and reads
+  are cited as HISTORICAL.
+- Sizes come from C-010's record of the local object store; line counts at the pin are not established here, except
+  those D-001's read log records. Path names are not evidence of function.
+- No host, VM, broker, webhook, Chartink, service or database was contacted; neither repository was changed.
+
+========================================================================================================================
+11. TOOLS (SHA-256 at the build)
+========================================================================================================================
+tree_check_d002.py     5B557DA1EB58528C03D7005525B1411B5763699FC408AF3CCDB8221B079B7F2E
+pathscan_d002.py       B9789D93FE24095F5AF8DD28AEFDB42629E11AD6D6C9FF7432E83B4A80C8A76A
+groups_d002.py         67B6AAD79D013FEF7AE2EF2DEFC468F4274BBA8C851AB0E26C7AA88313CFFBB0
+build_s0_d002.py       36B6547377F02F9470EAD410A2669018D6F6A425A3DA014AAC0A66F401784D8B
+All in <SCRATCHPAD>/d002/tools/. check_s0_d002.py runs the final checks and writes
+  D-002_STAGE0_FINAL_CHECK_26-OCT-2026.txt.

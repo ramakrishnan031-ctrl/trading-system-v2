@@ -1,0 +1,50 @@
+D-002 — CHATGPT REVIEW OF STAGE 1 EVIDENCE
+Date: 26-Oct-2026 (IST)
+Status: CONDITIONAL ACCEPTANCE — ONE WORDING CORRECTION REQUIRED BEFORE MANUAL DRAFTING.
+
+1. REVIEW VERDICT
+The Stage 1 package is methodically documented and is acceptable as an evidence-gathering result, subject to the correction in section 2. The final check reports 12/12 checks passed, the 16 authorised files read at the pinned baseline, 50 logged reads, 13 searches, 64 filter invocations, no mismatches, no unexpected legacy opens, no repository changes and the read lock re-engaged. These are Claude's recorded verification results; this review has inspected the supplied package but has not independently rerun the checks or re-read the remote repository.
+
+The safety disclosure is material and should remain in the permanent audit record: every started filter run loaded HR-1 and HR-2 in full, value-blind, as token sources; they were not printed or used as evidence. The package transparently logs those inputs and the two deviations. No further source reads are authorised or needed to fix the wording issue below.
+
+2. REQUIRED CORRECTION — CIRCUIT-PROXIMITY WORDING
+The Stage 1 handoff and the opening summary of the source-evidence sheet compress SC-04 too broadly. They say, in effect, that the circuit-proximity function “rejects ... whenever the enforce branch is not taken.” That wording can be read as an unconditional rejection and is not accurate.
+
+Correct statement:
+“When the HardGate enforce branch is not taken, screen() invokes the circuit-proximity check at step 1b. It rejects only if circuit_proximity_reason returns a reason. The function can fail open—for example, when disabled, when entry data is missing, or when neither usable circuit band is available. Under the recorded repository configuration the flag is true, so this path can reject when the function's price/band conditions are met. Repository configuration is not proof of deployed or runtime state.”
+
+The detailed SC-04 body already describes the conditional “A reason gives status REJECTED_CIRCUIT_PROXIMITY” and HG-03 records fail-open cases. This is a summary-level wording correction, not a new finding and not a reason for further source access.
+
+Update consistently in:
+- D-002_STAGE1_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt
+- D-002_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt, section 0 (findings in brief)
+- Any duplicate summary sentence in the boundary matrix or gap register, if present.
+Do not change SC-04's underlying evidence or claim IDs unless the correction is needed for consistency. Re-run the package's text/hash/citation checks and regenerate the final check with the new hashes. Preserve the prior files as the previous revision or clearly note the superseding revision; do not silently overwrite audit history.
+
+3. SUBSTANTIVE FINDINGS ACCEPTED, WITH SCOPE LIMITS
+- HardGate.evaluate has the documented ordered battery: at-circuit, circuit proximity, freshness; liquidity is a no-op; the return contract is GateVerdict.
+- The repository mode is shadow. In the source-described shadow path, HardGate's result is logged after scoring and does not change that screener decision. This does not establish deployed state.
+- Step 1b is a separate circuit-proximity rejection path when the enforce branch is not taken; its actual rejection remains conditional on the shared function returning a reason.
+- The MIS learned-blocklist is logging-only on the recorded repository values and remains a cross-reference, not a transfer of ownership to D-002.
+- No F&O-ban consumer was found in the authorised files; consumers outside those files remain UNKNOWN. Do not upgrade the bounded search result to a repository-wide absence claim.
+- The index universe is described as regime data, not an admission list, within the authorised evidence.
+- The two processor entry-window checks are before screen(); no entry-window check was identified in the inspected HardGate/screener scope. The receiver/door check and the two further processor paths remain explicitly unread.
+- V3/PB01 references concern playbook gates, not calls to HardGate.evaluate or the circuit-proximity function, within the inspected files. Their callers/deployed execution remain UNKNOWN.
+
+4. OWNERSHIP / OPEN ITEMS
+Keep all unresolved ownership labels and references exactly visible: BK-54 (step-1b circuit-proximity reject); the battery's J by A-008 vs D-002 agenda-name boundary; BK-58 (step-9 circuit wording, D-002/D-003); BK-57 (C-011/J-010); the B-008 row-4 window-layer ownership. Do not resolve these by inference.
+Keep G-10 to G-14 as UNKNOWN / NOT READ. No further reads are required for the D-002 draft if the manual states these limitations and cross-references the correct owners. Do not inspect protected records or widen the search.
+
+5. NEXT AUTHORISED STEP
+After the wording correction and successful package checks, Claude may prepare a D-002 manual DRAFT ONLY from the corrected Stage 1 evidence and frozen governance inputs. The draft must:
+- be factual, evidence-backed and written as a legacy manual, not a V2 proposal;
+- cite exact pinned path, blob ID and line range for source claims;
+- preserve FACT (SOURCE/TEXT/CONFIG/COUNT/METADATA), HISTORICAL, INTERPRETATION, UNKNOWN, OPEN and known limitations distinctly;
+- include signal-path order, branch conditions, return/status contracts, configuration caveats and hand-offs;
+- include a boundary/ownership table and the G-10 to G-14 limitations;
+- avoid converting comments into behaviour or repository config into deployed behaviour;
+- not answer unresolved owner questions, not create a Rama answer sheet, and not read further source files;
+- not edit governance records, freeze/approve the manual, commit, push, or modify the legacy repository.
+Stop after producing the draft, source/citation audit, change note and final check. ChatGPT reviews the draft before any freeze/storage/push instruction.
+
+No substantive question is issued to Rama at this stage.

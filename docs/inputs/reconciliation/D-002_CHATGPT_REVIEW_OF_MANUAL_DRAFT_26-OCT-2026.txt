@@ -1,0 +1,35 @@
+D-002 — CHATGPT REVIEW OF MANUAL DRAFT 1
+Date: 26-Oct-2026 (IST)
+Decision: CONDITIONAL ACCEPTANCE — MAKE ONE PRECISION CORRECTION, THEN RE-RUN CHECKS.
+
+1. OVERALL VERDICT
+The manual is well structured, evidence-led and appropriately labelled DRAFT / NOT FROZEN. It preserves the legacy pin, source labels, exact citation ranges, eligibility boundaries, the masking-input disclosure, the unresolved owners and G-10 to G-14 limitations. The corrected circuit-proximity wording is materially accurate in the revised evidence sheet, handoff and matrix. The reported Stage 1 checks are 15/15 PASS and draft checks are 16/16 PASS; I have reviewed the supplied files and these reported results, but have not independently rerun Claude's tools or re-read the legacy repository.
+
+Do not freeze, commit, push or change governance records. One general-mode qualification is needed in the manual before the draft is ready for the next review.
+
+2. REQUIRED CORRECTION — SHADOW COMPARE REQUIRES A HARD GATE INSTANCE
+The Stage 1 evidence SC-05 expressly says that the shadow comparison runs “in shadow mode (with a hard gate set).” The manual sometimes shortens this to “in shadow mode” without that condition. Since the same manual records that the constructor's hard_gate defaults to None (MC-20), the unqualified wording is too broad for the general path description, even though the repository wiring evidence says main.py injects a HardGate.
+
+Please qualify these places consistently:
+- Section 3 diagram, line describing the post-score shadow comparison.
+- MC-06, section 3.5: the sentence saying the V3 shadow compare occurs in shadow mode.
+- Section 5 mode table, HardGate.evaluate row: make clear the shadow comparison runs only when mode is shadow AND a hard gate is set; off means no shadow compare, and no gate instance means no HardGate.evaluate call.
+- MC-19, section 5: qualify the shadow-mode sentence with “with a hard gate set.”
+- Check any other generic sentence that describes shadow comparison as unconditional.
+
+Suggested wording:
+“In shadow mode, when a HardGate instance is set, screen() runs the shadow comparison after scoring and logs the HardGate verdict; the result does not change the existing screening decision. If no HardGate instance is set, HardGate.evaluate cannot run through this path.”
+
+Keep the distinction between the repository's observed wiring/configuration and the general branch contract. Do not change the Stage 1 source evidence, claims, owners or scope; SC-05 already contains the necessary condition. Update the citation audit only if its text duplicates a changed sentence or requires a synchronized wording update. Add the exact correction to the change note and regenerate hashes/checks.
+
+3. FINDINGS ACCEPTED
+- Step 1b circuit proximity is conditional: it rejects only when circuit_proximity_reason returns a reason and may fail open. The revised wording no longer claims unconditional rejection.
+- HardGate.evaluate's ordered battery and GateVerdict contract are clearly distinguished from the step-1b path.
+- Repository config is consistently labelled FACT (CONFIG), not deployed truth.
+- MIS learned-blocklist, F&O ban-list and index-universe boundaries remain appropriately bounded.
+- Entry-window checks, door check and unread processor paths are kept within the stated evidence limits.
+- V3/PB01 calls are separated from the HardGate battery; the manual does not infer whether those callers run.
+- Open ownership items and G-10 to G-14 remain unresolved/unknown rather than being silently decided.
+
+4. NEXT STEP
+Make only the shadow-compare qualification correction; run the draft's citation, quote, label, boundary, safety, hash and final-check suite again. Keep the manual DRAFT / NOT FROZEN and stop for ChatGPT's review. No additional legacy reads, broad searches, runtime access, implementation, governance edits, freeze, commit or push are authorised.

@@ -1,0 +1,127 @@
+D-002 - HARD REJECTION GATES: MANUAL DRAFT 1, REVISION 1 - CHANGE NOTE
+Date: 26-Oct-2026 (IST). Prepared by Claude. Answers D-002_CLAUDE_PROMPT_MANUAL_DRAFT_PRECISION_FIX_26-OCT-2026.txt with
+  D-002_CHATGPT_REVIEW_OF_MANUAL_DRAFT_26-OCT-2026.txt (both received at 13:33 IST). Revision 1 of the manual draft was
+  built at 13:41 IST from draft 1 as delivered.
+
+========================================================================================================================
+1. THE CORRECTION
+========================================================================================================================
+- The meaning used, from the review's section 2 and Stage 1 claim SC-05: in shadow mode, when a HardGate instance is
+  set, screen() runs the shadow comparison after scoring and logs the HardGate verdict; the result does not change the
+  existing screening decision; if no HardGate instance is set, HardGate.evaluate cannot run through this path.
+- Where: the four places the review names (C2 to C5) and three more found by sweeping every sentence of the draft that
+  says when the shadow comparison or HardGate.evaluate runs (C1, C6, C7; the sweep is check 16 of
+  D-002_MANUAL_DRAFT_FINAL_CHECK_REV1_26-OCT-2026.txt). Exact text, draft 1 then revision 1:
+C1  section 1.1, the third bullet
+    Draft 1:    - where and when the battery runs: the enforce branch and the shadow compare (section 5);
+    Revision 1: - where and when the battery runs: the enforce branch and the shadow compare, each only in its mode and
+                with a hard gate set (section 5);
+C2  section 3, the signal-path diagram, the step 5 line
+    Draft 1:      step 5  score; in shadow mode HardGate.evaluate is then logged, with no effect
+    Revision 1:   step 5  score; in shadow mode with a hard gate set, HardGate.evaluate is then logged, with no effect
+C3  MC-06 (section 3.5)
+    Draft 1:    in shadow mode, after the score and before the minimum-score check, the V3 shadow compare
+    Revision 1: in shadow mode with a hard gate set, after the score and before the minimum-score check, the V3 shadow
+                compare
+C4  section 5, the mode table, the HardGate.evaluate row, right-hand cell
+    Draft 1:    shadow mode: after the score, logged only `screening/secondary_screener.py:305-314`; off: no call (both
+                calls are behind those two mode tests)
+    Revision 1: shadow mode with a hard gate set: after the score, logged only
+                `screening/secondary_screener.py:305-314`; mode off, or no hard gate set: no call (each call needs its
+                mode and a hard gate set)
+C5a  MC-19 (section 5), the shadow-mode sentence
+    Draft 1:    In shadow mode, after the score, _log_v3_shadow_compare runs HardGate.evaluate
+    Revision 1: In shadow mode, when a HardGate instance is set, screen() runs the shadow comparison after scoring:
+                _log_v3_shadow_compare runs HardGate.evaluate
+C5b  MC-19 (section 5), the end of the same sentence and one sentence added
+    Draft 1:    it returns nothing and screen() uses no result from it `screening/secondary_screener.py:311-314`. FACT
+                (TEXT)
+    Revision 1: it returns nothing and screen() uses no result from it `screening/secondary_screener.py:311-314`, so the
+                result does not change the existing screening decision. If no HardGate instance is set,
+                HardGate.evaluate cannot run through this path (the constructor's default is None, MC-20). FACT (TEXT)
+C6  MC-22 (section 5), the repository wiring made explicit
+    Draft 1:    On the repository values the enforce branch is not taken and HardGate.evaluate runs only in the shadow
+                compare
+    Revision 1: On the repository values (mode shadow, MC-21) and the repository wiring (main.py builds a HardGate and
+                passes it to the screener, MC-13), the enforce branch is not taken and HardGate.evaluate runs only in
+                the shadow compare
+C7  section 9.1, the HardGate battery, shadow row, the Where cell
+    Draft 1:    | HardGate battery, shadow | after the score |
+    Revision 1: | HardGate battery, shadow | after the score, in shadow mode with a hard gate set |
+
+========================================================================================================================
+2. RECORD OF THE REVISION (bookkeeping; no finding involved)
+========================================================================================================================
+R1  the status line (replaced) and a revision paragraph after it (added)
+    Draft 1:    Status: DRAFT / NOT FROZEN. Draft 1 of 26-Oct-2026, prepared by Claude for ChatGPT's review under
+                D-002_CLAUDE_PROMPT_CORRECTION_AND_MANUAL_DRAFT_26-OCT-2026.txt (Part B). Not reviewed, not approved,
+                not frozen and not stored in the V2 repository; it records no V2 decision and makes no V2
+                recommendation.
+    Revision 1: Status: DRAFT / NOT FROZEN. Draft 1, revision 1, of 26-Oct-2026, prepared by Claude for ChatGPT's review
+                under D-002_CLAUDE_PROMPT_CORRECTION_AND_MANUAL_DRAFT_26-OCT-2026.txt (Part B) and
+                D-002_CLAUDE_PROMPT_MANUAL_DRAFT_PRECISION_FIX_26-OCT-2026.txt. Draft 1 was conditionally accepted
+                (D-002_CHATGPT_REVIEW_OF_MANUAL_DRAFT_26-OCT-2026.txt); this revision is not yet reviewed, not approved,
+                not frozen and not stored in the V2 repository; it records no V2 decision and makes no V2
+                recommendation.
+    Added:      Revision 1 (26-Oct-2026, 13:41 IST) supersedes draft 1 as delivered,
+                D-002_HARD_REJECTION_GATES_MANUAL_DRAFT_26-OCT-2026.md (SHA-256
+                5C2948165BA2246DBC8A9DDF4A1B36FDAEDA937A79C5F4EEDF52E1B20920BA23), which is kept unchanged. It makes the
+                one correction that D-002_CHATGPT_REVIEW_OF_MANUAL_DRAFT_26-OCT-2026.txt, section 2, requires: the
+                shadow comparison runs in shadow mode only when a HardGate instance is set (SC-05). The condition is now
+                stated in section 1.1, the section 3 diagram (step 5), MC-06, the section 5 table (the HardGate.evaluate
+                row), MC-19, MC-22 (with the repository wiring) and the section 9.1 shadow row; this header, sections
+                1.2 and 2.2 and the input table (12.1) record the revision. No citation, label, claim ID, evidence
+                claim, finding, owner, scope or open item changed, and the citation audit is unchanged. Details:
+                D-002_MANUAL_DRAFT_REV1_CHANGE_NOTE_26-OCT-2026.txt.
+R2  section 1.2, a bullet added after the Stage 1 review bullet
+    Added:      - ChatGPT's review of draft 1 (D-002_CHATGPT_REVIEW_OF_MANUAL_DRAFT_26-OCT-2026.txt): conditional
+                acceptance and the shadow-comparison qualification, made in revision 1 of this draft under
+                D-002_CLAUDE_PROMPT_MANUAL_DRAFT_PRECISION_FIX_26-OCT-2026.txt.
+R3  section 2.2, a bullet added after the draft bullet
+    Added:      - Revision 1 of this draft: the shadow-comparison qualification required by ChatGPT's review of draft 1,
+                from the same evidence (SC-05). No legacy file was opened, and no statement's citations, labels or
+                evidence claims changed.
+R4  section 12.1, two input rows added (the review of draft 1 and the precision-fix prompt)
+    Added:      | D-002_CHATGPT_REVIEW_OF_MANUAL_DRAFT_26-OCT-2026.txt |
+                C2BEEF1A55C2E2F74F13EA4B6DD565F96332ABC8A03EDE4669737338C75788F2 |
+    Added:      | D-002_CLAUDE_PROMPT_MANUAL_DRAFT_PRECISION_FIX_26-OCT-2026.txt |
+                89EBACADABBAC7DF8F69223720BED31896B58C1D7BB3913B62BD7E6B699EC6DD |
+
+========================================================================================================================
+3. NOT CHANGED
+========================================================================================================================
+- Every other line of the draft, byte for byte: revision 1 equals draft 1 with exactly the 12 edits above applied (check
+  17).
+- No statement's citations, labels, claim ID or evidence claims (MC-01 to MC-44); the Stage 1 source evidence, the
+  owners, the scope, the circuit-proximity correction, the open items and G-10 to G-14.
+- Left as written, being no statement of when the comparison runs: the section 3.5 heading and MC-09, which name the
+  shadow compare only; the general status rule of section 2.3; the repository values of MC-21; MC-39's sentence on the
+  off and shadow paths (step-9 scoring, not the shadow comparison).
+- The citation audit, D-002_MANUAL_CITATION_AUDIT_26-OCT-2026.txt (SHA-256
+  C55650863E9DD6FFCB8B83A4D85A73B83FBF9D66384FD2355988378DC0DE049C): the wording changes do not require it; its rows,
+  labels and evidence claims equal revision 1's (check 5). Its header still names draft 1, the file it was built with.
+- The Stage 1 revision 1 set and Part A's final check, as delivered.
+
+========================================================================================================================
+4. FILES
+========================================================================================================================
+- Changed: the manual, under a new name, D-002_HARD_REJECTION_GATES_MANUAL_DRAFT_REV1_26-OCT-2026.md (draft 1 kept).
+- New: this note; D-002_MANUAL_DRAFT_FINAL_CHECK_REV1_26-OCT-2026.txt;
+  D-002_MANUAL_DRAFT_CHATGPT_REVIEW_HANDOFF_REV1_26-OCT-2026.txt.
+- Unchanged: the citation audit; the Stage 1 revision 1 set (evidence sheet, matrix, handoff, final check and change
+  note).
+- Kept unchanged for audit, draft 1 as delivered:
+    D-002_HARD_REJECTION_GATES_MANUAL_DRAFT_26-OCT-2026.md
+      5C2948165BA2246DBC8A9DDF4A1B36FDAEDA937A79C5F4EEDF52E1B20920BA23
+    D-002_MANUAL_DRAFT_FINAL_CHECK_26-OCT-2026.txt  53AC6C526A5338B7A1D592BF83E23E303EB86AEA78CD1D575E0437A3AE389EC6
+    D-002_MANUAL_DRAFT_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt
+      E4D143ACB29E09C7AF60BE7DA93D74F97EC9BFA7B21041CAC7F5F5C550C28A0C
+
+========================================================================================================================
+5. METHOD, INPUTS AND CHECKS
+========================================================================================================================
+- build_draft_r1_d002.py applied the 12 declared edits to draft 1 as delivered, each old text found exactly once; no
+  legacy file was opened and no source was re-read.
+- Inputs: the two governing files of this round (their zip holds the same two files), draft 1, the revision 1 Stage 1
+  evidence (SC-05) and, for the checks, the saved Stage 1 outputs as before.
+- Checks: D-002_MANUAL_DRAFT_FINAL_CHECK_REV1_26-OCT-2026.txt (the checks run, their results and the hashes).

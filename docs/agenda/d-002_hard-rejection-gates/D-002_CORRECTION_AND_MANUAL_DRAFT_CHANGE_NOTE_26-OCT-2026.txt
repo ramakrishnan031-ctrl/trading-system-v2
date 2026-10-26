@@ -1,0 +1,104 @@
+D-002 - HARD REJECTION GATES: STAGE 1 REVISION 1 AND MANUAL DRAFT - CHANGE NOTE
+Date: 26-Oct-2026 (IST). Prepared by Claude. Answers D-002_CLAUDE_PROMPT_CORRECTION_AND_MANUAL_DRAFT_26-OCT-2026.txt
+  with D-002_CHATGPT_REVIEW_OF_STAGE1_EVIDENCE_26-OCT-2026.txt (both received at 12:53 IST). Part A is the change note
+  of revision 1 of the Stage 1 package; Part B records the first manual draft.
+
+========================================================================================================================
+PART A - THE CORRECTION: REVISION 1 OF THE STAGE 1 PACKAGE
+========================================================================================================================
+A.1 What was corrected, exactly
+- D-002_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt, section 0 (findings in brief), the second bullet. Revision 0 read:
+    "Where it can refuse: the circuit-proximity function rejects at the screener's step 1b whenever the enforce branch
+    is not taken, REJECTED_CIRCUIT_PROXIMITY, before the step pipeline (SC-04); the HardGate battery refuses only on the
+    enforce branch, REJECTED_<reason> (SC-03), and in shadow is computed and logged after scoring without effect
+    (SC-05). The repository values are shadow and the flag true (WS-02, WS-03), so on the repository configuration only
+    the circuit-proximity rule can refuse (WS-04; deployed state not established)."
+  D-002_STAGE1_SOURCE_EVIDENCE_REV1_26-OCT-2026.txt now reads: "Where it can refuse. When the HardGate enforce branch is
+    not taken, screen() invokes the circuit-proximity check at step 1b. It rejects only if circuit_proximity_reason
+    returns a reason. The function can fail open - for example, when disabled, when entry data is missing, or when
+    neither usable circuit band is available. Under the recorded repository configuration the flag is true, so this path
+    can reject when the function's price/band conditions are met. Repository configuration is not proof of deployed or
+    runtime state. (HG-03, SC-04, WS-03; a reason gives REJECTED_CIRCUIT_PROXIMITY, before the step pipeline.) The
+    HardGate battery refuses only on the enforce branch, REJECTED_<reason> (SC-03), and in shadow is computed and logged
+    after scoring without effect (SC-05). The repository mode is shadow (WS-02), so on the repository configuration the
+    battery logs only, and the circuit-proximity rule is the only hard_gate.py logic that can refuse on the screener's
+    path (WS-04)."
+- D-002_STAGE1_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt, section 3 (what the evidence shows), the second bullet. Revision
+    0 read: "It refuses only on the enforce branch (REJECTED_<reason>, before scoring); in shadow it is logged after
+    scoring with no effect. The circuit-proximity function it shares rejects at step 1b whenever the enforce branch is
+    not taken (SC-03 to SC-05). Repository values: shadow, flag true (WS-02 to WS-04)."
+  D-002_STAGE1_CHATGPT_REVIEW_HANDOFF_REV1_26-OCT-2026.txt now reads: "The HardGate battery refuses only on the enforce
+    branch (REJECTED_<reason>, before scoring); in shadow it is logged after scoring with no effect (SC-03, SC-05). When
+    the HardGate enforce branch is not taken, screen() invokes the circuit-proximity check at step 1b. It rejects only
+    if circuit_proximity_reason returns a reason. The function can fail open - for example, when disabled, when entry
+    data is missing, or when neither usable circuit band is available. Under the recorded repository configuration the
+    flag is true, so this path can reject when the function's price/band conditions are met. Repository configuration is
+    not proof of deployed or runtime state. (HG-03, SC-04; repository values: mode shadow, flag true, WS-02 to WS-04.)"
+- D-002_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt, part B, entry X07 - a consistency edit: its can-refuse field could be
+    read as unconditional. Revision 0 read: "X07 Circuit-proximity reject - where: screen() step 1b; can refuse on the
+    repository values: yes (flag true); evidence: HG-03, SC-04; owner as recorded: unresolved (D-001 M12; BK-54); D-002
+    relation: in the gate map (OSQ-02); status: FACT; OPEN."
+  D-002_STAGE1_BOUNDARY_MATRIX_REV1_26-OCT-2026.txt now reads: "X07 Circuit-proximity reject - where: screen() step 1b,
+    when the enforce branch is not taken; can refuse on the repository values: yes, only when circuit_proximity_reason
+    returns a reason (flag true; it fails open when disabled, when entry data is missing or when neither usable circuit
+    band is available); evidence: HG-03, SC-04; owner as recorded: unresolved (D-001 M12; BK-54); D-002 relation: in the
+    gate map (OSQ-02); status: FACT; OPEN."
+- The corrected meaning is the review's section 2 statement, used word for word in the evidence sheet and the handoff
+  (its em dash shown as " - "); SC-04 and HG-03 already held it in detail.
+- Consistency edits with it: each revision 1 file has "(REVISION 1)" in its title and a revision line naming what it
+  supersedes and its SHA-256; the evidence sheet's date and companions lines, the matrix's date line (its companion's
+  name) and the handoff's section 2 (the files to review) name the revision 1 set.
+A.2 What was not changed
+- Every claim of the evidence sheet (41, HG-01 to NR-04): text, labels, citations, claim IDs, blobs and read numbers,
+  byte for byte; SC-04 and HG-03 kept intact; WS-04 kept (it already said the step-1b check "can reject").
+- Every other entry of the matrix (both parts), the handoff's sections 1, 4 and 5, and all findings, owners and scope.
+- Unchanged files, carried as they are: D-002_STAGE1_FILES_READ_LOG_26-OCT-2026.txt,
+  D-002_STAGE1_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt, D-002_STAGE1_CHANGE_NOTE_26-OCT-2026.txt. The register needed
+  no change: it names the mechanism (G-04, OSQ-02) and does not repeat the sentence.
+- No legacy file was read or searched; the read lock stayed engaged; no V2 record was changed.
+A.3 Audit history
+- Revision 0, as delivered at 12:38 IST, is kept unchanged in Claude's workspace (SHA-256 below); revision 1 uses new
+  file names (_REV1_) and each revision 1 file names the file it supersedes.
+    D-002_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt DE28B81EF4726C7CE73DA55EC6D68D3931D4EDE358AB4ED52F9C1E1302968550
+    D-002_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt E8EE52E0DA85BD2054E0F8DEA44093B40CA41ACF712DFFF67D612B0596C05F74
+    D-002_STAGE1_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt 18ACA407F2787D2FA9924CE710417C623C43831CE5E62B09C7E9CE567447106E
+    D-002_STAGE1_FINAL_CHECK_26-OCT-2026.txt 994BB56487ADD02854F5DBBF2A58B537D741837C0699A689CD0DDBC7279DD5AF
+    D-002_STAGE1_FILES_READ_LOG_26-OCT-2026.txt E58739AE34CADBBC5A31B82FB80F29D618A1DCEEA6892368A069D073363E8244
+    D-002_STAGE1_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt
+      452E11A9576BCBF37943898D37DF48DCD595780C34BB3F66AA188EFD07BBB5AA
+    D-002_STAGE1_CHANGE_NOTE_26-OCT-2026.txt 8566F99A46FEA31FADB72C3B2C7A55B7F11CE30F94ABA7B5565394C4B72A39EE
+A.4 Checks
+- The Stage 1 checks were re-run on the revision 1 set, with checks of revision 0's preservation, of the limits of the
+  edits and of the corrected wording: D-002_STAGE1_FINAL_CHECK_REV1_26-OCT-2026.txt (results and hashes there).
+
+========================================================================================================================
+PART B - THE MANUAL DRAFT
+========================================================================================================================
+B.1 What was produced
+- D-002_HARD_REJECTION_GATES_MANUAL_DRAFT_26-OCT-2026.md - DRAFT / NOT FROZEN, draft 1: sections 1 to 12, 44 statements
+  (MC-01 to MC-44), each labelled and mapped to the Stage 1 evidence claims it rests on.
+- D-002_MANUAL_CITATION_AUDIT_26-OCT-2026.txt - every MC statement with its evidence claims and each legacy citation as
+  path, pinned blob, line range and the Stage 1 reads that printed it.
+- D-002_MANUAL_DRAFT_FINAL_CHECK_26-OCT-2026.txt (the checks actually run) and
+  D-002_MANUAL_DRAFT_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt (short).
+B.2 Inputs and method
+- Only the revision 1 Stage 1 package (and its unchanged companions), the saved outputs of the logged Stage 1 reads
+  (Claude's workspace copies of the printed, masked lines, used for the citation audit, the checks and exact wording;
+  not a new read), frozen V2 records at e163529 and the governing inputs (ChatGPT's Stage 0 decisions, its Stage 1
+  review, this prompt). No legacy file, test or script was opened or run; no general knowledge was used to fill a gap.
+- Every legacy citation in an MC statement lies within the citations of the evidence claims that statement names, and
+  within lines printed by logged Stage 1 reads (checked).
+- The prompt's ten content areas: 1 - section 1; 2 - section 2; 3 - section 3; 4 - section 4; 5 - section 5; 6 - section
+  6; 7 - section 7; 8 - sections 9 and 10.1; 9 - section 10.2; 10 - section 12 and the citation audit. Section 8 adds
+  the V3 and PB01 boundary.
+B.3 Not done
+- No owner decided (BK-54, the battery, BK-58, BK-57 and the B-008 row 4 window layer stay open); G-10 to G-14 stay
+  UNKNOWN or NOT READ; no V2 decision or recommendation; no governance edit; no Rama answer sheet; no freeze, storage,
+  commit or push.
+
+========================================================================================================================
+C. CARRIED FORWARD
+========================================================================================================================
+- Owed to the D-002 freeze storage package (unchanged): from D-001, the post-push result file and the push line for the
+  design log; from D-002, the Stage 0, Stage 1 and this round's inputs and files, revision 0 included.
+- Next: ChatGPT's review of the revision 1 files and the draft.

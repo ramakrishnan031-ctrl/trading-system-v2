@@ -1,0 +1,58 @@
+D-002 - HARD REJECTION GATES: STAGE 1 REVIEW HANDOFF FOR CHATGPT (REVISION 1)
+Date: 26-Oct-2026 (IST). From Claude, after D-002_CLAUDE_PROMPT_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt and
+  D-002_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_26-OCT-2026.txt. Stage 1 is complete and Claude has stopped.
+Revision 1 (26-Oct-2026, 12:57 IST) supersedes revision 0, D-002_STAGE1_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt (SHA-256
+  18ACA407F2787D2FA9924CE710417C623C43831CE5E62B09C7E9CE567447106E), which is kept unchanged. It corrects the
+  circuit-proximity summary wording, as D-002_CHATGPT_REVIEW_OF_STAGE1_EVIDENCE_26-OCT-2026.txt, section 2, requires
+  (section 3, the second bullet; section 2 now names the revision 1 files). No claim, citation, label, claim ID,
+  finding, owner or scope changed. Details: D-002_CORRECTION_AND_MANUAL_DRAFT_CHANGE_NOTE_26-OCT-2026.txt.
+
+1. STATUS AND PINNED SOURCE
+- Legacy: trading-system-prod-snapshot, main = HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb (ls-remote 12:09 IST; no
+  other ref); tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa re-checked; clone unchanged (8,920 objects).
+- V2: main = e16352901a3c8327d03e4074503a670376f4d3fc. Nothing committed or pushed; no V2 record changed.
+- Safety gate before any read; read lock lifted 12:15:19 and re-engaged 12:22:43 IST; 13 searches and 50 reads of 16
+  authorised files; every masking input logged per run.
+
+2. FILES TO REVIEW (revision 1 set; SHA-256 values in D-002_STAGE1_FINAL_CHECK_REV1_26-OCT-2026.txt)
+- D-002_STAGE1_SOURCE_EVIDENCE_REV1_26-OCT-2026.txt: the claims (revision 1).
+- D-002_STAGE1_FILES_READ_LOG_26-OCT-2026.txt: the safety gate and every filter invocation with its masking inputs
+  (unchanged).
+- D-002_STAGE1_BOUNDARY_MATRIX_REV1_26-OCT-2026.txt: the boundary matrix (revision 1).
+- D-002_STAGE1_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt: the updated gaps and the OSQ decisions applied (unchanged).
+- D-002_STAGE1_CHANGE_NOTE_26-OCT-2026.txt: what changed and what is carried (unchanged).
+- D-002_CORRECTION_AND_MANUAL_DRAFT_CHANGE_NOTE_26-OCT-2026.txt: what revision 1 corrected and what it did not change.
+- D-002_STAGE1_FINAL_CHECK_REV1_26-OCT-2026.txt: checks and hashes (revision 1; revision 0 is
+  D-002_STAGE1_FINAL_CHECK_26-OCT-2026.txt).
+
+3. WHAT THE EVIDENCE SHOWS (short)
+- The hard gate is screening/hard_gate.py: HardGate.evaluate checks at-circuit, circuit proximity and freshness (60 s)
+  in that order, liquidity a no-op, and returns GateVerdict(passed, reason, evidence) (HG-02, HG-04).
+- The HardGate battery refuses only on the enforce branch (REJECTED_<reason>, before scoring); in shadow it is logged
+  after scoring with no effect (SC-03, SC-05). When the HardGate enforce branch is not taken, screen() invokes the
+  circuit-proximity check at step 1b. It rejects only if circuit_proximity_reason returns a reason. The function can
+  fail open - for example, when disabled, when entry data is missing, or when neither usable circuit band is available.
+  Under the recorded repository configuration the flag is true, so this path can reject when the function's price/band
+  conditions are met. Repository configuration is not proof of deployed or runtime state. (HG-03, SC-04; repository
+  values: mode shadow, flag true, WS-02 to WS-04.)
+- Eligibility: MIS pre-drop logging only on the repository values (owned elsewhere); the F&O ban list has no consumer in
+  the authorised files; the index universe is regime data (EL-01 to EL-04).
+- No window check in the hard gate or the screener; the processor's window refusals come first (WN-01, WN-02).
+- The V3 chain and the PB01 stages call only the playbook gates, as log-only or would-be verdicts by their comments
+  (VC-01 to VC-05).
+
+4. FOR CHATGPT'S REVIEW
+- Owners still open, as the decisions require: the step-1b reject (BK-54), the battery (J by A-008, D-002 by the agenda
+  name), BK-58 (D-002, D-003), BK-57 (C-011, J-010); the window layer named "C-008, D-002" by B-008 row 4.
+- Not established, outside this pass's files: G-10 (F&O ban consumers elsewhere), G-11 (callers of the V3 runner and the
+  PB01 stages), G-12 (the door window check), G-13 (orders/price_math.py), G-14 (two further processor window paths).
+  Claude proposes no further reads.
+- No genuine Rama decision; no answer sheet.
+
+5. COMPLIANCE
+Only the 22 authorised files could be read, through the approved masking filter; 16 were read in bounded ranges or
+  targeted lines; A06, the five tests and Group E were not opened; HR-1 and HR-2 were loaded by the filter as token
+  sources on every run that started, value-blind, and never displayed. No code, test or script run; no import; no host,
+  VM, broker, webhook, Chartink, service or database contacted; no history command, fetch or GitHub API; no repository
+  change. No credential, token, account or client identifier, host-record path or value, or session link appears in
+  these files. Stopped for ChatGPT's review.
