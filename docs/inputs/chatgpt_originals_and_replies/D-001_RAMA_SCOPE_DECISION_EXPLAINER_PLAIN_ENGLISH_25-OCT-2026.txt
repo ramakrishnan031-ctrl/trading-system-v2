@@ -1,0 +1,232 @@
+D-001 — RAMA SCOPE DECISION EXPLAINER
+Plain-English guide with real-market-style examples
+Date: 25-Oct-2026
+
+PURPOSE
+This guide helps you choose what the D-001 “Pre-filter” manual chapter should cover. It explains the three choices in plain English, with fictional market scenarios. It is about documenting the DEAD legacy system accurately—not trading advice, not V2 design, and not permission to run or change the old system.
+
+============================================================
+1. WHAT ARE YOU BEING ASKED TO DECIDE?
+============================================================
+
+You are NOT deciding which filter makes more money, which old rule V2 should keep, or whether the legacy system should be repaired.
+
+You ARE deciding how wide the D-001 documentation chapter should be.
+
+The pinned source code calls the processor’s first block “Pre-flight checks”; it does not establish one source component formally named “Pre-filter”. Checks are spread across different places:
+
+1. Processor-side checks, before the Secondary Screener is called.
+2. Early checks inside the Secondary Screener, before its ten-step scoring pipeline.
+3. A separate broader HardGate.evaluate battery that runs in shadow mode under the repository configuration.
+
+Think of a shopping mall: an entrance desk checks entry, security checks people inside, and individual departments have their own rules. These are connected parts of a journey, but they are not automatically one department.
+
+============================================================
+2. SIMPLE HISTORICAL FLOW
+============================================================
+
+Incoming strategy signal
+    |
+    v
+LAYER 1 — BEFORE THE SECONDARY SCREENER
+    - Kill switch
+    - Global entry window
+    - Signal age/expiry
+    - Shadow-inning guard
+    - Strategy lookup/control
+    - Strategy-specific time window
+    - Strategy governor
+    |
+    v
+LAYER 2 — EARLY CHECKS INSIDE THE SECONDARY SCREENER
+    - MIS learned-blocklist pre-drop
+    - Quote availability
+    - Circuit-proximity rule
+    |
+    v
+LAYER 3 — TEN-STEP EXECUTOR AND SCORING
+    - Ten screening steps
+    - Score/tier/minimum-score decision
+    |
+    v
+Later processing / entry-related mechanisms
+
+This is a simplified map, not the complete trading flow.
+
+Important historical qualifications:
+- In the inspected repository configuration, the MIS filter is shadow=true: it logs what it would have dropped, then lets the signal fall through. Do not call it an active rejection under that configuration.
+- The early circuit-proximity rule can reject when its configured condition applies.
+- The broader V3 HardGate.evaluate battery is a separate mechanism. It is shadow on the repository configuration and logs its verdict rather than changing the live result. Do not describe all of hard_gate.py as “shadow-only”.
+- Signal age appears in multiple places: processor expiry is configured as 600 seconds; screener/executor age handling uses 60 seconds; the HardGate shadow battery also has a 60-second freshness rule. These are distinct checks, not one unified timer.
+- EntryGate is post-screening and described as dormant in a source comment; its caller search was not rerun in Stage 1. Retest diversion and entry throttling are later mechanisms, not automatically part of a pre-filter.
+- These findings describe the pinned repository, not a running or deployed system. The legacy system is dead/reference-only.
+
+============================================================
+3. OPTION A — PROCESSOR CHECKS ONLY
+============================================================
+
+D-001 would document:
+1. “Pre-flight” checks: kill switch, global entry window, signal expiry and shadow-inning guard.
+2. Strategy checks: strategy lookup, enabled/control check, strategy-specific window and strategy governor.
+3. The hand-off to SecondaryScreener.screen(), with links to other chapters for later checks.
+
+D-001 would NOT detail the MIS pre-drop, quote availability, circuit proximity, or ten-step scoring pipeline.
+
+FICTIONAL MARKET EXAMPLE
+At 10:20 a strategy produces a BUY signal for ABC Ltd.
+- If the kill switch is active, the signal stops before the screener.
+- If the global entry window is closed, it stops before the screener.
+- If the signal is too old for the processor’s expiry rule, it stops.
+- If the strategy is disabled or its own window/governor blocks it, it stops.
+- If all processor-side checks pass, the signal is handed to the Secondary Screener. Option A ends its detailed explanation there.
+
+Advantages:
+- Narrow, easy to maintain, and closely aligned with the processor’s named “Pre-flight checks”.
+- Least likely to duplicate the existing D-003 ownership of screener checks.
+
+Disadvantages:
+- Anyone asking “what can stop a signal before scoring?” must follow cross-references to other chapters.
+- The title “Pre-filter” could confuse readers unless the manual defines it narrowly.
+
+Choose A if you want D-001 to mean only the checks before SecondaryScreener.screen() is called.
+
+============================================================
+4. OPTION B — ALL EARLY CHECKS BEFORE THE TEN-STEP PIPELINE
+============================================================
+
+D-001 would include everything in Option A PLUS the screener’s early checks:
+- MIS learned-blocklist pre-drop.
+- Quote availability.
+- Circuit-proximity rejection.
+
+It would stop before the ten-step executor/scoring pipeline. Existing assignments to D-003 and unresolved D-002 boundaries must be cross-referenced, not silently moved. The broader HardGate.evaluate battery stays separate.
+
+FICTIONAL MARKET EXAMPLE
+A strategy produces a BUY signal for ABC Ltd at 10:20.
+1. Processor checks pass.
+2. The signal reaches the screener.
+3. The MIS blocklist says the symbol was recently blocked. Under the inspected repository configuration this check is shadow: it logs the would-drop, but the signal falls through.
+4. Quote availability is checked. If the required quote is unavailable, the observed path can skip/reject the signal.
+5. Circuit proximity is checked. If the configured condition applies, the early circuit-proximity rule can reject the signal.
+6. A signal that survives the early checks reaches the ten-step executor/scoring pipeline.
+
+Advantages:
+- One chapter tells a wider story of checks before the ten-step scoring pipeline.
+- Readers can see the processor and screener early checks in sequence.
+
+Disadvantages:
+- It groups logic that lives in different source components.
+- It can duplicate D-003 and blur unresolved D-002 ownership unless cross-references are precise.
+- “Before the ten-step pipeline” is a useful documentation boundary, but not evidence that the code treats all these checks as one named component.
+
+Choose B if your main goal is one narrative of all early checks before the ten-step executor, accepting the need for strong cross-references.
+
+============================================================
+5. OPTION C — BOUNDARY-MAP CHAPTER (MY RECOMMENDATION)
+============================================================
+
+D-001 would provide a concise factual map of:
+1. Processor-side pre-flight and strategy checks.
+2. Early checks inside SecondaryScreener.screen().
+3. The separate broader HardGate.evaluate shadow battery.
+
+It would explain where each layer lives, what it does at a high level, where the hand-offs occur, whether behaviour is active/shadow/dormant/unresolved in the pinned repository configuration, and which existing chapter owns the detailed treatment.
+
+It would NOT take ownership of every mechanism or repeat every formula and check in full. It would link to the existing owners.
+
+FICTIONAL MARKET EXAMPLE
+A strategy produces a BUY signal for ABC Ltd.
+- Processor checks decide whether the signal can reach the screener.
+- The screener’s early checks determine whether it can reach the ten-step scoring pipeline.
+- The separate HardGate battery produces a shadow verdict under the repository configuration; that verdict is logged but does not change the live result.
+- D-001’s map points the reader to the correct chapter for detailed treatment of each mechanism. It does not pretend these are one component or transfer ownership.
+
+Advantages:
+- Best protects existing governance assignments.
+- Makes confusing boundaries and hand-offs clear.
+- Reduces duplicate material across D-002, D-003, Section C, J and other assigned topics.
+- Supports a complete high-level understanding without making premature V2 decisions.
+
+Disadvantages:
+- It reads more like a map/index chapter than one single filter component.
+- Readers seeking every detailed rule in one place must follow cross-references.
+- It needs a clear title/scope statement so “Pre-filter” is not mistaken for a source-named module.
+
+Choose C if factual accuracy, chapter ownership and boundary clarity are the priorities.
+
+============================================================
+6. QUICK COMPARISON
+============================================================
+
+OPTION A
+Coverage: checks before SecondaryScreener.screen()
+Simplicity: high
+Duplication risk: low
+Risk readers miss early screener checks: higher
+Best for: a narrow processor-side chapter.
+
+OPTION B
+Coverage: processor checks plus early screener checks before the ten-step pipeline
+Simplicity: lower; spans components
+Duplication/ownership risk: highest
+Best for: a single narrative of all early blockers before scoring.
+
+OPTION C
+Coverage: maps all three nearby layers and their owners without absorbing their detailed logic
+Simplicity: medium
+Duplication risk: low if it stays a map
+Best for: preserving the factual record and governance boundaries.
+
+============================================================
+7. MY SUGGESTION
+============================================================
+
+I recommend OPTION C — BOUNDARY-MAP CHAPTER.
+
+Reasons:
+1. The source calls the first processor block “Pre-flight checks”; it does not establish a single module called “Pre-filter”.
+2. The relevant checks live in different components and at different points in the flow.
+3. Existing records already assign some mechanisms to Section C, D-003, J and other agenda topics.
+4. A boundary map documents the actual historical structure without moving owners or duplicating whole chapters.
+5. It can show the complete high-level journey with a flow diagram and cross-references while leaving detailed treatment to the existing owners.
+
+SUGGESTED SCOPE STATEMENT IF YOU CHOOSE C
+“D-001 documents the historical boundary and hand-off map for processor-side pre-flight/strategy checks, early checks inside SecondaryScreener.screen(), and the separate V3 HardGate shadow battery. It records pinned-repository behaviour and links to existing detailed owners. It does not rename these mechanisms as one legacy component, transfer ownership, decide V2 retention, or replace D-002/D-003/Section C/J manuals.”
+
+This is my recommendation, not a decision made on your behalf.
+
+============================================================
+8. FACTS, EXAMPLES AND UNKNOWNS
+============================================================
+
+Source-derived findings:
+- The first processor block is called “Pre-flight checks”.
+- Processor checks precede SecondaryScreener.screen().
+- The screener has early checks before its ten-step executor/scoring path.
+- The MIS filter is shadow in the inspected repository configuration.
+- The early circuit-proximity rule and broader HardGate.evaluate battery are distinct uses.
+- The broader HardGate battery is shadow on the repository configuration.
+- EntryGate/retest/throttle are later mechanisms, not automatically one pre-filter.
+- Some ownership questions remain open.
+
+Fictional illustrations:
+- ABC Ltd and the BUY-signal scenarios are invented teaching examples. They are not historical trades, actual fills, or performance claims.
+
+Unknown / not established:
+- Deployed/runtime configuration behaviour is not established by the repository configuration.
+- Count-only references to hard_gate in files not opened do not prove a PB01 hand-off into the processor/screener.
+- The intended D-001 scope cannot be inferred from code alone; it is a governance decision.
+
+============================================================
+9. HOW TO ANSWER THE SCOPE SHEET
+============================================================
+
+If you agree with my recommendation, mark:
+[X] OPTION C — BOUNDARY-MAP CHAPTER, NOT A SINGLE PIPELINE BLOCK
+
+You can add this note:
+“I choose Option C. Keep D-001 as a factual boundary/handoff map. Preserve all existing owners and cross-reference their detailed chapters. Do not duplicate full rule logic, move ownership, make V2 decisions, or proceed beyond the agreed D-001 scope without a separate review.”
+
+Choose B instead if you specifically want one chapter to narrate all checks before the ten-step executor. Choose A if you want the smallest chapter limited to processor-side checks.
+
+No option authorises changes to, or execution of, the legacy system.

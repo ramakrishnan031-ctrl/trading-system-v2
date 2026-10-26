@@ -1,0 +1,283 @@
+D-001 - PRE-FILTER: STAGE 1 FILES READ LOG
+Date: 25-Oct-2026 (IST). Companion of D-001_STAGE1_SOURCE_EVIDENCE_25-OCT-2026.txt.
+
+========================================================================================================================
+1. PIN, LOCK AND GATE
+========================================================================================================================
+- 18:54:02 IST tree check: the saved listing (1,438 rows) rebuilt with git mktree --missing gives the pinned commit's
+  tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa; the clone's HEAD is the pin; 8,920 local objects; never-open blobs
+  present 0.
+- The lock refused a read and a count before the lift (18:54:02). 18:54:07 IST LK-1: the lock lifted as a step of its
+  own (lock_d001.py). The gate test (gate_test_d001.py) then PASSED: 102 protected paths, 2 excluded July records, 26
+  Group E records, 14 rule-shaped names, a shared-blob path, a name outside the tree, 5 unlisted files and a malformed
+  range all refused; the 27 authorised files admitted; the object store unchanged.
+- Before the searches: the 292 working files of the runtime list and the authorised set hashed (git hash-object
+  --no-filters) equal to their pinned blobs.
+- 19:03:40 IST LK-2: the lock re-engaged; a read and a count attempt were then refused by it (lock check passed). The
+  clone afterwards: HEAD the pin, 8,920 objects, never-open blobs 0.
+
+========================================================================================================================
+2. COUNT-ONLY SEARCHES (S1-1; ccount_d001.py; per-file counts only, no line printed)
+========================================================================================================================
+Lists: auth_code (the 16 Group A and B source files), auth_cfg (the 4 configuration files), auth_tests (the 7 tests),
+  s_rt (the 281 runtime Python files of the C-010 scope register, SHA-256 4a6302df...; used only for the call-site
+  questions). Regular expressions as given, case-sensitive unless (?i).
+- Q01 hard_gate|HardGate over s_rt: 7 of 281 files, 24 lines. call sites: who references the hard gate module or class.
+    Files: main.py 4 (445fb0d8237a); screening/hard_gate.py 5 (a8e7e2e49675); screening/secondary_screener.py 9
+    (b6f8ff7223ad); scripts/v3_hardgate_parity_recompute.py 2 (3623a42b0d15); v3_chain/pb01_entry.py 1 (cbfd4752525f);
+    v3_chain/pb01_runner.py 2 (e87a5aa96464); v3_chain/runner.py 1 (a782f91f2f4f).
+- Q02 step_executor|StepExecutor over s_rt: 9 of 281 files, 37 lines. call sites: the step executor.
+    Files: main.py 5 (445fb0d8237a); ops_dashboard/backend/readers/db_reader.py 1 (f59e4f58fe51); screening/__init__.py
+    3 (f5069dd61fb8); screening/hard_gate.py 1 (a8e7e2e49675); screening/secondary_screener.py 13 (b6f8ff7223ad);
+    screening/step_executor.py 11 (d83b04860f0f); signals/signal_processor.py 1 (7fab0a02a302);
+    v3_chain/forward_shadow.py 1 (dc96649f0a9f); v3_chain/score.py 1 (8270d4981254).
+- Q03 quality_scorer|QualityScorer over s_rt: 7 of 281 files, 27 lines. call sites: the quality scorer.
+    Files: main.py 5 (445fb0d8237a); ops_dashboard/backend/services/system_logs.py 1 (773006336224);
+    screening/__init__.py 2 (f5069dd61fb8); screening/hard_gate.py 2 (a8e7e2e49675); screening/quality_scorer.py 6
+    (b125e9ce3243); screening/secondary_screener.py 7 (b6f8ff7223ad); signals/signal_processor.py 4 (7fab0a02a302).
+- Q04 secondary_screener|SecondaryScreener over s_rt: 9 of 281 files, 33 lines. call sites: the secondary screener.
+    Files: core/evidence_contract.py 1 (29fb84bc690d); core/logger.py 1 (8b79114a49b4); core/state_store.py 1
+    (11866117801b); main.py 5 (445fb0d8237a); ops_dashboard/backend/services/system_logs.py 1 (773006336224);
+    screening/__init__.py 2 (f5069dd61fb8); screening/hard_gate.py 2 (a8e7e2e49675); screening/secondary_screener.py 16
+    (b6f8ff7223ad); signals/signal_processor.py 4 (7fab0a02a302).
+- Q05 entry_gate|EntryGate over s_rt: 18 of 281 files, 85 lines. call sites: the entry gate.
+    Files: core/config_auditor.py 1 (054d58298b58); core/config_loader.py 5 (8635bca77531); core/evidence_contract.py 1
+    (29fb84bc690d); core/state_store.py 2 (11866117801b); main.py 17 (445fb0d8237a);
+    ops_dashboard/backend/api/analytics.py 1 (d8e9d100e1be); ops_dashboard/backend/services/audit.py 2 (f772aa60f53a);
+    ops_dashboard/backend/services/capacity.py 1 (44b8c9f13ba4); ops_dashboard/backend/services/config_view.py 9
+    (0d4929a1c990); ops_dashboard/backend/services/slippage_analytics.py 1 (6589bef40ec7);
+    ops_dashboard/backend/services/system_logs.py 1 (773006336224); orders/eod_squareoff.py 6 (54f6cd622335);
+    orders/order_placer.py 6 (e3a602909bef); reports/daily_trade_review.py 4 (c448b7976964); screening/entry_gate.py 21
+    (46b173171bdf); screening/retest_monitor.py 1 (26639d6ed5dd); scripts/system_manager.py 1 (04e776e60f98);
+    signals/signal_processor.py 5 (7fab0a02a302).
+- Q06 retest_monitor|RetestMonitor over s_rt: 9 of 281 files, 53 lines. call sites: the retest monitor.
+    Files: core/config_loader.py 1 (8635bca77531); core/evidence_contract.py 1 (29fb84bc690d); main.py 18
+    (445fb0d8237a); orders/eod_squareoff.py 8 (54f6cd622335); orders/structure_exit_manager.py 2 (6e4c58d8d2e8);
+    screening/retest_monitor.py 18 (26639d6ed5dd); signals/signal_processor.py 2 (7fab0a02a302);
+    sr_detector/zone_warmer.py 1 (a47058e77cfc); v3_chain/pb01_entry.py 2 (cbfd4752525f).
+- Q07 entry_throttle|EntryThrottle over s_rt: 2 of 281 files, 12 lines. call sites: the entry throttle.
+    Files: signals/entry_throttle.py 2 (b887a4be78a4); signals/signal_processor.py 10 (7fab0a02a302).
+- Q08 mis_blocklist|MisBlocklist|MISBlocklist over s_rt: 5 of 281 files, 23 lines. call sites: the MIS blocklist.
+    Files: core/config_loader.py 1 (8635bca77531); core/mis_blocklist.py 5 (1f91fedfbdd4); main.py 6 (445fb0d8237a);
+    orders/order_placer.py 6 (e3a602909bef); screening/secondary_screener.py 5 (b6f8ff7223ad).
+- Q09 \.screen\( over s_rt: 3 of 281 files, 3 lines. callers of screen().
+    Files: core/state_store.py 1 (11866117801b); screening/secondary_screener.py 1 (b6f8ff7223ad);
+    signals/signal_processor.py 1 (7fab0a02a302).
+- Q10 (?i)pre[ _.-]?filt over s_rt: 3 of 281 files, 4 lines. the word pre-filter in runtime code.
+    Files: capital/kill_switch.py 2 (3eb2ece050c3); core/config_snapshotter.py 1 (3bb8ce1de7ce); core/state_store.py 1
+    (11866117801b).
+- Q11 (?i)pre[ _.-]?filt over auth_cfg: 0 of 4 files, 0 lines. the word pre-filter in the four configuration files.
+- P02 (?i)filt over auth_cfg: 2 of 4 files, 2 lines (positive control for Q11). positive control for the configuration
+  list (a broader form of the term).
+- Q12 (?i)pre[ _.-]?filt over auth_tests: 0 of 7 files, 0 lines. the word pre-filter in the seven tests.
+- P03 (?i)filt|def test_ over auth_tests: 7 of 7 files, 276 lines (positive control for Q12). positive control for the
+  test list.
+- Q13 (?i)pre[ _-]?(check|flight) over auth_code: 4 of 16 files, 15 lines. the words pre-check and pre-flight in the
+  authorised code.
+    Files: capital/kill_switch.py 1 (3eb2ece050c3); main.py 5 (445fb0d8237a); signals/signal_processor.py 8
+    (7fab0a02a302); strategies/control.py 1 (b6eecb480b83).
+- Q14 (?i)hard[ _-]?(gate|reject) over auth_code: 4 of 16 files, 35 lines. hard gate or hard reject wording in the
+  authorised code.
+    Files: main.py 7 (445fb0d8237a); screening/hard_gate.py 10 (a8e7e2e49675); screening/secondary_screener.py 17
+    (b6f8ff7223ad); screening/step_executor.py 1 (d83b04860f0f).
+- Q15 (?i)v3_hardgate|hardgate_mode over auth_cfg: 1 of 4 files, 2 lines. the V3 hard-gate mode key in configuration.
+    Files: config/scoring_weights.yaml 2 (e9d6ede4c02d).
+- Q16 (?i)v3_hardgate|hardgate_mode over s_rt: 6 of 281 files, 13 lines. readers of the V3 hard-gate mode key.
+    Files: core/config_loader.py 3 (8635bca77531); core/evidence_contract.py 1 (29fb84bc690d); main.py 1 (445fb0d8237a);
+    screening/secondary_screener.py 2 (b6f8ff7223ad); scripts/v3_hardgate_parity_recompute.py 2 (3623a42b0d15);
+    scripts/v3_shadow_soak_report.py 4 (f4e59d87274c).
+- Q17 (?i)pb01|pb_01 over auth_code: 1 of 16 files, 31 lines. PB01 in the authorised code (the EOD / PB01 question).
+    Files: main.py 31 (445fb0d8237a).
+- Q18 (?i)\beod\b|eod_ over auth_code: 7 of 16 files, 215 lines. EOD in the authorised code (the EOD / PB01 question).
+    Files: capital/kill_switch.py 18 (3eb2ece050c3); core/market_windows.py 36 (25625e8cd109); main.py 121
+    (445fb0d8237a); orders/shadow_tracker.py 36 (850722541f41); screening/entry_gate.py 1 (46b173171bdf);
+    screening/retest_monitor.py 2 (26639d6ed5dd); screening/secondary_screener.py 1 (b6f8ff7223ad).
+- Q19 (?i)shadow over auth_code: 5 of 16 files, 109 lines. shadow wording in the authorised code (shadow or live only
+  where proven).
+    Files: main.py 31 (445fb0d8237a); orders/shadow_tracker.py 26 (850722541f41); screening/hard_gate.py 4
+    (a8e7e2e49675); screening/secondary_screener.py 15 (b6f8ff7223ad); signals/signal_processor.py 33 (7fab0a02a302).
+- Q20 REJECTED_|SKIPPED_ over auth_code: 4 of 16 files, 46 lines. status names written in the authorised code.
+    Files: screening/hard_gate.py 2 (a8e7e2e49675); screening/retest_monitor.py 2 (26639d6ed5dd);
+    screening/secondary_screener.py 19 (b6f8ff7223ad); signals/signal_processor.py 23 (7fab0a02a302).
+Zero results: Q11 and Q12; each has its positive control (P02, P03) with the same tool, flags and list. The read-time
+  zero grep (read 035) has its control in read 036.
+
+========================================================================================================================
+3. READS (S1-2; cread_d001.py through mr.py; every read matched its pinned blob before it ran)
+========================================================================================================================
+A long grep expression is shown with a space after each "|" so that it wraps; the expression run had no spaces there
+  (the exact text is in d001/code_read_log.tsv).
+Columns: read, time (IST), mode (range A:B, or grep REGEX with a printed-line cap), file, blob, lines in the file, lines
+  printed, masks, purpose. Masking: every printed line passed the filter (host tokens, secret shapes, identifier
+  shapes); for a grep the counts cover the whole file, for a range the range; a masked value is never printed. The
+  filter also reads the two host records value-blind to build its host-token list (nothing from them is printed), as at
+  every earlier topic.
+001 18:56:30 signals/signal_processor.py range 40:75 blob 7fab0a02a302; 2704 lines; 36 printed; masks {HOSTTOK: 0,
+    CLIENTID: 1} | s2 {}; imports: which screening modules the processor imports.
+002 18:56:35 signals/signal_processor.py range 1:39 blob 7fab0a02a302; 2704 lines; 39 printed; masks {HOSTTOK: 0} | s2
+    {}; module docstring: the processor's stated pipeline and boundaries.
+003 18:56:42 signals/signal_processor.py range 868:1060 blob 7fab0a02a302; 2704 lines; 193 printed; masks {HOSTTOK: 0} |
+    s2 {}; main path: the order of the checks before the screener and the screener call (_process_one).
+004 18:56:51 signals/signal_processor.py grep/cap40 "step_executor| StepExecutor| quality_scorer| QualityScorer|
+    secondary_screener| SecondaryScreener| entry_gate| EntryGate| retest_monitor| RetestMonitor| entry_throttle|
+    EntryThrottle| hard_gate| HardGate" blob 7fab0a02a302; 2704 lines; 26 printed; masks {HOSTTOK: 0, CLIENTID: 7,
+    ALNUM: 2} | s2 {}; processor references to the screening modules, the entry gate, the retest monitor and the
+    throttle (locate call sites).
+005 18:57:00 signals/signal_processor.py range 255:272 blob 7fab0a02a302; 2704 lines; 18 printed; masks {HOSTTOK: 0} |
+    s2 {}; throttle construction and its admit call on the main path.
+006 18:57:00 signals/signal_processor.py range 1380:1420 blob 7fab0a02a302; 2704 lines; 41 printed; masks {HOSTTOK: 0} |
+    s2 {}; throttle admit on the main path (after the late kill and shutdown checks).
+007 18:57:07 signals/signal_processor.py range 2008:2030 blob 7fab0a02a302; 2704 lines; 23 printed; masks {HOSTTOK: 0} |
+    s2 {}; the entry-gate resume path: what it re-runs and its dormancy note.
+008 18:57:08 signals/signal_processor.py range 2232:2242 blob 7fab0a02a302; 2704 lines; 11 printed; masks {HOSTTOK: 0} |
+    s2 {}; the dormancy comment on EntryGate.add().
+009 18:57:14 screening/secondary_screener.py range 1:122 blob b6f8ff7223ad; 706 lines; 122 printed; masks {HOSTTOK: 0} |
+    s2 {}; screener: module docstring, imports and construction (what it calls: step executor, scorer, hard gate).
+010 18:57:23 screening/secondary_screener.py range 123:330 blob b6f8ff7223ad; 706 lines; 208 printed; masks {HOSTTOK: 0}
+    | s2 {}; screen(): the order of its steps (MIS pre-drop, quote, circuit proximity, hard gate, executor, scorer, min
+    score, persist).
+011 18:57:33 screening/secondary_screener.py grep/cap50 "^\s*def |hard_gate|_hg_circuit|v3_mode" blob b6f8ff7223ad; 706
+    lines; 23 printed; masks {HOSTTOK: 0, CLIENTID: 3} | s2 {}; screener structure: its method definitions (locate the
+    helpers screen() calls).
+012 18:57:38 screening/secondary_screener.py range 330:379 blob b6f8ff7223ad; 706 lines; 50 printed; masks {HOSTTOK: 0}
+    | s2 {}; screen(): its end (PASSED and persist) and the circuit-proximity helper's delegation to the hard gate.
+013 18:57:39 screening/secondary_screener.py range 420:460 blob b6f8ff7223ad; 706 lines; 41 printed; masks {HOSTTOK: 0}
+    | s2 {}; the circuit-proximity helper and the head of the V3 enforce path (the hard gate's evaluate call).
+014 18:57:48 main.py grep/cap60 "HardGate| hard_gate| StepExecutor\(| QualityScorer\(| SecondaryScreener\(|
+    MisLearnedBlocklist| mis_blocklist=| mis_filter| EntryGate\(| RetestMonitor\(| RetestDiverter| SignalProcessor\(|
+    scoring_config| circuit_proximity" blob 445fb0d8237a; 4294 lines; 23 printed; masks {HOSTTOK: 0, CLIENTID: 19, KV:
+    10, ALNUM: 8, IPV4: 1} | s2 {}; wiring: where main.py builds the screener, step executor, scorer, hard gate, MIS
+    blocklist, entry gate, retest monitor and the processor.
+015 18:57:55 main.py range 3222:3300 blob 445fb0d8237a; 4294 lines; 79 printed; masks {HOSTTOK: 0, CLIENTID: 3} | s2 {};
+    wiring: construction of the scorer, step executor, hard gate and screener, with their config sources.
+016 18:58:07 main.py range 3572:3628 blob 445fb0d8237a; 4294 lines; 57 printed; masks {HOSTTOK: 0} | s2 {}; wiring: the
+    processor's constructor arguments (kill switch, windows, expiry, governor, throttle settings, trade type).
+017 18:58:19 main.py grep/cap31 "(?i)pb01" blob 445fb0d8237a; 4294 lines; 31 printed; masks {HOSTTOK: 0, CLIENTID: 19,
+    KV: 10, ALNUM: 8, IPV4: 1} | s2 {}; the EOD / PB01 question: what main.py passes to the PB01 stages (screener, hard
+    gate, processor or none).
+018 18:58:25 main.py range 3700:3766 blob 445fb0d8237a; 4294 lines; 67 printed; masks {HOSTTOK: 0, ALNUM: 6} | s2 {};
+    the EOD / PB01 question: the whole PB01 wiring block (which objects the PB01 stages receive).
+019 18:58:36 main.py range 3765:3812 blob 445fb0d8237a; 4294 lines; 48 printed; masks {HOSTTOK: 0} | s2 {}; wiring: the
+    retest monitor and diverter (built only when enabled) and their hand-off to the processor.
+020 18:58:36 main.py range 3832:3860 blob 445fb0d8237a; 4294 lines; 29 printed; masks {HOSTTOK: 0} | s2 {}; wiring: the
+    entry gate's construction and its link to the processor.
+021 18:58:55 main.py grep/cap20 "^\s*(_v2_on| _watchlist_on| _struct_exit_on| _v3_cfg| _sr_cfg| _watchlist_cfg|
+    mode_label)\s*=" blob 445fb0d8237a; 4294 lines; 8 printed; masks {HOSTTOK: 0, CLIENTID: 19, KV: 10, ALNUM: 8, IPV4:
+    1} | s2 {}; the flags that switch the retest divert and the V3 pieces on (definitions of _v2_on, _watchlist_on,
+    _v3_cfg).
+022 18:59:03 config/system_config.yaml grep/cap40 "^\s*(sr_detector| wait_for_retest_enabled| mis_filter|
+    circuit_proximity_reject_enabled| signal_processor| min_gap_between_entries_sec| entry_burst_window_sec|
+    entry_burst_max| per_symbol_cooldown_sec| signal_queue| expiry_sec| trade_type| force_intraday_only| entry_gate|
+    strategy_governor| watchlist| v3_chain| kill_switch)\s*:" blob bf742ae5c81c; 754 lines; 17 printed; masks {HOSTTOK:
+    5, IPV4: 2, KV: 1, CLIENTID: 1, ALNUM: 1} | s2 {}; configuration: the keys the authorised ranges read (sr_detector
+    retest flag, mis_filter, entry_gate circuit proximity, throttle, expiry, trade type).
+023 18:59:11 config/system_config.yaml range 170:182 blob bf742ae5c81c; 754 lines; 13 printed; masks {HOSTTOK: 0} | s2
+    {}; configuration: the mis_filter block the screener's MIS pre-drop reads.
+024 18:59:11 config/system_config.yaml range 619:621 blob bf742ae5c81c; 754 lines; 3 printed; masks {HOSTTOK: 0} | s2
+    {}; configuration: watchlist.enabled (the EOD / PB01 question).
+025 18:59:22 config/scoring_weights.yaml range 1:90 blob e9d6ede4c02d; 45 lines; 45 printed; masks {HOSTTOK: 0} | s2 {};
+    configuration: the scoring file (step weights, pass score, tiers, the V3 hard-gate mode and freshness keys the
+    screener and hard gate read).
+026 18:59:34 screening/secondary_screener.py range 530:582 blob b6f8ff7223ad; 706 lines; 53 printed; masks {HOSTTOK: 0}
+    | s2 {}; the V3 shadow compare (is the hard gate's verdict only logged?) and the MIS pre-drop decision helper.
+027 18:59:42 screening/hard_gate.py range 1:60 blob a8e7e2e49675; 467 lines; 60 printed; masks {HOSTTOK: 0} | s2 {};
+    hard gate: module docstring (its stated role and mode).
+028 18:59:42 screening/hard_gate.py grep/cap40 "^\s*def | ^class | REJECTED_| reason=| AT_CIRCUIT| CIRCUIT_PROXIMITY|
+    STALE| FRESH| LIQUID" blob a8e7e2e49675; 467 lines; 25 printed; masks {HOSTTOK: 0} | s2 {}; hard gate: its
+    functions, class, verdict reasons and callers' entry points.
+029 18:59:50 screening/hard_gate.py range 119:176 blob a8e7e2e49675; 467 lines; 58 printed; masks {HOSTTOK: 0} | s2 {};
+    hard gate: HardGate.evaluate (its checks and their order).
+030 18:59:59 screening/step_executor.py grep/cap50 "^\s*def |^class |REJECT|hard|STEPS|steps =|_step_[0-9]+" blob
+    d83b04860f0f; 424 lines; 31 printed; masks {HOSTTOK: 0, CLIENTID: 1} | s2 {}; step executor: its structure (the
+    steps, run_all, and any hard reject inside the steps).
+031 19:00:04 screening/step_executor.py range 118:220 blob d83b04860f0f; 424 lines; 103 printed; masks {HOSTTOK: 0} | s2
+    {}; step executor: run_all (how a step result becomes PASSED, REJECTED or ERROR).
+032 19:00:05 screening/step_executor.py range 397:424 blob d83b04860f0f; 424 lines; 28 printed; masks {HOSTTOK: 0} | s2
+    {}; step executor: steps 9 and 10 (circuit and signal age, which the hard gate mirrors).
+033 19:00:16 screening/quality_scorer.py grep/cap40 "^\s*def | ^class | circuit| signal_age| min_pass| threshold| hard|
+    == 0| dead| pinned" blob b125e9ce3243; 151 lines; 19 printed; masks {HOSTTOK: 0} | s2 {}; quality scorer: structure
+    (does any step act as a hard reject in the score?).
+034 19:00:22 screening/quality_scorer.py range 71:151 blob b125e9ce3243; 151 lines; 81 printed; masks {HOSTTOK: 0} | s2
+    {}; quality scorer: score() (how step results become the total, tier and pass; any hard-fail rule).
+035 19:00:31 screening/secondary_screener.py grep/cap20 "rejected_at|step_statuses\[|== "REJECTED"" blob b6f8ff7223ad;
+    706 lines; 0 printed; masks {HOSTTOK: 0, CLIENTID: 3} | s2 {}; does the screener use the executor's rejected_at or
+    step statuses to reject (OFF path)?.
+036 19:00:38 screening/secondary_screener.py grep/cap5 "step_statuses" blob b6f8ff7223ad; 706 lines; 5 printed; masks
+    {HOSTTOK: 0, CLIENTID: 3} | s2 {}; positive control for the zero grep above: step_statuses is used in the same file.
+037 19:00:46 screening/entry_gate.py range 1:40 blob 46b173171bdf; 538 lines; 40 printed; masks {HOSTTOK: 0} | s2 {};
+    entry gate: its stated role (module docstring) and where it sits relative to screening.
+038 19:00:46 screening/entry_gate.py grep/cap30 "^\s*def |^class " blob 46b173171bdf; 538 lines; 16 printed; masks
+    {HOSTTOK: 0} | s2 {}; entry gate: its methods (add, release, rehydrate).
+039 19:00:58 screening/retest_monitor.py range 1:30 blob 26639d6ed5dd; 442 lines; 30 printed; masks {HOSTTOK: 0} | s2
+    {}; retest monitor: its stated role (module docstring).
+040 19:00:58 screening/retest_monitor.py grep/cap15 "^class |def maybe_divert|def enabled|self\.enabled|on_confirm" blob
+    26639d6ed5dd; 442 lines; 8 printed; masks {HOSTTOK: 0} | s2 {}; retest monitor: the diverter and monitor classes,
+    the divert entry point and its enabled switch.
+041 19:01:16 signals/signal_processor.py range 1974:2008 blob 7fab0a02a302; 2704 lines; 35 printed; masks {HOSTTOK: 0} |
+    s2 {}; the shadow-inning guard helper the main path calls (its fail-closed branch and the tracker call).
+042 19:01:22 capital/kill_switch.py grep/cap10 "def is_active|(?i)pre[ _.-]?filt|(?i)pre[ _-]?(check|flight)" blob
+    3eb2ece050c3; ? lines; 0 printed; masks s2 {}; kill switch: the is_active entry point the pre-flight calls, and the
+    lines where the word pre-filter occurs (Q10). FILTER ERROR: the regex put (?i) mid-pattern; nothing printed; re-run
+    as 043.
+043 19:01:31 capital/kill_switch.py grep/cap10 "(?i)def is_active|pre[ _.-]?filt|pre[ _-]?(check|flight)" blob
+    3eb2ece050c3; 2152 lines; 4 printed; masks {HOSTTOK: 0, CLIENTID: 9} | s2 {}; kill switch: is_active and the
+    pre-filter / pre-check words (re-run of the previous grep with the flag at the start).
+044 19:01:41 capital/kill_switch.py range 1838:1852 blob 3eb2ece050c3; 2152 lines; 15 printed; masks {HOSTTOK: 0} | s2
+    {}; kill switch: the context of the word pre-filter at line 1850 (is it a signal pre-filter or the kill switch's
+    own?).
+045 19:01:41 capital/kill_switch.py range 510:528 blob 3eb2ece050c3; 2152 lines; 19 printed; masks {HOSTTOK: 0} | s2 {};
+    kill switch: the entry check the pre-flight calls (is_active).
+046 19:01:47 core/market_windows.py grep/cap5 "def is_entry_allowed" blob 25625e8cd109; 334 lines; 2 printed; masks
+    {HOSTTOK: 0} | s2 {}; market windows: the two entry-window checks the pre-flight and the strategy window call.
+047 19:01:52 core/market_windows.py range 143:178 blob 25625e8cd109; 334 lines; 36 printed; masks {HOSTTOK: 0} | s2 {};
+    market windows: is_entry_allowed and is_entry_allowed_for_strategy (inputs and outcome).
+048 19:01:58 strategies/control.py grep/cap20 "^def |^CAUSE_|^class " blob b6eecb480b83; 118 lines; 6 printed; masks
+    {HOSTTOK: 0} | s2 {}; strategy control: strategy_will_trade (what the strategy-control gate checks and its causes).
+049 19:02:02 strategies/control.py range 67:118 blob b6eecb480b83; 118 lines; 52 printed; masks {HOSTTOK: 0} | s2 {};
+    strategy control: the body of strategy_will_trade (its layers and order).
+050 19:02:09 strategies/loader.py grep/cap12 "enabled" blob 99e83b192021; 214 lines; 1 printed; masks {HOSTTOK: 0,
+    CLIENTID: 1} | s2 {}; strategy loader: does it keep disabled strategies in the loaded set (which check then refuses
+    them: lookup or control)?.
+051 19:02:19 main.py grep/cap12 "^\s*strategies\s*=| load_strategies| \.enabled\b.*strateg| strateg.*\.enabled\b" blob
+    445fb0d8237a; 4294 lines; 2 printed; masks {HOSTTOK: 0, CLIENTID: 19, KV: 10, ALNUM: 8, IPV4: 1} | s2 {}; wiring:
+    where main.py loads the strategies passed to the processor (any enabled filter there?).
+052 19:02:26 capital/strategy_governor.py grep/cap10 "def check|def _|class " blob d17193c569c1; 197 lines; 7 printed;
+    masks {HOSTTOK: 0} | s2 {}; strategy governor: check() (when a strategy is paused; its fail-open branch).
+053 19:02:31 capital/strategy_governor.py range 49:90 blob d17193c569c1; 197 lines; 42 printed; masks {HOSTTOK: 0} | s2
+    {}; strategy governor: the body of check() (pause rule and fail-open).
+054 19:02:38 core/mis_blocklist.py grep/cap12 "def is_blocked|def info|def record_block|ttl" blob 1f91fedfbdd4; 161
+    lines; 8 printed; masks {HOSTTOK: 1} | s2 {}; MIS blocklist: the predicate the screener's pre-drop uses (is_blocked)
+    and the writer (record_block).
+055 19:02:43 core/mis_blocklist.py range 102:115 blob 1f91fedfbdd4; 161 lines; 14 printed; masks {HOSTTOK: 0} | s2 {};
+    MIS blocklist: is_blocked (the TTL rule the pre-drop applies).
+056 19:03:02 screening/secondary_screener.py grep/cap3 "(?i)\beod\b|eod_" blob b6f8ff7223ad; 706 lines; 1 printed; masks
+    {HOSTTOK: 0, CLIENTID: 3} | s2 {}; the EOD / PB01 question: the screener's only EOD-named line (Q18).
+057 19:03:03 signals/signal_processor.py grep/cap10 "(?i)pre[ _-]?(check|flight)" blob 7fab0a02a302; 2704 lines; 8
+    printed; masks {HOSTTOK: 0, CLIENTID: 7, ALNUM: 2} | s2 {}; the processor's own words for its first checks
+    (pre-check / pre-flight, Q13).
+058 19:03:12 signals/signal_processor.py range 410:424 blob 7fab0a02a302; 2704 lines; 15 printed; masks {HOSTTOK: 0} |
+    s2 {}; the FIX-007 rate-limiter pre-check: its run condition (C-008 ST-01; is it wired?).
+059 19:03:24 signals/signal_processor.py grep/cap8 "except _PipelineReject|REJECTED_\{|class _PipelineReject" blob
+    7fab0a02a302; 2704 lines; 8 printed; masks {HOSTTOK: 0, CLIENTID: 7, ALNUM: 2} | s2 {}; pre-check outputs: how a
+    _PipelineReject becomes a stored REJECTED_<check> status (the handler).
+060 19:03:29 signals/signal_processor.py range 1193:1232 blob 7fab0a02a302; 2704 lines; 40 printed; masks {HOSTTOK: 0} |
+    s2 {}; pre-check outputs: the main-path reject handler (status write, reservation release, counters).
+
+========================================================================================================================
+4. FILES CONSIDERED BUT NOT OPENED, AND WHY
+========================================================================================================================
+- config/scan_webhook_map.yaml: authorised, not needed; the processor reads app_config.scan_webhook_map.scanners
+  (main.py:3585) and the map's content is C-010's subject.
+- config/strategy_direction_registry.yaml: authorised, not needed; no read range referred to it.
+- config/strategies/*.yaml: not needed; the screener's thresholds are named (screening/secondary_screener.py:234-239)
+  and their values are D-003's and A-008's subject. No file was named in d001/s1/strategy_yaml_requests.tsv, so the gate
+  admitted none.
+- orders/shadow_tracker.py: authorised for a direct guard; the guard and its fail-closed branch are in the processor
+  (signals/signal_processor.py:1976-2008); is_tracking while disabled is C-008 [U-01], left open.
+- signals/entry_throttle.py: authorised; the call site and its place before placement
+  (signals/signal_processor.py:1407-1418) answered the question.
+- The seven tests: authorised as text; the source answered every question, so none was opened.
+- Outside the authorised set, with count-only hits, not opened: v3_chain/pb01_entry.py, v3_chain/pb01_runner.py,
+  v3_chain/runner.py, scripts/v3_hardgate_parity_recompute.py (Q01, Q16); core/config_snapshotter.py,
+  core/state_store.py (Q10); core/config_loader.py (the config mapping); every other runtime file.
+- Never opened: the never-open set, the two July records, the 26 Group E records, the README.

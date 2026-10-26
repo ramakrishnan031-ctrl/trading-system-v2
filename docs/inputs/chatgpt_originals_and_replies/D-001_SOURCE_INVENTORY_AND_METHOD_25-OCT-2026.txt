@@ -1,0 +1,459 @@
+D-001 - PRE-FILTER: STAGE 0 SOURCE INVENTORY AND METHOD
+Date of work: 25-Oct-2026 (IST), 18:16 to 18:43 IST. Prepared by Claude for ChatGPT's review.
+Status: Stage 0 only. No legacy module, configuration file, test, script, document or README was opened, read, searched
+  or run, and no blob was fetched. Candidate paths are inventory leads by name, not evidence of what a file does. This
+  is not a D-001 manual and decides nothing for V2.
+Companions: D-001_STAGE0_GAP_AND_BOUNDARY_REGISTER_25-OCT-2026.txt (gap and boundary register),
+  D-001_STAGE0_CHANGE_NOTE_25-OCT-2026.txt (change note), D-001_STAGE0_FINAL_CHECK_25-OCT-2026.txt (the final check).
+Conventions: Claude's working folder is written <SCRATCHPAD>; "the listing" is the saved pinned listing of the legacy
+  tree; "the clone" is Claude's blob-less partial clone of the legacy repository at the pin; never-open paths are
+  counted, never listed. V2 records are cited as path:line at V2 main ad73016. Blob IDs are shown by their first 12
+  characters. Quotations are verbatim except that line breaks and runs of spaces are dropped, non-ASCII dashes are shown
+  as "-", and "..." marks words left out.
+Labels: FACT (METADATA) - refs, tree objects and counts from git metadata; FACT (PATH NAME) - a path exists at the pin
+  (a name, not a function); HISTORICAL / RECORD-DERIVED - a statement in a frozen manual or another V2 record, cited and
+  not re-verified here; INTERPRETATION - Claude's reading, marked; UNKNOWN / NOT ESTABLISHED; OPEN SCOPE QUESTION -
+  listed in the gap and boundary register (OSQ-xx).
+
+========================================================================================================================
+1. INPUTS RECEIVED (Rama, 18:15 IST; file time 18:15:40 IST)
+========================================================================================================================
+- D-001_CHATGPT_SOURCE_REVIEW_NOTE_25-OCT-2026.txt: 22 lines, 2,155 bytes; SHA-256
+  8BAC0FD835BB38A1CC3F38A12A1D1F6584733CAEE7E7BD3B0F5D47CA2C6E9550; ChatGPT: its read-only inventory review.
+- D-001_RAMA_ANSWER_SHEET_STAGE0_25-OCT-2026.txt: 32 lines, 1,952 bytes; SHA-256
+  2C234B01D43E5ABC4B50495962A513C7882073CA6A15789F132FBC3368DF5FDB; ChatGPT: the Stage 0 answer sheet (no question).
+- D-001_CLAUDE_PROMPT_STAGE0_25-OCT-2026.txt: 77 lines, 5,386 bytes; SHA-256
+  D74A12370A739DB16B6592CF3E0C19EA3050C01D2D2D5AD826A6481F32B99623; ChatGPT: Claude's Stage 0 prompt.
+With them, ChatGPT's message relayed by Rama: "I reviewed the Legacy Production repository at the pinned baseline ...
+  The inventory is verified; I have not analysed individual modules. The next topic is D-001 - Pre-filter, keeping D-002
+  and D-003 separate." and "Next: give Claude the prompt and the two companion files. I'll review its inventory before
+  authorising any D-001 module analysis" (Rama's note: "Now: 25-Oct-2026 Sunday at 18:16 IST"). Lines are newline
+  counts. The three files are UTF-8 with a few non-ASCII dashes and quotes, and no CR.
+
+========================================================================================================================
+2. TIMELINE (IST, 25-Oct-2026; times printed by the tools)
+========================================================================================================================
+- 18:05:26 Section C end post-push check on a fresh clone of V2 main: PASS (ad73016; the result file is
+  SECTION-C_END_POST_PUSH_GITHUB_VERIFICATION_RESULT_25-OCT-2026.txt). The local V2 clone fast-forwarded to it.
+- 18:15 Rama's message with the three D-001 files.
+- 18:17:44 ls-remote of the legacy and V2 repositories (section 3).
+- 18:17:54 GitHub API tree request for the legacy repository refused for this session (HTTP 403, "GitHub access to this
+  repository is not enabled for this session"). Not retried by another route; the counts were established from git
+  objects instead (section 3.2).
+- 18:18:51 tree check (tree_check_d001.py): PASSED.
+- From 18:19: path-name scan (pathscan_d001.py) and grouping, then the V2 records; files built at 18:43
+  (build_s0_d001.py) and checked (check_s0_d001.py; its time is in the final check).
+
+========================================================================================================================
+3. BASELINES AND METADATA (FACT (METADATA))
+========================================================================================================================
+3.1 Legacy production reference (DEAD / REFERENCE ONLY)
+- Repository: ramakrishnan031-ctrl/trading-system-prod-snapshot (public). Branch: main.
+- ls-remote (18:17:44 IST): HEAD and refs/heads/main = 970aabf3c78d777d9d34549e021f7c8e756c7bdb. No other ref is
+  advertised: no other branch and no tag.
+- Commit date: 2026-09-11, as recorded by C-008 ("dated 2026-09-11",
+  docs/agenda/c-008_signal-processing/C-008_manual.md:5); not re-read here.
+3.2 The tree at the pin
+- Source: the saved pinned listing (1,438 rows; SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5), saved in Claude's workspace on 24-Oct-2026 and used
+  unchanged at C-010 and C-011.
+- Proof that it is the whole pinned tree: its 1,438 entries rebuilt bottom-up with `git mktree --missing` in a scratch
+  repository give the root tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa, equal to the tree of the pinned commit (`git
+  rev-parse <pin>^{tree}` in the clone: one local commit object, no history walk, no blob).
+- Counts: 1,438 blob entries (1,432 mode 100644, 6 mode 100755; no symlink, no submodule); 125 directory (tree) entries;
+  1,563 entries in all. They equal ChatGPT's figures (1,563 entries: 1,438 blobs and 125 trees). Its "truncated=false"
+  belongs to its API response and was not re-observed here; the rebuild makes it unnecessary for the counts.
+3.3 The clone (Claude's workspace)
+- HEAD = the pin. Local objects: 8,920 (1,257 blobs, 1,537 commits, 6,126 trees), by object ID and type only: the store
+  was iterated locally and nothing was fetched. Same figures as at C-010 and C-011 (Claude's notes): no fetch since.
+- Never-open paths in the tree (.env and .env.*, token and session files, gui_config.local.yaml, docs/web_claude/,
+  database and SQLite files, logs, and the standing rules for the accounts, security and reference-data configuration
+  files): 102 (root 1, config 21, docs 80). Never-open blobs present locally: 0.
+3.4 V2 governance repository
+- ramakrishnan031-ctrl/trading-system-v2: HEAD and main = ad730162c190f605cba8ddd8eb720de52fd529b7 (ls-remote 18:17:44
+  IST), the Section C close commit. Every V2 citation here is at this commit (the local clone, clean).
+3.5 Time and timezone
+- IST (UTC+05:30), from the workspace clock with TZ=Asia/Kolkata.
+
+========================================================================================================================
+4. FILE CATEGORIES AT THE PIN (FACT (PATH NAME); blob entries per top-level folder)
+========================================================================================================================
+alerts 6; allocation 5; broker 13; capital 10; config 51 (never-open 21); core 29; data 3; deploy 29; docs 474
+  (never-open 80); ops 14; ops_dashboard 183; orders 21; regime 4; reports 10; screening 7; scripts 88; signals 4;
+  sr_detector 12; strategies 5; tasks 1; tests 442; utils 5; v3_chain 9; (root files) 13 (never-open 1). Total 1,438.
+By name only (INTERPRETATION): runtime packages (alerts, allocation, broker, capital, core, data, orders, regime,
+  screening, signals, sr_detector, strategies, utils, v3_chain, and main.py); configuration (config, with 16 strategy
+  files); scripts; tests; documents (docs); the operations dashboard (ops_dashboard); deployment and operations (deploy,
+  ops); reports; tasks (one file).
+
+========================================================================================================================
+5. PATH-NAME SEARCH (FACT (PATH NAME); pathscan_d001.py over the 1,438 paths, case-insensitive)
+========================================================================================================================
+| Term | Matches | Never-open (counted) | Permitted matches by folder |
+|---|---|---|---|
+| T01 prefilter | 0 | 0 | - |
+| T02 filter | 5 | 0 | docs 3, tests 2 |
+| T03 screen | 39 | 1 | docs 2, ops_dashboard 25, screening 7, scripts 1, tests 3 |
+| T04 gate | 12 | 1 | docs 2, screening 2, scripts 1, tests 6 |
+| T05 reject | 4 | 0 | config 1, docs 2, tests 1 |
+| T06 eligibility/universe/lists | 8 | 1 | config 1, core 1, docs 1, scripts 1, tests 3 |
+| T07 liquidity/price/volume | 6 | 0 | docs 3, tests 3 |
+| T08 signal | 23 | 2 | docs 2, ops_dashboard 3, reports 1, scripts 3, signals 4, tests 8 |
+| T09 quality/score/rank | 16 | 1 | allocation 1, config 1, docs 3, ops_dashboard 6, screening 1, tests 2, v3_chain 1 |
+| T10 step/pipeline/stage | 31 | 4 | docs 17, ops_dashboard 3, screening 1, tests 6 |
+| T11 validation | 11 | 0 | core 1, docs 1, scripts 1, tests 8 |
+| T12 throttle/window | 12 | 0 | allocation 1, core 1, docs 4, ops_dashboard 1, signals 1, tests 4 |
+| T13 regime | 12 | 0 | docs 7, regime 4, tests 1 |
+| T14 strategy | 64 | 1 | capital 1, config 17, core 1, docs 9, ops_dashboard 16, scripts 3, strategies 5, tests 11 |
+T01 searched every path for "pre" then "filt", joined by nothing, a space, "_", "." or "-": 0 matches. T02 lists every
+  "filt" (5 paths, in Group E, Group D and Group F below); none has "pre" before it. No path name at the pin names a
+  pre-filter. Union of the permitted matches: 209 paths, each placed in exactly one group of section 6 (the builder
+  asserts it); 6 more paths are listed with no term match: main.py and config/system_config.yaml, and four named by
+  frozen manuals (marked REC). The exact expressions are in pathscan_d001.py.
+
+========================================================================================================================
+6. CANDIDATE PATHS (inventory leads by name only; none was opened or read)
+========================================================================================================================
+Columns: ID, path, blob (first 12 characters, from the listing), bytes (C-010's record of the local object store,
+  24-Oct; metadata), then the frozen manuals that cite the path (git grep over the 34 *_manual.md files at ad73016) and
+  what the V2 records say about it (HISTORICAL / RECORD-DERIVED).
+
+6.1 Group A - the screening and signal packages and the wiring (ChatGPT's leads and the rest of screening/)
+A01 screening/__init__.py  blob f5069dd61fb8  358 bytes
+    no frozen manual cites it; the package marker of screening/
+A02 screening/entry_gate.py  blob 46b173171bdf  21,303 bytes
+    cited by the A-008, A-009, B-006, B-011, C-007, C-008, C-010 manuals; read in part at C-008 (its inventory, R07:
+    start, release, docstring); BK-24 (its GATE_WAITING writer)
+A03 screening/hard_gate.py  blob a8e7e2e49675  23,101 bytes
+    no frozen manual cites it; not read at C-008 (R08: "the processor imports and calls none of them"); described by the
+    21-Sep record, section 14 (section 7.2 here)
+A04 screening/quality_scorer.py  blob b125e9ce3243  6,337 bytes
+    cited by the A-008 manual; A-008 section 12 (a code comment, RECORD-DERIVED); not read at C-008 (R08)
+A05 screening/retest_monitor.py  blob 26639d6ed5dd  19,889 bytes
+    cited by the B-006, C-007, C-008, C-010 manuals; not in ChatGPT's list; read in part at C-008 (R07: divert,
+    confirm); C-008 ST-15, owner "D topics"
+A06 screening/secondary_screener.py  blob b6f8ff7223ad  35,461 bytes
+    cited by the A-008, C-004, C-007, C-008 manuals; A-008 section 12; C-004 sections 10.2 and 10.3; read in part at
+    C-008 (R06: the result type, screen()'s entry and quote handling); C-008 ST-12, owner "D topics"
+A07 screening/step_executor.py  blob d83b04860f0f  17,364 bytes
+    cited by the A-008, B-006 manuals; not read at A-008 (its section 2) or C-008 (R08); named in Q-34 (c)
+A08 signals/signal_processor.py  blob 7fab0a02a302  139,403 bytes
+    cited by 19 of the 34 frozen topic manuals; the C-008 subject: its stage table (section 4.1) puts ST-04 to ST-11
+    before the screener (ST-12)
+A09 signals/entry_throttle.py  blob b887a4be78a4  5,266 bytes
+    cited by the C-001, C-008, C-010 manuals; C-008 ST-27, owner open ([OQ-01]); read at C-008 (R09)
+A10 main.py  blob 445fb0d8237a  208,758 bytes
+    cited by 33 of the 34 frozen topic manuals; the wiring (C-008 section 2)
+
+6.2 Group B - leads for checks before or inside screening (owner not established)
+B01 core/mis_blocklist.py  blob 1f91fedfbdd4  6,651 bytes
+    cited by the C-004 manual; C-004 section 10.3: the learned MIS blocklist, the screener's MIS pre-drop (owners D-003
+    and G-007 there)
+B02 core/market_windows.py  blob 25625e8cd109  13,938 bytes
+    cited by the A-011, B-008, B-009, B-010, C-008 manuals; C-008 ST-05 and ST-10: the global and the strategy windows
+    (A-003, A-008)
+B03 capital/kill_switch.py  blob 3eb2ece050c3  108,965 bytes
+    cited by 12 of the 34 frozen topic manuals; REC: C-008 ST-04, the kill-switch check (I topics)
+B04 orders/shadow_tracker.py  blob 850722541f41  36,064 bytes
+    cited by the C-008 manual; REC: C-008 ST-07, the shadow-inning guard (owner not named, [OQ-01]; [U-01])
+B05 config/scan_webhook_map.yaml  blob 54dd98d75f27  3,067 bytes
+    cited by the A-008, A-009, C-001, C-002, C-004, C-010, C-011 manuals; REC: C-008 ST-08, the strategy lookup (C-010)
+B06 strategies/control.py  blob b6eecb480b83  5,552 bytes
+    cited by the A-007, A-008, B-009, C-001, C-008, C-010 manuals; C-008 ST-09, the strategy-control gate (A-008)
+B07 strategies/loader.py  blob 99e83b192021  9,811 bytes
+    cited by the A-007, A-008, A-009, B-002, B-009, C-001, C-008, C-010 manuals; C-008 ST-09 (not read there: whether
+    the loader keeps disabled strategies)
+B08 strategies/schema.py  blob 22530161a5ee  14,263 bytes
+    cited by the A-008, A-009, B-002, C-010 manuals; the strategy model (A-008 section 4)
+B09 strategies/taxonomy.py  blob 069644bc1bdb  1,653 bytes
+    cited by the C-010 manual; strategy classes, by name
+B10 strategies/__init__.py  blob ee3a2879f0fa  245 bytes
+    cited by the C-010 manual; the package marker of strategies/
+B11 capital/strategy_governor.py  blob d17193c569c1  9,169 bytes
+    cited by the A-008, C-008, C-010 manuals; C-008 ST-11, the strategy circuit breaker (F topics)
+B12 core/strategy_direction.py  blob 0e6f8b6686f3  6,954 bytes
+    cited by the A-008, A-009, B-002, C-001, C-010 manuals; strategy direction, by name (A-008, C-001)
+B13 config/strategy_direction_registry.yaml  blob b03f4ed0c900  5,745 bytes
+    cited by the A-008, A-009, C-001, C-010 manuals; the direction registry, by name (A-008, C-001)
+B14 scripts/fetch_fno_ban.py  blob 8416cd9c71b1  14,028 bytes
+    no frozen manual cites it; an F&O ban list, by name; the 08:35 job "fetch_fno_ban" in the B-003 and B-008 manuals
+    (B-003_manual.md:221, B-008_manual.md:62; job name only)
+B15 config/index_universe.yaml  blob 416d1eb723c5  1,688 bytes
+    cited by the A-009 manual; an index universe, by name (A-009)
+B16 config/scoring_weights.yaml  blob e9d6ede4c02d  2,610 bytes
+    cited by the A-008, A-009 manuals; A-008 section 12: the ten step weights
+B17 config/system_config.yaml  blob bf742ae5c81c  55,901 bytes
+    cited by 29 of the 34 frozen topic manuals; REC: frozen manuals cite its blocks, for example C-004 section 10.3 (the
+    MIS blocklist block)
+B18 config/strategies/ (16 files)
+    cited by 11 of the 34 frozen topic manuals; the 16 strategy files (list below); A-008 sections 10 and 12:
+    min_volume_surge, min_adr_pct and max_spread_pct
+    Files and blobs: first_pullback_long.yaml bba1441d7cc3; first_pullback_short.yaml d946da39a9c5; gap_fade_long.yaml
+    6e0c95d5191d; gap_fade_short.yaml a78b93440fe5; gap_go_long.yaml 6e6656fbc6ed; gap_go_short.yaml 7e53d31871d6;
+    open_high_breakdown_short.yaml 96b354653687; open_low_breakout_long.yaml 48012d053f33; pb01_breakout_retest.yaml
+    eedf5cac5ed5; positional_momentum_long.yaml 7a46596fac63; positional_sector_rotation.yaml b110bd594203;
+    positional_swing_long.yaml 597193f8076a; range_breakout_long.yaml ddee444cade6; range_breakout_short.yaml
+    2f99b1dd5f15; vwap_bounce_long.yaml e279719f9e5d; vwap_rejection_short.yaml a62177d49e35.
+B19 scripts/generate_screened_stocks_csv.py  blob 3e6b5896bbc3  13,497 bytes
+    cited by the B-003, C-007 manuals; a screened-stocks CSV, by name ("screened_stocks" in the B-003, C-004 and C-007
+    manuals)
+
+6.3 Group C - adjacent agenda topics by name (for the boundary only; not proposed as D-001 leads)
+C01 allocation/ranker.py  blob beac7be7eadb  1,048 bytes; J-012 and D-017 by the agenda names
+C02 allocation/window_buffer.py  blob a8b3b5d4dfff  1,075 bytes; J-012 by name
+C03 regime/__init__.py  blob 5522ae3af542  1,781 bytes; J-011 and D-008 by the agenda names
+C04 regime/engine.py  blob d9cdd9366857  16,380 bytes; J-011
+C05 regime/models.py  blob 24bbf02fa912  4,412 bytes; J-011
+C06 regime/runner.py  blob a5cb48c53de0  4,433 bytes; J-011
+C07 v3_chain/score.py  blob 8270d4981254  10,379 bytes; J-010 by name (C-008 ST-18 hooks the V3 chain through
+    v3_chain/runner.py)
+
+6.4 Group D - tests by name (text leads only, if authorised; never run)
+D-a screening (6): test_hard_gate.py 83388f2e371d; test_entry_gate.py ab1a956af832; test_secondary_screener.py
+    e8e2ddb2a77d; test_quality_scorer.py f2fddb776fb3; test_step_executor.py 82cfe6819362;
+    test_ms3_step_timeout_bounds_caller.py 9840cfb74d78 (which step: not established by name).
+D-b the processor and its pre-checks (11): test_signal_processor.py 3ec0ea84392a; test_entry_throttle.py 94752125157a;
+    test_market_windows.py 6ac7f3e67fe8; test_fix133_entry_windows.py 39a4b8997333; test_kill_switch_product_filter.py
+    a6860e73b44c (kill switch: I topics); test_h8_shadow_tracker_strategy_column.py ed7c605630ad;
+    test_phase4_trade_type_gate.py 69f0b6b6bb74; test_slice2_strategy_control.py 4df7c9923a9b;
+    test_fix130_strategy_governor.py e6d9a5c6c9e4; test_fix128_circuit_breaker.py 2b067c5266c0 (which circuit breaker:
+    not established by name); test_tick2_pipeline_scoped_daily_gate.py bc12039ea309 (which gate: not established by
+    name).
+D-c eligibility, instrument and market filters (5): test_mis_blocklist.py 4960f825965e; test_fix135_fno_ban.py
+    dbf781b9e1cf; test_fix134_liquidity_check.py 3e3e61d572ec; test_fix134_instrument_validation.py f4e7b94656cf;
+    test_fix135_tick_volume.py 4fe9347477c8.
+D-d strategies and direction (3): test_strategies.py a17ae20faa67; test_v3_strategy_taxonomy.py bc5c5caed4da;
+    test_strategy_direction_routing.py febe85d94bcc.
+D-e screened output and end to end (3): test_generate_screened_csv_readonly.py 8b52dd873006;
+    test_integration_screened_csv_15jul.py f3ebdc4603a0; tests/integration/test_full_signal_flow.py 376a2ee815f7.
+D-f adjacent topics (2): test_market_regime.py 3acfc6f1885b (J-011); test_v3_pb01_gates_score.py 8af37d3f579c (J-010,
+    PB01).
+    Paths are under tests/unit/ unless they name another folder.
+
+6.5 Group E - dated legacy documents by name (HISTORICAL leads; not opened)
+- docs/audit/secondary_filtration_execution_pipeline_audit.md 5d405fa42059 (no date in the name)
+- docs/audit/buyday_filter_build_01aug2026.md 7569dfc231ab
+- docs/audit/ms4_screener_nulls_and_parked_items_25jul2026.md 8309fbc2a4df
+- docs/audit/consecutive_losses_gate_wired_19jul2026.md ed1ce195194a
+- docs/audit/check1_product_skip_step1_05aug2026.md 133bf8fec6b9
+- docs/audit/r12_allowlist_enumeration_04aug2026.md 5ffa86be2fe1
+- docs/audit/signal_mortality_census_19jul2026.md 9f9db37223c3
+- docs/audit/q6_two_pipeline_design_14jul2026.md 16816a78efb9
+- docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md adf589da7314
+- docs/audit/throttle_selection_and_record_correction_19jul2026.md d49b1a12dfa2
+- docs/audit/band_inversion_investigation_13jul2026.md 9b33a94c393a ("band": meaning not established by name)
+- docs/audit/d3_band_inversion_robustness_19jul2026.md 6cc824a09fd0 ("band": meaning not established by name)
+- docs/audit/strategy_direction_investigation_17jul2026.md 6082b5d79929
+- docs/audit/strategy_direction_registry_done_17jul2026.md abe19f103c74
+- docs/audit/regime_computability_verification_20jul2026.md 3927b41befc0 (J-011)
+- docs/audit/regime_direction_preference_investigation_20jul2026.md 7ac202a8f51a (J-011)
+- docs/audit/regime_phase0_index_ingestion_17jul2026.md 6de7e91de3ae (J-011)
+- docs/audit/regime_phase1_investigation_18jul2026.md 053c6e028268 (J-011)
+- docs/audit/regime_thesis_minscore_control_18jul2026.md 154b7887de4a (J-011)
+- docs/audit/regime_thesis_validation_18jul2026.md c3d5daff5cde (J-011)
+- docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md 6cd5e099ccd2
+- docs/decisions/10_entry_throttle_admission.md fdf97c54f2dc
+- docs/decisions/07_regime_enable.md 78a21efc3844 (J-011)
+- docs/screened_stocks_csv_workflow.md d80fb3b76b94
+- docs/02_strategy_yaml_guide.md ba662a5c1431
+- docs/CONFIG_GUIDE.md 1e4f7ee17440 (REC: C-009 cites its line 326, a "signal_age 10" weight (BK-46))
+    Some dated records under docs/audit/ hold host values (earlier topics read such records value-blind only, for
+    example C-004 under DR-057). Which of these do is not established by name (G-06).
+
+6.6 Group F - other matches, not proposed as D-001 leads (the matched word names another subject; INTERPRETATION)
+F-1 the operations dashboard (L-010): 45 paths under ops_dashboard/ (backend services, templates and tests; the tests
+    are numbered by screen, S01 to S22).
+F-2 screenshots (images; DR-008) (6): docs/audit/approval_19aug/S03_strategies_1440x900.png;
+    docs/audit/approval_19aug/S03_strategies_1920x1080.png; docs/audit/approval_final_19aug/S03_strategies.png;
+    docs/audit/approval_final_19aug/S04_signals.png; docs/audit/approval_final_19aug/S19_strategy_ranking.png;
+    docs/audit/approval_final_19aug/S20_strategy_health.png.
+F-3 Section C and B-007 subjects (7): signals/__init__.py; signals/webhook_receiver.py; reports/signal_status.py;
+    tests/unit/test_signal_status_classification.py; scripts/preflight/checks/signals.py;
+    scripts/preflight/checks/config_sanity.py; tests/unit/test_preflight_signals.py.
+F-4 configuration validation (A-009, B-002) (3): core/config_validator.py; tests/core/test_config_validator.py;
+    tests/unit/test_fix135_strategy_config_validation.py.
+F-5 orders, positions and capital limits (F, G, H, I) (10): tests/unit/test_fix129_order_state_validation.py;
+    tests/unit/test_fix129_rejection_handling.py; tests/unit/test_fix135_strategy_position_cap.py;
+    tests/unit/test_h7_strategy_cap_toctou.py; tests/unit/test_reconciler_product_filter.py;
+    tests/unit/test_cnc_gtt_step4_wiring.py; tests/unit/test_unit3a_leverage_validation.py;
+    docs/audit/exit_rejection_hard_kill_forensics_22jul2026.md; docs/audit/MIS_SQUAREOFF_REJECTION_IDEA_10-Sep-2026.md;
+    docs/audit/reconciler_product_filter_build_02aug2026.md.
+F-6 tokens (B-004, M-005) (2): tests/unit/test_fix062_token_invalidation.py;
+    tests/unit/test_h11_invalidate_token_path.py.
+F-7 test tools and replay (N) (6): scripts/load_test_signals.py; scripts/replay_signals.py;
+    tests/unit/test_load_test_signals.py; tests/unit/test_fix133_replay_signals.py; tests/crash_test/signal_injector.py;
+    tests/crash_test/state_machine_validator.py.
+F-8 reports, metrics, alerts and officers (L, M) (8): scripts/compute_strategy_metrics.py; scripts/strategy_status.py;
+    scripts/strategy_registry_officer.py; tests/unit/test_strategy_registry_officer.py;
+    tests/unit/test_fix134_strategy_metrics.py; tests/unit/test_signal_alert_capital_vocabulary.py;
+    tests/integration/test_alerts_pipeline.py; docs/audit/out_of_band_alert_path_verified_25jul2026.md.
+F-9 operations and lifecycle (B, M) (7): scripts/copy_gate.py ("copy gate": subject not established by name);
+    tests/unit/test_copy_gate.py ("copy gate": subject not established by name);
+    tests/unit/test_service_window_config.py; docs/audit/service_window_configurable_25jul2026.md;
+    docs/audit/service_window_extension_2026-07-24.md; tests/unit/test_eod_lifecycle_pipeline_aware.py;
+    tests/unit/test_b1_consumer_health_unblocked.py.
+F-10 measurement and ledger records (5): docs/audit/bk8_step1_measurement_03aug2026.md;
+    docs/audit/ledger2d_step1_measurement_03aug2026.md; docs/audit/ledger3b_separability_step1_04aug2026.md;
+    docs/audit/ledger8b_check_vm_state_step1_02aug2026.md; docs/audit/ledger_3a_9_5_step1_03aug2026.md.
+F-11 V3 and PB01 plans other than the hard gate (J-010, C-011) (8): docs/v3/V3_STEP10_PIPELINE_PLUMBING_PLAN.md;
+    docs/v3/V3_STEP4B_PARITY_ARTIFACT.md; docs/v3/V3_STEP5_RISK_SIZING_GAPMAP.md;
+    docs/v3/V3_STEP6_PORTFOLIO_ALLOCATOR_PLAN.md; docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md;
+    docs/v3/V3_STEP8_TRADE_MGMT_GAPMAP.md; docs/v3/V3_STEP9_EXIT_ENGINE_GAPMAP.md;
+    docs/audit/w2_pb01_shadow_flip_staged_14jul2026.md.
+F-12 other (1): docs/decisions/03_d2_strategic_direction.md.
+
+========================================================================================================================
+7. RELATED PRIOR RECORDS (HISTORICAL / RECORD-DERIVED; V2 records at ad73016; none is new legacy evidence)
+========================================================================================================================
+7.1 The master agenda
+- docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt:289 to 317: "D. TRADE DECISION ENGINE", D-001
+  Pre-filter (line 292), D-002 Hard rejection gates, D-003 Secondary screening, then D-004 to D-018. Goal (lines 312 and
+  313): "Completely revisit the question:" "Should this signal become a trade?"; "This section is especially important
+  for the known redesign concerns: late entry, unsuitable filtration, incorrect S&R range, and trading near high-of-day
+  without adequate S&R context." (lines 315 to 317).
+- No agenda text describes D-001 beyond its title. Agenda topics outside section D whose names touch screening or
+  filtering: J-006 "S&R use in screening" (line 442), J-010 V3 chain, J-011 Regime, J-012 Allocation, E-009 Price
+  revalidation, E-010 Fresh LTP.
+- The Claude Project's copy of the agenda reads the same for Part 5, section D (read, not byte-compared).
+7.2 The 21-Sep working-tree record (docs/inputs/legacy_baseline/CURRENT_PRODUCTION_SYSTEM_DEEP_WORKING_TREE_21-SEP-2026.txt)
+A baseline document of 21-Sep-2026 on the production snapshot at the pin, by its header; its statements were not
+  verified here. It is the closest V2 record to the agenda's three names, but its words are "pre-flight", "STRATEGY
+  CONTROL GATES", "hard gate" and "secondary screening", not "pre-filter" (whether the agenda names come from it: NOT
+  ESTABLISHED):
+- line 62: the processor as an orchestrator, "pre-flight -> strategy lookup -> screening -> price derivation -> sizing"
+  and on.
+- section 9 (line 386), "SIGNAL PROCESSOR - STEP 1: PRE-FLIGHT": before screening, the kill-switch entry check, the
+  global entry window, the signal age, the shadow-inning guard and "Additional in-flight/concurrency protections" (line
+  395); section 10 (line 410), strategy resolution (scanner to strategy).
+- section 11 (line 437), strategy control gates: master trade_type, force_intraday_only, per-strategy enable; the
+  governor hook; then the strategy window.
+- sections 12 and 13 (line 462): the secondary screener, "an initial MIS learned-blocklist check" (line 475) and the
+  quote (SKIPPED_QUOTE_UNAVAILABLE).
+- section 14 (line 500), "HARD GATE": "screening/hard_gate.py provides explicit non-score hard admission rules." (line
+  503): at-circuit, circuit-proximity, signal freshness, and liquidity "currently a NO-OP at this gate"; "hard gates are
+  permission checks;" (line 515).
+- section 15 (line 519): the screening result, the screener writing its own PASSED or REJECTED_* status.
+- section 43 (line 1306), the single-signal view: under "SECONDARY SCREENER" (line 1341) it lists, in this order, "MIS
+  learned blocklist" (line 1343), "quote", "hard gates" (line 1345), "screening steps" (line 1346), "score" and "min
+  score / final verdict"; the processor's checks (kill switch, entry window, freshness, shadow inning, scanner to
+  strategy, strategy control, strategy window, governor) come before it.
+- section 44 (line 1438), the rejection model: "Pre-flight rejection" (line 1451), then "Strategy rejection" (line
+  1454), then "Screening rejection" (line 1457).
+7.3 C-008 Signal processing (frozen, DR-061; docs/agenda/c-008_signal-processing/C-008_manual.md)
+- Scope (line 28): "The pre-checks (kill switch, entry windows, the age check, strategy lookup and control, the strategy
+  circuit breaker, the entry throttle and the same-symbol checks) appear by their place in the pipeline and their
+  outcome; their rules stay with their owners." Owners elsewhere (line 30) include "D topics (screening and the gate and
+  retest rules)".
+- Stage table (section 4.1, lines 144 to 151): before the screener, ST-04 kill switch (I topics), ST-05 global entry
+  window (A-003), ST-06 age (C-009), ST-07 shadow inning (the shadow tracker's owner, not named in the agenda), ST-08
+  strategy lookup (C-010), ST-09 strategy control (A-008), ST-10 strategy window (A-003, A-008), ST-11 strategy circuit
+  breaker (F topics); ST-12 secondary screening, owner "D topics" (line 152); ST-15 retest divert, "D topics" (line
+  155); ST-27 entry throttle, owner open (line 167).
+- [OQ-01] (line 555): which topic owns the entry throttle's rule (for example D-016 or F-010) and the shadow tracker,
+  left for the master agenda review. [U-09] (line 566): "Exceptions inside the screener beyond its quote fetch (D
+  topics)." [EP-09] (line 337): no direct hand-off from the EOD route to the processor was found.
+- Section 14.3, IX-03 (line 438): in the 18-Sep legacy manual's index as supplied on 24-Oct-2026, chapter 06 "Filtering
+  and trade decision" and the other chapters on the processor's subject were all "NOT STARTED".
+- Its inventory
+  (docs/agenda/c-008_signal-processing/C-008_STAGE1_SOURCE_INVENTORY_READ_LOG_AND_METHOD_REV3_24-OCT-2026.txt): R08
+  "screening/hard_gate.py; screening/step_executor.py; screening/quality_scorer.py" (line 205) NOT READ: "the processor
+  imports and calls none of them" (line 206); R06 and R07 read the screener and the entry and retest files in part.
+7.4 C-004 Validation (frozen, DR-057; docs/agenda/c-004_validation/C-004_manual.md), section 10
+- 10.1 (line 268): the processor's checks before the screener; "None tests the symbol's validity."
+- 10.2 (line 270): the screener's quote fetch is "the first stop for a symbol the broker does not return"
+  (SKIPPED_QUOTE_UNAVAILABLE); "D-003 owns the screener." (line 271).
+- 10.3 (line 273; "D-003 and G-007 own it"): the MIS pre-drop runs as the "first step of screen(), only when the
+  resolved product is MIS" (line 276), in shadow mode on the pinned configuration.
+7.5 A-008 Strategy model (frozen, DR-023; docs/agenda/a-008_strategy-model/A-008_manual.md)
+- Section 12 (line 146): "every signal went through one common SecondaryScreener: a 10-step pipeline scored by
+  QualityScorer" (weights from config/scoring_weights.yaml; pass score 60; tiers). Shadow layers at the baseline include
+  "the V3 hard-gate re-scale (scoring v3_hardgate_mode "shadow"; "LIVE follows OLD")" (line 151); "The MIS learned
+  blocklist in the screener was in shadow mode" (line 152).
+- Section 2 (line 20): "Not read: screening/step_executor.py (which screening steps could score)".
+7.6 C-009 Signal expiry (frozen, DR-062; docs/agenda/c-009_signal-expiry/C-009_manual.md)
+- Line 159: the screener's signal-age scoring step is "a pointer for D-003 (bookmark BK-46)".
+7.7 Design log pointers (docs/governance/V2_DESIGN_LOG.md)
+- Naming D-001: VP-44 only (line 252), Ratify at "D-001, D-013 to D-016, E-002" (earlier signals; the scanner redesign);
+  at the Section C close (DR-066) C-001 was dropped from that cell.
+- Naming D-002 or D-003 (adjacent; kept separate): VP-27 (line 235, "D-002"); VP-37 (line 245, "Intent DECIDED (DR-032);
+  G-002, D-002"); VP-03 (line 212, "D-003, D-017 (ranking with F)"); VP-08 (line 217, "Count DECIDED (DR-031); D-003,
+  D-009 to D-017, J"); BK-46 (line 571, "D-003, D-014, D-015"); BK-24 (line 549, "C-008; D topics; B-009").
+- Other section D owners (outside D-001 to D-003, by ID only): VP-09 (D-016), BK-40 (D-015, D-016), BK-43 (D-016). Q-34
+  (c) names screening/step_executor.py ("dead-at-0" or "pinned-at-half" steps; area "Audit"). No open question's area
+  names a section D topic.
+- Section 4 has no row for a section D topic yet; the Section C end row ends "Section C complete; next Section D" (line
+  319).
+7.8 Decision register (docs/governance/V2_DECISION_REGISTER.md)
+- DR-031 (line 42): filtration (VP-03) and the rest "stay with C-001, D-003, D-009 to D-017 and J" (as written; the
+  C-001 part was rescheduled by DR-066).
+- DR-032 (line 43): "the eligibility pre-check mechanism (D-002)".
+- DR-066 (line 77): the Section C close, ending "Next: Section D".
+7.9 V2 inputs files
+- docs/agenda/a-008_strategy-model/A-008_v2_design_inputs.md:24 "CLAUDE CONSIDERATIONS (C-001, D-001, D-013 to D-016,
+  E-002; none decided)" and :122 "D-001 to D-018 (filtration, extension guard, entry timing, ranking)".
+- docs/agenda/b-008_market-open/B-008_v2_design_inputs.md:11, row 4: the window "checked at the door and again in the
+  pipeline"; owners "C-008, D-002".
+
+========================================================================================================================
+8. EXISTING D-001 MATERIAL
+========================================================================================================================
+- FACT (V2 at ad73016): no docs/agenda/d-* folder; no tracked file whose name contains D-001, D-002, D-003 or a
+  pre-filter word (474 tracked files; 37 agenda folders: A-001 to C-011 and the three section-end folders); no agenda
+  status row for a section D topic. "Pre-filter" occurs in V2 only as the agenda title and in the Section C end
+  inventory's note of ChatGPT naming D-001 as next.
+- FACT (PATH NAME): no path name at the pin contains a pre-filter word (T01 = 0).
+- HISTORICAL: the 18-Sep legacy manual's chapter 06 "Filtering and trade decision" was NOT STARTED in the index as
+  supplied on 24-Oct-2026 (C-008 IX-03). Whether it has been written since: UNKNOWN (the records repository was not
+  opened; it is not a source of this prompt).
+- So, at Stage 0, which legacy mechanism D-001 documents is NOT ESTABLISHED (OSQ-01).
+
+========================================================================================================================
+9. PLANNED DOCUMENTATION SEQUENCE (PROPOSED: W-9, W-10 and the C-008 to C-011 practice)
+========================================================================================================================
+Each step after this one waits for ChatGPT; no module is read before its authorisation.
+- S0 (this step): this inventory, the gap and boundary register, the change note and the final check, for ChatGPT's
+  review.
+- S1 ChatGPT's Stage 0 review: confirms or corrects the inventory; settles or narrows OSQ-01 to OSQ-08 (D-001's legacy
+  scope and its boundaries with C-008, D-002, D-003 and the J topics); names the Stage 1 files, read modes and scopes.
+  If it issues evidence-based questions, they go on the Rama answer sheet under its own rules (question IDs and wording
+  kept; UNKNOWN / NOT ESTABLISHED allowed; no suggested answer taken as chosen).
+- S2 Stage 1, only as authorised: count-only searches, each zero with a positive control; then gated reads of the named
+  files at their pinned blobs through the masking filter (protected-path check zero before every read, each read matched
+  to its blob and logged); a Stage 1 evidence sheet (claims with path:line) and a searched-files list. No test, script
+  or code is run; no host or service is contacted.
+- S3 ChatGPT's Stage 1 reconciliation and drafting prompt; Rama answers only what concerns him (W-10).
+- S4 D-001_manual.md, revision 0 onwards, each revision after a ChatGPT review: legacy fact only (W-1); cross-topic
+  points as bookmarks (W-9); V2 points as PROPOSED inputs for their owners (W-6); D-002 and D-003 kept separate; VP-44,
+  whose Ratify-at cell names D-001, dispositioned at the close.
+- S5 The final storage package (W-4, W-10): the frozen manual and companions in a D-001 folder under docs/agenda/ (name
+  PROPOSED: d-001_pre-filter), the register row, the design log updates (a section 4 row; the VP-44 note; bookmarks;
+  session notes), rehearsed push commands, one zip. Also carried into it from the Section C end: the post-push result
+  file (to docs/inputs, as the C-011 check was stored with the Section C end package) and the Section C end publication
+  note for the design log, section 6. These Stage 0 inputs and files are stored with it in
+  docs/inputs/chatgpt_originals_and_replies/, as at C-008 to C-011.
+- S6 Rama runs the push commands; Claude verifies GitHub main against the manifest.
+
+========================================================================================================================
+10. NOT DONE AND LIMITS
+========================================================================================================================
+- No legacy file content was opened, read, searched or run, the README included (ChatGPT's note says the pinned README
+  "contains a statement that the system was live"; recorded in the register as a source-status point, G-03). No blob was
+  fetched: the clone's object count is unchanged (section 3.3; re-checked in the final check).
+- No legacy history command: no log, show, grep of a revision or ls-tree -l. The only commit-object access was rev-parse
+  of the pin's tree.
+- The GitHub API was not used for the legacy tree (refused for this session; not retried another way). The records and
+  sandbox repositories were not accessed.
+- Frozen manuals and other V2 records are cited, not re-verified against legacy source.
+- Sizes come from C-010's record of the local object store; line counts at the pin are not established here (they would
+  need content). Path names are not evidence of function.
+- No host, VM, broker, webhook, Chartink, service or database was contacted; neither repository was changed.
+
+========================================================================================================================
+11. TOOLS (SHA-256 at the build)
+========================================================================================================================
+tree_check_d001.py     E3CA999688B0E61F7F67817ABA2FF6035B649413A4D15D9FE04049CC6E9616D1
+pathscan_d001.py       7F37CF7C80BF7180FC4D10FD436F407BCA868CC3E045F01F53E33222889F6D0D
+groups_d001.py         342303BA57E10B1085E174664AFFDBBA16B21E5D612DD12E57554780220F3319
+build_s0_d001.py       1D95F0C16A0289E466CEE706FE0C8E135CB3E4694509A92DD3CB5140A8C05CD8
+All in <SCRATCHPAD>/d001/tools/. check_s0_d001.py runs the final checks and writes
+  D-001_STAGE0_FINAL_CHECK_25-OCT-2026.txt.

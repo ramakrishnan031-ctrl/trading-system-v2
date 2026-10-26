@@ -1,0 +1,110 @@
+CLAUDE PROMPT — D-001 STAGE 1 SOURCE EVIDENCE PASS
+Date: 25-Oct-2026 (IST)
+Authority: ChatGPT Stage 0 review. This prompt authorises only the bounded evidence pass below.
+
+PROJECT RULES
+- Legacy system is DEAD / REFERENCE ONLY. Document historical behaviour only.
+- Do not fix, tune, revive, redesign, implement, deploy, or test the legacy system.
+- Do not infer function from path names. Keep FACT (SOURCE), HISTORICAL / RECORD-DERIVED, INTERPRETATION, UNKNOWN / NOT ESTABLISHED, and KNOWN DEFECT distinct.
+- Do not decide V2 design or governance. Do not ratify or disposition VP-44.
+- Do not write D-001_manual.md yet. Do not create a Rama answer sheet/questionnaire yet.
+- Do not change either repository; no commit or push.
+
+PINNED SOURCES
+Legacy production repository: ramakrishnan031-ctrl/trading-system-prod-snapshot
+Required commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Required tree: 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+V2 governance context cited in Stage 0: main at ad730162c190f605cba8ddd8eb720de52fd529b7
+Confirm the legacy HEAD/tree against the pin using permitted metadata-only methods. Do not use history-walking commands.
+
+AUTHORISED FILES — FIRST PASS ONLY
+Group A — primary pipeline and screening boundary:
+- main.py
+- signals/signal_processor.py
+- screening/entry_gate.py
+- screening/secondary_screener.py
+- screening/hard_gate.py
+- screening/step_executor.py
+- screening/quality_scorer.py
+- screening/retest_monitor.py
+
+Group B — only if required to establish a direct call/guard or distinguish ownership:
+- core/market_windows.py
+- core/mis_blocklist.py
+- capital/kill_switch.py
+- orders/shadow_tracker.py
+- signals/entry_throttle.py
+- strategies/control.py
+- strategies/loader.py
+- capital/strategy_governor.py
+
+Configuration — only keys directly referenced by the authorised source ranges:
+- config/system_config.yaml
+- config/scan_webhook_map.yaml
+- config/scoring_weights.yaml
+- config/strategy_direction_registry.yaml
+- specific config/strategies/*.yaml only if directly necessary; name each file and reason before reading it in the evidence log.
+
+Tests — text-only and only if needed to clarify an evidenced source path:
+- tests/unit/test_hard_gate.py
+- tests/unit/test_entry_gate.py
+- tests/unit/test_secondary_screener.py
+- tests/unit/test_quality_scorer.py
+- tests/unit/test_step_executor.py
+- tests/unit/test_signal_processor.py
+- tests/unit/test_entry_throttle.py
+Never execute any test.
+
+READ PROTOCOL
+1. Before each content read, verify the path is authorised, not protected, and resolves to the pinned blob. Log path, blob ID, purpose, and read mode.
+2. First perform bounded count-only searches for terms needed to map call sites and boundaries. For every zero-result search, include a positive control proving the search method works. Do not search excluded paths or all file contents indiscriminately.
+3. Then read only the narrow line ranges required to understand call sites, guards, inputs/outputs, state changes, and hand-offs. If more context is needed, log why before extending the range.
+4. Use any existing masking/value-blind filter before displaying content. Never print or include secret values, tokens, session links, host/address values, or other protected identifiers.
+5. No scripts, code, tests, linters, imports, application startup, or runtime behaviour may be executed. Do not use git log, git show, git grep against a revision, or git ls-tree -l. Do not fetch unrelated blobs.
+6. No access to hosts, VMs, broker, webhook, Chartink, services, or databases.
+
+NEVER OPEN
+- .env and .env.* files
+- token/session files
+- gui_config.local.yaml
+- docs/web_claude/
+- database/SQLite files
+- logs
+- Group E docs/audit records from Stage 0 (some may contain host values). They require separate ChatGPT approval and a value-blind protocol if later needed.
+
+QUESTIONS THIS PASS MUST INVESTIGATE — NOT PRE-DECIDE
+- What is the observed order of checks before the secondary screener, and which source owns each check?
+- What does the source show about the boundary between processor pre-checks, entry_gate, secondary_screener, hard_gate, step_executor and quality_scorer?
+- Does the pinned source show a call path to screening/hard_gate.py? If not established from bounded reads, state that.
+- What direct caller/callee and hand-off evidence exists for retest_monitor and entry_throttle? Avoid unrelated deep analysis.
+- Which config keys are actually read by these paths, and what are their consumers?
+- Is there any source-backed evidence about the EOD/PB01 path touching this decision pipeline? Do not infer a path from a V2 record.
+- What remains unresolved about the agenda's D-001 “Pre-filter” label versus D-002 hard rejection gates and D-003 secondary screening?
+
+OUTPUTS REQUIRED
+1. D-001_STAGE1_SOURCE_EVIDENCE_25-OCT-2026.txt
+   - claim ledger with path:line and pinned blob ID
+   - inputs, logic, guards, outputs, state/storage/handoff, next consumer only where source supports them
+   - observed call order, with inferred links explicitly labelled
+   - explicit paper/live or shadow/live distinction only if source/config proves it
+2. D-001_STAGE1_FILES_READ_LOG_25-OCT-2026.txt
+   - every file and exact line range read, blob ID, purpose, read mode, masking status
+   - searches run and positive controls for zero results
+   - files considered but not opened, with reason
+3. D-001_STAGE1_BOUNDARY_MATRIX_25-OCT-2026.txt
+   - D-001, D-002, D-003, C-008 and adjacent J-topic overlap; source evidence versus historical V2 record versus governance assignment
+   - do not decide agenda scope or owner transfers
+4. Updated D-001_STAGE0_GAP_AND_BOUNDARY_REGISTER_25-OCT-2026.txt or a clearly named Stage 1 revision that preserves all prior open items and records evidence status.
+5. D-001_STAGE1_CHANGE_NOTE_25-OCT-2026.txt and D-001_STAGE1_FINAL_CHECK_25-OCT-2026.txt.
+
+REQUIRED STATUS DISCIPLINE
+- A path exists != its code is called.
+- Code is called != it rejects a signal.
+- A configured rule != it is enabled or effective.
+- A shadow flag != it affected live decisions.
+- A historical V2 manual != verified legacy-source behaviour.
+- Missing evidence in a bounded read != proof that behaviour never existed.
+- If a factual claim cannot be established from the authorised ranges, mark UNKNOWN / NOT ESTABLISHED and identify the exact next evidence needed.
+
+STOP CONDITION
+Stop when these outputs are complete and checked. No manual drafting, no repository edits, no push, no question for Rama unless ChatGPT first reviews the evidence and explicitly asks for one. Return the files to ChatGPT for reconciliation and wait.

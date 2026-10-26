@@ -1,0 +1,42 @@
+D-001 STAGE 1 — CHATGPT RECONCILIATION REVIEW
+Date: 25-Oct-2026 (IST)
+Disposition: EVIDENCE PACKAGE ACCEPTED WITH ONE PROCESS-PROVENANCE CLARIFICATION.
+No manual drafting, repository changes, commits, pushes, or V2 design are authorised by this review.
+
+1. REVIEW SCOPE AND CONFIDENCE
+Reviewed the six uploaded Stage 1 records: source evidence, files-read log, boundary matrix, revised gap/boundary register, change note, and final check. This is a documentary reconciliation of Claude's package; ChatGPT did not independently rerun the local scripts or reproduce the source reads.
+
+The records are mutually consistent on the main scope findings and on the claim that no repository changes or code/test execution occurred. The final check reports 227 source citations covered by logged reads, 120 blob IDs matching the pin, 60 reads, 22 saved searches including controls, and no listed blocker. Treat these as reported validation results, not an independent ChatGPT execution.
+
+2. SOURCE-BACKED FINDINGS THAT CAN NOW BE CARRIED FORWARD
+A. The pinned code does not name a feature “pre-filter.” The processor calls its first block “Pre-flight checks,” followed by strategy lookup/control/window/governor checks. The screener then has early steps before its ten-step executor pipeline. Therefore, “D-001 — Pre-filter” is an agenda label whose intended scope remains a governance decision, not a source-established module name.
+
+B. The processor’s first two stages are before the call to SecondaryScreener.screen(): kill switch, global entry window, signal age, shadow-inning guard; then strategy mapping/lookup, strategy control, strategy-specific window and strategy governor. These existing owners must remain as recorded in Section C unless separately decided.
+
+C. Inside the screener, MIS learned-blocklist handling, quote availability and circuit-proximity handling precede the ten-step executor/scorer flow. On the repository configuration, the MIS filter is enabled but shadow=true, so its would-drop is logged and the signal falls through. Do not describe that configured MIS filter as an active rejection.
+
+D. Critical distinction: a circuit-proximity rule imported from screening/hard_gate.py is called from the screener’s early path and can reject when enabled. Separately, HardGate.evaluate’s broader V3 battery is invoked in the “shadow” comparison on the repository configuration and is logged without changing the live result. “hard_gate.py is shadow-only” would be inaccurate; “the HardGate.evaluate battery is shadow on the repository configuration” is the supported distinction.
+
+E. Signal-age logic appears at multiple stages: processor expiry configured as 600 seconds, screener/executor age handling at 60 seconds, and HardGate freshness in the shadow battery at 60 seconds. Record each source and consumer separately; do not merge them into one rule.
+
+F. EntryGate and retest/throttle are not one pre-filter block. EntryGate is post-screening and described as dormant in a source comment; the Stage 1 report explicitly says the add() caller search was not rerun. Retest divert is after price derivation and is not built with the repository setting shown. EntryThrottle runs after screening/sizing/reservation, immediately before placement. Preserve those limitations and existing ownership.
+
+G. The inspected PB01 wiring in main.py does not pass the processor, screener or hard gate into those stages. Count-only hits show references to hard_gate in PB01-related files, but those files were not read. A PB01 hand-off into the main decision pipeline is therefore NOT ESTABLISHED, not disproved.
+
+3. D-001 BOUNDARY — WHAT IS AND IS NOT DECIDED
+No existing owner should be moved on the strength of this pass. In particular, earlier records assign the MIS pre-drop and quote availability to D-003; circuit proximity has no owner found in the matrix; the HardGate battery has a historical J-topic assignment; and the processor checks have existing Section C / A-003 / A-008 / F ownership references. These are references to preserve, not silently change.
+
+OSQ-01 through OSQ-06 remain open as recorded; OSQ-07 (VP-44) remains deferred to D-001 close and is not ratified, rejected, or moved. OSQ-08 is answered for this pass only: ChatGPT set the bounded Stage 1 file list/read modes.
+
+4. PROCESS-PROVENANCE CLARIFICATION REQUIRED
+The files-read log says the masking filter “also reads the two host records value-blind to build its host-token list” (files-read log, lines 110–114), while other parts of the package say Group E / protected records were never opened and that never-open blobs present were zero. These statements may be reconcilable if “host records” are a separately approved input and are not Group E/protected records, but the package does not identify them clearly enough to establish that.
+
+Do not reopen any record or repeat the read. Ask Claude to clarify from existing audit metadata only:
+- identify the two records by safe category/registry label only, not path, host value, or contents;
+- state whether either record is in the protected/Group E/never-open set;
+- distinguish “filter consumed an already-approved token list” from “filter read a source record”;
+- make no new access, no content display, and no change to the pinned clone.
+If the existing metadata cannot resolve this, leave it UNKNOWN / NOT ESTABLISHED and stop. This clarification does not by itself invalidate the source evidence; it is a provenance ambiguity to close before further work.
+
+5. NEXT GATE
+Before drafting D-001, Rama should select the intended agenda scope in the companion answer sheet. After the answer, ChatGPT should reconcile the selected scope with the recorded ownership boundaries and issue a separate, bounded follow-up prompt if additional source evidence is needed. Do not begin D-002/D-003 work or draft the D-001 manual now.

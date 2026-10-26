@@ -1,0 +1,77 @@
+D-001 - PRE-FILTER: STAGE 1 GAP AND BOUNDARY REGISTER (Stage 1 revision)
+Date: 25-Oct-2026 (IST). Prepared by Claude for ChatGPT's reconciliation.
+Revises D-001_STAGE0_GAP_AND_BOUNDARY_REGISTER_25-OCT-2026.txt (SHA-256 1C5DE8C5...): every Stage 0 item kept, with its
+  evidence status after Stage 1; new items G-09 to G-15. Factual findings are kept apart from the governance decisions
+  that remain with ChatGPT and Rama. Claim IDs refer to D-001_STAGE1_SOURCE_EVIDENCE_25-OCT-2026.txt.
+
+========================================================================================================================
+A. INVENTORY AND EVIDENCE GAPS
+========================================================================================================================
+G-01 [OPEN (factual part narrowed)] What "Pre-filter" denotes. Stage 1: the code names its first block "Pre-flight
+     checks" (P-03, W-02); "pre-filter" occurs in runtime code only in 4 lines of 3 files, two of them an unrelated
+     kill-switch comment (W-01, B-06), two not read (G-10). The mechanism D-001 documents is a governance choice
+     (OSQ-01).
+G-02 [CLOSED at Stage 0 (no change)] The GitHub API listing was refused to this session; the counts rest on the rebuilt
+     tree, re-checked at 18:54 IST.
+G-03 [UNCHANGED] The README statement that the system was live is repository text, not runtime state; the README was not
+     opened.
+G-04 [UNCHANGED] Whether chapter 06 "Filtering and trade decision" of the 18-Sep manual has been written since
+     24-Oct-2026: UNKNOWN (records repository not a source of this pass).
+G-05 [FACTUAL PART RESOLVED for the repository configuration] The two records describe two uses of hard_gate.py: the
+     circuit-proximity rule on the live default path (H-01, H-06) and the HardGate battery computed in shadow (H-02 to
+     H-05; mode "shadow"). The 21-Sep record's section 14 lists the battery's checks; A-008's "shadow" matches the
+     configured mode. Deployed configuration not read. Where D-002 starts stays OSQ-03.
+G-06 [UNCHANGED] No Group E record was opened; any later need requires a separate ChatGPT approval and a value-blind
+     protocol.
+G-07 [PARTLY ADDRESSED] Re-read at the pin and consistent with the records: C-008 ST-04 to ST-12, ST-15, ST-27 and ST-01
+     (P-03 to P-10); C-004 10.2 and 10.3 (S-03, S-05); A-008 section 12 on the shadow layers (H-04, H-05, S-06); C-009
+     on the screener's age step (E-02). No conflict found in the ranges read; other cited statements stay HISTORICAL.
+G-08 [RESOLVED for the files read] Line counts from the filter: signals/signal_processor.py 2,704; main.py 4,294;
+     screening/secondary_screener.py 706; screening/hard_gate.py 467; screening/step_executor.py 424;
+     screening/quality_scorer.py 151; screening/entry_gate.py 538; screening/retest_monitor.py 442;
+     capital/kill_switch.py 2,152; core/market_windows.py 334; strategies/control.py 118; strategies/loader.py 214;
+     capital/strategy_governor.py 197; core/mis_blocklist.py 161; config/system_config.yaml 754;
+     config/scoring_weights.yaml 45.
+G-09 [NEW - UNKNOWN] What v3_chain/pb01_entry.py, v3_chain/pb01_runner.py, v3_chain/runner.py and
+     scripts/v3_hardgate_parity_recompute.py use from hard_gate.py (count only, H-07). Next evidence: the matching lines
+     of those four files (needs ChatGPT's authorisation).
+G-10 [NEW - UNKNOWN] The "pre-filter" lines in core/config_snapshotter.py and core/state_store.py (W-01). Next evidence:
+     those two lines (needs authorisation).
+G-11 [NEW - NOT ESTABLISHED] Which configuration file feeds app_config.scoring and app_config.system (the mapping is in
+     core/config_loader.py). Next evidence: the loader's mapping lines (needs authorisation).
+G-12 [NEW - NOT ESTABLISHED] The entry-window times' configuration and whether the strategy governor is enabled
+     (_build_strategy_governor in main.py). Next evidence: that builder and the window block, if ChatGPT needs them for
+     D-001 (they belong to A-003 and F).
+G-13 [NEW - OPEN (owner elsewhere)] is_tracking while the shadow tracker is disabled (C-008 [U-01]);
+     orders/shadow_tracker.py not opened.
+G-14 [NEW - OBSERVATION] hard_gate.py calls step 9 a "hard reject" (E-04) while on the default path a 0.0 step 9 only
+     lowers the score (E-01, S-04). Recorded for D-002 / D-003; not a D-001 finding and not decided.
+G-15 [NEW - NOT DONE] No test was read; the source answered the questions. The EntryGate.add() caller search was not
+     re-run (claim AF-01 of the evidence file relies on the code comment and B-009 D1).
+
+========================================================================================================================
+B. OPEN SCOPE QUESTIONS (governance; ChatGPT's Stage 0 review kept OSQ-01 to OSQ-07 open)
+========================================================================================================================
+OSQ-01 [OPEN] Which mechanism D-001 documents. New factual input: the code's own Step 1 "Pre-flight checks" (kill
+       switch, window, age, shadow inning) and Step 2 (lookup, control, window, governor) (P-03, P-04); the screener's
+       steps 0, 1 and 1b before its ten steps (S-03); the hard-gate rules (H-01 to H-06). The source does not name any
+       of them a pre-filter.
+OSQ-02 [OPEN] D-001 and C-008: the owners of each pre-check rule are as C-008 recorded (matrix M01 to M09); no transfer
+       proposed. Cross-reference bookmarks would be the mechanism if ChatGPT wants D-001 to cover them.
+OSQ-03 [OPEN] D-001 and D-002: the live circuit-proximity reject runs from hard_gate.py inside screen() (M12); the
+       HardGate battery is shadow (M13); the window check and the eligibility pre-check already name D-002 (M02, M10).
+OSQ-04 [OPEN] D-001 and D-003: steps 0, 1 and 1b run before the ten steps but inside screen(); C-004 gave 0 and 1 to
+       D-003 (M10, M11); the age rule repeats (M03, M16).
+OSQ-05 [OPEN] Other owners: the throttle is post-screening and pre-placement (M19); the shadow-inning guard is inside
+       the pre-flight block with no named owner (M04); the retest divert, the V3 chain and the allocator come after
+       (M17, M20).
+OSQ-06 [OPEN] EOD / PB01: no hand-off into the processor or the screener in main.py's PB01 wiring (X-02); hard_gate.py
+       references in two PB01 files, count only (X-03, G-09). C-011's ownership of the route unchanged.
+OSQ-07 [DEFERRED TO THE D-001 CLOSE] VP-44: not ratified, rejected or moved.
+OSQ-08 [ANSWERED FOR THIS PASS] ChatGPT set the Stage 1 file list and read modes; any further reads are listed as next
+       evidence in G-09 to G-12.
+
+========================================================================================================================
+C. QUESTIONS FOR RAMA
+========================================================================================================================
+None. No question is put to Rama unless ChatGPT, after reconciling the evidence, asks for one.

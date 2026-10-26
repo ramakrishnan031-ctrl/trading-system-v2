@@ -1,0 +1,448 @@
+D-001 - PRE-FILTER: STAGE 1 SOURCE EVIDENCE
+Date: 25-Oct-2026 (IST). Built 19:12 IST by Claude for ChatGPT's reconciliation. Not a manual; decides nothing.
+Authority: D-001_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_25-OCT-2026.txt and
+  D-001_CLAUDE_PROMPT_STAGE1_SOURCE_EVIDENCE_25-OCT-2026.txt (Rama, 18:49 IST). Pinned source:
+  trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa, re-checked 18:54 IST from the saved listing; no history command). V2
+  context: main at ad73016.
+Method: count-only searches with positive controls (S1-1, 20 searches), then 60 logged narrow reads of 16 authorised
+  files at their pinned blobs through the masking filter (S1-2), between the lock's lift at 18:54:07 and its
+  re-engagement at 19:03:40 IST. Companions: D-001_STAGE1_FILES_READ_LOG_25-OCT-2026.txt,
+  D-001_STAGE1_BOUNDARY_MATRIX_25-OCT-2026.txt, D-001_STAGE1_GAP_AND_BOUNDARY_REGISTER_25-OCT-2026.txt,
+  D-001_STAGE1_CHANGE_NOTE_25-OCT-2026.txt, D-001_STAGE1_FINAL_CHECK_25-OCT-2026.txt.
+Labels: FACT (SOURCE) - code lines read at the pin; FACT (TEXT) - a comment or docstring (not behaviour); FACT (CONFIG)
+  - a repository configuration value (not a deployed host's); FACT (COUNT) - a count-only search (file names and counts,
+  no line read); HISTORICAL / RECORD-DERIVED - a V2 record; INTERPRETATION; UNKNOWN / NOT ESTABLISHED. A path:a-b
+  citation names lines printed by a logged read of that file at its pinned blob (the files-read log). Quotations are
+  verbatim except that comment markers and line breaks are dropped, non-ASCII dashes, arrows and symbols are shown in
+  ASCII, and "..." marks words left out.
+Status discipline (the prompt): a path existing is not its code being called; code being called is not it rejecting a
+  signal; a configured rule is not an enabled or effective one; a shadow flag is not an effect on live decisions; a
+  bounded read finding nothing is not proof of absence. No code, test or script was run; no deployed configuration or
+  host was read.
+
+========================================================================================================================
+FILES AND PINNED BLOBS (the claims cite these paths)
+========================================================================================================================
+  capital/kill_switch.py             blob 3eb2ece050c3  (reads: 042, 043, 044, 045)
+  capital/strategy_governor.py       blob d17193c569c1  (reads: 052, 053)
+  config/scoring_weights.yaml        blob e9d6ede4c02d  (reads: 025)
+  config/system_config.yaml          blob bf742ae5c81c  (reads: 022, 023, 024)
+  core/market_windows.py             blob 25625e8cd109  (reads: 046, 047)
+  core/mis_blocklist.py              blob 1f91fedfbdd4  (reads: 054, 055)
+  main.py                            blob 445fb0d8237a  (reads: 014, 015, 016, 017, 018, 019, 020, 021, 051)
+  screening/entry_gate.py            blob 46b173171bdf  (reads: 037, 038)
+  screening/hard_gate.py             blob a8e7e2e49675  (reads: 027, 028, 029)
+  screening/quality_scorer.py        blob b125e9ce3243  (reads: 033, 034)
+  screening/retest_monitor.py        blob 26639d6ed5dd  (reads: 039, 040)
+  screening/secondary_screener.py    blob b6f8ff7223ad  (reads: 009, 010, 011, 012, 013, 026, 035, 036, 056)
+  screening/step_executor.py         blob d83b04860f0f  (reads: 030, 031, 032)
+  signals/signal_processor.py        blob 7fab0a02a302  (reads: 001, 002, 003, 004, 005, 006, 007, 008, 041, 057, 058,
+      059, 060)
+  strategies/control.py              blob b6eecb480b83  (reads: 048, 049)
+  strategies/loader.py               blob 99e83b192021  (reads: 050)
+
+========================================================================================================================
+1. THE PROCESSOR'S MAIN PATH: THE ORDER OF THE CHECKS BEFORE THE SCREENER
+========================================================================================================================
+P-01 [FACT (TEXT)] The processor's module docstring gives its pipeline as "pre-flight -> strategy lookup -> secondary
+     screen -> price derivation -> position sizing -> risk approval -> capital reserve -> order placement -> status
+     update" and says it "Owns orchestration only; delegates all decisions to injected modules."
+     signals/signal_processor.py:4-10. A docstring, not behaviour; HISTORICAL: C-008 CX-02 records processor-owned
+     checks against that claim.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 002.
+
+P-02 [FACT (SOURCE)] At module level, among the decision modules, the processor imports only strategies.control
+     (strategy_will_trade, CAUSE_TRADE_TYPE) signals/signal_processor.py:55-61; it imports EntryThrottle inside its
+     constructor signals/signal_processor.py:262 (P-10). The screener and the scorer arrive as constructor arguments,
+     the scorer "kept for logging/metrics" signals/signal_processor.py:167-168, and are stored as self._screener and
+     self._scorer signals/signal_processor.py:209-210.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 001, 004.
+
+P-03 [FACT (SOURCE)] _process_one writes PROCESSING first signals/signal_processor.py:896-899. Then the block the code
+     itself labels "Step 1: Pre-flight checks (cheap, no I/O)" signals/signal_processor.py:901-903 runs, in this order:
+     the kill switch, self._ks.is_active("entry") -> KILL_SWITCH signals/signal_processor.py:905-907; the global window,
+     self._mw.is_entry_allowed(now) -> OUTSIDE_ENTRY_WINDOW signals/signal_processor.py:909-912; the signal age against
+     self._signal_expiry_sec -> EXPIRED, commented "defense-in-depth; receiver also checks"
+     signals/signal_processor.py:914-921; the shadow-inning guard signals/signal_processor.py:923-928.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 003.
+
+P-04 [FACT (SOURCE)] Then "Step 2: Strategy lookup (SPW3)" signals/signal_processor.py:930-932: no scan_webhook_map
+     entry, an entry with no strategy, or a strategy not in the loaded set -> UNKNOWN_STRATEGY
+     signals/signal_processor.py:933-953; the strategy-control gate, strategy_will_trade(...) -> TRADE_TYPE or
+     STRATEGY_CONTROL signals/signal_processor.py:955-972; the per-strategy window, is_entry_allowed_for_strategy ->
+     OUTSIDE_ENTRY_WINDOW signals/signal_processor.py:974-982; the strategy circuit breaker,
+     self._strategy_governor.check(...) when a governor is set -> STRATEGY_CIRCUIT_BREAKER
+     signals/signal_processor.py:984-990.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 003.
+
+P-05 [FACT (SOURCE)] Then "Step 3: Secondary screening (SPW3, P18)" signals/signal_processor.py:992-996:
+     self._screener.screen(signal_id, symbol, scanner_name, trigger_price, triggered_at, direction=..., intent=...,
+     strategy=..., market_data=None) signals/signal_processor.py:997-1004; a status beginning "SKIPPED_" -> a warning
+     and return signals/signal_processor.py:1008-1013; not passed -> return signals/signal_processor.py:1015-1020. The
+     comment: "Processor does NOT double-write those statuses." signals/signal_processor.py:994-995. Step 4, price
+     derivation, follows signals/signal_processor.py:1025-1030.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 003.
+
+P-06 [FACT (SOURCE)] A _PipelineReject raised by any of these checks ends in the handler
+     signals/signal_processor.py:1193-1231: the stored status is f"REJECTED_{rej.check}" with the reason
+     signals/signal_processor.py:1201; a held reservation is released signals/signal_processor.py:1212-1217; the
+     per-check reject counter is bumped signals/signal_processor.py:1218-1220; for EXPIRED a warning goes out at most
+     once a minute signals/signal_processor.py:1221-1231.
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 059, 060.
+
+P-07 [FACT (SOURCE)] The shadow-inning helper signals/signal_processor.py:1976-2008: with no tracker object it returns
+     signals/signal_processor.py:1988-1990; is_tracking(symbol) true -> SHADOW_INNING_ACTIVE
+     signals/signal_processor.py:1991-1997; an exception -> SHADOW_TRACKER_ERROR, "failing closed"
+     signals/signal_processor.py:2000-2008. Its docstring says all three entry paths enforce it
+     signals/signal_processor.py:1980-1981. What is_tracking returns while the tracker is disabled: UNKNOWN
+     (orders/shadow_tracker.py not opened; C-008 [U-01]).
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 007, 041.
+
+P-08 [FACT (SOURCE)] The FIX-007 rate-limiter "pre-check" signals/signal_processor.py:415-424 runs only if
+     self._rate_limiter is not None signals/signal_processor.py:418; main.py's SignalProcessor(...) call
+     main.py:3575-3623 passes no rate_limiter argument. So it does not run on the pinned wiring (consistent with C-008
+     ST-01, HISTORICAL).
+     Blobs: main.py 445fb0d8237a; signals/signal_processor.py 7fab0a02a302. Reads: 014, 016, 057, 058.
+
+P-09 [FACT (SOURCE) + FACT (CONFIG)] The retest divert signals/signal_processor.py:1037-1056 comes after price
+     derivation and runs only if self._retest_diverter is not None and enabled signals/signal_processor.py:1042. main.py
+     builds and late-binds the diverter only when _v2_on and the zone warmer and zone cache exist main.py:3769
+     main.py:3789-3793; _v2_on is sr_detector.wait_for_retest_enabled main.py:3421 main.py:3423; the repository value is
+     false config/system_config.yaml:529. So on the repository configuration the diverter is not built and the divert
+     does not run (no deployed configuration read).
+     Blobs: config/system_config.yaml bf742ae5c81c; main.py 445fb0d8237a; signals/signal_processor.py 7fab0a02a302.
+     Reads: 003, 014, 019, 021, 022.
+
+P-10 [FACT (SOURCE) + FACT (CONFIG)] The processor builds the entry throttle itself signals/signal_processor.py:259-268
+     and calls admit(symbol) at signals/signal_processor.py:1407-1418, after the late kill-switch check
+     signals/signal_processor.py:1384-1396 and the shutdown check signals/signal_processor.py:1398-1405 and right before
+     placement signals/signal_processor.py:1420: so after screening, sizing and reservation. The settings come from
+     system.signal_processor main.py:3595-3599; repository values 20 s, 60 s, 3 and 300 s
+     config/system_config.yaml:350-353. The gate and retest resume paths call it too signals/signal_processor.py:2225
+     signals/signal_processor.py:2530.
+     Blobs: config/system_config.yaml bf742ae5c81c; main.py 445fb0d8237a; signals/signal_processor.py 7fab0a02a302.
+     Reads: 004, 005, 006, 016, 022.
+
+========================================================================================================================
+2. THE SECONDARY SCREENER: WHAT RUNS INSIDE screen()
+========================================================================================================================
+S-01 [FACT (TEXT)] Its header: "Orchestrates the 10-step screening pipeline: fetches market data, runs step_executor,
+     scores via quality_scorer, applies strategy min_score override, persists result per P18."
+     screening/secondary_screener.py:3-5.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 009.
+
+S-02 [FACT (SOURCE)] Its constructor takes step_executor, quality_scorer, state_store, quote_fn, logger,
+     circuit_proximity_reject_enabled (default True), mis_blocklist, mis_filter_enabled (default False),
+     mis_filter_shadow (default True), resolve_product, hard_gate, scoring_config and evidence
+     screening/secondary_screener.py:66-81; the V3 mode is scoring_config.v3_hardgate_mode, default "off"
+     screening/secondary_screener.py:96.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 009.
+
+S-03 [FACT (SOURCE)] screen() runs, in this order screening/secondary_screener.py:123-374: step 0, the MIS
+     learned-blocklist pre-drop, only when the filter is enabled and a blocklist is set
+     screening/secondary_screener.py:142-148, rejecting REJECTED_NOT_MIS_TRADABLE only when shadow is false
+     screening/secondary_screener.py:150-164 and otherwise falling through screening/secondary_screener.py:165; step 1,
+     the quote when market_data is None: none -> SKIPPED_QUOTE_UNAVAILABLE screening/secondary_screener.py:167-183, a
+     failure -> the same status with an ERROR log screening/secondary_screener.py:185-196; the V3 enforce path only when
+     the mode is "enforce" and a hard gate is set screening/secondary_screener.py:200-206; step 1b, the pre-fill
+     circuit-proximity rejection -> REJECTED_CIRCUIT_PROXIMITY, commented "Hard reject, not a soft score - runs before
+     the 10-step pipeline." screening/secondary_screener.py:208-232; step 2, the thresholds min_volume_surge,
+     min_adr_pct and max_spread_pct from the strategy screening/secondary_screener.py:234-239; step 4,
+     step_executor.run_all, an exception -> SKIPPED_EXECUTOR_ERROR screening/secondary_screener.py:251-263; step 4b, any
+     error step -> REJECTED_STEP_ERROR screening/secondary_screener.py:265-286; step 5, scorer.score, an exception ->
+     SKIPPED_SCORER_ERROR screening/secondary_screener.py:288-300; the V3 shadow compare when the mode is "shadow" and a
+     hard gate is set screening/secondary_screener.py:305-314; step 6, the per-strategy min_score (strategy.min_score if
+     above 0, else the scorer's min_pass_score), below it REJECTED_SCORE_<n> screening/secondary_screener.py:316-337;
+     step 7, a signal_age result of 0.0 -> REJECTED_SIGNAL_AGE screening/secondary_screener.py:339-354; step 8, PASSED
+     screening/secondary_screener.py:356-374. The screener persists every outcome itself
+     screening/secondary_screener.py:163 screening/secondary_screener.py:182 screening/secondary_screener.py:195
+     screening/secondary_screener.py:231 screening/secondary_screener.py:262 screening/secondary_screener.py:285
+     screening/secondary_screener.py:299 screening/secondary_screener.py:336 screening/secondary_screener.py:353
+     screening/secondary_screener.py:369.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 010, 012.
+
+S-04 [FACT (SOURCE)] The screener does not read the executor's step statuses or rejected_at to reject: a grep of the
+     file for rejected_at, step_statuses[ and == "REJECTED" printed no line (read 035), and its positive control found
+     step_statuses in 14 lines (read 036); file screening/secondary_screener.py, blob b6f8ff7223ad. So on the default
+     path a 0.0 step result other than signal_age only lowers the score (INTERPRETATION, bounded to this file and S-03).
+
+S-05 [FACT (SOURCE)] The MIS helper screening/secondary_screener.py:554-581 answers False unless the resolved product is
+     MIS (fail-open on a resolve error) screening/secondary_screener.py:564-571 and the blocklist reports the symbol
+     screening/secondary_screener.py:572-573; it logs every would-drop, shadow or active, and returns True for both
+     screening/secondary_screener.py:557-563 screening/secondary_screener.py:574-581. MisLearnedBlocklist.is_blocked:
+     true only within the TTL; a corrupt date fails open core/mis_blocklist.py:102-114.
+     Blobs: core/mis_blocklist.py 1f91fedfbdd4; screening/secondary_screener.py b6f8ff7223ad. Reads: 011, 026, 054, 055.
+
+S-06 [FACT (CONFIG)] mis_filter: enabled true, shadow true, ttl_days 1 config/system_config.yaml:179-181; its comment
+     says the would-drop is logged and the signal falls through config/system_config.yaml:171-174. main.py passes them
+     as mis_filter_enabled and mis_filter_shadow main.py:3289-3292 and the TTL to the blocklist main.py:3055
+     main.py:3057. So on the repository configuration step 0 logs and does not reject.
+     Blobs: config/system_config.yaml bf742ae5c81c; main.py 445fb0d8237a. Reads: 014, 015, 023.
+
+========================================================================================================================
+3. THE HARD GATE: IS THERE A CALL PATH TO screening/hard_gate.py?
+========================================================================================================================
+H-01 [FACT (SOURCE)] Yes. The screener imports circuit_proximity_reason, rescale_min_score, rescaled_total and tier_for
+     from screening.hard_gate screening/secondary_screener.py:29-34, and its step 1b helper delegates to
+     hard_gate.circuit_proximity_reason with enabled=self._circuit_proximity_reject_enabled
+     screening/secondary_screener.py:420-431. So a function of hard_gate.py is on the screener's default path (S-03,
+     step 1b).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 009, 011, 013.
+
+H-02 [FACT (SOURCE)] main.py always builds HardGate(now_fn, logger, freshness_max_sec from scoring.v3_freshness_max_sec,
+     circuit_proximity_reject_enabled from system.entry_gate) main.py:3238-3247 and passes it to the screener with
+     scoring_config=app_config.scoring main.py:3294-3296. Its comment: "Consumed by the screener only when
+     scoring.v3_hardgate_mode != off (default off -> dormant); built always so shadow/enforce need no re-wiring."
+     main.py:3238-3240.
+     Blobs: main.py 445fb0d8237a. Reads: 014, 015.
+
+H-03 [FACT (SOURCE)] HardGate.evaluate checks, in order: at-circuit -> AT_CIRCUIT; circuit proximity through the same
+     circuit_proximity_reason -> CIRCUIT_PROXIMITY; age over freshness_max_sec -> SIGNAL_AGE (a missing triggered_at
+     admits); liquidity, a no-op screening/hard_gate.py:139-171. FACT (TEXT): "For the CURRENT LIVE flow it houses only
+     the rules relocated out of the score: at-circuit, circuit-proximity, and freshness (signal_age, 60s)." and the V3
+     playbook gates "NEVER reject a live order in this step" screening/hard_gate.py:3-8.
+     Blobs: screening/hard_gate.py a8e7e2e49675. Reads: 027, 028, 029.
+
+H-04 [FACT (SOURCE)] The screener calls evaluate only in _screen_v3_enforce screening/secondary_screener.py:444, taken
+     only when the mode is "enforce" screening/secondary_screener.py:202, and in _log_v3_shadow_compare
+     screening/secondary_screener.py:538, taken when the mode is "shadow" screening/secondary_screener.py:310. The
+     shadow compare only logs: "Pure side-effect; never changes the live result, never raises."
+     screening/secondary_screener.py:534-536, the log call screening/secondary_screener.py:544-548.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 010, 011, 026.
+
+H-05 [FACT (CONFIG)] config/scoring_weights.yaml: v3_hardgate_mode "shadow" config/scoring_weights.yaml:39,
+     v3_gate_steps [circuit_check, signal_age] config/scoring_weights.yaml:40, v3_freshness_max_sec 60.0
+     config/scoring_weights.yaml:41, v3 thresholds 50, 75 and 56 config/scoring_weights.yaml:42-44; its comment: "shadow
+     = compute both, live follows OLD, log NEW old-vs-new." config/scoring_weights.yaml:34. Which file feeds
+     app_config.scoring is NOT ESTABLISHED from the authorised source (core/config_loader.py not authorised); FACT
+     (TEXT): the scorer's comment "All weights and thresholds come from ScoringConfig (scoring_weights.yaml)."
+     screening/quality_scorer.py:4.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d; screening/quality_scorer.py b125e9ce3243. Reads: 025, 033.
+
+H-06 [INTERPRETATION] From H-01 to H-05 and the repository configuration: on the default path the HardGate class decides
+     nothing (its verdict is computed and logged in shadow), while the circuit-proximity rule housed in hard_gate.py
+     rejects when enabled; the repository value is true config/system_config.yaml:661. On the default path freshness
+     decides through the executor's step 10 and the screener's step 7 (E-02, S-03), while at-circuit only lowers the
+     score (step 9; E-01, E-04); neither goes through HardGate.
+     Blobs: config/system_config.yaml bf742ae5c81c. Reads: 022.
+
+H-07 [FACT (COUNT)] hard_gate or HardGate also occurs in v3_chain/pb01_entry.py (1 line), v3_chain/pb01_runner.py (2),
+     v3_chain/runner.py (1) and scripts/v3_hardgate_parity_recompute.py (2) (search Q01). Outside the authorised set;
+     not read; their blobs are in the files-read log, section 2. What they call is UNKNOWN.
+
+H-08 [FACT (SOURCE)] hard_gate.py also defines gate_rr, gate_htf, gate_extreme, gate_confirm and gate_pullback
+     screening/hard_gate.py:240 screening/hard_gate.py:297 screening/hard_gate.py:340 screening/hard_gate.py:369
+     screening/hard_gate.py:422; the screener does not import them (its import list
+     screening/secondary_screener.py:29-34); their callers are not established; the module calls them "PLAYBOOK-shadow
+     scope" screening/hard_gate.py:6-8.
+     Blobs: screening/hard_gate.py a8e7e2e49675; screening/secondary_screener.py b6f8ff7223ad. Reads: 009, 027, 028.
+
+========================================================================================================================
+4. THE STEP EXECUTOR AND THE SCORER
+========================================================================================================================
+E-01 [FACT (SOURCE)] run_all runs ten steps in a fixed order: volume_surge, vwap_position, atr_filter, rsi_range,
+     price_action, sector_strength, time_of_day, spread_check, circuit_check, signal_age, less any exclude_steps
+     screening/step_executor.py:141-154. Every step runs, with no stop on a 0.0; a timeout scores 0.5 as TIMEOUT
+     screening/step_executor.py:168-181; an exception scores 0.0 as ERROR and is listed as an error step
+     screening/step_executor.py:182-195; a 0.0 result is marked REJECTED and the first is rejected_at
+     screening/step_executor.py:200-206. The screener calls it without exclude_steps on the default path
+     screening/secondary_screener.py:253.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad; screening/step_executor.py d83b04860f0f. Reads: 010, 030, 031.
+
+E-02 [FACT (SOURCE)] Step 9 gives 0.0 at an upper or lower circuit, else 1.0 screening/step_executor.py:397-404; step 10
+     gives 1.0 up to 30 s, 0.5 up to 60 s, 0.0 beyond, and 0.5 with no triggered_at screening/step_executor.py:406-423.
+     With S-03 step 7, a signal older than 60 s by the screener's clock ends REJECTED_SIGNAL_AGE on the default path (a
+     code path, not an observed event).
+     Blobs: screening/step_executor.py d83b04860f0f. Reads: 030, 032.
+
+E-03 [FACT (SOURCE) + FACT (CONFIG)] QualityScorer.score: a proportional weighted sum over the steps present (missing
+     steps leave the denominator), capped at 100 screening/quality_scorer.py:79-120; tiers from the high and medium
+     thresholds screening/quality_scorer.py:122-132; passed means total >= min_pass_score
+     screening/quality_scorer.py:134; the range read shows no step acting as a hard reject. Repository values: weights
+     15, 10, 10, 10, 15, 10, 5, 5, 10, 10; min_pass_score 60; high 80; medium 65 config/scoring_weights.yaml:10-29.
+     main.py builds it with weights=app_config.scoring main.py:3230-3233.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d; main.py 445fb0d8237a; screening/quality_scorer.py b125e9ce3243.
+     Reads: 014, 015, 025, 033, 034.
+
+E-04 [FACT (TEXT)] hard_gate.py says its at-circuit rule "mirrors step_executor._step_9_circuit_check: hard reject"
+     screening/hard_gate.py:145; on the default path step 9 only scores 0.0 and the screener does not reject on it
+     (E-01, S-04). A comment against the code path (register G-14); whether the 10 lost points alone could end below the
+     pass score depends on the other steps (A-008 section 12 records a ceiling of 65; HISTORICAL).
+     Blobs: screening/hard_gate.py a8e7e2e49675. Reads: 029.
+
+========================================================================================================================
+5. AFTER THE SCREENER: THE ENTRY GATE, THE RETEST MONITOR AND THE THROTTLE
+========================================================================================================================
+AF-01 [FACT (TEXT) + FACT (SOURCE)] entry_gate.py: "Hold screened signals in a price-watchlist." ... "release to
+     downstream on_release callback." screening/entry_gate.py:4-8; EG14 "Integration with signal_processor deferred to
+     Module 33." screening/entry_gate.py:24. main.py builds EntryGate(quote_fn, logger, state_store,
+     on_release=_make_gate_release_cb(signal_processor)) main.py:3839-3844. The processor's continue_from_gate resumes
+     "post-screening" for a released WatchEntry; "Steps 1-4 of _process_one (screening + price derivation) are bypassed.
+     Kill-switch and market-window are re-checked as a last-mile gate." signals/signal_processor.py:2010-2019. Its
+     comment: "This path is DORMANT today: nothing calls EntryGate.add(), so only gate_state rows rehydrated at boot can
+     reach it." signals/signal_processor.py:2236-2238. HISTORICAL / KNOWN DEFECT: B-009 D1 (no runtime caller of add();
+     C-007 S-14, C-008 BK-24 note); the caller search was not re-run here.
+     Blobs: main.py 445fb0d8237a; screening/entry_gate.py 46b173171bdf; signals/signal_processor.py 7fab0a02a302. Reads:
+     004, 007, 008, 014, 020, 037.
+
+AF-02 [FACT (TEXT) + FACT (SOURCE)] retest_monitor.py: it "Holds candidates DIVERTED by the pre-placement check (a LONG
+     entry inside a HIGH resistance zone)" and on confirmation hands them to signal_processor.continue_from_retest
+     screening/retest_monitor.py:4-10; on_confirm is that method screening/retest_monitor.py:51 main.py:3784-3788; the
+     diverter's enabled and maybe_divert screening/retest_monitor.py:300 screening/retest_monitor.py:303. Not built on
+     the repository configuration (P-09).
+     Blobs: main.py 445fb0d8237a; screening/retest_monitor.py 26639d6ed5dd. Reads: 014, 019, 039, 040.
+
+AF-03 [FACT (SOURCE)] The entry throttle runs after screening, sizing and reservation, just before placement (P-10). It
+     is not a check before the screener.
+
+========================================================================================================================
+6. THE OWNERS OF THE PRE-CHECKS (GROUP B, READ ONLY WHERE A CALL OR GUARD NEEDED IT)
+========================================================================================================================
+B-01 [FACT (SOURCE)] KillSwitch.is_active("entry") is true for SOFT_KILL or HARD_KILL capital/kill_switch.py:510-520.
+     Blobs: capital/kill_switch.py 3eb2ece050c3. Reads: 043, 045.
+
+B-02 [FACT (SOURCE)] is_entry_allowed: false on a trading holiday, else entry_start <= t < entry_end
+     core/market_windows.py:143-150; is_entry_allowed_for_strategy: the global check, then the strategy's
+     entry_start_time and entry_end_time, missing or malformed times falling back to the global result
+     core/market_windows.py:152-175. The window times' configuration was not read (A-003's subject).
+     Blobs: core/market_windows.py 25625e8cd109. Reads: 046, 047.
+
+B-03 [FACT (SOURCE) + FACT (CONFIG)] strategy_will_trade: a disabled strategy -> DISABLED, checked first
+     strategies/control.py:79-83; force_intraday_only with a DELIVERY intent -> FORCE_BREAKER
+     strategies/control.py:85-97; trade_type INTRADAY or DELIVERY against another intent -> TRADE_TYPE
+     strategies/control.py:99-113; else OK strategies/control.py:114-117. Repository values: force_intraday_only false
+     config/system_config.yaml:142, trade_type BOTH config/system_config.yaml:149. So on that configuration only a
+     disabled strategy is refused here (INTERPRETATION).
+     Blobs: config/system_config.yaml bf742ae5c81c; strategies/control.py b6eecb480b83. Reads: 022, 049.
+
+B-04 [FACT (SOURCE)] strategies/loader.py has one line with "enabled", a docstring line about delivery_enabled
+     strategies/loader.py:121, and main.py passes loader.load_all_strategies(...) to the processor unchanged
+     main.py:3159 main.py:3584. No filter on a strategy's enabled field was found in either (bounded to those two
+     greps), so a disabled strategy reaches the control gate (P-04), not the lookup (C-008 ST-09's open note, as far as
+     these greps go).
+     Blobs: main.py 445fb0d8237a; strategies/loader.py 99e83b192021. Reads: 016, 050, 051.
+
+B-05 [FACT (SOURCE)] StrategyGovernor.check: not enabled -> not paused; already paused today -> paused; after the cutoff
+     -> not paused; a database error -> not paused (fail-open); else paused when today's P&L is below the loss
+     multiplier times the average daily loss capital/strategy_governor.py:49-87. Whether the governor is enabled on the
+     repository configuration was not established (_build_strategy_governor in main.py not read).
+     Blobs: capital/strategy_governor.py d17193c569c1. Reads: 052, 053.
+
+B-06 [FACT (SOURCE)] The two "pre-filter" lines in kill_switch.py capital/kill_switch.py:1850
+     capital/kill_switch.py:1983 are comments in the emergency-flatten code about a product default
+     capital/kill_switch.py:1838-1852: not a signal check.
+     Blobs: capital/kill_switch.py 3eb2ece050c3. Reads: 043, 044.
+
+========================================================================================================================
+7. THE WORDS: "PRE-FILTER", "PRE-FLIGHT", "PRE-CHECK"
+========================================================================================================================
+W-01 [FACT (COUNT)] "pre" then "filt" (case-insensitive; joined by nothing, a space, "_", "." or "-") occurs in 3 of the
+     281 runtime files: capital/kill_switch.py 2 lines (B-06), core/config_snapshotter.py 1, core/state_store.py 1
+     (search Q10); in none of the four configuration files (Q11; positive control P02, "filt": 2 files) and none of the
+     seven tests (Q12; control P03). The config_snapshotter and state_store lines were not read (not authorised); the
+     blobs are in the files-read log, section 2.
+
+W-02 [FACT (SOURCE)] The processor's own words: "pre-flight" for its first block signals/signal_processor.py:6
+     signals/signal_processor.py:902; "pre-check" for the FIX-007 rate limiter signals/signal_processor.py:189
+     signals/signal_processor.py:233 signals/signal_processor.py:415 and for the allocator's "portfolio pre-checks"
+     signals/signal_processor.py:1707 signals/signal_processor.py:1713 signals/signal_processor.py:1725. No legacy
+     source read here calls any step a "pre-filter".
+     Blobs: signals/signal_processor.py 7fab0a02a302. Reads: 002, 003, 057.
+
+========================================================================================================================
+8. EOD / PB01
+========================================================================================================================
+X-01 [FACT (COUNT) + FACT (SOURCE)] In the 16 authorised source files "pb01" occurs only in main.py, 31 lines (Q17);
+     "eod" occurs in 7 of them but not in signals/signal_processor.py (Q18); the screener's one such line is a comment
+     on eod_cleanup pruning rows that end REJECTED screening/secondary_screener.py:661.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad. Reads: 056.
+
+X-02 [FACT (SOURCE) + FACT (CONFIG)] main.py's PB01 block main.py:3704-3763 builds the capture worker, a would-be runner
+     and the entry stage from config, store, fetcher, market windows, zone settings, a regime runner and
+     on_confirm=_pb01_would_be.record main.py:3734-3746; none of them is given the screener, the hard gate or the
+     processor in these lines. Its comment calls it "SHADOW / ANALYSIS-ONLY" and the runner "PLACE-FREE" with "NO order,
+     NO reservation" main.py:3707-3710; webhook_receiver.set_eod_capture(pb01_capture_worker) main.py:3747. Repository
+     value: watchlist.enabled true config/system_config.yaml:620.
+     Blobs: config/system_config.yaml bf742ae5c81c; main.py 445fb0d8237a. Reads: 017, 018, 024.
+
+X-03 [UNKNOWN / NOT ESTABLISHED] Whether v3_chain/pb01_entry.py or v3_chain/pb01_runner.py calls functions of
+     hard_gate.py (H-07, count only). So no source-backed hand-off from the EOD / PB01 path into the processor or the
+     screener was found in the authorised ranges, and a PB01 use of hard_gate.py functions is not excluded.
+
+========================================================================================================================
+9. CONFIGURATION KEYS READ AND THEIR CONSUMERS (repository values)
+========================================================================================================================
+- config/system_config.yaml, signal_queue.expiry_sec: 600 (config/system_config.yaml:127): the processor's age check
+  (P-03); wired at main.py:3614 signals/signal_processor.py:917.
+- config/system_config.yaml, force_intraday_only: false; trade_type: BOTH (config/system_config.yaml:142
+  config/system_config.yaml:149): strategy_will_trade (P-04, B-03); wired at main.py:3620-3621.
+- config/system_config.yaml, mis_filter: enabled true, shadow true, ttl_days 1 (config/system_config.yaml:179-181): the
+  screener's step 0 and the blocklist TTL (S-05, S-06); wired at main.py:3057 main.py:3291-3292.
+- config/system_config.yaml, signal_processor throttle keys: 20, 60, 3, 300 (config/system_config.yaml:350-353):
+  EntryThrottle (P-10); wired at main.py:3596-3599.
+- config/system_config.yaml, sr_detector.wait_for_retest_enabled: false (config/system_config.yaml:529): the retest
+  diverter (P-09); wired at main.py:3423 main.py:3769.
+- config/system_config.yaml, watchlist.enabled: true (config/system_config.yaml:620): the PB01 wiring (X-02); wired at
+  main.py:3478.
+- config/system_config.yaml, entry_gate.circuit_proximity_reject_enabled: true (config/system_config.yaml:661): the
+  screener's step 1b and HardGate (H-01, H-02); wired at main.py:3246 main.py:3288.
+- config/scoring_weights.yaml, steps (ten weights), min_pass_score 60, high 80, medium 65
+  (config/scoring_weights.yaml:10-29): QualityScorer and the screener's re-scale weights (E-03); wired at
+  main.py:3230-3233 screening/secondary_screener.py:103-106.
+- config/scoring_weights.yaml, v3_hardgate_mode "shadow", v3_gate_steps, v3_freshness_max_sec 60.0, v3 thresholds
+  (config/scoring_weights.yaml:39-44): the screener's V3 branches and HardGate (H-04, H-05); wired at
+  screening/secondary_screener.py:96-102 main.py:3245.
+Not established from source: which file feeds app_config.scoring and app_config.system (the mapping is in
+  core/config_loader.py, not authorised); the key names match (INTERPRETATION). Repository values only; no deployed
+  configuration was read.
+
+========================================================================================================================
+10. PIPELINE AND BOUNDARY MAP
+========================================================================================================================
+Observed call order on the intraday main path (E1) at the pin, with the repository configuration. "->" marks an
+order the source shows; [inferred] marks a link not shown by the ranges read. Short names: SP signals/
+signal_processor.py, SS screening/secondary_screener.py, SE screening/step_executor.py, QS screening/
+quality_scorer.py, MAIN main.py, CFG config/system_config.yaml, SW config/scoring_weights.yaml.
+
+  webhook receiver, queue (Section C)  [inferred here: the dispatcher hands the item to _process_one; C-006, C-008]
+  -> _process_one: PROCESSING                                          SP:896-899
+  -> "Step 1: Pre-flight checks" (the code's own name)                 SP:901-928
+       kill switch -> global window -> age (600 s, repository) -> shadow-inning guard
+  -> "Step 2": strategy lookup -> strategy control -> strategy window -> governor   SP:930-990
+  -> "Step 3": screener.screen()                                        SP:997-1020 -> SS:123-374
+       0  MIS pre-drop (enabled, shadow: logs only on the repository configuration)       SS:142-165
+       1  quote (SKIPPED_QUOTE_UNAVAILABLE)                              SS:167-196
+       -  V3 enforce path: not taken (mode "shadow")                    SS:200-206, SW:39
+       1b circuit proximity via hard_gate.circuit_proximity_reason (enabled) -> REJECTED_CIRCUIT_PROXIMITY  SS:208-232
+       2-4 the ten steps (StepExecutor.run_all)                         SS:234-263 -> SE:118-219
+       4b step error -> REJECTED_STEP_ERROR                             SS:265-286
+       5  score (QualityScorer.score)                                   SS:288-300 -> QS:71-150
+       -  V3 shadow compare: HardGate.evaluate + re-scale, logged only  SS:305-314, SS:530-552
+       6  min score -> REJECTED_SCORE_<n>                               SS:316-337
+       7  signal_age 0.0 -> REJECTED_SIGNAL_AGE                         SS:339-354
+       8  PASSED                                                        SS:356-374
+  -> "Step 4": entry and SL prices                                     SP:1025-1030
+  -> retest divert: not built on the repository configuration           SP:1037-1056, MAIN:3769, CFG:529
+  -> [inferred here: sizing, the portfolio lock, risk, reservation, target; C-008 ST-16 to ST-23, not read here]
+  -> late kill switch -> shutdown -> entry throttle -> placement         SP:1384-1420
+
+Off the main path: EntryGate holds screened signals and resumes after screening (dormant: add() has no caller per the
+code comment and B-009 D1); RetestMonitor resumes after a divert (not built); the PB01 stages are wired without the
+processor or the screener (X-02).
+
+========================================================================================================================
+11. WHAT REMAINS UNRESOLVED ABOUT THE "PRE-FILTER" LABEL
+========================================================================================================================
+- The legacy code names its first block "Pre-flight checks" (P-03, W-02); no source read here calls anything a
+  "pre-filter" (W-01). Which mechanism the agenda's D-001 "Pre-filter" denotes stays a governance question (OSQ-01): the
+  evidence offers three early stages - the processor's Step 1 and Step 2 checks (P-03, P-04), the screener's steps 0, 1
+  and 1b before its ten steps (S-03), and the hard-gate rules (H-01 to H-06) - and does not say which one the agenda
+  name means.
+- The hard gate: hard_gate.py is called on the live default path for one rule (circuit proximity, step 1b) while the
+  HardGate class runs only in the shadow compare on the repository configuration (H-01 to H-06). Whether D-002 "Hard
+  rejection gates" covers the circuit-proximity reject, the HardGate battery, or both is a governance question (OSQ-03).
+- Steps 0 and 1 run inside screen() before any scoring; C-004 gave them to D-003 (OSQ-04). The signal-age rule exists
+  three times on the main path: the processor (600 s, P-03), the executor's step 10 with the screener's step 7 (60 s,
+  E-02, S-03), and HardGate freshness in shadow (60 s, H-03, H-05).
+- Ownership elsewhere stands as recorded (C-008 stage table; C-004 section 10): no owner transfer is proposed here.

@@ -1,0 +1,102 @@
+D-001 - PRE-FILTER: STAGE 1 PROVENANCE CLARIFICATION (REVISION 1)
+Date: 25-Oct-2026 (IST), prepared at 20:35 IST by Claude for ChatGPT. Answers
+  D-001_CLAUDE_PROVENANCE_CLARIFICATION_PROMPT_25-OCT-2026.txt (SHA-256 0E65EA6F...), received with ChatGPT's Stage 1
+  reconciliation review (7C58BFE8...) and the Rama scope sheet (1CB8318A...; Rama's to answer).
+Supersedes D-001_STAGE1_PROVENANCE_CLARIFICATION_25-OCT-2026.txt (20:05 IST, SHA-256 FA5DE21B...), which answered from
+  existing metadata only and left two points RECORD-DERIVED or UNKNOWN. At 20:20 IST Rama authorised further checks
+  ("you've full authorisation to do it in GitHub repos ... if required do anything to anwer to ChatGPT & finalising
+  files"). This revision closes both points with the checks in section 3, all value-blind: the two host records were
+  only hashed and their file details checked, with nothing of their content opened, printed or seen by Claude; no other
+  legacy file was touched; the clone, both repositories and the six Stage 1 files are unchanged.
+
+========================================================================================================================
+1. THE STATEMENT AND WHAT IT WAS SET AGAINST
+========================================================================================================================
+- D-001_STAGE1_FILES_READ_LOG_25-OCT-2026.txt, section 3 (READS), lines 110 to 114 (the masking note). Its last
+  sentence, lines 112 to 114: "The filter also reads the two host records value-blind to build its host-token list
+  (nothing from them is printed), as at every earlier topic."
+- Set against: the same log, lines 8 to 9 and 17 (never-open blobs present 0) and line 283 ("Never opened: the
+  never-open set, the two July records, the 26 Group E records, the README."); D-001_STAGE1_FINAL_CHECK_25-OCT-2026.txt,
+  lines 56 to 61 ("16 files were read, all on the Stage 1 list ... no test, strategy YAML, Group E record, README or
+  protected path was opened").
+
+========================================================================================================================
+2. ANSWERS
+========================================================================================================================
+Q1 Safe labels for the two records
+- HR-1: a system map, a Markdown record in the legacy production repository's documentation folder.
+- HR-2: a deployment record, a Markdown record at the legacy production repository's root.
+- Both labels come from the file names; no content of either was seen in D-001. Both are host records in the
+  project's sense ("Host records (deployment files, cron tables, service units, system maps) are read value-blind only",
+  C-009 session handover, section 4); the filter's docstring calls them "the legacy host records".
+
+Q2 Group E, protected or never-open? ESTABLISHED: neither record is in any of these sets.
+- Group E: the 26-record register that the Stage 1 gate refuses by name (cread_d001.py; as listed in the Stage 0
+  inventory) names neither, and neither is in the Stage 0 path-name inventory that Group E was drawn from.
+- Never-open and protected: the 102-path list the gate uses (the same list since C-009) holds neither, and neither
+  falls in a never-open category. Neither is among the 27 files the Stage 1 prompt authorised.
+- Both are in the clone's checkout set (C-009's s_all checkout, 24-Oct), so "never-open blobs present 0" is unaffected.
+
+Q3 A pre-approved token list, or source-record bytes? ESTABLISHED: source-record bytes.
+- The filter's code (mask_read2.py; every Stage 1 read reached it through mr.py and every count-only search through
+  count_grep.py) holds no stored or pre-approved token list. On each run it opens every requested file and each of
+  three fixed token-source files that exists, reads the whole text into memory, collects host-like tokens by pattern
+  (tailnet names, ssh targets and config hosts, user@host forms, key files and key names, fingerprints, hostname and
+  VM-name forms), and prints only the requested lines (those tokens replaced by <HOSTTOK>, secret and identifier
+  shapes masked) and the mask counts. Nothing from a token source is printed.
+- Presence, now ESTABLISHED (was RECORD-DERIVED for HR-1): both records are in the clone's working tree with file times
+  of 24-Oct 11:43:06 IST (the C-009 checkout), so they were there, unchanged, through every Stage 1 run; both working
+  files equal their pinned blobs; both are in the clone's sparse-checkout list.
+- The third token source, a manifest in a testing-snapshot clone, does not exist in this workspace (listings at 18:16,
+  18:50 and 20:21 IST), so the filter skipped it.
+- So on every filter run in Stage 1 (the 60 logged reads and the count-only searches) the filter loaded HR-1 and HR-2
+  in full, in memory, value-blind, with their pinned content. Claude never printed or viewed any of their content. The
+  loads were not logged as read rows (path, blob, purpose, read mode).
+
+Q4 Reconcilable without new access? YES. The facts reconcile; one wording correction is needed.
+- Still true: no Group E record and no never-open or protected path was opened; never-open blobs present 0; nothing
+  from a host record was printed, quoted or used as evidence.
+- Incomplete, corrected here (erratum): the final check's "16 files were read" and the read log's rows cover only the
+  files read for evidence. Correct form: "16 source files were read for evidence in 60 logged reads; on every filter
+  run (reads and count-only searches) the masking filter also loaded two legacy host records, HR-1 and HR-2, in full
+  and value-blind, as its host-token source; nothing from them was printed." The six Stage 1 files stay as reviewed;
+  this file is their erratum record.
+- Prior disclosure and review (was UNKNOWN; now found in V2 records at ad73016):
+  - B-001_review_notes.md, section 8, line 92 (frozen with B-001): the second pass of 10-Oct "extended" the filter so
+    that host-like tokens are "extracted from the files being read and from the two host records, and masked wherever
+    they appear". The extension followed a disclosed 09-Oct masking slip (line 91).
+  - ChatGPT addressed that slip in CLAUDE_VALUE_ADDED_REVIEW_B-001_FINALISATION_10-OCT-2026.txt (section 4, item 2:
+    "Keep these notes transparent without reproducing masked values") and, for the testing-manifest slip, in
+    B-002_CHATGPT_VALUE_ADDED_REVIEW_13-OCT-2026.txt (R8: "the filter was corrected and tested").
+  - C-009's S1-1 results (section 11, 24-Oct) disclosed it again: the filter "by its design, also reads" the two host
+    records "on every run to build its host-token masks; it prints nothing from them".
+  - Status: DISCLOSED in frozen records since 10-Oct and carried without objection; no ChatGPT text explicitly approves
+    or rejects the two records as token sources. Whether that disclosure is enough is ChatGPT's call (and Rama's).
+- Earlier wording with the same gap (observation only; no record changed): the C-011 Stage 1 evidence sheet, line 100
+  (HR-1 "counted, never read"), and the C-010 Stage 0 answers, lines 136 and 172 (host-type records "Deliberately
+  excluded"), describe HR-1 without the filter's loads; C-011's decisions (OQ-06) said "Do not inspect protected or
+  host/deployment material". In all of these, "read" meant read or printed by Claude, not loaded by the filter.
+- For ChatGPT, not decided here: whether to accept the filter's host-record loads as within the Stage 1 authorisation
+  ("Use any existing masking/value-blind filter", READ PROTOCOL 4) rather than under the Stage 0 review's "Do not fetch
+  or inspect any unrelated blobs" (section 5), and whether later passes should list them as a standing input.
+
+========================================================================================================================
+3. CHECKS AND SOURCES
+========================================================================================================================
+Under Rama's 20:20 IST authorisation (value-blind; nothing of either record printed):
+- A listing of the legacy workspace folder (production clone and saved listing only; no testing-snapshot clone).
+- For HR-1 and HR-2: file presence, size and modification time; git hash-object --no-filters on each working file,
+  compared with the pinned listing (match: yes, yes); a count of both in the sparse-checkout list (2). HEAD the pin.
+- git show and git grep of V2 records at ad73016 (the B-001 and B-002 review notes and ChatGPT's reviews there).
+From existing metadata (as in the 20:05 IST version):
+- The six D-001 Stage 1 files and the Stage 0 inventory; the Stage 1 gate's registers (Group E 26, never-open 102,
+  authorised 27); the Stage 0 path-name inventory.
+- The filter and its two wrappers, read as text and not run. SHA-256: mask_read2.py BC0B715DF0267BCF..., mr.py
+  B0BD3D87CF51D1CB..., count_grep.py 31AF8CA5903370BF... (first 16 characters each).
+- The session's command log (listings at 18:16 and 18:50 IST); the C-009 S1-1 results (sections 2 and 11); the C-010
+  Stage 0 answers; the C-011 Stage 1 evidence sheet; the C-011 Stage 0 reconciliation and decisions (OQ-06); the
+  Project session handovers (Section C, section 8; C-009, section 4); the D-001 Stage 0 review and Stage 1 prompt.
+
+STATUS: Q1 answered at category level; Q2 ESTABLISHED; Q3 ESTABLISHED, presence included; Q4 reconciled with the
+  erratum above; the earlier disclosure is found, explicit approval is not. Waiting for ChatGPT. The Rama scope sheet is
+  pending with Rama.
