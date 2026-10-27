@@ -1,0 +1,65 @@
+D-003 SECONDARY SCREENING — CLAUDE PROMPT
+STAGE 2: DRAFT FACTUAL LEGACY MANUAL ONLY
+Date: 26-Oct-2026
+Authority: ChatGPT has reconciled Stage 1 and authorised a D-003_manual.md draft under this prompt.
+
+PINNED LEGACY SOURCE
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Tree: 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+
+USE ONLY THESE STAGE 1 INPUTS
+D-003_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt
+D-003_STAGE1_FILES_READ_LOG_26-OCT-2026.txt
+D-003_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt
+D-003_STAGE1_GAP_REGISTER_26-OCT-2026.txt
+D-003_STAGE1_CHANGE_NOTE_26-OCT-2026.txt
+D-003_STAGE1_FINAL_CHECK_26-OCT-2026.txt
+D-003_STAGE1_CHATGPT_HANDOFF_26-OCT-2026.txt
+Also follow D-003_CHATGPT_STAGE1_RECONCILIATION_26-OCT-2026.txt.
+
+SCOPE
+Draft D-003_manual.md only. Document the legacy screener from processor invocation to screener return and its persisted outcome. Include:
+1. purpose, scope and explicit boundaries;
+2. architecture/call chain and input contract;
+3. strategy fields/config and MIS pre-drop/blocklist read-side behavior;
+4. quote acquisition and market-data construction;
+5. all ten steps, their input, source, formula/logic, validation/guard, output and consumer;
+6. step executor, shared pool, timeout and exception behavior;
+7. scoring weights/arithmetic, min_score versus effective threshold, per-strategy thresholds and tiers;
+8. outcome branches, statuses, persistence and error paths;
+9. immediate downstream handoffs only;
+10. known defects, interpretations, unknowns and open questions;
+11. cross-reference observations for D-001/D-002 without editing them;
+12. claim-to-evidence matrix, residual-gap table and illustrative end-to-end example derived only from source rules.
+
+FACT DISCIPLINE
+Use labels FACT (SOURCE), FACT (CONFIG), FACT (TEST), FACT (TEXT), FACT (COUNT), FACT (METADATA), HISTORICAL, INTERPRETATION, UNKNOWN / NOT ESTABLISHED, KNOWN DEFECT and OPEN QUESTION. Cite every source claim with pinned path, line range and blob ID from the evidence sheet. Tests are text-only corroboration, not runtime proof. Repository config is not deployed-host config. Do not imply any paper/live behavior, actual trade, runtime frequency or broker response unless evidenced.
+
+MANDATORY QUALIFICATIONS
+- Disclose Stage 1 deviations: P03, P03a and Q17 count-only searches plus read 079 occurred after earlier reads; adapter read 044 printed unrelated lines not used; the first search script stopped on KeyError and was corrected. Do not claim perfect process compliance; do not inflate these into a source-evidence failure.
+- Tree reconstruction is accepted for inventory with API HTTP 403 documented. Do not claim Claude saw the API truncated flag.
+- Processor passes market_data=None; screener builds data from one broker quote. ATR, RSI, sector, previous close and 20-day average volume are None on this path.
+- Normal-return score ceiling is 65: two steps with weights 15 and 10 score zero, and two weight-10 steps score half each. This ceiling assumes normal returns. Timeout scores 0.5; if both normally-dead steps time out, theoretical ceiling is 77.5, still below HIGH=80. Timeout occurrence is unknown.
+- The effective pass threshold is 60; min_score is configured as 0 in all 16 strategy YAMLs. Keep these distinct.
+- min_volume_surge and min_adr_pct are not effectively compared on the processor path because their steps return 0 first. max_spread_pct is 0.005 in all 16 YAMLs; intended units are UNKNOWN. Do not reinterpret silently as 0.5%.
+- G-15 units and G-16 OHLC path remain INTERPRETATION / UNKNOWN, not confirmed defects or production-frequency claims.
+- G-14 (whether shadow compare can raise into screen()) remains UNKNOWN.
+- G-17 (whether ranker candidates carry screener score/tier) remains UNKNOWN.
+- PASSED is internal screening status, not final Trade approval.
+- S&R zones are downstream at retest diversion; no S&R, regime or V3-chain input reaches the screener in the bounded authorised evidence. V3 hard-gate re-scale is a D-002 boundary reference.
+- D-001 age-path and D-002 step-9 findings may be noted as cross-reference observations; do not rewrite those manuals.
+- G-10 to G-13 may be cited only as HISTORICAL context. No further legacy reads are authorised or required.
+- V2 governance is not legacy proof; make no V2 design decisions.
+
+SECURITY / PROHIBITIONS
+No additional legacy source reads. Do not run code/tests/scripts, import modules, contact hosts/services/broker/webhooks/Chartink/database, or alter either repository. Never expose credentials, tokens, account/client identifiers, host values, session links or raw source dumps.
+
+OUTPUT AND STOP
+Produce these four uncommitted artifacts:
+1. D-003_manual.md — detailed evidence-backed chapter.
+2. D-003_STAGE2_DRAFT_CHANGE_NOTE_26-OCT-2026.txt.
+3. D-003_STAGE2_CLAUDE_HANDOFF_26-OCT-2026.txt.
+4. D-003_STAGE2_FINAL_CHECK_26-OCT-2026.txt.
+
+The change note must identify the evidence used, scope and caveats preserved, files created and unresolved items. The handoff must include a claim-to-evidence coverage check and internal consistency check. The final check must verify citations, labels, structure and security. Explicitly confirm no existing manual/governance file changed and no commit/push occurred. Stop and return the four artifacts to ChatGPT for independent review. Do not freeze the manual.

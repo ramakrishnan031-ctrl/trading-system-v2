@@ -1,0 +1,140 @@
+D-003 - SECONDARY SCREENING: STAGE 2 CLAUDE HANDOFF (FOR CHATGPT'S INDEPENDENT REVIEW)
+Date: 26-Oct-2026 (IST). Built 18:27 IST by Claude. Status: D-003_manual.md is DRAFT / NOT FROZEN. Nothing was stored,
+  committed or pushed; no existing manual or governance file was changed. Claude stops here: the four files go to
+  ChatGPT for independent review; no freeze.
+
+========================================================================================================================
+1. FILES FOR REVIEW (unzipped)
+========================================================================================================================
+- D-003_manual.md
+    797 lines, 119,761 bytes, SHA-256 25B7213200E57BB986758D8D59BCB952BEF6F420B5CCE43F2A7EE7EB3E8B2DB7
+- D-003_STAGE2_DRAFT_CHANGE_NOTE_26-OCT-2026.txt
+    117 lines, 9,533 bytes, SHA-256 FAC0664787D14A1B7FFA9530BA4DF809408B4AF291A5BDFDAD22C63DFA152DFC
+- D-003_STAGE2_CLAUDE_HANDOFF_26-OCT-2026.txt (this file; it cannot list its own SHA-256)
+- D-003_STAGE2_FINAL_CHECK_26-OCT-2026.txt: written by check_draft_d003.py after this file; 17 of 17 PASS (its check 17
+  confirms that this line matches the run).
+Rama decisions requested: none.
+
+========================================================================================================================
+2. THE DRAFT IN BRIEF
+========================================================================================================================
+- 18 sections; 81 statements (MC-01 to MC-81), each with its labels and the Stage 1 evidence claims it rests on.
+  Statements carrying each label: FACT (SOURCE) 51, FACT (TEXT) 27, FACT (CONFIG) 8, FACT (TEST) 10, FACT (COUNT) 5,
+  HISTORICAL 22, INTERPRETATION 22, UNKNOWN / NOT ESTABLISHED 6, KNOWN DEFECT 1.
+- Call and data: the processor calls screen(..., market_data=None) once per signal; the screener fetches one broker
+  quote; ATR, RSI, sector, previous close and 20-day average volume are always None (MC-02, MC-20, MC-23).
+- Steps and score: volume_surge and atr_filter return 0.0 and rsi_range and sector_strength 0.5 on every signal, so the
+  normal-return ceiling is 65; timeouts could lift it to 77.5, still below HIGH 80 (MC-37, MC-55, MC-56: the one KNOWN
+  DEFECT). The pass threshold applied is 60; min_score is 0 in all 16 YAMLs (MC-52).
+- Thresholds: min_volume_surge and min_adr_pct are not effectively compared; max_spread_pct is 0.005 in all 16, its unit
+  UNKNOWN (MC-53, MC-54).
+- Executor: one shared single-worker pool, a 5 s default timeout scoring 0.5, an exception ending REJECTED_STEP_ERROR
+  (MC-41 to MC-46).
+- Outcome: nine statuses, each persisted by the screener; PASSED and the tier are internal, not final Trade approval
+  (MC-60 to MC-65, MC-72).
+- Hand-offs and boundary: tier and score to the retest diverter and the tier to the sizer; ranking inputs NOT
+  ESTABLISHED; no S&R, regime or V3-chain input reaches the screener (sections 12 and 13).
+- Example: one hypothetical signal worked through the recorded rules, with five variants (MC-77).
+
+========================================================================================================================
+3. CLAIM-TO-EVIDENCE COVERAGE CHECK (build_manual_d003.py; re-run by the final check, checks 4 and 5)
+========================================================================================================================
+- Statements: 81, in order, each naming its Stage 1 evidence claims. Legacy ranges in statements: 303, every one within
+  the citations of the evidence claims named; ranges elsewhere (tables): 70, every one within the evidence sheet's
+  citations. Failures: 0.
+- Evidence claims used: 78 of 78 (NR-01 to NR-04 in section 2.6, the rest by statements); unused: none.
+- Statements with no direct legacy citation (they rest on the claims named and the statements they cite; MC-10's
+  citations are its table): MC-10, MC-18, MC-24, MC-38, MC-72, MC-76, MC-77, MC-78, MC-79, MC-80, MC-81.
+- Evidence claim -> statements:
+    IN-01: 02, 63; IN-02: 03; IN-03: 04; IN-04: 05; IN-05: 06; IN-06: 12; IN-07: 07, 78; IN-08: 08; SC-01: 01;
+    SC-02: 13; SC-03: 20; SC-04: 23, 26; SC-05: 27; SC-06: 30; SC-07: 46, 77, 79; SC-08: 51; SC-09: 28, 81;
+    SC-10: 51, 77; SC-11: 58, 77; SC-12: 58, 78; MD-01: 21; MD-02: 22, 35; MD-03: 23, 77; MD-04: 24;
+    MD-05: 31, 32, 33, 34, 35, 36, 77; MD-06: 37, 55, 56; MD-07: 38; MD-08: 39; MD-09: 35, 54; MD-10: 34; MD-11: 25;
+    SE-01: 41; SE-02: 42; SE-03: 43, 55; SE-04: 44, 81; SE-05: 45, 81; SQ-01: 11, 55; SQ-02: 48, 77; SQ-03: 49, 77;
+    SQ-04: 50; SQ-05: 10, 52; SQ-06: 09; SQ-07: 52; SQ-08: 57, 78, 79; SQ-09: 56; SQ-10: 67, 77; SQ-11: 53, 80;
+    MS-01: 14, 77; MS-02: 15; MS-03: 16; MS-04: 17; MS-05: 18; MS-06: 19; ST-01: 60; ST-02: 61; ST-03: 62, 77;
+    ST-04: 63; ST-05: 64; TS-01: 40; TS-02: 65; TS-03: 65; TS-04: 59; TS-05: 47; TS-06: 73; SR-01: 74; SR-02: 29, 76;
+    SR-03: 75; SR-04: 76; HO-01: 66, 77; HO-02: 68; HO-03: 69; HO-04: 70; HO-05: 71; HO-06: 72; NR-01: section 2.6;
+    NR-02: section 2.6; NR-03: section 2.6; NR-04: section 2.6.
+   (statement numbers without the MC- prefix)
+
+========================================================================================================================
+4. INTERNAL CONSISTENCY CHECK (build_manual_d003.py)
+========================================================================================================================
+- OK: 65 is called the normal-return ceiling, with 77.5 under the timeout caveat, and never unconditional (phrases
+  checked)
+- OK: PASSED is never described as final Trade approval (0 sentences)
+- OK: min_score 0 (configured) and the effective pass threshold 60 are kept distinct (MC-52)
+- OK: G-15 and G-16 carry INTERPRETATION / UNKNOWN, never KNOWN DEFECT (MC-54, MC-39, 15.3)
+- OK: G-14 and G-17 are UNKNOWN / NOT ESTABLISHED (15.3)
+- OK: The nine statuses appear in the same order in the diagram (3.3), MC-61 and the status table (9 table rows)
+- OK: Stage 1 numbers stated consistently (22 runs, 79 reads, 39 files, 102 runs, 0.005 in all 16) (all present)
+- OK: No V2 design recommendation (no "should" or "recommend" outside quotations) (0 sentences)
+- OK: Every statement uses legend labels only; KNOWN DEFECT only on MC-56 (other labels: none; KNOWN DEFECT on MC-56)
+- OK: Statement IDs MC-01 to MC-81 in order, each defined once (81 statements)
+- OK: Every MC reference points to a defined statement (81 distinct references)
+- OK: The residual-gap table carries G-04 and G-10 to G-20 (G-04, G-10, G-11, G-12, G-13, G-14, G-15, G-16, G-17, G-18,
+  G-19, G-20)
+
+========================================================================================================================
+5. RECONCILIATION DECISIONS A TO L: WHERE APPLIED
+========================================================================================================================
+- A. scope: processor invocation to screener return and its own persisted outcome; no final verdict. Where: 1.1, 1.3,
+    1.4; MC-72.
+- B. concise labelled observations for D-001 and D-002; no edit. Where: section 16 (MC-78, MC-79).
+- C. G-15: INTERPRETATION / UNKNOWN INTENDED UNIT; percent arithmetic; 0.005 configured, 0.1 in the tests. Where: MC-54;
+    15.3.
+- D. G-16: INTERPRETATION / UNKNOWN FREQUENCY; the source-level path from missing OHLC to REJECTED_STEP_ERROR. Where:
+    MC-39; variant E of MC-77; 15.3.
+- E. G-14: UNKNOWN / NOT ESTABLISHED. Where: MC-28; 15.3.
+- F. G-17: UNKNOWN / NOT ESTABLISHED. Where: MC-70; 15.3.
+- G. G-10 to G-13 HISTORICAL; no further read. Where: 15.3.
+- H. runtime and deployed settings, broker responses, live/paper parity and frequency NOT ESTABLISHED. Where: 1.4; 2.6;
+    MC-21; 15.3.
+- I. the 65 ceiling conditional on normal returns; 77.5 under timeouts; never unconditional. Where: MC-55, MC-56.
+- J. configured min_score 0 against the effective threshold 60. Where: MC-52.
+- K. min_volume_surge and min_adr_pct not effectively compared; 0.005 in all 16; units unknown. Where: MC-53, MC-54.
+- L. PASSED and the tier internal; downstream hand-offs only. Where: section 12; MC-72.
+The prompt's mandatory qualifications and their locations: change note, section 2.
+
+========================================================================================================================
+6. WORDING THAT DIFFERS FROM STAGE 1 (for the review)
+========================================================================================================================
+- MC-35 refines MD-09: the evidence says spread_check scores "0.0 when one side is empty"; by the formula as recorded
+  that holds for an empty buy side only, while an empty sell side gives a negative spread that the comparison as
+  recorded would score 1.0. The draft records this as INTERPRETATION, with the guard question NOT ESTABLISHED; no read
+  was made.
+- MC-55 and MC-56 restate MD-06 and SQ-09 under decision I: 65 is the normal-return ceiling, not an unconditional one;
+  the 77.5 timeout bound is added; HIGH stays unreachable on every path read.
+- MC-53 and MC-54 follow decisions K and C: min_volume_surge and min_adr_pct are "not effectively compared"; the
+  percentage that MD-09 gave in brackets for the fraction reading is not repeated, per the prompt ("Do not reinterpret
+  silently as 0.5%"); the unit stays UNKNOWN.
+- MC-71 says the four screener files "do not name these components, apart from one comment" where HO-05 said "call
+  none", since a count shows names, not calls.
+- Sections 1.3 and 12 give the hand-off owners as recorded in C-008's stage table and the V2 log rows cited; the draft
+  assigns no owner.
+- MC-77 is new (prompt item 12): Claude's arithmetic on the recorded rules with hypothetical inputs; no legacy code was
+  run.
+
+========================================================================================================================
+7. POINTS FOR CHATGPT'S REVIEW (none blocks; no Rama decision)
+========================================================================================================================
+- R-1 MC-35: keep the empty-sell-side reading as INTERPRETATION with the guard NOT ESTABLISHED, or drop it. Either needs
+      no read.
+- R-2 The admission test (SECTION-A END decision paper, line 97) is recorded to be written at D-003 as a V2 rule; under
+      W-1 the draft leaves it out of the legacy chapter and lists it in section 17 only.
+- R-3 At the freeze, the storage path docs/agenda/d-003_secondary-screening/ would follow the D-001 and D-002 folders; a
+      proposal for the storage package, not decided here.
+
+========================================================================================================================
+8. COMPLIANCE AND STOP
+========================================================================================================================
+- No additional legacy read, search or count; the read lock stays engaged (final check, check 15).
+- No code, test or script run, no import, and no host, broker, service, webhook, Chartink or database contact; the only
+  remote contact is the final check's git ls-remote ref listing.
+- No credential, token, account or client identifier, host value, session link or raw source dump in the four files
+  (final check, checks 2 and 3).
+- No V2 design decision or recommendation; no existing manual or governance file changed; no commit or push (final
+  check, checks 12 and 16).
+- Stop: the draft returns to ChatGPT for independent review. No freeze, storage, governance update, commit or push
+  before that review.

@@ -1,0 +1,610 @@
+D-003 - SECONDARY SCREENING: STAGE 1 FILES READ LOG
+Date: 26-Oct-2026 (IST). Companion of D-003_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt. Every filter invocation is listed
+  with every masking input it loaded (the standing rule of 26-Oct-2026: token-source loads are disclosed as inputs
+  consumed by the filter, distinct from the files whose content was displayed).
+
+========================================================================================================================
+1. SAFETY GATE (FIRST ACTION, BEFORE ANY LEGACY CONTENT READ)
+========================================================================================================================
+Run by safety_gate_d003.py at 16:47:48 IST, before the lock was lifted at 16:50:28 and before the first read at
+  16:51:48. It read the filter's code as text (ast; nothing executed), checked file presence and identity, and printed
+  roles and verdicts only. Verdict: SAFE TO PROCEED.
+Approved filter chain (entry point first; SHA-256):
+  gate                  cread_d003.py      5BF571BDD8FA54AF97FD8D5783BB7E05D53DF5D495CCBC913E48BF7F575BDA34
+  gate                  ccount_d003.py     37C6B68E80021CCF5D8AE10252F89056A1D164B6A710C4A33CE92D5F32D70227
+  stage-2 wrapper       mr.py              B0BD3D87CF51D1CBAB4FE09F868F1BACC082E684AFE4155515C37788969F4F48 (first 16
+      characters equal the D-001 provenance record)
+  count wrapper         count_grep.py      31AF8CA5903370BF935B57DCB4FDCDBDA343F99226AA50580C495CA2C124362B (first 16
+      characters equal the D-001 provenance record)
+  filter                mask_read2.py      BC0B715DF0267BCFD0EA23E17E52E487D16C7F447A92076E0F6AB4AB1C3F17F7 (first 16
+      characters equal the D-001 provenance record)
+  pattern library       mask_read_lib.py   CCC8D5BE22AE2E928F5E2D3A42B2D70821EBE8EA318DF936DBEAC1EFE9C74BB8
+  protected-path check  sensitive_check.py E36C1382B05129E5A2B1382AF60981B9352C8AE4DCA40D29F90629AAC998A337
+The D-001 record: docs/agenda/d-001_pre-filter/D-001_STAGE1_PROVENANCE_CLARIFICATION_REV1_25-OCT-2026.txt:94
+  (mask_read2.py, mr.py and count_grep.py). The gate entry points are the D-003 copies of the accepted D-002 ones (lists
+  changed: the 39 authorised paths, the 27 Group E records and six named refusals, the three registry paths among them);
+  the filter, its wrappers, its pattern library and the protected-path check are unchanged.
+What the filter loads (from its code): it holds no stored or pre-approved token list; on every run it opens each
+  requested file and each of three fixed token sources that exists, reads the whole text, collects host-like tokens by
+  pattern, and prints only the requested lines (tokens replaced, secret and identifier shapes masked) and the mask
+  counts.
+Token-source inputs, by safe role (no path or value of a host record is given in these files):
+- HR-1 - a system map, a Markdown record in the legacy production repository's documentation folder. Exists: yes. Loaded
+  by the filter: YES, in full, value-blind, on every run. In the pinned listing: yes; never-open: no; shares a
+  never-open blob: no; Group E: no; authorised for reading: no (refused as evidence by name); in the clone's
+  sparse-checkout list: yes; working file equal to its pinned blob: yes (git hash-object, value-blind); file time
+  2026-10-24 11:43:06 IST (the C-009 checkout); size 705,794 bytes.
+- HR-2 - a deployment record, a Markdown record at the legacy production repository's root. Exists: yes. Loaded by the
+  filter: YES, in full, value-blind, on every run. In the pinned listing: yes; never-open: no; shares a never-open blob:
+  no; Group E: no; authorised for reading: no (refused as evidence by name); in the clone's sparse-checkout list: yes;
+  working file equal to its pinned blob: yes (git hash-object, value-blind); file time 2026-10-24 11:43:06 IST (the
+  C-009 checkout); size 13,949 bytes.
+- HR-3 - a manifest in a testing-snapshot clone. Exists: no (no testing-snapshot clone in the workspace). Loaded: NO;
+  the filter tries it and skips it (seen in every trace as an attempted open that fails).
+- Each requested file - loaded in full by the filter for its token scan and again for printing, even when only a range
+  is printed; for a count-only search, every listed file in full.
+Protected-path check (sensitive_check.py): never-open paths in the tree 102, local objects 8,920, never-open blobs
+  present locally 0 (exit 0), at the gate and again after the relock.
+Other value-blind gate operations, not masking inputs: before each read the gate compares the requested file's tree
+  entry and working file (git hash-object) with the pinned listing; before each search, every listed file likewise;
+  after each filter run the two host records are re-hashed against the listing; the local-store check runs before each
+  read and search. None prints content.
+
+========================================================================================================================
+2. LOCK, GATE TEST AND TRACE SELF-TEST
+========================================================================================================================
+Before the lift, a read and a count attempt were both refused by the lock. LK-1 16:50:28: the lock lifted as a step of
+  its own (lock_d003.py), cread_d003.py 5bf571bdd8fa54af -> d35ad72fa71ba16d; reason: "D-003 Stage 1 evidence pass,
+  authorised by ChatGPT (D-003_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_26-OCT-2026.txt)".
+Gate test (gate_test_d003.py) PASSED: 102 protected paths, 2 excluded July records, 27 Group E records, 6 named refusals
+  (the two-factor runbook, HR-1, HR-2 and the three registry paths), the shared-blob path, 14 rule-shaped names, a name
+  outside the tree, 11 unlisted files and a malformed range all refused; 8 count lists holding a refused path refused;
+  the 39 authorised paths admitted; the printed-line cap tested on synthetic text; the object store unchanged.
+Trace self-test, FI-001 at 16:50:47 IST (one filter run on a synthetic three-line text in the gate folder; no legacy
+  evidence): masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted,
+  absent; unexpected legacy opens 0. This run loaded HR-1 and HR-2 in full, value-blind, like every run, and proved the
+  per-run trace before the first legacy read.
+LK-2 17:08:00: the lock re-engaged; a read and a count attempt were then refused by it (lock check passed);
+  cread_d003.py back to 5bf571bdd8fa54af; reason: "D-003 Stage 1 evidence collection complete (79 reads, 21 count-only
+  searches incl. controls); lock re-engaged before building the seven deliverables".
+
+========================================================================================================================
+3. COUNT-ONLY SEARCHES (ccount_d003.py; per-file counts only, no line printed)
+========================================================================================================================
+Lists: auth34 - the 34 authorised files that are not tests; scr4 - the screener, the executor, the scorer and the
+  scoring weights; scr4sp - scr4 and the processor; main1 - main.py; sp1 - the processor; yaml16 - the 16 strategy
+  YAMLs; tests5 - the five authorised tests; cfg1 and cfg1a - config/system_config.yaml (cfg1 held a relative path, see
+  P03). Plan: run_s11_d003.py, fixed before running (DV-01: SHA-256 now 55C7FA81520C9397); P09, P03a and Q17 were added
+  (DV-02, DV-03). Every zero result has a positive control with the same tool and the same expression.
+- Q01 16:50:54 SecondaryScreener|secondary_screener over auth34: files searched: 34; files with matches: 6; matching
+    lines: 30. Purpose: which authorised files import, build or call the screener. Matches: config/system_config.yaml 1
+    (bf742ae5c81c); main.py 5 (445fb0d8237a); screening/__init__.py 2 (f5069dd61fb8); screening/hard_gate.py 2
+    (a8e7e2e49675); screening/secondary_screener.py 16 (b6f8ff7223ad); signals/signal_processor.py 4 (7fab0a02a302).
+    Filter FI-002, masking inputs: requested files whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent; unexpected 0.
+- Q02 16:50:55 StepExecutor|step_executor|QualityScorer|quality_scorer over auth34: files searched: 34; files with
+    matches: 7; matching lines: 57. Purpose: which authorised files import, build or call the step executor and the
+    scorer. Matches: main.py 10 (445fb0d8237a); screening/__init__.py 5 (f5069dd61fb8); screening/hard_gate.py 3
+    (a8e7e2e49675); screening/quality_scorer.py 6 (b125e9ce3243); screening/secondary_screener.py 17 (b6f8ff7223ad);
+    screening/step_executor.py 11 (d83b04860f0f); signals/signal_processor.py 5 (7fab0a02a302). Filter FI-003, masking
+    inputs: requested files whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent;
+    unexpected 0.
+- Q03 16:50:56 (?i)sr_detector|support|resistance|confluence|\bzones?\b over scr4: files searched: 4; files with
+    matches: 1; matching lines: 1. Purpose: S&R inputs in the screener, executor, scorer and weights (OSQ-08). Matches:
+    screening/step_executor.py 1 (d83b04860f0f). Filter FI-004, masking inputs: requested files whole: 4 of 4 opened;
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q04 16:50:56 (?i)regime over scr4: files searched: 4; files with matches: 0; matching lines: 0. Purpose: regime inputs
+    in the screener, executor, scorer and weights (OSQ-08). Matches: no file. Filter FI-005, masking inputs: requested
+    files whole: 4 of 4 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- P04 16:51:18 (?i)regime over main1: files searched: 1; files with matches: 1; matching lines: 34. Purpose: positive
+    control for Q04: the same regex over main.py. Matches: main.py 34 (445fb0d8237a). Filter FI-006, masking inputs:
+    requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q05 16:51:18 (?i)v3_chain|playbook|pb01 over scr4: files searched: 4; files with matches: 0; matching lines: 0.
+    Purpose: V3 chain or playbook inputs in the screener files (OSQ-08). Matches: no file. Filter FI-007, masking
+    inputs: requested files whole: 4 of 4 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent;
+    unexpected 0.
+- P07 16:51:19 (?i)v3_chain|playbook|pb01 over main1: files searched: 1; files with matches: 1; matching lines: 55.
+    Purpose: positive control for Q05: the same regex over main.py. Matches: main.py 55 (445fb0d8237a). Filter FI-008,
+    masking inputs: requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent;
+    unexpected 0.
+- Q06 16:51:20 (?i)candle|ohlc|live_feed|historical|\bltp\b|last_price over scr4: files searched: 4; files with matches:
+    3; matching lines: 19. Purpose: market data other than the quote in the screener files (OSQ-04). Matches:
+    config/scoring_weights.yaml 1 (e9d6ede4c02d); screening/secondary_screener.py 4 (b6f8ff7223ad);
+    screening/step_executor.py 14 (d83b04860f0f). Filter FI-009, masking inputs: requested files whole: 4 of 4 opened;
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q07 16:51:20 (?i)quote over scr4: files searched: 4; files with matches: 2; matching lines: 35. Purpose: the quote in
+    the screener files (OSQ-04). Matches: config/scoring_weights.yaml 2 (e9d6ede4c02d); screening/secondary_screener.py
+    33 (b6f8ff7223ad). Filter FI-010, masking inputs: requested files whole: 4 of 4 opened; HR-1 loaded, pinned; HR-2
+    loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q08 16:51:21 (?i)\btier\b|tier_for|tier_multiplier over auth34: files searched: 34; files with matches: 12; matching
+    lines: 101. Purpose: where the tier is computed and where it is consumed (OSQ-05, OSQ-07). Matches:
+    allocation/ranker.py 1 (beac7be7eadb); broker/zerodha_adapter.py 1 (0c85d2d254aa); capital/position_sizer.py 21
+    (f92eace8d6e3); config/scoring_weights.yaml 5 (e9d6ede4c02d); config/system_config.yaml 6 (bf742ae5c81c); main.py 9
+    (445fb0d8237a); screening/entry_gate.py 4 (46b173171bdf); screening/hard_gate.py 2 (a8e7e2e49675);
+    screening/quality_scorer.py 8 (b125e9ce3243); screening/retest_monitor.py 6 (26639d6ed5dd);
+    screening/secondary_screener.py 27 (b6f8ff7223ad); signals/signal_processor.py 11 (7fab0a02a302). Filter FI-011,
+    masking inputs: requested files whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted,
+    absent; unexpected 0.
+- Q09 16:51:23 min_score|min_pass_score|min_volume_surge|min_adr_pct|max_spread_pct over auth34: files searched: 34;
+    files with matches: 24; matching lines: 113. Purpose: the pass score and the per-strategy thresholds: definitions
+    and readers (OSQ-05). Matches: config/scoring_weights.yaml 2 (e9d6ede4c02d);
+    config/strategies/first_pullback_long.yaml 4 (bba1441d7cc3); config/strategies/first_pullback_short.yaml 4
+    (d946da39a9c5); config/strategies/gap_fade_long.yaml 4 (6e0c95d5191d); config/strategies/gap_fade_short.yaml 4
+    (a78b93440fe5); config/strategies/gap_go_long.yaml 4 (6e6656fbc6ed); config/strategies/gap_go_short.yaml 4
+    (7e53d31871d6); config/strategies/open_high_breakdown_short.yaml 4 (96b354653687);
+    config/strategies/open_low_breakout_long.yaml 4 (48012d053f33); config/strategies/pb01_breakout_retest.yaml 4
+    (eedf5cac5ed5); config/strategies/positional_momentum_long.yaml 4 (7a46596fac63);
+    config/strategies/positional_sector_rotation.yaml 4 (b110bd594203); config/strategies/positional_swing_long.yaml 4
+    (597193f8076a); config/strategies/range_breakout_long.yaml 4 (ddee444cade6);
+    config/strategies/range_breakout_short.yaml 4 (2f99b1dd5f15); config/strategies/vwap_bounce_long.yaml 4
+    (e279719f9e5d); config/strategies/vwap_rejection_short.yaml 4 (a62177d49e35); config/system_config.yaml 2
+    (bf742ae5c81c); screening/hard_gate.py 5 (a8e7e2e49675); screening/quality_scorer.py 4 (b125e9ce3243);
+    screening/secondary_screener.py 17 (b6f8ff7223ad); screening/step_executor.py 6 (d83b04860f0f);
+    signals/signal_processor.py 1 (7fab0a02a302); strategies/schema.py 12 (22530161a5ee). Filter FI-012, masking inputs:
+    requested files whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected
+    0.
+- Q10 16:51:24 (?i)is_blocked|record_block|mis_blocklist|MisBlocklist over auth34: files searched: 34; files with
+    matches: 4; matching lines: 22. Purpose: the MIS blocklist: its use by the screener against its maintenance
+    (OSQ-06). Matches: config/system_config.yaml 2 (bf742ae5c81c); core/mis_blocklist.py 7 (1f91fedfbdd4); main.py 6
+    (445fb0d8237a); screening/secondary_screener.py 7 (b6f8ff7223ad). Filter FI-013, masking inputs: requested files
+    whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q11 16:51:24 (?i)timeout|ThreadPoolExecutor|max_workers|_rotate_executor over scr4sp: files searched: 5; files with
+    matches: 2; matching lines: 54. Purpose: the step pool and its limits (C-008 K-06). Matches:
+    screening/step_executor.py 24 (d83b04860f0f); signals/signal_processor.py 30 (7fab0a02a302). Filter FI-014, masking
+    inputs: requested files whole: 5 of 5 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent;
+    unexpected 0.
+- Q12 16:51:25 (?i)retest|entry_gate|throttle|position_siz|ranker over scr4: files searched: 4; files with matches: 1;
+    matching lines: 1. Purpose: whether the screener files call the components after the screener (OSQ-07). Matches:
+    config/scoring_weights.yaml 1 (e9d6ede4c02d). Filter FI-015, masking inputs: requested files whole: 4 of 4 opened;
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q13 16:51:26 REJECTED_|SKIPPED_|PASSED over scr4: files searched: 4; files with matches: 2; matching lines: 24.
+    Purpose: the status names the screener files write or test. Matches: screening/secondary_screener.py 22
+    (b6f8ff7223ad); screening/step_executor.py 2 (d83b04860f0f). Filter FI-016, masking inputs: requested files whole: 4
+    of 4 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q14 16:51:27 (?i)sector over auth34: files searched: 34; files with matches: 8; matching lines: 37. Purpose: the
+    sector-strength step and its data source. Matches: capital/position_sizer.py 2 (f92eace8d6e3);
+    config/scoring_weights.yaml 1 (e9d6ede4c02d); config/strategies/positional_sector_rotation.yaml 4 (b110bd594203);
+    config/system_config.yaml 9 (bf742ae5c81c); main.py 8 (445fb0d8237a); screening/secondary_screener.py 1
+    (b6f8ff7223ad); screening/step_executor.py 5 (d83b04860f0f); signals/signal_processor.py 7 (7fab0a02a302). Filter
+    FI-017, masking inputs: requested files whole: 34 of 34 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent; unexpected 0.
+- Q15 16:51:27 min_volume_surge|min_adr_pct|max_spread_pct|min_score over yaml16: files searched: 16; files with
+    matches: 16; matching lines: 64. Purpose: which strategy YAMLs set the screening thresholds. Matches:
+    config/strategies/first_pullback_long.yaml 4 (bba1441d7cc3); config/strategies/first_pullback_short.yaml 4
+    (d946da39a9c5); config/strategies/gap_fade_long.yaml 4 (6e0c95d5191d); config/strategies/gap_fade_short.yaml 4
+    (a78b93440fe5); config/strategies/gap_go_long.yaml 4 (6e6656fbc6ed); config/strategies/gap_go_short.yaml 4
+    (7e53d31871d6); config/strategies/open_high_breakdown_short.yaml 4 (96b354653687);
+    config/strategies/open_low_breakout_long.yaml 4 (48012d053f33); config/strategies/pb01_breakout_retest.yaml 4
+    (eedf5cac5ed5); config/strategies/positional_momentum_long.yaml 4 (7a46596fac63);
+    config/strategies/positional_sector_rotation.yaml 4 (b110bd594203); config/strategies/positional_swing_long.yaml 4
+    (597193f8076a); config/strategies/range_breakout_long.yaml 4 (ddee444cade6);
+    config/strategies/range_breakout_short.yaml 4 (2f99b1dd5f15); config/strategies/vwap_bounce_long.yaml 4
+    (e279719f9e5d); config/strategies/vwap_rejection_short.yaml 4 (a62177d49e35). Filter FI-018, masking inputs:
+    requested files whole: 16 of 16 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected
+    0.
+- Q16 16:51:28 (?i)screen over tests5: files searched: 5; files with matches: 5; matching lines: 254. Purpose: the
+    authorised tests that mention the screener. Matches: tests/unit/test_mis_blocklist.py 22 (4960f825965e);
+    tests/unit/test_quality_scorer.py 2 (f2fddb776fb3); tests/unit/test_secondary_screener.py 100 (e8e2ddb2a77d);
+    tests/unit/test_signal_processor.py 123 (3ec0ea84392a); tests/unit/test_step_executor.py 7 (82cfe6819362). Filter
+    FI-019, masking inputs: requested files whole: 5 of 5 opened; HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent; unexpected 0.
+- P09 16:51:40 (?i)retest|entry_gate|throttle|position_siz|ranker over sp1: files searched: 1; files with matches: 1;
+    matching lines: 73. Purpose: positive control for the file-level zero of Q12 (no match in the three screener code
+    files): the same regex over the signal processor (added after the plan). Matches: signals/signal_processor.py 73
+    (7fab0a02a302). Filter FI-020, masking inputs: requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent; unexpected 0.
+- P03 17:06:55 (?i)sr_detector|support|resistance|confluence|\bzones?\b over cfg1: files searched: 0; files with
+    matches: 0; matching lines: 0. Purpose: positive control for Q03 (supplementary, after the reads; DV-03): the same
+    S&R regex over system_config.yaml, which has an sr_detector section. Matches: no file. Filter FI-099, masking
+    inputs: requested file whole (0 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected
+    0.
+- P03a 17:07:07 (?i)sr_detector|support|resistance|confluence|\bzones?\b over cfg1a: files searched: 1; files with
+    matches: 1; matching lines: 19. Purpose: positive control for Q03, rerun (DV-03): P03 searched no file because its
+    list held a relative path; same regex over system_config.yaml, which has an sr_detector section. Matches:
+    config/system_config.yaml 19 (bf742ae5c81c). Filter FI-100, masking inputs: requested file whole (2 opens); HR-1
+    loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+- Q17 17:07:26 \.screen\( over auth34: files searched: 34; files with matches: 2; matching lines: 2. Purpose:
+    supplementary count (DV-03): which authorised files call a .screen( method (is the processor's call at 998 the only
+    caller among the authorised files). Matches: screening/secondary_screener.py 1 (b6f8ff7223ad);
+    signals/signal_processor.py 1 (7fab0a02a302). Filter FI-101, masking inputs: requested files whole: 34 of 34 opened;
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent; unexpected 0.
+
+========================================================================================================================
+4. READS (cread_d003.py through mr.py; each at its pinned blob)
+========================================================================================================================
+Columns: read number, time, mode and range or expression, path, blob, lines in the file, lines printed, mask counts,
+  filter invocation, masking inputs, purpose. Masks are counts over the whole range processed (a grep masks every line
+  it scans and prints only matches); no masked value is reproduced. Printed lines holding a placeholder: 7 (reads 005,
+  007 and 012), each inside a "# noqa:" lint comment; no claim depends on a masked token. An expression longer than 60
+  characters is shown with a space after each | so that it can wrap (the space is not part of it), and a non-ASCII
+  character or a double quote in an expression as a \u escape. In the masking inputs, pinned means the host record
+  equalled its pinned blob when re-hashed after the run.
+- 001 16:51:48 grep cap 80 ^class | ^    def | ^def | ^from | ^import | ^[A-Z][A-Z_0-9]* *[:=]
+    screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 25; masks {'HOSTTOK': 0, 'CLIENTID': 3} |
+    stage-2 masks {}; FI-021; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: secondary_screener.py structure: imports, constants, classes and method definitions
+    (to plan the bounded reads).
+- 002 16:51:57 range 1:122 screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 122; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-022; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: secondary_screener.py lines 1-122: module docstring, imports, the
+    ScreeningResult contract and the constructor (dependencies, settings, executor pool).
+- 003 16:52:01 range 123:379 screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 257; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-023; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: secondary_screener.py lines 123-379: screen() end to end -
+    inputs, steps 0 to 8, the executor and scorer calls, the minimum score, the signal-age reject, PASSED, the status
+    writes and error paths.
+- 004 16:52:12 range 380:419 screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 40; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-024; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: secondary_screener.py lines 380-419: _build_market_data, how the quote
+    becomes the market data the steps read (D-003 data acquisition; D-004 boundary).
+- 005 16:52:13 range 554:706 screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 153; masks
+    {'HOSTTOK': 0, 'CLIENTID': 3} | stage-2 masks {}; FI-025; masking inputs - requested file whole (2 opens); HR-1
+    loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: secondary_screener.py lines 554-706: the
+    MIS-blocked decision helper (step 0), _make_skipped, the status write _persist, evidence capture and shutdown.
+- 006 16:52:21 grep cap 80 ^class | ^    def | ^def | ^from | ^import | ^[A-Z_][A-Z_0-9]* *[:=]| ^@
+    screening/step_executor.py blob d83b04860f0f; 424 lines; printed 28; masks {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2
+    masks {}; FI-026; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: step_executor.py structure: imports, constants, classes and function definitions (to
+    plan the bounded reads).
+- 007 16:52:26 range 1:246 screening/step_executor.py blob d83b04860f0f; 424 lines; printed 246; masks {'HOSTTOK': 0,
+    'CLIENTID': 1} | stage-2 masks {}; FI-027; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: step_executor.py lines 1-246: module docstring, the
+    StepExecutorResult contract, the constructor, the single-worker pool and its rotation, run_all (order, timeouts,
+    error handling, outputs) and shutdown.
+- 008 16:52:30 range 247:424 screening/step_executor.py blob d83b04860f0f; 424 lines; printed 178; masks {'HOSTTOK': 0}
+    | stage-2 masks {}; FI-028; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: step_executor.py lines 247-424: the ten step functions - inputs read,
+    thresholds, scores and defaults for missing data.
+- 009 16:52:44 range 1:200 screening/quality_scorer.py blob b125e9ce3243; 151 lines; printed 151; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-029; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: quality_scorer.py whole file (small): score arithmetic, weights, the missing-step
+    rule, min_pass_score, passed and the tier.
+- 010 16:52:51 range 1:45 config/scoring_weights.yaml blob e9d6ede4c02d; 45 lines; printed 45; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-030; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: scoring_weights.yaml whole file (45 lines; screening weights and thresholds; the V3
+    keys only as names, D-002 documented them).
+- 011 16:53:08 grep cap 50 SecondaryScreener| StepExecutor| QualityScorer| secondary_screener| step_executor|
+    quality_scorer| mis_filter| MisLearnedBlocklist| scoring_config| circuit_proximity_reject| resolve_product|
+    step_timeout main.py blob 445fb0d8237a; 4294 lines; printed 25; masks {'HOSTTOK': 0, 'CLIENTID': 19, 'KV': 10,
+    'ALNUM': 8, 'IPV4': 1} | stage-2 masks {}; FI-031; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: main.py: lines that import, build or wire the
+    screener, the step executor, the scorer and their settings (to locate the narrow wiring ranges).
+- 012 16:53:14 range 3226:3300 main.py blob 445fb0d8237a; 4294 lines; printed 75; masks {'HOSTTOK': 0, 'CLIENTID': 3} |
+    stage-2 masks {}; FI-032; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: main.py lines 3226-3300: construction of the scorer, the step executor and the
+    screener, and the settings and dependencies passed to them.
+- 013 16:53:14 range 3048:3060 main.py blob 445fb0d8237a; 4294 lines; printed 13; masks {'HOSTTOK': 0} | stage-2 masks
+    {}; FI-033; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: main.py lines 3048-3060: construction of the MIS learned blocklist passed to the
+    screener.
+- 014 16:53:15 range 3578:3592 main.py blob 445fb0d8237a; 4294 lines; printed 15; masks {'HOSTTOK': 0} | stage-2 masks
+    {}; FI-034; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: main.py lines 3578-3592: the screener and scorer handed to the signal processor.
+- 015 16:53:25 grep cap 60 secondary_screener| _screener| quality_scorer| _scorer| screen\(| screening_result| sr\.tier|
+    \.tier\b| \.passed| \.status\.startswith| SKIPPED_ signals/signal_processor.py blob 7fab0a02a302; 2704 lines;
+    printed 23; masks {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks {}; FI-035; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose:
+    signal_processor.py: lines naming the screener or the scorer, and the screening result fields used after it (to
+    locate the invocation and the immediate post-screener branch).
+- 016 16:53:29 range 990:1060 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 71; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-036; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py lines 990-1060: the screener invocation (arguments,
+    market_data), the immediate post-screener branch (SKIPPED_, not passed, passed) and the hand-off of the tier to the
+    next stages (retest divert).
+- 017 16:53:30 range 338:346 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 9; masks {'HOSTTOK': 0}
+    | stage-2 masks {}; FI-037; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py lines 338-346: the processor's stop() calling the
+    screener's shutdown (the step pool).
+- 018 16:53:36 range 1108:1124 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 17; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-038; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py lines 1108-1124: where the screener's tier is handed to
+    the next stage (sizing boundary only).
+- 019 16:53:37 range 1959:1975 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 17; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-039; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py lines 1959-1975: _record_screener_stats (processor-side
+    counting of screener outcomes; boundary).
+- 020 16:53:42 grep cap 30 (?i)\btier\b|tier_mult capital/position_sizer.py blob f92eace8d6e3; 823 lines; printed 30;
+    masks {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks {}; FI-040; masking inputs - requested file whole (2 opens);
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: position_sizer.py: lines naming the tier
+    (whether and how the screener tier is consumed downstream; boundary only).
+- 021 16:53:51 grep cap 80 ^[a-z_]+: config/system_config.yaml blob bf742ae5c81c; 754 lines; printed 41; masks
+    {'HOSTTOK': 5, 'IPV4': 2, 'KV': 1, 'CLIENTID': 1, 'ALNUM': 1} | stage-2 masks {}; FI-041; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: system_config.yaml:
+    top-level section keys only (to locate the sections the screener chain reads; no section body).
+- 022 16:53:59 range 170:182 config/system_config.yaml blob bf742ae5c81c; 754 lines; printed 13; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-042; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: system_config.yaml lines 170-182: the mis_filter block (step 0 switches and TTL).
+- 023 16:54:00 grep cap 12 circuit_proximity_reject_enabled| market_open:| tier_multipliers| ^    (HIGH| MEDIUM| LOW):
+    config/system_config.yaml blob bf742ae5c81c; 754 lines; printed 7; masks {'HOSTTOK': 5, 'IPV4': 2, 'KV': 1,
+    'CLIENTID': 1, 'ALNUM': 1} | stage-2 masks {}; FI-043; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: system_config.yaml: the circuit-proximity switch, the
+    market-open setting and the tier-multiplier lines only (screener-chain settings; sizing boundary).
+- 024 16:54:09 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/first_pullback_long.yaml blob bba1441d7cc3; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-044; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML first_pullback_long: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 025 16:54:09 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/first_pullback_short.yaml blob d946da39a9c5; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-045; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML first_pullback_short: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 026 16:54:10 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score config/strategies/gap_fade_long.yaml
+    blob 6e0c95d5191d; 57 lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-046; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategy YAML
+    gap_fade_long: the four screening fields only (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 027 16:54:10 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score config/strategies/gap_fade_short.yaml
+    blob a78b93440fe5; 56 lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-047; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategy YAML
+    gap_fade_short: the four screening fields only (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 028 16:54:11 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score config/strategies/gap_go_long.yaml blob
+    6e6656fbc6ed; 57 lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-048; masking inputs - requested file
+    whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategy YAML
+    gap_go_long: the four screening fields only (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 029 16:54:12 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score config/strategies/gap_go_short.yaml blob
+    7e53d31871d6; 57 lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-049; masking inputs - requested file
+    whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategy YAML
+    gap_go_short: the four screening fields only (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 030 16:54:12 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/open_high_breakdown_short.yaml blob 96b354653687; 56 lines; printed 4; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-050; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: strategy YAML open_high_breakdown_short: the four screening fields only
+    (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 031 16:54:13 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/open_low_breakout_long.yaml blob 48012d053f33; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-051; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML open_low_breakout_long: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 032 16:54:13 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/pb01_breakout_retest.yaml blob eedf5cac5ed5; 80 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-052; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML pb01_breakout_retest: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 033 16:54:14 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/positional_momentum_long.yaml blob 7a46596fac63; 56 lines; printed 4; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-053; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: strategy YAML positional_momentum_long: the four screening fields only
+    (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 034 16:54:15 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/positional_sector_rotation.yaml blob b110bd594203; 56 lines; printed 4; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-054; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: strategy YAML positional_sector_rotation: the four screening fields only
+    (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 035 16:54:15 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/positional_swing_long.yaml blob 597193f8076a; 56 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-055; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML positional_swing_long: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 036 16:54:16 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/range_breakout_long.yaml blob ddee444cade6; 56 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-056; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML range_breakout_long: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 037 16:54:17 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/range_breakout_short.yaml blob 2f99b1dd5f15; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-057; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML range_breakout_short: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 038 16:54:17 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score config/strategies/vwap_bounce_long.yaml
+    blob e279719f9e5d; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-058; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategy YAML
+    vwap_bounce_long: the four screening fields only (min_volume_surge, min_adr_pct, max_spread_pct, min_score).
+- 039 16:54:18 grep cap 8 min_volume_surge|min_adr_pct|max_spread_pct|min_score
+    config/strategies/vwap_rejection_short.yaml blob a62177d49e35; 55 lines; printed 4; masks {'HOSTTOK': 0} | stage-2
+    masks {}; FI-059; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: strategy YAML vwap_rejection_short: the four screening fields only (min_volume_surge,
+    min_adr_pct, max_spread_pct, min_score).
+- 040 16:54:28 grep cap 40 min_score| min_volume_surge| min_adr_pct| max_spread_pct| ^class | ^    @| def _v| Field\(
+    strategies/schema.py blob 22530161a5ee; 376 lines; printed 40; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-060;
+    masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent.
+    Purpose: strategies/schema.py: lines naming the four screening fields and their validators (field types, defaults,
+    units and bounds).
+- 041 16:54:35 range 108:122 strategies/schema.py blob 22530161a5ee; 376 lines; printed 15; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-061; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: strategies/schema.py lines 108-122: the screening fields of StrategyConfig with
+    their neighbouring comments (units and defaults).
+- 042 16:54:35 grep cap 20 (?i)spread|adr|volume_surge|min_score strategies/schema.py blob 22530161a5ee; 376 lines;
+    printed 12; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-062; masking inputs - requested file whole (2 opens); HR-1
+    loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: strategies/schema.py: any validator or comment
+    naming the four screening fields beyond the declarations (units, bounds).
+- 043 16:54:56 grep cap 20 def get_quote| class Quote| Quote\(| def _to_quote| def _parse_quote
+    broker/zerodha_adapter.py blob 0c85d2d254aa; 2521 lines; printed 4; masks {'HOSTTOK': 0, 'ALNUM': 6, 'CLIENTID': 2}
+    | stage-2 masks {}; FI-063; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: zerodha_adapter.py: the get_quote definition and the Quote type it returns
+    (to locate the narrow quote-interface range; no auth, account or order logic).
+- 044 16:55:01 range 205:240 broker/zerodha_adapter.py blob 0c85d2d254aa; 2521 lines; printed 36; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-064; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: zerodha_adapter.py lines 205-240: the Quote data type the screener receives (fields
+    only).
+- 045 16:55:02 range 1730:1807 broker/zerodha_adapter.py blob 0c85d2d254aa; 2521 lines; printed 78; masks {'HOSTTOK': 0}
+    | stage-2 masks {}; FI-065; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: zerodha_adapter.py lines 1730-1807: get_quote, the quote function passed to
+    the screener (request, mapping of fields, errors).
+- 046 16:55:11 grep cap 20 ^class |    def |^def  core/mis_blocklist.py blob 1f91fedfbdd4; 161 lines; printed 9; masks
+    {'HOSTTOK': 1} | stage-2 masks {}; FI-066; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: mis_blocklist.py: class and method definitions (to locate the
+    two methods the screener calls, is_blocked and info).
+- 047 16:55:19 range 85:132 core/mis_blocklist.py blob 1f91fedfbdd4; 161 lines; printed 48; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-067; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: mis_blocklist.py lines 85-132: record_block (the writer, for the G-007 boundary)
+    and the two readers the screener calls, is_blocked and info, with the TTL arithmetic.
+- 048 16:55:25 grep cap 25 def |^class |StrategyConfig|model_validate|safe_load|\*\* strategies/loader.py blob
+    99e83b192021; 214 lines; printed 14; masks {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 masks {}; FI-068; masking inputs
+    - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose:
+    strategies/loader.py: definitions and the lines that turn a strategy YAML into a StrategyConfig (how the screening
+    fields reach the screener).
+- 049 16:55:29 range 102:157 strategies/loader.py blob 99e83b192021; 214 lines; printed 56; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-069; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: strategies/loader.py lines 102-157: load_all_strategies, how each YAML becomes a
+    StrategyConfig (validation; no field transformation expected).
+- 050 16:55:46 grep cap 10 ^def circuit_proximity_reason| ^def rescale_min_score| ^def rescaled_total| ^def tier_for|
+    ^class HardGate|     def evaluate screening/hard_gate.py blob a8e7e2e49675; 467 lines; printed 6; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-070; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: hard_gate.py: definition lines of the four helpers the screener imports and
+    of HardGate.evaluate (interface only; D-002 documented the internals).
+- 051 16:55:46 grep cap 15 (?i)def |class |tier|score allocation/ranker.py blob beac7be7eadb; 27 lines; printed 5; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-071; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: allocation/ranker.py: definitions and any score or tier use
+    (to confirm the downstream boundary only).
+- 052 17:01:31 grep cap 20 (?i)entry_gate| entrygate| entry_throttle| entrythrottle| _throttle\b
+    signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 20; masks {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM':
+    2} | stage-2 masks {}; FI-072; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py: lines naming the entry gate or entry throttle (to
+    place those handoffs relative to the screener call at 998; names only, no bodies).
+- 053 17:01:31 grep cap 20 ^class |^    def |^def  screening/entry_gate.py blob 46b173171bdf; 538 lines; printed 16;
+    masks {'HOSTTOK': 0} | stage-2 masks {}; FI-073; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: entry_gate.py: class and method definitions
+    (interface/handoff only, no implementation analysis).
+- 054 17:01:45 grep cap 25 ^class |^    def |^def  screening/retest_monitor.py blob 26639d6ed5dd; 442 lines; printed 25;
+    masks {'HOSTTOK': 0} | stage-2 masks {}; FI-074; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: retest_monitor.py: class and method definitions
+    (diversion interface/handoff only).
+- 055 17:01:46 grep cap 20 ^class |^    def |^def  signals/entry_throttle.py blob b887a4be78a4; 126 lines; printed 6;
+    masks {'HOSTTOK': 0} | stage-2 masks {}; FI-075; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: entry_throttle.py: class and method definitions
+    (interface/handoff only).
+- 056 17:01:55 grep cap 20 (?i)tier|score|def maybe_divert screening/retest_monitor.py blob 26639d6ed5dd; 442 lines;
+    printed 11; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-076; masking inputs - requested file whole (2 opens); HR-1
+    loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: retest_monitor.py: lines using the screener's
+    tier or score, and the maybe_divert signature (whether/how the diverter consumes screener outputs).
+- 057 17:01:56 grep cap 15 (?i)tier|score|screen screening/entry_gate.py blob 46b173171bdf; 538 lines; printed 7; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-077; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: entry_gate.py and entry_throttle.py: any use of screener
+    tier/score/status (to confirm whether these downstream components consume screener outputs).
+- 058 17:01:57 grep cap 15 (?i)tier|score|screen signals/entry_throttle.py blob b887a4be78a4; 126 lines; printed 0;
+    masks {'HOSTTOK': 0} | stage-2 masks {}; FI-078; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: entry_throttle.py: any use of screener
+    tier/score/status.
+- 059 17:02:07 range 1:12 screening/entry_gate.py blob 46b173171bdf; 538 lines; printed 12; masks {'HOSTTOK': 0} |
+    stage-2 masks {}; FI-079; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned;
+    HR-3 attempted, absent. Purpose: entry_gate.py module docstring head: the component's stated role (downstream
+    boundary only).
+- 060 17:02:08 range 2010:2024 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 15; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-080; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py: docstring of the post-screening resume path for
+    EntryGate releases (handoff boundary).
+- 061 17:02:08 range 2234:2241 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 8; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-081; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py: the DORMANT comment about EntryGate.add() (handoff
+    boundary; comment only).
+- 062 17:02:09 range 303:320 screening/retest_monitor.py blob 26639d6ed5dd; 442 lines; printed 18; masks {'HOSTTOK': 0}
+    | stage-2 masks {}; FI-082; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: retest_monitor.py: maybe_divert signature (the tier/score handoff from the
+    screener result).
+- 063 17:04:12 grep cap 80 ^def test_|^    def test_|^class  tests/unit/test_secondary_screener.py blob e8e2ddb2a77d;
+    601 lines; printed 24; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-083; masking inputs - requested file whole (2
+    opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_secondary_screener.py (text
+    only, never run): test names, to choose narrow assertion reads.
+- 064 17:04:24 grep cap 90 ^\s+assert  tests/unit/test_secondary_screener.py blob e8e2ddb2a77d; 601 lines; printed 51;
+    masks {'HOSTTOK': 0} | stage-2 masks {}; FI-084; masking inputs - requested file whole (2 opens); HR-1 loaded,
+    pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_secondary_screener.py (text only, never run):
+    assertion lines (corroboration of statuses, override and skip paths).
+- 065 17:04:35 grep cap 20 \u0022avg_volume_20d\u0022|\u0022atr\u0022|\u0022rsi\u0022|\u0022sector\u0022|market_data=
+    tests/unit/test_secondary_screener.py blob e8e2ddb2a77d; 601 lines; printed 20; masks {'HOSTTOK': 0} | stage-2 masks
+    {}; FI-085; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: test_secondary_screener.py (text only): fixture lines that inject
+    avg_volume_20d/atr/rsi/sector (whether tests supply data the live caller never supplies).
+- 066 17:04:36 range 548:560 tests/unit/test_secondary_screener.py blob e8e2ddb2a77d; 601 lines; printed 13; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-086; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_secondary_screener.py (text only): how the all-strategies
+    test builds its list (the asserted count of 15 against 16 YAMLs at the pin).
+- 067 17:04:42 grep cap 90 ^def test_|^    def test_|^class  tests/unit/test_step_executor.py blob 82cfe6819362; 648
+    lines; printed 51; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-087; masking inputs - requested file whole (2 opens);
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_step_executor.py (text only, never
+    run): test names.
+- 068 17:04:47 range 357:428 tests/unit/test_step_executor.py blob 82cfe6819362; 648 lines; printed 72; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-088; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_step_executor.py (text only): spread-check tests
+    (threshold units the tests use for max_spread_pct).
+- 069 17:04:48 range 534:540 tests/unit/test_step_executor.py blob 82cfe6819362; 648 lines; printed 7; masks {'HOSTTOK':
+    0} | stage-2 masks {}; FI-089; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: test_step_executor.py (text only): missing-keys test (whether a key present
+    with None is covered).
+- 070 17:04:55 grep cap 15 def _base_thresholds| max_spread_pct| min_adr_pct| min_volume_surge
+    tests/unit/test_step_executor.py blob 82cfe6819362; 648 lines; printed 5; masks {'HOSTTOK': 0} | stage-2 masks {};
+    FI-090; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted,
+    absent. Purpose: test_step_executor.py (text only): the threshold values the tests pass (units of max_spread_pct and
+    min_adr_pct).
+- 071 17:05:01 grep cap 20 max_spread_pct| min_adr_pct| min_volume_surge| min_score| min_pass_score
+    tests/unit/test_secondary_screener.py blob e8e2ddb2a77d; 601 lines; printed 15; masks {'HOSTTOK': 0} | stage-2 masks
+    {}; FI-091; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: test_secondary_screener.py (text only): strategy threshold values the screener tests use
+    (units; min_score override).
+- 072 17:05:07 grep cap 90 ^def test_|^    def test_|^\s+assert  tests/unit/test_quality_scorer.py blob f2fddb776fb3;
+    333 lines; printed 72; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-092; masking inputs - requested file whole (2
+    opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_quality_scorer.py (text
+    only, never run): test names and assertion lines (score arithmetic, missing steps, tiers).
+- 073 17:05:12 grep cap 60 ^def test_|^    def test_|^class |^\s+assert  tests/unit/test_mis_blocklist.py blob
+    4960f825965e; 271 lines; printed 60; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-093; masking inputs - requested
+    file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose:
+    test_mis_blocklist.py (text only, never run): test names and assertion lines (TTL and read semantics used by the
+    screener pre-drop).
+- 074 17:05:19 grep cap 30 market_data| screen\.assert| screen\.call| SKIPPED_| REJECTED_SCORE| def test_.*screen
+    tests/unit/test_signal_processor.py blob 3ec0ea84392a; 2501 lines; printed 23; masks {'HOSTTOK': 0} | stage-2 masks
+    {}; FI-094; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3
+    attempted, absent. Purpose: test_signal_processor.py (text only, never run): lines on the screen call and
+    post-screener branching (market_data, SKIPPED_/rejected/passed handling).
+- 075 17:05:24 range 774:810 tests/unit/test_signal_processor.py blob 3ec0ea84392a; 2501 lines; printed 37; masks
+    {'HOSTTOK': 0} | stage-2 masks {}; FI-095; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned;
+    HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: test_signal_processor.py (text only): tier-to-sizing and
+    direction tests (corroborate the screener-to-sizer handoff).
+- 076 17:05:30 grep cap 10 ^from |^import |__all__|screener|executor|scorer screening/__init__.py blob f5069dd61fb8; 13
+    lines; printed 4; masks {'HOSTTOK': 0} | stage-2 masks {}; FI-096; masking inputs - requested file whole (2 opens);
+    HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: screening/__init__.py: package metadata
+    and import lines only (A5; whether the package marker adds D-003 evidence).
+- 077 17:06:15 grep cap 25 triggered_at signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 25; masks
+    {'HOSTTOK': 0, 'CLIENTID': 7, 'ALNUM': 2} | stage-2 masks {}; FI-097; masking inputs - requested file whole (2
+    opens); HR-1 loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: signal_processor.py: lines naming
+    triggered_at (origin of the screen() triggered_at argument that the executor's signal-age step consumes; BK-46/BK-55
+    carry).
+- 078 17:06:25 range 912:919 signals/signal_processor.py blob 7fab0a02a302; 2704 lines; printed 8; masks {'HOSTTOK': 0}
+    | stage-2 masks {}; FI-098; masking inputs - requested file whole (2 opens); HR-1 loaded, pinned; HR-2 loaded,
+    pinned; HR-3 attempted, absent. Purpose: signal_processor.py: the expiry check that uses triggered_at before the
+    screen() call (whether it and the executor's signal-age step measure from the same value; BK-55 carry; C-009 owns
+    the rule).
+- 079 17:07:33 grep cap 3 \.screen\( screening/secondary_screener.py blob b6f8ff7223ad; 706 lines; printed 1; masks
+    {'HOSTTOK': 0, 'CLIENTID': 3} | stage-2 masks {}; FI-102; masking inputs - requested file whole (2 opens); HR-1
+    loaded, pinned; HR-2 loaded, pinned; HR-3 attempted, absent. Purpose: secondary_screener.py: the one line matching
+    .screen( in Q17 (to explain the count).
+
+========================================================================================================================
+5. FILTER INVOCATIONS: TOTALS
+========================================================================================================================
+102 invocations (filter_log.tsv): 1 self-test, 22 count-only search runs, 79 reads. In 101, the filter loaded the
+  requested file or files in full and HR-1 and HR-2 in full (both equal to their pinned blobs after the run) and
+  attempted the absent HR-3. In 1 (FI-099, P03), it loaded HR-1 and HR-2 and attempted HR-3 but opened no requested
+  file: the list held a relative path that the count wrapper could not open from its folder; nothing was searched.
+  Unexpected legacy opens: 0 in all 102. No masking input other than these three roles and the requested files was
+  loaded.
+Files read for display: 39 files in 79 reads (78 reads printed lines; read 058 printed none). Legacy files loaded by the
+  filter: those files, the files of the searches (all among them) and HR-1 and HR-2 as token sources. Never displayed or
+  quoted: HR-1, HR-2.
+
+========================================================================================================================
+6. DEVIATIONS AND SCOPE NOTES
+========================================================================================================================
+- DV-01 The search plan stopped after Q04 (a Python KeyError: a default argument evaluated eagerly); fixed, made
+  resume-safe (searches already logged are not re-run) and continued at 16:51:17 IST. Q01 to Q04 ran once each, under
+  the first version (SHA-256 E3D2DF99767B5D06 as noted at 16:50:22; that version was replaced and is not kept); the rest
+  under the fixed one. No result affected.
+- DV-02 P09 (16:51:40) was added after the plan, before the first read, as a positive control for Q12's zeros in the
+  screener's code files.
+- DV-03 After the reads and before the relock: P03 (17:06:55) searched no file, its list holding a relative path (void;
+  it loaded HR-1 and HR-2 like every run); P03a (17:07:07), the same expression over the absolute list, the positive
+  control that Q03's S&R terms lacked; Q17 (17:07:26), to bound the callers of screen(); read 079 (17:07:33), to explain
+  Q17's match in the screener. The prompt orders searches first; these three came late.
+- DV-04 Read 044 (adapter lines 205 to 240) printed lines 225 to 240 of unrelated constants and comments after the Quote
+  type; they are not used as evidence (only lines 208 to 222 are cited).
+- Scope note: processor reads beyond the immediate call range - 052 (lines naming the entry gate or throttle), 060 and
+  061 (the gate-release path and its comment), 077 and 078 (the origin of the triggered_at argument and the expiry check
+  that uses it) - each narrow and logged with its purpose, for the hand-off (C3, C5) or the call's arguments (C1).
+
+========================================================================================================================
+7. NOT OPENED
+========================================================================================================================
+- The never-open set (102 paths), the two excluded July records, the 27 Group E records (the four host-record documents
+  among them), the two-factor runbook, the three strategy-direction registry paths, and HR-1 and HR-2 as evidence:
+  refused by the gate; none opened for display.
+- Any file outside the 39 authorised: refused by the gate (not authorised for reading).
+- No legacy code, test or script executed; no import; no legacy history command; no blob fetched (8,920 local objects
+  before and after); no host, VM, broker, webhook, Chartink, service or database contacted; no GitHub API use.

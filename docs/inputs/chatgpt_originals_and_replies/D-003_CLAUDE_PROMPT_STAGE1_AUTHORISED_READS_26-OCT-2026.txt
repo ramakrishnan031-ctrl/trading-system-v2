@@ -1,0 +1,96 @@
+D-003 SECONDARY SCREENING — CLAUDE PROMPT
+STAGE 1: AUTHORISED SOURCE-EVIDENCE COLLECTION ONLY
+Date: 26-Oct-2026 | Project: Trading_System-v2_redesign
+
+AUTHORITY
+ChatGPT has reviewed Stage 0. Stage 1 is authorised only within the exact scope and read modes below. This is NOT permission to draft the manual, change governance, make redesign decisions, or read unrelated source content.
+
+PINNED REPOSITORIES
+Legacy production reference (DEAD / REFERENCE ONLY):
+https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Exact legacy baseline: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+V2 governance repository:
+https://github.com/ramakrishnan031-ctrl/trading-system-v2
+Exact V2 governance commit: 85915267f38c0d653cf43d1be9425b87fb946566
+Use the legacy pin for every source claim. If a path/blob does not match the pin, STOP and report it.
+
+CHATGPT SCOPE DECISIONS
+1. D-003 documents the legacy screener's own stage end-to-end: invocation/inputs through step execution, scoring/threshold/tier outputs, internal screening outcome and status write, only where pinned source evidence supports each element. Describe observed behavior, not intended or redesigned behavior.
+2. D-001 is HISTORICAL and remains the lifecycle/map account. Document source facts needed to understand the screener; cross-reference D-001 rather than duplicating its entire account. Record discrepancies as gaps.
+3. D-002 is HISTORICAL. Document only how the screener invokes, receives, branches on, or records D-002 gate mechanisms. Cross-reference gate internals; do not re-document the gate battery. Keep BK-54/BK-58 unresolved unless direct source evidence settles them.
+4. D-003 documents the screener's own quote/data acquisition and how steps consume data. D-004 owns broader market-data contracts and requirements. Record observed inputs; do not design requirements.
+5. D-003 documents score arithmetic, weights, per-strategy thresholds, minimum-score handling, tier calculation and internal PASSED/REJECTED_/SKIPPED_ status only where source confirms these are part of the screener. D-017 owns downstream ranking; D-018 owns final system Trade/Reject. Internal PASSED is not final trade approval.
+6. Document the screener-side MIS pre-drop/blocklist interaction where evidenced. Distinguish it from broker rejection handling and any feedback loop that updates the blocklist; cross-reference G-007.
+7. Retest diversion, entry gate, entry throttle, sizing, ranking and later S&R/V3/regime engines are boundary/handoff references only. Establish the observed handoff and where the screener stops; do not claim downstream components are inside D-003.
+8. Establish from authorised source reads whether S&R/V3/regime inputs are actually consumed by the screener. Broader engine ownership remains with J topics.
+9. V2 governance items (VP-03, VP-08, DR-031/DR-032, A-009 Q39, admission test, BK-46/BK-55/BK-58/BK-63, etc.) are governance inputs, not legacy proof. Label them HISTORICAL, PROPOSED, OPEN or UNKNOWN as appropriate; do not decide V2 behavior.
+10. Drop config/strategy_direction_registry.yaml, core/strategy_direction.py and scripts/strategy_registry_officer.py from this Stage 1 read list. Reopen only if direct evidence from an authorised read establishes a specific D-003 dependency; request ChatGPT approval before reading them.
+11. Accept the reconstructed tree method because its root object matches the pinned commit's tree and counts match ChatGPT's independent GitHub tree result. State that Claude's API request returned HTTP 403; do not claim Claude directly observed the API truncated flag.
+
+AUTHORISED LEGACY PATHS / READ MODES
+
+GROUP A — PRIMARY D-003 IMPLEMENTATION
+A1 screening/secondary_screener.py — relevant ranges/declarations for class/function flow, steps, inputs, branch conditions, scoring, outcome/status writes and error paths. Narrow ranges; expand only for a directly referenced helper.
+A2 screening/step_executor.py — relevant ranges for step order, execution semantics, exceptions, timeout/pool behavior and outputs.
+A3 screening/quality_scorer.py — relevant ranges for score arithmetic, weights, missing-step behavior, threshold/passed result and tier if implemented here.
+A4 config/scoring_weights.yaml — relevant screening weights/thresholds only; do not expose credential-like values if unexpectedly present.
+A5 screening/__init__.py — metadata/import relevance only; skip if it adds no D-003 evidence.
+
+GROUP B — CONFIGURATION, STRATEGY INPUTS AND EARLY-STEP DEPENDENCIES
+B1 config/system_config.yaml — only exact sections/keys consumed by the screener or early steps; no full-file dump.
+B2 config/strategies/*.yaml — the 16 strategy YAMLs in Stage 0 inventory, but only screening-related fields (e.g. named thresholds/min_score) and evidence needed to confirm schema/default behavior. Do not output unrelated config.
+B3 strategies/schema.py and strategies/loader.py — relevant ranges for strategy fields/defaults and how they reach the screener.
+B4 core/mis_blocklist.py — only blocklist functions/fields directly used by the screener's early step.
+B5 main.py — narrow ranges only for screener construction/wiring, passed dependencies/config and caller invocation/handoff. No whole-file read/dump.
+B6 broker/zerodha_adapter.py — narrow ranges only for the quote function passed to the screener and its interface. No unrelated broker/auth/account/order logic.
+
+GROUP C — BOUNDARY/HANDOFF EVIDENCE ONLY
+C1 signals/signal_processor.py — narrow ranges around screener invocation, arguments and immediate post-screener branching/status handling.
+C2 screening/hard_gate.py — narrow ranges only for interface/call relationship to D-002; no gate-battery re-documentation.
+C3 screening/entry_gate.py — interface/handoff range only; establish downstream boundary, no implementation analysis.
+C4 screening/retest_monitor.py — interface/handoff range only; establish downstream diversion boundary.
+C5 signals/entry_throttle.py — interface/handoff range only; establish downstream boundary.
+C6 capital/position_sizer.py — narrow ranges only to establish whether/how screener tier is consumed downstream.
+C7 allocation/ranker.py — narrow interface range only if needed to confirm downstream boundary.
+C8 Do not read broad market-data/S&R/V3/regime implementation files. Use direct references/imports/calls in authorised A/B files to establish whether screener consumes them. If a dependency cannot be settled without another file, record an OPEN GAP and request ChatGPT authorisation.
+
+GROUP D — TEXT-ONLY TEST EVIDENCE; NEVER RUN
+May read relevant assertions/cases in these files as text only:
+- tests/unit/test_secondary_screener.py
+- tests/unit/test_step_executor.py
+- tests/unit/test_quality_scorer.py
+- tests/unit/test_mis_blocklist.py
+- tests/unit/test_signal_processor.py
+Do not execute tests, import modules, run fixtures/scripts or infer runtime results beyond assertions. Tests corroborate but do not prove deployed host settings.
+
+GROUP E — LEGACY DOCUMENTS
+NOT authorised in Stage 1. Do not open/read any Group E documents, including the four host-record documents. Names may remain inventory leads only. Do not extract host values/settings/operational state. Earlier frozen V2 manuals may be cited as HISTORICAL with exact V2 path/line, but cannot replace fresh pinned-source reads for claims about the legacy pin.
+
+PRE-READ SAFETY GATE — STOP IF NOT SATISFIED
+1. Verify each target path and blob ID against the pinned tree.
+2. Run approved count-only searches first, with positive controls and zero-result evidence. Do not print matching lines/values from secrets or configuration.
+3. Identify the exact gated/masking read mechanism and disclose in the read log every input/source from which it obtains token/secret patterns or values (input path/name and role; never disclose values). If mechanism or inputs cannot be confidently identified, DO NOT READ source bodies; report blocker to ChatGPT.
+4. Confirm the gate prevents secret/token/session values appearing in terminal output, logs, intermediate files and final artifacts. Never save raw source dumps.
+5. Never-open rules remain in force: .env/.env.*; token/session files; gui_config.local.yaml; docs/web_claude/; *.db; logs; and other standing excluded account/security/reference-data configurations. Never enumerate sensitive values or prohibited paths in deliverables.
+6. If any path has an unanticipated sensitive role, stop that path and ask ChatGPT. No fallback to unmasked reads.
+
+STAGE 1 PROCEDURE
+A. Create a pre-read authorisation log: target paths, pinned blob IDs, allowed ranges/purpose, count-only checks and positive controls, masking mechanism, all token-source inputs by path/name and role (values redacted), safety-gate result.
+B. Run only permitted count-only searches; no broad content search that prints source lines.
+C. Read only authorised ranges through the gated masking mechanism. Log path, blob, line range, reason, evidence extracted, masking status and any omitted/redacted region. Do not save raw source text.
+D. Tag claims FACT, HISTORICAL, INTERPRETATION, UNKNOWN / NOT ESTABLISHED, KNOWN DEFECT or OPEN QUESTION. Every source fact cites pinned path + line range and blob ID.
+E. Do not run code/tests/scripts, import modules, invoke broker, contact hosts/services/webhooks/Chartink/database, or change either repository.
+F. If a necessary dependency is outside the authorised list, record the precise question and stop for ChatGPT authorisation.
+
+REQUIRED STAGE 1 DELIVERABLES
+1. D-003_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt
+2. D-003_STAGE1_FILES_READ_LOG_26-OCT-2026.txt
+3. D-003_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt
+4. D-003_STAGE1_GAP_REGISTER_26-OCT-2026.txt
+5. D-003_STAGE1_CHANGE_NOTE_26-OCT-2026.txt
+6. D-003_STAGE1_FINAL_CHECK_26-OCT-2026.txt
+7. D-003_STAGE1_CHATGPT_HANDOFF_26-OCT-2026.txt
+The handoff must address OSQ-01 to OSQ-11 with source-backed conclusions where possible; unresolved questions remain OPEN/UNKNOWN. Identify conflicts with frozen A/B/C/D topic manuals without rewriting them. No Rama questions unless evidence proves a genuine business decision necessary.
+
+STOP CONDITION
+Stop after Stage 1 evidence collection/checks. Do not draft D-003_manual.md, revise other manuals, edit V2 governance, create commits or push. Send all seven deliverables to ChatGPT for reconciliation and explicit manual-drafting authorisation.

@@ -1,0 +1,856 @@
+D-003 - SECONDARY SCREENING: STAGE 1 SOURCE EVIDENCE
+Date: 26-Oct-2026 (IST). Built 17:34 IST by Claude for ChatGPT's review. Evidence only: not a manual; decides nothing;
+  no V2 recommendation.
+Authority: D-003_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_26-OCT-2026.txt,
+  D-003_CLAUDE_PROMPT_STAGE1_AUTHORISED_READS_26-OCT-2026.txt and D-003_RAMA_ANSWER_SHEET_STAGE1_SCOPE_26-OCT-2026.txt
+  (received from Rama at 16:44 IST in D-003_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATI.zip, which also holds
+  D-003_STAGE1_AUTHORIZATION_HANDOFF_26-OCT-2026.zip with the same three files, byte for byte). Pinned source:
+  trading-system-prod-snapshot at 970aabf3c78d777d9d34549e021f7c8e756c7bdb (tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa; from the saved listing, no history command). V2 context: main at 8591526.
+Method: first the safety gate (16:47:48 IST, before any read: the filter chain and every token source it loads, by role;
+  read log section 1); then the read lock lifted at 16:50:28 (LK-1), a gate test with a trace self-test, 22 count-only
+  search runs over authorised files only (19 planned or added before the first read, 3 after), 79 logged reads of the 39
+  authorised files at their pinned blobs, and the lock re-engaged at 17:08:00 IST (LK-2). Every filter run was traced
+  (strace, file opens only) and its masking inputs logged.
+Masking inputs, stated once here: on every filter run, the filter loaded the requested file (or every listed file) in
+  full and two legacy host records, HR-1 (a system map) and HR-2 (a deployment record), in full and value-blind as its
+  host-token source, and tried a third, HR-3 (a testing-snapshot manifest), which is absent; one void count run opened
+  no requested file (read log, sections 3 and 5). Nothing of HR-1 or HR-2 was printed or seen. A read of lines a-b shows
+  lines a-b; the filter still loaded the whole file.
+Companions: D-003_STAGE1_FILES_READ_LOG_26-OCT-2026.txt, D-003_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt,
+  D-003_STAGE1_GAP_REGISTER_26-OCT-2026.txt, D-003_STAGE1_CHANGE_NOTE_26-OCT-2026.txt,
+  D-003_STAGE1_FINAL_CHECK_26-OCT-2026.txt, D-003_STAGE1_CHATGPT_HANDOFF_26-OCT-2026.txt.
+Labels: FACT (SOURCE) - code lines read at the pin; FACT (TEXT) - a comment or docstring (not behaviour); FACT (CONFIG)
+  - a repository configuration value (not a deployed host's); FACT (TEST) - test source read as text, never run
+  (corroboration, not proof); FACT (COUNT) - a count-only search (file names and counts, no line printed); FACT
+  (METADATA) - listing, gate or log facts; HISTORICAL - a V2 record, cited at 8591526; INTERPRETATION - Claude's reading
+  or arithmetic of the facts cited; UNKNOWN / NOT ESTABLISHED; KNOWN DEFECT - a defect recorded in a V2 record and
+  confirmed in source (SQ-09 only); OPEN QUESTION (in the register). A path:lines citation names lines printed by a
+  logged read of that file at its pinned blob (the read log); search IDs are the read log's, section 3. Quotations are
+  verbatim except that comment markers and line breaks are dropped, non-ASCII dashes, arrows and symbols are shown in
+  ASCII, and "..." marks words left out.
+Status discipline: a comment is not behaviour; a function existing is not it being called; a call on a branch is not the
+  branch being taken; a configured value is not a deployed one; a shadow or log-only path is not an effect on live
+  decisions; a bounded search finding nothing is not proof of absence beyond its files; a test assertion is not a
+  runtime result. No code, test or script was run; no deployed configuration, host or database was read.
+
+========================================================================================================================
+FILES AND PINNED BLOBS (the claims cite these paths)
+========================================================================================================================
+  allocation/ranker.py                             blob beac7be7eadb    27 lines  (reads: 051)
+  broker/zerodha_adapter.py                        blob 0c85d2d254aa  2521 lines  (reads: 043, 044, 045)
+  capital/position_sizer.py                        blob f92eace8d6e3   823 lines  (reads: 020)
+  config/scoring_weights.yaml                      blob e9d6ede4c02d    45 lines  (reads: 010)
+  config/strategies/first_pullback_long.yaml       blob bba1441d7cc3    55 lines  (reads: 024)
+  config/strategies/first_pullback_short.yaml      blob d946da39a9c5    55 lines  (reads: 025)
+  config/strategies/gap_fade_long.yaml             blob 6e0c95d5191d    57 lines  (reads: 026)
+  config/strategies/gap_fade_short.yaml            blob a78b93440fe5    56 lines  (reads: 027)
+  config/strategies/gap_go_long.yaml               blob 6e6656fbc6ed    57 lines  (reads: 028)
+  config/strategies/gap_go_short.yaml              blob 7e53d31871d6    57 lines  (reads: 029)
+  config/strategies/open_high_breakdown_short.yaml blob 96b354653687    56 lines  (reads: 030)
+  config/strategies/open_low_breakout_long.yaml    blob 48012d053f33    55 lines  (reads: 031)
+  config/strategies/pb01_breakout_retest.yaml      blob eedf5cac5ed5    80 lines  (reads: 032)
+  config/strategies/positional_momentum_long.yaml  blob 7a46596fac63    56 lines  (reads: 033)
+  config/strategies/positional_sector_rotation.yaml blob b110bd594203    56 lines  (reads: 034)
+  config/strategies/positional_swing_long.yaml     blob 597193f8076a    56 lines  (reads: 035)
+  config/strategies/range_breakout_long.yaml       blob ddee444cade6    56 lines  (reads: 036)
+  config/strategies/range_breakout_short.yaml      blob 2f99b1dd5f15    55 lines  (reads: 037)
+  config/strategies/vwap_bounce_long.yaml          blob e279719f9e5d    55 lines  (reads: 038)
+  config/strategies/vwap_rejection_short.yaml      blob a62177d49e35    55 lines  (reads: 039)
+  config/system_config.yaml                        blob bf742ae5c81c   754 lines  (reads: 021, 022, 023)
+  core/mis_blocklist.py                            blob 1f91fedfbdd4   161 lines  (reads: 046, 047)
+  main.py                                          blob 445fb0d8237a  4294 lines  (reads: 011, 012, 013, 014)
+  screening/__init__.py                            blob f5069dd61fb8    13 lines  (reads: 076)
+  screening/entry_gate.py                          blob 46b173171bdf   538 lines  (reads: 053, 057, 059)
+  screening/hard_gate.py                           blob a8e7e2e49675   467 lines  (reads: 050)
+  screening/quality_scorer.py                      blob b125e9ce3243   151 lines  (reads: 009)
+  screening/retest_monitor.py                      blob 26639d6ed5dd   442 lines  (reads: 054, 056, 062)
+  screening/secondary_screener.py                  blob b6f8ff7223ad   706 lines  (reads: 001, 002, 003, 004, 005, 079)
+  screening/step_executor.py                       blob d83b04860f0f   424 lines  (reads: 006, 007, 008)
+  signals/entry_throttle.py                        blob b887a4be78a4   126 lines  (reads: 055, 058)
+  signals/signal_processor.py                      blob 7fab0a02a302  2704 lines  (reads: 015, 016, 017, 018, 019, 052,
+      060, 061, 077, 078)
+  strategies/loader.py                             blob 99e83b192021   214 lines  (reads: 048, 049)
+  strategies/schema.py                             blob 22530161a5ee   376 lines  (reads: 040, 041, 042)
+  tests/unit/test_mis_blocklist.py                 blob 4960f825965e   271 lines  (reads: 073)
+  tests/unit/test_quality_scorer.py                blob f2fddb776fb3   333 lines  (reads: 072)
+  tests/unit/test_secondary_screener.py            blob e8e2ddb2a77d   601 lines  (reads: 063, 064, 065, 066, 071)
+  tests/unit/test_signal_processor.py              blob 3ec0ea84392a  2501 lines  (reads: 074, 075)
+  tests/unit/test_step_executor.py                 blob 82cfe6819362   648 lines  (reads: 067, 068, 069, 070)
+
+========================================================================================================================
+0. FINDINGS IN BRIEF (details and citations in the sections below)
+========================================================================================================================
+- The stage: the processor calls screen() once per signal with market_data=None, the only caller in the authorised files
+  (IN-01, IN-02). screen() runs step 0 (the MIS pre-drop), step 1 (one broker quote), the enforce branch or step 1b
+  (D-002's), the ten executor steps, step 4b (step errors), the scorer, the shadow compare (D-002's), step 6 (minimum
+  score), step 7 (signal age) and PASSED, and persists every outcome itself (SC-01 to SC-11, ST-01 to ST-04).
+- Data: the only market input is the broker quote (last price, top bid and ask, volume, VWAP, OHLC, circuit limits);
+  ATR, RSI, sector, previous close and 20-day average volume are always None, so volume_surge and atr_filter score 0 and
+  rsi_range and sector_strength 0.5 on every signal. This answers Q-34 (c): the 65 ceiling (MD-01 to MD-07).
+- Score: proportional to the weights present (FIX-042); pass 60 for all 16 strategies (min_score 0); tiers 80 and 65;
+  under the ceiling a pass needed nearly every live step at full score and MEDIUM needed all of them; HIGH was
+  unreachable (KNOWN DEFECT, recorded) (SQ-01 to SQ-09). The per-strategy thresholds did not tell strategies apart on
+  that path (SQ-11). The tier reaches the sizer's multiplier and the retest diverter (SQ-10).
+- Execution: all ten steps always run, each on one shared single-worker pool with a 5 s timeout (the default; main.py
+  passes none); a timeout scores 0.5 and replaces the pool; an exception makes the result REJECTED_STEP_ERROR (SE-01 to
+  SE-05, SC-07).
+- MIS: step 0 reads the learned blocklist and, on the repository values (enabled, shadow, 1-day TTL), logs and never
+  rejects; the writer is the order placer's 400 handler, G-007's (MS-01 to MS-06).
+- No S&R, regime or V3-chain input reaches the screener; its only V3 element is the hard-gate re-scale (shadow); S&R
+  zones are read after it, by the retest diverter (SR-01 to SR-04).
+- Hand-off: PASSED is internal; the processor goes on to price derivation, the retest divert, sizing with the tier, the
+  throttle and placement (HO-01 to HO-06).
+- For review, labelled INTERPRETATION: max_spread_pct and min_adr_pct are 0.005 in every YAML against percent
+  arithmetic, while the tests use 0.1 and 0.5 (MD-09); a quote without OHLC would make price_action raise and the result
+  REJECTED_STEP_ERROR (MD-08); on the processor's path a signal_age or circuit_check of 0.0 ends REJECTED_SCORE_<n>
+  before step 7 (SQ-08).
+
+========================================================================================================================
+1. THE CALL, THE WIRING AND THE INPUTS (OSQ-01, OSQ-02, OSQ-04)
+========================================================================================================================
+IN-01 [FACT (SOURCE); FACT (TEXT)] The processor's step 3 calls the screener once per signal:
+     self._screener.screen(signal_id, symbol, scanner_name, trigger_price, triggered_at,
+     direction=strategy_obj.direction, intent=strategy_obj.intent, strategy=strategy_obj, market_data=None)
+     signals/signal_processor.py:997-1004. Its comment: "Screener writes signal status (PASSED / REJECTED_<step>)." and
+     "Processor does NOT double-write those statuses." signals/signal_processor.py:992-996. The call is timed and
+     counted in the processor's statistics signals/signal_processor.py:1005-1006, 1959-1970. HISTORICAL: C-008 ST-12
+     records the same call (docs/agenda/c-008_signal-processing/C-008_manual.md:152).
+     Blobs: signals/signal_processor.py 7fab0a02a302.
+     Reads: 016, 019.
+
+IN-02 [FACT (COUNT); FACT (SOURCE)] Q17 (an expression matching ".screen(" over the 34 authorised files that are not
+     tests) found one line in the processor and one in the screener; read 079 shows the screener's line is the
+     ScreeningResult docstring screening/secondary_screener.py:44. Within the authorised files, the processor's call
+     signals/signal_processor.py:998 is the only caller of screen(). Files outside the authorisation were not searched:
+     other callers there are UNKNOWN.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad; signals/signal_processor.py 7fab0a02a302.
+     Reads: 079, 016.
+
+IN-03 [FACT (SOURCE); FACT (TEXT)] screen() takes signal_id, symbol, scanner_name, trigger_price, triggered_at,
+     direction, intent, strategy and an optional market_data (default None) and returns a ScreeningResult
+     screening/secondary_screener.py:123-134. Its docstring: "SS4: Pipeline order: fetch data -> run steps -> check
+     errors -> score -> apply min_score override -> final status." and "SS5: Persist result to state_store (P18). DB
+     failures logged but do not prevent returning ScreeningResult." screening/secondary_screener.py:135-141.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+IN-04 [FACT (SOURCE)] Wiring in main.py: QualityScorer(weights=app_config.scoring, logger) main.py:3230-3233;
+     StepExecutor(logger, market_open=market_windows.market_open), with no step_timeout_sec main.py:3234-3237, so the
+     constructor default of 5.0 s applies screening/step_executor.py:49-60; a HardGate, built always main.py:3238-3247
+     (D-002); then SecondaryScreener with the step executor, the scorer, state_store=store,
+     quote_fn=broker_adapter.get_quote, a logger, circuit_proximity_reject_enabled from system.entry_gate, the MIS
+     blocklist, mis_filter_enabled and mis_filter_shadow from system.mis_filter, a resolve_product closure over
+     product_resolver.resolve(intent, "zerodha"), the hard gate, scoring_config=app_config.scoring and
+     evidence=evidence_recorder main.py:3281-3298.
+     Blobs: main.py 445fb0d8237a; screening/step_executor.py d83b04860f0f.
+     Reads: 012, 007.
+
+IN-05 [FACT (SOURCE); FACT (TEXT)] The processor is given the screener, the scorer and the instrument cache, the last
+     commented "IC: lot_size/sector lookup" main.py:3586-3592; its constructor comments the scorer as "kept for
+     logging/metrics" signals/signal_processor.py:144-145, 167-168. The screener's constructor has no instrument-cache
+     parameter screening/secondary_screener.py:66-81 and main.py passes it none main.py:3281-3298.
+     Blobs: main.py 445fb0d8237a; screening/secondary_screener.py b6f8ff7223ad; signals/signal_processor.py
+       7fab0a02a302.
+     Reads: 014, 015, 002, 012.
+
+IN-06 [INTERPRETATION; FACT (TEXT); HISTORICAL] Where app_config.scoring comes from: the scorer's header says "All
+     weights and thresholds come from ScoringConfig (scoring_weights.yaml)." screening/quality_scorer.py:4; the
+     screener's constructor types scoring_config as core.config_loader.ScoringConfig screening/secondary_screener.py:79;
+     the keys the screener reads, v3_hardgate_mode, v3_gate_steps, v3_min_pass_score, v3_high_score_threshold,
+     v3_medium_score_threshold and steps screening/secondary_screener.py:96-106, are keys of the scoring file
+     config/scoring_weights.yaml:10, 39-44. The loader, core/config_loader.py, was not authorised and not read, so the
+     link rests on these names and comments. HISTORICAL: A-009 records config/scoring_weights.yaml as loaded into
+     AppConfig (docs/agenda/a-009_configuration-model/A-009_manual.md:33); D-001 left the feed NOT ESTABLISHED in its
+     own reads (docs/agenda/d-001_pre-filter/D-001_manual.md:347). Gap G-10.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d; screening/quality_scorer.py b125e9ce3243;
+       screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 009, 002, 010.
+
+IN-07 [FACT (SOURCE); INTERPRETATION; HISTORICAL] triggered_at: the processor takes it from the signal tuple
+     signals/signal_processor.py:883, 886; its own expiry check measures now minus triggered_at (made IST-aware) against
+     self._signal_expiry_sec signals/signal_processor.py:914-918; the same variable goes to screen()
+     signals/signal_processor.py:999, which puts it in the signal dict screening/secondary_screener.py:241-249 that step
+     10 reads against now_ist() screening/step_executor.py:406-423. Among the processor's lines naming triggered_at
+     (read 077), none between the tuple and the call assigns it. INTERPRETATION: the processor's expiry (600 s, a
+     repository value per D-001, HISTORICAL) and the executor's 30 s and 60 s bands measure from the same triggered_at
+     value, at different instants (the processor's now; now_ist() when step 10 runs). This answers at the variable level
+     D-001's note "Whether the two measure age from the same timestamp is not established in Stage 1."
+     (docs/agenda/d-001_pre-filter/D-001_manual.md:240).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad; screening/step_executor.py d83b04860f0f;
+       signals/signal_processor.py 7fab0a02a302.
+     Reads: 077, 078, 003, 008.
+
+IN-08 [FACT (SOURCE)] Shutdown: the processor's stop() calls the screener's shutdown()
+     signals/signal_processor.py:342-344, which shuts down the step executor screening/secondary_screener.py:697-705;
+     the executor's shutdown() takes its pool lock and shuts the current pool down once
+     screening/step_executor.py:221-241.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad; screening/step_executor.py d83b04860f0f;
+       signals/signal_processor.py 7fab0a02a302.
+     Reads: 017, 005, 007.
+
+========================================================================================================================
+2. THE SCREENER'S ORDER OF WORK (screen(); OSQ-01 TO OSQ-03, OSQ-05)
+========================================================================================================================
+SC-01 [FACT (TEXT)] The module header: "Orchestrates the 10-step screening pipeline: fetches market data, runs
+     step_executor, scores via quality_scorer, applies strategy min_score override, persists result per P18."
+     screening/secondary_screener.py:3-5. The class docstring: "SS1: Pure orchestration of step_executor +
+     quality_scorer." and "SS12: Layer 5 (screening/). No broker import; quote_fn injected."
+     screening/secondary_screener.py:58-64.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 002.
+
+SC-02 [FACT (SOURCE)] Step 0, the MIS learned-blocklist pre-drop, runs first and only when mis_filter_enabled is true
+     and a blocklist is set; when _is_mis_blocked_decision returns True and shadow is false, screen() persists and
+     returns REJECTED_NOT_MIS_TRADABLE (passed false, score 0, tier LOW, rejected_step mis_tradable, empty step data and
+     snapshot); in shadow it falls through screening/secondary_screener.py:142-165. Detail in section 6.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-03 [FACT (SOURCE); FACT (TEXT); HISTORICAL] Step 1, only when market_data is None: quotes = quote_fn([symbol]) and
+     quote = quotes.get(symbol); no quote gives an INFO line and SKIPPED_QUOTE_UNAVAILABLE with an empty snapshot; an
+     exception from quote_fn or _build_market_data gives an ERROR line with traceback and the same status; otherwise
+     market_data = _build_market_data(quote) screening/secondary_screener.py:167-196. Its comment calls a missing quote
+     "an EXPECTED, benign skip that fires ~hundreds of times a session" screening/secondary_screener.py:173-176 (comment
+     text; nothing measured here). HISTORICAL: B-009 gives counts of SKIPPED_QUOTE_UNAVAILABLE from its own source
+     (docs/agenda/b-009_intraday-operation/B-009_manual.md:279) and records that the processor drops the candidate with
+     no retry (docs/agenda/b-009_intraday-operation/B-009_manual.md:156).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-04 [FACT (SOURCE); FACT (CONFIG); HISTORICAL] market_data_snapshot = dict(market_data)
+     screening/secondary_screener.py:198. Then the V3 enforce branch, taken only when the mode is "enforce" and a hard
+     gate is set, returns _screen_v3_enforce(...) screening/secondary_screener.py:200-206; its body, from line 435
+     (definition seen in read 001, screening/secondary_screener.py:420, 435, 530), was not read (D-002 documents it:
+     docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:210). The repository mode is shadow
+     config/scoring_weights.yaml:39, so on the repository configuration the branch is not taken; the deployed value is
+     NOT ESTABLISHED.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d; screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003, 001, 010.
+
+SC-05 [FACT (SOURCE)] Step 1b, the circuit-proximity reject: REJECTED_CIRCUIT_PROXIMITY, score 0, tier LOW,
+     rejected_step circuit_proximity, persisted, before the ten steps screening/secondary_screener.py:208-232. Its rule
+     is documented by D-002 and its owner is open (BK-54, docs/governance/V2_DESIGN_LOG.md:594); D-003 records only
+     where it runs and what it returns.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-06 [FACT (SOURCE)] Step 2 builds the thresholds from the strategy, min_volume_surge, min_adr_pct and max_spread_pct
+     screening/secondary_screener.py:234-239; step 3 the signal dict, symbol, scanner_name, trigger_price, triggered_at,
+     direction and intent screening/secondary_screener.py:241-249; step 4 calls run_all(signal_dict, market_data,
+     thresholds) with no exclude_steps, so all ten steps run, and an exception from run_all gives SKIPPED_EXECUTOR_ERROR
+     screening/secondary_screener.py:251-263.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-07 [FACT (SOURCE)] Step 4b: when any step raised, the result is REJECTED_STEP_ERROR, score 0, tier LOW, rejected_step
+     the comma-joined names of the error steps, logged as a WARNING screening/secondary_screener.py:265-286. A step that
+     returned 0.0 does not stop screen(): screen() branches only on exec_result.error_steps (step 4b) and on the
+     signal_age result (step 7), and does not use exec_result.rejected_at screening/secondary_screener.py:265-374.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-08 [FACT (SOURCE)] Step 5: score_result = self._scorer.score(exec_result.step_results); an exception gives
+     SKIPPED_SCORER_ERROR; total_score and tier come from the score result screening/secondary_screener.py:288-303.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-09 [FACT (SOURCE); FACT (TEXT); UNKNOWN / NOT ESTABLISHED] The V3 shadow compare runs next, only in shadow mode with
+     a hard gate set, and screen() uses nothing from it; its comment: "The LIVE decision below is UNCHANGED (follows
+     OLD); this is a pure side-effect for the old-vs-new soak compare." screening/secondary_screener.py:305-314 (D-002,
+     docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:210). Whether _log_v3_shadow_compare (defined at line 530,
+     screening/secondary_screener.py:530) can raise into screen() is NOT ESTABLISHED: its body was not read and no try
+     surrounds the call in the lines read.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003, 001.
+
+SC-10 [FACT (SOURCE)] Step 6: effective_min is strategy.min_score when it is above 0, otherwise
+     score_result.min_pass_score; a total below it gives REJECTED_SCORE_<total_score> (passed false, the score and tier
+     kept, rejected_step None), persisted with eligible_score=effective_min screening/secondary_screener.py:316-337.
+     screen() does not read score_result.passed screening/secondary_screener.py:288-374.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-11 [FACT (SOURCE)] Step 7: when step_results.get("signal_age", 1.0) == 0.0 the result is REJECTED_SIGNAL_AGE (score
+     and tier kept, rejected_step signal_age), persisted with eligible_score screening/secondary_screener.py:339-354.
+     Step 8: otherwise PASSED, persisted with eligible_score, and an INFO line with status, score and tier
+     screening/secondary_screener.py:356-374.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+SC-12 [INTERPRETATION] Order matters: step 6 runs before step 7 screening/secondary_screener.py:316-354, so a signal
+     whose signal_age step returned 0.0 ends REJECTED_SIGNAL_AGE only if its total still reaches effective_min;
+     otherwise it ends REJECTED_SCORE_<n> (section 5, SQ-08).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+========================================================================================================================
+3. MARKET DATA: WHAT THE SCREENER FETCHES AND WHAT THE STEPS USE (OSQ-04)
+========================================================================================================================
+MD-01 [FACT (SOURCE)] The live quote_fn is the adapter's get_quote main.py:3285. get_quote(symbols) returns a dict of
+     Quote; in paper mode it calls an injected provider broker/zerodha_adapter.py:1730-1755; live, it takes a
+     rate-limiter slot, builds "NSE:<symbol>" keys, calls self._kite.quote(*instrument_keys) and translates any
+     exception broker/zerodha_adapter.py:1757-1766; each response key is mapped back by removing the prefix
+     broker/zerodha_adapter.py:1773-1774.
+     Blobs: broker/zerodha_adapter.py 0c85d2d254aa; main.py 445fb0d8237a.
+     Reads: 012, 045.
+
+MD-02 [FACT (SOURCE)] Quote fields: symbol, last_price, bid, ask, volume, ts, and the optional vwap, open_price,
+     day_high, day_low, upper_circuit and lower_circuit broker/zerodha_adapter.py:208-222. get_quote takes bid and ask
+     from the first buy and sell depth levels, 0.0 when the depth or a side is empty
+     broker/zerodha_adapter.py:1775-1782; last_price (default 0.0) and volume (default 0)
+     broker/zerodha_adapter.py:1785-1791; vwap from average_price, open, high and low from ohlc, and the two circuit
+     limits, each None when missing or zero broker/zerodha_adapter.py:1792-1798.
+     Blobs: broker/zerodha_adapter.py 0c85d2d254aa.
+     Reads: 044, 045.
+
+MD-03 [FACT (SOURCE); FACT (TEXT)] _build_market_data sets circuit_state to "upper_circuit" when ltp >= upper,
+     "lower_circuit" when ltp <= lower, else empty screening/secondary_screener.py:386-395; it copies ltp, bid, ask,
+     volume, circuit_state, the raw bands, vwap, open, day_high and day_low from the quote
+     screening/secondary_screener.py:397-411; atr, rsi, sector, prev_close and avg_volume_20d are always None, under the
+     comment "Still not in Kite quote API; would need instruments cache" screening/secondary_screener.py:412-418.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 004.
+
+MD-04 [FACT (SOURCE); FACT (COUNT)] On the processor's path (IN-01, market_data=None) every screened signal costs one
+     quote request at screen time (SC-03), and the steps see only the quote-built dict, the strategy's three thresholds,
+     the signal dict and the clock; the screener holds no instrument cache (IN-05). Q06 (candle, ohlc, live_feed,
+     historical, ltp, last_price) and Q07 (quote) over the four screener files: every matching line (19 and 35) lies
+     among the lines printed by the reads of those files (checked against the saved read outputs), and none names a data
+     source other than the quote.
+     Reads: 003, 004.
+
+MD-05 [FACT (SOURCE); FACT (TEXT)] What each step reads and returns: volume_surge 0.0 when avg_volume_20d is missing or
+     zero, else 1.0 if volume > avg_volume_20d x min_volume_surge (fallback 1.5) screening/step_executor.py:247-256;
+     vwap_position 0.0 without vwap or ltp, else 1.0 when ltp > vwap for LONG or ltp < vwap for SHORT
+     screening/step_executor.py:258-269; atr_filter 0.0 without atr or ltp, else 1.0 when (atr / ltp) x 100 >=
+     min_adr_pct (fallback 0.5) screening/step_executor.py:271-281; rsi_range 0.5 when rsi is missing, not numeric or
+     outside 0 to 100, else 1.0 inside 40 to 80 (LONG) or 20 to 60 (SHORT) screening/step_executor.py:283-316;
+     price_action min(1.0, 2 x body / range) from ltp, open, day_high and day_low, each defaulting to ltp only when its
+     key is absent screening/step_executor.py:318-329; sector_strength, docstring "Placeholder: 1.0 if sector provided,
+     0.5 if missing." screening/step_executor.py:331-336; time_of_day from minutes since market_open (negative clamped
+     to 0): below 15 gives 0.5, below 60 gives 1.0, below 180 gives 0.8, else 0.5 screening/step_executor.py:338-370;
+     spread_check 0.5 when bid or ask is None or the mid is not positive, else 1.0 when ((ask - bid) / mid) x 100 <=
+     max_spread_pct (fallback 0.1) screening/step_executor.py:372-395; circuit_check 0.0 for upper_circuit or
+     lower_circuit, else 1.0 screening/step_executor.py:397-404; signal_age 0.5 without triggered_at, else 1.0 up to 30
+     s, 0.5 up to 60 s, 0.0 beyond screening/step_executor.py:406-423.
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 008.
+
+MD-06 [FACT (SOURCE); INTERPRETATION; HISTORICAL] Q-34 (c), dead and pinned steps. On the processor's path
+     avg_volume_20d, atr, rsi and sector are always None (MD-03), so on every signal volume_surge returns 0.0
+     screening/step_executor.py:251-253, atr_filter 0.0 screening/step_executor.py:275-278, rsi_range 0.5
+     screening/step_executor.py:296-298 and sector_strength 0.5 screening/step_executor.py:335-336. INTERPRETATION: 25
+     of the 100 weight points (volume_surge 15, atr_filter 10) are dead at 0 and 20 (rsi_range 10, sector_strength 10)
+     are pinned at half, so with all ten steps scored the total cannot exceed 65: the ceiling the scorer's comment
+     states, "25/100 pts dead-at-0 + 20 pinned-at-half make >65 algebraically impossible today"
+     screening/quality_scorer.py:16-19, and which A-008 recorded without naming the steps
+     (docs/agenda/a-008_strategy-model/A-008_manual.md:149; Q-34, docs/governance/V2_DESIGN_LOG.md:198). The ceiling
+     assumes every step returns: a step that times out scores 0.5 screening/step_executor.py:168-181, so a timed-out
+     dead step would add points; whether any step ever timed out is NOT ESTABLISHED.
+     Blobs: screening/quality_scorer.py b125e9ce3243; screening/step_executor.py d83b04860f0f.
+     Reads: 008, 009, 007.
+
+MD-07 [FACT (SOURCE)] The live steps on that path depend on the quote and the clock only: vwap_position on vwap
+     (average_price), price_action on the day's open, high and low (ohlc), spread_check on the top bid and ask,
+     circuit_check on the circuit limits through circuit_state, time_of_day on the clock and market_open, signal_age on
+     triggered_at and the clock (MD-02, MD-03, MD-05).
+
+MD-08 [INTERPRETATION; FACT (TEST)] A quote without OHLC: the screener always sets the keys open, day_high and day_low
+     screening/secondary_screener.py:409-411, and get_quote sets them None when ohlc gives none or zero
+     broker/zerodha_adapter.py:1793-1795; md.get("open", ltp) then returns None, not ltp, and the body arithmetic would
+     raise screening/step_executor.py:322-326; the executor turns a raised step into 0.0, status ERROR and an error step
+     screening/step_executor.py:182-195, and screen() turns any error step into REJECTED_STEP_ERROR
+     screening/secondary_screener.py:265-286. How often a quote lacked OHLC is NOT ESTABLISHED. The executor's
+     missing-keys test passes an empty dict, keys absent rather than present with None
+     tests/unit/test_step_executor.py:534-538.
+     Blobs: broker/zerodha_adapter.py 0c85d2d254aa; screening/secondary_screener.py b6f8ff7223ad;
+       screening/step_executor.py d83b04860f0f; tests/unit/test_step_executor.py 82cfe6819362.
+     Reads: 004, 045, 008, 007, 003, 069.
+
+MD-09 [FACT (SOURCE); FACT (CONFIG); FACT (TEST); INTERPRETATION] Spread units. The step computes spread_pct = ((ask -
+     bid) / mid) x 100 and scores 1.0 when spread_pct <= max_spread_pct, fallback 0.1
+     screening/step_executor.py:393-395; the screener passes the strategy's value
+     screening/secondary_screener.py:234-239, which is 0.005 in all 16 strategy YAMLs (SQ-05) and the schema default
+     strategies/schema.py:116-119. The executor's tests pass 0.1 with comments in percent,
+     "spread_pct=(0.2/2510)*100=0.00796% < 0.1" tests/unit/test_step_executor.py:53, 55-57, 357-363, and the screener
+     tests' mock strategy uses max_spread_pct=0.1 and min_adr_pct=0.5 tests/unit/test_secondary_screener.py:53, 56-59.
+     INTERPRETATION: in the code's percent units, 0.005 admits a spread of at most 0.005% of the mid price (one part in
+     20,000; a bid equal to the ask scores 1.0, tests/unit/test_step_executor.py:403-411), against 0.1% in the tests;
+     whether 0.005 was meant as a fraction (0.5%) is UNKNOWN. The step scores 0.5 when the quote has no depth (bid and
+     ask 0.0, so the mid is 0) and 0.0 when one side is empty (MD-02). The effect on live scores is NOT ESTABLISHED (no
+     quote data read). min_adr_pct has the same pattern (0.005 against (atr / ltp) x 100, fallback 0.5), but on the
+     processor's path atr is None and the step returns 0.0 before comparing (MD-06). Gap G-15.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad; screening/step_executor.py d83b04860f0f; strategies/schema.py
+       22530161a5ee; tests/unit/test_secondary_screener.py e8e2ddb2a77d; tests/unit/test_step_executor.py 82cfe6819362.
+     Reads: 008, 003, 041, 070, 068, 071.
+
+MD-10 [FACT (SOURCE); FACT (TEXT); FACT (CONFIG); HISTORICAL] market_open: main.py passes market_windows.market_open
+     main.py:3236; the executor's comment says "Production code MUST inject market_open from
+     SystemConfig.trading_hours.market_open" and keeps 09:15 as a fallback screening/step_executor.py:30-36; the
+     repository value is 09:15 config/system_config.yaml:103. HISTORICAL: B-008 records that main.py builds
+     MarketWindows from the trading_hours values (docs/agenda/b-008_market-open/B-008_manual.md:26).
+     core/market_windows.py was not read in D-003.
+     Blobs: config/system_config.yaml bf742ae5c81c; main.py 445fb0d8237a; screening/step_executor.py d83b04860f0f.
+     Reads: 012, 007, 023.
+
+MD-11 [INTERPRETATION; HISTORICAL] Quote-map case (C-004 L-04): the screener looks up quotes.get(symbol) with the symbol
+     as received screening/secondary_screener.py:170-171, and get_quote keys its result by the response key minus the
+     prefix broker/zerodha_adapter.py:1773-1774, with no case change in the lines read; a symbol whose case differs from
+     the key the broker returns would therefore miss and end SKIPPED_QUOTE_UNAVAILABLE. Whether the broker returns the
+     requested case is UNKNOWN (C-004 U-03). HISTORICAL: docs/agenda/c-004_validation/C-004_manual.md:467;
+     docs/agenda/c-004_validation/C-004_manual.md:484.
+     Blobs: broker/zerodha_adapter.py 0c85d2d254aa; screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003, 045.
+
+========================================================================================================================
+4. STEP EXECUTION (screening/step_executor.py; OSQ-01; C-008 K-06 AND [U-09])
+========================================================================================================================
+SE-01 [FACT (TEXT)] Header: "Execute all 10 screening steps. Each step is a pure function returning a raw score
+     (0.0-1.0). Exceptions are captured per step; run_all() never raises." screening/step_executor.py:3-4. Class
+     docstring, among others: "SE7: ALL 10 steps always run (no short-circuit)." and "SE8: Missing market_data keys use
+     per-step defaults (0.0 or 0.5)." screening/step_executor.py:40-47.
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 007.
+
+SE-02 [FACT (SOURCE); FACT (TEXT)] run_all(signal, market_data, thresholds, exclude_steps=None) runs, in this order,
+     volume_surge, vwap_position, atr_filter, rsi_range, price_action, sector_strength, time_of_day, spread_check,
+     circuit_check and signal_age, leaving out any step named in exclude_steps screening/step_executor.py:118-154; the
+     direction is the signal's, upper-cased, default LONG screening/step_executor.py:132. Its docstring: "In v3 mode the
+     screener passes {circuit_check, signal_age} so only the 8 scored steps run." screening/step_executor.py:129-130.
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 007.
+
+SE-03 [FACT (SOURCE)] Each step is submitted to the pool and awaited with future.result(timeout=self._step_timeout_sec)
+     screening/step_executor.py:158-167. A timeout scores 0.5 ("neutral score"), status TIMEOUT, logs a WARNING and
+     rotates the pool screening/step_executor.py:168-181; an exception scores 0.0, status ERROR, logs an ERROR with
+     traceback, adds the step to error_steps and, if first, sets rejected_at screening/step_executor.py:182-195; a
+     returned 0.0 is status REJECTED (rejected_at if first), any other value PASSED screening/step_executor.py:197-206.
+     The result carries step_results, step_statuses, rejected_at, error_steps and latencies_ms
+     screening/step_executor.py:20-27, 213-219.
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 007.
+
+SE-04 [FACT (SOURCE); FACT (TEXT)] The pool: one ThreadPoolExecutor with max_workers=1 (thread prefix step-exec) per
+     StepExecutor, created once and reused across calls screening/step_executor.py:62-76; the comment: "run_all() may be
+     entered by several signal workers at once." screening/step_executor.py:67-68. After a timeout, _rotate_executor
+     swaps in a fresh pool and abandons the stale one, because "future.result(timeout=...) abandons the WAIT, not the
+     WORK" screening/step_executor.py:78-112. The timeout is the constructor's step_timeout_sec, default 5.0
+     screening/step_executor.py:49-60; main.py passes none and builds one StepExecutor for the one screener
+     main.py:3234-3237, 3281-3283.
+     Blobs: main.py 445fb0d8237a; screening/step_executor.py d83b04860f0f.
+     Reads: 007, 012.
+
+SE-05 [INTERPRETATION; FACT (TEXT); HISTORICAL] With one shared single-worker pool, the steps of concurrent signals run
+     one at a time, and a step's 5 s wait includes time queued behind other signals' steps. HISTORICAL: the processor
+     runs a pool of workers, repository worker_count 5 (docs/agenda/c-006_queue/C-006_manual.md:181). The comment
+     describes the queueing after a hung step: "every remaining step of THIS signal, and every step of every LATER
+     signal, queues behind it and times out in turn" screening/step_executor.py:83-86. Whether contention or timeouts
+     occurred is NOT ESTABLISHED (no log read). This answers C-008 K-06's "whose limits were not read" for the step pool
+     (docs/agenda/c-008_signal-processing/C-008_manual.md:377); the quote fetch of step 1 runs outside the pool, in the
+     calling worker, with no screener-level timeout (SC-03).
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 007.
+
+========================================================================================================================
+5. SCORE, THRESHOLDS AND TIER (OSQ-05)
+========================================================================================================================
+SQ-01 [FACT (CONFIG); FACT (TEXT)] config/scoring_weights.yaml: volume_surge 15, vwap_position 10, atr_filter 10,
+     rsi_range 10, price_action 15, sector_strength 10, time_of_day 5, spread_check 5, circuit_check 10, signal_age 10,
+     total 100 config/scoring_weights.yaml:10-20; min_pass_score 60 config/scoring_weights.yaml:22; high_score_threshold
+     80 and medium_score_threshold 65 config/scoring_weights.yaml:28-29, under the note that the scoring-side
+     tier_multipliers block was deleted and "The thresholds below still drive tier ASSIGNMENT."
+     config/scoring_weights.yaml:24-27. The header: "NO weights are hardcoded in screening/*.py - this file is the
+     single source." config/scoring_weights.yaml:3-4.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d.
+     Reads: 010.
+
+SQ-02 [FACT (SOURCE)] The scorer takes its step names from the configuration model's fields
+     screening/quality_scorer.py:56-69. For each step: missing from step_results, it is logged, listed in missing_steps,
+     reported as 0 and left out of the denominator; present, it adds raw x weight to the achieved total and its weight
+     to the denominator screening/quality_scorer.py:79-103. total = min(100, int(round(achieved / present x 100))), or 0
+     when no step is present screening/quality_scorer.py:105-120.
+     Blobs: screening/quality_scorer.py b125e9ce3243.
+     Reads: 009.
+
+SQ-03 [FACT (SOURCE); FACT (TEXT)] Tier: HIGH when the total >= high_score_threshold, MEDIUM when >=
+     medium_score_threshold, else LOW; passed = total >= min_pass_score screening/quality_scorer.py:122-134. ScoreResult
+     carries total_score, tier, passed, step_scores, missing_steps, min_pass_score and tier_thresholds
+     screening/quality_scorer.py:25-34, 142-150. Docstring QS7: "scorer returns tier string only; sizer applies size
+     multiplier" screening/quality_scorer.py:44.
+     Blobs: screening/quality_scorer.py b125e9ce3243.
+     Reads: 009.
+
+SQ-04 [FACT (SOURCE); FACT (TEXT); INTERPRETATION] Missing steps: on the screener's default path run_all records every
+     step, a timeout as 0.5 and an exception as 0.0 (SE-03), so no step is missing and the denominator is 100; the
+     missing-step branch applies only to steps excluded or absent. The FIX-042 docstring's example, "If circuit_check
+     times out, recalculate score as (achieved / weights_present) * 100" screening/quality_scorer.py:75-77, describes a
+     case the executor does not produce, since a timed-out step is present with 0.5 screening/step_executor.py:168-181
+     (comment observation OB-06).
+     Blobs: screening/quality_scorer.py b125e9ce3243; screening/step_executor.py d83b04860f0f.
+     Reads: 009, 007.
+
+SQ-05 [FACT (CONFIG)] The 16 strategy YAMLs (each read with one grep of the four keys): min_score 0, min_adr_pct 0.005
+     and max_spread_pct 0.005 in all 16; min_volume_surge as shown: config/strategies/first_pullback_long.yaml:39-42
+     (min_volume_surge 1.3); config/strategies/first_pullback_short.yaml:39-42 (min_volume_surge 1.3);
+     config/strategies/gap_fade_long.yaml:41-44 (min_volume_surge 1.3); config/strategies/gap_fade_short.yaml:40-43
+     (min_volume_surge 1.3); config/strategies/gap_go_long.yaml:41-44 (min_volume_surge 2.0);
+     config/strategies/gap_go_short.yaml:41-44 (min_volume_surge 2.0);
+     config/strategies/open_high_breakdown_short.yaml:40-43 (min_volume_surge 1.3);
+     config/strategies/open_low_breakout_long.yaml:39-42 (min_volume_surge 1.3);
+     config/strategies/pb01_breakout_retest.yaml:59-62 (min_volume_surge 1.3);
+     config/strategies/positional_momentum_long.yaml:40-43 (min_volume_surge 1.5);
+     config/strategies/positional_sector_rotation.yaml:40-43 (min_volume_surge 1.3);
+     config/strategies/positional_swing_long.yaml:40-43 (min_volume_surge 1.2);
+     config/strategies/range_breakout_long.yaml:40-43 (min_volume_surge 1.8);
+     config/strategies/range_breakout_short.yaml:39-42 (min_volume_surge 1.8);
+     config/strategies/vwap_bounce_long.yaml:39-42 (min_volume_surge 1.5);
+     config/strategies/vwap_rejection_short.yaml:39-42 (min_volume_surge 1.5).
+     Blobs: config/strategies/first_pullback_long.yaml bba1441d7cc3; config/strategies/first_pullback_short.yaml
+       d946da39a9c5; config/strategies/gap_fade_long.yaml 6e0c95d5191d; config/strategies/gap_fade_short.yaml
+       a78b93440fe5; config/strategies/gap_go_long.yaml 6e6656fbc6ed; config/strategies/gap_go_short.yaml 7e53d31871d6;
+       config/strategies/open_high_breakdown_short.yaml 96b354653687; config/strategies/open_low_breakout_long.yaml
+       48012d053f33; config/strategies/pb01_breakout_retest.yaml eedf5cac5ed5;
+       config/strategies/positional_momentum_long.yaml 7a46596fac63; config/strategies/positional_sector_rotation.yaml
+       b110bd594203; config/strategies/positional_swing_long.yaml 597193f8076a;
+       config/strategies/range_breakout_long.yaml ddee444cade6; config/strategies/range_breakout_short.yaml
+       2f99b1dd5f15; config/strategies/vwap_bounce_long.yaml e279719f9e5d; config/strategies/vwap_rejection_short.yaml
+       a62177d49e35.
+     Reads: 024, 025, 026, 027, 028, 029, 030, 031, 032, 033, 034, 035, 036, 037, 038, 039.
+
+SQ-06 [FACT (SOURCE); FACT (TEXT)] The schema's "Screening Thresholds": min_score int 0, commented "0 = use global from
+     scoring_weights.yaml", min_volume_surge 1.3, min_adr_pct 0.005, max_spread_pct 0.005 strategies/schema.py:115-119;
+     validators: min_adr_pct and max_spread_pct >= 0, min_score >= 0, min_volume_surge > 0 strategies/schema.py:251,
+     255, 258, 260, 262, 265, 267, 269, with no unit conversion in these lines. The loader validates each YAML
+     (validate_strategy), in sorted order, and stores the result by name, with no change to the screening fields
+     strategies/loader.py:126-156.
+     Blobs: strategies/loader.py 99e83b192021; strategies/schema.py 22530161a5ee.
+     Reads: 041, 042, 049.
+
+SQ-07 [INTERPRETATION; HISTORICAL] With min_score 0 in all 16 (SQ-05), effective_min is min_pass_score, 60, for every
+     strategy (SC-10), the same test as the scorer's passed screening/quality_scorer.py:134; a strategy min_score above
+     0 would have replaced it. HISTORICAL: A-008 recorded the same
+     (docs/agenda/a-008_strategy-model/A-008_manual.md:147).
+     Blobs: screening/quality_scorer.py b125e9ce3243.
+     Reads: 009.
+
+SQ-08 [INTERPRETATION] What a pass needed on the processor's path (Claude's arithmetic on the formula read; no legacy
+     code run). With 25 points dead and 20 at half (MD-06) the best total is 65, and a pass needs 60, so the live steps
+     together could lose about 5 points (a loss between 5 and 6 depends on rounding). Losses: vwap_position 0.0,
+     circuit_check 0.0 or signal_age 0.0 cost 10 each (no pass); signal_age 0.5 costs 5; time_of_day 0.8 costs 1, and
+     0.5 costs 2.5; spread_check 0.5 costs 2.5, and 0.0 costs 5; price_action p costs 15 x (1 - p). Examples, with
+     vwap_position, price_action and circuit_check at 1.0: age up to 30 s, 15 to 60 minutes after the open and
+     spread_check 1.0 gives 65 (MEDIUM); the same with spread_check 0.5 gives 62.5 (LOW) and with 0.0, 60 (LOW, at the
+     threshold); 60 to 180 minutes after the open with spread_check 0.0 gives 59 (REJECTED_SCORE_59); an age of 30 to 60
+     s passes only with time_of_day and spread_check both 1.0 (60). So MEDIUM needed every live step at 1.0, and a
+     signal_age or circuit_check of 0.0 caps the total at 55, so such a signal ends REJECTED_SCORE_<n> at step 6 and
+     never reaches step 7 (SC-12), unless a timed-out dead step adds points. Rounding changes no outcome in these
+     examples screening/quality_scorer.py:105-108.
+     Blobs: screening/quality_scorer.py b125e9ce3243.
+     Reads: 009.
+
+SQ-09 [KNOWN DEFECT; FACT (TEXT); HISTORICAL] The HIGH tier was unreachable: the scorer's comment marks HIGH
+     "unreachable today (IA-P2-03: threshold 80 > ceiling 65)" screening/quality_scorer.py:126-127 and keeps a tripwire
+     at 65 screening/quality_scorer.py:16-19, 139-140; A-008 recorded "One common screener whose score could not exceed
+     65: HIGH tier unreachable" (docs/agenda/a-008_strategy-model/A-008_manual.md:269). Stage 1 confirms the mechanism
+     at the pin (MD-06): on the processor's path every pass was LOW (60 to 64) or MEDIUM (65).
+     Blobs: screening/quality_scorer.py b125e9ce3243.
+     Reads: 009.
+
+SQ-10 [FACT (SOURCE); FACT (CONFIG); FACT (TEXT); HISTORICAL] Where the tier goes: the processor passes
+     screen_result.tier, with the score, to the retest diverter signals/signal_processor.py:1042-1049 and the tier to
+     the sizer signals/signal_processor.py:1111-1121; the sizer's multiplier is its tier map's value for the tier
+     (default 1.0) times the performance weight capital/position_sizer.py:542, 544-545. The repository holds
+     position_sizing.tier_multipliers HIGH 1.0, MEDIUM 0.70, LOW 0.50 config/system_config.yaml:237-240, and the scoring
+     file's comment says the sizer's tier weights are owned there config/scoring_weights.yaml:24-27; main.py's sizer
+     wiring was not read (HISTORICAL: docs/agenda/a-005_capital-model/A-005_manual.md:47). The screener stores score and
+     tier in its analytics row screening/secondary_screener.py:622-632.
+     Blobs: capital/position_sizer.py f92eace8d6e3; config/scoring_weights.yaml e9d6ede4c02d; config/system_config.yaml
+       bf742ae5c81c; screening/secondary_screener.py b6f8ff7223ad; signals/signal_processor.py 7fab0a02a302.
+     Reads: 016, 018, 020, 023, 010, 005.
+
+SQ-11 [INTERPRETATION; HISTORICAL] On the processor's path the per-strategy thresholds did not tell strategies apart:
+     volume_surge and atr_filter return 0.0 before min_volume_surge and min_adr_pct are compared
+     screening/step_executor.py:251-255, 275-280, and max_spread_pct is 0.005 in all 16 (SQ-05); with min_score 0
+     everywhere (SQ-07), every strategy met the same screen apart from its direction, which vwap_position uses
+     (rsi_range is pinned). HISTORICAL: A-008 recorded these three thresholds as "the only strategy-specific part of
+     screening" (docs/agenda/a-008_strategy-model/A-008_manual.md:148); this refines that record for the processor's
+     path.
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 008.
+
+========================================================================================================================
+6. THE MIS PRE-DROP AND THE LEARNED BLOCKLIST (OSQ-06)
+========================================================================================================================
+MS-01 [FACT (SOURCE)] Step 0 (SC-02) asks _is_mis_blocked_decision(symbol, intent, direction, signal_id): when
+     resolve_product is set it resolves the intent, returns False on any exception (fail-open) and False when the
+     product is not MIS; then False unless the blocklist's is_blocked(symbol); then it reads info(symbol), logs a
+     WARNING naming REJECTED_NOT_MIS_TRADABLE with the mode, the last-blocked date, the days and the direction, and
+     returns True in both modes screening/secondary_screener.py:554-581; the caller rejects only when shadow is false
+     screening/secondary_screener.py:148-165.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 005, 003.
+
+MS-02 [FACT (SOURCE)] The blocklist: record_block(symbol) stores today's ISO date under strip().upper() and persists,
+     the writer core/mis_blocklist.py:85-100; is_blocked(symbol) is True when the symbol is stored and the days since
+     its date are below ttl_days, False on a corrupt date core/mis_blocklist.py:102-114; info(symbol) returns the date
+     and the days for logging core/mis_blocklist.py:116-123. The module also defines is_mis_block_rejection
+     core/mis_blocklist.py:38, whose body was not read (G-007).
+     Blobs: core/mis_blocklist.py 1f91fedfbdd4.
+     Reads: 047, 046.
+
+MS-03 [FACT (SOURCE); FACT (TEXT)] Wiring: main.py builds one MisLearnedBlocklist with ttl_days from
+     system.mis_filter.ttl_days and a path in the data-store folder (path not reproduced) main.py:3055-3059, under the
+     comment that the order placer's 400 handler "RECORDS broker MIS-blocks into it; the SecondaryScreener READS it" and
+     "Recording is always-on; the screener DROP is gated by mis_filter.enabled." main.py:3051-3054; it passes the
+     blocklist, the two switches and the resolve_product closure to the screener main.py:3290-3293. The screener's
+     comment: "Recording happens in the order_placer 400-handler; the screener only READS the learned set here."
+     screening/secondary_screener.py:111-113.
+     Blobs: main.py 445fb0d8237a; screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 013, 012, 002.
+
+MS-04 [FACT (CONFIG); FACT (TEXT); FACT (TEST)] Repository values: mis_filter enabled true, shadow true, ttl_days 1
+     config/system_config.yaml:179-181; the comment: "flipped false -> true in SHADOW ONLY" and "DO NOT set shadow:
+     false without Rama. That is the enforcing change." config/system_config.yaml:171-178. A test asserts that the
+     shipped configuration is enabled and shadow tests/unit/test_mis_blocklist.py:238, 242-243. Repository values, not
+     deployed truth.
+     Blobs: config/system_config.yaml bf742ae5c81c; tests/unit/test_mis_blocklist.py 4960f825965e.
+     Reads: 022, 073.
+
+MS-05 [INTERPRETATION; HISTORICAL] On the repository values the pre-drop logs a would-drop and never rejects; with
+     ttl_days 1 a symbol counts as blocked only on the calendar day of its last recorded block (days < 1, MS-02). Which
+     intents resolve to MIS is A-007's: INTRADAY to MIS and DELIVERY to CNC
+     (docs/agenda/a-007_product-types/A-007_manual.md:23), so the pre-drop could act only on INTRADAY-intent strategies,
+     and a resolve error fails open (MS-01). HISTORICAL: the shadow mode is recorded by A-008
+     (docs/agenda/a-008_strategy-model/A-008_manual.md:152), A-004 (docs/agenda/a-004_instruments/A-004_manual.md:76)
+     and C-004 (docs/agenda/c-004_validation/C-004_manual.md:276; L-11,
+     docs/agenda/c-004_validation/C-004_manual.md:474); the writer is the order placer's rejection handler, read by
+     C-004 (docs/agenda/c-004_validation/C-004_manual.md:275), and G-007's.
+
+MS-06 [FACT (TEST)] The blocklist tests (text only, never run): the screener hook with the filter active rejects
+     REJECTED_NOT_MIS_TRADABLE and logs tests/unit/test_mis_blocklist.py:186, 190-191, 193; a symbol not blocked passes
+     tests/unit/test_mis_blocklist.py:195, 199; a non-MIS product is never dropped tests/unit/test_mis_blocklist.py:202,
+     206; shadow logs but does not reject tests/unit/test_mis_blocklist.py:209, 213, 215; a dormant filter does not
+     consult the blocklist tests/unit/test_mis_blocklist.py:217, 223; TTL expiry allows a re-test
+     tests/unit/test_mis_blocklist.py:71, 77, 80; a corrupt date fails open tests/unit/test_mis_blocklist.py:92, 96.
+     Blobs: tests/unit/test_mis_blocklist.py 4960f825965e.
+     Reads: 073.
+
+========================================================================================================================
+7. RESULT, STATUS AND PERSISTENCE (OSQ-01, OSQ-05)
+========================================================================================================================
+ST-01 [FACT (SOURCE)] ScreeningResult: passed, status (commented "PASSED" | "REJECTED_<step>" | "SKIPPED_<reason>"),
+     score 0 to 100, tier HIGH, MEDIUM or LOW, rejected_step, step_results, step_statuses, error_steps, latencies_ms and
+     market_data_snapshot screening/secondary_screener.py:42-54; SKIPPED_ results come from _make_skipped: passed false,
+     score 0, tier LOW, empty step data screening/secondary_screener.py:583-596.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 002, 005.
+
+ST-02 [FACT (SOURCE)] Statuses screen() writes on the default path, in order: REJECTED_NOT_MIS_TRADABLE (step 0, active
+     mode only); SKIPPED_QUOTE_UNAVAILABLE (step 1); REJECTED_CIRCUIT_PROXIMITY (step 1b, D-002); SKIPPED_EXECUTOR_ERROR
+     (step 4); REJECTED_STEP_ERROR (step 4b); SKIPPED_SCORER_ERROR (step 5); REJECTED_SCORE_<n> (step 6);
+     REJECTED_SIGNAL_AGE (step 7); PASSED (step 8) screening/secondary_screener.py:142-374. The enforce branch's
+     statuses were not read (D-002; C-007 records a REJECTED_<gate reason> line, HISTORICAL:
+     docs/agenda/c-007_signal-persistence/C-007_manual.md:213). FACT (COUNT): Q13 counted 22 screener lines naming
+     REJECTED_, SKIPPED_ or PASSED; 17 lie in the lines read and the other 5 in lines 420 to 553.
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 003.
+
+ST-03 [FACT (SOURCE); FACT (TEXT)] Every path calls _persist: update_signal_status(signal_id, status, reason =
+     rejected_step or status, ts) and insert_screener_result(signal_id, score, tier, status, step results, latencies,
+     the snapshot, ts, eligible_score) in one try, a failure logged as an ERROR and not raised
+     screening/secondary_screener.py:598-637; eligible_score is passed on the score, signal-age and PASSED paths only
+     screening/secondary_screener.py:336, 353, 369. After that try, outside it, the P3_SCREEN evidence capture records
+     identity, trigger, status, rejected step, score, tier, step results, step statuses and the snapshot
+     screening/secondary_screener.py:638-674; its comment says step_statuses is "persisted NOWHERE else"
+     screening/secondary_screener.py:641-643; _evidence_capture never raises into screening
+     screening/secondary_screener.py:676-695. HISTORICAL: C-007 S-13
+     (docs/agenda/c-007_signal-persistence/C-007_manual.md:199).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 005, 003.
+
+ST-04 [FACT (SOURCE); FACT (TEST)] The processor writes no status of its own for a screener outcome: SKIPPED_ gives a
+     WARNING and returns; not passed gives an INFO and returns; PASSED continues signals/signal_processor.py:1008-1023.
+     A processor test asserts that the screener's REJECTED_SCORE_40 is not overwritten
+     tests/unit/test_signal_processor.py:811, 818, 825, 827-828.
+     Blobs: signals/signal_processor.py 7fab0a02a302; tests/unit/test_signal_processor.py 3ec0ea84392a.
+     Reads: 016, 074.
+
+ST-05 [FACT (TEXT); HISTORICAL] Comment claims about the record corpus, not checked here: "68.99 % of the corpus is a
+     REJECTED_SCORE_*" screening/secondary_screener.py:638-640. HISTORICAL: B-009 records REJECTED_SCORE as the leading
+     terminal status in its source (docs/agenda/b-009_intraday-operation/B-009_manual.md:278).
+     Blobs: screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 005.
+
+========================================================================================================================
+8. S&R, V3 AND REGIME INPUTS (OSQ-08)
+========================================================================================================================
+SR-01 [FACT (COUNT); FACT (SOURCE)] Over the four screener files (secondary_screener.py, step_executor.py,
+     quality_scorer.py, scoring_weights.yaml): Q03, the S&R vocabulary (sr_detector, support, resistance, confluence,
+     zone or zones), found one line, the homonym "to support special sessions" screening/step_executor.py:33; its
+     positive control P03a found 19 lines in config/system_config.yaml (supplementary, DV-03). Q04, regime, found none
+     (control P04: 34 lines in main.py). Q05, v3_chain, playbook or pb01, found none (control P07: 55 lines in main.py).
+     Blobs: screening/step_executor.py d83b04860f0f.
+     Reads: 007.
+
+SR-02 [FACT (SOURCE)] The V3 hard-gate re-scale is the only V3 element in the screener: it imports
+     circuit_proximity_reason, rescale_min_score, rescaled_total and tier_for from screening.hard_gate
+     screening/secondary_screener.py:29-34, reads the V3 mode and thresholds from the scoring configuration
+     screening/secondary_screener.py:92-106 and uses them on the enforce branch and in the shadow compare (SC-04,
+     SC-09); their internals are D-002's, the V3 engines J's. The hard-gate module defines those helpers and HardGate
+     screening/hard_gate.py:53, 119, 139, 178, 197, 206.
+     Blobs: screening/hard_gate.py a8e7e2e49675; screening/secondary_screener.py b6f8ff7223ad.
+     Reads: 002, 050.
+
+SR-03 [FACT (SOURCE); FACT (TEXT); HISTORICAL] S&R appears after the screener: on PASSED, after price derivation, the
+     processor's retest diverter, commented "SNR-V2 Phase A: WAIT_FOR_RETEST pre-placement divert" and reading "the
+     ZoneCache SYNCHRONOUSLY", runs only when a diverter is set and enabled, with the screener's tier and score
+     signals/signal_processor.py:1037-1049; maybe_divert takes tier and an optional score
+     screening/retest_monitor.py:303-318. HISTORICAL: C-008 records no diverter set at the pin
+     (docs/agenda/c-008_signal-processing/C-008_manual.md:155).
+     Blobs: screening/retest_monitor.py 26639d6ed5dd; signals/signal_processor.py 7fab0a02a302.
+     Reads: 016, 062.
+
+SR-04 [INTERPRETATION] Within the lines read and the counts above, the screener's verdict at the pin used no S&R, regime
+     or V3-chain input; its only V3 element is the hard-gate re-scale, shadow on the repository values (SC-04). J-006
+     "S&R use in screening" exists in the agenda only
+     (docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt:442).
+
+========================================================================================================================
+9. THE HAND-OFF AND THE DOWNSTREAM BOUNDARY (OSQ-07)
+========================================================================================================================
+HO-01 [FACT (SOURCE)] After PASSED the processor heartbeats, derives the entry and SL prices from the trigger price and
+     the strategy, and turns the direction into an order side signals/signal_processor.py:1022-1035; then the retest
+     divert (SR-03), and later sizing with screen_result.tier signals/signal_processor.py:1108-1121. The screener takes
+     no further part after its return.
+     Blobs: signals/signal_processor.py 7fab0a02a302.
+     Reads: 016, 018.
+
+HO-02 [FACT (SOURCE)] The entry throttle is built in the processor signals/signal_processor.py:261-263 and asked
+     admit(symbol) on three paths; the lines printed on each path release a reservation ("entry_throttled") and refuse
+     with ENTRY_THROTTLED signals/signal_processor.py:1410, 1413, 1417, 2225, 2228, 2232, 2530, 2533, 2536; its
+     interface: ThrottleResult, EntryThrottle, enabled, admit(symbol) and metrics signals/entry_throttle.py:31, 37, 62,
+     65, 117. No line of entry_throttle.py names tier, score or screen (read 058, none printed), while the same
+     expression matched 7 lines of entry_gate.py (read 057).
+     Blobs: signals/entry_throttle.py b887a4be78a4; signals/signal_processor.py 7fab0a02a302.
+     Reads: 052, 055, 058, 057.
+
+HO-03 [FACT (SOURCE); FACT (TEXT); HISTORICAL] The entry gate's stated purpose: "Hold screened signals in a
+     price-watchlist. Poll LTP at fixed interval." screening/entry_gate.py:4-8; its WatchEntry carries "tier: str # from
+     screener result" screening/entry_gate.py:72; the processor's continue_from_gate resumes the "post-screening
+     pipeline for a WatchEntry released by EntryGate", bypassing "screening + price derivation"
+     signals/signal_processor.py:2010-2017; a processor comment says "nothing calls EntryGate.add()"
+     signals/signal_processor.py:2236-2240. HISTORICAL: BK-24 records the same, re-verified at C-008
+     (docs/governance/V2_DESIGN_LOG.md:564).
+     Blobs: screening/entry_gate.py 46b173171bdf; signals/signal_processor.py 7fab0a02a302.
+     Reads: 059, 057, 060, 061.
+
+HO-04 [FACT (SOURCE); UNKNOWN / NOT ESTABLISHED] The ranker sorts candidates by score descending, tier rank descending,
+     then triggered epoch and signal id ascending allocation/ranker.py:5, 14, 18, over ScoredCandidate objects from
+     allocation.models allocation/ranker.py:11, not read. Whether the screener's score and tier fill those candidates is
+     NOT ESTABLISHED (D-017; G-17).
+     Blobs: allocation/ranker.py beac7be7eadb.
+     Reads: 051.
+
+HO-05 [FACT (COUNT)] The screener files call none of these: Q12 (retest, entry_gate, throttle, position_siz, ranker)
+     over the four screener files found one line, the scoring file's comment naming position_sizing
+     config/scoring_weights.yaml:25; its control P09 found 73 lines in the processor.
+     Blobs: config/scoring_weights.yaml e9d6ede4c02d.
+     Reads: 010.
+
+HO-06 [INTERPRETATION] D-003's stage ends at screen()'s return: a ScreeningResult and the status the screener persisted.
+     PASSED is the screener's internal verdict, not trade approval: price derivation, the retest divert, sizing and
+     reservation, the throttle and placement follow (HO-01 to HO-03), and the final verdict is D-018's
+     (docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt:309).
+
+========================================================================================================================
+10. TEST TEXT (READ AS TEXT, NEVER RUN; CORROBORATION ONLY)
+========================================================================================================================
+TS-01 [FACT (TEST); INTERPRETATION] The screener tests build market data with atr, rsi, sector and avg_volume_20d set
+     tests/unit/test_secondary_screener.py:87-88, 91, 96 and pass it in as market_data
+     tests/unit/test_secondary_screener.py:139, 149, 176. INTERPRETATION: they exercise the step arithmetic with inputs
+     the processor's path never supplies (MD-03, MD-06).
+     Blobs: tests/unit/test_secondary_screener.py e8e2ddb2a77d.
+     Reads: 065.
+
+TS-02 [FACT (TEST)] Screener test assertions: PASSED tests/unit/test_secondary_screener.py:178-179; REJECTED_SCORE_
+     under the global and the strategy minimum tests/unit/test_secondary_screener.py:263-265, 287-288; min_score 0 falls
+     back to the global pass score tests/unit/test_secondary_screener.py:291, 295, 306; the signal-age test accepts
+     either "REJECTED_SIGNAL_AGE" or a 0.0 signal_age tests/unit/test_secondary_screener.py:324; quote_fn raising gives
+     SKIPPED_QUOTE_UNAVAILABLE with an ERROR log tests/unit/test_secondary_screener.py:340-342; no quote gives the same
+     status at INFO with no ERROR tests/unit/test_secondary_screener.py:354-356; a step exception gives
+     REJECTED_STEP_ERROR tests/unit/test_secondary_screener.py:390-392; the state-store row carries signal_id, score,
+     tier and status tests/unit/test_secondary_screener.py:412, 428-431.
+     Blobs: tests/unit/test_secondary_screener.py e8e2ddb2a77d.
+     Reads: 064, 063, 071.
+
+TS-03 [FACT (TEST)] The all-strategies test loads config/strategies, keeps the strategies without v3_playbook and
+     asserts 15 tests/unit/test_secondary_screener.py:548-556, commented that "the PB-01 shadow playbook (V3 Step 10b)
+     is exercised by its own tests" tests/unit/test_secondary_screener.py:553-554; it checks only that each screen
+     returns a ScreeningResult tests/unit/test_secondary_screener.py:587.
+     Blobs: tests/unit/test_secondary_screener.py e8e2ddb2a77d.
+     Reads: 066, 064.
+
+TS-04 [FACT (TEST)] Scorer tests: all ten at 1.0 give 100 tests/unit/test_quality_scorer.py:74, 79; tiers at 80 HIGH, 65
+     MEDIUM, 75 MEDIUM and 15 LOW tests/unit/test_quality_scorer.py:90, 101-102, 105, 116-117, 120, 129-130, 133,
+     139-140; 60 passes tests/unit/test_quality_scorer.py:143, 154-155; missing steps leave the denominator:
+     circuit_check missing gives 61 tests/unit/test_quality_scorer.py:249, 274-276, seven missing give 100 and HIGH
+     tests/unit/test_quality_scorer.py:279, 291-293, five missing give 64 and LOW tests/unit/test_quality_scorer.py:296,
+     311-313.
+     Blobs: tests/unit/test_quality_scorer.py f2fddb776fb3.
+     Reads: 072.
+
+TS-05 [FACT (TEST)] Executor tests pass thresholds 1.5, 0.5 and 0.1 tests/unit/test_step_executor.py:53, 55-57 and
+     include signal-age cases within 30 s, between 30 and 60 s and over 90 s tests/unit/test_step_executor.py:458, 466,
+     474, the error path tests/unit/test_step_executor.py:486, 501, 517 and rejected_at
+     tests/unit/test_step_executor.py:541, 552.
+     Blobs: tests/unit/test_step_executor.py 82cfe6819362.
+     Reads: 070, 067.
+
+TS-06 [FACT (TEST)] Processor tests, with a mock screener: a SKIPPED_ result logs a WARNING and stops with no sizing
+     tests/unit/test_signal_processor.py:744-745, 753; a PASSED HIGH result reaches the sizer with HIGH
+     tests/unit/test_signal_processor.py:774-790; the direction comes from the strategy
+     tests/unit/test_signal_processor.py:793-808; the statistics count REJECTED_SCORE_30
+     tests/unit/test_signal_processor.py:1713, 1719, 1726, 1728.
+     Blobs: tests/unit/test_signal_processor.py 3ec0ea84392a.
+     Reads: 074, 075.
+
+========================================================================================================================
+11. NOT READ, AND WHY
+========================================================================================================================
+NR-01 [FACT (METADATA)] screening/secondary_screener.py from line 420 to line 553 (the _circuit_proximity_reason
+     wrapper, the enforce branch, the shadow compare): D-002's, cross-referenced
+     (docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:210;
+     docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:214).
+
+NR-02 [FACT (METADATA)] Outside the authorisation, recorded as gaps with the V2 record that covers each where one
+     exists: core/config_loader.py (G-10; A-009), the product resolver (G-11; A-007), orders/order_placer.py and the
+     body of is_mis_block_rejection (G-12; C-004, G-007), core/market_windows.py (G-13; B-008), allocation/models.py and
+     the processor's allocator lines (G-17), the callers of EntryGate.add() (G-18; BK-24).
+
+NR-03 [FACT (METADATA)] Group E (27 records, the four host-record documents among them), the three strategy-direction
+     registry paths (OSQ-10) and the never-open set: refused by the gate and not opened. HR-1 and HR-2 were loaded by
+     the filter as token sources only (read log, section 1).
+
+NR-04 [FACT (METADATA)] Count matches left unopened because the wiring reads show the screener does not consume them:
+     Q09's two system_config.yaml lines and one processor line; Q14's sector lines in main.py, system_config.yaml, the
+     processor and the sizer; Q08's tier lines in the adapter, entry_gate.py, main.py and system_config.yaml beyond the
+     lines read.
+
+========================================================================================================================
+12. OBSERVATIONS ON COMMENTS AND CONFIGURATION (no finding; for the owners named)
+========================================================================================================================
+- OB-01 scoring_weights.yaml line 5, "final score = sum of weights for passed steps", against the proportional raw x
+  weight total of the scorer (SQ-02).
+- OB-02 Line 15, price_action "candle structure + swing confirmation", against a body-to-range ratio only (MD-05).
+- OB-03 Line 16, sector_strength "sector index momentum", against a placeholder on presence (MD-05).
+- OB-04 Line 18, spread_check "bid-ask spread vs ATR", against the mid-price percentage (MD-05, MD-09).
+- OB-05 Line 20, signal_age "<= 90s", against 30 s and 60 s (BK-63; D-002 MC-23).
+- OB-06 quality_scorer.py lines 75 to 77, the timeout example, against the executor's 0.5 for a timeout (SQ-04).
+- OB-07 step_executor.py line 400, "Reject if upper or lower circuit", against a score (BK-58; D-002 MC-39).
+- OB-08 step_executor.py line 41, "SE2: Stateless. Constructor takes only logger.", against the market_open and
+  step_timeout_sec parameters and the pool (SE-04).
+- OB-09 secondary_screener.py line 51 lists step statuses without TIMEOUT, which the executor writes (SE-03).
+- OB-10 system_config.yaml lines 172 to 173 cite "secondary_screener.py:144" and ":159"; at the pin the reject and the
+  fall-through are at lines 150 to 164 and 165.
+- OB-11 The blocklist docstring's 5-day TTL against the repository's 1 day (BK-63; D-002 MC-25): not re-read in D-003.

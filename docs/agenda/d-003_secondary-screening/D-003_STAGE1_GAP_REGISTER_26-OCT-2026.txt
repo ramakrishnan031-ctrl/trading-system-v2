@@ -1,0 +1,86 @@
+D-003 - SECONDARY SCREENING: STAGE 1 GAP REGISTER
+Date: 26-Oct-2026 (IST). Companion of D-003_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt. Updates the Stage 0 register
+  (D-003_STAGE0_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt). Nothing here is decided: no owner is assigned, no boundary
+  is redrawn, no V2 question is answered. Labels as in the evidence sheet.
+
+========================================================================================================================
+A. STAGE 0 GAPS: STATUS AFTER STAGE 1
+========================================================================================================================
+G-01 [CLOSED FOR STAGE 1] What D-003 covers: decided by ChatGPT (OSQ-01); the evidence covers the whole stage (sections
+     1 to 9 of the evidence sheet). The manual is not drafted.
+G-02 [LARGELY FACT] The steps' inputs, sources, thresholds and formulas (MD-01 to MD-07, SQ-05, SQ-06), the scorer
+     (SQ-02, SQ-03), the pool and timeouts (SE-03, SE-04) and the dead and pinned steps (MD-06) are now read at the pin.
+     Left: G-15, G-16 (interpretations) and G-19 (runtime).
+G-03 [APPLIED] Every exact claim rests on fresh reads at the pin; earlier topics are cited as HISTORICAL only.
+G-04 [UNKNOWN / NOT ESTABLISHED; unchanged] Deployed values: not establishable from the repository.
+G-05 [CLOSED BY DECISION] Group E was not authorised; nothing of it was opened.
+G-06 [FACT] Line counts at the pin are now known for the 39 files read (evidence sheet, file table).
+G-07 [UNCHANGED] The 18-Sep manual's chapter 06: not a Stage 1 source.
+G-08 [ACCEPTED] ChatGPT accepted the rebuilt tree; the HTTP 403 stays documented, and Claude does not claim to have seen
+     the API's truncated flag.
+G-09 [UNCHANGED] V2 statements stay HISTORICAL; where one bears on a claim, the claim rests on fresh reads.
+
+========================================================================================================================
+B. NEW GAPS FROM STAGE 1 (each with the precise question; none needs a further read for D-003 to proceed)
+========================================================================================================================
+G-10 [INTERPRETATION; HISTORICAL] The scoring configuration's source: core/config_loader.py is outside the
+     authorisation; key names and comments tie app_config.scoring to the scoring file (IN-06), and A-009 records it
+     (docs/agenda/a-009_configuration-model/A-009_manual.md:33). Question, if fresh evidence is wanted: a narrow read of
+     the ScoringConfig class and the line that loads config/scoring_weights.yaml.
+G-11 [HISTORICAL] Which intents resolve to MIS for the pre-drop: A-007 records INTRADAY to MIS, DELIVERY to CNC
+     (docs/agenda/a-007_product-types/A-007_manual.md:23); the resolver was not read. Question, if wanted: a narrow read
+     of ProductResolver.resolve.
+G-12 [HISTORICAL; cross-reference] The blocklist writer and the 400 detection: C-004 read the order placer's recording
+     lines (docs/agenda/c-004_validation/C-004_manual.md:275); is_mis_block_rejection's body was not read. G-007's; no
+     D-003 read proposed.
+G-13 [HISTORICAL] market_open's source for time_of_day: the executor's comment and B-008
+     (docs/agenda/b-008_market-open/B-008_manual.md:26); core/market_windows.py was not read in D-003.
+G-14 [UNKNOWN / NOT ESTABLISHED] Whether the shadow compare (screener from line 530) can raise into screen(): its body
+     was not read (D-002's). This is the one residual of C-008 [U-09]
+     (docs/agenda/c-008_signal-processing/C-008_manual.md:566).
+G-15 [INTERPRETATION; UNKNOWN] Units of max_spread_pct and min_adr_pct: 0.005 in every YAML and the schema, against
+     percent arithmetic and the 0.1 and 0.5 of the executor's fallbacks and the tests (MD-09). Which was intended, and
+     the effect on live scores, are not established; no further read in the authorised files can settle intent.
+G-16 [INTERPRETATION; UNKNOWN] A quote without OHLC would make price_action raise and the result REJECTED_STEP_ERROR
+     (MD-08); how often that happened is not established.
+G-17 [UNKNOWN] Whether the ranker's candidates carry the screener's score and tier (allocation/models.py and the
+     processor's allocator lines not read). D-017's.
+G-18 [FACT (TEXT); HISTORICAL] The entry gate's dormancy: a processor comment and BK-24
+     (docs/governance/V2_DESIGN_LOG.md:564) say nothing calls EntryGate.add(); not re-verified in D-003 (callers outside
+     the authorised files). D-016's.
+G-19 [UNKNOWN] Runtime behaviour of the shared single-worker step pool under concurrent workers (SE-05): contention and
+     timeouts not established (no log read).
+G-20 [INTERPRETATION; UNKNOWN] The quote map's case (C-004 L-04): an exact-key lookup (MD-11); whether the broker
+     returns the requested case is C-004 U-03.
+
+========================================================================================================================
+C. CHATGPT'S OSQ DECISIONS AND WHERE THE EVIDENCE LEAVES THEM
+========================================================================================================================
+OSQ-01 [FACT] The stage is evidenced end to end, from the processor's call to screen()'s return and its persisted status
+       (IN-01 to IN-03, SC-01 to SC-11, ST-01 to ST-04).
+OSQ-02 [FACT; OPEN (BK-46, BK-55)] Steps 0 and 1 are read as implemented (SC-02, SC-03, MS-01 to MS-06); the age rule's
+       recurrence measures from the same triggered_at (IN-07). The D-014 and D-015 parts of BK-46 and BK-55's ownership
+       stay open.
+OSQ-03 [FACT; OPEN (BK-54, BK-58)] D-002's mechanisms are recorded only as invocations, branches and results (SC-04,
+       SC-05, SC-09, SR-02); BK-54 unchanged; BK-58: step 9 scores, and on the processor's path a 0.0 ends
+       REJECTED_SCORE_<n> (SQ-08).
+OSQ-04 [FACT; OPEN (D-004)] The screener's own acquisition and each step's use of data are read (MD-01 to MD-11); the
+       requirement questions go to D-004.
+OSQ-05 [FACT; UNKNOWN (G-17)] Arithmetic, weights, thresholds, the minimum score, the tier and the statuses are read
+       (SQ-01 to SQ-11, ST-02); ranking and the final verdict stay outside.
+OSQ-06 [FACT; HISTORICAL] The screener-side read is evidenced (MS-01 to MS-06), distinct from the writer (G-007; G-12).
+       DR-032 is carried as a V2 input (docs/governance/V2_DECISION_REGISTER.md:43).
+OSQ-07 [FACT] The hand-off and the downstream components are evidenced from narrow interface ranges only (HO-01 to
+       HO-06).
+OSQ-08 [FACT (COUNT); FACT] No S&R, regime or V3-chain input reaches the screener (SR-01 to SR-04).
+OSQ-09 [CARRIED] The V2 governance inputs are listed in the handoff, section 6, with their labels; none decided.
+OSQ-10 [FACT] No printed line of any read names the registry, its module or its officer; no D-003 dependency was found,
+       so the paths stay dropped.
+OSQ-11 [FACT] Reads followed the prompt's modes; earlier records are cited as HISTORICAL; the tree method and the HTTP
+       403 stand as accepted; deviations DV-01 to DV-04 are disclosed (read log, section 6).
+
+========================================================================================================================
+D. QUESTIONS FOR RAMA
+========================================================================================================================
+None. The evidence raises no business decision: the units question (G-15) and the arithmetic findings are legacy facts
+  and interpretations for ChatGPT's review, and V2 design is not in scope.

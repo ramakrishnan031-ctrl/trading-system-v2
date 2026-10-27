@@ -1,0 +1,148 @@
+D-003 - SECONDARY SCREENING: STAGE 1 HANDOFF FOR CHATGPT
+Date: 26-Oct-2026 (IST). From Claude, after D-003_CLAUDE_PROMPT_STAGE1_AUTHORISED_READS_26-OCT-2026.txt and
+  D-003_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_26-OCT-2026.txt. Stage 1 evidence collection is complete and
+  Claude has stopped: no manual drafted.
+
+========================================================================================================================
+1. STATUS AND PINNED SOURCE
+========================================================================================================================
+- Legacy: trading-system-prod-snapshot, main = HEAD = 970aabf3c78d777d9d34549e021f7c8e756c7bdb; tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa; clone unchanged (8,920 objects).
+- V2: main = 85915267f38c0d653cf43d1be9425b87fb946566. Nothing committed or pushed; no V2 record changed.
+- Safety gate 16:47:48; read lock lifted 16:50:28 and re-engaged 17:08:00 IST; 22 count-only search runs and 79 reads of
+  the 39 authorised files; every masking input logged per run.
+
+========================================================================================================================
+2. FILES TO REVIEW (SHA-256 values in the final check)
+========================================================================================================================
+- D-003_STAGE1_SOURCE_EVIDENCE_26-OCT-2026.txt: the claims.
+- D-003_STAGE1_FILES_READ_LOG_26-OCT-2026.txt: the safety gate and every filter invocation with its masking inputs.
+- D-003_STAGE1_BOUNDARY_MATRIX_26-OCT-2026.txt: the boundary matrix.
+- D-003_STAGE1_GAP_REGISTER_26-OCT-2026.txt: the updated gaps and the OSQ decisions applied.
+- D-003_STAGE1_CHANGE_NOTE_26-OCT-2026.txt: what changed and what is carried.
+- D-003_STAGE1_FINAL_CHECK_26-OCT-2026.txt: checks and hashes.
+- D-003_STAGE1_CHATGPT_HANDOFF_26-OCT-2026.txt: this file.
+
+========================================================================================================================
+3. WHAT THE EVIDENCE SHOWS (short)
+========================================================================================================================
+- One call, one quote: the processor calls screen() with market_data=None; the screener fetches one broker quote and
+  builds its data from it; ATR, RSI, sector and average volume are always None (IN-01, MD-01 to MD-04).
+- The 65 ceiling explained (Q-34 (c)): volume_surge and atr_filter are dead at 0 and rsi_range and sector_strength
+  pinned at 0.5 on every signal; a pass (60) needed nearly every live step at full score; MEDIUM needed all; HIGH (80)
+  was unreachable (MD-06, SQ-08, SQ-09).
+- Thresholds: min_score 0 everywhere, so 60 for all 16; of the three per-strategy thresholds, min_volume_surge and
+  min_adr_pct are never compared (their steps return 0.0 first) and max_spread_pct is 0.005 in all 16, so the strategies
+  met the same screen apart from direction (SQ-05, SQ-11; units, MD-09).
+- Execution: ten steps on one shared single-worker pool, 5 s per step, a timeout scores 0.5; step exceptions give
+  REJECTED_STEP_ERROR; the screener persists every verdict itself (SE-03 to SE-05, ST-02, ST-03).
+- MIS pre-drop: reads the learned blocklist; on the repository values (enabled, shadow, 1 day) it logs only (MS-01 to
+  MS-05).
+- No S&R, regime or V3-chain input; S&R zones appear only after the screener, in the retest divert (SR-01 to SR-04).
+
+========================================================================================================================
+4. OSQ-01 TO OSQ-11: CONCLUSIONS FROM THE EVIDENCE
+========================================================================================================================
+- OSQ-01 Scope: the evidence supports documenting the stage end to end, from signals/signal_processor.py:998 to
+  screen()'s return and its persisted status; every element is located and cited (IN, SC, SE, SQ, MS, ST). Boundaries:
+  the call (C-008) and the return (the processor's branch).
+- OSQ-02 D-001: steps 0 and 1 read as implemented, consistent with D-001's M10 and M11
+  (docs/agenda/d-001_pre-filter/D-001_manual.md:286; docs/agenda/d-001_pre-filter/D-001_manual.md:287); the age rules
+  measure from the same triggered_at (IN-07), which settles D-001's open note at the variable level. BK-46: its D-003
+  part (the screener's age score) is now read; its D-014 and D-015 parts stay OPEN. BK-55: the D-003 facts are
+  evidenced; ownership stays OPEN.
+- OSQ-03 D-002: recorded only as invocation, branch and result (SC-04, SC-05, SC-09, SR-02). BK-54 unchanged (no
+  ownership evidence). BK-58: confirmed that step 9 scores; on the processor's path its 0.0 forces REJECTED_SCORE_<n>
+  (SQ-08), an interpretation for its owners; OPEN.
+- OSQ-04 D-004: the screener's own data acquisition and each step's consumption are fully evidenced (MD-01 to MD-11).
+  For D-004: where ATR, RSI, sector and average volume would come from, and the units question (G-15).
+- OSQ-05 D-017 and D-018: the score arithmetic, weights, thresholds, minimum score, tier and statuses are the screener's
+  and are evidenced (SQ, ST). Ranking (HO-04; inputs UNKNOWN, G-17) and the final verdict (HO-06) stay outside.
+- OSQ-06 G-007: the screener reads the blocklist and the switches; the writer is the order placer's 400 handler
+  (HISTORICAL, C-004; G-12); DR-032's eligibility pre-check stays a V2 input for D-002.
+- OSQ-07 Downstream: price derivation, the retest divert, sizing, the throttle and the entry gate are evidenced from
+  narrow interface ranges as hand-offs only (HO-01 to HO-06; Y13 to Y19 of the matrix).
+- OSQ-08 S&R, V3, regime: none consumed by the screener, by counts with positive controls and the reads; the V3
+  hard-gate re-scale is the only V3 element (SR-01 to SR-04). J keeps the engines.
+- OSQ-09 V2 governance: carried as inputs with labels (section 6); nothing decided; no legacy fact drawn from a V2
+  record.
+- OSQ-10 Registry: no authorised read showed a dependency; the three paths stay dropped; no approval requested.
+- OSQ-11 Method: as authorised; the tree method and the HTTP 403 stand as accepted (Claude did not observe the API's
+  truncated flag); deviations DV-01 to DV-04 disclosed.
+
+========================================================================================================================
+5. RELATION TO THE FROZEN A, B, C AND D MANUALS (no manual rewritten)
+========================================================================================================================
+No FACT conflict was found. Three records are refined and two UNKNOWNs supplemented:
+- docs/agenda/d-001_pre-filter/D-001_manual.md:240 (D-001, INTERPRETATION): "a signal that passes Layer 1's age check
+  can still end REJECTED_SIGNAL_AGE at step 7". Refinement: on the processor's path at the pin, a signal_age of 0.0 caps
+  the total at 55, so it ends REJECTED_SCORE_<n> at step 6 and does not reach step 7 unless a timed-out dead step adds
+  points (SQ-08, SC-12). D-001's FACT rows (docs/agenda/d-001_pre-filter/D-001_manual.md:227) are unaffected.
+- docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:291 and BK-58 (D-002 MC-39): "on the off and shadow paths a 0.0
+  step 9 lowers the score and is not by itself a reject" - confirmed; on the processor's path the 10-point loss makes a
+  pass impossible (SQ-08).
+- docs/agenda/a-008_strategy-model/A-008_manual.md:148 (A-008): the three thresholds were "the only strategy-specific
+  part of screening" - true of the configuration; on the processor's path none of them told strategies apart (SQ-11).
+- docs/agenda/c-008_signal-processing/C-008_manual.md:377 (C-008 K-06): the step pool's limits "were not read" - now
+  read: one shared worker, 5 s per step (SE-04, SE-05).
+- docs/agenda/c-008_signal-processing/C-008_manual.md:566 (C-008 [U-09]): exceptions inside the screener - now
+  documented (SC-03, SC-06 to SC-08, SE-03, ST-03), except the shadow compare (G-14).
+- Consistent at the pin: A-008 section 12 (docs/agenda/a-008_strategy-model/A-008_manual.md:146;
+  docs/agenda/a-008_strategy-model/A-008_manual.md:147; docs/agenda/a-008_strategy-model/A-008_manual.md:149) and its
+  values (docs/agenda/a-008_strategy-model/A-008_manual.md:124); A-004
+  (docs/agenda/a-004_instruments/A-004_manual.md:76); A-005 (docs/agenda/a-005_capital-model/A-005_manual.md:47); A-007
+  (docs/agenda/a-007_product-types/A-007_manual.md:23); A-009
+  (docs/agenda/a-009_configuration-model/A-009_manual.md:33); B-008 (docs/agenda/b-008_market-open/B-008_manual.md:26);
+  B-009 (docs/agenda/b-009_intraday-operation/B-009_manual.md:156); C-004 10.2 and 10.3
+  (docs/agenda/c-004_validation/C-004_manual.md:271; docs/agenda/c-004_validation/C-004_manual.md:276); C-007 S-13
+  (docs/agenda/c-007_signal-persistence/C-007_manual.md:199); C-008 ST-12
+  (docs/agenda/c-008_signal-processing/C-008_manual.md:152); C-009 CC-04
+  (docs/agenda/c-009_signal-expiry/C-009_manual.md:159); D-001 (docs/agenda/d-001_pre-filter/D-001_manual.md:186;
+  docs/agenda/d-001_pre-filter/D-001_manual.md:290); D-002 (docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:46;
+  docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:214;
+  docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:218;
+  docs/agenda/d-002_hard-rejection-gates/D-002_manual.md:224).
+- Addressed carry items: Q-34 (c) (MD-06; docs/governance/V2_DESIGN_LOG.md:198); C-004 L-04 and L-11 (MD-11, MS-05);
+  C-008 K-06 and [U-09] (above).
+
+========================================================================================================================
+6. V2 GOVERNANCE INPUTS CARRIED (W-1, W-6; none decided here)
+========================================================================================================================
+- VP-03 (docs/governance/V2_DESIGN_LOG.md:219): PROPOSED; ratify at D-003 and D-017 (ranking with F). Legacy evidence
+  for it: SQ-08, SQ-09, MD-06.
+- VP-08 (docs/governance/V2_DESIGN_LOG.md:224) and DR-031 (docs/governance/V2_DECISION_REGISTER.md:42): the count
+  DECIDED; the choice of strategies, own filtration and S&R PROPOSED or OPEN (C-001, D-003, D-009 to D-017, J).
+- The admission test (docs/agenda/a-section-end/SECTION-A_END_decision_paper.md:97): written at D-003 as a V2 rule;
+  OPEN, not legacy evidence.
+- A-009 Q39 (docs/agenda/a-009_configuration-model/A-009_v2_design_inputs.md:123): Rama's input on per-strategy
+  filtration and shadow configuration; HISTORICAL.
+- A-008 V2 inputs, section 4 (docs/agenda/a-008_strategy-model/A-008_v2_design_inputs.md:46): PROPOSED considerations,
+  among them "No dead inputs: every scoring step must be able to score"; MD-06 is the legacy evidence.
+- DR-032 (docs/governance/V2_DECISION_REGISTER.md:43): DECIDED for V2; its eligibility pre-check mechanism is D-002's;
+  MS-05 is the legacy evidence.
+- Bookmarks: BK-46 (docs/governance/V2_DESIGN_LOG.md:586), BK-55 (docs/governance/V2_DESIGN_LOG.md:595), BK-58
+  (docs/governance/V2_DESIGN_LOG.md:598) and BK-63 (docs/governance/V2_DESIGN_LOG.md:603) stay OPEN; their D-003 parts
+  now have evidence (IN-07, MD-05, SC-11, SQ-08, OB-05). Q-34 (docs/governance/V2_DESIGN_LOG.md:198): part (c) answered
+  by evidence; the rest OPEN. Any status change is for the D-003 freeze.
+
+========================================================================================================================
+7. FOR CHATGPT'S DECISION
+========================================================================================================================
+- Whether the V2 records that cover G-10 (A-009), G-11 (A-007), G-12 (C-004) and G-13 (B-008) suffice as HISTORICAL, or
+  whether to authorise the narrow reads named in the register. Claude proposes none as necessary.
+- How the manual should label the units question (MD-09, G-15) and the OHLC path (MD-08, G-16): Claude has them as
+  INTERPRETATION, not KNOWN DEFECT, because no record names them as defects.
+- Whether the two refinements in section 5 enter the D-003 manual as observations for D-001 and D-002 (frozen manuals
+  are not changed).
+- Authorisation to draft D-003_manual.md. No Rama question: no business decision arises from the evidence.
+
+========================================================================================================================
+8. COMPLIANCE
+========================================================================================================================
+Only the 39 authorised files could be read, through the approved masking filter, in narrow ranges or targeted lines; the
+  tests as text only; Group E, the host records, the registry paths and the never-open set were not opened; HR-1 and
+  HR-2 were loaded by the filter as token sources on every run, value-blind, and never displayed. No code, test or
+  script run; no import; no host, VM, broker, webhook, Chartink, service or database contacted; no history command,
+  fetch or GitHub API; no repository change. No credential, token, account or client identifier, host-record path or
+  value, or session link appears in these files. Stopped for ChatGPT's reconciliation and explicit manual-drafting
+  authorisation.

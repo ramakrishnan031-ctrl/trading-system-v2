@@ -1,0 +1,83 @@
+D-003 - SECONDARY SCREENING: STAGE 0 FINAL CHECK
+Date: 26-Oct-2026 (IST). Run by check_s0_d003.py at 16:32:58 IST. Prepared by Claude; nothing was committed or pushed.
+
+REQUIRED OUTPUTS (the prompt's five artifacts)
+  1 D-003_SOURCE_INVENTORY_AND_METHOD_26-OCT-2026.txt: present
+    557 lines, 52,038 bytes, SHA-256 8D017465AFEE1743474E95FF9C7DD29319FE183B0A58E47AE9CC95F6846D9D42
+  2 D-003_STAGE0_GAP_AND_BOUNDARY_REGISTER_26-OCT-2026.txt: present
+    133 lines, 13,190 bytes, SHA-256 83C540B348FD64982772D52AC423A26D3BC5E79D70F57BCB125050FAFADB9037
+  3 D-003_STAGE0_CHANGE_NOTE_26-OCT-2026.txt: present
+    49 lines, 3,988 bytes, SHA-256 F84DFE57E8075573FC9C8F0187D4CD3B267BB73E46FC3B787D407164868ECBBA
+  4 D-003_STAGE0_FINAL_CHECK_26-OCT-2026.txt: this file (it cannot list its own SHA-256)
+  5 D-003_STAGE0_CHATGPT_REVIEW_HANDOFF_26-OCT-2026.txt: present
+    68 lines, 5,453 bytes, SHA-256 EF9AB1BC044216BBFD066F7B3A101B1F94EF9465B7034D644B49632CDD532418
+  No Rama answer sheet: no question for Rama at Stage 0 (the register, part D).
+
+TOOLS (<SCRATCHPAD>/d003/tools/)
+  ref_check_d003.py      35CA3429DC8192AC86D9078DD9DB3EAF3998CD12672349B63E06FB8240C41DCF
+  api_try_d003.py        983236CE294E40DEDD58EF08C7ADC513D296593C57862DED52670BED800133CA
+  tree_check_d003.py     DC780CD9D57399AEF335E2DEB4E098CA3C3A93C09D00DE53A2F69D2331E01970
+  pathscan_d003.py       A4C8694A7A6C9B64E361D2DD184D9B14459E724295E911331F9CFA2553A7D702
+  groups_d003.py         139E9B050207C34B574E0864284E79E5871B8115C12D6E642E1D5C595F852DA0
+  showlines_d003.py      DAA3951B8C6E1E9828B34FCCAD55D80E901B5D792A3D87AF9F35D9D53A100F1E
+  build_s0_d003.py       201D2F9A775F5601E56B7A1BBCB96FD1B4BFF404A9A431F4EB5D402C860EBCB9
+  check_s0_d003.py       6DB200049A35676A201DC9118C36E9237E81EC9EB014B492CFBE2C8D905FE197
+
+CHECKS
+  1 Format: ASCII, LF only, no tab, final newline, lines at most 125 characters: PASS
+    all four files
+  2 Credential and session-link patterns; host-record names, local or user paths and addresses: PASS
+    0 credential or link hits; 0 host-record, path or address hits
+  3 Value-blind identifier scan (scan_ids.py patterns): PASS
+    21 long hex tokens, all known (the pin, its tree, V2 main, the listing, the four inputs, the D-002 result file, the
+    tools); unknown 0; other shapes: none
+  4 Paths: every listed path in the pinned tree and shown (blob prefix or path), no never-open path named, every
+    path-name match in exactly one group: PASS
+    181 paths (162 matches and 19 record-named); missing 0; not shown 0; duplicates 0; never-open named 0
+  5 V2 citations (path:line and phrase, each phrase on exactly one line) checked with git show at 8591526: PASS
+    130 citations, 0 failures; 130 shown in the inventory
+  6 Quotations: every quoted fragment of 12 or more characters found in its sources (the four inputs, the API response,
+    the V2 records): PASS
+    98 fragments, 0 not found; 0 logical lines with an odd number of quote marks
+  7 Pinned tree re-checked: listing SHA-256, 1,438 blobs, 125 trees, 1,563 entries, rebuilt root tree = the pin's tree:
+    PASS
+    tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa
+  8 The clone: HEAD = the pin; 8,920 local objects (nothing fetched); never-open blobs present 0: PASS
+    8920 objects (blob 1257, commit 1537, tree 6126); never-open paths in the tree 102, none present locally
+  9 ls-remote now: legacy HEAD and main = the pin (no other ref); V2 HEAD and main = 8591526 (no other ref): nothing
+    pushed: PASS
+    legacy refs 2; V2 refs 2
+  10 The four D-003 inputs unchanged (SHA-256 as recorded in the inventory, section 1): PASS
+    4 files
+  11 The register and the handoff agree: IDs in order, every row labelled from the prompt's set, the same OSQ list in
+    both, the files named, the group counts as built, no Rama question, Stage 1 stated as not authorised: PASS
+    17 boundary rows, 9 gaps, 11 open scope questions; non-standard labels 0
+  12 ChatGPT's eight candidate paths: each in the pinned tree with its blob, listed in section 5 and placed in one
+    group: PASS
+    8 paths
+  13 The local V2 clone: HEAD = 8591526, no change in the working tree, no local commit: PASS
+    HEAD 8591526; changed paths 0; local commits 0
+  14 No module body read, no code run (static check of the D-003 tools): the legacy-facing tools use only ls-remote,
+    rev-parse of the pin's tree, mktree in a scratch repository, the local object listing and one REST request; the
+    V2-facing tools run git only on the V2 clone; no masking filter; with check 8, nothing fetched: PASS
+    0 forbidden command patterns found. This checks the tools, not every shell command of the session; its other
+    commands read V2 records, the saved listing and its metadata, the D-003 inputs and Claude's own workspace files, and
+    none read legacy file content.
+
+CHECKLIST (the prompt's items, and where each is checked)
+  Required outputs: the five files (above). Path pin: checks 7, 9 and 12, and check 4 for every path. Forbidden-file
+  compliance: checks 4 and 8, never-open paths counted and never named or opened. No module-body reads and no code
+  execution: check 14, with check 8. No V2 changes: checks 9 and 13. No commit or push: checks 9 and 13.
+  Not run as a machine check: whether ChatGPT accepts the tree method (register G-08, an open question).
+
+BLOCKERS
+  None for Stage 0.
+  Stage 1 is NOT authorised: it waits for ChatGPT's review of these files, its decisions on OSQ-01 to OSQ-11 of the
+  gap and boundary register, and its Stage 1 file list and read modes. No question for Rama.
+
+BOUNDARIES KEPT
+  No legacy module, configuration, test, script, document or README content opened, read, searched, counted or run; no
+  masking filter run (no token-source input to disclose); no blob fetched; no legacy history command; one read-only
+  GitHub REST request (refused); no host, VM, broker, webhook, Chartink, service or database contacted; neither
+  repository changed; no credential or identifier value written; no V2 recommendation; no product or trading design
+  question answered.

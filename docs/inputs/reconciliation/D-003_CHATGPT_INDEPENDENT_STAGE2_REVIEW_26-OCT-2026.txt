@@ -1,0 +1,41 @@
+D-003 SECONDARY SCREENING — INDEPENDENT STAGE 2 REVIEW
+Date: 26-Oct-2026
+Reviewer: ChatGPT
+Review basis: uploaded D-003_manual.md, Stage 2 Claude handoff, final check and draft change note, reconciled against the accepted Stage 1 conclusions in the supplied files.
+Decision: ACCEPT THE MANUAL AS A FACTUAL DRAFT; ONE SMALL HANDOFF WORDING CLARIFICATION RECOMMENDED BEFORE FREEZE.
+Status remains DRAFT / NOT FROZEN. This review does not authorise freeze, commit, push, or governance updates.
+
+1. EXECUTIVE VERDICT
+The draft is detailed, well-structured and appropriately bounded. It covers the processor-to-screener contract, MIS pre-drop, quote construction, the ten steps, executor, score/threshold/tier, persistence, statuses, hand-offs, evidence matrix and residual gaps. The main governance requirements are preserved: no V2 design proposal, no claim that PASSED is final trade approval, no unsupported runtime/deployed-state claims, and no further legacy reads.
+
+The 17/17 final check is useful mechanical assurance, but is not itself proof of semantic correctness. I independently reviewed the important score, threshold, data-input, exception, status and boundary claims visible in the manual and the supporting handoff. I found no substantive contradiction that warrants reopening Stage 1 or authorising more source reads.
+
+2. CHECKED AND ACCEPTED
+- Source baseline remains the pinned legacy commit stated in the manual.
+- Stage 1 deviations are disclosed without pretending the process was perfect or inflating them into a source-evidence failure.
+- The normal-return ceiling of 65 is correctly qualified; the 77.5 timeout bound is arithmetic under the stated default ten-step path, not an unconditional runtime fact.
+- The configured strategy min_score=0 is kept separate from the effective threshold of 60.
+- The configured spread value 0.005 remains unit-ambiguous; it is not silently converted to 0.5%.
+- Missing OHLC → possible price_action exception → REJECTED_STEP_ERROR is correctly presented as a source-level interpretation, with frequency unknown.
+- The possible empty-sell-side spread result is explicitly an interpretation, with the guard question not established; no extra read is requested.
+- The nine statuses, persistence path and immediate downstream hand-offs are separated from the final Trade/Reject decision.
+- G-14 and G-17 remain unknown; G-10 to G-13 remain historical/boundary context.
+- No edits to frozen manuals or governance, no freeze, no commit/push and no extra legacy access are claimed.
+
+3. SMALL WORDING CLARIFICATION RECOMMENDED
+In the Stage 2 handoff, section 6, the sentence “HIGH stays unreachable on every path read” is broader than necessary. The manual's stronger evidence is explicitly framed around the processor's default ten-step path and its timeout bound. Elsewhere, MC-42 records an exclusion mechanism in the executor's V3-mode docstring, while the relevant wrapper/enforce branch was not read in Stage 1. Even if the available arithmetic suggests HIGH would remain unreachable for the described exclusion case, avoid implying that every alternate branch was fully analysed.
+
+Replace that sentence with:
+“On the processor's default ten-step path, HIGH remains unreachable under normal returns and under the documented timeout bound. This is not a claim that every alternate/excluded-step branch was independently traced.”
+
+This is a handoff wording clarification only. It does not require legacy reads or a change to the manual's core findings. If Claude prefers to leave the handoff as-is, do not reopen source collection; simply preserve the narrower formulation in any later review summary.
+
+4. OPTIONAL PRESENTATION IMPROVEMENTS — NOT BLOCKERS
+- Keep the “illustrative” label prominent on MC-77 whenever the example is copied elsewhere; it is hypothetical, not a historical signal.
+- At freeze packaging, include the manual, Stage 2 note/handoff/final check, the accepted Stage 1 package and reconciliation/prompt so the evidence trail is reproducible.
+- Preserve the 17/17 mechanical check output as a companion artifact; do not describe it as semantic certification.
+
+5. GOVERNANCE DECISION
+No Stage 1 repeat and no additional legacy source read are required on the evidence reviewed. The manual is suitable to carry forward as a draft after the narrow handoff wording clarification. It is NOT yet frozen. ChatGPT must review any resulting revised handoff/package before freeze, storage, governance update, commit or push.
+
+END
