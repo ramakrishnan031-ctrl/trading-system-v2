@@ -1,0 +1,75 @@
+D-005 — CHATGPT STAGE 0 REPOSITORY REVIEW AND TOPIC PROPOSAL
+Date: 28-Oct-2026, 09:36 IST
+
+DECISION
+D-005 topic is confirmed from the accepted Master Redesign Agenda:
+D-005 — CANDLE ANALYSIS
+This is the next item after frozen D-004 Market-data requirements. Start with Stage 0 source inventory and bounded research planning. Do not begin the D-005 manual or read legacy source-code contents during Stage 0.
+
+LEGACY SOURCE PIN
+Repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+Branch: main
+Pinned commit: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Repository tree at pin: 1,563 entries; not truncated.
+The repository metadata reports the default branch as main and the snapshot as public. Use the pinned commit, not a moving branch head, for all legacy references.
+
+REPOSITORY REVIEW COMPLETED BY CHATGPT
+Reviewed repository metadata and the recursive tree at the pinned commit, plus orientation documentation: README.md, AGENTS.md, docs/SYSTEM_MAP.md (opening/index portion), docs/01_system_architecture.md, docs/02_strategy_yaml_guide.md and docs/03_daily_operations_runbook.md.
+No legacy Python source module or test body was opened in this review; no code, tests, imports, service, VM, database, broker, webhook or Chartink process was run or contacted.
+This is a preliminary structural review, not D-005 source research.
+
+WHY D-005 IS THE RIGHT NEXT TOPIC
+The Master Redesign Agenda's Section D lists:
+D-004 Market-data requirements → D-005 Candle analysis → D-006 Formation/pattern analysis → D-007 Timeframe analysis → D-008 Trend/market context → D-009 Support & Resistance.
+The section's overall goal is to document how the system answers “Should this signal become a trade?” D-005 must therefore describe the legacy system's single-candle interpretation and candle calculations without jumping into later topics.
+
+PRELIMINARY STRUCTURAL FINDINGS
+- The repository README describes an automated NSE intraday system whose path includes Chartink webhook signals, screening, capital allocation, orders and Zerodha.
+- The architecture document identifies a data layer with live-feed and candle-store components and a separate screening layer. This is documentation, not proof that every described path is active at the pinned revision or deployed.
+- The repository tree contains a dedicated `core/candle_math.py` (21,275 bytes), `data/candle_store.py` (15,247 bytes), `data/live_feed.py` (34,774 bytes), `scripts/fetch_daily_candles.py` (13,950 bytes), and candle-focused tests. The four core areas identified during D-004 as not previously read included candle math; D-004 should be cross-referenced, not repeated.
+- There are many adjacent modules (`signals/`, `screening/`, `strategies/`, `sr_detector/`, `regime/`, `v3_chain/`). Their path names alone do not prove candle-math consumers or runtime use. Stage 0 should discover candidate paths and propose a bounded caller-discovery plan, not claim call relationships.
+- Existing repository audit documents include `docs/audit/tick_candle_dormancy_25jul2026.md` and `docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md`. Treat them as historical documentation by name until separately authorised to read them; do not let them replace pinned-source evidence.
+
+PROPOSED D-005 PURPOSE
+Create a factual, source-cited manual of how the pinned legacy code represents and interprets an individual candle, including formulas, inputs, outputs, edge cases, call sites and tests. Describe only what the authorised evidence supports. Distinguish source code, comments/docstrings, repository configuration, tests, historical documents and runtime/deployed behaviour.
+
+PROPOSED D-005 SCOPE
+IN SCOPE (subject to Stage 0 inventory and Stage 1 bounded authorisation):
+1. Candle-related terms and input fields used by candle math (for example OHLC and any volume/time fields, if present in the authorised code).
+2. Exact formulas and definitions for candle body, range, direction, upper/lower shadows or other single-candle measures, only where the source actually implements them.
+3. Rounding, zero-range, missing/invalid values, equality boundaries, numeric types and error/return behaviour.
+4. Exact direct callers and the way they pass inputs/consume outputs, established by approved count-only discovery and bounded reads.
+5. Relevant tests and what they assert; tests are evidence of tested expectations, not proof of production execution.
+6. A clear boundary with D-004 market-data contracts and the next topics.
+
+OUT OF SCOPE
+- Multi-candle formations and named patterns — D-006.
+- Multi-timeframe alignment or timeframe hierarchy — D-007.
+- Trend/regime/market context — D-008.
+- Support/resistance, zones, strength and freshness — D-009 to D-012.
+- Entry zones, breakout/breakdown, retest/reclaim and entry timing — D-013 to D-016.
+- Score/ranking and final Trade/Reject decision — D-017 to D-018.
+- Fixes, redesign decisions, tuning, implementation, deployment or operational verification.
+- Repeating D-004's market-data source/storage investigation except for a narrow cross-reference needed to explain a candle input.
+
+CANDIDATE PATHS FOUND BY TREE METADATA ONLY — NOT YET AUTHORISED FOR CONTENT READ
+Direct candle/math candidates:
+- `core/candle_math.py` — 21,275 bytes; blob `57e69c5973ae29a04633bce90537448c7b3778f0`
+- `tests/unit/test_candle_math.py` — 21,664 bytes; blob `bf47cc393815296c498515616628f5c42f3da85f`
+Adjacent data/candle lifecycle candidates (avoid redoing D-004 unless a precise dependency requires it):
+- `data/candle_store.py` — 15,247 bytes; blob `f44a831760e62c9d34d4ffc6d420434b0acebf4c`
+- `data/live_feed.py` — 34,774 bytes; blob `10ebd00ee728c449c6df4dcc5e576a92f3361e10`
+- `scripts/fetch_daily_candles.py` — 13,950 bytes; blob `4a149615dc48ad1342f5b406d4728728631dd7c8`
+- `tests/unit/test_candle_store.py` — 21,724 bytes; blob `73943467c9de5e600ba885eb2b553e84bd941086`
+- `tests/unit/test_fetch_daily_candles_indices.py` — 6,489 bytes; blob `aeb92213573172574dd5955c904456012ec0fe00`
+- `tests/unit/test_h9_candle_offbyone_landmine.py` — 6,836 bytes; blob `fb6e10cae35071828221ea43705166f12472540f`
+Possible consumer-discovery candidates (paths only; do not presume they call candle_math):
+- `signals/signal_processor.py` — 139,403 bytes; blob `7fab0a02a302770ac72bbbd662549d5c091086c1`
+- `screening/secondary_screener.py` — 35,461 bytes; blob `b6f8ff7223ad803869e976f92d794dfc7c811b59`
+Other adjacent packages to classify only if count-only evidence points to a direct relationship: `strategies/`, `sr_detector/`, `regime/`, `v3_chain/`, `main.py`.
+
+STAGE 0 EXIT CONDITION
+Claude returns a source inventory and a bounded Stage 1 research plan with exact paths, proposed count-only search patterns, intended line ranges/questions, masking rules, expected evidence IDs, exclusion list and gaps. ChatGPT will review that plan; Rama need not be asked to approve routine steps again. Do not read source contents or start the manual before that review.
+
+FINAL GUARDRAILS
+The legacy repository is DEAD / REFERENCE ONLY. Preserve pin `970aabf3c78d777d9d34549e021f7c8e756c7bdb`. Never read or reveal credentials, tokens, session files, `.env`, local GUI configuration, databases, logs or host records HR-1/HR-2/HR-3. Do not run legacy code, tests or imports. No VM, host, broker, database, webhook, Chartink or service contact. No changes to the legacy repo or V2 repository. Bookmark cross-topic questions; do not resolve them in D-005.

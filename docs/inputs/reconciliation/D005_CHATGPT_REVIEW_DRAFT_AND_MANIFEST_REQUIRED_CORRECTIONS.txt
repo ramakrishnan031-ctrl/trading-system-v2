@@ -1,0 +1,69 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF MANUAL DRAFT AND MANIFEST
+Date: 28-Oct-2026
+Files reviewed:
+- 2026-10-28_d005_manual_DRAFT_for_ChatGPT_review.md
+- 2026-10-28_d005_manual_DRAFT_manifest.md
+Legacy pin stated in draft: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+OVERALL DECISION
+The draft is substantively useful and largely respects D-005's single-candle scope, but it is NOT YET ACCEPTED AS REVIEW-COMPLETE. Make the limited documentary corrections below and return the revised draft and manifest for a final review. Do not perform any further legacy source reads, searches, tests, scripts, operational checks, or repository actions.
+
+The draft's reported identity is 226 lines / 22,816 bytes / SHA-256:
+2D1F9251EC26A28DDA9EAF5B3BF7052978DF9F2FF0821EFE2B05FB457052D6D1
+The manifest's current SHA-256 is:
+E2315573BE9EDB5176AE4FC8A8357EADC55559D2EC0E081520523E61018A2474
+These are the uploaded local copies ChatGPT reviewed; hashes are not a claim about any repository copy.
+
+1. ACCEPTED CONTENT, WITH EXISTING LIMITS
+- `_strong_close` is the only confirmed single-candle measure in this evidence set. The cited source excerpt and line-level formula are within the authorised reads.
+- The two Part 1 errata are correctly preserved: `pos` is measured upward from the low for a long and downward from the high for a short; line 133 calculates `high - low`, not anything involving `close`.
+- The docstring/code tension is appropriately presented as an observation, not a conclusion about intended strategy semantics.
+- The line-70 import is correctly treated as a narrow line-level fact. Import execution, name resolution, use, and production execution remain NOT ESTABLISHED.
+- The draft generally keeps `body_frac`, `true_range_series`, `atr`/`resample`, runtime execution, and uncontrolled search hits unresolved. The hard-gate/scoring candidate lines 409 and 82 remain unread.
+- Cross-topic boundaries and the proposed-but-not-stored D5-BK-6 bookmark are retained.
+- Do not broaden the manual or resolve open items through additional source access.
+
+2. REQUIRED CORRECTION A — ADD THE DRAFT-STAGE PROCESS DEVIATION
+The manifest says the post-draft check tooling ran `check_m_d005.py`, `sensitive_check.py`, and `git status --porcelain` on the V2 clone. The controlling draft authorisation expressly prohibited scripts and repository/operational checks; earlier checkpoints also said not to use `git status`. This is a disclosed process deviation even though the manifest reports no repository write and a clean result.
+
+Add a separate, explicit deviation entry to the manual's process notes and the manifest:
+- Identifier: DV-03 (or the next unused deviation ID if the project register has one; do not overwrite DV-02).
+- Report exactly what the manifest says: after drafting, check_m_d005.py ran; sensitive_check.py was run; and `git status --porcelain` was run on the V2 clone and returned clean, as Claude reports.
+- State that these actions were outside the draft-stage authorisation; ChatGPT has not independently reproduced them.
+- Do not claim they changed the repository; the current report says no repository write occurred.
+- Preserve DV-02 separately as the earlier `wc -l` deviation. Do not merge or replace it.
+- Do not rerun any of these commands or scripts, and do not attempt a new status check to “verify” the prior result.
+
+3. REQUIRED CORRECTION B — CLARIFY THE EVIDENCE INPUT/VALIDATION DISTINCTION
+The draft says its content inputs were the eight Stage 1 files and nothing else. The manifest also says validation compared quotations/citations against masked evidence files and that check tooling ran after the draft. Clarify in the manifest (and if useful in the draft's method note) that:
+- the eight named artifacts were the substantive synthesis inputs;
+- the masked read-evidence files were consulted only as previously generated evidence artefacts for validation, not as new legacy-source reads;
+- post-draft tooling is recorded as DV-03 and is not presented as authorised by the checkpoint.
+Do not change the underlying scope or imply new research was authorised.
+
+4. REQUIRED CORRECTION C — TIGHTEN THE COUNT-CONTROL WORDING
+The draft's FACT (COUNT) paragraph says the inputs record NO VALID REAL CONTROL for S01 s_rt, S04b, S04c and S03 to S08a, while the screenshot summary says the independent review found that three early searches did have valid real controls, and the draft says the full status of other first-step runs is in a count-log revision that is not among the draft's inputs.
+Do not guess or reconstruct which searches had valid controls. Revise the prose so it is internally consistent and explicitly limited to what the cited inputs establish:
+- state the exact no-valid-real-control results documented in the included evidence;
+- state that control status for other first-step searches is not fully established from the draft's listed inputs and must be checked against the already-existing count-log revision if that record is supplied through the existing project workflow;
+- do not say all searches lacked real controls;
+- keep the general caveat that counts are candidate locators and zero does not establish absence.
+Do not search for or read additional source files to resolve this editorial gap. If the required count-log revision is not available among the existing local artifacts, mark the relevant control status UNKNOWN / NOT ESTABLISHED.
+
+5. REQUIRED CORRECTION D — LIMIT TWO OVERSTATEMENTS
+- Section 4's arithmetic discussion should remain explicitly conditional on the stated values and assumptions (e.g. valid numeric OHLC values, close within the range, and the branch conditions shown). Do not generalise those interpretations to malformed candles or all callers.
+- The phrase “a NaN in any of them returns False without raising” is a mathematical interpretation of ordinary floating-point NaN propagation through the printed arithmetic, not a separately tested source fact. Label it as INTERPRETATION and retain that it has not been runtime-tested. Do not run tests to validate it.
+
+6. FINAL FORMAT / MANIFEST
+After the limited edits:
+- Keep the document marked DRAFT for ChatGPT review; no freeze/storage.
+- Update the manifest's draft SHA-256, byte count, and line count to match the revised draft. Update the manifest's own hash only if the workflow normally records it; do not claim an uncomputed hash.
+- Keep the eight substantive input hashes and their provenance intact; do not rewrite earlier evidence files.
+- Return the revised draft and manifest as local files for ChatGPT's final review.
+- No repository writes, commits, pushes, freeze package, or storage of D5-BK-6.
+
+STRICT STOP
+No more source reads, count searches, tests, scripts, imports, `git status`, `sensitive_check.py`, other operational checks, or repository contact. This is an editorial correction step using the two draft artifacts and the already-reported process record only. If a correction cannot be supported by the existing material, mark it UNKNOWN / NOT ESTABLISHED rather than investigating.
+
+END OF REVIEW
+The D-005 draft is not rejected wholesale; it needs the above limited corrections before final acceptance. No design or implementation decision is made.

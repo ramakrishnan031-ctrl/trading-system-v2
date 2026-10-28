@@ -1,0 +1,51 @@
+D-005 FREEZE CHECKPOINT — RAMA'S DECISION ON PREREQUISITE BLOCKER
+Date: 28-Oct-2026
+Input reviewed: D-005_FREEZE_PREREQUISITE_BLOCKER_28-OCT-2026.txt
+
+DECISION: OPTION A — APPROVE C-1, WITH THE BOUNDED TEXT BELOW.
+
+Proceed with the two historical cross-references before freezing. This is a documentation reconciliation, not a new legacy-source research phase. It resolves the ambiguity that “one confirmed individual-candle measure” might be read as “the only individual-candle measure on record.” It does not change any D-005 formula, finding, evidence label, caveat, open item, erratum, deviation, or the authorised source-read scope.
+
+1. MANUAL CHANGE — SECTION 6
+Add the following bullet after the body_frac bullet. Use the source-record terminology and preserve the explicit HISTORICAL label:
+
+- Single-candle measures recorded in other frozen manuals (HISTORICAL; not re-read for D-005, and outside its authorised reads):
+  - D-003 records the secondary screener's step 5, price_action: min(1.0, 2 x body / range), with body = abs(ltp - open) and range = day_high - day_low + 1e-9; a key absent defaults to ltp, and a key present with None makes the body arithmetic raise, which the executor turns into an error step (D-003_manual.md section 8, step 5; MC-33, MC-39).
+  - A-008 records the Chartink scanner definitions as a supplied record (A-008_manual.md section 17), with conditions on the daily candle such as Close > Open, Open = Low and today's high-low range above 0.5% of close. These are the external scanners' conditions, not legacy code (C-001).
+
+Do not open/read legacy source files or re-investigate the frozen manuals. The above is a historical cross-reference derived from the already-present frozen records cited in the blocker.
+
+2. MANUAL CHANGE — SECTION 7
+Add these two cross-topic rows:
+| price_action, the secondary screener's body-to-range step (D-003 MC-33, MC-39) | D-003 (frozen; scoring use D-017, D-018) | cross-reference only (HISTORICAL) |
+| the Chartink scanners' single-candle conditions (A-008 section 17) | C-001, A-008 (frozen) | cross-reference only (HISTORICAL) |
+
+3. MANUAL CHANGE — SECTION 10
+Change “one confirmed individual-candle measure” to “one individual-candle measure confirmed by its own reads”. The related bullet should state that section 6 also cross-references two measures/condition sets recorded elsewhere. Keep `_strong_close` as the one individual-candle measure confirmed by D-005's own authorised reads. Do not imply that the other historical items were independently re-read or confirmed by D-005.
+
+4. MANIFEST / FREEZE RECORD
+Record C-1 as a pre-freeze correction arising from the frozen-manual cross-reference search, following the D-004 C-1 precedent. Explicitly state:
+- no new legacy source read/search occurred;
+- the added material is HISTORICAL and cross-reference-only;
+- no D-005 formula, source finding, open item, erratum, or deviation was changed;
+- F-1 and F-2 were addressed as historical cross-references, not source contradictions;
+- DV-02 and DV-03 remain separate and unchanged;
+- D5-BK-6 remains proposed/not stored.
+
+5. FREEZE EXECUTION AUTHORISATION
+After applying only these C-1 changes and the already-approved freeze metadata edits, continue the bounded freeze workflow without asking Rama for another routine approval:
+- update the companion manifest and the DR-071 record;
+- complete the remaining review notes, design-log entries, freeze change note, and final validation record following the established D-004 package convention;
+- use the already established destination `docs/agenda/d-005_candle-analysis/`;
+- commit and push only the intended D-005 documentation/package changes to V2 main;
+- verify the pushed commit and each relevant file on GitHub, and return the final frozen manual, manifest, freeze/push verification record, commit SHA and parent SHA.
+Do not write to or push the legacy production repository. Do not modify DR-040 or unrelated records. Do not create/store D5-BK-6.
+
+6. PRESERVE INPUT IDENTITY AND SCOPE
+Before finalising, verify the accepted Revision 3 inputs against the recorded hashes. Preserve the exact legacy pin, evidence IDs and full blob IDs. Keep the D-005 manual's accepted substantive findings, caveats, unknowns, errata and deviations intact. Do not perform new legacy reads, searches, tests, imports, scripts, or operational checks. Do not read quarantined candidate lines or contact services. Run only established, safe documentation/package checks required for the freeze; record exactly what ran and its result.
+
+7. STOP CONDITIONS
+Stop before commit/push if the input hashes mismatch, the exact intended diff includes unrelated changes, a required assertion is unsupported, a protected/secret file appears, or a required validation fails. Report the precise blocker rather than expanding scope. Otherwise finish the package and guarded push; no additional approval is required.
+
+FINAL DECISION
+Option A is approved. Option B (freeze Revision 3 unchanged and defer both as gaps) is not selected.

@@ -1,0 +1,71 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF PART 3 COUNT LOG AND FOURTH CHECKPOINT
+Date: 28-Oct-2026
+Inputs reviewed:
+- 2026-10-28_d005_stage1_part3_count_log.md
+- 2026-10-28_d005_stage1_checkpoint4_proposed_list.md
+Controlling checkpoint:
+- D005_CHECKPOINT3_CLAUDE_INSTRUCTIONS_FRESH_LINK.txt
+Legacy pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+STATUS
+Part 3 count log reviewed. The reported S07/S08 results remain candidate locators only: none of the four runs has a valid real control. The proposed fourth-checkpoint searches are appropriately count-only and do not require reading source lines. Approve the three exact count-only searches below, with the limitations and safeguards in this file. No source-content reads, manual drafting, or repository writes are authorised.
+
+A. REVIEW OF PART 3 COUNT LOG
+
+1. Accept the reported results as Claude-recorded process/count evidence, not independently reproduced ChatGPT results:
+- S07 in s_rt: 6 matching lines across two files.
+- S07 in s_tests: zero matching lines.
+- S08 in s_rt: 17 matching lines across five files.
+- S08 in s_tests: 7 matching lines in one file.
+- No source lines were read in that step; reported budget remains 243 lines and 22 read rows.
+2. Every run lacked a valid real control. Synthetic controls show that the search pipeline behaves as tested on invented examples; they do not establish completeness or prove the meaning of source hits. Preserve the report's statement that hits are candidate locators only and zero is not proof of absence.
+3. S07 hits at orders/structure_exit_manager.py:290 and :293 are near/in a method body by position only. Do not read or interpret those lines as part of D-005. The structure-exit decision logic remains outside scope.
+4. S08 hits in screening/hard_gate.py, v3_chain/pb01_entry.py, v3_chain/pb01_runner.py, v3_chain/score.py and the related test remain unread. Do not read them under this checkpoint. Their likely ownership by gate, entry, scoring or tests is not authorisation to inspect them.
+5. Carry forward the Part 1 errata and DV-02 deviation exactly as accepted in the Part 2 evidence note. Do not silently alter earlier artifacts. DV-02 must remain recorded as a process deviation; ChatGPT has not independently verified the operation.
+6. The proposed D5-BK-6 note is sensible as a deferred bookmark for D-008: leave regime/engine.py hits 191, 207, 245 and 340 UNKNOWN / NOT ESTABLISHED and outside D-005. Do not create or store the bookmark now; no repository write is authorised.
+
+B. FOURTH CHECKPOINT — EXACT LIMITED AUTHORISATION
+
+Authorise only these three count-only searches, each in s_rt (281 files), with the exact expression below:
+
+1. S07d
+Expression (Python re, case-sensitive):
+`^\s*def\s+_strong_close\b|^\s*_strong_close\s*=(?!=)`
+Purpose: count/locate lines shaped like a direct `def _strong_close` or a direct `_strong_close =` binding. This is a narrow locator, not an exhaustive definition/alias search.
+2. S07i
+Expression (Python re, case-sensitive):
+`^\s*from\s+sr_detector\.retest_confirm\s+import\s.*\b_strong_close\b`
+Purpose: count/locate one-line `from sr_detector.retest_confirm import ... _strong_close` lines only. This does not establish use, execution or runtime behaviour.
+3. S08a
+Expression (Python re, case-insensitive):
+`(?i)\bbody_frac\b\s*=(?!=)|^\s*def\s+\w*body_frac\w*\s*\(`
+Purpose: count/locate some direct assignments or function-definition-shaped lines that may relate to body_frac. It is not an exhaustive search for computations or bindings.
+
+C. REQUIRED SEARCH LIMITS
+
+- Run only S07d, S07i and S08a in s_rt (281 files). Do not run them in s_tests or any other scope.
+- Use the existing gate and masking/preflight/postflight controls. Verify pinned legacy state and blob consistency as required; check sensitive_check.py and object counts before/after. Do not use `git status`.
+- Print/save per-file counts and line numbers only. Do not print or read matched source text.
+- Use the existing synthetic controls. No valid real control is available under the agreed standard; record this explicitly for each run. A previously read line can be a read-based sanity check, but is not a frozen-record real control.
+- Do not alter or broaden expressions, add new patterns, or rerun other searches. If a control fails, stop and report it; do not silently repair the regex or retry.
+- The proposal explicitly acknowledges search limitations. Preserve them: S07d can miss decorators, async definitions, annotated/chained/tuple bindings, setattr, and import aliases; S07i can miss multiline/relative/aliased imports; S08a can miss suffixed/prefixed variable names, annotated assignments, dictionary assignments and async definitions, and may hit comments/text/keyword arguments. A zero is not evidence of absence.
+- These are count-only operations, so they add zero source-read lines. Keep the overall read budget at the reported 243/900 planned lines and 1,000 absolute stop unless actual authorised source reads are later approved. Do not count proposed searches as permission to read.
+- No R09/R10/R11 or other reads are authorised. No tests, imports, code execution, operational checks, repository writes, commits, pushes, service contacts or manual drafting.
+
+D. AFTER THE SEARCHES — STOP AND RETURN TO CHATGPT
+
+Return an updated count log or addendum with:
+- exact expression and scope for each actual run;
+- file count, hit-file count, per-file counts and line numbers;
+- synthetic-control result and explicit “NO VALID REAL CONTROL” statement;
+- pre/post safety checks, any deviations, and the actual read-row/line budget;
+- clear statement that no matched text was printed/read and no repository was changed;
+- an exact proposed list for any further action, if still needed.
+
+Do not read any resulting hit lines. Any later source read requires a separate checkpoint naming the exact path, full blob ID, exact line(s), purpose, exclusions and budget.
+
+E. SCOPE REMINDER
+D-005 is factual legacy documentation of individual-candle measures only. Multi-candle formations/patterns are D-006; timeframe hierarchy D-007; trend/regime D-008; S&R D-009–D-012; entry/retest/timing D-013–D-016; scoring/ranking and final Trade/Reject D-017–D-018. D-004 data contracts should be referenced rather than re-investigated.
+
+END OF CHECKPOINT
+This file authorises only S07d, S07i and S08a count-only searches in s_rt. All source reads and all other actions remain unauthorised unless explicitly approved at a later checkpoint.

@@ -1,0 +1,245 @@
+D-005 - CANDLE ANALYSIS: STAGE 0 CANDIDATE FILE REGISTER
+Date of work: 28-Oct-2026, 09:49 to 10:26 IST. Prepared by Claude for ChatGPT's plan review. Output 2 of 3 (output 1:
+  D-005_STAGE0_SOURCE_INVENTORY_AND_RESEARCH_PLAN_28-OCT-2026.txt, whose sections 3 to 5 give the method).
+Status: Stage 0 only. Every row is a CANDIDATE by path name, folder or V2 record, not an approved read. No legacy file
+  was opened, read, searched or counted by Claude; in deviation DV-01 (output 1, section 3.6) git read two ignore-file
+  blobs, which are not candidates. A path name, test name or document title does not establish what a file does, that
+  anything calls it, or that it ran.
+Pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (tree 080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa); listing 1,438 rows,
+  SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5. V2 records at main 2364a99.
+Placed: 163 paths of the 1,438 at the pin = 157 permitted, each in exactly one row below (A 5, B 3, C 8, D 34, E 19, F
+  62, G 26), plus 6 never-open paths that matched a term (all under docs/web_claude/; counted, not listed).
+Bytes known for 107 of the 157 rows (stored objects of the reading clone); lines known for 47 rows (the D-004 L01 table,
+  a V2 record).
+
+Columns
+- Blob: the blob ID at the pin, copied by the builder from the listing: all 40 characters in classes A and B, the first
+  12 elsewhere (the 12-character prefixes are unique in the listing).
+- Bytes: the stored blob's size in the old reading clone (FACT (METADATA)); "not stored" = NOT VERIFIED (no fetch).
+- Lines: the line total in D-004's L01 table (FACT (V2 RECORD)); "-" = not established.
+- Terms: the path-name groups matched (output 1, section 5): P01 candle/ohlc/bar; P02 shape words; P03 candle maths and
+  indicators; P04 pattern/formation; P05 timeframe/resample; P06 regime/trend; P07 S&R; P08 entry/breakout/retest;
+  P09 score/rank/decision; P10 feed/tick/fetch/history; "+" = added without the path-name scan, by the preliminary
+  map (sections C and D) or by a frozen V2 record, the Basis column naming which (OQ-14); "area" = placed because its
+  folder is a search area of the preliminary map's section C.
+- Scope: the count-only scope that holds the path (s_rt runtime Python, s_tests, s_cfg configuration); s_all = in the
+  text scope only; "-" = in no scope (binary or placeholder files).
+- Relation / owner: the reason for the row and the topic that owns the logic, as recorded or, where marked "by name",
+  as the name suggests (LEAD (PATH NAME)). HISTORICAL = a frozen V2 record establishes the relation; the record is
+  named in Basis.
+- Stage 1 mode (proposed; output 1, sections 8 and 9): G = gated grep read; R = range read, by the named read rule;
+  H = cite the frozen record, no read; C = in a count-only scope only, read only where a count hit meets a read rule;
+  N = no read proposed.
+- Protection: every row is permitted (not never-open, not sharing a never-open blob, not a July record, not a host
+  record). The 6 never-open matches are counted in the summary above and not listed.
+
+========================================================================================================================
+CLASS A - D-005 DIRECT: candle maths, candle records and recorded single-candle rules (5 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| A01 | core/candle_math.py | 57e69c5973ae29a04633bce90537448c7b3778f0 | 21,275 | 457 | P01,P03 | s_rt | D-005 primary: candle maths module | name; D-004 MC-33 and O-02 (ranges read for D-004: 3-115, 130-153, 244-270, 311-457) | G then R (R01) |
+| A02 | data/candle_store.py | f44a831760e62c9d34d4ffc6d420434b0acebf4c | 15,247 | 369 | P01,P10 | s_rt | D-005: the live CandleData record (fields D-004 MC-21); also class B (D-004 storage) | D-004 MC-21 to MC-23, MC-25 | H + C |
+| A03 | screening/step_executor.py | d83b04860f0ff97b33ca60faa20230004d04ae5e | 17,364 | - | + | s_rt | D-005: a recorded single-candle formula (price_action body / range); the step is D-003's | D-003 MC-33, MC-39 (screening/step_executor.py:318-329) | H + C |
+| A04 | sr_detector/models.py | 4f49fac5386809539578085fc51dbdee5211da00 | 8,872 | 208 | P07 | s_rt | D-005: the historical Candle record (fields D-004 MC-31); S&R models otherwise D-009 to D-012 | D-004 MC-31 (sr_detector/models.py:23-43; read 22-45) | G then R (R03) |
+| A05 | v3_chain/watchlist_capture.py | 25a1f084eadabc443a0dd22d8171b26584d4e897 | 11,490 | 245 | area | s_rt | D-005: a recorded forming / settled daily-candle guard; the route is C-011's | C-011 section 7.3 (v3_chain/watchlist_capture.py:143-151) | H + C |
+
+========================================================================================================================
+CLASS B - CANDLE STORAGE AND INGESTION (D-004 owns; cross-reference only) (3 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| B01 | data/live_feed.py | 10ebd00ee728c449c6df4dcc5e576a92f3361e10 | 34,774 | 791 | P10 | s_rt | D-004: tick feed | D-004 MC-12 to MC-19 | H + C |
+| B02 | scripts/fetch_daily_candles.py | 4a149615dc48ad1342f5b406d4728728631dd7c8 | 13,950 | 347 | P01,P10 | s_rt | D-004: post-close daily-candle writer | D-004 MC-36, MC-38 | H + C |
+| B03 | sr_detector/fetch.py | 38636d538667470cda48dde687f4531dcf349bd3 | 6,709 | 160 | P07,P10 | s_rt | D-004: historical OHLC fetcher and cache | D-004 MC-30 (sr_detector/fetch.py:4-21, 53-151) | H + C |
+
+========================================================================================================================
+CLASS C - POSSIBLE CONSUMERS (map section C or a frozen record; caller NOT ESTABLISHED unless HISTORICAL) (8 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| C01 | config/system_config.yaml | bf742ae5c81c | 55,901 | 754 | + | s_cfg | configuration comment naming resample (HISTORICAL); entry timeframe D-007, D-016 | D-004 O-02 (config/system_config.yaml:628); C-011 manual line 716 | H + C (S01 over s_cfg) |
+| C02 | main.py | 445fb0d8237a | 208,758 | 4294 | + | s_rt | consumer search area (preliminary map section C); wiring | preliminary map section C | C; R07 at located hits only; SE-7 lines 3695-3713 excluded |
+| C03 | orders/smart_tgt_manager.py | 4c9698d6be4d | 37,594 | 897 | + | s_rt | reads closed candles from the store (HISTORICAL); exits (later sections) | D-004 MC-26 | C; R06 or R07 at located hits only |
+| C04 | regime/engine.py | d9cdd9366857 | 16,380 | 360 | P06 | s_rt | caller by import (HISTORICAL); regime logic D-008 | D-004 O-02 (regime/engine.py:26-28) | C; R07 at the located call lines |
+| C05 | screening/quality_scorer.py | b125e9ce3243 | 6,337 | - | P09+ | s_rt | scores the step results (HISTORICAL); D-003, D-017 | D-003 MC-48, MC-57 | C |
+| C06 | screening/retest_monitor.py | 26639d6ed5dd | 19,889 | 442 | P08 | s_rt | reads 1-minute candles (HISTORICAL); retest D-015 | D-004 MC-32 | C; R06 or R07 at located hits only |
+| C07 | screening/secondary_screener.py | b6f8ff7223ad | 35,461 | - | + | s_rt | possible consumer (preliminary map section C); screening D-003 | preliminary map section C; D-003 MC-39 (keys open, day_high, day_low at :409-411) | C; R06 or R07 at located hits only |
+| C08 | signals/signal_processor.py | 7fab0a02a302 | 139,403 | - | + | s_rt | possible consumer (preliminary map section C); processing C-008 | preliminary map section C | C; R06 or R07 at located hits only |
+
+========================================================================================================================
+CLASS D - TESTS (evidence of tested expectations only; never run) (34 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| D01 | ops_dashboard/tests/test_screen19_strategy_ranking.py | 6cece022f0c7 | 25,198 | - | P09 | s_tests | test by name; GUI (ops dashboard) test; D-017 by name | path name | C (s_tests); R08 only per rule |
+| D02 | ops_dashboard/tests/test_strategy_score.py | e5437ac489be | 3,970 | - | P09 | s_tests | test by name; GUI (ops dashboard) test; D-017 by name | path name | C (s_tests); R08 only per rule |
+| D03 | tests/unit/test_candle_math.py | bf47cc393815 | 21,664 | 507 | P01,P03 | s_tests | D-005 primary test file | name; D-004 count results (no lines read) | G then R (R02) |
+| D04 | tests/unit/test_candle_store.py | 73943467c9de | 21,724 | 628 | P01,P10 | s_tests | test by name; D-004 (storage, ingestion) | path name | C (s_tests); R08 only per rule |
+| D05 | tests/unit/test_entry_gate.py | ab1a956af832 | 48,082 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D06 | tests/unit/test_fetch_daily_candles_indices.py | aeb922135731 | 6,489 | 150 | P01,P10 | s_tests | test by name; D-004 (storage, ingestion) | path name | C (s_tests); R08 only per rule |
+| D07 | tests/unit/test_fix066_entry_offset_margin.py | 25f87a0e6ac0 | 10,563 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D08 | tests/unit/test_fix073_eod_entry_cutoff.py | 8b0f79aa3e6d | 13,826 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D09 | tests/unit/test_fix133_entry_windows.py | 39a4b8997333 | 2,656 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D10 | tests/unit/test_fix135_tick_volume.py | 4fe9347477c8 | 4,244 | 126 | P10 | s_tests | test by name; D-004 (storage, ingestion) | path name | C (s_tests); R08 only per rule |
+| D11 | tests/unit/test_gemini_weekly_patterns.py | 5d31ce70f0f1 | 5,845 | - | P04 | s_tests | test by name; "patterns" in the name; which kind of pattern is NOT ESTABLISHED; D-006 only if candle patterns | path name | C (s_tests); R08 only per rule |
+| D12 | tests/unit/test_h9_candle_offbyone_landmine.py | fb6e10cae350 | 6,836 | 165 | P01 | s_tests | test by name; D-004 (the candle-store window off-by-one, MC-23) by name | path name | C (s_tests); R08 only per rule |
+| D13 | tests/unit/test_live_feed.py | 2f550ecc5e77 | 33,761 | 970 | P10 | s_tests | test by name; D-004 (storage, ingestion) | path name | C (s_tests); R08 only per rule |
+| D14 | tests/unit/test_market_regime.py | 3acfc6f1885b | 10,684 | 269 | P06 | s_tests | test by name; D-008 | path name | C (s_tests); R08 only per rule |
+| D15 | tests/unit/test_paper_gtt_triggers.py | cce3dc933010 | 9,589 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D16 | tests/unit/test_price_math.py | ff05dc5aee51 | 11,209 | - | P03 | s_tests | test by name; Section E (E-012) by name; "math" token | path name | C (s_tests); R08 only per rule |
+| D17 | tests/unit/test_quality_scorer.py | f2fddb776fb3 | 12,053 | - | P09 | s_tests | test by name; D-017, D-018 | path name | C (s_tests); R08 only per rule |
+| D18 | tests/unit/test_sr_anchors.py | ef3adf98e39e | 10,819 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D19 | tests/unit/test_sr_detector_backfill.py | 04909d89653a | 4,941 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D20 | tests/unit/test_sr_detector_fetch.py | eaec88f4de5b | 3,371 | 109 | P07,P10 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D21 | tests/unit/test_sr_detector_observer.py | 46020a54e7f8 | 9,473 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D22 | tests/unit/test_sr_detector_units.py | 78a76e0e8bf3 | 9,122 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D23 | tests/unit/test_sr_level_export.py | a9a6c150598b | 3,426 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D24 | tests/unit/test_sr_v2_continue.py | 7b61f16d4b09 | 9,673 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D25 | tests/unit/test_sr_v2_divert.py | 191e94efecef | 10,582 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D26 | tests/unit/test_sr_v2_market_path.py | 4d4153648d57 | 4,494 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D27 | tests/unit/test_sr_v2_monitor.py | d325c412fca0 | 8,120 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D28 | tests/unit/test_sr_v2_retest_confirm.py | c33e9bb928ce | 6,536 | - | P07,P08 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D29 | tests/unit/test_sr_v2_zone_cache.py | f81933df7f5b | 4,020 | - | P07 | s_tests | test by name; D-009 to D-012 | path name | C (s_tests); R08 only per rule |
+| D30 | tests/unit/test_step_executor.py | 82cfe6819362 | 23,460 | - | + | s_tests | executor tests; price_action missing-keys case (HISTORICAL) | D-003 MC-39 (tests/unit/test_step_executor.py:534-538) | H + C (s_tests) |
+| D31 | tests/unit/test_tick_failsafe_snap.py | e61f5b61866d | 6,329 | 159 | P10 | s_tests | test by name; D-004 (storage, ingestion) | path name | C (s_tests); R08 only per rule |
+| D32 | tests/unit/test_v3_pb01_entry.py | 2330afee2c4b | 9,844 | - | P08 | s_tests | test by name; D-013 to D-016 | path name | C (s_tests); R08 only per rule |
+| D33 | tests/unit/test_v3_pb01_gates_score.py | 8af37d3f579c | 9,074 | - | P09 | s_tests | test by name; D-017, D-018 | path name | C (s_tests); R08 only per rule |
+| D34 | tests/unit/test_v3_watchlist_capture.py | 8b50580570a9 | 6,849 | - | + | s_tests | forming-candle skip test named (HISTORICAL); C-011 | C-011 manual line 340 | H + C (s_tests) |
+
+========================================================================================================================
+CLASS E - EXISTING DOCS AND RECORDS (by name; none opened; HISTORICAL leads only) (19 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| E01 | docs/01_system_architecture.md | 603fd3cbd220 | not stored | - | + | s_all | record by name; orientation doc (preliminary map section D); ChatGPT opened it; a claim, not source | path name | N (name only) |
+| E02 | docs/02_strategy_yaml_guide.md | ba662a5c1431 | not stored | - | + | s_all | record by name; orientation doc (preliminary map section D); ChatGPT opened it; a claim, not source | path name | N (name only) |
+| E03 | docs/03_daily_operations_runbook.md | 135aa048bcc3 | not stored | - | + | s_all | record by name; orientation doc (preliminary map section D); ChatGPT opened it; a claim, not source | path name | N (name only) |
+| E04 | docs/04_db_schema_reference.md | 0218e152b77e | not stored | - | + | s_all | record by name; schema reference doc (preliminary map section D); not among the docs ChatGPT lists as opened | path name | N (name only) |
+| E05 | docs/audit/candle_retention_and_perfallocator_feasibility_19jul2026.md | a7ed4432a06b | not stored | - | P01 | s_all | candle retention by name (agenda title K-011 and D-004 gap G-07 name the subject; no record links this file to either) | preliminary map section D; path name | N |
+| E06 | docs/audit/paper_gtt_trigger_26jul2026.md | 751e2b75a46f | not stored | - | P08 | s_all | record by name; D-013 to D-016 | path name | N (name only) |
+| E07 | docs/audit/regime_computability_verification_20jul2026.md | 3927b41befc0 | not stored | - | P06 | s_all | record by name; D-008 | path name | N (name only) |
+| E08 | docs/audit/regime_direction_preference_investigation_20jul2026.md | 7ac202a8f51a | not stored | - | P06 | s_all | record by name; D-008 | path name | N (name only) |
+| E09 | docs/audit/regime_phase0_index_ingestion_17jul2026.md | 6de7e91de3ae | not stored | - | P06 | s_all | record by name; D-008 | path name | N (name only) |
+| E10 | docs/audit/regime_phase1_investigation_18jul2026.md | 053c6e028268 | not stored | - | P06 | s_all | record by name; D-008 | path name | N (name only) |
+| E11 | docs/audit/regime_thesis_minscore_control_18jul2026.md | 154b7887de4a | not stored | - | P06,P09 | s_all | record by name; D-008 | path name | N (name only) |
+| E12 | docs/audit/regime_thesis_validation_18jul2026.md | c3d5daff5cde | not stored | - | P06 | s_all | record by name; D-008 | path name | N (name only) |
+| E13 | docs/audit/senco_double_entry_27jul2026.md | b3d280d8e0c5 | not stored | - | P08 | s_all | record by name; D-013 to D-016 | path name | N (name only) |
+| E14 | docs/audit/tick_candle_dormancy_25jul2026.md | 364064b48ce6 | not stored | - | P01,P10 | s_all | a dormancy record by name; B-006, B-009 | B-006 read it through the filter (B-006_manual.md:20); the RECORD-DERIVED 25-Jul dormancy lines of B-006 (:94) cite another record, memory/dormant_tick_candle_path_25jul.md, which is not in the pinned tree | N |
+| E15 | docs/decisions/07_regime_enable.md | 78a21efc3844 | not stored | - | P06,P09 | s_all | record by name; D-008 | path name | N (name only) |
+| E16 | docs/decisions/10_entry_throttle_admission.md | fdf97c54f2dc | not stored | - | P08,P09 | s_all | record by name; D-013 to D-016 | path name | N (name only) |
+| E17 | docs/v3/V3_STEP4_HARDGATE_SCORER_PLAN.md | 6cd5e099ccd2 | not stored | - | P09 | s_all | record by name; D-017, D-018 | path name | N (name only) |
+| E18 | docs/v3/V3_STEP7_ENTRY_ENGINE_GAPMAP.md | c9a9988048b4 | not stored | - | P08 | s_all | record by name; D-013 to D-016 | path name | N (name only) |
+| E19 | reports/weekly_patterns/patterns_2026-06-03.md | bb3ab954f882 | not stored | - | P04 | s_all | record by name; "patterns" in the name; which kind of pattern is NOT ESTABLISHED; D-006 only if candle patterns | path name | N (name only) |
+
+========================================================================================================================
+CLASS F - OTHER PLACED PATHS (other topics by name, or a name match only) (62 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| F01 | allocation/ranker.py | beac7be7eadb | 1,048 | 27 | P09 | s_rt | adjacent runtime code by name; D-017, D-018 | path name | C (s_rt); R06 only per rule |
+| F02 | config/scoring_weights.yaml | e9d6ede4c02d | 2,610 | - | P09 | s_cfg | configuration by name; D-017, D-018 | path name | C (s_cfg) |
+| F03 | config/strategies/open_high_breakdown_short.yaml | 96b354653687 | 1,228 | 56 | P08 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F04 | config/strategies/open_low_breakout_long.yaml | 48012d053f33 | 1,150 | 55 | P08 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F05 | config/strategies/pb01_breakout_retest.yaml | eedf5cac5ed5 | 3,051 | 80 | P08 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F06 | config/strategies/range_breakout_long.yaml | ddee444cade6 | 1,220 | 56 | P08 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F07 | config/strategies/range_breakout_short.yaml | 2f99b1dd5f15 | 1,140 | 55 | P08 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F08 | config/strategies/vwap_bounce_long.yaml | e279719f9e5d | 1,109 | 55 | P03 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F09 | config/strategies/vwap_rejection_short.yaml | a62177d49e35 | 1,133 | 55 | P03 | s_cfg | strategy YAML by name; A-008 (strategy model), C-010 (mapping) | path name | C (s_cfg) |
+| F10 | core/mis_squareoff_timing.py | 22c1e1adbd5e | 7,053 | - | P08 | s_rt | name match only: square-off timing (A-003, B-010) | path name | N (name only) |
+| F11 | docs/audit/GUI_CLOSURE_DECISION_MATRIX_19-Aug-2026.md | 556d57c29b0c | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F12 | docs/audit/GUI_DECISION_PACK_D1_D2_D3_19-Aug-2026.md | 2b588b822d3d | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F13 | docs/audit/GUI_DECISION_READY_MATRIX_19-Aug-2026.md | cefb83adb60c | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F14 | docs/audit/approval_final_19aug/S19_strategy_ranking.png | 0190695545f9 | not stored | - | P09 | - | name match only: GUI asset or image | path name | N (name only) |
+| F15 | docs/audit/c1_history_purge_runbook_02jul2026.md | d44b9b54fe95 | not stored | - | P10 | s_all | name match only: repository-history purge runbook ("histor") | path name | N (name only) |
+| F16 | docs/audit/check1_external_close_decision_27jul2026.md | fc99f481c94c | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F17 | docs/audit/decision_packages_19jul2026.md | 0cef59d8dd4c | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F18 | docs/audit/decision_readiness_triage_19jul2026.md | 728f9e9eb8c4 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F19 | docs/audit/holdings_blind_readers_verdicts_04aug2026.md | 2c5770b74fe5 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F20 | docs/audit/q4_hard_kill_delivery_decision_30jul2026.md | 2a67e6fe88f5 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F21 | docs/decisions/00_INDEX.md | 0a7139a544a4 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F22 | docs/decisions/01_e4_w10_pnl_contract.md | 4764d7c5dced | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F23 | docs/decisions/02_d1_concentration_sizing.md | 48180bfec4b1 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F24 | docs/decisions/03_d2_strategic_direction.md | 76daa1b5a295 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F25 | docs/decisions/04_d3_min_pass_threshold.md | 65b1bed3bcfd | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F26 | docs/decisions/05_d4_exit_policy.md | 3296d11ddd6e | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F27 | docs/decisions/06_performance_allocator.md | 8a44bd5e36dc | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F28 | docs/decisions/08_freeze_min_pass_during_measurement.md | a8bf59530ed7 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F29 | docs/decisions/09_prune_retention.md | ae2390e54258 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F30 | docs/decisions/11_absolute_kill_ladder.md | bb4c50628905 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F31 | docs/decisions/ACTIONS_not_decisions.md | c22a5f535083 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F32 | docs/decisions/BRIEF_01_e4_w10_pnl_contract.md | 1e739117c530 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F33 | docs/decisions/BRIEF_08_freeze_min_pass.md | 9e42f1aa614c | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F34 | docs/decisions/BRIEF_09_prune_retention.md | c298cc4b1ddb | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F35 | docs/decisions/DESIGN_09_prune_retention.md | 7a7fbb10101f | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F36 | docs/decisions/DESIGN_ct_harness_safety.md | a0678144cbc0 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F37 | docs/decisions/DESIGN_midnight_day_floor.md | d570313cddf2 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F38 | docs/decisions/RUNBOOK_2fa_seed_vm_only.md | fc57a9f980b9 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F39 | docs/decisions/RUNBOOK_e4_w10_deploy.md | e5eecba2cb67 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F40 | docs/locked_decisions.yaml | 2908b09fb546 | 167,677 | - | P09 | s_cfg | name match only: locked decisions record ("decision") | path name | N (name only) |
+| F41 | ops_dashboard/assets/backgrounds/patterns/.gitkeep | e69de29bb2d1 | 0 | - | P04 | - | name match only: empty GUI asset placeholder | path name | N (name only) |
+| F42 | ops_dashboard/assets/badges/rankings/.gitkeep | e69de29bb2d1 | 0 | - | P09 | - | name match only: empty GUI asset placeholder | path name | N (name only) |
+| F43 | ops_dashboard/backend/services/strategy_ranking.py | 61f44251c094 | 20,694 | - | P09 | s_rt | adjacent runtime code by name; GUI (ops dashboard); D-017 by name | path name | C (s_rt); R06 only per rule |
+| F44 | ops_dashboard/backend/services/strategy_score.py | 79c55db1987d | 4,785 | - | P09 | s_rt | adjacent runtime code by name; GUI (ops dashboard); D-017 by name | path name | C (s_rt); R06 only per rule |
+| F45 | ops_dashboard/backend/services/summary_bar.py | 44602a27dd49 | 3,046 | - | P01 | s_rt | name match only: GUI summary bar ("bar" token) | path name | N (name only) |
+| F46 | ops_dashboard/docs/G2_READINESS_VERDICT.md | ff6609545881 | not stored | - | P09 | s_all | name match only: a record named for a project decision or verdict ("decision" / "verdict") | path name | N (name only) |
+| F47 | ops_dashboard/frontend/templates/strategy_ranking.html | 3f6ff9bedebb | not stored | - | P09 | s_all | by name; D-017, D-018 | path name | N (name only) |
+| F48 | ops_dashboard/tests/test_b3_b4_spec_decisions.py | 256b25dc9f9b | 9,648 | - | P09 | s_tests | name match only: GUI specification-decision test ("decision") | path name | N (name only) |
+| F49 | ops_dashboard/tests/test_summary_bar.py | 076e18972e45 | 1,196 | - | P01 | s_tests | name match only: GUI summary bar test ("bar" token) | path name | N (name only) |
+| F50 | orders/entry_engine.py | 11a37373db87 | 5,209 | - | P08 | s_rt | adjacent runtime code by name; D-013 to D-016 | path name | C (s_rt); R06 only per rule |
+| F51 | orders/full_entry_engine.py | 140445862c7e | 9,338 | - | P08 | s_rt | adjacent runtime code by name; D-013 to D-016 | path name | C (s_rt); R06 only per rule |
+| F52 | orders/price_math.py | 36c71e421300 | 14,798 | 378 | P03 | s_rt | adjacent runtime code by name; Section E (E-012 tick-size handling) by name; "math" token | path name | C (s_rt); R06 only per rule |
+| F53 | screening/entry_gate.py | 46b173171bdf | 21,303 | - | P08 | s_rt | adjacent runtime code by name; D-013 to D-016 | path name | C (s_rt); R06 only per rule |
+| F54 | scripts/fetch_fno_ban.py | 8416cd9c71b1 | 14,028 | - | P10 | s_rt | name match only: F&O ban list fetch (D-002) | path name | N (name only) |
+| F55 | scripts/gemini_weekly_patterns.py | 8f1f5b03b90c | 6,246 | - | P04 | s_rt | adjacent runtime code by name; "patterns" in the name; which kind of pattern is NOT ESTABLISHED; D-006 only if candle patterns | path name | C (s_rt); R06 only per rule |
+| F56 | scripts/sr_corp_action_spotcheck.py | 05b06689a5c4 | 3,560 | 103 | P07 | s_rt | adjacent runtime code by name; D-009 to D-012 | path name | C (s_rt); R06 only per rule |
+| F57 | scripts/sr_detector_backfill.py | 9e6d9a45d2dc | 4,862 | 150 | P07 | s_rt | adjacent runtime code by name; D-009 to D-012 | path name | C (s_rt); R06 only per rule |
+| F58 | scripts/sr_level_export.py | f4a2a3e3c6f5 | 9,263 | - | P07 | s_rt | adjacent runtime code by name; D-009 to D-012 | path name | C (s_rt); R06 only per rule |
+| F59 | signals/entry_throttle.py | b887a4be78a4 | 5,266 | - | P08 | s_rt | name match only: entry throttle (C-008) | path name | N (name only) |
+| F60 | tests/unit/test_a3_entry_kill_recheck.py | 47478aa5f5d8 | 10,206 | - | P08 | s_tests | name match only: entry kill re-check | path name | N (name only) |
+| F61 | tests/unit/test_entry_throttle.py | 94752125157a | 6,302 | - | P08 | s_tests | name match only: entry throttle test (C-008) | path name | N (name only) |
+| F62 | tests/unit/test_kill_persist_timing.py | ae99ca89e410 | 8,370 | - | P08 | s_tests | name match only: kill-switch persistence timing | path name | N (name only) |
+
+========================================================================================================================
+CLASS G - OUT-OF-SCOPE ADJACENT ENGINES (folders of the map section C; caller NOT ESTABLISHED) (26 paths)
+========================================================================================================================
+| No. | Path | Blob | Bytes | Lines | Terms | Scope | Relation / owner | Basis | Stage 1 mode |
+|---|---|---|---|---|---|---|---|---|---|
+| G01 | regime/__init__.py | 5522ae3af542 | 1,781 | 54 | P06 | s_rt | adjacent engine in a consumer search area; regime by name: D-008 (agenda title) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G02 | regime/models.py | 24bbf02fa912 | 4,412 | 126 | P06 | s_rt | adjacent engine in a consumer search area; regime by name: D-008 (agenda title) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G03 | regime/runner.py | a5cb48c53de0 | 4,433 | 119 | P06 | s_rt | adjacent engine in a consumer search area; regime by name: D-008 (agenda title) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G04 | sr_detector/__init__.py | 0bafa58a43c3 | 2,532 | 71 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G05 | sr_detector/confluence.py | 8448e94be254 | 7,606 | 212 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G06 | sr_detector/detector.py | a8500c48c8ac | 14,572 | 330 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G07 | sr_detector/flags.py | c5ca5b2514d8 | 8,028 | 187 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G08 | sr_detector/pivots.py | c1b4f0e44997 | 2,133 | 56 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G09 | sr_detector/retest_confirm.py | 5fc212535bbd | 5,459 | 138 | P07,P08 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G10 | sr_detector/zone_builder.py | 976721417531 | 8,860 | 225 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G11 | sr_detector/zone_cache.py | 06009c711f99 | 2,723 | 77 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G12 | sr_detector/zone_warmer.py | a47058e77cfc | 6,545 | 162 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G13 | sr_detector/zones.py | dfcc7736d627 | 3,851 | 117 | P07 | s_rt | adjacent engine in a consumer search area; S&R by name: D-009 to D-012 (agenda titles); retest_confirm by name only | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G14 | strategies/__init__.py | ee3a2879f0fa | 245 | - | area | s_rt | adjacent engine in a consumer search area; strategy code by name: A-008 (strategy model) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G15 | strategies/control.py | b6eecb480b83 | 5,552 | - | area | s_rt | adjacent engine in a consumer search area; strategy code by name: A-008 (strategy model) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G16 | strategies/loader.py | 99e83b192021 | 9,811 | - | area | s_rt | adjacent engine in a consumer search area; strategy code by name: A-008 (strategy model) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G17 | strategies/schema.py | 22530161a5ee | 14,263 | 376 | area | s_rt | adjacent engine in a consumer search area; strategy code by name: A-008 (strategy model) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G18 | strategies/taxonomy.py | 069644bc1bdb | 1,653 | - | area | s_rt | adjacent engine in a consumer search area; strategy code by name: A-008 (strategy model) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G19 | v3_chain/__init__.py | 72b84e0f5997 | 645 | - | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G20 | v3_chain/forward_shadow.py | dc96649f0a9f | 5,017 | 106 | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G21 | v3_chain/models.py | 159e319d8c91 | 5,430 | - | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G22 | v3_chain/pb01_entry.py | cbfd4752525f | 18,217 | - | P08 | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G23 | v3_chain/pb01_runner.py | e87a5aa96464 | 15,333 | - | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G24 | v3_chain/runner.py | a782f91f2f4f | 20,092 | - | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G25 | v3_chain/score.py | 8270d4981254 | 10,379 | - | P09 | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+| G26 | v3_chain/truncate.py | 1d11b0b7c3b5 | 4,580 | - | area | s_rt | adjacent engine in a consumer search area; V3 chain; the PB01 / V3 rows record owners C-011 and J-010 (BK-57, BK-60) | preliminary map section C (folder) | C; R06 or R07 at located hits only |
+
+========================================================================================================================
+EXCLUDED, NOT PLACED (counted or named by rule only)
+========================================================================================================================
+- Never-open: 102 paths in the tree (root 1, config 21, docs 80), refused by name and by blob; 6 of them matched a term
+  here, all under docs/web_claude/, among them item 7 of section D of ChatGPT's preliminary map.
+- Shared protected blob: docs/v2_design_spec.md (permitted by name; its blob is a never-open path's).
+- The two July 2026 queue records named in V2_SESSION_HANDOVER_C-009_24-OCT-2026.md section 4.
+- Host records HR-1 and HR-2 (loaded value-blind by the masking filter only) and HR-3 (absent).
+- The SE-6 and SE-7 ranges kept out by the D-004 decision (core/analytics_schema.sql 28-45; main.py 3695-3713):
+  core/analytics_schema.sql is not a D-005 candidate; main.py is (class C), and both ranges are refused for D-005 too
+  unless ChatGPT decides otherwise (OQ-05).

@@ -1,0 +1,66 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF STAGE 0 AND AUTHORISATION BOUNDARY
+Date: 28-Oct-2026
+Basis: The three D-005 Stage 0 files supplied by Rama:
+- D-005_STAGE0_SOURCE_INVENTORY_AND_RESEARCH_PLAN_28-OCT-2026.txt
+- D-005_STAGE0_CANDIDATE_FILE_REGISTER_28-OCT-2026.txt
+- D-005_STAGE0_OPEN_QUESTIONS_AND_SCOPE_BOUNDARY_28-OCT-2026.txt
+
+STATUS
+Stage 0 reviewed. The topic and overall boundary are suitable. This is a research-plan decision, not a D-005 manual, a V2 design decision, or permission to change any repository. D-005 remains legacy-factual documentation only, against pin:
+970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+DECISION SUMMARY
+Approve only the safety preflight and bounded count-only Stage 1 pass (S1-0 and S1-1), subject to the conditions below. Do NOT begin any legacy content reads yet. After count-only results and controls are returned, Claude must produce the exact approved read list (path, full blob ID, line range, count/grep evidence, purpose, per-read cap and cumulative cap) and send it to ChatGPT for a checkpoint. This is a ChatGPT–Claude checkpoint; no routine Rama approval is needed.
+
+RESOLUTIONS: OQ-01 TO OQ-15
+
+OQ-01 — Series indicators: ACCEPT the proposal. D-005 covers per-bar/single-candle measures only (one bar, or one bar with previous close). List window/series functions and resample by verified name, signature and line range only. Do not read their full formulas or edge cases. Bookmark analytical use to D-007/D-008 as proposed. Do not assume a function is a series function until its definition has been read.
+
+OQ-02 — Single-candle formulas outside candle_math: ACCEPT WITH A LIMITATION. S04a–S04c may locate candidate expressions across the authorised s_rt scope, including files not listed in the register. Record only confirmed single-candle formulas, their inputs, expression, edge handling and exact path:line. A caller is dependency evidence only; the downstream decision remains with its owning topic. Multi-candle predicates must not be read further and are listed for D-006. Search misses must be described only as “not found in the inspected scope”; do not claim exhaustive absence because regex coverage is necessarily imperfect. If a control fails, stop that expression and ask ChatGPT before changing/re-running it.
+
+OQ-03 — Re-reading lines already read for D-004: ACCEPT. D-005 may re-read only the specific lines needed to answer D-005 questions, with each read logged under this explicit authorisation. Cite D-004 for previously established facts and do not present those summaries as new source research.
+
+OQ-04 — Never-open docs/web_claude path: ACCEPT WITHDRAWAL. Do not open, count-search, or otherwise inspect its contents. The candidate-map correction should remain documented.
+
+OQ-05 — SE-6 / SE-7: ACCEPT. Keep core/analytics_schema.sql:28–45 and main.py:3695–3713 excluded. No D-005 claim may depend on them or on quarantined claim parts Q-1 to Q-4.
+
+OQ-06 — Repository records: ACCEPT. Do not read extra legacy or V2 repository records for convenience. Cite already-frozen records only as historical evidence, with their existing citations. If a source question cannot be answered from the authorised legacy reads, submit a narrowly specified request (path, question, minimum range) to ChatGPT first. Do not treat orientation docs/comments as source proof.
+
+OQ-07 — 18-Sep legacy manual: ACCEPT DEFAULT NO COMPARISON. Do not expand Stage 1 into manual comparison. If later reconciliation shows a specific need, raise it as a separate bounded request.
+
+OQ-08 — Host record note: ACCEPT AS A PROCESS NOTE ONLY. Do not use or reproduce any host-record content or values in D-005. Continue to identify host records by ID only and let the masking filter handle them value-blind. The report says nothing from the orientation read is used; keep it that way.
+
+OQ-09 — Reading clone: ACCEPT the existing reading clone, because its masking-filter token sources are already configured, but only after the complete safety preflight. Never use `git status`. Record object counts and `sensitive_check.py` results before/after each stage. Check every authorised working file against its pinned blob before reading; any mismatch, unexpected object change, protected-path presence, or gate failure is a hard stop. Do not create a fresh clone or alter filter sources in this stage.
+
+OQ-10 — Controls: ACCEPT. Use synthetic controls for every S04 expression. A real control is valid only if the frozen record establishes a code-level hit, not merely a paraphrase. If the real control fails, report CONTROL NOT MET, disregard zeros for that expression, and stop for ChatGPT review before changing the regex or rerunning it. No broadening the search silently.
+
+OQ-11 — Storage location: SPLIT BY ARTIFACT TYPE. The three incoming ChatGPT input/answer/prompt files should retain their received names and be preserved under docs/inputs/chatgpt_originals_and_replies/ when the freeze package is eventually prepared. Claude-generated reports and research outputs should follow the repository's CLAUDE.md report convention under docs/claude_code_reports/yyyy-mm-dd_task.md, with the freeze package linking/copying only where the established D-004 package practice requires it. Do not write anything during Stage 0 or Stage 1 research.
+
+OQ-12 — Input names: ACCEPT. Preserve the names as received, including `_RESHARED`, for provenance. Record the companion-name discrepancy as a note; do not silently rename originals. Any normalized filename for a later generated output must be a separate output, not a renamed original.
+
+OQ-13 — D-004 post-push review file: ACCEPT NOT REQUIRED FOR STAGE 1. Do not block research on it. If it is to be included in the eventual D-005 storage package, request the actual file from Rama/ChatGPT rather than reconstructing it from the screenshot.
+
+OQ-14 — Six V2-record-based candidates: ACCEPT, with no blanket permission to read them. Keep the six rows and their recorded basis in the register. Their inclusion makes them candidates only; the authorised searches and read rules still govern whether any content is read. Keep no-read rows no-read unless a permitted count hit and explicit rule justify a limited read.
+
+OQ-15 — Exact read list: ACCEPT CLAUDE'S CHECKPOINT PROPOSAL. Do not pre-authorise R01–R08 ranges/caps for content reads now. Authorise only S1-0 safety preflight and S1-1 count-only searches listed below. After counts/controls are complete, Claude must submit the exact read list for ChatGPT review before R01a/R02a/R03a or any other content read. No Rama approval needed for this routine ChatGPT–Claude checkpoint.
+
+LIMITED AUTHORISATION — STAGE 1 S1-0 AND S1-1 ONLY
+
+1. S1-0: Perform the safety preflight exactly as specified in the Stage 0 plan. Verify the pinned legacy HEAD and listing SHA-256; verify V2 main is the recorded commit unless the prompt explicitly says otherwise; confirm `sensitive_check.py` is zero; record object counts; run gate self-tests using synthetic inputs. Do not run `git status`. Do not open source files or read grep matches. Stop on any discrepancy or failed control.
+2. S1-1: If S1-0 passes, run only the following count-only expressions in their named scopes, with controls: S01, S02, S04a, S04b, S04c, S04d and S05. S02 is limited to the three named candle-definition files. Do not run S03 or S06 yet: they depend on function names discovered by reading R01a, which has not been authorised. Do not print or read matched text.
+3. Return the count log: expression, exact scope and file count, per-file counts/line numbers, control result, and explicit limitations. Do not treat zeros as proof of absence outside the scanned scope or beyond the expression's coverage.
+4. Then prepare the exact proposed read list for ChatGPT review. No content reads until the checkpoint authorises specific paths/ranges.
+5. No repository writes, commits, pushes, tests, imports, scripts, runtime/operational checks, host/VM/broker/database/webhook/Chartink/service contact, or V2 design/fix/tuning work.
+
+IMPORTANT TECHNICAL CLARIFICATIONS BEFORE S1-1
+- The plan says “9 expressions” but the enumerated table includes S01, S02, S03, S04a–S04d, S05 and S06. S03 and S06 depend on names discovered by reading R01a, so they cannot be part of the initial count-only pass without violating the no-content-read boundary. Treat the initial pass as the seven expression IDs S01, S02, S04a–S04d and S05. Defer S03/S06 until after the read-list checkpoint.
+- The stated total of 12 expression-scope runs must be recalculated from the expressions actually authorised and the scopes specified; report actual runs, not the planned total.
+- The read-cap arithmetic says the per-read caps add to 1,021 while the total cap is 1,000. The cumulative 1,000-line hard cap governs. Prefer planning no more than 900 lines initially, with 1,000 an absolute stop.
+- The S04 regexes are candidate locators, not proof of comprehensive formula discovery. Preserve this limitation in the count log and eventual manual.
+- D-005 must not become a general audit of candle ingestion/storage, scanner strategy logic, multi-candle patterns, regime/indicators, S&R, entry, scoring or final Trade/Reject decisions.
+
+REQUIRED RESPONSE FROM CLAUDE AFTER THIS STEP
+Return the count-only log and control results, confirm S1-0 passed or list the precise blocker, state the actual expressions/scopes run, and provide the proposed exact read list for ChatGPT's next checkpoint. Stop before any content read. Do not draft the manual or write to either repository.
+
+END OF REVIEW
+This review authorises only the limited S1-0/S1-1 work above. All other actions remain unauthorised unless explicitly authorised later.

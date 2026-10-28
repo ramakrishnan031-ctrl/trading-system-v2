@@ -1,0 +1,73 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF PART 1 EVIDENCE AND PART 2 PROPOSAL
+Date: 28-Oct-2026
+Basis:
+- 2026-10-28_d005_stage1_part1_read_evidence.md
+- 2026-10-28_d005_stage1_part2_proposed_list.md
+- Prior controlling checkpoint: D005_STAGE1_CHECKPOINT_READ_AUTHORIZATION_RESHARED.txt
+Legacy pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+V2 main reported in the evidence: 2364a9976a6634134549ad1ddb36ef30f65d3034
+
+STATUS
+Part 1 evidence reviewed. It reports 29 read calls across 21 rows, 242 printed lines, no STOP, and unchanged clone/object checks. These are Claude-reported process facts, not independently reproduced by ChatGPT. The evidence is useful but not yet ready to freeze as a D-005 manual or repository record. Part 2 remains a proposal and has not been authorised as a whole.
+
+KEY FINDING ACCEPTED WITH LIMITS
+The Part 1 evidence reports one confirmed single-candle formula: `_strong_close` in `sr_detector/retest_confirm.py:130-136`. The calculation of `rng` and `pos`, and the flat/non-positive-range branch, are supported by the printed source lines. The comparison of `pos` with `frac` remains unread and UNKNOWN. The documented owner/use belongs to D-015 and must not be assessed as part of D-005.
+
+`body_frac` appears in text/docstrings/comments only in the inspected ranges. No computing code was located in those inspected lines. Do not state that it does not exist in the whole system. `true_range_series` is a sequence/series function; the evidence has not established its formula, and its full body is not approved for D-005. The statement that atr/resample signatures are incomplete is a gap, not a reason to inspect their bodies.
+
+PART 1 EVIDENCE REVIEW — REQUIRED QUALIFICATIONS
+1. The evidence itself says the count expressions had no valid real controls. Treat all count hits as candidate locators only. Do not describe the search as exhaustive and do not infer absence from zero hits.
+2. The report's claim that the corrected copies passed Claude's own 9/9 check is a report by Claude. ChatGPT has not independently inspected those corrected count-log/read-list copies or the 29 per-read evidence files. The source evidence is therefore reviewed at report level, not independently re-performed.
+3. The Part 1 evidence states a total of 29 reads across 21 rows, while the Part 2 proposal says “21 rows used” and “29 remain” from 50; arithmetic is consistent. It also reports 242 lines and a 393-line Part 1 ceiling. Preserve the prior 900-line planned ceiling and 1,000-line absolute stop for the whole Stage 1.
+4. R06-03 was not read because prior read evidence placed the hit in `Zone.width`, an S&R property. This is a defensible scope exclusion; retain it as a reasoned non-read, not a source formula finding.
+5. The evidence's references to runtime imports prove only the printed import lines. They do not prove that any importing path executed or that any formula was active in production.
+6. The module header is FACT (TEXT), not runtime truth. Preserve the distinction between header wording and observed import lines.
+7. The source evidence's mask counts and gate checks are process evidence reported by Claude. Do not include host-record values or infer any such values.
+8. Do not write these reports or the D-005 manual to either repository yet.
+
+PART 2 — CHECKPOINT DECISIONS
+
+A. Count-only searches approved now, subject to the exact limits below:
+- S03: `\btrue_range_series\b`, case-sensitive, in the already defined `s_rt` scope (281 files).
+- S06: the same expression in the already defined `s_tests` scope (486 files).
+- S02r: the already used S02 definition-line expression `(?i)^\s*(def|class)\s` against `regime/engine.py` only.
+These are candidate-locator counts only. Synthetic controls are pipeline checks, not real controls. Do not print matched text. Do not change expressions/scopes, broaden them, or rerun any other search.
+
+B. S06 limitation: the proposed `\btrue_range_series\b` does not match names where the string is embedded inside a longer identifier, such as `test_true_range_series_exact`. Therefore a zero count for those test names is expected and cannot be treated as evidence that tests do not exist. Do not modify the expression in this checkpoint. If a test-name search is still needed, propose a separate expression and synthetic/real control at the next checkpoint.
+
+C. S07 and S08 — NOT AUTHORISED NOW.
+They are new expressions beyond the previously agreed four candidates (S03, S06, S05', S02r). They were not covered by the prior authorisation. They may be proposed again at the next checkpoint with exact expressions, scopes, controls and purpose, but must not be run now.
+
+D. S05' — NOT PROPOSED, AND NOT AUTHORISED.
+Accept Claude's explanation for not proposing it: its broad use-site search would likely pull the work into ingestion/storage, S&R, regime and entry topics. Do not run it under this checkpoint. If a narrow specific gap remains, submit a targeted proposal rather than broadening D-005.
+
+E. R01c — REJECT.
+Do not read `core/candle_math.py:54-82` as part of D-005. The proposal itself identifies this as the body of `true_range_series`, a sequence/series function, and the prior checkpoint excluded series formulas. Do not read its tests or supporting candle builders for this purpose. Therefore R02b (`tests/unit/test_candle_math.py:109-126`) and R08a (`tests/unit/test_candle_math.py:15-49`) are also NOT AUTHORISED as dependent reads. G-04 remains outside D-005 unless a narrower, genuinely per-bar question can be established without reading the series-function body; any future request must return to ChatGPT.
+
+F. R01d — DO NOT READ THE PROPOSED RANGES AS WRITTEN.
+The ranges `83-90` and `335-344` can include function bodies, even though the proposal says it will not record body lines. Reading a range means the body lines are exposed to the reader; a promise not to record them does not make that a signature-only read. The first-line signatures at 83 and 335 are already present in read 001. No additional read is needed now. If a signature continuation is essential, submit a narrower range that ends at the last signature line and excludes the first body line, with exact lines identified before the read.
+
+G. R06b — APPROVE ONE LINE ONLY.
+Authorise `sr_detector/retest_confirm.py:137` at the already verified pinned blob `5fc212535bbd2e86f1c5899d07ce76331ab72724`, to determine only how `pos` is compared with `frac` in `_strong_close`. Do not read beyond line 137, surrounding function lines, or any call-site/owner logic. If line 137 does not resolve the comparison, stop and ask for a new checkpoint.
+
+H. R11 / R09 / R10 — NOT AUTHORISED.
+These are dependent reads based on S02r/S03/S07/S08 outcomes. Return their exact paths, full blob IDs, ranges, count hits, purposes and line caps at a later checkpoint. In particular, do not read `regime/engine.py` definition bodies; any later type-identification request is signature-only and must not inspect series formulas or downstream gate/decision logic.
+
+I. Count/read budget:
+- Current Part 1 reported usage: 21 rows, 29 read calls, 242 lines.
+- Current overall cap: 50 rows and 900 planned lines; 1,000 lines is an absolute stop.
+- This checkpoint authorises three count-only expression/scope runs (S03, S06, S02r) and one single-line read (R06b) only. Count-only output has zero source lines but must still be logged and gated.
+- Report the actual number of runs/scopes, not the proposal's prior total. Recalculate the running budget after these operations.
+- Stop on any blob mismatch, masking/gate failure, protected-path presence, unexpected object-count change or budget overrun.
+
+REQUIRED CLAUDE RESPONSE
+1. Run only the three authorised count-only searches (S03, S06, S02r) with the existing safety preflight and synthetic controls; do not print matched text.
+2. Read only R06b line 137, after checking the pinned blob and using the required masking gate.
+3. Return an updated evidence note/count log that records the actual operations, controls, limitations, R06b result, and remaining open questions. Do not draft the manual or write either repository.
+4. Submit any proposed additional searches/reads (including S07, S08, any test-name search, R01d continuation, R09/R10/R11) as an exact list for a new ChatGPT checkpoint. Do not run them first.
+
+SCOPE REMINDER
+D-005 is factual legacy documentation of individual candle measures only. Multi-candle patterns are D-006; timeframe hierarchy D-007; trend/regime D-008; S&R D-009–D-012; entry/retest/timing D-013–D-016; scoring/ranking and final Trade/Reject D-017–D-018. D-004 data contracts should be referenced rather than re-investigated. No redesign, fixes, tuning, implementation, tests, runtime/operational checks, repository writes, commits or pushes are authorised.
+
+END OF CHECKPOINT
+This is a ChatGPT–Claude research checkpoint, not a D-005 freeze and not an authorisation to proceed beyond the exact actions above.

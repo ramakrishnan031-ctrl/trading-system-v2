@@ -1,0 +1,72 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF PART 5 AND MANUAL-DRAFT CHECKPOINT
+Date: 28-Oct-2026
+Input reviewed:
+- 2026-10-28_d005_stage1_part5_read_addendum.md
+Controlling prior authorisation:
+- D005_CHATGPT_REVIEW_PART4_AND_CHECKPOINT5_LIMITED_AUTHORIZATION.txt
+Legacy source pin:
+- 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+DECISION 1 — R09a LINE-70 FINDING
+ACCEPT, strictly within the recorded limits.
+
+The line-level fact is accepted as:
+`orders/structure_exit_manager.py:70` at blob `6e4c58d8d2e8aa0438a9461067ae070ed1118950` contains the literal text:
+`from sr_detector.retest_confirm import _strong_close`
+
+This is evidence that the line is shaped as a one-line import naming `_strong_close` from `sr_detector.retest_confirm`. It does NOT establish that the line executes, that the import is outside a multi-line string, that the imported name resolves to the definition at `sr_detector/retest_confirm.py:130`, that the exit actually uses the name, or that any production path ran. Keep each of those points NOT ESTABLISHED. Do not read the exit's use sites at lines 290 or 293. Do not describe exit behaviour.
+
+DECISION 2 — STAGE 1 COMPLETION
+ACCEPT STAGE 1 AS COMPLETE FOR D-005, WITH EXPLICIT OPEN ITEMS.
+
+Completion means the bounded research stage and its approved reads/searches are finished; it does not mean every question has been resolved. Carry these gaps into the manual as UNKNOWN / NOT ESTABLISHED or as cross-topic bookmarks:
+- G-02: body_frac computation and its missing-value/zero-range handling — UNKNOWN / NOT ESTABLISHED. The two candidate locators at `screening/hard_gate.py:409` and `v3_chain/score.py:82` came from searches without valid real controls and were not read. Do not use or quote them as established formula evidence.
+- G-03: exit module's import line is a source fact; whether it executes or is used is NOT ESTABLISHED.
+- G-04: `true_range_series` formula — outside D-005; unresolved and carried as the prior checkpoint decided.
+- G-05: `atr` and resample signatures — unresolved as previously decided; no extra reads.
+- G-06: whether any path ran — NOT ESTABLISHED and outside this source-documentation stage.
+- G-07: `regime/engine.py` hits at 191, 207, 245 and 340 — UNKNOWN / NOT ESTABLISHED and outside D-005. D5-BK-6 remains only a proposed deferred bookmark for D-008; do not create/store it now.
+- G-07a and G-08: other uncontrolled search hits remain candidate locators only and are not source findings.
+- Preserve Part 1 errata E-1 and E-2 and process deviation DV-02 as recorded. Do not alter original evidence artifacts or claim ChatGPT independently reproduced Claude's process checks.
+- Do not interpret zero counts as proof of absence. State that relevant search expressions lacked valid real controls and were candidate locators only.
+- Tests, imports, source text and documentation headers do not prove runtime execution or production behaviour.
+
+DECISION 3 — AUTHORISE A SEPARATE D-005 MANUAL DRAFT
+AUTHORISE A DRAFT ONLY, using the existing evidence package; no new research or repository changes.
+
+Permitted inputs:
+Use the seven earlier Stage 1 evidence/proposal/count/checkpoint artifacts identified by the Part 5 addendum's SHA-256 ledger, plus `2026-10-28_d005_stage1_part5_read_addendum.md`. Preserve the received/original artifacts unchanged. Use the already-frozen D-004 manual only as a cross-reference for previously established market-data contracts; do not repeat D-004 research. Do not read additional legacy source lines, other repository records, host records, or unrelated files.
+
+Purpose:
+Produce a reviewable, factual draft manual for D-005, Candle Analysis, describing only individual-candle/per-bar measures actually established by the authorised legacy source reads. It is a draft for ChatGPT review, not a frozen manual, design decision, or permission to write to either repository.
+
+Required manual structure:
+1. Document status, purpose and scope.
+2. Source identity and reproducibility: exact legacy commit pin; source path, full blob ID, line/range and evidence ID for each source fact.
+3. Evidence labels: FACT (SOURCE), FACT (TEXT), FACT (COUNT), INTERPRETATION, UNKNOWN / NOT ESTABLISHED, and cross-topic bookmark. Do not merge these categories.
+4. Confirmed measure: `_strong_close` only, based on the authorised lines in `sr_detector/retest_confirm.py` (the earlier read evidence for lines 130-136 and read 030 for line 137). State the formula exactly as supported by those reads, including the `pos >= frac` comparison and the reported flat/non-positive-range handling. Preserve errata E-1 and E-2: position is measured from the unfavourable end; line 133 uses high and low, not close. Do not infer the intended strategy semantics from the docstring or claim a production path executed. Any value/default of `frac` not established by the approved reads must remain UNKNOWN.
+5. Import fact: record the literal `orders/structure_exit_manager.py:70` import line as a narrow source fact and explain what it does NOT establish. Do not describe call sites or exit logic.
+6. Non-findings and unresolved questions: `body_frac`, `true_range_series`, `atr`, resample signatures, production/runtime execution, and other candidate locators. Explicitly state that search results were not exhaustive and had no valid real controls where recorded. Do not promote candidates to confirmed formulas.
+7. Cross-topic boundaries/bookmarks: identify which questions belong to D-004 or D-006 through D-018 and leave regime-related hits for D-008. D5-BK-6 remains proposed only and is not to be stored.
+8. Method/process notes: preserve DV-02 as a disclosed process deviation, plus E-1/E-2 corrections; explain that the process evidence is Claude-reported and not independently reproduced by ChatGPT.
+9. Source/evidence register and a concise open-items table.
+10. A clear statement that this is a draft and no V2 design or implementation conclusions are made.
+
+Strict exclusions:
+- No more searches or reads; no test execution, imports, scripts, runtime checks or operational work.
+- Do not document multi-candle formations/patterns (D-006), timeframe hierarchy (D-007), trend/regime calculations (D-008), S&R/zones/strength/freshness (D-009–D-012), entry/retest/timing (D-013–D-016), scoring/ranking/final Trade/Reject (D-017–D-018), or D-004 data ingestion/storage beyond brief cross-reference.
+- Do not read or quote `screening/hard_gate.py:409`, `v3_chain/score.py:82`, `orders/structure_exit_manager.py:290` or `:293`, or any rejected/quarantined ranges.
+- No host-record values, credentials, secrets, tokens, environment files, local GUI configuration, databases, logs or operational records.
+- No repairs, tuning, redesign, implementation, deployment or claims about live production behaviour.
+- No repository writes, commits, pushes or freeze/storage operation.
+
+Required output from Claude:
+Create one local review artifact named:
+`2026-10-28_d005_manual_DRAFT_for_ChatGPT_review.md`
+Return the draft and a brief manifest listing its inputs and SHA-256 hashes. Do not place either file in the legacy or V2 repository. Do not create a freeze package. Stop and return both files to ChatGPT for review.
+
+BUDGET / GOVERNANCE
+Stage 1 is complete at the reported 244 source lines and 23 rows. The reported counts are Claude's process record, not independent ChatGPT verification. This draft step is a synthesis of already authorised evidence, not additional source research. If the supplied artifacts do not support a claim, mark it UNKNOWN / NOT ESTABLISHED rather than expanding the source scope.
+
+END OF CHECKPOINT
+This authorises only the local draft and manifest described above. The draft must return to ChatGPT for review before any freeze, storage, repository write, or further research.

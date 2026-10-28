@@ -1,0 +1,71 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW OF PART 2 EVIDENCE AND THIRD CHECKPOINT
+Date: 28-Oct-2026
+Inputs reviewed:
+- 2026-10-28_d005_stage1_part2_evidence_note.md
+- 2026-10-28_d005_stage1_checkpoint3_proposed_list.md
+Prior controlling decision:
+- D005_CHATGPT_REVIEW_PART1_EVIDENCE_AND_PART2_CHECKPOINT_RESHARED.txt
+Legacy pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+STATUS
+The second-checkpoint evidence note and third-checkpoint proposal have been reviewed. This is a research checkpoint only; it does not freeze D-005 or authorise repository writes. The reported process checks/counts are Claude's own records and have not been independently reproduced by ChatGPT.
+
+DECISIONS
+
+1. R06b RESULT — ACCEPT WITH THE SOURCE'S LIMITS.
+The reported one-line read at sr_detector/retest_confirm.py:137 states `return pos >= frac`. Together with the previously reported lines 130-136, this completes the expression for `_strong_close`. The formula and flat/non-positive-range branch can be documented as code facts, but do not document its caller's trading decision or infer that any production path executed it. Preserve the erratum: `pos` is measured from the low for a long and from the high for a short (the unfavourable end), not from the favourable end. Keep the docstring/code wording tension about “UPPER frac” as an observation, not a verdict about intended strategy behaviour. The value of `frac` and use of the return belong to D-015.
+
+2. PART 1 ERRATA — ACCEPT AS CORRECTIONS TO THE EVIDENCE NOTE.
+Retain both corrections in the updated evidence record:
+- “Position from the favourable end” was inaccurate; use the formula-based description above.
+- The subtraction at line 133 uses high and low, not close. Do not claim a missing close raises at line 133. The later use of close is at lines 135-136.
+Do not silently overwrite the original Part 1 artifact; preserve provenance and issue an explicit erratum/addendum.
+
+3. S03 / S06 / S02r COUNTS — ACCEPT AS CANDIDATE LOCATORS ONLY.
+The evidence reports three authorised count-only runs and synthetic controls passed, but no valid real controls. Therefore the hit locations are not comprehensive and zero counts cannot establish absence. The S06 word-boundary expression is known not to match a substring inside identifiers such as `test_true_range_series_exact`; do not interpret that zero as absence of tests. No additional search is authorised by this acceptance.
+
+4. DISCLOSURE DV-02 — RECORD AS A PROCESS DEVIATION.
+The report discloses a `wc -l` run on core/candle_math.py outside the gate and outside the authorised operation list. The report says it emitted only a number already recorded and was not repeated. Preserve this as a deviation; do not repeat it, and do not treat the overall process as perfectly compliant. No evidence here indicates source content was printed, but ChatGPT has not independently verified the scratchpad operation.
+
+5. THIRD-CHECKPOINT S07 — APPROVE COUNT-ONLY, EXACT SCOPE.
+Authorise S07 expression `\b_strong_close\b`, case-sensitive, in the existing named scopes only:
+- s_rt (281 files)
+- s_tests (486 files)
+Count-only output: per-file hit counts and line numbers only; do not print or read matched text. Use the existing gate and required preflight/postflight checks. Synthetic controls verify only the pipeline; there is no valid real control. Treat hits as candidate locators only. Do not read call sites or infer runtime use. Any later read of a hit must be proposed as an exact path/blob/range and returned for a new checkpoint.
+
+6. THIRD-CHECKPOINT S08 — APPROVE COUNT-ONLY, EXACT SCOPE.
+Authorise S08 expression `(?i)body_frac` in the existing named scopes only:
+- s_rt (281 files)
+- s_tests (486 files)
+Count-only output: per-file hit counts and line numbers only; do not print or read matched text. Use the existing gate and required preflight/postflight checks. Synthetic controls verify only the pipeline; there is no valid real control. Treat hits as candidate locators only. A hit in gate/docstring/configuration code is to be classified, not used to document the gate or its downstream decision. Any later read must be proposed for a new checkpoint.
+
+7. R11 — NOT AUTHORISED AS PROPOSED.
+The proposed one-line reads at regime/engine.py:190, 205, 233 and 328 are described as “first line of each definition/signature,” but the proposal acknowledges a one-line definition may contain a body after the colon. That could expose formula or decision logic, and the nearest preceding definition line does not prove the following hit is inside that function. Do not read these four lines now. Do not assume a line is a signature-only line from its position alone. If typing these hits remains necessary, submit a safer proposal that does not expose any function body (or leave them UNKNOWN / NOT ESTABLISHED and outside D-005). No search or read of regime/engine.py is authorised by this checkpoint.
+
+8. DEPENDENT READS — NOT AUTHORISED.
+R09 and R10 are not authorised. They depend on S07/S08 results and must return as exact lists at a later checkpoint: full path, full pinned blob ID, exact line ranges, evidence hit, purpose, exclusions and cumulative line budget. No broadening from the search hits. In particular, do not inspect structure-exit decision logic or hard-gate conditions.
+
+9. BUDGET.
+Current reported Stage 1 use is 243 lines and 22 rows of the 900-line planned ceiling, 1,000-line absolute stop, and 50-row limit. This checkpoint adds four count runs (S07/S08 each in two scopes) and zero read lines. The proposed R11 is rejected, so it adds no row or line. Recalculate the budget from actual logged operations; do not use estimates as actuals.
+
+EXECUTION CONDITIONS
+- Perform only S07 and S08 in the exact scopes above.
+- Keep the existing masking gate, pinned-blob checks, protected-path exclusions, object-count and sensitive-check pre/post checks, and synthetic controls.
+- Do not use `git status`; do not read or print matched source text; do not modify the clone/filter configuration.
+- Stop on a blob mismatch, unexpected object change, protected-path presence, masking/gate failure or budget discrepancy.
+- No tests, imports, scripts, runtime/operational checks, host/VM/broker/database/webhook/Chartink/service contact, repository writes, commits or pushes.
+- No D-005 manual draft yet.
+
+CLAUDE'S REQUIRED NEXT RESPONSE
+Return a concise evidence note/count log showing:
+1. S07 and S08 actual scopes, file counts, hit-file counts, per-file counts/line numbers and synthetic-control results.
+2. Explicit statement that there was no valid real control and the results are candidate locators only.
+3. Pre/post safety-check results and actual updated row/line budget.
+4. A proposed exact read list for any next-step reads, including R09/R10 if still justified. Do not execute those reads until ChatGPT reviews the list.
+5. Preserve DV-02 and the Part 1 errata in the research record without altering the original artifacts.
+
+SCOPE REMINDER
+D-005 documents factual single-candle measures only. Multi-candle patterns are D-006; timeframe hierarchy D-007; trend/regime D-008; S&R D-009–D-012; entry/retest/timing D-013–D-016; scoring/ranking and final Trade/Reject D-017–D-018. D-004 data contracts should be referenced rather than re-investigated.
+
+END OF CHECKPOINT
+This file authorises only the S07 and S08 count-only runs above. All reads and all other actions remain unauthorised unless explicitly approved at a later checkpoint.

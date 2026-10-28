@@ -1,0 +1,97 @@
+D-005 - CANDLE ANALYSIS: FREEZE PREREQUISITE BLOCKER (ERRATA SEARCH BEFORE THE FREEZE)
+Date: 28-Oct-2026, 14:27 to 14:45 IST. Prepared by Claude under D005_CLAUDE_PROMPT_FINAL_FREEZE_STORAGE_PUSH_28-OCT-2026.txt
+  and D005_FREEZE_STORAGE_ANSWER_FILE_28-OCT-2026.txt (received from Rama at 14:21 IST), for ChatGPT's decision.
+Status: STOP BEFORE COMMIT. Nothing is committed or pushed. The working copy is preserved in Claude's V2 clone. No legacy
+  file was read, searched or counted, and no command was run on the legacy clone. The searches below are of V2
+  documentation only.
+
+1. WHAT IS READY (uncommitted)
+- The inputs were verified before any edit:
+  - revision 3 of the manual: 234 lines, 26,126 bytes, SHA-256
+    13B937825AF4BD3BF794782CEDE7E0B6CB4FD8D519C9F10939EFECDF1EC177BB;
+  - its manifest: SHA-256 A9E79B6FDF671817F8C175AE4C3ECFB397D8109BC0F1F3AD697563B8A7CA97DE.
+  Both match the freeze prompt.
+- The base is V2 main 2364a9976a6634134549ad1ddb36ef30f65d3034. HEAD and origin/main were equal after a fetch, and there
+  was no other change in the working tree.
+- The destination is docs/agenda/d-005_candle-analysis/. It follows the D-series folder form, d-00N_<agenda title>, and
+  the master agenda's title "D-005  Candle analysis" (line 296).
+- The next register number is DR-071. The register's last row is DR-070, and DR-071 appears in no row.
+- 35 carried files are placed, each byte for byte equal to its source or its recorded SHA-256:
+  - Claude's Stage 0 and Stage 1 reports, in docs/claude_code_reports/ (OQ-11);
+  - revisions 1 to 3 of the manual, in docs/inputs/manuals/;
+  - the drafts' manifests and ChatGPT's Stage 0 set, with the record owed by the D-004 package, in
+    docs/inputs/chatgpt_originals_and_replies/;
+  - ChatGPT's reviews, decisions and prompts, in docs/inputs/reconciliation/.
+- Revision 2, which had been overwritten in place, was rebuilt by reversing revision 3's three recorded edits. Its
+  SHA-256 equals the value ChatGPT computed: ADB6FD193B2D0B6DB8F5DAFA392F4D3B7459E50D2F57E70774391EBDD27FE149.
+- The frozen manual is built: revision 3 with four freeze edits only (the title, the status line, the manifest's name
+  and section 10). The companion manifest is built too.
+- Not yet written: the review notes, the DR-071 row, the design-log entries, the freeze change note and the final
+  check. They depend on the decision below.
+
+2. THE FINDING (the errata search before the freeze; the lesson of 2026-10-19 and the D-004 precedent, C-1)
+The frozen manuals were searched for single-candle measures and conditions. That is the component D-005 documents. The
+search found two records that D-005 does not cross-reference. Neither contradicts D-005, and no frozen manual needs an
+erratum.
+
+F-1 D-003 (FROZEN 2026-10-27, DR-069), docs/agenda/d-003_secondary-screening/D-003_manual.md:
+- Section 8's step table, row 5: "| 5 price_action (15) | ltp; open, day_high, day_low (ohlc) | min(1.0, 2 x body /
+  range), body = abs(ltp - open), range = day_high - day_low + 1e-9; a key absent defaults to ltp, a key present with
+  None does not (MC-39) | up to 1.0 | live | `screening/step_executor.py:318-329` |" (line 306).
+- MC-33 (line 317): "price_action returns min(1.0, 2 x body / range) from ltp, open, day_high and day_low, each
+  defaulting to ltp only when its key is absent".
+- MC-39 (line 329) records that a key present with None would make the body arithmetic raise, and that the executor
+  turns a raised step into an error step.
+- This is a body-to-range measure of one candle, the current day's, recorded as FACT (SOURCE) at the same pin.
+- D-005's own Stage 0 plan said it would cite this as HISTORICAL:
+  D-005_STAGE0_OPEN_QUESTIONS_AND_SCOPE_BOUNDARY_28-OCT-2026.txt, line 84: "cites price_action's body-to-range formula as
+  HISTORICAL; adds nothing".
+- The read list also listed screening/step_executor.py 318-329 as "Cited, not read (HISTORICAL)".
+- The D-005 manual does not mention it. Section 4 says "Confirmed measure: `_strong_close`" and section 10 says "one
+  confirmed individual-candle measure". Without the cross-reference, a reader could take that as the only single-candle
+  measure on record.
+
+F-2 A-008 (FROZEN 2026-10-07, DR-023), docs/agenda/a-008_strategy-model/A-008_manual.md, section 17, "Chartink scanner
+  conditions (FACT, SUPPLIED RECORD unless marked)":
+- Its conditions are on the daily candle, for example "Close > Open" (lines 182 to 197), "Open = Low" (lines 182 and
+  196), and "today's high-low range above 0.5% of close (13; not II, III or XVI)" (line 179).
+- These are the external Chartink scanners' conditions (a supplied record; C-001's subject), not legacy code. They are
+  single-candle conditions on record, and D-005 does not mention them.
+
+Also checked; no action needed:
+- D-004 (DR-070) records true range, ATR, VWAP, RSI and resample (line 231) and its G-08 (line 326: callers of candle_math
+  UNKNOWN). D-005 agrees, and its import facts (Part 1 MC-07) add to G-08 without contradicting it.
+- C-011, line 716 (the entry_tf comment) agrees with D-005.
+- D-004's BK-70 (PROPOSED - NOT WRITTEN; candle time conventions; "Cross-check with: D-005") is not D-005's subject and is
+  left unchanged.
+- Owner-cell search (the lesson of 2026-10-25): no V2 inputs file, design-log row or register row names D-005. Only the
+  master agenda and D-004's boundary lines and evidence sheet name it, so no owner cell changes.
+
+3. DECISION NEEDED (choose one)
+A. Approve correction C-1 (recommended): add HISTORICAL cross-references only, with no legacy read and no change to any
+   D-005 finding, formula, label, caveat, open item, erratum or deviation. Exact text:
+   C-1a, section 6, a new bullet after the body_frac bullet:
+   "- Single-candle measures recorded in other frozen manuals (HISTORICAL; not re-read for D-005, and outside its
+   authorised reads):
+     - D-003 records the secondary screener's step 5, price_action: min(1.0, 2 x body / range), with body = abs(ltp -
+       open) and range = day_high - day_low + 1e-9; a key absent defaults to ltp, and a key present with None makes the
+       body arithmetic raise, which the executor turns into an error step (D-003_manual.md section 8, step 5; MC-33,
+       MC-39).
+     - A-008 records the Chartink scanner definitions as a supplied record (A-008_manual.md section 17), with
+       conditions on the daily candle such as Close > Open, Open = Low and today's high-low range above 0.5% of close.
+       They are the external scanners' conditions, not legacy code (C-001)."
+   C-1b, section 7, two new rows:
+   "| price_action, the secondary screener's body-to-range step (D-003 MC-33, MC-39) | D-003 (frozen; scoring use
+   D-017, D-018) | cross-reference only (HISTORICAL) |" and
+   "| the Chartink scanners' single-candle conditions (A-008 section 17) | C-001, A-008 (frozen) | cross-reference only
+   (HISTORICAL) |".
+   C-1c, section 10 (a freeze edit): "one confirmed individual-candle measure" becomes "one individual-candle measure
+   confirmed by its own reads". The bullet also names section 6's cross-references to the two measures recorded
+   elsewhere.
+   The manifest and DR-071 would record C-1 as a pre-freeze correction from the errata search, as DR-070 recorded D-004's
+   C-1.
+B. Freeze revision 3 unchanged, apart from the four freeze edits. F-1 and F-2 would be recorded in DR-071 and the review
+   notes as KNOWN CROSS-REFERENCE GAPS (no erratum), as DR-070 recorded DR-040's drift, for the whole-design review.
+
+After the decision Claude completes the package (review notes, DR-071, the design-log entries, the change note and the
+final check), commits and pushes it to V2 main only, and verifies it on GitHub. No further approval is sought.

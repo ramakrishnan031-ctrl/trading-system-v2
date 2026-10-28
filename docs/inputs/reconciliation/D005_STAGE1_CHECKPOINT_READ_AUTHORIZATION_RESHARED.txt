@@ -1,0 +1,67 @@
+D-005 CANDLE ANALYSIS — CHATGPT REVIEW, READ-LIST CHECKPOINT AND LIMITED CONTENT-READ AUTHORISATION
+Date: 28-Oct-2026
+Reviewed inputs:
+- 2026-10-28_d005_stage1_count_log.md
+- 2026-10-28_d005_stage1_read_list.md
+Controlling scope: D005_CHATGPT_STAGE0_REVIEW_AND_LIMITED_STAGE1_AUTHORIZATION_28-OCT-2026.txt
+Legacy pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+V2 main reported by Claude: 2364a9976a6634134549ad1ddb36ef30f65d3034
+
+STATUS
+The S1-0 preflight and S1-1 count-only run are reported as complete. The count log and proposed read list are detailed and generally bounded. This review now resolves the six questions at the end of the read list.
+
+DECISIONS
+
+1. PART 1 READ LIST — APPROVE WITH THE SPECIFIC CORRECTIONS BELOW.
+The 22 proposed rows may be read only after Claude corrects the count log and read-list file as specified in the “Required corrections” section. No other paths or ranges are authorised. Keep the stated masking, pinned-blob verification, per-read logging, protected-path exclusions, and cumulative line cap.
+
+2. R06-01 — SCREENING/HARD_GATE.PY — APPROVE NARROWLY.
+Keep ranges 382-388 and 430-436 solely to classify the located S04b/S04c hits. Record only a confirmed single-candle measure at formula level (expression, inputs and edge handling). If a range contains a multi-candle predicate, series computation, gate condition, or downstream decision, do not document that logic; mark it outside D-005 and stop analysis of that logic. Do not explain or assess the playbook gate itself; its owning topic remains J-010 / the relevant existing owner.
+
+3. R04a — DATA/CANDLE_STORE.PY DEFINITION GREP — APPROVE NARROWLY.
+The grep was not listed in the Stage 0 plan, but it is a bounded, useful member-name/signature inventory and is not a blanket authorisation to inspect storage behaviour. Limit output and notes to class/function/property names and signatures. Do not read function bodies, ingestion, storage, retention or lifecycle logic; those remain D-004 / K-011. Any further range must return to a checkpoint.
+
+4. REAL-CONTROL STANDARD — CONFIRM THE IDENTIFIER HALF; PARAPHRASE IS NOT A CONTROL.
+A real control qualifies only where a frozen V2 record identifies the exact matched identifier or quotes the relevant text at stated lines of the pinned file. A paraphrase is not enough. Therefore the regime-engine S01 s_rt reference is NOT a valid real control. The count log must not call it “D-004 FACT (SOURCE)” or say its real control passed. The same standard applies uniformly to every expression and scope.
+
+For this checkpoint, the already-produced counts may be used only as positive-hit candidate locators for the expressly listed read ranges, because the synthetic pipeline controls passed. They do not establish exhaustive discovery, and no missing-hit/zero conclusion may be drawn. Do not alter regexes or rerun any expression as part of this authorisation. If a future step requires a changed expression or a rerun, submit the proposed expression, scope, and control first.
+
+5. READ COUNT AND LINE BUDGET — APPROVE THE PROPOSED ROW-BASED COUNT.
+Count one read as one row: one file, one purpose, one or more explicitly listed ranges/grep expressions. A maximum of 50 rows is permitted for the combined D-005 Stage 1 sequence, provided the 900-line planned ceiling and 1,000-line absolute stop are also obeyed. Count grep output lines toward the same cumulative line budget. The 50-row cap is not permission to add files or ranges beyond an approved list.
+
+6. PART 2 — SECOND CHECKPOINT REQUIRED; S05' AND S02r MAY BE PROPOSED, NOT PRE-AUTHORISED.
+Yes, Part 2 must return as a new exact list before any Part 2 count or read. Claude may propose S03, S06, S05' and S02r at that checkpoint, with exact expression, scope, control, purpose and line budget. None is authorised now. In particular, S05' and S02r are new expression/scope combinations and must not be run until that second checkpoint explicitly authorises them. All resulting read ranges must also be listed and approved before content reads.
+
+REQUIRED CORRECTIONS BEFORE PART 1 CONTENT READS
+
+A. Correct the control-status contradictions in the count log:
+- The S01 s_rt control is not met under the agreed standard; the frozen record paraphrases the regime import rather than quoting the exact identifier at the stated source lines.
+- S02 and S04a/S04c have no valid real control in the cited records; do not present them as real-control passes. The synthetic controls passed, which verifies the search pipeline on synthetic inputs only.
+- Remove or correct the statement “No CONTROL NOT MET occurred” and any section 3 wording that labels the regime-engine import a “D-004 FACT (SOURCE)”.
+- Keep the actual observed counts unchanged unless a separately authorised rerun is later approved. Mark the relevant controls “NO VALID REAL CONTROL” / “CONTROL NOT MET” as appropriate and explicitly state that positive hits are used as candidate locators only, not as a comprehensive search result.
+
+B. Correct R01b's range to avoid unnecessary re-reading. The current 1-31 range is broader than needed and largely overlaps D-004. Replace it with the two minimal ranges 1-2 and 28-31 (or 28-31 only if the module docstring at 1-2 is not needed for Q8). Record the exact resulting line count. Do not expand the read elsewhere to compensate.
+
+C. Reconcile the summary language: the read list describes 22 rows, 25 ranges and 178 range lines, with at most 240 grep-output lines, total at most 418. After the R01b reduction, update all totals consistently. The second-part ceiling must be recalculated from the revised Part 1 total; do not rely on stale arithmetic. Keep 900 as planned ceiling and 1,000 as absolute stop.
+
+D. Confirm that the R04a grep read was added to this checkpoint by explicit decision, not imply it was present in the Stage 0 plan.
+
+E. Do not write either document to a repository yet. Return corrected copies of the count log and exact read list to ChatGPT. After that correction check, the Part 1 read authorisation above is in force; Claude does not need to ask Rama for routine approval.
+
+READ EXECUTION CONDITIONS
+- Read only the approved rows and corrected ranges; verify each blob against the pin before reading.
+- All content reads must go through the existing masking gate and required mask stages. Keep host-record values value-blind.
+- Do not use `git status`; do not fetch/checkout or alter the reading clone/filter configuration.
+- Keep SE-6 / SE-7 excluded, including main.py:3695-3713 and core/analytics_schema.sql:28-45.
+- Stop on any blob mismatch, unexpected object-count change, protected-path presence, masking/gate failure, or cumulative budget overrun.
+- Tests are expectation evidence only; do not run tests, imports, scripts or code.
+- Do not read matched lines from S04a, S04d or S05 merely because they matched. Their broad counts are noisy candidate locators. Only approved ranges in Part 1 may be read.
+- Do not inspect multi-candle formations, timeframe hierarchy, regime/series formulas, S&R logic, entry logic, scoring, or Trade/Reject decisions. For a function whose type is unclear, stop and return a narrowly specified question rather than reading its body.
+
+CLAUDE'S NEXT RESPONSE
+Return corrected versions of:
+1. 2026-10-28_d005_stage1_count_log.md
+2. 2026-10-28_d005_stage1_read_list.md
+Then, and only then, perform the approved Part 1 reads and return the read evidence/log for ChatGPT's review. Do not begin Part 2 and do not draft the D-005 manual.
+
+This file records a ChatGPT–Claude checkpoint decision. It is not a design decision, does not freeze D-005, and authorises no repository write or operational activity.
