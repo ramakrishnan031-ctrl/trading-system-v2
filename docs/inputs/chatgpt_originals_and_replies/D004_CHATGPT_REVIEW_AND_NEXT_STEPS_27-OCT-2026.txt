@@ -1,0 +1,69 @@
+D-004 — MARKET-DATA REQUIREMENTS
+CHATGPT REVIEW / RESEARCH HANDOFF
+Prepared: 27-Oct-2026 16:30 IST
+Status: DISCUSSION / RESEARCH PREPARATION ONLY — NOT A D-004 DECISION, MANUAL, FREEZE OR STORAGE PACKAGE
+
+PURPOSE
+Provide Rama with the review conclusions and a precise Claude research instruction for D-004. This is not the D-004 final manual and does not decide V2 data requirements.
+
+1. REVIEW BASIS — CURRENT V2 REPOSITORY
+Repository reviewed: https://github.com/ramakrishnan031-ctrl/trading-system-v2 (public, default branch main). GitHub metadata at review time: pushed 2026-10-27 10:35:58 UTC (16:05:58 IST); repository updated 10:36:02 UTC (16:06:02 IST). The repository’s README and CLAUDE.md state that it is in design phase, documentation/governance is kept under docs/, docs/inputs is immutable, governance decisions are append-only, and the legacy repository is evidence—not an inherited V2 requirement.
+
+D-004 master agenda label: “Market-data requirements”; it sits between D-003 Secondary screening and D-005 Candle analysis. The D-003 manual defines its own scope as observed screener inputs and explicitly hands broader data requirements to D-004. That D-003 boundary is a pointer, not a D-004 decision.
+
+Current D-003 evidence available on V2 main includes D-003_manual.md and records describing a proposed freeze/storage package. The D-003 manual header calls it FROZEN only subject to the authorised storage action; the latest action check explicitly states: no repository write, commit, push, publication, freeze or storage occurred; manual of record remains DRAFT / NOT FROZEN; candidate copies are PROPOSED. Therefore D-003 is reviewed, but its final freeze/storage is still pending according to the current records. Do not describe D-003 as pushed/frozen/stored. The package’s final check also marks its fresh manual content checks NOT VERIFIED in that action step (they passed in an earlier named run); do not collapse this into a fresh PASS.
+
+2. GOVERNANCE AND SAFETY BOUNDARIES
+- Legacy system is DEAD / REFERENCE ONLY. Never run code, tests, scripts, services, schedulers, broker actions, database operations or host operations.
+- D-004 may begin as a topic discussion/research preparation before D-003 storage. But do not create D-004 final freeze/storage materials until D-003 has been deliberately pushed and verified, because D-003 reserves DR-069 and the handover says D-004 starts at DR-070.
+- No V2 design or implementation during the legacy-documentation phase. Keep historical evidence separate from possible future requirements.
+- Keep labels distinct: FACT (SOURCE), FACT (CONFIG), FACT (TEXT), FACT (COUNT), HISTORICAL / RECORD-DERIVED, INTERPRETATION, KNOWN DEFECT, UNKNOWN / NOT ESTABLISHED, OPEN QUESTION. A source-code presence is not proof a path is called; repository config is not deployed config; historical or observed inputs do not automatically become V2 requirements.
+- Never expose secrets. Never open protected legacy paths: `.env` / `.env.*`, token/session files, `gui_config.local.yaml`, `docs/web_claude/`, `*.db`/SQLite files, logs; follow `docs/governance/LEGACY_REFERENCE.md` and the authorised research scope.
+- Do not run any legacy code or tests. Use bounded, read-only, evidence-first inspection only when the governing instruction card authorises it.
+- `docs/inputs/` is immutable: add, never edit/rename/overwrite. `V2_DECISION_REGISTER.md` is append-only. Do not write to GitHub or mutate repo state as part of this task.
+
+3. INDEPENDENT REVIEW FINDINGS — WHAT D-004 SHOULD ESTABLISH BEFORE ANY DECISIONS
+D-004 should first create a source-grounded map of the legacy data contract, not a speculative new architecture. Research each data family separately and record evidence coverage/limits:
+A. Data source identity: broker/API, external scanner payload, instrument master/reference data, quotes, candle/historical data, internal persisted data, any secondary/external source. Identify which are inputs to the signal, screener, later candle/context/S&R topics, and which are only reporting/evidence consumers.
+B. Instrument identity and mapping: symbol aliases/canonicalization, exchange/segment, instrument token, instrument master freshness, expiry/contract identity if actually applicable to the pinned legacy baseline. Do not infer F&O/MCX or expiry handling from generic patterns; this legacy baseline was documented as NSE-equity oriented and exact wider support may be unknown.
+C. Data shapes: quote fields and timestamp semantics; OHLCV candle fields and source; volume semantics; previous close/limits/circuit fields if present; missing/nullable fields and any derived fields. Distinguish supplied, calculated, stubbed, hard-coded, unused, and unknown fields.
+D. Granularity and history: timeframe(s), bar construction/resampling, lookback/history length, requested interval, session alignment and partial/current candle semantics—only where direct evidence identifies them.
+E. Timing/freshness: source timestamp vs receive timestamp vs trigger timestamp; timezone and IST conversions; market-session boundaries; data age gates; fetch timeout/retry/cache/rate-limit behaviour; whether validation is repeated at consumers.
+F. Invalid and inconsistent data: missing quote/candles, empty results, stale/delayed data, duplicate/out-of-order candles, symbol-key/case mismatch, API errors, incomplete OHLCV, zero/negative values and numeric anomalies. Report only actual handling demonstrated by source; else UNKNOWN.
+G. Storage/provenance/reproducibility: what is persisted, in which table/columns or files, writer and reader, retention/backfill, source/timeframe/received-at metadata, whether a saved snapshot permits replay. Never read database files; schema/code references only if authorised.
+H. Consumers and boundary: D-001/D-002/D-003 observations; D-005 candle analysis; D-006 patterns; D-007 timeframes; D-008 market context; D-009–D-012 S&R; later price/entry, risk/order or reporting only to identify a data dependency, not to analyse those modules prematurely.
+I. Environment qualification: source tree at pinned production commit vs sandbox records vs old chapter notes. Production VM was not directly inspected in the prior manual evidence, and runtime/deployed values may be NOT ESTABLISHED. Do not state runtime behaviour unless supported.
+J. Future V2 requirements: record a separately labelled open question or design input only. D-004 is not authority to decide source-of-truth, preferred broker feed, universal timeframe, freshness SLA, retry policy, candle-store design or new validators.
+
+4. REVIEW OF DOCUMENTATION QUALITY EXPECTATIONS
+A strong D-004 output must do more than list sources. For each relevant data contract, use:
+SOURCE → INPUT/FETCH → TRANSFORMATION/NORMALIZATION → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → NEXT CONSUMER.
+Record file path, function/class and line reference where evidence allows; exact config key and code consumer; actual schema/table/column where the schema is permitted; formula/units where a transformation exists; error/skip/reject outcome; and what remains unverified. Include a compact data-lineage matrix and explicit cross-topic boundary matrix. Include a negative-claim evidence limit; do not write “not used anywhere” from a bounded search.
+
+5. SEQUENCE / ACTION
+1. Use the attached Claude prompt to research D-004 only. First inventory source files and proposed read scope; do not open individual modules until the bounded scope is reviewed/authorised through the established project workflow.
+2. Return findings and an evidence/gap matrix, not final D-004 freeze/storage files at this stage.
+3. ChatGPT independently reviews the findings, reconciles boundaries, and identifies any question that genuinely requires Rama’s choice.
+4. Once discussion and source evidence are sufficient, prepare the D-004 manual and final-package workflow. D-003 must be deliberately pushed and post-push verified before D-004’s final package is frozen/stored; verify that DR-069 remains unused and use DR-070 only when appropriate.
+
+6. FILE / REPOSITORY REFERENCES CHECKED
+- README.md: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/README.md
+- CLAUDE.md: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/CLAUDE.md
+- Master agenda/workflow: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt
+- Legacy reference: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/LEGACY_REFERENCE.md
+- V2 decision register: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/V2_DECISION_REGISTER.md
+- V2 design log/open questions and bookmarks: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/governance/V2_DESIGN_LOG.md
+- D-001 manual: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/d-001_pre-filter/D-001_manual.md
+- D-002 manual: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/d-002_hard-rejection-gates/D-002_manual.md
+- D-003 manual: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/d-003_secondary-screening/D-003_manual.md
+- D-003 freeze/storage action check: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/d-003_secondary-screening/D-003_FREEZE_STORAGE_ACTION_FINAL_CHECK_27-OCT-2026.txt
+- D-003 proposed storage items/entries: https://github.com/ramakrishnan031-ctrl/trading-system-v2/blob/main/docs/agenda/d-003_secondary-screening/D-003_FREEZE_CANDIDATE_STORAGE_ITEMS_AND_PROPOSED_ENTRIES_REV1_27-OCT-2026.txt
+
+7. FACT / UNKNOWN / INTERPRETATION
+FACT: GitHub currently exposes D-001 through D-003 agenda directories and the D-001, D-002, D-003 manuals; D-004 is the next agenda item in the master agenda.
+FACT: The latest D-003 storage-action check says no storage/freeze/push occurred and K-3 manual content checks were not re-run in that action step.
+FACT: V2 repo instructions say docs/inputs are immutable and the decision register append-only.
+UNKNOWN / NOT ESTABLISHED: current D-003 package state on Rama’s local PC; whether any separate manual push/storage action occurred after the latest package check; live/runtime behaviour of the retired legacy system; data-source behaviour not actually read from source.
+INTERPRETATION: D-004 is best prepared through inventory → bounded evidence research → independent reconciliation → topic discussion → only later manual/final package. This follows the current handover and repository governance; it is not a new V2 design decision.
+
+END

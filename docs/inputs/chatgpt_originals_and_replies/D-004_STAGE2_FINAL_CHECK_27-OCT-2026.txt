@@ -1,0 +1,77 @@
+D-004 - MARKET-DATA REQUIREMENTS: STAGE 2 FINAL CHECK
+Date: 27-Oct-2026 (IST). Run by check_s2_d004.py after the four candidate files were built.
+Status: a verification record; no decision; nothing written to any repository; DR-070 unused.
+Opens no legacy source file: legacy line totals come from the Stage 1 read log, cited ranges are compared with the
+  Stage 1 read log and evidence text, and the range accounting uses the Stage 1 count line numbers only.
+Check tool SHA-256: 1B9D4282DF71BED231B6D20F32D45D9FC0F0E5998B64E25FA2C53AFA23FE779F; range tool range_accounting_s2.py: 0CCF85311530F956E9DA07578149EEDEDB1D7F95BBDA34983B1B1E79DCC319B5.
+
+RESULTS
+Run at 18:42:22 IST by check_s2_d004.py.
+PASS  E-C1 the nine inputs are present, match the manual's table 19.1, and the two Stage 1 inputs match their Stage 1 hashes: 9 files; mismatches []; files with CR []
+PASS  E-C2 no legacy read, search or count since Stage 1: read log rows 170; last log writes code_read_log.tsv 17:37:39, search_log.tsv 17:43:14, lines_log.tsv 17:48:40, range_additions.tsv 17:47:00 IST; newest gate output 17:48:40 IST (all before 18:02 IST); legacy objects {'blob': 814, 'tree': 101, 'commit': 1}; never-open blobs present locally: 0; legacy HEAD 970aabf
+PASS  E-C3 legacy citations in the four files resolve in the listing and lie inside their files (line totals from the read log): 193 distinct cited ranges in 35 files (D-004_MARKET_DATA_REQUIR 193, D-004_STAGE2_CANDIDATE_P 0, D-004_STAGE2_DRAFT_CHANG 2, D-004_STAGE2_SELF_REVIEW 192); problems 0
+PASS  E-C4 every cited legacy range lies inside a Stage 1 read: 193 checked; outside the reads 0
+PASS  E-C5 every cited legacy range lies inside the ranges the Stage 1 evidence cites (backticked or plain): 193 checked against 200 Stage 1 ranges; outside 0
+PASS  E-C6 MC IDs: every ID in the four files exists in Stage 1, and all 61 appear in the manual: Stage 1 IDs 61; in the manual 61; unknown IDs []
+PASS  E-C7 V2 citations: each record exists at c33466b, each line lies inside it, and each cited line was cited in Stage 0 or Stage 1: 46 distinct V2 citations in 11 records; problems []; not in Stage 0 or 1 []; proposed paths, absent as expected: ['docs/agenda/d-004_market-data-requirements/D-004_manual.md']; legacy paths named, not V2 citations: ['docs/v2_design_spec.md']
+PASS  E-C8 the ten labels are defined in manual 2.6, and every bullet of sections 4 to 15 opens with a label: label uses in 4 to 15: {'FACT (SOURCE)': 48, 'FACT (TEXT)': 17, 'FACT (CONFIG)': 7, 'FACT (COUNT)': 3, 'FACT (TEST)': 2, 'HISTORICAL': 4, 'INTERPRETATION': 4, 'UNKNOWN / NOT ESTABLISHED': 11, 'OBSERVATION': 4, 'OPEN QUESTION': 1}; bullets 80; without a label []
+PASS  E-C9 BK-69 and BK-70 appear in the manual only in section 17; every DR-070 mention says it is unused or not allocated: BK sections {'BK-69': ['17'], 'BK-70': ['17']}; DR-070 mentions 12; other []
+PASS  E-C10 gap register G-01 to G-10 in manual 16.3 equals the Stage 1 rows: Stage 1 rows 10; manual rows 10; equal True
+PASS  E-C11 value-blind scan (scan_ids.py) of the four files: only hashes and the D004 file-name prefix: {'client_id_shape': 25, 'long_token': 38}
+PASS  E-C12 no never-open path, session link or host-record name; ASCII only; no CR: never-open named 0; session links 0; host names 0; non-ASCII lines {'D-004_MARKET_DATA_REQUIR': 0, 'D-004_STAGE2_CANDIDATE_P': 0, 'D-004_STAGE2_DRAFT_CHANG': 0, 'D-004_STAGE2_SELF_REVIEW': 0}; CR []
+PASS  E-C13 quotations in the manual under fifteen words: 41 quoted strings; 15 words or more: 0
+PASS  E-C14 V2 clone unchanged at c33466b (status clean); the local output folder holds only the expected files: V2 HEAD c33466b; status clean; output files 11
+PASS  E-C15 range accounting reproduces the manual's figures (82 = 63 + 19; 63 + 49 + 19 = 131): output below (parts E1 to E5)
+RESULT: PASS (15/15) at 18:42:23 IST
+
+INFO  cite_check.py was not run in this step: it opens the checked-out legacy files to count their lines, and this step
+  allows no source read. Its Stage 1 INFO line stands as reported (manual 2.5).
+
+RANGE ACCOUNTING (range_accounting_s2.py; parts E1 to E5; line numbers and counts only)
+  E1. Disclosed no-hit extensions (read log, section 4)
+     core/analytics_schema.sql: ranges 1-23, 46-50; lines 28; outside hit+/-3 clusters 22 [1-20, 46-47]; inside clusters 6 [21-23, 48-50]
+     core/schema.sql: ranges 1001-1004, 1143-1148, 1472-1487, 1607-1609; lines 29; outside hit+/-3 clusters 16 [1143-1145, 1472-1484]; inside clusters 13 [1001-1004, 1146-1148, 1485-1487, 1607-1609]
+     data/live_feed.py: ranges 305-328; lines 24; outside hit+/-3 clusters 24 [305-328]; inside clusters 0 [-]
+     orders/smart_tgt_manager.py: ranges 788; lines 1; outside hit+/-3 clusters 1 [788]; inside clusters 0 [-]
+     total lines 82; outside clusters 63; inside clusters 19
+  E2. Reads of the two schema files beyond the hit +/- 3 clusters (definition lines, not disclosed as extensions)
+     read 106 core/analytics_schema.sql 1-50: outside clusters 40; of them no-hit extension lines 22; definition lines 18 [28-45]
+     read 108 core/schema.sql 1123-1148: outside clusters 19; of them no-hit extension lines 3; definition lines 16 [1127-1142]
+     read 109 core/schema.sql 1463-1487: outside clusters 18; of them no-hit extension lines 13; definition lines 5 [1467-1471]
+     read 110 core/schema.sql 1593-1609: outside clusters 10; of them no-hit extension lines 0; definition lines 10 [1597-1606]
+     total definition lines 49
+  E3. Exact additions to the fixed lists (G-05): lines outside the clusters of all searches, and of the named basis
+     broker/zerodha_adapter.py 1799-1830 [S01]: outside all-search clusters 0 [-]; outside the named basis clusters 2 [1829-1830], inside the clusters of all searches together
+     main.py 423-436 [S02,S04]: outside all-search clusters 0 [-]
+     main.py 1970-1976 [S03a]: outside all-search clusters 0 [-]
+     main.py 2438-2446 [S04,S12]: outside all-search clusters 0 [-]
+     main.py 2965-2996 [S04,S12,S01]: outside all-search clusters 0 [-]
+     main.py 3463-3563 [S12,S02]: outside all-search clusters 0 [-]; outside the named basis clusters 23 [3484-3506], inside the clusters of all searches together
+     main.py 3666-3745 [S02,S12]: outside all-search clusters 19 [3695-3713]; outside the named basis clusters 19 [3695-3713]
+     main.py 3837-3861 [S01,S03b]: outside all-search clusters 0 [-]
+     main.py 3918-3950 [S12,S04]: outside all-search clusters 0 [-]
+     main.py 543-549 [S01]: outside all-search clusters 0 [-]
+     main.py 2389-2395 [S01,S12]: outside all-search clusters 0 [-]
+     main.py 3030-3036 [S01]: outside all-search clusters 0 [-]
+     main.py 3130-3136 [S01]: outside all-search clusters 0 [-]
+     main.py 3613-3619 [S01]: outside all-search clusters 0 [-]
+     main.py 390-407 [S13]: outside all-search clusters 0 [-]
+     total addition lines outside all clusters 19
+  E4. Lines read in no kind-K fixed range and in no hit +/- 3 cluster: 63 + 49 + 19 = 131
+  E5. Citations whose ranges include exception lines (X = no-hit extension, D = schema definition, A = addition)
+     section 5 | data/live_feed.py:324-361 | X 324-328
+     section 5 | data/live_feed.py:302-322 | X 305-322
+     section 7 | main.py:3666-3702 | A 3695-3702
+     section 7 | main.py:3704-3745 | A 3704-3713
+     section 8 | core/analytics_schema.sql:21-45 | D 28-45
+     section 8 | core/analytics_schema.sql:2-17 | X 2-17
+     section 8 | core/schema.sql:1463-1470 | D 1467-1470
+     section 11 | core/schema.sql:1593-1606 | D 1597-1606
+     section 13 | main.py:3704-3745 | A 3704-3713
+     section 14 | core/schema.sql:1123-1142 | D 1127-1142
+
+HASHES OF THE FOUR CANDIDATE FILES (at this check)
+  D-004_MARKET_DATA_REQUIREMENTS_REV0_27-OCT-2026.md: 509 lines, 68,061 bytes, SHA-256 A144D15C53C90CFE3B626F5A04CC39F7351D4D3DE7231D030ABF8AE5E7AFE02D
+  D-004_STAGE2_CANDIDATE_PACKAGE_MANIFEST_27-OCT-2026.txt: 104 lines, 11,883 bytes, SHA-256 0845C770E4E14FEC11114B05303F29DDFD64A5B97E2CD3BE27CC9A6A665EFD20
+  D-004_STAGE2_DRAFT_CHANGE_NOTE_27-OCT-2026.txt: 113 lines, 12,130 bytes, SHA-256 7ECFC2138F8D9B92E126073656E5B57C1541C30A0159ACC5A398379509C59778
+  D-004_STAGE2_SELF_REVIEW_CHECKLIST_27-OCT-2026.txt: 208 lines, 28,184 bytes, SHA-256 CF965D54B0AA81CAA9512351A2160D51047627B2FB1776255BDA62E37B72D7C5

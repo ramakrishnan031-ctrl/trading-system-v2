@@ -1,0 +1,72 @@
+CLAUDE RESEARCH PROMPT — D-004 MARKET-DATA REQUIREMENTS
+Date: 27-Oct-2026 (IST)
+Task state: STAGE 0 / SOURCE INVENTORY AND RESEARCH PLAN ONLY. Do not read individual legacy modules yet. Do not create D-004 final manual/freeze/storage files.
+
+GOAL
+Prepare a precise, source-backed inventory and bounded research plan for D-004, “Market-data requirements,” in the trading-system-v2 project. The purpose is to establish what data the DEAD legacy system actually obtained, transformed, validated, stored and handed to consumers. This is legacy documentation only, not V2 design.
+
+READ THESE GOVERNING V2 FILES FIRST (V2 repository main; read-only):
+1. docs/governance/V2_DECISION_REGISTER.md
+2. docs/governance/V2_DESIGN_LOG.md
+3. docs/governance/MASTER_REDESIGN_AGENDA_AND_WORKFLOW_21-SEP-2026.txt
+4. docs/governance/LEGACY_REFERENCE.md
+5. docs/agenda/d-001_pre-filter/D-001_manual.md
+6. docs/agenda/d-002_hard-rejection-gates/D-002_manual.md
+7. docs/agenda/d-003_secondary-screening/D-003_manual.md
+8. docs/agenda/d-003_secondary-screening/D-003_FREEZE_STORAGE_ACTION_FINAL_CHECK_27-OCT-2026.txt
+9. docs/agenda/d-003_secondary-screening/D-003_FREEZE_CANDIDATE_STORAGE_ITEMS_AND_PROPOSED_ENTRIES_REV1_27-OCT-2026.txt
+
+REPOSITORY AND BASELINE
+- V2 governance repository: https://github.com/ramakrishnan031-ctrl/trading-system-v2
+- Legacy production reference repository: https://github.com/ramakrishnan031-ctrl/trading-system-prod-snapshot
+- Legacy baseline pin: 970aabf3c78d777d9d34549e021f7c8e756c7bdb (verify against LEGACY_REFERENCE.md / authoritative source records; do not silently move the pin).
+- Sandbox reference is a separate system and is not a substitute for production: https://github.com/ramakrishnan031-ctrl/trading-system-sbx-snapshot
+- Records repo: https://github.com/ramakrishnan031-ctrl/trading-system-records
+
+MANDATORY GOVERNANCE
+- Legacy is DEAD / REFERENCE ONLY. Never run legacy code, tests, scripts, services, schedulers, broker actions, webhook/Chartink actions, database operations or host/runtime operations.
+- Follow docs/governance/LEGACY_REFERENCE.md exactly. Never open `.env` or `.env.*`, token/session files, `gui_config.local.yaml`, `docs/web_claude/`, `*.db`/SQLite files or logs. Do not use forbidden history-reading commands. Never display or record secret values, credentials, account/client IDs, tokens, addresses or sensitive session data.
+- This task is inventory / research planning only. First inventory relevant files by path and safe metadata. Do not read individual legacy modules, search their contents, or prepare a manual until the authorised workflow explicitly advances to Stage 1.
+- Do not fetch more legacy blobs than necessary. Avoid tree-wide/history commands that can lazily fetch protected blobs. Use the approved shallow clone and existing gated/masking workflow referenced by the legacy safety rules. If the local clone, pinned tree, protected-path scan or gate is not clean/consistent, STOP and report the precise blocker; do not work around it.
+- No V2 design, implementation or recommendations. Existing legacy behaviour is not automatically inherited into V2. No decisions about a source of truth, timeframe, freshness SLA, retry model, schema, or validation policy.
+- docs/inputs/ is immutable; never edit, rename or overwrite it. No write, commit, push or GitHub mutation. Do not create any final D-004 manual, freeze package or governance entry.
+- Respect max 2 concurrent subagents per CLAUDE.md.
+
+STAGE 0 OUTPUTS ONLY
+A. Source inventory table with: path, file type/role inferred from path only, why D-004 may need it, proposed read range if known, protection check, and whether the path is authorised for later bounded reading. Do not infer module behaviour from filenames.
+B. A proposed read/search matrix, separated by evidence family:
+   1) data-source/API acquisition (quotes, historical candles, live ticks, scanner payload fields and reference/instrument data)
+   2) symbol/instrument identity, aliases and instrument token mapping
+   3) candle shape, granularity, history/lookback, timestamps and session alignment
+   4) freshness, caching, pacing/rate limits, timeouts and retries
+   5) normalization/derived fields/units/nullability
+   6) missing, stale, duplicate, malformed or inconsistent data handling
+   7) storage/schema/writers/readers/retention/backfill/provenance (schema/code only; never open DB files)
+   8) consumers in D-001 through D-012 and clearly named downstream dependencies, without taking ownership of their topics
+   9) paper/live only as historical legacy description where the source evidence directly supports it; do not assume parity
+   10) testing/evidence limits and unknowns.
+C. Boundary matrix that preserves D-001 (pre-filter), D-002 (hard rejection gates), D-003 (secondary-screen observed data inputs), D-004 (broader data requirements), and later D-005 to D-008 / D-009 to D-012 boundaries. Use existing open bookmarks, but do not close, reassign or reinterpret them.
+D. Safety and provenance plan: pinned commit/tree confirmation, allowed-path list, protected-path/blob exclusions, how each subsequent read and count would be logged, masking/redaction path, positive controls for zero-result searches, and STOP conditions.
+E. Unknowns / genuine decision gates for Rama or ChatGPT. Ask no speculative large questionnaire; no Rama decisions unless a real scope choice is unavoidable at Stage 0.
+F. Concise proposed Stage 1 sequence, with the count/search pass before narrow reads when authorised, read ranges, source anchors, citation accounting and reconciliation deliverables. Stage 1 must wait for explicit authorisation from the established workflow.
+
+RESEARCH QUESTIONS TO PLAN FOR — NOT PRE-ANSWER
+- Which sources feed each data family, and what is the exact source path and caller?
+- What data fields are actually acquired vs merely represented in a model/config?
+- What is the timestamp basis at source, receipt and trigger, and what time zone/session semantics apply?
+- What granularity/history is requested, transformed or resampled, if any?
+- What fields are absent, stubbed, hard-coded or computed as None/defaults?
+- How are quote/candle lookup keys normalized? How are missing symbols or differently-cased response keys handled?
+- What actual validators/guards protect downstream consumers, and in which sequence?
+- What happens on no data, stale data, API errors, partial candles, invalid OHLCV, duplicate/out-of-order inputs, or cache/rate-limit pressure?
+- What is persisted and what evidence supports reproducibility? Who writes and reads it?
+- Which claims only come from prior notes, test source, configuration comments, historical records or sandbox evidence, rather than the pinned production source?
+
+OUTPUT LOCATION AND FORMAT
+Return a single Stage 0 inventory/research-plan report for review under the project’s normal report naming convention, e.g. docs/claude_code_reports/2026-10-27_d004_stage0_inventory.md, only if this does not conflict with the current local task workflow. Do not write to docs/inputs/. If the established workflow requires a different destination, do not guess; report the intended path and wait. Report exact paths and metadata, cite repository links or path+line only where lines are genuinely known, and clearly label facts vs path-based hypotheses.
+
+REQUIRED FINAL STATUS
+End with:
+- “Stage 0 inventory only — no legacy module read, no Stage 1 research authorised, no D-004 manual created, no V2 decision, no repository write.”
+- A list of blockers / unverified checks.
+- The exact next authorisation needed before bounded Stage 1 research.

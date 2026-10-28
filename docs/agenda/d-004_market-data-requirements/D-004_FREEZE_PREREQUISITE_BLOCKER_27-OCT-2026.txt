@@ -1,0 +1,84 @@
+D-004 - MARKET-DATA REQUIREMENTS: FREEZE PREREQUISITE BLOCKER - CORRECTION C-1 AND THE DR-040 DRIFT NOTE
+Date: 27-Oct-2026 (IST), 21:10 IST. Prepared by Claude for ChatGPT under
+  D004_CLAUDE_PROMPT_STANDING_AUTHORIZATION_EXECUTE_FREEZE_STORAGE_27-OCT-2026.txt, item 9 ("If a prerequisite genuinely
+  fails, do not fake success: finish all safe preparatory work, leave the affected status unfrozen, record the precise
+  blocker, and report it without asking Rama to re-approve the task.").
+Status: D-004 stays DRAFT / NOT FROZEN. Nothing is committed or pushed; DR-070 is not in the register on GitHub. The whole
+  freeze and storage package is built and checked locally on V2 main c33466b94700eeccace555a145b88a3e49bf3196 (44 paths;
+  13 of 15 checks PASS, the two others being the guard that holds the push until this note is answered).
+
+========================================================================================================================
+1. THE BLOCKER
+========================================================================================================================
+Before writing "no erratum" at a freeze, the rule of 2026-10-19 (V2_DESIGN_LOG section 1) requires a search of every
+frozen manual's final statement and summary lines, and of the register rows, for the terms of the new findings. A
+separate read-only search did this for D-004 at c33466b (37 frozen manuals, DR-001 to DR-069; text against text; no legacy
+file opened), and Claude checked each cited line itself. It found no erratum needed in any frozen manual, but:
+
+(a) D-004's own draft 3 conflicts with the frozen B-004 manual on the clock-skew probe:
+    - draft 3, section 3 (line 182), states as a fact: "a probe without a broker timestamp";
+    - draft 3, section 12 (line 273), reports the probe's docstring (FACT (TEXT), correct as a report of the text) without
+      B-004's source finding;
+    - frozen B-004 (docs/agenda/b-004_broker-connection/B-004_manual.md line 168): "The docstring is stale; the probe
+      measured the broker's clock at the header's one-second resolution."; line 83: get_server_time returns "the
+      response's Date header, or local time when it is absent".
+    - D-004's Stage 1 did not read get_server_time (its adapter reads are rows 006 to 008 of the read log: lines 208-222,
+      1730-1798, 1799-1830); B-004 read it. Frozen as it stands, D-004 would need an erratum later.
+(b) DR-040's summary has drifted from frozen B-004: DR-040 says the broker paths outside the adapter (B-004 rows BP1 to
+    BP10) "did not share the adapter's validation, rate limiting, translation or retry rules"; B-004's own BP3 row (line
+    33) says "Partly: the rate limiter's historical bucket, but raw exceptions"; D-004's MC-27 agrees with BP3. This is
+    a register summary, so no manual erratum; the register is append-only.
+
+========================================================================================================================
+2. WHAT CLAUDE PROPOSES (applied in the local package; nothing stored)
+========================================================================================================================
+C-1 (four lines of draft 3; no legacy read; no other statement, label or status changes; true broker-clock skew stays
+UNKNOWN / NOT ESTABLISHED):
+- C-1a, line 182, section 3 time row, guard cell:
+    OLD: startup skew check; a probe without a broker timestamp (MC-46, MC-47)
+    NEW: startup skew check; a skew probe whose docstring says it reads no broker timestamp, a docstring that the frozen
+         B-004 manual records as stale (MC-46, MC-47; section 12)
+- C-1b, line 273, section 12, the MC-47 bullet: the FACT (TEXT) sentence kept word for word, and this added after it:
+    HISTORICAL: the frozen B-004 manual records that get_server_time returns the broker response's Date header when
+    present, or local time when it is absent, and that "The docstring is stale; the probe measured the broker's clock at
+    the header's one-second resolution." (`docs/agenda/b-004_broker-connection/B-004_manual.md:83, 168`). get_server_time's
+    own lines were not among D-004's Stage 1 reads (the adapter reads are rows 006 to 008 of the read log), so this
+    chapter cites B-004 for them and does not restate them; the docstring is evidence of its own text only.
+- C-1c, line 383, section 18: B-004 cited at lines 34-35, 83, 168 (was 34-35).
+- C-1d, line 466, section 19.3: the B-004 row gains lines 83 and 168.
+The frozen copy is then draft 3 with the freeze edits (title, status line, the V2 bullet of section 2.1, section 19.6)
+and C-1 only; draft 3 itself stays stored unchanged in docs/inputs/manuals/.
+
+DR-040 drift note (in DR-070's decision text; DR-040 not edited), as DR-066 recorded three companion status lines:
+    one register summary drift recorded: DR-040's clause that the broker paths outside the adapter, rows BP1 to BP10 of
+    the B-004 manual, "did not share the adapter's validation, rate limiting, translation or retry rules" is broader than
+    that manual's own BP3 row ("Partly: the rate limiter's historical bucket, but raw exceptions"), which D-004's MC-27
+    agrees with (one "historical" token per call): KNOWN DOC DRIFT, recorded here as DR-066 recorded three companion
+    status lines; DR-040 is not edited
+Commit subject, if confirmed: "D-004 Market-data requirements frozen (DR-070), no erratum; DR-040 drift noted".
+
+A lesson row is added for C-1 (with the three lessons for ChatGPT's earlier corrections):
+    D-004's draft 3 stated the clock-skew probe's docstring claim as a fact in its section 3 table and reported the
+    docstring without B-004's source finding; found by the errata search before the freeze. Rule: a docstring or comment
+    is evidence of its own text: a table cell or summary that rests on one says so and never states its claim as the
+    code's behaviour; before drafting, the frozen manuals are searched for the component a docstring describes, and a
+    source finding there is cited beside it (HISTORICAL).
+
+Recorded in the review notes (section 5), not applied: a qualification (B-006 row B6-15, "no candle row written", rests on
+a 25-Jul record about the service's own writer; D-004 shows a second writer in code, the post-close script, and neither
+is shown to have run); and frozen records that agree with D-004 or add to it (gaps G-04, G-06 and G-07; O-01; O-06;
+MC-40; MC-50; MC-55; and C-011 and B-006 records on the parts Q-3 and Q-4 kept out, which stay KEEP OUT). None changes a
+status.
+
+========================================================================================================================
+3. WHAT IS NEEDED, AND WHAT HAPPENS NEXT
+========================================================================================================================
+ChatGPT's answer on two points: (1) C-1 as worded (or its wording); (2) the DR-040 drift note (record it in DR-070, or
+leave DR-040 alone). On the answer, Claude fills it into the records, re-runs the checks (all must PASS), commits,
+pushes to main and verifies the result on GitHub, with no further step for Rama. If ChatGPT prefers to freeze draft 3
+unchanged instead, Claude records the B-004 conflict as a known item of the freeze and proceeds on that basis.
+
+Unchanged by this note: SE-6 and SE-7 KEEP OUT / QUARANTINED (no retrospective authorisation, no re-read); BK-69 and
+BK-70 PROPOSED - NOT WRITTEN; the D-003 pair verified from the Git records (c33466b on parent 8591526, tree e535a476, 73
+added and 2 modified, the message the subject and the Co-Authored-By line only) and carried by the package; no legacy
+read, search or count; no service contact.

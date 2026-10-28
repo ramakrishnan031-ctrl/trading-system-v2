@@ -1,0 +1,41 @@
+D-004 - MARKET-DATA REQUIREMENTS: STAGE 1 FINAL CHECK
+Date: 27-Oct-2026 (IST). Run by check_s1_d004.py after the evidence, log and count-results files were built.
+Status: a verification record; no decision; nothing written to any repository.
+Each check is named for what it tests:
+  C1 V2 main and the legacy refs by ls-remote, and the saved listing's SHA-256.
+  C2 sensitive_check.py on the clone: never-open blobs present locally.
+  C3 the clone's local objects by type, against the count after the checkout (814 blobs, 101 trees, 1 commit);
+     before the checkout the clone held 1 commit, 101 trees and no blob.
+  C4 git hash-object of each of the 817 checked-out files against its pinned blob.
+  C5 gate_test_d004.py, final run (its earlier runs: 17:20 IST before the checkout, 17:21:35 IST after it: PASSED).
+  C6 the 170 logged reads: each path allowed by the D-004 gate, each basis valid, each range inside its fixed range or
+     its count-located range (hit +/- 3, clusters joined across gaps of up to 10), apart from the four disclosed
+     extensions; S06b's extra term is excluded when ranges are rebuilt.
+  C7 each legacy path:line citation in the evidence file resolves in the listing and lies inside its file (line totals
+     from clines_d004.py, no line printed).
+  C8 each cited legacy range was read (or is made only of count-hit lines).
+  C9 each V2 citation lies inside its file at c33466b.
+  C10 scan_ids.py over the three files (value-blind): hit classes; the D004 file-name prefix and hashes are benign.
+  C11 no never-open path, session link or host-record name in the three files; ASCII only.
+  C12 quotations in the evidence file under fifteen words.
+  C13 the V2 clone at c33466b with a clean status (no write).
+The cite_check.py line is informational: that tool reads "a-b" as the start line only and flags non-legacy tokens.
+No legacy source file was read during this verification step; line totals came from the filter's header only.
+
+RESULTS
+Run at 17:48:21 IST by check_s1_d004.py.
+PASS  C1 baselines: V2 main c33466b; legacy refs 2 at 970aabf; listing 1F195D3D516AB4F1
+PASS  C2 never-open blobs present locally: never-open blobs present locally: 0  (must be 0)
+PASS  C3 local objects unchanged since the checkout: {'blob': 814, 'tree': 101, 'commit': 1}
+PASS  C4 working files equal their pinned blobs: 817 checked, 0 differ
+PASS  C5 gate self-test (final run): GATE TEST PASSED
+PASS  C6 every read authorised and inside its fixed or count-located range (disclosed extensions apart): 170 reads; problems 0
+PASS  C7 legacy citations resolve at the pin and lie inside their files: 196 cited ranges in 34 files; out of range 0
+PASS  C8 every cited legacy range was read (or is a count hit): read 196, count-hit lines 0, neither 0
+PASS  C9 V2 citations lie inside their files at c33466b: 22 checked; bad 0
+INFO  cite_check.py (the standard tool; it reads "a-b" as a): cited files not checked out: [] | path tokens not resolved in the tree: ['C-004_manual.md', 'C-011_manual.md', 'D-002_manual.md', 'D-003_manual.md', 'ccount_d004.py', 'clines_d004.py', 'cread_d004.py', 'gate_test_d004.py', 'mask_read2.py', 'scripts/build_daily_symbol_stats.py'] | free 'line(s)' references with no file in context: 0
+PASS  C10 value-blind scan: only hashes and the D004 file-name prefix: {'client_id_shape': 6, 'long_token': 29}
+PASS  C11 no never-open path, session link or host-record name; ASCII only: never-open named 0; session links 0; host names 0; non-ASCII lines {'D-004_STAGE1_SOURCE_EVIDENCE_27-OCT-2026.txt': 0, 'D-004_STAGE1_FILES_READ_AND_COUNT_LOG_27-OCT-2026.txt': 0, 'D-004_STAGE1_COUNT_RESULTS_27-OCT-2026.txt': 0}
+PASS  C12 quotations under fifteen words: 25 quoted strings; 15 words or more: 0
+PASS  C13 V2 clone unchanged (no write): HEAD c33466b; status clean
+RESULT: PASS (13/13) at 17:48:40 IST

@@ -1,0 +1,52 @@
+D-004 — CHATGPT RECONCILIATION OF STAGE 1 EVIDENCE
+Date: 27-Oct-2026 (IST)
+
+DECISION
+Stage 1 evidence package: ACCEPTED WITH DOCUMENTATION CORRECTIONS.
+D-004 candidate drafting from this evidence may proceed for review only.
+D-004 freeze, DR-070 use, V2 decisions and repository writes: NOT AUTHORISED.
+
+INPUTS REVIEWED
+- D-004_STAGE1_SOURCE_EVIDENCE_27-OCT-2026.txt
+- D-004_STAGE1_FILES_READ_AND_COUNT_LOG_27-OCT-2026.txt
+- D-004_STAGE1_COUNT_RESULTS_27-OCT-2026.txt
+- D-004_STAGE1_FINAL_CHECK_27-OCT-2026.txt
+
+1. INTEGRITY / SAFETY
+The final check reports PASS 13/13 at 17:48:40 IST: refs/listing hash rechecked; zero never-open blobs present; gate self-test passed; 817 checked-out files matched pinned blobs; 170 reads logged with separately disclosed exceptions; 196 cited legacy ranges in 34 files in range; 22 V2 citations checked; value-blind/output checks passed; V2 clone remained clean at c33466b.
+No legacy code, tests, scripts or imports ran; no VM, broker, database, webhook, Chartink or service was contacted; no repository writes/commits/pushes occurred.
+
+Do not simplify C6 to “all reads were within range without exception”: the final check explicitly excludes disclosed extensions from its blanket pass.
+
+2. SOURCE FINDINGS SUPPORTED — LEGACY FACTS ONLY
+- REST quote: timestamp is assigned from the VM clock after the response; the inspected adapter method does not use an exchange/trade timestamp. Missing response symbols are omitted, and previous close is not populated in the inspected mapping. Paper and live quote paths differ.
+- Live ticks/candles: code exists, but source comments/wiring indicate the subscription path is dormant in ordinary operation. The live candle database writer is registered but described as dormant. Do not infer runtime feed activity.
+- Queue-full handling: inspected main.py wiring passes no kill switch to the live-feed constructor; the queue-full branch logs when none is configured. This is source-path evidence, not proof of deployed operation.
+- Historical/post-close candles: the post-close script builds its own client and instrument map, sleeps 0.35 seconds between requests, and writes CSV/database output. The in-memory candle-store writer uses close-time timestamps, while the post-close script stores the historical row's date. Broker timestamp semantics remain UNKNOWN / NOT ESTABLISHED; the forum source is unofficial.
+- Instrument identity: InstrumentCache validates fields and strips symbol strings, but the inspected load path has no file-age/freshness check. The five authorised fixture headers establish test-fixture shape only, not production schema.
+- Daily statistics: a named cache-job script is absent from the pinned tree; a state-store writer/reader and docstrings refer to daily_symbol_stats and a pre-market cron. Whether the screener reads that table and under which flag is NOT ESTABLISHED.
+- Configuration/time: repository config values do not prove deployed values. now_ist() uses the VM clock with fixed +05:30; the inspected skew probe does not establish true broker-clock skew.
+
+3. REQUIRED CORRECTIONS IN THE CANDIDATE
+1) Preserve labels: FACT (SOURCE), FACT (TEXT), FACT (CONFIG), FACT (COUNT), FACT (TEST), HISTORICAL, INTERPRETATION, UNKNOWN / NOT ESTABLISHED, OBSERVATION, OPEN QUESTION.
+2) Distinguish source code, comments/docstrings, repository configuration, historical records and runtime behaviour.
+3) BK-69 and BK-70 remain PROPOSED / OPEN and must not be written to the V2 design log.
+4) Reconcile range-extension accounting explicitly. The log section 4 identifies no-hit extensions; the summary/final check refer to four disclosed extensions. The reported 82 lines correspond to the no-hit extension groups. Identify exactly which ranges make up the total and distinguish them from G-05-authorised count-located ranges. Do not conceal the exception.
+5) cite_check.py is INFO, not a clean PASS: it lists unresolved path tokens for frozen manuals/helper files. Explain that separately from the reported 196 legacy ranges and 22 V2 citations.
+6) S06, S11 and several sub-patterns lack positive controls. Count-only results are bounded discovery evidence, not proof of absence. S11 searched only the two schema files and cannot establish writers/readers elsewhere.
+7) The unofficial forum is not authoritative broker documentation. Timestamp semantics remain UNKNOWN.
+8) Preserve G-01 through G-08 and G-09/G-10 limitations. Do not infer definitions of six flags above main.py:3463; broader writers/readers for candles, market_execution_context and daily_symbol_stats; actual cron schedules; per-table candle retention; or all candle_math callers.
+9) No further source reads are authorised by this reconciliation.
+
+4. PROPOSED BOOKMARKS
+BK-69: proposed bookmark for the mismatch between the absent named cache-job path, daily_symbol_stats writer/reader documentation and D-003's recorded screener inputs. Keep PROPOSED / OPEN.
+BK-70: proposed bookmark for differing timestamp sources/conventions of the two candle writers. Keep PROPOSED / OPEN.
+Neither is to be written into V2_DESIGN_LOG.md now. Do not add the optional lesson row without explicit agreement.
+
+5. NEXT STEP
+Claude may prepare a D-004 candidate/manual and candidate storage package from existing evidence only, for review: no additional legacy reads/searches; no V2 design or implementation decisions; no DR-070 allocation/consumption; no changes to decision register, design log, agenda status or frozen inputs; no freeze/push; unknowns remain explicitly UNKNOWN / NOT ESTABLISHED; include source pin, evidence references, gap register, paper/live distinction, change note and content-not-verified list.
+
+FINAL STATUS
+Stage 1 source research: ACCEPTED WITH DOCUMENTATION CORRECTIONS.
+D-004 candidate drafting: MAY PROCEED FOR REVIEW ONLY.
+D-004 freeze, DR-070 use, V2 decisions and repository writes: NOT AUTHORISED.

@@ -1,0 +1,419 @@
+D-004 - MARKET-DATA REQUIREMENTS: STAGE 1 FILES-READ AND COUNT LOG
+Date of work: 27-Oct-2026 (IST), 17:15 to 17:47 IST. Prepared by Claude. Companion to
+  D-004_STAGE1_SOURCE_EVIDENCE_27-OCT-2026.txt; the full count outputs are in D-004_STAGE1_COUNT_RESULTS_27-OCT-2026.txt.
+Status: a record of Stage 1 steps; no decision; nothing written to any repository.
+
+========================================================================================================================
+1. INPUTS
+========================================================================================================================
+- D004_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_27-OCT-2026.txt: 80 lines, 7,818 bytes; SHA-256 CDDA8BCF7851163AF8E49A152FA30CB4766AA771D9A91ACBF8A53A63EA22C54B; no CR.
+- D004_STAGE1_GATE_ANSWERS_RAMA_27-OCT-2026.txt: 27 lines, 2,452 bytes; SHA-256 96DB4D98E508FF8C6D56B775C006E28C1447897D1335C1092FEF3ED0F9C5C5F1; no CR.
+
+========================================================================================================================
+2. S1-0 SAFETY RECORD (FACT (METADATA))
+========================================================================================================================
+- 17:20:13 IST, before any checkout or read: V2 main c33466b94700eeccace555a145b88a3e49bf3196 (expected); legacy HEAD and
+  refs/heads/main 970aabf3c78d777d9d34549e021f7c8e756c7bdb, no other ref; clone HEAD the pin, tree
+  080cf3ea6f3c825d144aa2eff9882c88b4d0fdaa; listing SHA-256 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5;
+  local objects 1 commit and 101 trees, no blob.
+- Gate tools rebuilt from V2_SESSION_HANDOVER_C-009_24-OCT-2026.md section 8 (C-008 copies extracted unchanged into the
+  scratchpad as references): cread_d004.py, ccount_d004.py (adds line numbers and a positive control),
+  clines_d004.py (gate module and folder only), gate_test_d004.py; helper scripts from
+  V2_SESSION_HANDOVER_SECTION_C_21-OCT-2026.md section 8 (sensitive_check.py equal to the D-003 copy by SHA-256).
+- gate_test_d004.py PASSED at 17:20 IST (before the checkout) and at 17:21:35 IST (after it): never-open pattern
+  identical to sensitive_check.py; 102 protected paths (root 1, config 21, docs 80) refused by name; 2 July records,
+  docs/v2_design_spec.md (shared blob), 14 rule-shaped names, 1 name not in the tree, the 13 G-03 records, 6 paths
+  outside the read list and 7 out-of-limit ranges or bases refused; list refusals of the count and line-count gates;
+  logs unchanged; sensitive_check unchanged. A final run is recorded in the final check.
+- Checkout 17:20:59 to 17:21:01 IST: one anchored no-cone pattern per path for 817 paths (s_rt, s_cfg, s_tests, the two
+  schema files, the 114-path read list, HR-1, HR-2); pre-check: none never-open, July, shared-blob or G-03; 813
+  distinct blobs expected; 814 present after: the extra blob is the root .gitattributes (attribute lookup by git
+  during the checkout; not checked out, not read; a permitted path). 817 working files, each equal to its pinned blob
+  (git hash-object --no-filters); sensitive_check.py: never-open blobs present 0.
+- cread_d004.py changed three times after the gate test, each time only by adding fixed ranges (section 4); the final
+  file's SHA-256 is in section 7. Its self-test runs before every read.
+
+========================================================================================================================
+3. COUNT LOG (ccount_d004.py; per-file counts and line numbers, never text)
+========================================================================================================================
+| ID | Time | Expression | List (rows, SHA-256 prefix) | Files searched | Files with matches | Lines | Positive control |
+|---|---|---|---|---|---|---|---|
+| S01 | 17:23:05 | (?i)get_quote\|quote_fn\|\.quote\(\|\.ltp\(\|\.ohlc\( | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 71 | 442 | PASS broker/zerodha_adapter.py |
+| S02 | 17:23:13 | (?i)historical_data\|get_historical\|historical\(\|OhlcFetcher\|fetch_ohlc\|lookback | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 40 | 164 | PASS main.py |
+| S03 | 17:23:21 | (?i)KiteTicker\|subscribe\(\|on_ticks\|set_mode\|MODE_(FULL\|QUOTE\|LTP) | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 33 | 231 | PASS data/live_feed.py |
+| S04 | 17:23:29 | (?i)\.instruments\(\|instrument_token\|tradingsymbol\|instruments\.csv\|security_master | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 69 | 385 | PASS broker/zerodha_adapter.py |
+| S05 | 17:23:37 | (?i)"NSE:"\|'NSE:'\|\.upper\(\)\|\.strip\(\)\|alias | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 182 | 663 | PASS broker/zerodha_adapter.py |
+| S06 | 17:23:45 | (?i)exchange_timestamp\|last_trade_time\|timestamp\|tzinfo\|Asia/Kolkata\|\bIST\b\|interval\|minute | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 332 | 2277 | none |
+| S07 | 17:23:53 | (?i)RateLimiter\|bucket\|acquire\(\|time\.sleep\|retry\|backoff\|timeout\|ttl\|cache\|stale\|max_age | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 450 | 6201 | PASS config/broker_limits.yaml |
+| S08 | 17:24:02 | (?i)avg_volume\|\batr\b\|\brsi\b\|vwap\|prev_close\|sector\|circuit\|volume | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 255 | 2370 | PASS screening/secondary_screener.py |
+| S09 | 17:24:10 | (?i)KeyError\|not found\|isnan\|\bNaN\b\|duplicate\|out of order\|empty\|missing\|SKIPPED_ | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 489 | 3311 | PASS screening/secondary_screener.py |
+| S10 | 17:24:10 | (?i)CREATE TABLE | schema2.txt (2, 4f35f221) | 2 | 2 | 52 | PASS core/schema.sql |
+| S11 | 17:24:10 | (?i)INSERT (OR (REPLACE\|IGNORE) )?INTO\|executemany\|to_sql | schema2.txt (2, 4f35f221) | 2 | 1 | 1 | none |
+| S12 | 17:24:18 | (?i)candle_store\.\|live_feed\.\|instrument_cache\.\|get_quote\(\|fetcher\.\|regime | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 80 | 366 | PASS broker/zerodha_adapter.py |
+| S13 | 17:24:26 | (?i)paper\|quote_provider\|is_paper | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 258 | 2024 | PASS broker/zerodha_adapter.py |
+| S04a | 17:26:39 | \.instruments\( | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 7 | 7 | none |
+| S02a | 17:26:47 | (?i)historical_data\|get_historical\|historical\( | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 11 | 20 | none |
+| S03a | 17:26:54 | KiteTicker | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 7 | 39 | PASS data/live_feed.py |
+| S03b | 17:27:03 | (?i)subscribe\(\|set_mode\|MODE_(FULL\|QUOTE\|LTP) | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 31 | 182 | none |
+| S06a | 17:27:10 | (?i)exchange_timestamp\|last_trade_time | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 10 | 26 | none |
+| S06b (DEVIATION: adds ZoneInfo, a term outside S06; superseded by S06c) | 17:27:18 | (?i)tzinfo\|Asia/Kolkata\|ZoneInfo | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 87 | 276 | none |
+| S08a | 17:27:26 | (?i)prev_close\|avg_volume | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 23 | 97 | PASS screening/secondary_screener.py |
+| S06c (S06b without the extra term) | 17:43:14 | (?i)tzinfo\|Asia/Kolkata | s_rt_cfg_tests.txt (808, 5e0c9935) | 808 | 87 | 266 | none |
+Controls are hits that frozen records establish: get_quote in the adapter (D-003 MC-21), lookback in main.py
+(BK-52), KiteTicker in the live feed (B-004 BP5), the quote key and paper path in the adapter (C-004 B4; D-003 MC-21),
+the buckets in config/broker_limits.yaml (A-006), avg_volume and SKIPPED_ in the screener (D-003 MC-37, MC-20) and
+CREATE TABLE in core/schema.sql (C-007). S06, S11 and most sub-patterns have no recorded control (none).
+S06b: a deviation (one term outside S06). Rerun as S06c; the per-file results differ only in lines that no read
+used (time_authority.py:55, already an S06 hit, and lines in files not read), so no read depended on the extra term.
+L01 (clines_d004.py, 17:24:35 IST): line totals and byte sizes of the 114 read-list files (section 6).
+
+========================================================================================================================
+4. RANGES ADDED TO THE FIXED LISTS, AND EXTENSIONS READ WITHOUT A HIT
+========================================================================================================================
+| Time | Path | Range | Basis | Reason |
+|---|---|---|---|---|
+| 17:26:32 | broker/zerodha_adapter.py | 1799-1830 | S01 | get_quote end (return, missing symbols); S01 hits 1802-1825 |
+| 17:28:36 | data/live_feed.py | 305-328 | S03 (cluster 258-304) | READ WITHOUT A HIT: completes the queue-full branch begun at 302-304; disclosed as a 24-line extension beyond the computed range 329-361 |
+| 17:32:10 | core/analytics_schema.sql | 1-23, 46-50 | S10 (definition 24-45) | READ WITHOUT A HIT: the file header (database split) before the candles definition and the next table comment after it |
+| 17:32:10 | core/schema.sql | 1001-1004, 1143-1148, 1472-1487, 1607-1609 | S10 (definitions) | READ WITHOUT A HIT: leading comment lines of the next section, read with the table definitions above them |
+| 17:33:06 | main.py | 423-436 | S02,S04 | historical call 432 and instruments 428/433 at start-up wiring (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 1970-1976 | S03a | KiteTicker reference 1973 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 2438-2446 | S04,S12 | instruments.csv load 2441, cache wiring 2443 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 2965-2996 | S04,S12,S01 | feed and candle-store wiring after the LiveFeedManager build (2968-2993) (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3463-3563 | S12,S02 | shared fetcher and S&R wiring (3466-3560) (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3666-3745 | S02,S12 | V3 watchlist fetcher wiring (3669-3742) (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3837-3861 | S01,S03b | quote use 3840 and subscribe 3847/3858 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3918-3950 | S12,S04 | regime wiring 3921-3947 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 543-549 | S01 | quote call 546 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 2389-2395 | S01,S12 | quote call 2392 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3030-3036 | S01 | quote call 3033 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3130-3136 | S01 | quote call 3133 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:33:06 | main.py | 3613-3619 | S01 | quote call 3616 (hit lines +/- 3; G-05 exact additional range for authorised wiring) |
+| 17:34:11 | main.py | 390-407 | S13 | market-data kite handle used by the historical closure, paper/live (S13 hits 393-404 +/- 3) |
+| 17:47:00 | orders/smart_tgt_manager.py | 788 | S12 (cluster 789-807) | READ WITHOUT A HIT: one blank line before the count-located cluster; found by the final check and disclosed |
+The four entries marked READ WITHOUT A HIT are disclosed extensions beyond the count-located ranges (G-05 asks for
+no silent widening): 24 lines of data/live_feed.py, 28 lines of core/analytics_schema.sql, 29 comment lines of
+core/schema.sql and 1 blank line of orders/smart_tgt_manager.py (found by the final check). Every other read lies
+inside a fixed range or a count-located range (hit +/- 3 lines, clusters joined
+across gaps of up to 10 lines), as the final check re-verifies.
+
+========================================================================================================================
+5. FILES-READ LOG (cread_d004.py; one row per read; basis K = a range a frozen manual cites; for the five
+   fixtures, K stands for the G-02 header-only authorisation)
+========================================================================================================================
+| No. | Time | Path | Blob | Range | Basis | Lines | Masks | Saved-output SHA-256 prefix |
+|---|---|---|---|---|---|---|---|---|
+| 001 | 17:25:39 | main.py | 445fb0d8237a | 495-506 | K | 12 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | b8d8452f84c4 |
+| 002 | 17:25:39 | main.py | 445fb0d8237a | 2927-2938 | K | 12 | {'HOSTTOK': 0} | stage-2 {} | f27236c4a59a |
+| 003 | 17:25:40 | main.py | 445fb0d8237a | 3285-3285 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | 9df97a065fd7 |
+| 004 | 17:25:40 | main.py | 445fb0d8237a | 3586-3592 | K | 7 | {'HOSTTOK': 0} | stage-2 {} | bdd91e10d9ba |
+| 005 | 17:25:40 | main.py | 445fb0d8237a | 3730-3730 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | 8033b50694d9 |
+| 006 | 17:25:41 | broker/zerodha_adapter.py | 0c85d2d254aa | 208-222 | K | 15 | {'HOSTTOK': 0} | stage-2 {} | 9cb834cf75db |
+| 007 | 17:25:52 | broker/zerodha_adapter.py | 0c85d2d254aa | 1730-1798 | K | 69 | {'HOSTTOK': 0} | stage-2 {} | 04ad74214200 |
+| 008 | 17:26:08 | broker/zerodha_adapter.py | 0c85d2d254aa | 1799-1830 | S01 | 32 | {'HOSTTOK': 0} | stage-2 {} | c1560351a7a5 |
+| 009 | 17:28:00 | data/live_feed.py | 10ebd00ee728 | 1-31 | S03 | 31 | {'HOSTTOK': 0} | stage-2 {} | d09bc6377410 |
+| 010 | 17:28:00 | data/live_feed.py | 10ebd00ee728 | 44-73 | S03 | 30 | {'HOSTTOK': 0, 'KV': 2} | stage-2 {} | ac743c559835 |
+| 011 | 17:28:01 | data/live_feed.py | 10ebd00ee728 | 94-120 | S03 | 27 | {'HOSTTOK': 0} | stage-2 {} | 5903b36ba1b3 |
+| 012 | 17:28:01 | data/live_feed.py | 10ebd00ee728 | 134-142 | S03 | 9 | {'HOSTTOK': 0} | stage-2 {} | 7dc990bb0fe2 |
+| 013 | 17:28:02 | data/live_feed.py | 10ebd00ee728 | 162-216 | S03 | 55 | {'HOSTTOK': 0} | stage-2 {} | 4464367c4191 |
+| 014 | 17:28:02 | data/live_feed.py | 10ebd00ee728 | 258-304 | S03 | 47 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | dd384709782d |
+| 015 | 17:28:17 | data/live_feed.py | 10ebd00ee728 | 305-361 | S03 | 57 | {'HOSTTOK': 0} | stage-2 {} | 58a2c5f11869 |
+| 016 | 17:28:18 | data/live_feed.py | 10ebd00ee728 | 376-382 | S03 | 7 | {'HOSTTOK': 0} | stage-2 {} | 880c399f984f |
+| 017 | 17:28:18 | data/live_feed.py | 10ebd00ee728 | 431-437 | S03 | 7 | {'HOSTTOK': 0} | stage-2 {} | 73ccb9c418f2 |
+| 018 | 17:28:19 | data/live_feed.py | 10ebd00ee728 | 475-481 | S03 | 7 | {'HOSTTOK': 0} | stage-2 {} | b58be4280ce7 |
+| 019 | 17:28:19 | data/live_feed.py | 10ebd00ee728 | 507-521 | S03 | 15 | {'HOSTTOK': 0} | stage-2 {} | 3190ef5d359d |
+| 020 | 17:28:19 | data/live_feed.py | 10ebd00ee728 | 545-581 | S03 | 37 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 82754c6e65ab |
+| 021 | 17:28:20 | data/live_feed.py | 10ebd00ee728 | 616-622 | S03 | 7 | {'HOSTTOK': 0} | stage-2 {} | 79c3a0690882 |
+| 022 | 17:28:20 | data/live_feed.py | 10ebd00ee728 | 680-745 | S03 | 66 | {'HOSTTOK': 0} | stage-2 {} | 7b8066b9e643 |
+| 023 | 17:28:21 | data/live_feed.py | 10ebd00ee728 | 756-779 | S03 | 24 | {'HOSTTOK': 0} | stage-2 {} | 68dd7805f78d |
+| 024 | 17:28:36 | data/candle_store.py | f44a831760e6 | 1-7 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 7f5caf44d9f0 |
+| 025 | 17:28:37 | data/candle_store.py | f44a831760e6 | 24-98 | S06 | 75 | {'HOSTTOK': 0} | stage-2 {} | 07872543036d |
+| 026 | 17:28:37 | data/candle_store.py | f44a831760e6 | 126-144 | S06 | 19 | {'HOSTTOK': 0} | stage-2 {} | aad5d762c70e |
+| 027 | 17:28:38 | data/candle_store.py | f44a831760e6 | 161-197 | S06 | 37 | {'HOSTTOK': 0} | stage-2 {} | 089af366bc33 |
+| 028 | 17:28:46 | data/candle_store.py | f44a831760e6 | 208-217 | S06 | 10 | {'HOSTTOK': 0} | stage-2 {} | 70bfe0cb464f |
+| 029 | 17:28:46 | data/candle_store.py | f44a831760e6 | 232-304 | S06 | 73 | {'HOSTTOK': 0} | stage-2 {} | 16c32c8db7e0 |
+| 030 | 17:28:47 | data/candle_store.py | f44a831760e6 | 315-359 | S06 | 45 | {'HOSTTOK': 0} | stage-2 {} | a5ba3da42970 |
+| 031 | 17:28:57 | core/candle_math.py | 57e69c5973ae | 3-115 | S08 | 113 | {'HOSTTOK': 0} | stage-2 {} | d20160953d11 |
+| 032 | 17:28:57 | core/candle_math.py | 57e69c5973ae | 130-153 | S08 | 24 | {'HOSTTOK': 0} | stage-2 {} | 6094f84416fb |
+| 033 | 17:29:11 | core/candle_math.py | 57e69c5973ae | 244-270 | S08 | 27 | {'HOSTTOK': 0} | stage-2 {} | 378167a5bfd3 |
+| 034 | 17:29:12 | core/candle_math.py | 57e69c5973ae | 311-457 | S08 | 147 | {'HOSTTOK': 0} | stage-2 {} | 65ee3eded5e4 |
+| 035 | 17:29:20 | core/daily_stats.py | 36fdf6b07b84 | 1-75 | S08 | 75 | {'HOSTTOK': 0} | stage-2 {} | d57312595ac0 |
+| 036 | 17:29:39 | core/time_authority.py | a29c4f0795b1 | 4-62 | S06 | 59 | {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 {} | 185d6692b959 |
+| 037 | 17:29:40 | core/time_authority.py | a29c4f0795b1 | 93-116 | S06 | 24 | {'HOSTTOK': 0} | stage-2 {} | a115f2f72524 |
+| 038 | 17:29:40 | core/time_authority.py | a29c4f0795b1 | 134-140 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 5d3b489f6271 |
+| 039 | 17:29:40 | core/time_authority.py | a29c4f0795b1 | 169-207 | S06 | 39 | {'HOSTTOK': 0} | stage-2 {} | 65f70eeb562d |
+| 040 | 17:29:41 | core/time_authority.py | a29c4f0795b1 | 260-297 | S06 | 38 | {'HOSTTOK': 0} | stage-2 {} | 3407ad31a6d7 |
+| 041 | 17:29:50 | core/instrument_cache.py | 2bff50f7657f | 1-28 | S04 | 28 | {'HOSTTOK': 0} | stage-2 {} | 7b43a57dcc5a |
+| 042 | 17:29:51 | core/instrument_cache.py | 2bff50f7657f | 41-140 | S04 | 100 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 2ecbcd07e57a |
+| 043 | 17:30:02 | core/instrument_cache.py | 2bff50f7657f | 141-215 | S04 | 75 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 2a41a015caa2 |
+| 044 | 17:30:11 | sr_detector/fetch.py | 38636d538667 | 2-154 | S02 | 153 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 84b86d156695 |
+| 045 | 17:30:24 | config/broker_limits.yaml | ad05dd83fb2b | 1-8 | S07 | 8 | {'HOSTTOK': 0} | stage-2 {} | 774fb4f92e2a |
+| 046 | 17:30:24 | config/broker_limits.yaml | ad05dd83fb2b | 22-41 | S07 | 20 | {'HOSTTOK': 0} | stage-2 {} | 03f8330b90dc |
+| 047 | 17:30:24 | broker/rate_limiter.py | b2f688e7ed84 | 2-66 | S07 | 65 | {'HOSTTOK': 0} | stage-2 {} | ac1a7699ac67 |
+| 048 | 17:30:35 | scripts/fetch_daily_candles.py | 4a149615dc48 | 1-7 | S02 | 7 | {'HOSTTOK': 0} | stage-2 {} | 22e4f8933081 |
+| 049 | 17:30:36 | scripts/fetch_daily_candles.py | 4a149615dc48 | 45-109 | S02 | 65 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 2dc9e2578d81 |
+| 050 | 17:30:44 | scripts/fetch_daily_candles.py | 4a149615dc48 | 153-216 | S02 | 64 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 5798a4d27d09 |
+| 051 | 17:30:45 | scripts/fetch_daily_candles.py | 4a149615dc48 | 229-235 | S02 | 7 | {'HOSTTOK': 0} | stage-2 {} | 927bdf0d6958 |
+| 052 | 17:30:45 | scripts/fetch_daily_candles.py | 4a149615dc48 | 247-321 | S02 | 75 | {'HOSTTOK': 0, 'KV': 2} | stage-2 {} | 61bd66aad608 |
+| 053 | 17:31:10 | core/analytics_schema.sql | 57deb055f4db | 24-24 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | bcf6289b4784 |
+| 054 | 17:31:10 | core/analytics_schema.sql | 57deb055f4db | 51-51 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | abf3ba88bdb8 |
+| 055 | 17:31:11 | core/analytics_schema.sql | 57deb055f4db | 75-75 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 511fcb646c4e |
+| 056 | 17:31:11 | core/schema.sql | b46d7489f6ec | 29-29 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 8a06cafc0da0 |
+| 057 | 17:31:11 | core/schema.sql | b46d7489f6ec | 42-42 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 0f87a83e886f |
+| 058 | 17:31:12 | core/schema.sql | b46d7489f6ec | 117-117 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 6d129c66dd8e |
+| 059 | 17:31:12 | core/schema.sql | b46d7489f6ec | 315-315 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 4c31a72d1dbd |
+| 060 | 17:31:13 | core/schema.sql | b46d7489f6ec | 410-410 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 0603113b0887 |
+| 061 | 17:31:13 | core/schema.sql | b46d7489f6ec | 455-455 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | a5f5bfc6bbd5 |
+| 062 | 17:31:13 | core/schema.sql | b46d7489f6ec | 478-478 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 6c1e54bbcb5e |
+| 063 | 17:31:14 | core/schema.sql | b46d7489f6ec | 518-518 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 5de8d1c5de6a |
+| 064 | 17:31:14 | core/schema.sql | b46d7489f6ec | 565-565 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | e002a10052a0 |
+| 065 | 17:31:15 | core/schema.sql | b46d7489f6ec | 581-581 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 8ce1e5146926 |
+| 066 | 17:31:15 | core/schema.sql | b46d7489f6ec | 618-618 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 3ef55437777f |
+| 067 | 17:31:15 | core/schema.sql | b46d7489f6ec | 649-649 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | f7b26bf0352b |
+| 068 | 17:31:16 | core/schema.sql | b46d7489f6ec | 681-681 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | e38e2103f412 |
+| 069 | 17:31:16 | core/schema.sql | b46d7489f6ec | 713-713 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 116c85cdfa21 |
+| 070 | 17:31:17 | core/schema.sql | b46d7489f6ec | 743-743 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | c27831808665 |
+| 071 | 17:31:17 | core/schema.sql | b46d7489f6ec | 780-780 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | e082653e6c7c |
+| 072 | 17:31:17 | core/schema.sql | b46d7489f6ec | 824-824 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | c715c558ffc5 |
+| 073 | 17:31:18 | core/schema.sql | b46d7489f6ec | 844-844 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 3ba5bd5b829d |
+| 074 | 17:31:18 | core/schema.sql | b46d7489f6ec | 866-866 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | d9b65dd683b1 |
+| 075 | 17:31:19 | core/schema.sql | b46d7489f6ec | 883-883 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | b462fe4e8dc2 |
+| 076 | 17:31:19 | core/schema.sql | b46d7489f6ec | 911-911 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 5569aa02c688 |
+| 077 | 17:31:19 | core/schema.sql | b46d7489f6ec | 933-933 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 47153cec77ae |
+| 078 | 17:31:20 | core/schema.sql | b46d7489f6ec | 957-957 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 08608567353d |
+| 079 | 17:31:20 | core/schema.sql | b46d7489f6ec | 991-991 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 271aededa737 |
+| 080 | 17:31:21 | core/schema.sql | b46d7489f6ec | 1005-1005 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 3e2bb47aa78a |
+| 081 | 17:31:21 | core/schema.sql | b46d7489f6ec | 1019-1019 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 196b4f3ed21c |
+| 082 | 17:31:21 | core/schema.sql | b46d7489f6ec | 1050-1050 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | be580252de47 |
+| 083 | 17:31:22 | core/schema.sql | b46d7489f6ec | 1083-1083 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 939601fdbbc0 |
+| 084 | 17:31:22 | core/schema.sql | b46d7489f6ec | 1123-1123 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | d5efa5d7e841 |
+| 085 | 17:31:23 | core/schema.sql | b46d7489f6ec | 1149-1149 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 1bad90d48e2d |
+| 086 | 17:31:23 | core/schema.sql | b46d7489f6ec | 1167-1167 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 1ebe68a80395 |
+| 087 | 17:31:23 | core/schema.sql | b46d7489f6ec | 1183-1183 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | e08bef0ba4b1 |
+| 088 | 17:31:24 | core/schema.sql | b46d7489f6ec | 1215-1215 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | a18e1dc942bc |
+| 089 | 17:31:24 | core/schema.sql | b46d7489f6ec | 1219-1219 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 13a5db13e3e2 |
+| 090 | 17:31:25 | core/schema.sql | b46d7489f6ec | 1254-1254 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 3cca3f98a5aa |
+| 091 | 17:31:25 | core/schema.sql | b46d7489f6ec | 1258-1258 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 42e7b27f6d76 |
+| 092 | 17:31:25 | core/schema.sql | b46d7489f6ec | 1313-1313 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 20516a0d4561 |
+| 093 | 17:31:26 | core/schema.sql | b46d7489f6ec | 1361-1361 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | c90e588c2bd3 |
+| 094 | 17:31:26 | core/schema.sql | b46d7489f6ec | 1386-1386 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 698fa12875f3 |
+| 095 | 17:31:26 | core/schema.sql | b46d7489f6ec | 1391-1391 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | b98d3d41e1db |
+| 096 | 17:31:27 | core/schema.sql | b46d7489f6ec | 1418-1418 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 250707628938 |
+| 097 | 17:31:27 | core/schema.sql | b46d7489f6ec | 1435-1435 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 033b399b9549 |
+| 098 | 17:31:28 | core/schema.sql | b46d7489f6ec | 1448-1448 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | a8a9473e881c |
+| 099 | 17:31:28 | core/schema.sql | b46d7489f6ec | 1463-1463 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | d4dbcabc42bf |
+| 100 | 17:31:28 | core/schema.sql | b46d7489f6ec | 1488-1488 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 155d1063f578 |
+| 101 | 17:31:29 | core/schema.sql | b46d7489f6ec | 1491-1491 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 9122f9927ccb |
+| 102 | 17:31:29 | core/schema.sql | b46d7489f6ec | 1519-1519 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | fced929d5e0c |
+| 103 | 17:31:30 | core/schema.sql | b46d7489f6ec | 1559-1559 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | f0a779e94037 |
+| 104 | 17:31:30 | core/schema.sql | b46d7489f6ec | 1593-1593 | S10 | 1 | {'HOSTTOK': 0} | stage-2 {} | 5eb70b413d58 |
+| 105 | 17:31:30 | core/schema.sql | b46d7489f6ec | 1610-1610 | S11 | 1 | {'HOSTTOK': 0} | stage-2 {} | 91aabbcc8f91 |
+| 106 | 17:31:45 | core/analytics_schema.sql | 57deb055f4db | 1-50 | S10 | 50 | {'HOSTTOK': 0} | stage-2 {} | 2b2ac43a2754 |
+| 107 | 17:31:45 | core/schema.sql | b46d7489f6ec | 991-1004 | S10 | 14 | {'HOSTTOK': 0} | stage-2 {} | 863e9e4b94c6 |
+| 108 | 17:31:45 | core/schema.sql | b46d7489f6ec | 1123-1148 | S10 | 26 | {'HOSTTOK': 0} | stage-2 {} | 6d6e315fa926 |
+| 109 | 17:31:46 | core/schema.sql | b46d7489f6ec | 1463-1487 | S10 | 25 | {'HOSTTOK': 0} | stage-2 {} | 806ac0792fe3 |
+| 110 | 17:31:46 | core/schema.sql | b46d7489f6ec | 1593-1609 | S10 | 17 | {'HOSTTOK': 0} | stage-2 {} | de0fcda30966 |
+| 111 | 17:32:11 | core/state_store.py | 11866117801b | 3128-3165 | S08a | 38 | {'HOSTTOK': 0} | stage-2 {} | a5ead984470f |
+| 112 | 17:33:13 | main.py | 445fb0d8237a | 423-436 | S02 | 14 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 7f98856fc47b |
+| 113 | 17:33:13 | main.py | 445fb0d8237a | 1970-1976 | S03a | 7 | {'HOSTTOK': 0} | stage-2 {} | 92d61a216c1c |
+| 114 | 17:33:14 | main.py | 445fb0d8237a | 2438-2446 | S04 | 9 | {'HOSTTOK': 0} | stage-2 {} | df7889d724cd |
+| 115 | 17:33:14 | main.py | 445fb0d8237a | 2965-2996 | S04 | 32 | {'HOSTTOK': 0} | stage-2 {} | acea5f839c3a |
+| 116 | 17:33:25 | main.py | 445fb0d8237a | 3463-3563 | S12 | 101 | {'HOSTTOK': 0} | stage-2 {} | 6a2b47b0c8f3 |
+| 117 | 17:33:40 | main.py | 445fb0d8237a | 3666-3745 | S02 | 80 | {'HOSTTOK': 0, 'ALNUM': 8} | stage-2 {} | bd77bf101298 |
+| 118 | 17:33:40 | main.py | 445fb0d8237a | 3837-3861 | S03b | 25 | {'HOSTTOK': 0} | stage-2 {} | c9e280e39288 |
+| 119 | 17:33:41 | main.py | 445fb0d8237a | 3918-3950 | S12 | 33 | {'HOSTTOK': 0, 'KV': 1} | stage-2 {} | 54523a96bdd1 |
+| 120 | 17:33:55 | main.py | 445fb0d8237a | 543-549 | S01 | 7 | {'HOSTTOK': 0} | stage-2 {} | e14095ab9680 |
+| 121 | 17:33:55 | main.py | 445fb0d8237a | 2389-2395 | S01 | 7 | {'HOSTTOK': 0} | stage-2 {} | ea40b80ce1d8 |
+| 122 | 17:33:56 | main.py | 445fb0d8237a | 3030-3036 | S01 | 7 | {'HOSTTOK': 0} | stage-2 {} | 833600d212e2 |
+| 123 | 17:33:56 | main.py | 445fb0d8237a | 3130-3136 | S01 | 7 | {'HOSTTOK': 0} | stage-2 {} | 72cfba2920a9 |
+| 124 | 17:33:57 | main.py | 445fb0d8237a | 3613-3619 | S01 | 7 | {'HOSTTOK': 0} | stage-2 {} | fec47e81139f |
+| 125 | 17:34:12 | main.py | 445fb0d8237a | 390-407 | S13 | 18 | {'HOSTTOK': 0} | stage-2 {} | 067c5167be77 |
+| 126 | 17:34:34 | tests/fixtures/reference_data/index_members/fno_symbols.csv | de7c26445415 | 1-1 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | a2f8bcac3561 |
+| 127 | 17:34:34 | tests/fixtures/reference_data/index_members/nifty_bank.csv | f78fa47cc626 | 1-1 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | 310199b3122c |
+| 128 | 17:34:35 | tests/fixtures/reference_data/index_members/nifty_it.csv | 88311ce7c220 | 1-1 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | b43af33bcc6e |
+| 129 | 17:34:35 | tests/fixtures/reference_data/index_members/nifty_private_bank.csv | 80089ed25397 | 1-1 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | 6857bba3907f |
+| 130 | 17:34:35 | tests/fixtures/reference_data/security_master_small.csv | f23570b3e433 | 1-1 | K | 1 | {'HOSTTOK': 0} | stage-2 {} | 2432ce69a904 |
+| 131 | 17:35:04 | sr_detector/models.py | 4f49fac53868 | 22-45 | S02a | 24 | {'HOSTTOK': 0} | stage-2 {} | 69e2a6aeaef2 |
+| 132 | 17:35:04 | config/index_universe.yaml | 416d1eb723c5 | 1-22 | S04a | 22 | {'HOSTTOK': 0} | stage-2 {} | 2bd3523e549f |
+| 133 | 17:35:04 | broker/clock_skew_probe.py | 749d3905a15f | 3-33 | S06 | 31 | {'HOSTTOK': 0} | stage-2 {} | 59ade9e099aa |
+| 134 | 17:35:15 | core/market_windows.py | 25625e8cd109 | 7-13 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 34af31988021 |
+| 135 | 17:35:15 | core/market_windows.py | 25625e8cd109 | 38-44 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 2a002dcb7360 |
+| 136 | 17:35:16 | core/market_windows.py | 25625e8cd109 | 169-218 | S06b | 50 | {'HOSTTOK': 0} | stage-2 {} | e60e3239b8ae |
+| 137 | 17:35:16 | utils/holiday_guard.py | 688679256362 | 18-50 | S09 | 33 | {'HOSTTOK': 0} | stage-2 {} | b1d75e16435c |
+| 138 | 17:35:25 | core/market_windows.py | 25625e8cd109 | 237-274 | S06b | 38 | {'HOSTTOK': 0} | stage-2 {} | c44a63af3176 |
+| 139 | 17:35:40 | config/system_config.yaml | bf742ae5c81c | 505-630 | S02 | 126 | {'HOSTTOK': 0, 'KV': 1, 'CLIENTID': 1, 'ALNUM': 1} | stage-2 {} | ac38aceb4af9 |
+| 140 | 17:35:59 | config/system_config.yaml | bf742ae5c81c | 83-104 | S06 | 22 | {'HOSTTOK': 0} | stage-2 {} | 8b6f53b59b35 |
+| 141 | 17:35:59 | config/system_config.yaml | bf742ae5c81c | 159-201 | S06 | 43 | {'HOSTTOK': 0} | stage-2 {} | f084742e499f |
+| 142 | 17:36:00 | config/system_config.yaml | bf742ae5c81c | 730-749 | S06 | 20 | {'HOSTTOK': 0} | stage-2 {} | 94ef538a9c0a |
+| 143 | 17:36:36 | orders/shadow_tracker.py | 850722541f41 | 192-197 | S03b | 6 | {'HOSTTOK': 0} | stage-2 {} | cd1493f64996 |
+| 144 | 17:36:37 | orders/smart_tgt_manager.py | 4c9698d6be4d | 835-857 | S01 | 23 | {'HOSTTOK': 0} | stage-2 {} | 4434b86f4b8d |
+| 145 | 17:36:37 | orders/smart_tgt_manager.py | 4c9698d6be4d | 788-806 | S12 | 19 | {'HOSTTOK': 0} | stage-2 {} | f91e9a5620fa |
+| 146 | 17:36:38 | orders/structure_exit_manager.py | 6e4c58d8d2e8 | 633-655 | S12 | 23 | {'HOSTTOK': 0, 'CLIENTID': 2} | stage-2 {} | 4541bbe8764c |
+| 147 | 17:36:38 | screening/retest_monitor.py | 26639d6ed5dd | 46-50 | S02 | 5 | {'HOSTTOK': 0} | stage-2 {} | 75ed6c9d7ba0 |
+| 148 | 17:36:38 | screening/retest_monitor.py | 26639d6ed5dd | 215-219 | S12 | 5 | {'HOSTTOK': 0} | stage-2 {} | 4eaf32884d54 |
+| 149 | 17:36:39 | orders/sl_breach_monitor.py | 01c29e7771c5 | 75-79 | S12 | 5 | {'HOSTTOK': 0} | stage-2 {} | da5ad00a6d1b |
+| 150 | 17:36:50 | sr_detector/detector.py | a8500c48c8ac | 84-88 | S02 | 5 | {'HOSTTOK': 0} | stage-2 {} | fbef352d3d18 |
+| 151 | 17:36:50 | sr_detector/detector.py | a8500c48c8ac | 166-170 | S12 | 5 | {'HOSTTOK': 0} | stage-2 {} | 7613265a25a2 |
+| 152 | 17:36:50 | sr_detector/detector.py | a8500c48c8ac | 219-224 | S02 | 6 | {'HOSTTOK': 0} | stage-2 {} | 396861795aee |
+| 153 | 17:36:51 | sr_detector/detector.py | a8500c48c8ac | 247-251 | S08a | 5 | {'HOSTTOK': 0} | stage-2 {} | 2233fa00f98b |
+| 154 | 17:36:51 | sr_detector/zone_warmer.py | a47058e77cfc | 130-134 | S12 | 5 | {'HOSTTOK': 0} | stage-2 {} | f0825aca613a |
+| 155 | 17:36:51 | v3_chain/forward_shadow.py | dc96649f0a9f | 32-45 | S08a | 14 | {'HOSTTOK': 0} | stage-2 {} | 3a0a1e37807f |
+| 156 | 17:36:52 | scripts/db_retention.py | 3de2dded7d81 | 3-9 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 7dd30f60bc16 |
+| 157 | 17:36:52 | scripts/db_retention.py | 3de2dded7d81 | 25-31 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 93aae24075f5 |
+| 158 | 17:37:02 | scripts/db_retention.py | 3de2dded7d81 | 143-149 | S06 | 7 | {'HOSTTOK': 0, 'CLIENTID': 1} | stage-2 {} | cd142c191b14 |
+| 159 | 17:37:02 | scripts/db_retention.py | 3de2dded7d81 | 161-167 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 21cd480c7de5 |
+| 160 | 17:37:03 | scripts/db_retention.py | 3de2dded7d81 | 179-185 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 0f1b4ac3a15c |
+| 161 | 17:37:03 | ops/control_tower/freshness.py | 04b3cd96f5f3 | 1-78 | S06 | 78 | {'HOSTTOK': 0} | stage-2 {} | 0b9120ea147e |
+| 162 | 17:37:13 | config/cron_registry.yaml | 42ff638145ba | 101-107 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | cc158e065840 |
+| 163 | 17:37:13 | config/cron_registry.yaml | 42ff638145ba | 337-348 | S06 | 12 | {'HOSTTOK': 0} | stage-2 {} | f293299746d4 |
+| 164 | 17:37:14 | config/cron_registry.yaml | 42ff638145ba | 389-395 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | 522218b8f7e3 |
+| 165 | 17:37:14 | config/cron_registry.yaml | 42ff638145ba | 479-485 | S06 | 7 | {'HOSTTOK': 0} | stage-2 {} | f18ab81a80a7 |
+| 166 | 17:37:15 | config/cron_registry.yaml | 42ff638145ba | 615-627 | S06 | 13 | {'HOSTTOK': 0} | stage-2 {} | 93ffd7f64123 |
+| 167 | 17:37:15 | config/cron_registry.yaml | 42ff638145ba | 759-768 | S06 | 10 | {'HOSTTOK': 0} | stage-2 {} | 90ffbbe8e67f |
+| 168 | 17:37:25 | tests/unit/test_mo1_flatten_quote_key.py | dcb0afda7592 | 3-55 | S01 | 53 | {'HOSTTOK': 0} | stage-2 {} | f05eca1a3fe6 |
+| 169 | 17:37:38 | regime/engine.py | d9cdd9366857 | 1-40 | S06 | 40 | {'HOSTTOK': 0} | stage-2 {} | da72601db4d1 |
+| 170 | 17:37:39 | strategies/schema.py | 22530161a5ee | 199-229 | S08 | 31 | {'HOSTTOK': 0} | stage-2 {} | ca59a96b94f0 |
+
+========================================================================================================================
+6. LINE TOTALS AND SIZES OF THE READ-LIST FILES (L01; metadata, no line printed)
+========================================================================================================================
+# L01 | line totals and byte sizes | read_allow.txt
+    27      1048  allocation/ranker.py
+    80      2417  broker/angelone_adapter.py
+   142      5620  broker/clock_skew_probe.py
+   273     12393  broker/rate_limiter.py
+  2521    115374  broker/zerodha_adapter.py
+   823     43742  capital/position_sizer.py
+   272      9162  capital/shadow_engine.py
+    41      1361  config/broker_limits.yaml
+   768     27116  config/cron_registry.yaml
+    29      1688  config/index_universe.yaml
+    48      1390  config/nse_holidays_2026.yaml
+    55      1121  config/strategies/first_pullback_long.yaml
+    55      1127  config/strategies/first_pullback_short.yaml
+    57      1285  config/strategies/gap_fade_long.yaml
+    56      1211  config/strategies/gap_fade_short.yaml
+    57      1265  config/strategies/gap_go_long.yaml
+    57      1259  config/strategies/gap_go_short.yaml
+    56      1228  config/strategies/open_high_breakdown_short.yaml
+    55      1150  config/strategies/open_low_breakout_long.yaml
+    80      3051  config/strategies/pb01_breakout_retest.yaml
+    56      1310  config/strategies/positional_momentum_long.yaml
+    56      1315  config/strategies/positional_sector_rotation.yaml
+    56      1291  config/strategies/positional_swing_long.yaml
+    56      1220  config/strategies/range_breakout_long.yaml
+    55      1140  config/strategies/range_breakout_short.yaml
+    55      1109  config/strategies/vwap_bounce_long.yaml
+    55      1133  config/strategies/vwap_rejection_short.yaml
+   754     55901  config/system_config.yaml
+    91      5370  core/analytics_schema.sql
+   457     21275  core/candle_math.py
+   315     14789  core/cron_registry.py
+    75      3446  core/daily_stats.py
+   298     12293  core/instrument_cache.py
+   334     13938  core/market_windows.py
+   445     21663  core/migrations.py
+  1655    104053  core/schema.sql
+  3356    153466  core/state_store.py
+   396     16646  core/time_authority.py
+   369     15247  data/candle_store.py
+   791     34774  data/live_feed.py
+  4294    208758  main.py
+   120      5241  ops/control_tower/freshness.py
+   188      6579  ops_dashboard/backend/services/freshness.py
+   378     14798  orders/price_math.py
+   897     36064  orders/shadow_tracker.py
+   296     11540  orders/sl_breach_monitor.py
+   897     37594  orders/smart_tgt_manager.py
+   673     30091  orders/structure_exit_manager.py
+   395     16997  orders/tgt_retry_manager.py
+    54      1781  regime/__init__.py
+   360     16380  regime/engine.py
+   126      4412  regime/models.py
+   119      4433  regime/runner.py
+   442     19889  screening/retest_monitor.py
+   321     15526  scripts/backfill_closure_source_w8.py
+   231      8564  scripts/db_retention.py
+   347     13950  scripts/fetch_daily_candles.py
+   394     13008  scripts/gemini_data_integrity_check.py
+   158      5755  scripts/preflight/checks/database.py
+   253      7743  scripts/premarket_healthcheck.py
+   244      8290  scripts/replay_signals.py
+   103      3560  scripts/sr_corp_action_spotcheck.py
+   150      4862  scripts/sr_detector_backfill.py
+    71      2532  sr_detector/__init__.py
+   212      7606  sr_detector/confluence.py
+   330     14572  sr_detector/detector.py
+   160      6709  sr_detector/fetch.py
+   187      8028  sr_detector/flags.py
+   208      8872  sr_detector/models.py
+    56      2133  sr_detector/pivots.py
+   138      5459  sr_detector/retest_confirm.py
+   225      8860  sr_detector/zone_builder.py
+    77      2723  sr_detector/zone_cache.py
+   162      6545  sr_detector/zone_warmer.py
+   117      3851  sr_detector/zones.py
+   376     14263  strategies/schema.py
+     4        21  tests/fixtures/reference_data/index_members/fno_symbols.csv
+     4        25  tests/fixtures/reference_data/index_members/nifty_bank.csv
+     4        20  tests/fixtures/reference_data/index_members/nifty_it.csv
+     3        16  tests/fixtures/reference_data/index_members/nifty_private_bank.csv
+     7       428  tests/fixtures/reference_data/security_master_small.csv
+   189      6166  tests/integration/sim_kite.py
+   507     21664  tests/unit/test_candle_math.py
+   628     21724  tests/unit/test_candle_store.py
+   311     11659  tests/unit/test_clock_skew_probe.py
+    63      2801  tests/unit/test_daily_stats.py
+    64      2379  tests/unit/test_daily_symbol_stats.py
+   156      5305  tests/unit/test_db_retention.py
+   150      6489  tests/unit/test_fetch_daily_candles_indices.py
+   215      9138  tests/unit/test_fix068_timeout_recovery.py
+    91      3279  tests/unit/test_fix133_angelone_stub.py
+   158      5614  tests/unit/test_fix134_instrument_validation.py
+   157      5928  tests/unit/test_fix134_ws_reconnect.py
+   126      4244  tests/unit/test_fix135_tick_volume.py
+   165      6836  tests/unit/test_h9_candle_offbyone_landmine.py
+   156      7428  tests/unit/test_holiday_guard.py
+   437     20234  tests/unit/test_instrument_cache.py
+   394     15504  tests/unit/test_instrument_cache_integration.py
+   970     33761  tests/unit/test_live_feed.py
+   269     10684  tests/unit/test_market_regime.py
+   476     18358  tests/unit/test_market_windows.py
+    95      3774  tests/unit/test_mo1_flatten_quote_key.py
+    93      3463  tests/unit/test_no_real_data_store_from_tests.py
+   499     23983  tests/unit/test_rate_limiter.py
+   256     12403  tests/unit/test_refresh_instruments.py
+    50      1532  tests/unit/test_refresh_instruments_assert.py
+   109      3371  tests/unit/test_sr_detector_fetch.py
+   159      6329  tests/unit/test_tick_failsafe_snap.py
+   459     19401  tests/unit/test_time_authority.py
+   165      8686  tests/unit/test_time_authority_sweep.py
+  2372    101697  tests/unit/test_zerodha_adapter.py
+   132      4445  utils/holiday_guard.py
+   106      5017  v3_chain/forward_shadow.py
+   245     11490  v3_chain/watchlist_capture.py
+files counted: 114; lines: 39480
+
+========================================================================================================================
+7. TOOLS (SHA-256 at the build)
+========================================================================================================================
+build_s0_d004.py         0744FF18338451CA8E121379CCC011BE0BAD666160F0DC8A895091B101955CE6
+build_s1_d004.py         6565B3C970FE95D8BD1427DDF25019D5D8A0F651D3F46CC4FDB8FF6AC56E519E
+ccount_d004.py           40F1D4262896A554ED13FCF3F01770A79F74B9DABBE1A83E182337D15C631D4F
+check_s0_d004.py         1C7835240BD26E2A96E6E785CC3E6CBC7FDE8283C761DF32A03A913C0AE962F6
+check_s1_d004.py         8F90708967389779AACFB6EC30F224A552CC049B6E14184A3874BE7D552DF3B6
+clines_d004.py           3F0F39BF994D6D28B6163D515B5200155D247AB886A1FA683D2C830166E6B988
+cread_d004.py            199C05359DD32C26CC2B56CF41F3AA4DAA6C81DEC5407E54B144C2BB1D7552DF
+gate_test_d004.py        24D92D6A6FF801C94FD35C5FF75758F4311BE0003BBA7020E60EE5C1D2AB24D9
+hits_d004.py             77EB95DE3C85539EFD9E23D4AB70FD00DA4C34B9328DA6B6C725A80C77F4699C
+pathscan_d004.py         A85FC014918676E2AADFCDCB88679999098C818E7750E2BEE6A3A7AD66C9A0DB
+ranges_d004.py           F48C036928720C25466150251251E05AB3A04DEEADD89A6EBDB840D7B2B47825
+scope_rules.py           241736B0E0DE12A4BF535E699210D75354DBCA9E8F3FF06306C4B534FC556840
+mr.py                    B0BD3D87CF51D1CBAB4FE09F868F1BACC082E684AFE4155515C37788969F4F48
+count_grep.py            31AF8CA5903370BF935B57DCB4FDCDBDA343F99226AA50580C495CA2C124362B
+count_grep_lines.py      369D3E4376A05584C2E973BA8781E64523DEB4BB8DE3D49381943BC2365488B0
+mask_read_lib.py         CCC8D5BE22AE2E928F5E2D3A42B2D70821EBE8EA318DF936DBEAC1EFE9C74BB8
+mask_read2.py            BC0B715DF0267BCFD0EA23E17E52E487D16C7F447A92076E0F6AB4AB1C3F17F7
+sensitive_check.py       E36C1382B05129E5A2B1382AF60981B9352C8AE4DCA40D29F90629AAC998A337
+scan_ids.py              8217536996866BBB93A31ECE81C71193C53E1EA286B2054B1645C994329ACA16
+cite_check.py            15711E5BC6041A74273ED029ADFCB48AEFC1EE513A076DC0027BA557D9EA5C48

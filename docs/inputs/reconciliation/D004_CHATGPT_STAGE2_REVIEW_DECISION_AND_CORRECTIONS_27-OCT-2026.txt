@@ -1,0 +1,81 @@
+D-004 STAGE 2 — CHATGPT REVIEW DECISION AND REQUIRED CORRECTIONS
+Date: 27-Oct-2026 (IST)
+Files reviewed:
+A. D-004_MARKET_DATA_REQUIREMENTS_REV0_27-OCT-2026.md
+B. D-004_STAGE2_CANDIDATE_PACKAGE_MANIFEST_27-OCT-2026.txt
+C. D-004_STAGE2_DRAFT_CHANGE_NOTE_27-OCT-2026.txt
+D. D-004_STAGE2_SELF_REVIEW_CHECKLIST_27-OCT-2026.txt
+E. D-004_STAGE2_FINAL_CHECK_27-OCT-2026.txt
+
+DECISION
+The candidate is a substantial, carefully labelled evidence-based draft, and the Stage 2 consistency checks report PASS 15/15. However, it is NOT READY for final acceptance/freeze. The 15 checks establish consistency against the collected Stage 1 records; they do not by themselves establish that every read was within the authority granted by Rama's Stage 1 gate answers.
+
+Proceed with a documentation-only correction pass using existing records. Do not perform any new legacy reads/searches. Do not freeze, allocate/use DR-070, edit governance files, or write to GitHub.
+
+1. IMPORTANT DISTINCTION: 82 LINES VS 131 LINES
+The arithmetic is now transparently reported:
+- 82 disclosed no-hit extension lines = 63 outside the combined hit +/-3 clusters + 19 inside a neighbouring cluster.
+- 49 schema-definition lines are outside all hit +/-3 clusters.
+- 19 main.py lines, 3695-3713, sit in the gap between hit clusters within the added 3666-3745 range.
+- Total outside a kind-K fixed range and all hit +/-3 clusters: 63 + 49 + 19 = 131 lines.
+
+Do not describe all 131 lines as automatically unauthorised. Also do not describe all of them as authorised merely because the Stage 1 final check passed. The correct classification must follow the explicit scope decisions below.
+
+2. AUTHORISATION CLASSIFICATION
+A. 63 disclosed no-hit extension lines:
+These were disclosed in Stage 1 as READ WITHOUT A HIT. They are deviations/exceptions, not ordinary count-located reads. They must remain prominently disclosed. Do not hide them inside the 82-line total or call the overall read process exception-free.
+
+B. 31 of the 49 schema-definition lines in core/schema.sql:
+The Stage 0 plan explicitly promotes D01 (core/schema.sql) to “R1 on table definitions,” and the Stage 1 report identifies these as table-definition reads. They can be described as planned table-definition reads, while still noting they were outside hit +/-3 clusters. Keep the evidence limits: schema definition does not prove a writer/reader or runtime use.
+
+C. 18 of the 49 schema-definition lines in core/analytics_schema.sql (28-45):
+The Stage 0 plan lists D02 (core/analytics_schema.sql) as R2 and does not explicitly promote its table definitions to R1. The Stage 1 gate permitted minimum count-located ranges for other R1/R2 paths, but the 1-50 read was broader than the hit +/-3 cluster. The present records do not clearly establish that lines 28-45 were within the approved minimum read scope.
+Decision: treat authorisation for these 18 lines as NOT ESTABLISHED. Do not silently ratify them after the fact. Remove/downgrade claims that depend on them, or leave a clearly labelled unresolved scope exception for Rama's explicit decision. Do not perform another read.
+
+D. 19 lines in main.py 3695-3713:
+The approved G-05 condition for extra main.py ranges was that the count-only pass show the exact additional range necessary for authorised wiring. The chosen range 3666-3745 bridges a 19-line gap between hit clusters. The current evidence explains the gap but does not establish why every line in that gap was necessary to the authorised question.
+Decision: authorisation for these 19 lines is NOT ESTABLISHED. Do not silently ratify them. Remove/downgrade dependent claims or present this as an unresolved scope exception for Rama's explicit decision. Do not perform another read.
+
+3. CLAIMS TO QUARANTINE OR RE-DOWNGRADE IF THEY DEPEND ON THE UNCERTAIN RANGES
+Use the self-review's own list and preserve its IDs. At minimum re-examine:
+- MC-14 / MC-17 and manual section 5: data/live_feed.py ranges that include disclosed no-hit lines (already disclosed, but the claims must not overstate what the extra lines establish).
+- MC-28 and manual section 7: main.py:3695-3713 within the 3666-3745 range.
+- MC-37 / MC-39 and manual sections 8/14: schema-definition claims, distinguishing core/schema.sql from core/analytics_schema.sql.
+- MC-54 / MC-57 and manual sections 11/14: daily_symbol_stats / market_execution_context schema claims where their cited lines include uncertain schema reads.
+- Any self-review item whose claim depends on the 18 analytics_schema lines or the 19 main.py lines.
+Do not delete a claim if it is independently supported by another authorised cited range. Instead narrow the claim/citation to the supported part or mark the unsupported part UNKNOWN / NOT ESTABLISHED.
+
+4. STAGE 2 FINAL CHECK: WHAT IT DOES AND DOES NOT PROVE
+The reported PASS 15/15 is useful evidence of internal checks:
+- candidate inputs and hashes matched;
+- citations resolve to the pinned file listing and are within reported file line totals;
+- 193 distinct legacy citation ranges were in range and inside the Stage 1 reads;
+- 61 Stage 1 evidence IDs appear in the manual;
+- 46 V2 citations passed the reported checks;
+- the label, gap-register, BK-69/BK-70 and no-write checks passed.
+
+It does NOT decide whether the underlying reads were authorised by the user-approved scope. A citation can be technically valid and still rest on a read whose authorisation is unresolved. Do not describe PASS 15/15 as “all reads authorised” or “D-004 approved.”
+
+The cite_check.py status remains INFO with unresolved path tokens; do not call it clean. The final check also says no new legacy reads occurred after Stage 1; preserve that boundary.
+
+5. OTHER REQUIRED EDITS / REVIEW POINTS
+- Keep BK-69 and BK-70 in section 17 only, as PROPOSED - NOT WRITTEN. Do not edit V2_DESIGN_LOG.md.
+- Keep DR-070 unused/unallocated; do not edit V2_DECISION_REGISTER.md.
+- Keep G-01 through G-10 open/limited as written; do not infer missing writers/readers, cron schedules, deployed configuration, retention or candle_math callers.
+- Keep the timestamp convention UNKNOWN / NOT ESTABLISHED; the forum is not authoritative broker documentation.
+- Keep the D-003 post-push verification result and push-log line as outstanding items for the later authorised storage step; do not claim they were added or verified in this Stage 2.
+- Correct the checklist/change note/manifests to reflect the authorisation classification above. Their current statement that the review must decide whether the 49 and 19 lines count as authorised or extensions should not be left as an unresolved aside after this review.
+- Candidate remains DRAFT / NOT FROZEN.
+
+6. REQUIRED NEXT OUTPUT FROM CLAUDE
+Using only existing Stage 1 and Stage 2 files:
+1) Revise the candidate manual and self-review checklist to quarantine or downgrade claims dependent on the 18 analytics_schema lines and 19 main.py gap lines unless Rama separately authorises them.
+2) Revise the change note and package manifest to explain the distinction between read-range consistency and user-authorised scope.
+3) Add a short scope-exception register with path, line range, relevant claim IDs/manual sections, why authorisation is not established, and disposition (downgraded/removed/awaiting Rama decision).
+4) Re-run only local checks that operate on existing text/logs and do not open/read legacy source files. Clearly state which checks were run and their limits.
+5) Return revised local candidate files for ChatGPT/Rama review. No new legacy read/search/count, no GitHub write, no register/design-log/agenda edit, no DR-070, no freeze.
+
+FINAL STATUS
+Stage 2 candidate: NOT READY for final acceptance/freeze yet.
+Documentation correction pass: AUTHORISED using existing evidence only.
+Any retrospective approval of the 18 analytics_schema lines or 19 main.py gap lines: NOT GRANTED by this review; Rama must decide explicitly if Claude believes they must be retained.

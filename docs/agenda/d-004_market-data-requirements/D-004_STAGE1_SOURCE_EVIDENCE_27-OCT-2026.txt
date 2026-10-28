@@ -1,0 +1,389 @@
+D-004 - MARKET-DATA REQUIREMENTS: STAGE 1 SOURCE EVIDENCE
+Date of work: 27-Oct-2026 (IST), 17:15 to 17:47 IST. Prepared by Claude for ChatGPT's reconciliation.
+Status: Stage 1 source research only, under D004_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_27-OCT-2026.txt and
+  D004_STAGE1_GATE_ANSWERS_RAMA_27-OCT-2026.txt. This is an evidence report, not a D-004 manual: it decides nothing for
+  V2, freezes nothing, uses no register number (DR-070 stays unused) and wrote nothing to any repository.
+Companions: D-004_STAGE1_FILES_READ_AND_COUNT_LOG_27-OCT-2026.txt (S1-0 record, every read, every count search, every
+  range added and every extension), D-004_STAGE1_COUNT_RESULTS_27-OCT-2026.txt (the full per-file count outputs) and
+  D-004_STAGE1_FINAL_CHECK_27-OCT-2026.txt (the final verification record).
+Conventions: legacy citations are path:line at the pin 970aabf3c78d777d9d34549e021f7c8e756c7bdb (trading-system-prod-snapshot,
+  DEAD / REFERENCE ONLY); V2 citations are path:line at V2 main c33466b94700eeccace555a145b88a3e49bf3196. Claim IDs MC-nn
+  are D-004's own; other topics' claims are written with their topic, as in "D-003 MC-37". Quotations are verbatim and
+  under fifteen words. Values the masking filter masked are not reproduced; host records are named only HR-1 and HR-2.
+Labels: FACT (SOURCE) code read at the pin; FACT (TEXT) a comment or docstring read at the pin (what the text says,
+  not proof of behaviour); FACT (CONFIG) a repository configuration value at the pin (not the deployed value);
+  FACT (COUNT) a count-only search result (per-file counts and line numbers; no text); FACT (PATH NAME); FACT (TEST)
+  what a test or fixture says (not runtime proof); HISTORICAL a frozen V2 record, cited and not re-verified;
+  INTERPRETATION Claude's reading, marked; UNKNOWN / NOT ESTABLISHED; OBSERVATION a text-to-text or text-to-code
+  mismatch noted without a finding; OPEN QUESTION.
+Reading rules applied: no legacy code, test or import was run; nothing reached a host, broker, webhook, Chartink or
+  database; every read went through cread_d004.py (mask_read2.py and the stage-2 mask); every count went through
+  ccount_d004.py; a path, line or flag that is present in code is not shown to run, and repository configuration is not
+  shown to be the deployed configuration.
+
+========================================================================================================================
+1. INPUTS RECEIVED (Rama, 17:15 IST; file times 17:15 IST)
+========================================================================================================================
+- D004_CHATGPT_STAGE0_REVIEW_AND_STAGE1_AUTHORIZATION_27-OCT-2026.txt: 80 lines, 7,818 bytes; SHA-256 CDDA8BCF7851163AF8E49A152FA30CB4766AA771D9A91ACBF8A53A63EA22C54B; no CR; Stage 0 ACCEPTED WITH CORRECTIONS,
+  Stage 1 AUTHORISED with limits; corrects ChatGPT's earlier D-003 status (its section 1).
+- D004_STAGE1_GATE_ANSWERS_RAMA_27-OCT-2026.txt: 27 lines, 2,452 bytes; SHA-256 96DB4D98E508FF8C6D56B775C006E28C1447897D1335C1092FEF3ED0F9C5C5F1; no CR; the Rama answer sheet for G-01 to G-05. Both start files
+  were present (V2_DESIGN_LOG.md:160).
+
+========================================================================================================================
+2. BASELINES, GATE AND SCOPE (details in the log, sections 1 to 3)
+========================================================================================================================
+- FACT (METADATA): V2 main c33466b; legacy HEAD and main 970aabf (no other ref); listing 1,438 rows, SHA-256
+  1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5; all three rechecked at 17:20:13 IST before any read.
+- Gate: cread_d004.py, ccount_d004.py, clines_d004.py rebuilt from V2_SESSION_HANDOVER_C-009_24-OCT-2026.md section 8
+  with the D-004 limits (G-01 to G-05) built in; gate_test_d004.py PASSED before the checkout and after it.
+- Checkout: 817 authorised paths by anchored no-cone sparse patterns (the count scopes s_rt 281, s_cfg 41 and s_tests
+  486, the two schema files, the 114-path read list, HR-1 and HR-2); 813 distinct blobs expected, 814 present: the extra
+  one is the root .gitattributes, fetched by git's attribute lookup during the checkout, not checked out and not read.
+  Every one of the 817 working files equals its pinned blob. Never-open blobs present: 0 throughout.
+- Reads: 170 logged reads of 40 files (3,485 lines printed by the filter); four short extensions without a count hit
+  are disclosed in the log (section 4). Counts: S01 to S13 as authorised, plus narrower sub-patterns of them (S02a, S03a, S03b, S04a,
+  S06a, S06c, S08a), each a strict narrowing of one authorised expression, logged with its control. S06b added one term
+  outside S06 (ZoneInfo); it is a disclosed deviation, rerun without it as S06c, and no read depended on the extra term
+  (log, section 3).
+- Not read, by the authorisation: the 13 named records (G-03), every R3 path (cited from frozen manuals), every NP path,
+  config/reference_data/ and all other never-open paths, docs/v2_design_spec.md and the two July records.
+
+========================================================================================================================
+3. EVIDENCE BY DATA CONTRACT
+========================================================================================================================
+3.1 Broker REST quote (adapter.get_quote)
+MC-01 FACT (SOURCE). The Quote record holds symbol, last_price, bid, ask, volume and ts, plus optional vwap, open_price,
+  day_high, day_low, upper_circuit and lower_circuit `broker/zerodha_adapter.py:208-222` (as D-003 MC-22 records).
+MC-02 FACT (SOURCE). Live path: one rate-limiter token of get_quote's mapped category `broker/zerodha_adapter.py:1757`; keys
+  built as "NSE:" plus each symbol `:1759-1760`; one kite.quote call for all keys `:1762`; any exception translated to
+  a broker exception `:1763-1766`; the category's 429 counter reset on success `:1768-1769`.
+MC-03 FACT (SOURCE). Timestamp basis: every Quote gets ts = now_ist() taken once after the response `:1771` (the VM clock
+  at receipt). No exchange or trade timestamp from the response is read in get_quote `:1771-1798`.
+MC-04 FACT (SOURCE). Keys: the response key is cut at its first ":" `:1774`; the result holds only the symbols present
+  in the response, and a requested symbol the broker leaves out is simply absent (no error) `:1772-1806`.
+MC-05 FACT (SOURCE). Defaults and absences: bid and ask come from depth level 0, else 0.0 `:1775-1782`; last_price
+  defaults to 0.0 `:1787` and volume to 0 `:1790`; vwap (from average_price), open, high, low and both circuit limits
+  are None when absent or zero `:1792-1797`. No previous-close field is taken from the response `:1784-1798`.
+  INTERPRETATION: this matches D-003 MC-37 (prev_close always None on the processor's path).
+MC-06 FACT (SOURCE). Paper path: get_quote delegates to an injected quote_provider and raises NotImplementedError
+  without one `:1742-1755`. get_quote_raw returns the raw response with depth through the same mapped category, and {} in
+  paper mode `:1808-1826`.
+MC-07 FACT (SOURCE). The adapter gets a quote_provider only in paper mode `main.py:2389-2395`. The paper provider builds
+  its own client from the broker session file (a never-open path, named in code only) with an HTTP pool of 50
+  `main.py:495-506`, and calls quote with a translated symbol list prefixed "NSE:", counting any missing
+  `main.py:543-549`.
+  HISTORICAL: at most one call per 0.35 s (B-004_manual.md:34).
+MC-08 FACT (SOURCE). get_quote is wired into the screener `main.py:3285`, the smart-target manager `:2978`, the CNC GTT
+  manager `:3033`, the order reconciler `:3133`, the signal processor ("momentum fresh LTP fetch", FIX-067) `:3613-3616`
+  and the entry gate `:3839-3840`. Read uses: the structure-exit guard takes last_price when above zero, else a fallback
+  `orders/structure_exit_manager.py:634-645`; the smart-target restart check asks for one symbol and reads the result by
+  the bare symbol `orders/smart_tgt_manager.py:835-857`.
+MC-09 FACT (COUNT). S01 matches in 20 runtime and configuration files (log, S01), among them signals/signal_processor.py
+  (190, 234, 1066-1085, 2645-2650), screening/entry_gate.py (12, 23, 95, 110, 119, 437), orders/cnc_gtt.py
+  (66, 78, 238, 240), orders/order_reconciler.py (17 lines) and orders/order_placer.py (8 lines). Those files are R3 or
+  NP: the call sites are counted, not read.
+MC-10 FACT (TEST). A test docstring records a fixed bug: the order reconciler once asked for "NSE:"-prefixed symbols, so
+  the adapter built "NSE:NSE:" keys and the lookup always missed `tests/unit/test_mo1_flatten_quote_key.py:4-19`; the
+  test encodes bare-symbol keys `:31-37`. OBSERVATION: its adapter line references (1567, 1581) do not match the pin
+  (1760, 1774). The case of the broker's response keys stays NOT ESTABLISHED (C-004 U-03; V2_DESIGN_LOG.md:618, BK-67).
+
+3.2 Live ticks (KiteTicker WebSocket, data/live_feed.py)
+MC-11 FACT (TEXT). The module manages the KiteTicker connection, subscriptions and LTP tick distribution through a
+  bounded queue and one consumer thread `data/live_feed.py:1-8`; it imports KiteTicker `:18` and now_ist `:23`.
+MC-12 FACT (SOURCE). main.py builds it with the selected account's API-key variable, the access-token variable, a
+  critical-failure callback, paper_mode and market_windows `main.py:2927-2938`; reconnect attempts, reconnect delay and
+  batch size are not passed, so the defaults 10, 5 s and 50 apply `data/live_feed.py:45-53`. OBSERVATION: the
+  repository's live_feed keys (backoff base 1 s, maximum 30 s) `config/system_config.yaml:743-746` are not passed at
+  that call; whether they are read elsewhere is NOT ESTABLISHED.
+MC-13 FACT (SOURCE). connect() returns at once in paper mode `data/live_feed.py:136-140`; the ticker is created with
+  the reconnect parameters and four callbacks `:510-521`.
+MC-14 FACT (SOURCE); FACT (TEXT). subscribe() sets MODE_LTP in batches of 50 `:173-197`; every reconnect re-subscribes
+  the tracked set `:324-361`. A telemetry tripwire counts any subscription `:59-62, 178-180`; its comments say the tick
+  path is "dormant BY DECISION e754c7e" and name the only latent caller as the order placer's exit retry `:60-61, 179`.
+  FACT (COUNT): S03b matches in orders/order_placer.py (693, 697, 700, 3404); main.py's matches are event-bus
+  subscriptions `main.py:3846-3858`, and so are the shadow tracker's `orders/shadow_tracker.py:193-195`.
+MC-15 FACT (TEXT). The watchdog's comment says nothing subscribes in ordinary operation and quotes a record:
+  "32 connects, 0 tokens subscribed, 0 ticks ever" `data/live_feed.py:708-717`. The record named there is one of the
+  13 G-03 records and was not read.
+MC-16 FACT (SOURCE). Tick normalisation `:264-301`: each batch stamps the receipt time now_ist() `:270`; each tick keeps
+  the instrument token, last_price (default 0.0), bid and ask from depth when present (MODE_FULL only, else 0.0)
+  `:279-292`, timestamp = the tick's exchange_timestamp or timestamp `:298` and volume = volume_traded `:299`; the day
+  OHLC in the tick is left out `:301`.
+MC-17 FACT (SOURCE). A full queue calls soft_kill("LIVEFEED_QUEUE_FULL") when a kill switch was given, else logs that
+  none is configured `:302-322`; main.py's construction passes no kill switch `main.py:2927-2938` (O-06). The consumer discards a tick with no
+  token, or with last_price None or 0.0, before dispatch `data/live_feed.py:572-581`.
+MC-18 FACT (SOURCE). The watchdog runs in live mode only `data/live_feed.py:681-696`, arms only after a first tick
+  `:731-739`, and on a stale feed raises one critical alert logged as forcing a reconnect `:758-779` (the market-window
+  condition and the reconnect flag are in its docstrings `:102-115, 698-707`); thresholds 30 s and
+  10 s by default `:49-50`. Reconnect exhaustion calls the critical-failure path `:475-481`; off-hours it is downgraded
+  to a warning (FIX-189) `:431-437`.
+MC-19 FACT (SOURCE). main.py's tick dispatcher passes each tick to candle_store.on_tick (token, last_price, the tick
+  timestamp or now_ist(), volume) and to shadow_tracker.on_tick `main.py:2965-2971`; candle_store.start() runs before
+  live_feed.connect() `:3920-3947`; the reconnect chain marks the candle store and the smart-target manager `:2991-2994`.
+
+3.3 Intraday minute candles (data/candle_store.py) and their persistence
+MC-20 FACT (TEXT). The candle store builds minute OHLC candles from LTP ticks and calls itself the single source of
+  truth for intraday candles `data/candle_store.py:1-5`.
+MC-21 FACT (SOURCE). A candle carries token, symbol, OHLC, volume (accumulated from ticks since FIX-135), ts (the IST
+  close time), interval_sec and is_synthetic `:24-36`; default interval 60 s `:79-85`; up to 500 candles per token in
+  memory `:75-77, 353-359`.
+MC-22 FACT (SOURCE); FACT (TEXT). Windows follow the VM clock: on_tick floors now_ist() to the minute `:188`; the tick's
+  own ts is kept "INFORMATIONAL ONLY" and exchange OHLC is never used `:170-186`.
+MC-23 FACT (SOURCE). A timer aligned on wall-clock boundaries `:233-251` closes all windows, stamping close_ts =
+  now_ist() as each candle's ts `:262, 325, 343`. A token with history but no tick in the window gets a synthetic flat
+  candle at the last close, volume 0 `:253-287, 331-347`; repeated synthetic-only closes are logged as a warning
+  `:289-304`. The comment on the window off-by-one fix calls it harmless today, "no live reader" `:272-275`.
+MC-24 FACT (SOURCE). get_candles returns the last N closed candles, or [] `:211-217`; the token-to-symbol map comes from
+  the instrument cache `main.py:3946` and `data/candle_store.py:128-131`; dead tokens are swept on an instruments refresh
+  `:133-144, 161-168`.
+MC-25 FACT (SOURCE); FACT (TEXT). main.py registers a writer that inserts every closed candle into the database
+  (ts = the close time, interval, OHLCV, is_synthetic) `main.py:3923-3944`; its comment says the writer "must stay dark
+  even if the tick feed ever wires" `:3924-3925`.
+MC-26 FACT (SOURCE). The smart-target manager reads closed candles from the store when it recomputes a trail after a
+  reconnect `orders/smart_tgt_manager.py:789-806`.
+
+3.4 Historical candles through the shared OHLC closure
+MC-27 FACT (SOURCE). main.py's closure returns [] when no market-data client exists, else takes one "historical" token
+  and calls historical_data(token, from, to, interval) `main.py:423-436`. The client is the trading client in live mode
+  and a read-only client built from the broker session file in paper mode, or None without a token `main.py:393-407`.
+MC-28 FACT (SOURCE). The closure is built only when one of six feature flags is on `main.py:3479-3487` (the flags'
+  definitions lie above `main.py:3463` and were not read). It feeds the S&R detector `:3489-3508`, the regime runner
+  (lookback default 400 days; state written to a JSON file) `:3510-3540`, the zone warmer `:3542-3563`, the V3 chain
+  (lookback default 180) `:3666-3702` and the PB-01 watchlist (lookback default 180, cache 0) `:3704-3745`.
+MC-29 FACT (CONFIG), repository values at the pin: sr_detector enabled true, timeframes day, 60minute and 30minute,
+  lookback 180 days, cache 1,800 s, wait_for_retest_enabled false, a two-day 1-minute window ("respects the Zerodha
+  minute cap"), intraday anchors off `config/system_config.yaml:508-545`; regime enabled false, NIFTY 50 by a configured
+  token, daily lookback 400 `:547-562`; v3_chain_mode "shadow" with fetch lookback 180 `:573-574, 613-615`; watchlist
+  enabled true, capture lookback 60 days, 5-minute entry bars `:619-630`. Deployed values: NOT ESTABLISHED.
+MC-30 FACT (SOURCE); FACT (TEXT). OhlcFetcher resolves the token through the instrument cache, makes one request per
+  interval over [now - lookback, now], converts rows with Candle.from_kite, caches by (symbol, interval) for a TTL and
+  returns None or omits the interval on any failure, never raising `sr_detector/fetch.py:4-21, 53-151`; the index is
+  fetched by an explicit configured token `:85-101`.
+MC-31 FACT (SOURCE). Candle: ts is the historical row's "date", OHLC floats, volume default 0
+  `sr_detector/models.py:23-43`; its docstring allows an aware or a naive IST ts `:25`.
+MC-32 FACT (SOURCE). Readers: the S&R detector's analysis fetch `sr_detector/detector.py:167-170` and its anchor fetch
+  `:219-224`; the zone warmer `sr_detector/zone_warmer.py:130-134`; the retest monitor's short 1-minute fetch, which
+  drops the tzinfo of its `since` time `screening/retest_monitor.py:46-50, 215-219`.
+MC-33 FACT (SOURCE). Candle maths: true range and ATR (Wilder or SMA; at least period + 1 candles, else None)
+  `core/candle_math.py:54-115`; session VWAP `:136-153`; Wilder RSI `:250-269`; resample to minutes or "day", each bar
+  stamped at its bucket START, anchored to the injected session open, no bar for an empty slot, the session-tail bar
+  flagged partial `:311-456`. OBSERVATION: the header says "Wiring: NONE yet" `:28-31`, while the regime engine imports
+  its adx, atr, ema and true-range functions `regime/engine.py:26-28` and a configuration comment says the watchlist's
+  5-minute bars are built via resample `config/system_config.yaml:628`.
+
+3.5 Post-close 1-minute candles and the candles table
+MC-34 FACT (TEXT); FACT (SOURCE). scripts/fetch_daily_candles.py says it fetches 1-minute OHLCV after the close (cron
+  15:40 IST, Monday to Friday) for the daily report `scripts/fetch_daily_candles.py:1-5`; it builds its own client from
+  the broker session file and an API-key variable `:259-282` and its own instrument map from kite.instruments("NSE")
+  `:284-286`.
+MC-35 FACT (SOURCE). It fetches the configured indices first, 09:15 to 15:31 `:66-109, 159`, then each symbol from
+  _get_traded_symbols (its message speaks of PROCESSED signals) `:161-165`, 09:00 to 15:31, interval "minute"
+  `:167-208`; a missing token, empty result or error lists
+  the symbol as failed; it sleeps 0.35 s between calls `:106, 208` and writes a dated CSV `:210-216`.
+MC-36 FACT (SOURCE). It inserts rows into the candles table with INSERT OR IGNORE, ts = the historical row's date as text,
+  interval 60, is_synthetic 0, in the analytics database, and skips the insert when the database is missing
+  `:294-321`. The default run is skipped at weekends and on Friday after 17:30 `:229-235`; the trade date comes from
+  today_ist() `:249-255`.
+MC-37 FACT (SOURCE); FACT (TEXT). The candles table: symbol, token, ts ("ISO-8601 IST candle close"), interval_sec
+  (default 60), OHLC, volume (default 0), is_synthetic, a generated date, UNIQUE(token, ts, interval)
+  `core/analytics_schema.sql:21-45`, in a separate analytics database attached by name `:2-17`.
+MC-38 INTERPRETATION; UNKNOWN. The two writers stamp ts differently: the candle-store writer uses the close time
+  (MC-23, MC-25) and the script stores the historical row's date (MC-36), while the schema comment says close (MC-37).
+  Whether the broker's historical date marks a bar's start is not established from an official source here (a user
+  forum post says start; no broker staff reply was found). If it does, one minute could carry two ts values that the
+  UNIQUE key would not merge; the candle-store writer is dormant (MC-14, MC-25).
+MC-39 FACT (SOURCE). The control tower expects the candles stage by 15:40 IST and takes today's table maximum or the
+  fetch marker file's time `ops/control_tower/freshness.py:1-19, 39-78`. OBSERVATION: the freshness table's comment
+  lists OK, LATE, MISSING, NA `core/schema.sql:1463-1470`; the code uses OVERDUE `ops/control_tower/freshness.py:4, 60`.
+
+3.6 Instrument master and identity
+MC-40 FACT (SOURCE); FACT (TEXT). The instrument cache loads config/instruments.csv with the columns symbol,
+  instrument_token, exchange, lot_size, tick_size, is_fno and sector `core/instrument_cache.py:1-28, 54-68`. A missing
+  file, missing column, malformed row, empty symbol, lot below 1 or tick at or below 0 fails the whole load `:98-186`;
+  the symbol is stripped, not case-folded `:143`; reload() builds a new cache and publishes InstrumentsRefreshed
+  `:188-215`. The load path read has no file-age or freshness check `:98-186`.
+MC-41 FACT (SOURCE). main.py loads it at start `main.py:2438-2446` and passes it to the processor `:3586-3592`, the
+  smart-target manager `:2989`, the OHLC fetchers `:3519-3523, 3559-3562, 3678-3682, 3728-3732` and the candle store's
+  token map `:3946`.
+MC-42 HISTORICAL. config/instruments.csv is absent from the tree and was generated on the VM by
+  scripts/refresh_instruments.py from the security master and the broker dump, matched by exact string
+  (C-004_manual.md:68-69, 222); cache lookups are exact and case-sensitive, with defaults on a miss
+  (C-004_manual.md:232, 427).
+MC-43 FACT (COUNT). Instrument-dump calls (S04a) are in scripts/fetch_daily_candles.py:285, scripts/refresh_instruments.py:306,
+  scripts/forward_shadow_record.py:113, scripts/reconstruct_excursions.py:294 and scripts/sr_corp_action_spotcheck.py:46,
+  with two docstring mentions (config/index_universe.yaml:6, sr_detector/fetch.py:17); none in the adapter or main.py.
+  INTERPRETATION: besides the cache, at least the candle script keeps its own name-to-token map (MC-34).
+MC-44 FACT (TEST). Fixture headers only (G-02): the four index-member fixtures have one column, symbol; the security-
+  master fixture has symbol, name_of_company, series, fno_stock, date_of_listing, paid_up_value, market_lot, isin_number,
+  face_value, six of them with a leading space `tests/fixtures/reference_data/security_master_small.csv:1`. Fixture
+  shapes only, not the production files' schema.
+MC-45 FACT (CONFIG); FACT (TEXT). The index list is data only, resolved by name at fetch time from the INDICES segment;
+  indices carry no volume; the regime needs the 09:15 to 10:00 OHLC `config/index_universe.yaml:1-22`.
+
+3.7 Time, session and calendar
+MC-46 FACT (SOURCE). now_ist() is the VM clock at a fixed +05:30 `core/time_authority.py:55-59, 94-99`; skew samples are
+  recorded against it `:171-204`; a startup check raises when the single skew reading exceeds the limit `:263-297`.
+  FACT (CONFIG): 2, 5 and 30 s tiers, 30 s at startup, probe every 60 s `config/system_config.yaml:183-190`.
+MC-47 FACT (TEXT). The skew probe's docstring says get_server_time() returns local time after a round trip, not a broker
+  timestamp, so it measures path consistency rather than true broker skew; it is not built in paper mode
+  `broker/clock_skew_probe.py:19-32`.
+MC-48 FACT (CONFIG); FACT (SOURCE). Session 09:15 to 15:30 `config/system_config.yaml:103-104`; MarketWindows takes the
+  caller's IST now and applies special sessions `core/market_windows.py:7-13, 38-44, 194-216, 237-260`; the broker API is
+  treated as unavailable after 17:30 on Friday `:269-272`.
+MC-49 FACT (SOURCE). Holidays come from config/nse_holidays_<year>.yaml, cached, and a missing file raises
+  `utils/holiday_guard.py:21-49`. The 2026 file's content was not read (no count hit).
+
+3.8 Pacing, limits and retries
+MC-50 FACT (CONFIG); FACT (TEXT). On HTTP 429: backoff 1, 5 and 30 s, then soft kill in code; HTTP timeouts 5 s connect,
+  10 s read; bucket freeze 0.2 s doubling to 5 s with 0.05 s jitter `config/broker_limits.yaml:1-8, 22-41`.
+  HISTORICAL: quote 3/s and historical 2/s buckets (A-006_manual.md:56-58); Q-30 stays open (V2_DESIGN_LOG.md:200).
+MC-51 FACT (TEXT). Four categories, a blocking acquire up to a 30 s default and then BrokerRateLimitError, bucket
+  freeze, monotonic clock `broker/rate_limiter.py:4-29, 45`.
+MC-52 FACT (SOURCE); FACT (TEXT). The candle script paces itself with fixed 0.35 s sleeps `scripts/fetch_daily_candles.py:106, 208`;
+  no rate-limiter call appears in the lines read. A cron comment says the forward-shadow recorder reuses the limiter at
+  up to 3 requests per second `config/cron_registry.yaml:389-395`.
+
+3.9 Derived daily statistics (M-S4)
+MC-53 FACT (TEXT); FACT (SOURCE). core/daily_stats.py computes prev_close, avg_volume_20d, atr14 and rsi14 from daily
+  candles closed before the trading date `core/daily_stats.py:34-74`; its header says nothing on the live path consumes
+  it yet, behind a default-off flag `:14-15`, and names a cache job, scripts/build_daily_symbol_stats.py `:7`.
+  FACT (PATH NAME): that script is absent from the pinned tree.
+MC-54 FACT (SOURCE); FACT (TEXT). The daily_symbol_stats table `core/schema.sql:1593-1606`; the state store's writer says
+  the table is filled only by the about-08:30 pre-market cron `core/state_store.py:3136-3140` and its reader says the
+  screener's _build_market_data uses it and falls back to 0.0 or 0.5 on a miss `:3156-3159`.
+MC-55 INTERPRETATION; OPEN QUESTION. With the cache job absent at the pin, nothing read here fills the table. D-003 MC-37
+  records these inputs as always None on the processor's path. Whether _build_market_data reads the table, and under
+  which flag, is not established in D-004 (the screener is R3). Proposed bookmark BK-69 (section 6).
+MC-56 FACT (SOURCE). The V3 forward shadow recomputes the same four inputs and falls back the same way
+  `v3_chain/forward_shadow.py:32-45`.
+
+3.10 Other persisted market data
+MC-57 FACT (SOURCE). market_execution_context stores, per order leg, ltp, bid and ask price and quantity, spread,
+  volume_traded and recent_range_pct `core/schema.sql:1123-1142`; its writer was not searched (S11 is limited to the two
+  schema files).
+MC-58 FACT (SOURCE). fno_ban (symbol, ban_date, fetched_at) `core/schema.sql:991-999`; the fetch script is D-002's
+  (D-002_manual.md:230).
+MC-59 FACT (SOURCE). Other data-bearing tables by name only (definitions not read): screener_results `core/schema.sql:681`,
+  trade_excursions `:824`, trade_slippage_log `:1083`, sr_detector_results `:1258`, excursion_reconstruction_runs
+  `:1361`, pb01_watchlist `:1559`; schema version 45 `:1610`.
+MC-60 FACT (TEXT); UNKNOWN. db_retention prunes the append-only tables after the nightly backup and vacuums both
+  databases `scripts/db_retention.py:3-9, 25-29, 143-149`; the per-table retention map was not in the located ranges,
+  so the candles retention is UNKNOWN.
+
+3.11 Paper and live (legacy history only; no parity assumed)
+MC-61 FACT (SOURCE). Paper quotes come from the paper provider's own client (MC-06, MC-07); paper historical data from a
+  read-only client (MC-27); the WebSocket is not connected in paper (MC-13); the skew probe is not built in paper
+  (MC-47). V2 is live-only (DR-001); none of this is a V2 requirement.
+
+3.12 Count results (FACT (COUNT); per-file lists in the log)
+| Search | Expression (case-insensitive unless shown) | Files with matches | Matching lines | Control |
+|---|---|---|---|---|
+| S01 | (?i)get_quote\|quote_fn\|\.quote\(\|\.ltp\(\|\.ohlc\( | 71 | 442 | PASS broker/zerodha_adapter.py |
+| S02 | (?i)historical_data\|get_historical\|historical\(\|OhlcFetcher\|fetch_ohlc\|lookback | 40 | 164 | PASS main.py |
+| S03 | (?i)KiteTicker\|subscribe\(\|on_ticks\|set_mode\|MODE_(FULL\|QUOTE\|LTP) | 33 | 231 | PASS data/live_feed.py |
+| S04 | (?i)\.instruments\(\|instrument_token\|tradingsymbol\|instruments\.csv\|security_master | 69 | 385 | PASS broker/zerodha_adapter.py |
+| S05 | (?i)"NSE:"\|'NSE:'\|\.upper\(\)\|\.strip\(\)\|alias | 182 | 663 | PASS broker/zerodha_adapter.py |
+| S06 | (?i)exchange_timestamp\|last_trade_time\|timestamp\|tzinfo\|Asia/Kolkata\|\bIST\b\|interval\|minute | 332 | 2277 | none |
+| S07 | (?i)RateLimiter\|bucket\|acquire\(\|time\.sleep\|retry\|backoff\|timeout\|ttl\|cache\|stale\|max_age | 450 | 6201 | PASS config/broker_limits.yaml |
+| S08 | (?i)avg_volume\|\batr\b\|\brsi\b\|vwap\|prev_close\|sector\|circuit\|volume | 255 | 2370 | PASS screening/secondary_screener.py |
+| S09 | (?i)KeyError\|not found\|isnan\|\bNaN\b\|duplicate\|out of order\|empty\|missing\|SKIPPED_ | 489 | 3311 | PASS screening/secondary_screener.py |
+| S10 | (?i)CREATE TABLE | 2 | 52 | PASS core/schema.sql |
+| S11 | (?i)INSERT (OR (REPLACE\|IGNORE) )?INTO\|executemany\|to_sql | 1 | 1 | none |
+| S12 | (?i)candle_store\.\|live_feed\.\|instrument_cache\.\|get_quote\(\|fetcher\.\|regime | 80 | 366 | PASS broker/zerodha_adapter.py |
+| S13 | (?i)paper\|quote_provider\|is_paper | 258 | 2024 | PASS broker/zerodha_adapter.py |
+| S04a | \.instruments\( | 7 | 7 | none |
+| S02a | (?i)historical_data\|get_historical\|historical\( | 11 | 20 | none |
+| S03a | KiteTicker | 7 | 39 | PASS data/live_feed.py |
+| S03b | (?i)subscribe\(\|set_mode\|MODE_(FULL\|QUOTE\|LTP) | 31 | 182 | none |
+| S06a | (?i)exchange_timestamp\|last_trade_time | 10 | 26 | none |
+| S06b (DEVIATION: adds ZoneInfo, a term outside S06; superseded by S06c) | (?i)tzinfo\|Asia/Kolkata\|ZoneInfo | 87 | 276 | none |
+| S08a | (?i)prev_close\|avg_volume | 23 | 97 | PASS screening/secondary_screener.py |
+| S06c (S06b without the extra term) | (?i)tzinfo\|Asia/Kolkata | 87 | 266 | none |
+
+========================================================================================================================
+4. DATA-LINEAGE MATRIX (SOURCE -> FETCH -> TRANSFORM/NORMALISE -> GUARD -> OUTPUT -> STORAGE/HANDOFF -> CONSUMER)
+========================================================================================================================
+| Contract | Source | Fetch | Transform / normalise | Guard | Output | Storage / handoff | Consumer |
+|---|---|---|---|---|---|---|---|
+| L1 Quote (live) | Kite REST quote | adapter.get_quote, quote bucket (MC-02) | "NSE:" key; key cut at ":"; depth level 0; ts = receipt now_ist() (MC-02 to MC-05) | translated exceptions; 429 counter (MC-02); missing symbol absent (MC-04) | dict of Quote (MC-01) | none at the adapter; execution context table writer NOT ESTABLISHED (MC-57) | screener, processor, smart target, CNC GTT, reconciler, entry gate (MC-08, MC-09) |
+| L2 Quote (paper, history) | Kite REST quote | paper provider's own client (MC-07) | "NSE:" key; missing counted (MC-07) | NOT ESTABLISHED beyond MC-07 | dict of Quote via get_quote (MC-06) | none read | as L1 |
+| L3 Ticks | KiteTicker WebSocket | live_feed, MODE_LTP batches (MC-14) | token, LTP, depth bid/ask, exchange or tick timestamp, volume_traded (MC-16) | queue full -> soft kill; hollow ticks dropped; watchdog (MC-17, MC-18) | tick dicts to callbacks (MC-19) | in-memory queue only | candle store, shadow tracker (MC-19); dormant: no subscriber in ordinary operation (MC-14, MC-15) |
+| L4 Minute candles (live) | L3 ticks | candle_store.on_tick (MC-22) | VM-clock minute windows; close-time ts; synthetic flat candles (MC-22, MC-23) | none on prices beyond L3's drop; synthetic-only warning (MC-23) | CandleData (MC-21) | memory (500 per token); DB writer registered, dormant (MC-24, MC-25) | smart-target trail (MC-26) |
+| L5 Historical candles | Kite historical_data | shared closure, historical bucket (MC-27) | Candle.from_kite: ts = row date, volume 0 default (MC-31) | fail-safe None, TTL cache (MC-30) | lists of Candle per interval (MC-30) | memory cache; regime JSON state; V3 JSONL (MC-28, MC-29) | S&R detector, zone warmer, retest monitor, regime, V3 chain, watchlist (MC-28, MC-32) |
+| L6 Post-close 1-minute candles | Kite historical_data | script's own client, 0.35 s sleeps (MC-34, MC-52) | rows with date text (MC-35) | failed list; INSERT OR IGNORE (MC-35, MC-36) | dated CSV; candles rows (MC-35, MC-36) | analytics candles table (MC-37) | daily report via CSV (MC-34); readers of the table NOT ESTABLISHED beyond the control tower (MC-39) |
+| L7 Instrument master | instruments.csv generated on the VM (MC-42) | InstrumentCache.load at start (MC-41) | strip only, typed columns (MC-40) | whole-load failure on bad rows (MC-40) | InstrumentRow lookups, token map (MC-40) | memory; reload event (MC-40) | processor, sizer, smart target, fetchers, candle store (MC-41) |
+| L8 Index candles | Kite historical_data | candle script (MC-35); closure by token when regime is on (MC-28, MC-30) | name -> token at fetch time (MC-45) | fail-safe (MC-35) | rows; Candle lists | candles table (MC-36) | regime (disabled at the pin, MC-29) |
+| L9 Daily stats | daily candles | cache job absent at the pin (MC-53) | compute_daily_stats (MC-53) | None when history is short (MC-53) | four inputs | daily_symbol_stats (MC-54) | screener per docstring; V3 forward shadow (MC-54 to MC-56) |
+| L10 Time | VM clock | now_ist() (MC-46) | fixed +05:30 (MC-46) | startup skew check; probe without a broker timestamp (MC-46, MC-47) | IST datetimes | none | every timestamp above (MC-03, MC-16, MC-22, MC-23) |
+Missing links are written NOT ESTABLISHED; a cell is not a claim that a path ran.
+
+========================================================================================================================
+5. BOUNDARY MATRIX (recorded owners kept; nothing closed, reassigned or reinterpreted)
+========================================================================================================================
+| Topic | What stays with it (as recorded) | What D-004 found at its edge | Basis |
+|---|---|---|---|
+| D-001 (DR-067) | the processor's checks before screen() | the processor receives the instrument cache (MC-41) and a quote function for momentum LTP (MC-08) | D-003_manual.md:46; main.py:3586-3592, 3613-3616 |
+| D-002 (DR-068) | gates, windows, the F&O ban list, the index-list note | session times (MC-48); fno_ban table (MC-58); quote circuit fields (MC-05) | D-002_manual.md:230-244 |
+| D-003 (DR-069) | the screener's observed inputs | quote contract (MC-01 to MC-05); daily_symbol_stats reader per docstring (MC-54, BK-69 proposed) | D-003_manual.md:48, 262-280, 325 |
+| D-005 Candle analysis | candle analysis | candle shapes and their two time conventions (MC-21 to MC-23, MC-31, MC-33, MC-38) | agenda :296 |
+| D-007 Timeframe analysis | timeframes in analysis | timeframes fetched: day, 60minute, 30minute, 5minute, minute (MC-29, MC-35) | agenda :298 |
+| D-008 Trend / market context | regime logic | index data and the regime's data path, disabled at the pin (MC-28, MC-29, MC-45) | agenda :299 |
+| D-009 to D-012 S&R | levels and zones | the S&R fetch contract (MC-30 to MC-32) | agenda :300-303; C-011_manual.md:872 |
+| D-014, D-015 (BK-46) | retest logic | the retest monitor's 1-minute fetch (MC-32) | V2_DESIGN_LOG.md:597 |
+| D-016 or F-010 (BK-56) | entry gate and throttle | the entry gate's quote function (MC-08) | V2_DESIGN_LOG.md:607 |
+| C-004 (U-03, BK-67) | symbol acceptance and lookups | instrument cache load and identity (MC-40 to MC-44); key case still NOT ESTABLISHED (MC-10) | C-004_manual.md:67-73, 222, 232, 427 |
+| C-011 (G-06, BK-52) | the EOD capture and its fetch window | watchlist lookback values in configuration (MC-29); BK-52 stays OPEN and unassigned | C-011_manual.md:449; V2_DESIGN_LOG.md:603 |
+| B-004, B-006 | client builds, feed start, candle-store timer | cited, not re-described (MC-12, MC-19, MC-23) | B-004_manual.md:34-35; B-006_manual.md:40 |
+| A-006 (Q-30) | pacing and Kite limits | the buckets and backoff in configuration (MC-50, MC-51) | A-006_manual.md:56-60; V2_DESIGN_LOG.md:200 |
+| Later exits, F-004 sizing | exit logic; sizing (BK-22, BK-31) | quote and tick-size reads by the exit guards (MC-08; orders/sl_breach_monitor.py:75-79) | V2_DESIGN_LOG.md:573, 582 |
+Carried unchanged: D-003's seven open questions, BK-64 to BK-68, Q-20, Q-21, Q-30, BK-22, BK-31, BK-52, BK-59, BK-67; the V2
+  proposals VP-03, VP-09, VP-10, VP-14, VP-27, VP-28, VP-30, VP-39, VP-49, VP-68 stay PROPOSED.
+
+========================================================================================================================
+6. GAP REGISTER (UNKNOWN items, limits, observations, proposed bookmarks)
+========================================================================================================================
+| ID | Kind | Point | Why open | Next |
+|---|---|---|---|---|
+| G-01 | UNKNOWN | the broker's response-key case | broker behaviour; not in source (MC-10) | C-004 U-03 (BK-67) |
+| G-02 | UNKNOWN | whether the historical "date" marks a bar's start; hence MC-38 | no official source found in this step | reconciliation or a later topic |
+| G-03 | UNKNOWN | the deployed values of every flag and setting in MC-29, MC-46, MC-48, MC-50 | repository configuration only | none in legacy documentation (VM never read) |
+| G-04 | UNKNOWN | the definitions of the six flags tested at main.py:3480 | above line 3463, not count-located | a later read, if authorised |
+| G-05 | UNKNOWN | writers and readers of the candles, market_execution_context and daily_symbol_stats tables beyond MC-25, MC-36 and MC-54 | S11 limited to the schema files; no table-name search authorised | a table-name count search, if authorised |
+| G-06 | UNKNOWN | the schedule of instrument refresh, candle fetch and stats jobs in the cron registry | the job entries were not count-located; times come from docstrings and the control tower (MC-34, MC-39, MC-54) | a job-name count search, if authorised |
+| G-07 | UNKNOWN | candles retention value | retention map not located (MC-60) | as G-05 |
+| G-08 | UNKNOWN | who calls candle_math outside the regime and the watchlist comment | no caller search in S01 to S13 (MC-33) | a caller search, if authorised |
+| G-09 | LIMIT | negative statements ("no X in Y") cover only the lines read or the authorised scopes searched | bounded reading | - |
+| G-10 | LIMIT | test and fixture evidence (MC-10, MC-44) shows what tests assert, not runtime | G-04 of the authorisation | - |
+| O-01 | OBSERVATION | live_feed configuration keys not passed at main.py:2927-2938 (MC-12) | text against code | whole-design review |
+| O-02 | OBSERVATION | candle_math header "Wiring: NONE yet" against the regime imports and a configuration comment (MC-33) | text against code | whole-design review |
+| O-03 | OBSERVATION | freshness status vocabulary: LATE in the schema comment, OVERDUE in code (MC-39) | text against code | whole-design review |
+| O-04 | OBSERVATION | stale adapter line numbers in a test docstring (MC-10) | text against code | none |
+| O-05 | OBSERVATION | daily_stats names a cache job absent from the tree (MC-53) | text against tree | BK-69 |
+| O-06 | OBSERVATION | main.py passes no kill switch to the live feed, whose queue-full branch then only logs (MC-17); whether one is set later is NOT ESTABLISHED | code against code | whole-design review |
+Proposed bookmarks (PROPOSED wording for V2_DESIGN_LOG.md section 7; not written now):
+- BK-69: D-004 MC-53 to MC-55: daily_symbol_stats exists with a state-store writer and reader whose docstrings say the
+  screener's _build_market_data reads it and that an about-08:30 cron fills it, while the named cache job is absent from
+  the tree and D-003 MC-37 records the inputs as always None; whether the screener reads the table, and under which
+  flag, is not established. Cross-check with: D-003; whole-design review. Status: OPEN.
+- BK-70: D-004 MC-38: the candles table takes rows from two writers with different ts conventions (close time against
+  the historical row's date); the broker's convention is not established. Cross-check with: D-005; whole-design review.
+  Status: OPEN.
+Records (G-03): no named record is essential to the Stage 1 questions; MC-15 quotes a record only through a code comment.
+
+========================================================================================================================
+7. NOT DONE AND LIMITS
+========================================================================================================================
+- No R3 or NP path, named record, never-open path, docs/v2_design_spec.md or July record was read; nothing beyond the
+  authorised ranges was read except the four disclosed extensions (log, section 4).
+- No legacy code, test, script or import ran; no host, VM, broker, webhook, Chartink, service or database was
+  contacted; nothing was written, committed or pushed in any repository.
+- One external look-up (web search) about the broker's historical timestamps; it found only an unofficial forum post
+  (G-02); no other external source was used.
+- The masking filter loaded HR-1 and HR-2 value-blind on every read; HR-3 is absent and was not sought.
+
+========================================================================================================================
+8. STATUS
+========================================================================================================================
+Stage 1 source research only - no D-004 manual, no freeze, no DR-070 entry, no V2 decision, no repository write.
+Blockers: none. For ChatGPT's reconciliation: the gap register (section 6), the proposed BK-69 and BK-70, and the four
+  disclosed read extensions. Any further read (G-04 to G-08) needs a separate authorisation.

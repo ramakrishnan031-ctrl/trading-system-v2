@@ -1,0 +1,80 @@
+D-004 — CHATGPT STAGE 0 REVIEW AND STAGE 1 AUTHORISATION
+Date: 27-Oct-2026 (IST)
+
+DECISION
+Stage 0: ACCEPTED WITH CORRECTIONS.
+Stage 1: AUTHORISED WITH THE STRICT LIMITS BELOW.
+D-004 manual/freeze, V2 design decisions, and repository writes: NOT AUTHORISED.
+
+REPOSITORY BASELINES TO RECHECK BEFORE ANY READ
+V2 main: c33466b94700eeccace555a145b88a3e49bf3196
+Legacy production reference (DEAD / REFERENCE ONLY): 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+Legacy tree/listing SHA-256 reported by Stage 0: 1F195D3D516AB4F194BCB7AF105FB193A606EE241E2E1437102EF495D8E647A5
+If either ref or the listing differs, STOP. Do not proceed on a changed baseline.
+
+1. IMPORTANT CORRECTION TO CHATGPT'S EARLIER REVIEW
+My earlier note incorrectly said D-003 freeze/storage was pending and asked to verify DR-069 was unused. The supplied Stage 0 report contains newer post-push evidence: D-003 is frozen/stored with DR-069, and the fresh-clone post-push verification is reported PASS at 16:07 IST. DR-069 belongs to D-003. D-004's expected next register number is DR-070; do not consume it during Stage 1.
+The 09:20 preparation check and pre-push proposal files are historical preparation records, not current status. D-003's K-3 content checks were not rerun on the final candidate and remain NOT VERIFIED; do not relabel them PASS.
+
+2. STAGE 0 REVIEW
+Accepted:
+- Clear separation of metadata/path-name facts, V2-record facts, historical citations, leads, interpretations and unknowns.
+- The report lists 1,438 tree-listing rows and 308 candidate paths without opening/fetching legacy blobs.
+- It preserves the legacy pin, listing hash, 102 never-open paths, the shared protected blob path docs/v2_design_spec.md, the two July queue exclusions, and value-blind-only host handling.
+- It separates D-004 market-data contracts from D-001–D-003 decision logic and D-005 onward analysis logic.
+- It makes no claim that path names prove runtime behaviour.
+
+Qualifications:
+- This is an inventory/research plan, not a source audit. No legacy file was read, searched or counted; no source-level behaviour can be inferred from path names.
+- Stage 0 did not run the masking/read gate. Stage 1 must rebuild the gate tools and pass self-tests before any checkout/read.
+- Path-name match counts are discovery aids, not proof of completeness or execution.
+- Do not claim that a path runs, a feed was active, config was deployed, runtime data existed, or broker response-key case is known without separate evidence.
+- The D-003 post-push verification result and push-log record remain items to include in the later D-004 storage package; they do not block Stage 1. Keep the optional lesson row optional unless Rama and ChatGPT explicitly agree.
+- The missing Stage 0 Rama answer sheet is not a blocker because Stage 0 required no Rama decision. The companion gate-answer sheet makes Stage 1 choices explicit.
+
+Stage 0 result: PASS for inventory and research planning only.
+
+3. STAGE 1 GATE ANSWERS
+G-01 Consumer scope — APPROVED: F01–F10 dependency mapping only: call sites, fields consumed, transformations, guards, outputs, storage/handoff. Do not re-document other topics' logic or infer runtime reachability.
+
+G-02 Reference data — APPROVED HEADER-ONLY for exactly these five fixtures:
+- tests/fixtures/reference_data/index_members/fno_symbols.csv
+- tests/fixtures/reference_data/index_members/nifty_bank.csv
+- tests/fixtures/reference_data/index_members/nifty_it.csv
+- tests/fixtures/reference_data/index_members/nifty_private_bank.csv
+- tests/fixtures/reference_data/security_master_small.csv
+Read only the first header record. No data rows or sample values. These are fixture shapes only, not proof of production schema. config/reference_data/ remains never-open. If the header does not establish the shape, record UNKNOWN.
+
+G-03 Named records — NONE AUTHORISED. Use existing frozen manual/governance citations as HISTORICAL. If a specific question requires one of the 13 records, report the exact path, question and minimum range for separate approval.
+
+G-04 Tests — LIMITED APPROVAL. Include s_tests in count-only S01–S13 searches with positive controls, per-file counts and line numbers only. Narrow reads only for R2 tests listed in the inventory, after a relevant code symbol/call site is confirmed, and only the minimum range needed for the D-004 data contract. Do not execute tests or imports. Test evidence is not proof of production runtime behaviour.
+
+G-05 Read volume — APPROVED AS PROPOSED; NO SILENT WIDENING.
+- main.py: only ranges 495–506, 2927–2938, 3285, 3586–3592 and 3730, plus an exact additional range only when the count-only pass proves it necessary for authorised wiring.
+- broker/zerodha_adapter.py: 208–222 and 1730–1798, plus the smallest method ranges located by S01–S04 that answer authorised questions.
+- Other R1/R2 paths: known ranges first, then minimal ranges located by the authorised count-only pass.
+If a wider read is needed, stop and request approval.
+
+4. REQUIRED STAGE 1 ORDER
+S1-0 Safety first: recheck refs and listing hash; rebuild gate/masking tools from cited governance sources; self-test path and blob refusal; verify sensitive_check.py returns 0; verify protected path set and local blob count. Any failure/mismatch means STOP.
+S1-1 Count-only: run S01–S13 on authorised runtime/config scopes and s_tests as above; S10/S11 only on the two named schema files. Log expressions, scopes, per-file counts, line numbers and positive-control results. Count-only output must not include matched source text.
+S1-2 Narrow reads: follow the Stage 0 matrix and G-05. Log path, blob ID, exact range, time, mask counts and saved-output SHA-256. Every factual claim must cite path:line at the exact pin.
+S1-3 Consumer map: trace only what evidence supports:
+SOURCE → FETCH → TRANSFORM/NORMALISE → VALIDATION/GUARD → OUTPUT → STORAGE/HANDOFF → CONSUMER.
+Record missing links as UNKNOWN / NOT ESTABLISHED; distinguish paper/live where source evidence permits.
+S1-4 Return to ChatGPT: (a) source-evidence report, not a manual; (b) data-lineage matrix, boundary matrix and gap register; (c) files-read and count logs; (d) final verification record for cite_check.py, scan_ids.py, sensitive_check.py (must be 0), gate self-tests and before/after object counts.
+
+5. NON-NEGOTIABLE EXCLUSIONS
+- All 102 never-open paths; config/reference_data/; docs/v2_design_spec.md due to shared protected blob; the two July queue records; all paths marked X.
+- HR-1/HR-2 value-blind only for masking; no host values in outputs. HR-3 is unavailable and must not be sought.
+- No VM/database/broker/service/webhook/Chartink contact.
+- No legacy execution, script/test execution, imports, startup, migrations, writes, commits or pushes.
+- No secrets, tokens, account data or sensitive fixture rows in reports.
+- No V2 design, tuning, implementation or retain/reject decisions.
+
+6. EXIT / GOVERNANCE
+Stage 1 is complete only after every authorised read is accounted for, claims are anchored to the pin, safety/output checks pass, and the lineage/gap records are reviewable. Return the evidence package to ChatGPT for reconciliation. Do not draft/freeze D-004 until reconciliation and Rama review/approval.
+Do not allocate a new decision row or freeze D-004 during Stage 1. DR-070 is expected only for the later properly reconciled package. Preserve DR-069 and D-003's frozen status. Include the D-003 post-push verification result and push-log entry once in the later D-004 storage package; do not silently add the optional lesson row.
+If a safety check fails, scope conflicts, or an unapproved read is required, STOP and report; do not work around it.
+
+FINAL: Stage 0 ACCEPTED WITH CORRECTIONS. Stage 1 AUTHORISED WITH LIMITS ABOVE. D-004 manual/freeze and repository writes NOT AUTHORISED.

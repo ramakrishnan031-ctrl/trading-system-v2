@@ -1,0 +1,40 @@
+D-004 FREEZE PREREQUISITE — CHATGPT DECISION
+Date: 27-Oct-2026 (IST)
+
+DECISIONS
+1. C-1: APPROVED AS WORDed in D-004_FREEZE_PREREQUISITE_BLOCKER_27-OCT-2026.txt.
+2. DR-040 drift: RECORD THE DRIFT NOTE IN DR-070; DO NOT EDIT DR-040.
+
+RATIONALE AND GUARDRAILS
+
+C-1
+The correction is required before freezing. It distinguishes the skew probe's docstring (evidence of what the text says) from the behaviour reported in frozen B-004. It cites the frozen B-004 manual for the Date-header/local-time behaviour and stale-docstring finding, and explicitly says D-004 Stage 1 did not read get_server_time's own lines. This is a historical cross-manual citation, not a new legacy-source read. Apply only the four C-1 changes described in the blocker:
+- C-1a: correct the section 3 time-row guard cell.
+- C-1b: retain the MC-47 FACT (TEXT) statement verbatim and append the HISTORICAL qualification.
+- C-1c: add B-004 citations at section 18.
+- C-1d: add B-004 citations at section 19.3.
+Do not change the underlying UNKNOWN / NOT ESTABLISHED status of actual broker-clock skew, and do not expand the scope beyond C-1. Keep draft 3 in docs/inputs/manuals/ unchanged as historical input; apply the correction only to the freeze candidate/copy.
+
+DR-040
+DR-040 is append-only and should not be edited. Record the identified summary drift in DR-070 as a known documentation drift, with the precise comparison stated in the blocker: DR-040's broad clause about BP1-BP10 versus B-004 BP3's “Partly: the rate limiter's historical bucket, but raw exceptions,” which D-004 MC-27 agrees with. Do not imply that this makes the whole DR-040 row false or authorises editing it.
+
+COMMIT MESSAGE
+Do not use “no erratum” without qualification, because C-1 is a pre-freeze correction. Preferred subject:
+“D-004 Market-data requirements frozen (DR-070); C-1 applied; DR-040 drift noted”
+This communicates that the frozen copy includes the correction and that no post-freeze erratum is being claimed.
+
+EXECUTION
+Under Rama's standing authorisation, proceed without asking for another approval:
+- Apply the approved C-1 and DR-070 drift note to the local freeze package.
+- Preserve revision history, hashes and source/evidence boundaries.
+- Keep SE-6 and SE-7 KEEP OUT / QUARANTINED; no retrospective authorisation or re-read.
+- Keep BK-69/BK-70 PROPOSED — NOT WRITTEN.
+- Preserve the D-003 verification/push evidence as recorded in the package; do not invent or overstate evidence.
+- Run all applicable checks. If all required checks pass, commit and push the authorised freeze/storage package to main and verify the resulting commit/files on GitHub.
+- If a check fails, do not force the freeze or claim success. Complete safe preparatory work, leave D-004 unfrozen, record the exact blocker, and report it without asking Rama to repeat authorisation.
+- No new legacy-source reads/searches/counts, no service contact, and no V2 implementation work.
+
+STATUS
+C-1: APPROVED.
+DR-040 drift note in DR-070: APPROVED; DR-040 remains unchanged.
+Freeze/storage execution: AUTHORISED under standing authorisation, subject to required checks passing.

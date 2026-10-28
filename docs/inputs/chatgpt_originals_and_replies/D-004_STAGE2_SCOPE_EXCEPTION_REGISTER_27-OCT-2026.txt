@@ -1,0 +1,84 @@
+D-004 - MARKET-DATA REQUIREMENTS: STAGE 2 SCOPE EXCEPTION REGISTER
+Date of work: 27-Oct-2026 (IST); built 19:33 IST. Prepared by Claude for ChatGPT's and Rama's review, under
+  D004_CLAUDE_PROMPT_STAGE2_CORRECTION_PASS_NO_NEW_LEGACY_READS_27-OCT-2026.txt (output E) and
+  D004_CHATGPT_STAGE2_REVIEW_DECISION_AND_CORRECTIONS_27-OCT-2026.txt (section 2, the classification applied here).
+Status: a register of the Stage 1 read lines that lie neither in a kind-K fixed range nor in any hit +/- 3 cluster, with
+  their classification and the disposition of the claims that rest on them. It decides nothing: SE-6 and SE-7 await
+  Rama's explicit decision. Nothing written to any repository; DR-070 unused; no governance file edited.
+Method: computed by range_accounting_rev1.py from the Stage 1 count line numbers, the read log (code_read_log.tsv) and
+  the range-addition log only. No legacy file was read, searched or counted; no source evidence is added; the content
+  of the listed lines is not restated. "Draft 1" is D-004_MARKET_DATA_REQUIREMENTS_REV0_27-OCT-2026.md and "draft 2"
+  D-004_MARKET_DATA_REQUIREMENTS_REV1_27-OCT-2026.md. Read log rows are those of
+  D-004_STAGE1_FILES_READ_AND_COUNT_LOG_27-OCT-2026.txt, section 5.
+
+========================================================================================================================
+1. REGISTER (131 lines)
+========================================================================================================================
+| ID | Path and lines | Lines | Read log rows | Stage 1 record | Classification (review, section 2) | Why authorisation is or is not established | Affected claims | Manual sections, draft 1 -> draft 2 | Disposition |
+|---|---|---|---|---|---|---|---|---|---|
+| SE-1 | data/live_feed.py 305-328 | 24 | 015 | read log s.4: READ WITHOUT A HIT, "completes the queue-full branch begun at 302-304" | disclosed exception | disclosed by Stage 1 (gate answer G-05 asks for no silent widening); the review keeps it a disclosed exception | MC-17 (queue-full branch, 305-322); MC-14 (re-subscribe, 324-328); observation O-06 | 5 -> 5 | KEPT AND MARKED: each citation carries SE-1; the statements describe code text only, not runtime behaviour |
+| SE-2 | core/analytics_schema.sql 1-20, 46-47 | 22 | 106 | read log s.4: READ WITHOUT A HIT, "the file header (database split) before the candles definition and the next table comment after it" | disclosed exception | as SE-1 | MC-37 (the separate analytics database, cited 2-17) | 8 -> 8 | KEPT AND MARKED: the statement rests on these lines alone and says so |
+| SE-3 | core/schema.sql 1143-1145, 1472-1484 | 16 | 108, 109 | read log s.4: READ WITHOUT A HIT, "leading comment lines of the next section" | disclosed exception | as SE-1 | none | - -> - | NO DEPENDENT CLAIM |
+| SE-4 | orders/smart_tgt_manager.py 788 | 1 | 145 | read log s.4: READ WITHOUT A HIT, "one blank line before the count-located cluster" | disclosed exception | as SE-1 | none | - -> - | NO DEPENDENT CLAIM |
+| SE-5 | core/schema.sql 1127-1142, 1467-1471, 1597-1606 | 31 | 108, 109, 110 | read log s.4: "S10 (definitions)" | planned D01 table-definition reads, outside the hit clusters | the accepted Stage 0 plan gives D01 "R2, then R1 on table definitions" and reads "D01 (table definitions only)"; the review classifies these as planned D01 reads | MC-57 (market_execution_context, 1127-1142); MC-39 and O-03 (freshness table comment, 1467-1470); MC-54 (daily_symbol_stats, 1597-1606) | 8, 11, 14 -> 8, 11, 14 | KEPT AS SCHEMA EVIDENCE ONLY: a table definition shows no writer, reader or runtime use (gap G-05) |
+| SE-6 | core/analytics_schema.sql 28-45 | 18 | 106 | read log s.4: "S10 (definition 24-45)" | authorisation NOT ESTABLISHED | D02 was an R2 path and its definitions were not promoted to R1; the gate allowed minimal count-located ranges, and the read 1-50 was wider than the hit cluster 21-27; the record does not establish that 28-45 was within the approved minimum scope | MC-37 (the definition's columns, defaults, ts comment and unique key; cited 21-45) and, through it, the schema-based parts of MC-38 | 8 -> 16.6 | QUARANTINED, AWAITING RAMA'S DECISION (draft 2, 16.6: Q-1, Q-2); MC-37 narrowed to the definition's opening line (24, an S10 hit) and the SE-2 header; MC-38 narrowed to the two writers' ts conventions |
+| SE-7 | main.py 3695-3713 | 19 | 117 | read log s.4: addition 3666-3745, "V3 watchlist fetcher wiring (3669-3742)" with "hit lines +/- 3" | authorisation NOT ESTABLISHED | gate answer G-05 allowed an exact additional main.py range where the count-only pass showed it necessary for authorised wiring; 3666-3745 bridges the gap between two hit clusters (nearest hits 3691 and 3717); the record explains the gap but does not show why every line of it was necessary | MC-28 (the V3-chain item, cited 3666-3702; the PB-01 watchlist item, cited 3704-3745) | 7, 13 -> 16.6 | QUARANTINED, AWAITING RAMA'S DECISION (draft 2, 16.6: Q-3, Q-4); still supported: the OHLC fetchers at 3678-3682 and 3728-3732 (MC-41) and the configuration values (MC-29) |
+
+Totals: 63 disclosed exceptions (SE-1 to SE-4), 31 planned D01 lines (SE-5), 18 + 19 lines whose authorisation is NOT
+  ESTABLISHED (SE-6, SE-7). None of the 131 lines is treated as authorised because a consistency check passed, and the
+  63 and 31 are not treated as unauthorised.
+
+========================================================================================================================
+2. NOT IN THE REGISTER
+========================================================================================================================
+- The 19 no-hit lines that lie inside a neighbouring hit's cluster (core/analytics_schema.sql 21-23, 48-50; core/schema.sql 1001-1004, 1146-1148, 1485-1487, 1607-1609): they are part of the 82
+  disclosed lines but inside count-located ranges, so they need no separate classification.
+- The other 14 exact additions (13 to main.py's fixed list and the adapter's 1799-1830): every line of them lies
+  inside the hit +/- 3 clusters of all searches together (two list only some of those searches as their basis; the
+  draft-1 change note, section 3.1).
+- All other reads: inside a kind-K fixed range or a hit +/- 3 cluster (Stage 1 final check, C6).
+
+========================================================================================================================
+3. DECISIONS AWAITING RAMA (identified; none taken here)
+========================================================================================================================
+- SE-6, core/analytics_schema.sql 28-45: whether to authorise these 18 lines after the fact. If authorised, Q-1 and Q-2
+  of draft 2 (section 16.6) can be restored as in draft 1; if not, they stay out and draft 2 stands as it is.
+- SE-7, main.py 3695-3713: the same choice for these 19 lines and Q-3, Q-4.
+- A third option for either: authorise a minimal re-read in a later step. Nothing in this step reads or proposes a range.
+
+========================================================================================================================
+4. LIMITS
+========================================================================================================================
+- The line classes come from line numbers alone. Which part of a cited range carries which statement is not known in
+  this step, so a claim whose cited range includes unresolved lines is quarantined as a whole: all of MC-37's definition
+  content (cited 21-45, of which 21-27 are count-located), and MC-28's V3-chain and PB-01 watchlist items.
+- A disclosed or planned classification is not proof of runtime behaviour: SE-1 statements describe code text, and SE-5
+  definitions show no writer, reader or use.
+- The register covers Stage 1's reads only; Stage 2 made none.
+
+========================================================================================================================
+5. CITATIONS THAT TOUCH A SCOPE EXCEPTION (computed from the two drafts)
+========================================================================================================================
+| Draft | Manual section | Cited range | Scope exception and lines |
+|---|---|---|---|
+| draft 1 | section 5 | data/live_feed.py:324-361 | SE-1 324-328 |
+| draft 1 | section 5 | data/live_feed.py:302-322 | SE-1 305-322 |
+| draft 1 | section 7 | main.py:3666-3702 | SE-7 3695-3702 |
+| draft 1 | section 7 | main.py:3704-3745 | SE-7 3704-3713 |
+| draft 1 | section 8 | core/analytics_schema.sql:21-45 | SE-6 28-45 |
+| draft 1 | section 8 | core/analytics_schema.sql:2-17 | SE-2 2-17 |
+| draft 1 | section 8 | core/schema.sql:1463-1470 | SE-5 1467-1470 |
+| draft 1 | section 11 | core/schema.sql:1593-1606 | SE-5 1597-1606 |
+| draft 1 | section 13 | main.py:3704-3745 | SE-7 3704-3713 |
+| draft 1 | section 14 | core/schema.sql:1123-1142 | SE-5 1127-1142 |
+| draft 2 | section 5 | data/live_feed.py:324-361 | SE-1 324-328 |
+| draft 2 | section 5 | data/live_feed.py:302-322 | SE-1 305-322 |
+| draft 2 | section 8 | core/analytics_schema.sql:2-17 | SE-2 2-17 |
+| draft 2 | section 8 | core/schema.sql:1463-1470 | SE-5 1467-1470 |
+| draft 2 | section 11 | core/schema.sql:1593-1606 | SE-5 1597-1606 |
+| draft 2 | section 14 | core/schema.sql:1123-1142 | SE-5 1127-1142 |
+| draft 2 | section 16.6 | core/analytics_schema.sql:21-45 | SE-6 28-45 |
+| draft 2 | section 16.6 | main.py:3666-3702 | SE-7 3695-3702 |
+| draft 2 | section 16.6 | main.py:3704-3745 | SE-7 3704-3713 |
+In draft 2, every citation that touches SE-6 or SE-7 lies in section 16.6 (the quarantine list); each citation that
+  touches SE-1, SE-2 or SE-5 is marked with its exception in the bullet that carries it.
