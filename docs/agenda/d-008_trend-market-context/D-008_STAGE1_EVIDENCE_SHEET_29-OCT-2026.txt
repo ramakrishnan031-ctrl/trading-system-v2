@@ -1,0 +1,163 @@
+D-008 TREND / MARKET CONTEXT - STAGE 1 EVIDENCE SHEET (OUTPUT 1 OF 3)
+Route B (DR-074, W-11): evidence for a V2 requirements discussion. This is not a legacy manual, and no D-008
+  decision is made.
+Prepared 29-Oct-2026 (IST) by Claude, for ChatGPT's review. Reads: output 2 (S1-01 to S1-35), V2 working copy at
+  8aac5d1713e34c3aa034979b9c1b7a11a96b129a.
+
+LABELS
+- HISTORICAL: a frozen manual's statement, carrying that manual's own label (FACT (SOURCE), FACT (CONFIG),
+  FACT (TEXT), INTERPRETATION and so on). Its legacy citations (path:line at the pin 970aabf) are the manual's;
+  none was re-read.
+- RAMA (STATED): Rama's words as a frozen manual or V2 record quotes them.
+- V2 DECISION / V2 PROPOSAL: the status of a V2 row.
+- INTERPRETATION: Claude's reading in this sheet.
+- UNKNOWN / NOT ESTABLISHED; NOT RESEARCHED: as defined in W-11.
+Manual paths, with freeze rows (Route B inventory):
+- D-004 docs/agenda/d-004_market-data-requirements/D-004_manual.md (DR-070)
+- D-005 docs/agenda/d-005_candle-analysis/D-005_manual.md (DR-071)
+- D-003 docs/agenda/d-003_secondary-screening/D-003_manual.md (DR-069)
+- D-002 docs/agenda/d-002_hard-rejection-gates/D-002_manual.md (DR-068)
+- A-008 docs/agenda/a-008_strategy-model/A-008_manual.md (DR-023)
+- A-001 docs/agenda/a-001_system-purpose/A-001_manual.md (DR-013)
+
+========================================================================================================================
+1. ANSWERS IN BRIEF (each rests on the rows in sections 2 to 6)
+========================================================================================================================
+- Q1 (a legacy regime mechanism):
+  - The frozen manuals record a regime runner fed by the shared historical-data closure, with state written to a
+    JSON file. It is disabled in the repository configuration, which names NIFTY 50 and a 400-day daily lookback
+    (E-01, E-02, E-03, E-11).
+  - Its texts call it shadow or default-off (E-06, E-07).
+  - What it computed, and whether it ran, is UNKNOWN / NOT ESTABLISHED (E-05, E-14) and otherwise NOT RESEARCHED.
+- Q2 (index data):
+  - An index list is "data only", resolved by name at fetch time, with no volume, and its text says the regime
+    needs the 09:15 to 10:00 OHLC (E-12).
+  - The post-close script fetches indices into the candles table (E-13).
+  - D-002 records the index universe as regime data, not an admission list (E-08, E-19).
+  - Whether any index path ran is UNKNOWN (E-14).
+- Q3 (did regime feed a decision path):
+  - For the secondary screener only, D-003 records a count that found no "regime" term (FACT (COUNT)) and an
+    INTERPRETATION that no S&R, regime or V3-chain input reaches the screener (E-17, E-18).
+  - No frozen manual read records whether regime output reached any other entry or decision path: NOT RESEARCHED
+    (NR-03).
+- Q4 (Rama): no Rama statement read here states a V2 trend or market-context requirement. His quoted statements
+  concern late entries on stocks that "already ran-out for the day" (E-21, E-26) and entries near high-of-day
+  without S&R context (E-25). These are entry and S&R matters. D-008 needs its own answer sheet.
+- Q5 (V2 rows): no register row decides anything about trend or market context (V-01 to V-05).
+  - The rows that touch it are an audit lead (Q-34 (a), market regime among possible causes of the legacy results),
+    PROPOSED rows on timeframes by signal type (VP-03), pre-market briefings (VP-26) and earlier signals (VP-44),
+    and a VP-12 consideration on market-wide moves (the D-017 / F-007 bookmark).
+  - One design-input line routes index_universe.yaml to J-011 (V-15).
+  - No bookmark names D-008 (a bounded negative).
+- Q6 (gaps): NR-01 to NR-07 (section 5), candidates for V2_DESIGN_LOG section 8, none written.
+
+========================================================================================================================
+2. EVIDENCE: THE LEGACY REGIME MECHANISM AND INDEX DATA (HISTORICAL unless marked)
+========================================================================================================================
+| ID | Source, heading, lines | Statement (short; the manual's own label kept) | Class | Limitation |
+|---|---|---|---|---|
+| E-01 | D-004, 7. Historical candles through the shared OHLC closure, line 226 | FACT (SOURCE): the closure is built only when one of six feature flags is on; it feeds the S&R detector, the regime runner ("lookback default 400 days; state written to a JSON file") and the zone warmer (MC-28) | HISTORICAL | the six flags' definitions not read (G-04) |
+| E-02 | D-004, section 7, line 227 | FACT (CONFIG), "repository values at the pin, not the deployed values (gap G-03)": "regime enabled false, NIFTY 50 by a configured token, daily lookback 400" (MC-29) | HISTORICAL | repository configuration only |
+| E-03 | D-004, 10. Index data, line 259 | FACT (CONFIG): "regime is disabled in the repository configuration, which names NIFTY 50 by a configured token" (MC-29) | HISTORICAL | as E-02 |
+| E-04 | D-004, section 7, line 232; 16.4 Observations, line 337 | OBSERVATION O-02: candle_math's header says "Wiring: NONE yet", while the regime engine imports its adx, atr, ema and true-range functions | HISTORICAL (observation, "no finding") | text against code; pointer "whole-design review" is Stage 1's, "not a V2 decision" (line 343) |
+| E-05 | D-005, 7. Cross-topic boundaries and bookmarks, line 157; 9. ..., line 234 | the regime engine's hits 191, 207, 245 and 340 are UNKNOWN / NOT ESTABLISHED, with its imports of adx, atr, ema_series and true_range_series; owner D-008; "outside D-005. D5-BK-6 is a proposed deferred bookmark only, not stored" | HISTORICAL | candidate locators only; no regime code read in D-005 |
+| E-06 | D-005, 6. Non-findings and unresolved questions, line 141 | "whether any importing or calling path ran is NOT ESTABLISHED"; the regime package's text "SHADOW - gates nothing in this step" is "evidence of its own text only" (FACT (TEXT)) | HISTORICAL | text, not behaviour |
+| E-07 | A-001, 6. Major lifecycle responsibilities, line 46 | "Evidence rule: code presence is not proof of activation. The README states that the regime, S&R detector, V3 chain and allocation engines were shadow / default-OFF." | HISTORICAL (the README's statement, as A-001 records it) | a document's statement, not behaviour |
+| E-08 | D-002, 6.3 The index universe (not an admission list), line 236 | FACT (TEXT): config/index_universe.yaml describes itself as "index instruments ingested for the regime-ranking feature (Phase 0, 17-Jul-2026). DATA ONLY - no regime is computed from these yet."; INTERPRETATION (D-002's): "regime data, not treated here as an admission list" (MC-28) | HISTORICAL | within D-002's authorised evidence |
+| E-09 | D-005, 1. Document status, purpose and scope, line 14 | out of D-005's scope: "trend and regime (D-008)" | HISTORICAL (scope) | a boundary, not a finding |
+| E-10 | D-004, 1.3 Boundaries, line 49 | boundary row: "D-008 Trend / market context: regime logic", while D-004 records "the index data and the regime's data path, disabled in the repository configuration (MC-28, MC-29, MC-45)"; basis: the Master Agenda line 299 | HISTORICAL (a recorded owner) | the heading says "recorded owners kept; nothing closed, reassigned or reinterpreted" |
+| E-11 | D-004, 3. The data contracts at a glance, line 177 | historical candles: "regime state in a JSON file (MC-28)"; consumers include "regime (MC-28, MC-32)" | HISTORICAL | "A cell is not a claim that a path ran." (line 184) |
+| E-12 | D-004, section 10, line 257 | FACT (CONFIG); FACT (TEXT): "the index list is data only, resolved by name at fetch time from the INDICES segment; indices carry no volume; the regime needs the 09:15 to 10:00 OHLC" (MC-45) | HISTORICAL | configuration text |
+| E-13 | D-004, section 10, line 258 | FACT (SOURCE): the post-close script fetches the configured indices first, into the candles table (MC-35, MC-36); the shared closure feeds the regime runner (MC-28); OhlcFetcher fetches an index by an explicit configured token (MC-30) | HISTORICAL | code paths, not events |
+| E-14 | D-004, section 10, line 260 | "UNKNOWN / NOT ESTABLISHED: whether any index path ran in operation (gap G-03)" | HISTORICAL (UNKNOWN) | - |
+| E-15 | D-004, section 3, line 180 | index data: guard "the closure path fails safe (MC-30); the script lists failed symbols (MC-35)"; consumer "regime, disabled in the repository configuration (MC-29)" | HISTORICAL | as E-11 |
+| E-16 | A-008, 18. Late signals and outcomes, line 220 | FACT (RECORD-DERIVED, BK-1): "With no index data stored, the July market effect could not be separated." | HISTORICAL | one record, 15-Jun to 16-Jul-2026 |
+
+========================================================================================================================
+3. EVIDENCE: DID REGIME OR MARKET CONTEXT FEED A DECISION PATH (source distinctions kept)
+========================================================================================================================
+| ID | Source, heading, lines | Statement | Class | Limitation |
+|---|---|---|---|---|
+| E-17 | D-003, 13. S&R, V3 and regime inputs, lines 484 and 488; 15.2 Interpretations, line 525 | MC-74, FACT (COUNT): over the four screener files, count Q04 (regime) "found none" (control P04: 34 lines in main.py). MC-76, INTERPRETATION: "Within the bounded authorised evidence ... no S&R, regime or V3-chain input reaches the screener" | HISTORICAL (FACT (COUNT); INTERPRETATION, kept as such) | the screener only; a zero is bounded to its pattern and scope |
+| E-18 | D-003, 1.3 Boundaries, line 55 | row "J (S&R, V3, regime)": "the S&R, V3 and regime engines" stay with J; "boundary; none consumed by the screener (section 13)"; basis OSQ-08 | HISTORICAL (a recorded owner) | rests on E-17 |
+| E-19 | D-002, 9.1 Mechanisms, in path order, line 284 | Index universe: "configuration"; can refuse: "no: regime data; no other authorised file names it"; owner as recorded: "the regime feature"; "outside" (MC-28) | HISTORICAL | D-002's authorised files only |
+| E-20 | A-008, section 18, line 215 | UNKNOWN: "how much of the poor performance came from scanner timing rather than screening, price construction, entry timing or market regime" | HISTORICAL (UNKNOWN) | - |
+- No other frozen manual read here records regime or index data entering an entry, gate, ranking or final
+  decision. That is not a negative finding: those paths were not read for regime (NR-03).
+
+========================================================================================================================
+4. EVIDENCE: RAMA'S STATEMENTS AND STOCK-LEVEL TREND TERMS
+========================================================================================================================
+| ID | Source, heading, lines | Statement | Class | Note |
+|---|---|---|---|---|
+| E-21 | A-008_v2_design_inputs.md, 2. Earlier entries, lines 20-21 | RAMA (07-Oct, verbatim): "remember need to change all these Why? Being late entries which hits 98% SL as of now [So improved or bit early entry required, note it]"; (Q17) "Late entry signals, meaning a stock which already ran-out for the day received as entry signal that leads to SL hitting [No room for further stock run]" | RAMA (STATED) | entry timing (VP-44; D-013 to D-016), not market context |
+| E-22 | A-008_v2_design_inputs.md, section 2, line 26; 3. Strategy count, line 38 | CLAUDE CONSIDERATIONS: intraday setups on intraday candles, with "daily conditions stay as context (trend, levels, liquidity)"; BK-1's samples "cover one regime" | V2 PROPOSAL (design input, PROPOSED / OPEN; Claude's, not Rama's) | the timeframe part is a D-007 dependency (OQ-02) |
+| E-23 | D-004, 1.4 Not covered, line 64 | "The analytic use of candles, patterns, timeframes, market context and S&R (D-005 to D-012) ...: their data inputs only are recorded here." | HISTORICAL (scope) | - |
+| E-24 | A-008, 17. Chartink scanner conditions, lines 178 and 206 | FACT (SUPPLIED RECORD): "All 16 definitions use only the Daily timeframe"; the grouping, by logic, includes "a close beyond the previous day's high or low with an EMA200 trend and an open condition" | HISTORICAL (supplied record; the grouping is INTERPRETATION by logic, as A-008 labels it) | stock-level trend conditions in the scanners, not market context |
+| E-25 | A-001, 9. Known purpose-relevant defects, line 64 | user-reported: "Entry near high-of-day without adequate S&R context." | RAMA (as A-001 records the user-reported defects) | entry and S&R (OQ-07); no distinct broad-market aspect in the sources read |
+| E-26 | A-008, section 18, line 212 | HISTORICAL (Rama, Q17, Q32, 07-Oct note): "signals arrived for stocks that had already run for the day, leaving no room, so trades hit the stop"; "approximately 98% SL outcomes" for an unspecified period, "attributed historical figures, not a measured system KPI" | RAMA (STATED), as recorded | as E-21 |
+- No source read here quotes Rama on index direction, market trend, market regime or broad market context as a
+  V2 requirement: UNKNOWN / NOT ESTABLISHED (output 3).
+
+========================================================================================================================
+5. V2 RECORDS THAT TOUCH D-008 (P3; statuses as stored at 8aac5d1)
+========================================================================================================================
+| ID | Record, line | Status | Class | What it says, at row level |
+|---|---|---|---|---|
+| V-01 | V2_DECISION_REGISTER.md 79, DR-068 | DECIDED (D-002 freeze) | V2 DECISION (freeze record of legacy facts) | "within the authorised evidence the index universe is regime data, not treated as an admission list" |
+| V-02 | register 80, DR-069 | DECIDED (D-003 freeze) | V2 DECISION (freeze record) | "within the bounded evidence no S&R, regime or V3-chain input reaches the screener (INTERPRETATION, MC-76)" |
+| V-03 | register 82, DR-071 | DECIDED (D-005 freeze) | V2 DECISION (freeze record) | the regime hits (G-07) "UNKNOWN / NOT ESTABLISHED and outside D-005"; "bookmark D5-BK-6 (the regime hits, for D-008) stays proposed and is not stored" |
+| V-04 | register 83 and 84, DR-072 and DR-073 | DEFERRED / NOT CLOSED; DECIDED | V2 DECISION | D-006 and D-007 statuses; option C |
+| V-05 | register 27, DR-016; 85, DR-074 | DECIDED | V2 DECISION | the post-agenda legacy audit; Route B, with D-008 the first topic and timeframe dependencies OPEN / UNRESOLVED |
+| V-06 | V2_DESIGN_LOG.md 170 and 171 (lessons, 2026-10-28) | rules in force | lesson | process only: a paraphrased regime reference is not a valid real control; reads of the regime engine's definitions were rejected as exposing out-of-scope text |
+| V-07 | design log 212, Q-34 | OPEN (audit lead, DR-016) | open question | (a) "how much of the result came from scanner timing rather than screening, price construction, entry timing or market regime" |
+| V-08 | design log 233, VP-03 | PROPOSED; Ratify at D-003, D-017 | V2 PROPOSAL | "intraday and positional use different timeframes and evaluation methods" (a D-007 dependency, OQ-02) |
+| V-09 | design log 242, VP-12 | PROPOSED; Ratify at F-007, whole-design review | V2 PROPOSAL | consideration: "without sector caps, a market-wide move can fill several slots with one sector" (the OQ-06 bookmark to D-017 / F-007) |
+| V-10 | design log 255, VP-26 | PROPOSED; Ratify at L, M | V2 PROPOSAL | "AI briefings (pre-market briefing, weekend pattern analysis) move from Gemini to ChatGPT"; INTERPRETATION: informational market context at most, not a decision input |
+| V-11 | design log 256, VP-27 | PROPOSED; Ratify at D-002 (needs a later scheduling decision) | V2 PROPOSAL | its D-002 note lists "the index universe, regime data" among D-002's legacy facts; not a D-008 row |
+| V-12 | design log 273, VP-44 | PROPOSED; Ratify at D-001, D-013 to D-016, E-002 | V2 PROPOSAL | earlier signals; the considerations include recording "distance from the open and VWAP" and "room to target and S&R" (entry, not market context) |
+| V-13 | design log 348 (Route B row), 363 (W-11), 647-653 (section 8) | in force; in force; "(none yet)" | V2 records | the Route B row, W-11 and the empty gap list |
+| V-14 | A-008_v2_design_inputs.md (PROPOSED / OPEN) | PROPOSED / OPEN | V2 design input | E-21 and E-22 |
+| V-15 | A-009_v2_design_inputs.md 126 (13. Cross-topic items) and 143 (16. Status and boundary); C-004_v2_design_inputs.md 24 | PROPOSED / OPEN | V2 design input | line 126: "index_universe.yaml to J-011 (regime)"; line 143: "Carried to: ... J (S&R, shadow, regime)"; C-004 line 24 restates line 126 |
+- V-15's "index_universe.yaml to J-011" sits in a line that summarises Rama's Q3 answer. Whether the routing is
+  Rama's words or Claude's is UNKNOWN / NOT ESTABLISHED from the line itself.
+- Bookmarks: none names D-008. This is a bounded negative from the Stage 0 locator search; lines 578 to 645 were
+  not read (output 2, section 4). D5-BK-6 was proposed and not stored (V-03).
+
+========================================================================================================================
+6. NOT RESEARCHED / UNKNOWN (candidates for V2_DESIGN_LOG section 8; none written; Route B does not research them)
+========================================================================================================================
+| ID | Legacy fact | Status | Why it may matter (INTERPRETATION) |
+|---|---|---|---|
+| NR-01 | what the regime engine computed (method, inputs beyond the recorded imports, outputs) | NOT RESEARCHED (D-005 G-07 UNKNOWN) | KEEP or MODIFY of any legacy regime logic would need it (W-11); a V2 requirement does not |
+| NR-02 | whether the regime runner ran on any host, and with which flags | UNKNOWN / NOT ESTABLISHED (D-004 G-03, G-04) | the same |
+| NR-03 | whether regime output reached any entry, gate, ranking or final-decision path outside the screener | NOT RESEARCHED | the same |
+| NR-04 | the regime state file's content and readers | NOT RESEARCHED | the same |
+| NR-05 | the "regime-ranking feature" beyond "Phase 0 ... DATA ONLY" | NOT RESEARCHED | the same |
+| NR-06 | the market effect on the legacy results | UNKNOWN (A-008 section 18; Q-34 (a)) | V2's evidence needs, if market context is recorded |
+| NR-07 | whether index candles were stored in operation | UNKNOWN (D-004 G-03) | the same |
+
+========================================================================================================================
+7. OPEN-QUESTION EVIDENCE (reported only; nothing decided)
+========================================================================================================================
+- OQ-01 (D-008 against J-011). The recorded owners differ, and none is decided here:
+  - D-004 records D-008 as holding "regime logic" (E-10), and D-005 assigns the regime hits to D-008 (E-05).
+  - D-003 places "the S&R, V3 and regime engines" with J (E-18), and D-002 gives "the regime feature" as the
+    index universe's owner (E-19).
+  - A V2 design-input line routes index_universe.yaml to J-011 (V-15).
+  - The Master Agenda lists both topics (M8-01, M8-02).
+- OQ-02 (D-007). These are OPEN / UNRESOLVED dependencies; no hierarchy is decided:
+  - D-004 records the timeframes fetched (day, 60minute, 30minute, minute; section 1.3, line 48), the regime's
+    400-day daily lookback (E-02) and "the regime needs the 09:15 to 10:00 OHLC" (E-12).
+  - VP-03 ties evaluation to signal type (V-08), and E-22 puts trend in "daily conditions ... as context".
+- OQ-03 (D-006): no formation dependency appeared in the reads. OPEN, none identified.
+- OQ-06 (sector and market-wide moves): only VP-12's consideration (V-09) and A-002 section 4's concentration
+  mechanisms (dropped, output 2, S1-19). No unavoidable D-008 dependency was found. The issue stays a bookmark for
+  D-017 and F-007.
+- OQ-07 (high-of-day): E-25 and E-21 concern entry and S&R. No distinct broad-market-context aspect is supported by
+  the Group A sources read.
+
+STATUS (unchanged): Route B in force (DR-074, W-11); option C in force (DR-073); D-006 DEFERRED / NOT CLOSED (Phase
+C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN); D-007 BLOCKED / NOT CLOSED (Stage 1 NOT AUTHORISED; NO APPROVED
+METHOD IDENTIFIED). D-008: Stage 1 evidence only; no decision, file write, commit or push. Owed to the next storage
+package: the Route B post-push record and its exact push line.

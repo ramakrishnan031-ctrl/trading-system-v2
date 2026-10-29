@@ -1,0 +1,61 @@
+D-008 TREND / MARKET CONTEXT - OPEN QUESTIONS AND DEPENDENCIES (FOR CHATGPT'S REVIEW)
+Route B (DR-074, W-11). Prepared 29-Oct-2026 (IST) by Claude. A companion to
+  D-008_REQUIREMENTS_RECONCILIATION_DRAFT_29-OCT-2026.txt (RQ8- and evidence IDs refer to it and to the Stage 1
+  evidence sheet).
+Nothing below is decided. A proposal in the last column is INTERPRETATION, for review.
+
+========================================================================================================================
+1. OPEN QUESTIONS
+========================================================================================================================
+| ID | Question | Source | Who decides | Claude's note (INTERPRETATION) |
+|---|---|---|---|---|
+| OQ8-01 | Which trading paths does recording apply to: intraday, delivery or both? | Q2 not decided | Rama | under RQ8-01 no path uses context in decisions, so Q2 now concerns only recording scope (RQ8-04) |
+| OQ8-02 | NIFTY 50 or NIFTY 100 as the reference; are other indices recorded? | Q3 | Rama, later | NIFTY 50 stays provisional and is never written as final |
+| OQ8-03 | What counts as "missing", "late" and "suspect" market-context data? | Q4 | design (owner not identified from the inputs) | no threshold is invented here |
+| OQ8-04 | The pre-flight check and the immediate alert: when it runs, what it checks, how alerts repeat or de-duplicate, and its class | Q4 | design (owner not identified) | to stay consistent with RQ8-01, the check reports and alerts and blocks neither trading nor the start |
+| OQ8-05 | What exactly is recorded as "market context" with each signal and trade (which values, at which moment, from which source)? | Q5 | D-008 requirements, then design | D-008's boundary excludes choosing indicators, formulas and lookbacks, yet recording needs a definition of what is recorded; where that definition is made needs a decision (section 3, conflict C-1) |
+| OQ8-06 | The data design for RQ8-04: schema, provenance, timestamp alignment with the signal, quality checks, retention | Q5 | design (owner not identified) | open as ChatGPT's review states |
+| OQ8-07 | Where stock-level trend is handled, and how it is kept apart from broad-market trend | Q6 | agenda governance | likely the strategy and scanner topics, not D-008; no owner moved here |
+| OQ8-08 | The time horizon of the recorded context | Q7 | Rama, after D-007 | OPEN / UNRESOLVED; D-007 BLOCKED / NOT CLOSED; no hierarchy invented |
+| OQ8-09 | Confirming the D-008 and J-011 split that Rama favours | Q8 | ChatGPT review, then a recorded decision | the split adopts nothing from the old mechanism; J-011 would review it |
+| OQ8-10 | Whether NR-01 to NR-07 go to V2_DESIGN_LOG section 8 at D-008's storage, or wait for J-011 | evidence sheet, section 6 | ChatGPT review | under RQ8-01 they bear mainly on J-011 |
+| OQ8-11 | What evidence, over what period, would let Rama decide on any later use of market context? | Q10 | Rama, later | depends on RQ8-04 being built; the DR-016 legacy audit cannot supply it while option C (DR-073) stands |
+
+========================================================================================================================
+2. CROSS-TOPIC BOUNDARIES AND DEPENDENCIES
+========================================================================================================================
+| Item | Topic | Status | Relation to D-008 |
+|---|---|---|---|
+| Timeframes and their hierarchy | D-007 | BLOCKED / NOT CLOSED (DR-073) | OQ8-08 waits; nothing in D-008 settles it (RB-Q2) |
+| Formation and patterns | D-006 | DEFERRED / NOT CLOSED (DR-072) | no dependency identified |
+| The old regime mechanism | J-011 | the agenda topic; split favoured by Rama (OQ8-09) | D-008 does not keep, modify or revive it |
+| Sector strength, sector caps, market-wide crowding | D-017, F-007 | bookmark (VP-12, V-09; OQ-06) | not D-008 under the current boundary |
+| Late entries; entries near the day's high | D-009 to D-016 (VP-44, V-12) | OPEN in those topics | not market context (E-21, E-25, E-26) |
+| Stock-level trend conditions | the strategy and scanner topics (E-24; VP-03, V-08) | OPEN | OQ8-07 |
+| Alerts on both channels; pre-flight checks | the alerting and operations topics (owner not identified from the inputs) | OPEN | OQ8-03, OQ8-04 |
+| Pre-market briefing | VP-26 (Ratify at L, M; V-10) | PROPOSED | information only (RQ8-07) |
+| Recording design | design phase (owner not identified) | OPEN | OQ8-05, OQ8-06 |
+
+========================================================================================================================
+3. CONFLICTS TO RESOLVE BEFORE A REQUIREMENTS RECORD
+========================================================================================================================
+- C-1: RQ8-04 (record market context) requires a definition of what is recorded. The D-008 boundary (Stage 0
+  prompt) excludes deciding "the trend formula, indicators, lookbacks, timeframe hierarchy". A requirements record
+  can state that context is recorded without saying what context is.
+  - Proposal: D-008 records the requirement and leaves the definition OPEN for a named later step, rather than
+    widening D-008's boundary.
+- C-2: the pre-flight check in Q4 must not act as a gate (RQ8-01).
+  - Proposal: the requirements record states it as a warning-class check that alerts on both channels and blocks
+    nothing.
+
+========================================================================================================================
+4. STATEMENTS
+========================================================================================================================
+- No legacy source, legacy repository, V2 repository, search, test or external page was used for these two files.
+  Nothing was written to any repository or project record.
+- Governance status unchanged:
+  - Route B and option C in force (DR-074, DR-073).
+  - D-006 DEFERRED / NOT CLOSED; Phase C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN.
+  - D-007 BLOCKED / NOT CLOSED; no approved method identified.
+  - D-008 answers are requirement input, not frozen.
+  - The Route B post-push record and its push line are owed to the next storage package.

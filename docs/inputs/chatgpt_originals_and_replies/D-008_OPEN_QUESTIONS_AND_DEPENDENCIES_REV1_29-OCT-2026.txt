@@ -1,0 +1,68 @@
+D-008 TREND / MARKET CONTEXT - OPEN QUESTIONS AND DEPENDENCIES (FOR CHATGPT'S REVIEW)
+Route B (DR-074, W-11). Prepared 29-Oct-2026 (IST) by Claude. A companion to
+  D-008_REQUIREMENTS_RECONCILIATION_DRAFT_29-OCT-2026.txt (RQ8- and evidence IDs refer to it and to the Stage 1
+  evidence sheet).
+Revision 1, 29-Oct-2026 (IST): revised after CHATGPT_REVIEW_D008_RECONCILIATION_DRAFT_29-OCT-2026.txt (the change
+  list is in the draft's section 6). OQ8-01 to OQ8-11 keep their IDs; OQ8-12 and OQ8-13 are new. Revision 0 is kept
+  unchanged as a local copy (SHA-256 1da0b74f...).
+Nothing below is decided. A proposal in the last column is INTERPRETATION, for review.
+
+========================================================================================================================
+1. OPEN QUESTIONS
+========================================================================================================================
+| ID | Question | Source | Who decides | Claude's note (INTERPRETATION) |
+|---|---|---|---|---|
+| OQ8-01 | Which trading paths (intraday, delivery or both), and which strategies (all, or only those that ask for it), does market context apply to? | Q2 not decided (RQ-02) | Rama | under RQ8-01 no path uses context for Trade / Reject, so for that Q2 concerns the scope of recording and alerting (RQ8-03, RQ8-04); for sizing and priority it depends on OQ8-12; Q2 stays OPEN |
+| OQ8-02 | NIFTY 50 or NIFTY 100 as the reference; are other indices recorded? | Q3 | Rama, later | NIFTY 50 stays provisional and is never written as final |
+| OQ8-03 | What counts as "missing", "late" and "suspect" market-context data? | Q4 | design (owner not identified from the inputs) | no threshold is invented here |
+| OQ8-04 | The market-context pre-flight check and the immediate alert: when it runs, what it checks, and how alerts repeat or de-duplicate | Q4 | design (owner not identified) | boundary (ChatGPT's review, correction 2): this check is warning / alert-only and cannot block a trade or the system start solely because market-context data is missing, late or suspect; other pre-flight checks, existing or future, keep whatever authority their own topics give them, and nothing here makes the pre-flight suite non-blocking |
+| OQ8-05 | What exactly is recorded as "market context" with each signal and trade: the minimum record fields, the values, the moment and the source | Q5 | the later step named under OQ8-13 | D-008 is not widened to select indicators, formulas, lookbacks or a timeframe hierarchy (section 3, C-1) |
+| OQ8-06 | The data design for RQ8-04: timestamps and their alignment with the signal, source and provenance, quality state, storage, retention | Q5 | the later step named under OQ8-13 | open as ChatGPT's reviews state |
+| OQ8-07 | Where stock-level trend is handled, and how it is kept apart from broad-market trend | Q6 | agenda governance | likely the strategy and scanner topics, not D-008; no owner moved here |
+| OQ8-08 | The time horizon of the recorded context | Q7 | Rama, after D-007 | OPEN / UNRESOLVED; D-007 BLOCKED / NOT CLOSED; no hierarchy invented |
+| OQ8-09 | Confirming the D-008 and J-011 split that Rama favours | Q8 | ChatGPT review, then a recorded decision | a preference to consider; stays open until formally confirmed; the split adopts nothing from the old mechanism, and J-011 would review it |
+| OQ8-10 | Whether NR-01 to NR-07 go to V2_DESIGN_LOG section 8 at D-008's storage, or wait for J-011 | evidence sheet, section 6 | ChatGPT review | they stay NOT RESEARCHED candidates, not established legacy behaviour; under RQ8-01 they bear mainly on J-011 |
+| OQ8-11 | What evidence, over what period, would let Rama decide anything further about market context? | Q10 | Rama, later | collecting evidence does not reopen Q1 or let context affect Trade / Reject; any such change is a separate explicit governance decision. Depends on RQ8-04 being built; the DR-016 legacy audit cannot supply it while option C (DR-073) stands |
+| OQ8-12 (NEW in revision 1) | Is market context also excluded from position sizing, ranking / priority and other trade attributes, or only from Trade / Reject? And so, when context data is missing, late or suspect, do those attributes stay unchanged? | Q1, Q4 (ChatGPT's review, corrections 1 and 3) | Rama | Rama's answer says "No market-context input in trade decisions"; the wider exclusion is a proposed clarification only. Until he answers, neither the wider exclusion nor its opposite is recorded as his requirement |
+| OQ8-13 (NEW in revision 1) | Which later step, and which owner, defines the minimum record fields, timestamps, source and provenance, quality state and storage that make RQ8-04 implementation-ready? | Q5 (ChatGPT's review, correction 4) | agenda governance: ChatGPT review, then Rama | until it is named, RQ8-04 stays a high-level requirement; no topic is proposed here because the inputs do not identify one; OQ8-03 and OQ8-04 also have no identified owner |
+
+========================================================================================================================
+2. CROSS-TOPIC BOUNDARIES AND DEPENDENCIES
+========================================================================================================================
+| Item | Topic | Status | Relation to D-008 |
+|---|---|---|---|
+| Timeframes and their hierarchy | D-007 | BLOCKED / NOT CLOSED (DR-073) | OQ8-08 waits; nothing in D-008 settles it (RB-Q2) |
+| Formation and patterns | D-006 | DEFERRED / NOT CLOSED (DR-072) | no dependency identified |
+| The old regime mechanism | J-011 | the agenda topic; split favoured by Rama, to consider (OQ8-09) | D-008 does not keep, modify or revive it |
+| Sector strength, sector caps, market-wide crowding | D-017, F-007 | bookmark (VP-12, V-09; OQ-06) | not D-008 under the current boundary |
+| Late entries; entries near the day's high | D-009 to D-016 (VP-44, V-12) | OPEN in those topics | not market context (E-21, E-25, E-26) |
+| Stock-level trend conditions | the strategy and scanner topics (E-24; VP-03, V-08) | OPEN | OQ8-07 |
+| Sizing, ranking / priority and other trade attributes | the owning topics (not identified from the inputs) | OPEN | OQ8-12 decides whether market context touches them at all |
+| Alerts on both channels; pre-flight checks | the alerting and operations topics (owner not identified from the inputs) | OPEN | OQ8-03, OQ8-04; only the market-context check is bounded here |
+| Pre-market briefing | VP-26 (Ratify at L, M; V-10) | PROPOSED | information only (RQ8-07) |
+| Recording design | the later step named under OQ8-13 (owner not identified) | OPEN | OQ8-05, OQ8-06, OQ8-13 |
+
+========================================================================================================================
+3. CONFLICTS TO RESOLVE BEFORE A REQUIREMENTS RECORD
+========================================================================================================================
+- C-1: RQ8-04 (record market context) requires a definition of what is recorded. The D-008 boundary (Stage 0
+  prompt) excludes deciding "the trend formula, indicators, lookbacks, timeframe hierarchy".
+  - Proposal: D-008 records the high-level requirement only. It is not implementation-ready until the later step
+    named under OQ8-13 defines the minimum record fields, timestamps, source and provenance, quality state and
+    storage. D-008's boundary is not widened.
+- C-2: the market-context pre-flight check in Q4 must not act as a gate (RQ8-01).
+  - Proposal: the requirements record states that this check is warning / alert-only. It alerts on both channels
+    and cannot block a trade or the system start solely because market-context data is missing, late or suspect.
+  - The proposal covers this check only. Other pre-flight checks, existing or future, keep their own authority.
+
+========================================================================================================================
+4. STATEMENTS
+========================================================================================================================
+- No legacy source, legacy repository, V2 repository, search, test or external page was used for these two files.
+  Nothing was written to any repository or project record.
+- Governance status unchanged:
+  - Route B and option C in force (DR-074, DR-073).
+  - D-006 DEFERRED / NOT CLOSED; Phase C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN.
+  - D-007 BLOCKED / NOT CLOSED; no approved method identified.
+  - D-008 answers are requirement input, not frozen.
+  - The Route B post-push record and its push line are owed to the next storage package.

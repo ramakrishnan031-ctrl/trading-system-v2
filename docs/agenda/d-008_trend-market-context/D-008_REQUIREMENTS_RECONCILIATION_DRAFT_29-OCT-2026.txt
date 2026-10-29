@@ -1,0 +1,137 @@
+D-008 TREND / MARKET CONTEXT - REQUIREMENTS RECONCILIATION DRAFT (FOR CHATGPT'S REVIEW)
+Route B (DR-074, W-11). Prepared 29-Oct-2026 (IST) by Claude.
+Revision 1, 29-Oct-2026 (IST): revised after CHATGPT_REVIEW_D008_RECONCILIATION_DRAFT_29-OCT-2026.txt. The changes
+  are listed in section 6. Revision 0 is kept unchanged as a local copy (SHA-256 a4475c8f...).
+Status: DRAFT. It records Rama's requirement input against the accepted Stage 1 evidence. Nothing here is a V2
+  decision, a frozen record or an implemented behaviour.
+Inputs, and only these:
+- D-008_STAGE1_EVIDENCE_SHEET_29-OCT-2026.txt (E-, V- and NR- IDs below);
+- D-008_STAGE1_READ_LOG_29-OCT-2026.txt;
+- D-008_STAGE1_RAMA_ANSWER_SHEET_QUESTIONS_29-OCT-2026.txt;
+- Rama's answers as reproduced in CHATGPT_REVIEW_D008_RAMA_ANSWERS_AND_NEXT_STEP_29-OCT-2026.txt, with his own
+  wording from the screenshot of his message to ChatGPT that came with it (quoted below as "Rama's words");
+- for revision 1: revision 0 of this file and its companion, and CHATGPT_REVIEW_D008_RECONCILIATION_DRAFT_29-OCT-2026.txt.
+No legacy source, legacy or V2 repository, search, test or external page was used, and nothing was written outside
+  this file and its companion.
+
+LABELS
+- FACT (TEXT): what an input file says.
+- HISTORICAL: a frozen manual's statement, as the evidence sheet records it.
+- RAMA REQUIREMENT INPUT: Rama's stated preference; an input, not a decision.
+- INTERPRETATION: Claude's reading, or a proposed clarification.
+- OPEN / NOT DECIDED.
+- UNKNOWN / NOT ESTABLISHED.
+
+========================================================================================================================
+1. RAMA'S ANSWERS, RECONCILED
+========================================================================================================================
+| Q | Rama's words (screenshot) | ChatGPT's record (review file) | Requirement input (draft wording) | Evidence it meets | Status |
+|---|---|---|---|---|---|
+| Q1 | "Option A - No market-context input in trade decisions Why? Since signals/stocks based on its own strategy fulfilment, meaning even during blood path still some stocks moving up, So whole market movement is irrespective of strategy qualification." | Option A, no; "blood bath" | RQ8-01: Rama's input is "No market-context input in trade decisions". Recorded scope: broad-market context is not an input to trade qualification (Trade / Reject); a signal qualifies, or not, on its own strategy's conditions. His answer does not say whether the exclusion also covers sizing, ranking / priority or other trade attributes (OQ8-12). | E-02, E-03 (regime disabled in the repository configuration), E-06, E-07 (shadow / default-off texts), E-17 (no regime input to the screener: INTERPRETATION) | RAMA REQUIREMENT INPUT. Reading "trade decisions" as Trade / Reject is INTERPRETATION, which ChatGPT's review calls reasonable. Any wider scope OPEN (OQ8-12) |
+| Q2 | "Not decided / discuss later" | not decided | none | DR-032's two paths (cited in the questions file) | OPEN (OQ8-01) |
+| Q3 | "NIFTY 50 first; other indices not decided (meaning nifty 50 is sufficient, later we will decide whether nifty 50 or Nifty 100), no take this note cautiously" | NIFTY 50 first; NIFTY 50 against NIFTY 100 OPEN | RQ8-02: NIFTY 50 is the current starting reference for recorded market context. It is provisional and not frozen: NIFTY 50 against NIFTY 100 is open, and other indices are not decided. | E-02, E-03 (the legacy configuration named NIFTY 50); E-12 (an index list as "data only") | RAMA REQUIREMENT INPUT (provisional); OPEN (OQ8-02) |
+| Q4 | "Option B: proceed without the context and alert (Telegram & Email immediately, even add this is also needs to be checked during pre-flight check along with other checks)" | Option B; both channels immediately; in pre-flight | RQ8-03: if market-context data is missing, late or suspect, that context is not used. The otherwise-qualified process continues without a market-context-derived decision change, while the data-quality condition is recorded and an alert goes at once on both Telegram and email. The condition is among the pre-flight checks. That market-context check is warning / alert-only: it cannot block a trade or the system start solely because market-context data is missing, late or suspect. Whether sizing, ranking / priority and other attributes stay unchanged is OPEN (OQ8-12). | E-14 (whether any legacy index path ran is UNKNOWN); E-15 (D-004's index row records only that "the closure path fails safe") | RAMA REQUIREMENT INPUT (the wording "proceed without context" is ChatGPT's review, correction 3; the warning-only boundary is correction 2). Definitions OPEN (OQ8-03, OQ8-04, OQ8-12) |
+| Q5 | "Option A - Yes, whether or not it affects decisions: better for retrospective analysis; requires data definitions, storage, and quality checks." | Option A | RQ8-04: market context is recorded with every signal and trade, whether or not it affects decisions, for retrospective analysis. This is a high-level requirement only. It is not implementation-ready until a later named step defines the minimum record fields, timestamps, source and provenance, quality state and storage (OQ8-05, OQ8-06, OQ8-13). | E-16 ("With no index data stored, the July market effect could not be separated."); V-07 (Q-34 (a), market regime among the open causes); NR-06 | RAMA REQUIREMENT INPUT. The definition and its owning step OPEN (OQ8-05, OQ8-06, OQ8-13) |
+| Q6 | "both, but separateNot decided / discuss later" | both, separate; handling not decided | RQ8-05: broad-market trend and a stock's own trend are separate concepts and are not merged into one signal. | E-24 (stock-level EMA200 trend conditions in the legacy scanners); E-22 (Claude's considerations in a V2 design input: "daily conditions stay as context") | RAMA REQUIREMENT INPUT (the concepts); handling and ownership OPEN (OQ8-07) |
+| Q7 | "Not decided / discuss later" | not decided | none | E-02, E-12 (the legacy regime's lookback and its 09:15 to 10:00 OHLC note); V-08 (VP-03) | OPEN (OQ8-08); D-007 BLOCKED / NOT CLOSED |
+| Q8 | "Option A is the clearest separation to consider" | Option A favoured | RQ8-06: Rama favours a split, to consider. D-008 sets the V2 market-context requirements, and J-011 separately reviews what happens to the old regime mechanism. This retains and revives nothing. | E-05, E-10, E-18, E-19, V-15 (the recorded owners differ) | RAMA REQUIREMENT INPUT (a preference, not a final decision). Confirmation OPEN (OQ8-09) |
+| Q9 | "Option A: information only" | Option A | RQ8-07: a pre-market briefing may show market context as information only. It never becomes a trade gate, explicitly or silently. | V-10 (VP-26: AI briefings; Ratify at L, M) | RAMA REQUIREMENT INPUT |
+| Q10 | "I am not sure; collect evidence before deciding" | collect evidence first | RQ8-08: Rama wants evidence collected before deciding anything further. Collecting it (RQ8-04) does not reopen Q1 and does not let market context affect Trade / Reject. Any later proposal to use context in Trade / Reject would need a separate, explicit governance decision. | E-16; V-07; NR-06 | RAMA REQUIREMENT INPUT. Later decisions OPEN (OQ8-11) |
+
+Reading notes (INTERPRETATION; for Rama to confirm):
+- Q1: "blood path" is read as "blood bath", a broad-market sell-off, as ChatGPT records it.
+- Q3: "no take this note cautiously" is read as "so take this note cautiously".
+- Q5 and Q8: the answers reuse wording from ChatGPT's guide ("requires data definitions, storage, and quality
+  checks"; "the clearest separation to consider"). They are recorded as Rama's choice of those options.
+- Q6: "separateNot decided" is read as two parts: "both, but separate" and "not decided / discuss later" for the
+  details.
+
+========================================================================================================================
+2. HOW Q1 FITS WITH Q4, Q5 AND Q9
+========================================================================================================================
+What Rama said (RAMA REQUIREMENT INPUT):
+- Q1: "No market-context input in trade decisions".
+- Q4: proceed without the context and alert at once on Telegram and email; include the condition in the pre-flight
+  checks.
+- Q5: record context with every signal and trade.
+- Q9: the briefing is information only.
+
+How they fit (INTERPRETATION):
+- Q1 is read as keeping market context out of Trade / Reject qualification. Q4, Q5 and Q9 are about observing
+  context: recording it, reporting its absence and showing it in a briefing. The four answers are compatible if
+  market context is observability and recording only and never changes Trade / Reject qualification.
+- Proposed clarification, not settled: the exclusion in Q1 might also cover sizing, ranking / priority and other
+  trade attributes. Rama's answer does not say so, so this is OPEN (OQ8-12). Until he answers, neither the wider
+  exclusion nor its opposite is recorded as his requirement.
+
+What follows for the requirements record:
+- Missing, late or suspect market-context data (Q4). That context is not used. The otherwise-qualified process
+  continues without a market-context-derived decision change. The data-quality condition is recorded, and the
+  requested alerts are issued. What this means for sizing, ranking / priority and other attributes is OPEN
+  (OQ8-12).
+- The pre-flight check (Q4). The market-context check is warning / alert-only. It cannot block a trade or the system
+  start solely because market-context data is missing, late or suspect. Otherwise it would act as the hidden gate
+  that Q1 rules out (OQ8-04).
+  - This applies to the market-context check only. It says nothing about the other pre-flight checks, existing or
+    future; they keep whatever authority their own topics give them.
+- Rama's rationale for Q1 is recorded as he gave it: a stock that meets its own strategy conditions may rise during
+  a broad sell-off. It is not recorded as a claim that the market never affects individual stocks, or that strategy
+  qualification guarantees a result.
+
+========================================================================================================================
+3. WHAT THE LEGACY RECORDS DO AND DO NOT SAY (from the accepted evidence; no new reading)
+========================================================================================================================
+- HISTORICAL: the frozen manuals record a regime runner on the shared historical-data closure, with a JSON state
+  file. It is disabled in the repository configuration, which names NIFTY 50 and a 400-day daily lookback (E-01,
+  E-02, E-03, E-11). Its texts call it shadow or default-off (E-06, E-07).
+- HISTORICAL: an index list existed as "data only" (E-08, E-12), and the post-close script fetched indices into the
+  candles table (E-13).
+- HISTORICAL, labelled INTERPRETATION in D-003: no regime input reached the secondary screener (E-17).
+- UNKNOWN / NOT ESTABLISHED, or NOT RESEARCHED: what the regime computed, whether it ran, whether it reached any
+  other decision path, and the market effect on the legacy results (NR-01 to NR-07).
+  - NR-01 to NR-07 are NOT RESEARCHED candidates. They are not established legacy behaviour, and how they are
+    handled is OPEN (OQ8-10).
+- So RQ8-01 is a V2 requirement in its own right. It is not a KEEP of legacy behaviour: KEEP needs a frozen-manual
+  citation of the behaviour kept (W-11), and the records establish only the repository configuration, not what ran.
+
+========================================================================================================================
+4. WHAT THIS DRAFT DOES NOT DO
+========================================================================================================================
+- It does not choose an index universe beyond the provisional NIFTY 50, a market-context measure, a formula, a
+  lookback, a timeframe or hierarchy, a freshness threshold, a retry or de-duplication rule, a pre-flight design, a
+  schema or a storage location.
+- It does not widen D-008 to select indicators, formulas, lookbacks or a timeframe hierarchy for the recording.
+- It does not decide whether market context is excluded from sizing, ranking / priority or other trade attributes
+  (OQ8-12).
+- It does not name the later step, or its owner, that makes RQ8-04 implementation-ready (OQ8-13).
+- It does not treat collecting evidence as reopening Q1 (RQ8-08).
+- It does not make the pre-flight suite as a whole non-blocking; only the market-context check is described.
+- It does not settle D-008 against J-011, ownership of stock-level trend, or the sector bookmark (D-017 / F-007).
+- It does not decide anything about the old regime mechanism (J-011's review, if confirmed).
+- It writes nothing to the decision register, the design log's section 8 or any repository.
+  - NR-01 to NR-07 stay candidates. INTERPRETATION: under RQ8-01 they bear on J-011's review rather than on D-008's
+    requirements, and ChatGPT may prefer to record them only when J-011 comes up (OQ8-10).
+
+========================================================================================================================
+5. STATUS (unchanged)
+========================================================================================================================
+- Route B in force (DR-074, W-11); option C in force (DR-073).
+- D-006: DEFERRED / NOT CLOSED; Phase C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN.
+- D-007: BLOCKED / NOT CLOSED; no approved method identified.
+- D-008: Stage 1 evidence accepted with qualifications. Rama's answers are requirement input, not frozen
+  decisions. No requirements record, register row, commit or push.
+- Owed to the next storage package: the Route B post-push record and its exact push line.
+
+========================================================================================================================
+6. REVISION 1 CHANGES (against ChatGPT's review)
+========================================================================================================================
+| Review correction | Change made |
+|---|---|
+| 1. Q1 not expanded | RQ8-01 now quotes Rama's words and limits the recorded scope to Trade / Reject, labelled INTERPRETATION. "Size or priority" is removed from section 2's compatibility statement and is now a proposed clarification. New OQ8-12 asks whether sizing, ranking / priority or other attributes are also excluded. |
+| 2. Q4 pre-flight narrowed | RQ8-03 and section 2: the market-context check is warning / alert-only and cannot block a trade or the system start solely because market-context data is missing, late or suspect. Other pre-flight checks are not affected (section 4 and companion OQ8-04, C-2). |
+| 3. "Proceed without context" | RQ8-03 and section 2 use the review's wording. Whether sizing, ranking / priority and other attributes stay unchanged is OPEN (OQ8-12). |
+| 4. Q5 and C-1 | RQ8-04 is stated as a high-level requirement. It is not implementation-ready until a later named step defines the minimum fields, timestamps, source and provenance, quality state and storage. New OQ8-13 asks which step and owner; the companion's C-1 and dependency table are updated. D-008 is not widened (section 4). |
+| 5. Q3 provisional | Kept. "Provisional" is added to RQ8-02's wording. |
+| 6. Q8 and J-011 | Kept as a preference to consider. OQ8-09 stays open until the split is formally confirmed. |
+| 7. Q10 and evidence | RQ8-08 states that collecting evidence does not reopen Q1 or let context affect Trade / Reject; any such change needs a separate explicit governance decision. |
+| 8. IDs and open items | OQ8-01 to OQ8-11 keep their IDs. OQ8-12 and OQ8-13 are added and marked new. Q2, Q3, Q6, Q7, Q8 and Q10 stay open where they were. NR-01 to NR-07 stay NOT RESEARCHED candidates (section 3). |

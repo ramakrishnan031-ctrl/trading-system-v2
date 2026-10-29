@@ -1,0 +1,69 @@
+D-008 REQUIREMENTS PACKAGE — CHATGPT REVIEW & CLAUDE REVISION INSTRUCTIONS
+Prepared: 29-Oct-2026 (IST)
+Scope: Review of the two supplied files only:
+- D-008_v2_requirements.md (Revision 0)
+- D-008_STORAGE_ITEMS_AND_PROPOSED_ENTRIES_29-OCT-2026.txt (Revision 0)
+
+STATUS
+ACCEPTABLE IN PRINCIPLE, WITH REQUIRED WORDING / PACKAGE-INTEGRITY CORRECTIONS.
+Do not freeze, store, commit, or push this revision yet. Claude should revise only the two local draft files and return them for ChatGPT's final review. Existing governance remains unchanged.
+
+DECISIONS ON THE FOUR PACKAGE QUESTIONS
+
+PKG-Q1 — DR-075 register status: ACCEPT OPTION (a), WITH THE CLARIFICATIONS BELOW.
+Record the supported, reviewed requirements at requirement level. Keep RQ8-02 (NIFTY 50) provisional and RQ8-06 (D-008/J-011 split) as a preference to consider, not a final decision. Keep all implementation details open. Do not turn interpretations into direct Rama quotations or settled design decisions.
+
+PKG-Q2 — NR-01 to NR-07: ACCEPT OPTION (a).
+Add all seven rows to V2_DESIGN_LOG section 8 as NOT RESEARCHED / UNKNOWN items with their stated boundaries and dependencies. This is a record of evidence gaps, not a finding that the underlying legacy behaviour did or did not exist or run. Do not access legacy sources to fill them. OQ8-10 may be marked closed only as an administrative question about where to record the gaps; the seven gaps themselves remain open.
+
+PKG-Q3 — Cross-topic bookmarks: ACCEPT OPTION (a).
+Add BK-71 through BK-75 with the described scope, owners/dependencies, and OPEN status. These are tracking bookmarks, not new requirements or design decisions. Preserve the existing BK-69/BK-70 references in the frozen D-004 manual; do not alter that manual.
+
+PKG-Q4 — Q-34 and VP-26 annotations: ACCEPT OPTION (a).
+Add the proposed tracking-only annotations. Do not change either item's status, ratification field, or owner.
+
+REQUIRED CORRECTIONS BEFORE FINAL REVIEW
+
+1. Narrow the phrase “observability and recording only” in D-008_v2_requirements.md section 3.
+   Current wording may imply that market context is excluded from every trade attribute. That is not decided: OQ8-12 explicitly remains open. State narrowly that market context does not affect Trade/Reject qualification under the current interpretation; its possible effect on sizing, ranking/priority, or other trade attributes remains OPEN under OQ8-12.
+
+2. Narrow RQ8-03 in D-008_v2_requirements.md section 2 and the matching DR-075 register-row text.
+   “The otherwise-qualified process continues without a market-context-derived decision change” is broader than the settled boundary may support. Specify that the process continues without a market-context-derived change to Trade/Reject qualification. Explicitly leave any effect on sizing, ranking/priority, or other trade attributes OPEN under OQ8-12. Preserve the alerting and warning-only requirements: the market-context data-quality condition is recorded and alerts go immediately through Telegram and email; this particular check cannot block a trade or system start solely because market-context data is missing, late, or suspect. Other pre-flight checks retain their own authority.
+
+3. Keep Q1 attribution precise.
+   “No market-context input in trade decisions” is Rama's stated answer. Reading “trade decisions” as specifically Trade/Reject qualification is an INTERPRETATION, not a verbatim clarification by Rama. Preserve that distinction everywhere, including the register row and decision record.
+
+4. Keep requirement and implementation status distinct.
+   RQ8-04 is a high-level requirement to record market context with every signal and trade. It is not implementation-ready. Do not invent fields, schema, source, thresholds, timestamps, retention, owner, indicator, formula, lookback, or timeframe hierarchy. Keep OQ8-03 to OQ8-06 and OQ8-13 open as applicable.
+
+5. Register and design-log consistency.
+   - DR-075 may mark the supported requirements as DECIDED at requirement level, but must clearly identify provisional items and open questions.
+   - If PKG-Q2 is applied, list OQ8-10 as administratively closed in the register/design-log summary, while NR-01 to NR-07 remain OPEN gaps.
+   - The status summary must not say “OQ8-01 to OQ8-13 OPEN” without noting the OQ8-10 administrative closure, if that closure is applied.
+   - Keep D-006 DEFERRED / NOT CLOSED, D-007 BLOCKED / NOT CLOSED, Route B / Option C in force, and no legacy-source access.
+
+6. Storage plan integrity.
+   - The file list and manifest must enumerate every file actually included in the eventual commit, with exact destination and SHA-256 for every file.
+   - The plan currently says the ChatGPT review of this package and any prompt sent with it will also be stored unchanged, but these artifacts are not given explicit numbered destinations in the 31-file list. Either add their exact destinations as explicit rows and update the count, or remove that claim and do not store them in this commit. Do not leave a vague “also stored” exception to the manifest.
+   - Preserve the owed Route B post-push verification record byte-for-byte and its exact push line. Include both in the eventual package exactly as the plan specifies.
+   - Do not claim that storage, commit, push, or fresh-clone verification has happened until it has actually happened.
+
+7. Scope and wording.
+   - Keep the seven NR items marked NOT RESEARCHED / UNKNOWN as stated; do not present repository settings or source-path presence as proof of runtime behaviour.
+   - Do not change any frozen manual, D-004/D-005 record, DR-072, DR-073, DR-074, or earlier governance decision.
+   - Do not start D-006, D-007, J-011, or another agenda topic as part of this package.
+   - Do not access legacy repositories/source, run legacy code/tests, or make any implementation change.
+
+CLAUDE TASK
+Revise only the two supplied local draft files in line with the points above. Return:
+1. Revised D-008_v2_requirements.md
+2. Revised D-008_STORAGE_ITEMS_AND_PROPOSED_ENTRIES_29-OCT-2026.txt
+3. A concise change log mapping each correction above to the exact section/row changed, plus a statement that no repository write, freeze, commit, push, legacy-source read, or test occurred.
+
+STOP after returning those three items. Do not store or push. ChatGPT will conduct the final review before any storage action.
+
+GOVERNANCE STATUS AFTER THIS REVIEW
+- D-008: requirements package remains DRAFT / NOT FROZEN pending corrections and final review.
+- D-006: DEFERRED / NOT CLOSED; Phase C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN.
+- D-007: BLOCKED / NOT CLOSED; no approved legacy-source reading method identified.
+- Route B (DR-074) and Option C (DR-073) remain in force.

@@ -1,0 +1,62 @@
+CHATGPT REVIEW — D-008 RAMA ANSWERS AND NEXT STEP
+Date: 29-Oct-2026 (IST)
+
+DECISION STATUS
+Rama has supplied requirements input for all ten D-008 questions. These are Rama's stated preferences / raw requirements input, not a frozen V2 design decision. Review is required before any decision-register or repository change.
+
+Q1 — Broad market context in trade decisions: OPTION A — NO.
+Rama's rationale: signals and stocks should qualify on their own strategy conditions. Even during a broad-market sell-off (“blood bath”), some stocks may rise; broad-market movement should not override strategy qualification.
+Review: Record this rationale faithfully. Do not reinterpret it as a claim that the market never affects individual stocks or that strategy qualification guarantees success.
+
+Q2 — Trading paths: NOT DECIDED / DISCUSS LATER.
+
+Q3 — Market reference: NIFTY 50 FIRST; other indices NOT DECIDED.
+Caution expressly supplied by Rama: NIFTY 50 is sufficient as the current starting reference, but later he will decide whether NIFTY 50 or NIFTY 100 is suitable. Do not silently freeze the index universe as NIFTY 50. Record NIFTY 50 versus NIFTY 100 as OPEN.
+
+Q4 — Missing, late, or suspect context data: OPTION B — PROCEED WITHOUT THE CONTEXT AND ALERT.
+Additional requirement: alert immediately through BOTH Telegram and email, and include this condition in pre-flight checks alongside other checks.
+Review: Requirements input only; no implementation is authorised. Later design must define what counts as missing/late/suspect, freshness rules, alert deduplication/retries, and pre-flight reporting. Do not invent thresholds or implementation details. Because Q1 says context must not affect trade qualification, make clear this is observability/alerting—not a hidden trade gate.
+
+Q5 — Record context with every signal/trade: OPTION A — YES, whether or not it affects decisions, for retrospective analysis.
+Data definitions, storage, provenance, timestamp alignment, and quality checks remain design questions; no schema or implementation is approved.
+
+Q6 — Meaning of trend: BOTH BROAD-MARKET TREND AND STOCK-LEVEL TREND, BUT SEPARATE; detailed handling NOT DECIDED / DISCUSS LATER.
+Do not merge them into one signal or silently assign all stock-trend logic to D-008.
+
+Q7 — Time horizon: NOT DECIDED / DISCUSS LATER.
+D-007 remains BLOCKED / NOT CLOSED. This answer does not authorise timeframe research or settle timeframe hierarchy.
+
+Q8 — D-008 versus J-011: OPTION A FAVOURED — D-008 defines V2 market-context requirements; J-011 separately reviews what happens to the old regime mechanism.
+This is a preferred topic split, not a decision to retain or revive the old mechanism.
+
+Q9 — Pre-market briefing: OPTION A — INFORMATION ONLY.
+Do not let the briefing silently become a trade gate.
+
+Q10 — Other priorities: NOT SURE; COLLECT EVIDENCE BEFORE DECIDING.
+
+OVERALL RECONCILIATION
+1. Q1 establishes the current preference that broad-market context must not affect Trade/Reject qualification.
+2. Q4 and Q5 request visibility: record context and data-quality state; if context data is missing/late/suspect, proceed without that context and send immediate Telegram AND email alerts, with the condition also included in pre-flight checks.
+3. These can coexist if context remains informational and does not influence trade qualification. The later requirements draft must say this explicitly.
+4. Q3's index choice is not frozen: NIFTY 50 is the current starting reference, but NIFTY 50 versus NIFTY 100 remains open.
+5. Q2 and Q7 remain open. Q6 distinguishes broad-market trend from stock-level trend but leaves detailed ownership/handling open.
+6. The old regime mechanism's actual calculation, runtime, and impact remain UNKNOWN / NOT ESTABLISHED except for what the previously reviewed frozen-manual records expressly say.
+7. Do not read legacy source code, perform additional legacy research, run code/tests, or write/commit/push to either repository under this step.
+
+RECOMMENDED NEXT STEP
+Prepare a bounded D-008 requirements reconciliation draft for ChatGPT review, based only on the accepted D-008 Stage 1 evidence sheet/read log, Rama's answers, and existing governance/status records already supplied in this conversation. Return:
+- requirements stated by Rama;
+- explicit NOT DECIDED / OPEN items;
+- distinction between decision inputs and observability/alerting;
+- Q3's provisional NIFTY 50 starting point and open NIFTY 50-versus-NIFTY 100 question;
+- pre-flight and immediate Telegram + email alert requirement as proposed, not implemented;
+- cross-topic/dependency list, including D-007 blocked and J-011 separate;
+- evidence references and a no-source-read/no-repository-write statement.
+
+Claude must return the reconciliation draft and a concise open-questions register only. No manual freeze, decision-register update, repository write, commit, push, source research, or implementation is authorised.
+
+GOVERNANCE STATUS TO PRESERVE
+- Route B IN FORCE (DR-074, W-11); Option C IN FORCE (DR-073).
+- D-006 DEFERRED / NOT CLOSED; Phase C NOT RUN; Phase E NOT AUTHORISED; Q-M6 OPEN.
+- D-007 BLOCKED / NOT CLOSED; no approved method identified.
+- D-008 Stage 1 evidence accepted with qualifications; Rama's answers supplied but not yet frozen as design decisions.
