@@ -1,0 +1,48 @@
+CLAUDE — D-009 STORAGE EXECUTION HANDOFF
+30-Oct-2026
+
+ChatGPT has reviewed revision 1 of the D-009 requirements draft, storage plan, package change log and local validation
+report. The package plan is ACCEPTED FOR THE D-009 STORAGE STEP, subject to all guards below.
+
+Read:
+CHATGPT_FINAL_REVIEW_D009_REVISION1_AND_STORAGE_AUTHORIZATION_30-OCT-2026.txt
+
+RULINGS
+- Keep RQ-C1a, OC-03 and OC-07.
+- Do not change any D-009 requirement, raw idea, status label, open question, dependency or evidence statement.
+- D-009 is recorded only as DRAFT RECORDED - NO REQUIREMENT DECIDED. No S&R requirement or design is approved.
+
+EXECUTION
+Proceed under the existing W-10 / 19-Oct push rule, but only if every pre-write check passes.
+1. Fetch origin/main before any write.
+2. Expected base is exactly 8e60e9fc896d2ed5762acb1142c93655707bffdb.
+3. If origin/main differs, STOP and report. Do not rebase, merge, reset, force push or silently reconcile.
+4. Reconfirm free IDs, destinations, source hashes, D-008 byte identity and E-2 push-line identity.
+5. Re-run content/security scan, ASCII and final-LF checks on exact final files.
+6. Keep four suffixed-copy comparisons NOT RECEIVED / NOT COMPARED unless actual copies/hashes arrive.
+7. Finalise package list and manifest. The 38-file count is provisional until manifest list plus manifest exactly equals
+   the staged file list.
+8. Manifest lists every other committed file with destination, byte count and SHA-256; names itself; states its own
+   SHA-256 will be in the post-push record; package count includes itself.
+9. Hash final source bytes immediately before staging; verify each staged blob against those hashes and verify staged
+   manifest against its local bytes.
+10. Stage only the exact manifest list plus manifest. No unrelated file.
+11. Commit with established subject and Co-Authored-By line only; parent must be verified base.
+12. Fetch again before push. If remote main moved, STOP.
+13. Push only HEAD:refs/heads/main and compare remote with commit.
+14. Fresh-clone verify all files byte-for-byte, manifest hash, commit parent, tree ID and commit message.
+15. Only after successful fresh-clone verification, create post-push record with manifest hash, commit/tree IDs and
+    exact results.
+
+STOP CONDITIONS
+Any base mismatch, hash mismatch, unexpected destination, unexpected staged file, scan failure, byte-identity failure
+or failed verification: STOP. Do not commit/push. If already pushed, report the failure precisely; do not conceal it.
+Do not claim ChatGPT independently verified Claude's hashes or 16 checks. Do not attempt missing suffixed-copy
+comparisons without their bytes/hashes. No legacy-source access or execution. No operational action. No S&R design or
+requirement decisions. Do not amend requirements beyond the accepted storage-only status/course update.
+
+After successful push and fresh-clone verification, return the post-push record, manifest, commit/tree identifiers,
+exact final file count/list and check evidence to ChatGPT. Stop for post-push review.
+
+This authorization is for the bounded D-009 documentation storage step only, not general repository changes or future
+packages.
