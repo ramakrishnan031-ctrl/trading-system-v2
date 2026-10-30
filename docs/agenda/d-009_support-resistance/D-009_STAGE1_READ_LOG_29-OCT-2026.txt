@@ -1,0 +1,229 @@
+D-009 SUPPORT & RESISTANCE - STAGE 1 READ LOG (OUTPUT 2 OF 3)
+*** A LOG OF THE BOUNDED READS. IT STATES ONLY WHAT EACH READ COVERED AND WHICH CANDIDATE ROW IT CONFIRMED OR DROPPED;
+    THE EVIDENCE IS IN OUTPUT 1. ***
+Route B (DR-074, W-11). Prepared 29-Oct-2026 (IST) by Claude, for ChatGPT's review.
+
+========================================================================================================================
+1. RUN FACTS
+========================================================================================================================
+- Clock (current_time tool, IST): first read 14:33:56; Tier 2 from 14:35:10; clock checks at 14:41:38 and 14:46:09;
+  last read before the clock check of 14:47:10. Per-read times were not taken; each read is placed in a time band:
+  A 14:33:56 to 14:35:10; B 14:35:10 to 14:41:38; C 14:41:38 to 14:46:09; D 14:46:09 to 14:47:10.
+- Tools: Read (heading-bounded ranges and row-level lines); Grep (two locator searches inside frozen manuals, L1-01 and
+  L1-02); current_time; Write (the three output files only). No Bash, script, git command, masking or filtering tool,
+  test or code run, and no external service. No legacy production, sandbox or records repository, clone, listing, host
+  record, credential, database, log or runtime record was accessed; nothing under docs/inputs/ was searched or read.
+- Files: only those of the Stage 0 register, in the V2 working copy at local main 8e60e9f (not re-checked in this
+  step).
+- Counts: 89 S1- reads (Tier 1: 25, of them 5 V2 rows holding Rama's words; Tier 2: 31; Group B: 2; V2 and D-008
+  row-level: 31); 30 RR- re-reads (sub-ranges of sections already read, for verbatim quotation); 2 L1- locator searches.
+  No section exceeded 120 lines, so the heading-to-first-hit-plus-20 rule was never needed.
+
+========================================================================================================================
+2. DEVIATIONS AND METHOD NOTES (DISCLOSED FOR CHATGPT'S REVIEW)
+========================================================================================================================
+- DV-01 Four Read calls each covered two adjacent headings, against "One heading-bounded section per read": S1-19
+  (C-011 7.6 and 7.7, lines 459 to 484), S1-28 (D-004 9 and 10, lines 245 to 261), S1-29 (D-004 13 and 14, lines 279 to
+  295) and S1-31 (D-005 4 and 5, lines 48 to 115). Every line was inside authorised candidate rows (R9-37; R9-05 and
+  R9-06; R9-07 and R9-08; R9-11 and R9-12), and each call was under 120 lines. From S1-32 on, each read took one heading
+  or one row. C-011 7.6 and 7.7 were later re-read one heading per call for quotation (RR-28, RR-29); that does not undo
+  the deviation.
+- DV-02 Locator L1-01 (Grep for "TH11" in B-006) printed two whole lines outside R9-49's two headings: line 71 (start
+  step ST4) and line 103 (failure F1). Neither is used as evidence. Line 174's text was not printed by the tool (too
+  long); it was read by S1-58.
+- M-01 Grep was used twice in Stage 1, as a locator only (L1-01, L1-02); Stage 0's method was Grep, and the Stage 1
+  prompt speaks of reads. Noted for ChatGPT's judgement.
+- M-02 Re-reads RR-01 to RR-30 re-opened sub-ranges of sections already read, to quote them verbatim in output 1. No new
+  section was opened by a re-read.
+- M-03 V2 records were read row by row. S1-62 read four adjacent register rows (DR-072 to DR-075, all under V9-04);
+  S1-75 read two adjacent evidence-sheet rows (E-17 and E-18, both under P9-02).
+- M-04 Group B: only R9-49 (B-006) was read, because C-008 9.2 [EP-05] (Tier 2, S1-47) names "HISTORICAL (B-006 TH11)".
+  TH11 is in B-006 section 3 (line 39, located by L1-01) and appears again in section 15 (line 174); both sections
+  belong to R9-49. Section 15 was read because it holds the named item; ChatGPT may judge whether that was needed.
+
+========================================================================================================================
+3. READS (S1-)
+========================================================================================================================
+Path key (relative to the repository root):
+  D-004 docs/agenda/d-004_market-data-requirements/D-004_manual.md        D-005 docs/agenda/d-005_candle-analysis/D-005_manual.md
+  D-003 docs/agenda/d-003_secondary-screening/D-003_manual.md            A-001 docs/agenda/a-001_system-purpose/A-001_manual.md
+  A-002 docs/agenda/a-002_trading-objectives/A-002_manual.md             A-008 docs/agenda/a-008_strategy-model/A-008_manual.md
+  A-009 docs/agenda/a-009_configuration-model/A-009_manual.md            B-002 docs/agenda/b-002_configuration-loading/B-002_manual.md
+  B-006 docs/agenda/b-006_worker-initialization/B-006_manual.md          C-004 docs/agenda/c-004_validation/C-004_manual.md
+  C-008 docs/agenda/c-008_signal-processing/C-008_manual.md              C-011 docs/agenda/c-011_eod-daily-signal-routing/C-011_manual.md
+  REG   docs/governance/V2_DECISION_REGISTER.md                          LOG   docs/governance/V2_DESIGN_LOG.md
+  RB    docs/agenda/route-b/V2_REQUIREMENTS_FIRST_GOVERNANCE_CHANGE_RECORD_28-OCT-2026.txt
+  D8R   docs/agenda/d-008_trend-market-context/D-008_v2_requirements.md
+  D8Q   docs/agenda/d-008_trend-market-context/D-008_OPEN_QUESTIONS_AND_DEPENDENCIES_29-OCT-2026.txt
+  D8Z   docs/agenda/d-008_trend-market-context/D-008_STAGE0_OPEN_QUESTIONS_AND_SCOPE_BOUNDARY_28-OCT-2026.txt
+  D8E   docs/agenda/d-008_trend-market-context/D-008_STAGE1_EVIDENCE_SHEET_29-OCT-2026.txt
+  A8V   docs/agenda/a-008_strategy-model/A-008_v2_design_inputs.md      A9V   docs/agenda/a-009_configuration-model/A-009_v2_design_inputs.md
+  A10V  docs/agenda/a-010_secrets-environment/A-010_v2_design_inputs.md  A11V  docs/agenda/a-011_system-states-and-lifecycle/A-011_v2_design_inputs.md
+  B4V   docs/agenda/b-004_broker-connection/B-004_v2_design_inputs.md   C1V   docs/agenda/c-001_chartink-strategy-scanner/C-001_v2_design_inputs.md
+
+Result: C = confirmed (the row holds D-009-relevant text, used in output 1); D = dropped (with the reason); X = context
+only. Class = the evidence class as the source records it.
+
+| ID | Band | File | Lines | Heading | Tier / group | Row | Purpose | Result | Class (as recorded) |
+|---|---|---|---|---|---|---|---|---|---|
+| S1-01 | A | D-004 | 40-58 | 1.3 Boundaries | Tier 1 | R9-01 | recorded owner of the S&R data inputs | C (lines 50, 51) | HISTORICAL (a recorded owner) |
+| S1-02 | A | D-004 | 223-234 | 7. Historical candles through the shared OHLC closure | Tier 1 | R9-04 | the detector's data path | C (226 to 230, 233) | FACT (SOURCE); FACT (CONFIG); UNKNOWN as recorded |
+| S1-03 | A | D-005 | 3-20 | 1. Document status, purpose and scope | Tier 1 | R9-10 | scope naming D-009 | C (15) | HISTORICAL (scope) |
+| S1-04 | A | D-005 | 116-149 | 6. Non-findings and unresolved questions | Tier 1 | R9-13 | detector-related unresolved items | C (137, 141, 143, 144) | FACT (SOURCE); FACT (TEXT); OBSERVATION; NOT ESTABLISHED |
+| S1-05 | A | D-005 | 150-167 | 7. Cross-topic boundaries and bookmarks | Tier 1 | R9-14 | the D-009 boundary | C (158 to 160) | HISTORICAL (a recorded boundary) |
+| S1-06 | A | D-003 | 17-33 | 1.1 What this chapter documents | Tier 1 | R9-16 | scope | C (29) | HISTORICAL (scope) |
+| S1-07 | A | D-003 | 34-41 | 1.2 Scope basis | Tier 1 | R9-16 | J-006 in the scope basis | C (36) | HISTORICAL |
+| S1-08 | A | D-003 | 42-57 | 1.3 Boundaries | Tier 1 | R9-16 | the J boundary | C (55) | HISTORICAL (a recorded owner) |
+| S1-09 | A | D-003 | 482-489 | 13. S&R, V3 and regime inputs | Tier 1 | R9-18 | S&R and the screener | C (MC-74, MC-75, MC-76) | FACT (COUNT); FACT (SOURCE); FACT (TEXT); HISTORICAL; INTERPRETATION |
+| S1-10 | A | A-001 | 43-47 | 6. Major lifecycle responsibilities | Tier 1 | R9-21 | the README statement | C (45, 46) | HISTORICAL (the README's statement); FACT (Rama; baseline) |
+| S1-11 | A | A-001 | 60-69 | 9. Known purpose-relevant defects | Tier 1 | R9-22 | user-reported defects | C (61 to 64) | RAMA (user-reported) |
+| S1-12 | A | A-009 | 133-144 | 8. Defaults and fallbacks | Tier 1 | R9-25 | the detector's defaults | C (134, 137, 143) | FACT, SOURCE-VERIFIED; UNKNOWN as recorded |
+| S1-13 | A | B-002 | 249-273 | 12. Rama's answers against the source | Tier 1 | R9-29 | Rama's answer naming S&R | D as a RAMA S&R row (his B2-02 answer is "UNKNOWN"); X as a dated layer (254) | RAMA (EXPECTED); HISTORICAL |
+| S1-14 | A | C-008 | 82-91 | 2.1 Construction | Tier 1 | R9-31 | the detector passed to the processor | C (W-02, W-05) | FACT (SOURCE-VERIFIED) |
+| S1-15 | A | C-008 | 105-110 | 2.3 Start and stop order | Tier 1 | R9-31 | the stop order | C (W-09) | FACT (SOURCE-VERIFIED) |
+| S1-16 | A | C-008 | 135-173 | 4.1 Stage table | Tier 1 | R9-33 | S&R stages | C (ST-13, ST-15, ST-31) | FACT, SOURCE-VERIFIED |
+| S1-17 | A | C-008 | 339-346 | 10. Observers and shadow hooks | Tier 1 | R9-34 | the S&R observer | C (OB-03, OB-04) | FACT, SOURCE-VERIFIED unless marked |
+| S1-18 | A | C-011 | 408-424 | 7.1 Order of the capture | Tier 1 | R9-37 | where sr_zone_json is set | C (419) | FACT for the lines read |
+| S1-19 | A | C-011 | 459-484 | 7.6 and 7.7 (one call: DV-01) | Tier 1 | R9-37 | the zone column's writer; uninspected helpers | C (461, 462, 477, 483) | FACT; FACT (CODE COMMENT); UNKNOWN (G-03) |
+| S1-20 | A | C-004 | 522-578 | 22.1 Rama's answer sheet (Q1 to Q13) | Tier 1 | R9-40 | Rama's answer naming sr_shadow | D as a RAMA S&R row (his Q7 answer, 551, has no S&R term; sr_shadow is in the repository text, 552) | RAMA (as C-004 records it); HISTORICAL |
+| S1-21 | A | A8V | 19-31 | 2. Earlier entries: redesign every scanner | Tier 1 (V2 row, Rama's words) | I9-01 | Rama's late-entry words | C (20, 21 RAMA verbatim, no S&R term; 25, 28 Claude's considerations) | RAMA (STATED); V2 PROPOSAL |
+| S1-22 | A | C1V | 6-11 | 1. Rama's input of 21-Oct-2026 | Tier 1 (V2 row) | I9-06 | Rama's strategy input | C (7, no S&R term; 10 quotes DR-031's owner sentence) | RAMA (STATED); V2 DECISION text quoted |
+| S1-23 | A | A9V | 120-127 | 13. Cross-topic items | Tier 1 (V2 row) | I9-02 | Q39 | C (123) | RAMA (STATED, verbatim) |
+| S1-24 | A | REG | 42 | DR-031 row | Tier 1 (V2 row) | V9-01 | owner sentence; Rama's answer | C | V2 DECISION (DECIDED) |
+| S1-25 | A | LOG | 243 | VP-08 row | Tier 1 (V2 row) | V9-08 | VP-08's S&R wording and Ratify-at | C | V2 PROPOSAL |
+| S1-26 | B | D-004 | 59-65 | 1.4 Not covered | Tier 2 | R9-02 | scope | C (64) | HISTORICAL (scope) |
+| S1-27 | B | D-004 | 169-185 | 3. The data contracts at a glance | Tier 2 | R9-03 | the candle contract | C (177, 184) | HISTORICAL |
+| S1-28 | B | D-004 | 245-261 | 9 and 10 (one call: DV-01) | Tier 2 | R9-05, R9-06 | reference and index data | D: R9-05 (251: an instrument-dump count; the name sr_corp_action_spotcheck only, X9-04); R9-06 (258: the index fetch, a D-008 subject) | HISTORICAL |
+| S1-29 | B | D-004 | 279-295 | 13 and 14 (one call: DV-01) | Tier 2 | R9-07, R9-08 | caches; persisted tables | C (285, 292) | FACT (SOURCE); FACT (CONFIG) |
+| S1-30 | B | D-004 | 419-460 | 19.2 Legacy files cited | Tier 2 | R9-09 | the detector files cited | C (452 to 455 and the retest_monitor and structure_exit_manager rows) | HISTORICAL (citation list) |
+| S1-31 | B | D-005 | 48-115 | 4 and 5 (one call: DV-01) | Tier 2 | R9-11, R9-12 | _strong_close; the structure-exit import | C (cited in output 1 through DR-071's restatement) | FACT (SOURCE); NOT ESTABLISHED |
+| S1-32 | B | D-005 | 186-236 | 9. Source and evidence register, and open items | Tier 2 | R9-15 | detector rows and open items | C (context; not quoted) | HISTORICAL; UNKNOWN (open items) |
+| S1-33 | B | D-003 | 80-89 | 2.3 Stage 1 deviations | Tier 2 | R9-17 | process note | X (86: P03a, the S&R count's control, run after the reads) | HISTORICAL (process) |
+| S1-34 | B | D-003 | 510-528 | 15.2 Interpretations | Tier 2 | R9-19 | the recorded interpretation | C (525) | INTERPRETATION (as recorded) |
+| S1-35 | B | D-003 | 586-604 | 17. Cross-references | Tier 2 | R9-20 | J and V2 cross-references | C (592, 599, 602) | HISTORICAL |
+| S1-36 | B | A-002 | 125-127 | 18. Explicit exclusions | Tier 2 | R9-23 | exclusion naming S&R | C (126) | HISTORICAL (exclusion) |
+| S1-37 | B | A-008 | 177-210 | 17. Chartink scanner conditions | Tier 2 | R9-24 | swing and support terms | C (178, 207); the SWING hits (182, 200) are strategy names | FACT, SUPPLIED RECORD; KNOWN AMBIGUITY |
+| S1-38 | C | A-009 | 214-232 | 14. Production versus testing | Tier 2 | R9-26 | S&R shadow by environment | C (216, 223, 229 to 231) | FACT, SOURCE-VERIFIED; HISTORICAL (Rama) |
+| S1-39 | C | A-009 | 255-264 | 17. Organisation and cleanliness | Tier 2 | R9-27 | shadow features | C (258) | FACT, SOURCE-VERIFIED |
+| S1-40 | C | A-009 | 265-276 | 18. Unknown / not established | Tier 2 | R9-27 | S&R unknowns | C (271) | UNKNOWN / NOT ESTABLISHED |
+| S1-41 | C | A-009 | 277-290 | 19. Known defects / ambiguities | Tier 2 | R9-27 | sr_shadow defect item | C (289) | HISTORICAL (defect or ambiguity) |
+| S1-42 | C | B-002 | 205-236 | 10. Production and testing | Tier 2 | R9-28 | S&R shadow configuration by environment | C (213, 214, 216, 218, 222, 224) | FACT for the repository objects; TESTING CAPTURE; INTERPRETATION |
+| S1-43 | C | C-008 | 10-33 | 1. Evidence rules and boundaries | Tier 2 | R9-30 | labels; owners elsewhere | C (16 to 26, 30) | HISTORICAL (scope) |
+| S1-44 | C | C-008 | 34-62 | 1.1 Sources at the pin | Tier 2 | R9-30 | sources | C (36 to 59: no sr_detector file among the 22; 40) | HISTORICAL |
+| S1-45 | C | C-008 | 111-132 | 3. Configuration the processor reads | Tier 2 | R9-32 | CF-11, CF-12 | C (113, 127, 128) | FACT (CONFIG); FACT, SOURCE-VERIFIED |
+| S1-46 | C | C-008 | 286-307 | 9.1 E2: continue_from_gate | Tier 2 | R9-35 | S&R on the gate path | C (300, 305) | FACT; KNOWN DEFECT (305) |
+| S1-47 | C | C-008 | 308-329 | 9.2 E3: continue_from_retest | Tier 2 | R9-35 | S&R on the retest path | C (317, 318, 322, 327) | FACT, SOURCE-VERIFIED; HISTORICAL (B-006) |
+| S1-48 | C | C-008 | 428-449 | 14.3 Master agenda and the legacy manual index | Tier 2 | R9-36 | reconciliation | X (438: the 18-Sep chapters for the S&R observer are NOT STARTED) | HISTORICAL |
+| S1-49 | C | C-008 | 531-552 | 14.7 The 18-Sep manual, chapters 02 and 03 | Tier 2 | R9-36 | statement-level reconciliation | C (541); the companion named at 537 not read | HISTORICAL |
+| S1-50 | C | C-008 | 577-602 | 17. End-to-end source path | Tier 2 | R9-36 | the end-to-end path | C (593, 599) | HISTORICAL (pinned wiring, repository configuration) |
+| S1-51 | C | C-011 | 318-344 | 5.8 Other source that names the route | Tier 2 | R9-39 | the name on the route | X (323: a logger-name list, INTERPRETATION (C-011)); no D-009 evidence | HISTORICAL; INTERPRETATION (C-011) |
+| S1-52 | C | C-011 | 648-664 | 10.2 Columns and what the capture writes | Tier 2 | R9-38 | the zone column | C (655, 658, 659) | FACT (SCHEMA); FACT (CODE COMMENT) |
+| S1-53 | C | C-011 | 724-747 | 11.2 Wiring in main.py | Tier 2 | R9-39 | wiring | C (732, 733, 735, 740, 744) | FACT for the lines |
+| S1-54 | C | C-011 | 782-785 | 12.3 What the row carries to the boundary | Tier 2 | R9-38 | the row at the boundary | C (784) | HISTORICAL |
+| S1-55 | C | C-011 | 865-876 | 14.5 Unknowns noted in drafting | Tier 2 | R9-39 | unknowns | C (872, DU-04); the companion named at 875 not read | UNKNOWN / NOT ESTABLISHED |
+| S1-56 | C | C-011 | 913-933 | 16. End-to-end walkthrough | Tier 2 | R9-39 | walkthrough | C (915, 926, 932) | illustrative; FACT for the lines |
+| S1-57 | C | B-006 | 24-63 | 3. Worker inventory at the baseline | Group B (named by C-008 [EP-05]) | R9-49 | TH5 and TH11 | C (25, 33, 39, 62) | FACT, SOURCE-VERIFIED unless marked; INTERPRETATION (62) |
+| S1-58 | C | B-006 | 172-176 | 15. Production and testing | Group B (holds TH11 at 174) | R9-49 | the testing S&R shadow worker | C (174, 175) | TESTING TREE |
+| S1-59 | C | REG | 27 | DR-016 | V2 row | V9-04 | status | C | V2 DECISION (DECIDED) |
+| S1-60 | C | REG | 80 | DR-069 | V2 row | V9-02 | D-003 freeze record | C | V2 DECISION (DECIDED) |
+| S1-61 | C | REG | 82 | DR-071 | V2 row | V9-03 | D-005 freeze record | C | V2 DECISION (DECIDED) |
+| S1-62 | C | REG | 83-86 | DR-072 to DR-075 | V2 rows (M-03) | V9-04 | statuses | C | DEFERRED / NOT CLOSED; DECIDED x3 |
+| S1-63 | C | RB | 29 | section 2 scope table row | V2 row | V9-13 | J topics in Route B | C | IN FORCE (DR-074) |
+| S1-64 | C | LOG | 53 | lesson of 2026-10-12 | V2 row | V9-05 | rule | C | lesson in force |
+| S1-65 | C | LOG | 218 | Q-35 | V2 row | V9-06 | item (e) | C | OPEN |
+| S1-66 | C | LOG | 227 | Q-44 | V2 row | V9-07 | item (a) and its note | C | OPEN |
+| S1-67 | C | LOG | 278 | VP-44 | V2 row | V9-09 | Ratify-at | C | V2 PROPOSAL |
+| S1-68 | C | D8R | 124 | E-25 row | D-008 row | P9-01 | the routing of E-25 | C | V2 REQUIREMENTS RECORDED |
+| S1-69 | C | D8R | 202 | cross-topic row | D-008 row | P9-01 | the hand-off | C | V2 REQUIREMENTS RECORDED |
+| S1-70 | C | D8Q | 39 | cross-topic row | D-008 row | P9-04 | the hand-off | C | accepted (revision 2) |
+| S1-71 | C | D8Z | 24 | neighbouring-topics row | D-008 row | P9-03 | S&R neighbours | C | reviewed |
+| S1-72 | C | D8Z | 39 | OQ-07 | D-008 row | P9-03 | high-of-day question | C | reviewed |
+| S1-73 | C | D8E | 59 | E-01 | D-008 row | P9-02 | consistency check | C (W9-05) | accepted with clarifications |
+| S1-74 | C | D8E | 65 | E-07 | D-008 row | P9-02 | consistency check | C (W9-05) | as S1-73 |
+| S1-75 | C | D8E | 81-82 | E-17, E-18 (M-03) | D-008 rows | P9-02 | consistency check | C (W9-05) | as S1-73 |
+| S1-76 | C | D8E | 95 | E-23 | D-008 row | P9-02 | consistency check | C (W9-05) | as S1-73 |
+| S1-77 | C | D8E | 97 | E-25 | D-008 row | P9-02 | consistency check | C (W9-05) | as S1-73 |
+| S1-78 | C | A8V | 12 | 1. Order of intent | V2 row | I9-01 | VP-08 restated | C | V2 PROPOSAL |
+| S1-79 | C | A8V | 34 | 3. Strategy count and distinct strategies | V2 row | I9-01 | SWING term | D (a strategy name only) | V2 PROPOSAL |
+| S1-80 | C | A8V | 95 | 11. PB01 and end-of-day signals (heading) | V2 row | I9-01 | J-013 term | X (heading only) | V2 PROPOSAL |
+| S1-81 | C | A8V | 98 | 11 | V2 row | I9-01 | the retest engine's owner | C | V2 PROPOSAL |
+| S1-82 | C | A9V | 116 | 12. Production and testing parity | V2 row | I9-02 | RAMA (Q24 to Q27) | C | RAMA (as recorded) |
+| S1-83 | C | A9V | 129 | 14. ChatGPT's 29-Sep and 30-Sep V2 inputs | V2 row | I9-02 | S&R, filtering and shadow review | C | V2 PROPOSAL |
+| S1-84 | C | A9V | 143 | 16. Status and boundary | V2 row | I9-02 | carried to J | C | V2 PROPOSAL |
+| S1-85 | C | A10V | 131 | 12. Production and testing secrets | V2 row | I9-03 | RAMA (Q27) verbatim | C | RAMA (STATED) |
+| S1-86 | C | A11V | 148 | 14. ChatGPT's 03-Oct cross-topic items | V2 row | I9-04 | no silent carry | C | V2 PROPOSAL |
+| S1-87 | C | B4V | 7 | preamble | V2 row | I9-05 | J-009 as an owner | C (boundary only) | V2 PROPOSAL |
+| S1-88 | C | B4V | 33 | 2. Legacy findings carried to their owners, row 12 | V2 row | I9-05 | J-009 | C (boundary only) | V2 PROPOSAL |
+| S1-89 | C | C1V | 33 | 3. Proposal and question rows that name C-001 | V2 row | I9-06 | VP-08 as C-001 recorded it | C (W9-03) | V2 PROPOSAL |
+
+========================================================================================================================
+4. RE-READS FOR VERBATIM QUOTATION (RR-; ALL IN BAND D)
+========================================================================================================================
+| ID | File | Lines | Inside the section of | Used in output 1 at |
+|---|---|---|---|---|
+| RR-01 | D-004 | 48-53 | S1-01 (1.3) | E9-17, B9-02 |
+| RR-02 | D-004 | 175-184 | S1-27 (3) | E9-16 |
+| RR-03 | D-004 | 223-234 | S1-02 (7) | E9-04, E9-06, E9-17 |
+| RR-04 | D-004 | 285 | S1-29 (13) | E9-18 |
+| RR-05 | D-004 | 292 | S1-29 (14) | E9-19 |
+| RR-06 | D-004 | 452-455 | S1-30 (19.2) | E9-20 |
+| RR-07 | D-005 | 3-20 | S1-03 (1) | B9-03 |
+| RR-08 | D-005 | 150-167 | S1-05 (7) | E9-31, B9-03 |
+| RR-09 | D-003 | 29 | S1-06 (1.1) | - (scope check) |
+| RR-10 | D-003 | 36 | S1-07 (1.2) | B9-04 |
+| RR-11 | D-003 | 55 | S1-08 (1.3) | B9-04 |
+| RR-12 | D-003 | 482-489 | S1-09 (13) | E9-24 to E9-26 |
+| RR-13 | A-001 | 43-47 | S1-10 (6) | E9-01, E9-28 |
+| RR-14 | A-001 | 60-69 | S1-11 (9) | E9-35 |
+| RR-15 | A-009 | 133-144 | S1-12 (8) | E9-02 |
+| RR-16 | B-002 | 249-256 | S1-13 (12) | E9-13, E9-39 |
+| RR-17 | C-008 | 82-91 | S1-14 (2.1) | E9-07 |
+| RR-18 | C-008 | 105-110 | S1-15 (2.3) | E9-09 |
+| RR-19 | C-008 | 135-173 | S1-16 (4.1) | E9-10, E9-29 |
+| RR-20 | C-008 | 339-346 | S1-17 (10) | E9-10 |
+| RR-21 | C-011 | 408-424 | S1-18 (7.1) | E9-21 |
+| RR-22 | C-004 | 550-553 | S1-20 (22.1) | E9-39 |
+| RR-23 | A9V | 120-127 | S1-23 (13) | E9-36 |
+| RR-24 | A8V | 19-31 | S1-21 (2) | E9-39, I9-01 |
+| RR-25 | C1V | 6-11 | S1-22 (1) | E9-39 |
+| RR-26 | REG | 42 | S1-24 (DR-031) | V9-01 |
+| RR-27 | LOG | 243 | S1-25 (VP-08) | V9-08 |
+| RR-28 | C-011 | 459-465 | S1-19 (7.6 alone) | E9-21 |
+| RR-29 | C-011 | 466-484 | S1-19 (7.7 alone) | E9-22 |
+| RR-30 | D-005 | 136-144 | S1-04 (6) | E9-15 |
+
+========================================================================================================================
+5. LOCATOR SEARCHES (L1-)
+========================================================================================================================
+| ID | Band | File | Pattern | Hits | Use |
+|---|---|---|---|---|---|
+| L1-01 | C | B-006 | TH11 | lines 39 (section 3), 71 and 103 (other sections; printed, not used: DV-02), 174 (section 15; text not printed) | to find the item C-008 [EP-05] names; led to S1-57 and S1-58 |
+| L1-02 | D | C-011 | ^### 7\.[1-8] (heading lines) | 408, 425, 431, 440, 451, 459, 466 (heading lines only) | to read 7.6 and 7.7 separately (RR-28, RR-29) |
+
+========================================================================================================================
+6. NOT READ, AND WHY
+========================================================================================================================
+- Group B, not named by any Tier 1 or Tier 2 finding: R9-41 (A-004 12), R9-42 (A-006 4), R9-43 (A-007 5, 11), R9-44
+  (A-008 3), R9-45 (A-010 19), R9-46 (A-011 21), R9-47 (B-003 5, 10, 13), R9-48 (B-004 3, 13, 21), R9-50 (B-010 10),
+  R9-51 (B-011 5, 6), R9-52 (C-004 13.2), R9-53 (C-007 2.3), R9-54 (D-003 15.5). B-004 section 13 is named at B-006
+  line 174, a Group B read, not a Tier 1 or 2 finding; not read.
+- Group C, R9-55 to R9-61: not read. By their Stage 0 IDs they bear on D-014 to D-018, J-010, J-012 and J-013; the
+  boundaries Q7 asks about (D-010 to D-012, J-001 to J-009) are recorded in Group A rows.
+- V2 rows used as Stage 0 locator facts, not re-read: V9-10 (bookmarks), V9-11 (section 8), V9-12 (W-11's own line);
+  the agenda rows M9-01 to M9-08 (quoted at Stage 0 from the Project document).
+- Companions and review notes named in passages read, not identified by ChatGPT (guardrail C), not read:
+  C-008_CHAPTER_02_03_CROSS_CHECK_REV3_24-OCT-2026.md (C-008 line 537); C-011's companion file (C-011 line 875);
+  D-003_CHATGPT_STAGE1_RECONCILIATION_26-OCT-2026.txt (D-003 lines 82 to 87).
+- Cross-references in passages read that point outside the register, not followed: B-009 section 15 (C-008 line 305);
+  A-011 section 14 (C-011 line 784); A-008 section 20 (A-009 line 215); A-008 section 9 and C-002 section 8.3 (C-004
+  line 552); C-001 4.1 (C-011 line 915); B-005 section 21 and C-006 sections (C-008 lines 107, 108).
+- docs/inputs/ (raw answer sheets and all other inputs): not searched or read.
+
+========================================================================================================================
+7. STOP CONDITIONS
+========================================================================================================================
+- None met: every required record was available; no step needed a legacy source, listing, host record,
+  docs/inputs/legacy_baseline/ or a masking or filtering tool; no requirement was drafted, so none needed a timeframe or
+  formation decision.
+- Stopped after the three output files, as the prompt requires: no repository or project write, manual, answer sheet,
+  reconciliation, freeze, storage, commit, push, test or operational action.

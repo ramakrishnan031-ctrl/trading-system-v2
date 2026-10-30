@@ -1,0 +1,168 @@
+D-009 — SUPPORT & RESISTANCE
+RAMA ANSWER GUIDE: REALISTIC MARKET EXAMPLES + CHATGPT SUGGESTIONS
+Prepared: 29-Oct-2026 (IST)
+
+PURPOSE
+This guide helps Rama answer the 14 questions in D-009_RAMA_ANSWER_SHEET_29-OCT-2026.txt.
+It does NOT answer on Rama's behalf, freeze requirements, approve a design, or authorise legacy-source access or implementation.
+
+IMPORTANT FACT DISCIPLINE
+- The market examples below are realistic ILLUSTRATIONS with invented prices and circumstances. They are not claims about an actual historical trade, actual legacy-system output, or actual live-market event.
+- Do not present an illustrative example as something that happened in the legacy system.
+- Where you do not remember, answer “I don't recall / Not sure.”
+- “Not decided / discuss later” and “OPEN / UNRESOLVED” are valid.
+- D-006 remains DEFERRED / NOT CLOSED. D-007 remains BLOCKED / NOT CLOSED.
+- D-009 answers are user-stated preferences only. They do not themselves freeze requirements.
+- The legacy system is DEAD / REFERENCE ONLY. No source access, implementation, tests, storage, commit or push is authorised by answering this sheet.
+- This guide follows the reviewed Stage 1 evidence. It does not resolve contradictions or unknowns in that evidence.
+
+HOW TO USE
+For each question:
+1. Read the question in the original Rama Answer Sheet.
+2. Use the example only to understand the practical issue.
+3. Consider ChatGPT's suggested position, but accept, edit, defer or reject it.
+4. Put your own answer in the original answer sheet or send your answers in chat.
+5. Any suggested V2 behavior remains a proposal until the proper governance step.
+
+Q1 — WHAT DID “INCORRECT OR UNSUITABLE S&R RANGE OR INTERPRETATION” MEAN?
+Market illustration:
+A stock is trading around ₹500. One method marks resistance near ₹505 using a recent intraday swing; another marks a broader resistance band around ₹512–₹515 from older price reactions. A buy signal appears at ₹504. The practical concern could be that the displayed level was too far away, too close, stale, incorrectly calculated, or interpreted as a precise price when it should have been a zone.
+These are possible meanings only; they are not claims about what happened to Rama.
+ChatGPT suggestion:
+If you remember the original problem, describe that actual recollection. If not, say “I remember the general concern but cannot identify a specific stock/trade/date.” Do not manufacture a historical example.
+RAMA'S ANSWER:
+1. For Intraday: Timeframes for S&R is 1Hr + 1D + 1W, So support & resistance points to be followed in these time frames with whichever is nearest S&R, Example: If ITC's S&R points as per 1Hr=Rs 250, 1D=Rs 260, 1W=Rs 270 and CMP is Rs 246 and strategy.yaml says R:R is Rs 1:2 (Risk 1: Return 2) then system checks the CMP against nearest S&R (1Hr > 1D > 1W) so nearest support with 1Hr=Rs 250, So R:R might be Rs 5: Rs 10 then Rs 246+Rs 5 = Rs 251 which is above then Rs 250 so stock can't be traded or rejected, Assume CMP is Rs 251 then can be traded why? 1D S&R is at Rs 260 this will accommodate R:R
+2. For Delivery: Time frames will be 1D + 1W + 1M with same concept as above
+* Note is cautiously, While designing new system we will discuss deeply and this is for rough idea only, meaning whether follow these time frame or something else including improved logic if any
+____________________________________________________________
+
+Q2 — WHAT IS “ADEQUATE S&R CONTEXT” NEAR THE DAY'S HIGH?
+Market illustration:
+A stock opens at ₹980, rises to a day high of ₹1,000, then consolidates around ₹994. A strategy signal appears at ₹996. Questions that might matter include whether meaningful resistance is just above ₹1,000, whether the move is already extended, whether price is breaking and holding above resistance, and whether there is room to the next level. Detailed timing/distance rules belong to later entry topics, not this answer.
+ChatGPT suggestion:
+Describe the information you want visible before deciding whether an entry near the day's high is sensible. Avoid choosing a numeric distance or a formula now.
+RAMA'S ANSWER:
+Same as Q1: Check which is next and nearest S&R point? (1Hr > 1D > 1W) then calculate the CMP > S&R points can accommodate R:R, if its accommodates then make trade else outright reject, So strategy signal Rs 996 to Rs 1000 (assume nearest S&R) so Rs 4 tgt fits within S&R? meaning SL Rs 2: TGT Rs 4 then pass else reject, We will discuss later deeply so note down cautiously
+____________________________________________________________
+
+Q3 — SHOULD S&R AFFECT V2 TRADE DECISIONS, AND IN WHAT ROLE?
+Market illustration:
+Two stocks both satisfy their own strategy conditions. Stock A is near a well-observed resistance area; Stock B has more apparent room before the next resistance. S&R could be recorded only, used to rank candidates, influence Trade/Reject, or inform entry/stop/target calculations. These roles have different consequences and must not be silently combined.
+ChatGPT suggestion:
+Choose explicitly among the roles. A conservative option to consider is to record S&R context and make its effect measurable before deciding whether it should reject trades or change sizing/ranking. This is a recommendation, not a fact or settled decision.
+RAMA'S ANSWER: Not understood well, So we will discuss later
+
+____________________________________________________________
+
+Q4 — COMMON S&R TREATMENT OR STRATEGY-SPECIFIC?
+Market illustration:
+A breakout strategy may care about price crossing a resistance level, while a pullback strategy may care about a support area holding. A common data/measurement baseline could coexist with different strategy-specific interpretations, but that introduces governance and testing complexity.
+ChatGPT suggestion:
+Consider “common baseline, with strategy-specific differences only where explicitly defined and tested.” If you are not ready to define the permitted differences, answer “Not decided / discuss later.” Do not decide strategy filtration itself here.
+RAMA'S ANSWER: Common baseline, with strategy-specific differences only where explicitly defined and tested, Yes correct only Breakout strategies & pull back strategies logic is equally opposite, like wise S&R considerations also applied accordingly, So we will discuss later
+____________________________________________________________
+
+Q5 — WHICH EXISTING S&R FUNCTIONALITY DID YOU MEAN IN YOUR EARLIER NOTE?
+Evidence reminder:
+The Stage 1 material distinguishes several things: the repository detector; a testing-only log-only shadow described as gating nothing; a PB-01 nearest-zone record; and a retest/structure path whose caller under the documented repository configuration was not established. The evidence does not prove which code actually ran on a host or affected a trade.
+Market illustration:
+You may remember a dashboard level, an order-time observer, a test-VM log, or a particular stop/target behavior. These are different recollections and should not be treated as interchangeable.
+ChatGPT suggestion:
+Name only what you actually remember. If you do not know which component you meant, say “I don't recall which component; the records should be reviewed separately.” Your recollection is not proof of runtime behavior.
+RAMA'S ANSWER: I don't recall which component; the records should be reviewed separately, So we will discuss later the relevant issue in new system
+____________________________________________________________
+
+Q6 — SHOULD A PROPOSED S&R COMPONENT HAVE A LOG-ONLY / SHADOW EVIDENCE PHASE?
+Market illustration:
+For a set of signals, the system records the S&R level it would have used and the decision it would have suggested, but it does not block, alter, or place orders based on that S&R result. Later, reviewers compare the recorded suggestion with subsequent price movement and inspect missing-data cases.
+ChatGPT suggestion:
+Consider a non-trading evidence phase before any authority to affect trades is considered. Do not choose a duration, sample size, or rollout mechanism unless you deliberately want to propose one. The evidence required and the approval gate can be specified later.
+RAMA'S ANSWER: Not understood, So as per your best opinion now, But we will discuss later the relevant issue in new system
+____________________________________________________________
+
+Q7 — WHAT DOES “R:R HONOURS S&R” MEAN TO YOU?
+Market illustration:
+An entry is planned near ₹250. A stop below a support area would be ₹246, while a nearby resistance area is around ₹257. A target of ₹270 might create an attractive arithmetic R:R on paper but could ignore the nearer resistance. Alternatively, mechanically setting the target at ₹257 changes the reward calculation. This illustrates the ambiguity; it does not select a formula.
+ChatGPT suggestion:
+Do not ratify the phrase as-is unless you can explain its intended meaning. A safe answer is “Defer detailed R:R behavior to the E-topic; D-009 may establish only whether S&R context is relevant.” If you want to retain the phrase, explain the principle without specifying the formula.
+RAMA'S ANSWER: Defer detailed R:R behavior to the E-topic, But the concept is: Once stock is eligible to make order then immediately pull nearest S&R points by comparing 1hr + 1D + 1W then check the R:R whether this R:R points within S&R (meaning for risk point is above 'support point' and for reward point must be below 'resistance point' why? safest approach) if it holds then place the order else reject, So we will discuss later
+____________________________________________________________
+
+Q8 — D-009 BOUNDARIES WITH D-010–D-012 AND J TOPICS
+Market illustration:
+One topic decides whether S&R information has a role in trade decisions; another defines how support/resistance zones are represented; another defines strength; another defines freshness; a separate review determines what to do with legacy engines. Mixing these into one topic makes it difficult to tell which decision is being approved.
+ChatGPT suggestion:
+Consider the proposed separation:
+- D-009: whether S&R is used and its high-level role;
+- D-010: zones;
+- D-011: strength;
+- D-012: freshness;
+- J topics: legacy-engine disposition review.
+This is a clear working boundary, but it is not yet a frozen decision. You can accept, amend or defer it.
+RAMA'S ANSWER: Not understood, So as per your best opinion now, But we will discuss later the relevant issue in new system
+____________________________________________________________
+
+Q9 — BOUNDARY WITH ENTRY, STOP-LOSS AND TARGET
+Market illustration:
+S&R may identify a nearby resistance zone; entry topics decide how that context affects entry timing or placement; risk/exit topics decide stop-loss and target calculations. If D-009 also sets the exact entry and stop formula, the same rule may be decided twice.
+ChatGPT suggestion:
+Consider keeping D-009 at the high-level decision-input question and leaving detailed entry behaviour to D-013–D-016 and stop/target mechanics to the named E/J topics. Preserve dependencies rather than deciding their formulas here.
+RAMA'S ANSWER: Not understood, So as per your best opinion now, But we will discuss later the relevant issue in new system
+____________________________________________________________
+
+Q10 — TIMEFRAME PREFERENCE (MUST STAY OPEN FOR D-007)
+Market illustration:
+A daily chart may show a broad resistance band near ₹1,200, while a 30-minute chart shows an intraday level near ₹1,185 and a 5-minute chart shows a local swing near ₹1,192. Which one matters depends on the strategy and timeframe policy; choosing a hierarchy prematurely could create conflicting levels.
+ChatGPT suggestion:
+If you have a broad preference, state it only as a proposal and explicitly mark it OPEN / UNRESOLVED for D-007. Do not set a timeframe hierarchy here. “Not decided / discuss later” is fully acceptable.
+RAMA'S ANSWER: OPEN / UNRESOLVED: The probable time frames for S&R (For Intraday: 1Hr + 1D + 1W and For Delivery: 1D + 1W + 1M) and entry conformations may be 1-5mins, we will discuss later
+____________________________________________________________
+
+Q11 — MISSING, LATE, INCONSISTENT OR SUSPECT S&R DATA
+Market illustration:
+A strategy signal arrives, but the candle feed needed to calculate a level is delayed, or one timeframe's data is incomplete. Possible responses include proceeding without S&R, deferring/rejecting the signal, or alerting and recording the issue. Each has different availability and safety trade-offs.
+ChatGPT suggestion:
+A conservative candidate is to make the data-quality condition visible, record it, and alert; whether the signal proceeds, is deferred or is rejected should be an explicit later governance decision. Do not let this answer silently create a hidden gate. If you prefer a specific outcome, state it as a proposal.
+RAMA'S ANSWER: Yes agreed with your suggestion
+____________________________________________________________
+
+Q12 — RECORDING S&R CONTEXT FOR RETROSPECTIVE AUDIT
+Market illustration:
+For each evaluated signal, an audit record could later show the level/zone available at evaluation time, the data-quality status, whether S&R was actually used, and the resulting Trade/Reject outcome. That could help determine whether S&R added value or caused missed opportunities. This is a conceptual example, not a schema proposal.
+ChatGPT suggestion:
+Consider requiring enough evidence to reconstruct what S&R information was available and whether/how it influenced the decision. Leave database fields, retention and implementation details for a later design step.
+RAMA'S ANSWER: Yes agreed with your suggestion
+____________________________________________________________
+
+Q13 — ROOM TO S&R, “LATE ENTRY” AND EXTENSION GUARD
+Market illustration:
+A stock has already moved from ₹400 to ₹425, and the next resistance zone is around ₹428. A new signal at ₹425 might have little room before resistance. Another stock at ₹425 may have no nearby level until ₹445. This illustrates why room-to-level might be relevant; it does not validate any particular extension guard.
+ChatGPT suggestion:
+Keep D-009's role to identifying this as a dependency. Leave exact room-to-level calculations, late-entry thresholds and extension guards to D-013–D-016/E-008. Do not ratify the previously proposed guard through this answer.
+RAMA'S ANSWER: We will discuss later, But the concept is simple whether this trade falls with in my R:R by considering nearest S&R point (1Hr > 1Month as stated above for intraday to Delivery), if the R:R within S&R then take trade else reject ('Within' means both SL & TGT points below its intended S&R, Example: Support is Rs 100 then SL points must be till Rs 100 say Rs 99.50-Rs.99.90 like wise If resistance is Rs 200 then TGT must till Rs 200 say Rs 199.50-Rs 199.90)
+____________________________________________________________
+
+Q14 — PERSONAL RECOLLECTION OF TESTING-VM TARGETS/STOPS
+Market illustration:
+A test log might show a stop below a support zone or a target near resistance. A log or code comment alone would not prove that the behavior occurred on the testing VM or that it was ever used in production.
+ChatGPT suggestion:
+Answer only from personal memory: “Yes, I recall…” with approximate timing, “No, I do not recall that behavior,” or “Not sure.” This will be recorded as RAMA (STATED), not independently verified evidence.
+RAMA'S ANSWER: No, I do not recall that behaviour or Not sure
+____________________________________________________________
+
+ADDITIONAL NOTES
+If your main concern is that the old S&R range was too broad/narrow, stale, not strategy-appropriate, inconsistent across timeframes, or ignored nearby resistance, say which you actually recall. These are prompts to help memory, not claims about the old system.
+RAMA'S ANSWER: No, I do not recall, But in new system we must deeply discuss on suitable time frames for intraday and Delivery; Improved S&R logic if any; and any other improvements if any, we will discuss later, note carefully!
+____________________________________________________________
+
+OVERALL CHATGPT RECOMMENDATION (FOR CONSIDERATION, NOT PRE-SELECTED ANSWERS)
+1. Separate factual recollection of the legacy problem from desired V2 behavior.
+2. Prefer auditable S&R context recording and a reviewable evidence phase before granting S&R authority over trade decisions.
+3. Avoid making S&R a rejection gate by implication; define any Trade/Reject role explicitly later.
+4. Keep D-009 high-level. Keep zones, strength, freshness, entry timing, stops/targets and legacy-engine disposition in their designated topics.
+5. Keep all timeframe choices OPEN / UNRESOLVED for blocked D-007.
+6. Do not claim the legacy detector ran or affected live trades; Stage 1 did not establish that.
+7. If uncertain, say so. Do not turn an illustrative price example into a claimed historical incident.
+
+NEXT STEP
+Use this guide alongside D-009_RAMA_ANSWER_SHEET_29-OCT-2026.txt. Fill the original answer sheet in your own words, or send answers by question number in chat. ChatGPT will review the answers before any requirements package is prepared. No freeze, repository write, storage, commit or push is authorised by these answers.

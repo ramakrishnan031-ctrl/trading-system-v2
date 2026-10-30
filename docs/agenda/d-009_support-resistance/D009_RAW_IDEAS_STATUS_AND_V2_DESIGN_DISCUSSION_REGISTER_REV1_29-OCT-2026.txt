@@ -1,0 +1,223 @@
+D-009 - SUPPORT & RESISTANCE
+RAW-IDEAS STATUS AND FUTURE V2 DESIGN DISCUSSION REGISTER
+Date: 29-Oct-2026
+Revision 1 (Claude, 29-Oct-2026, from 19:45 IST): ChatGPT's register (revision 0) with corrections A to F of
+CHATGPT_REVIEW_D009_CLAUDE_RAW_IDEAS_NOTES_29-OCT-2026.txt applied. Each change is listed in
+D-009_RAW_IDEAS_REGISTER_REV1_CHANGE_LOG_29-OCT-2026.txt. This is a local working copy for ChatGPT's review.
+Correction CR-1 (Claude, 29-Oct-2026, 19:56 IST): one wording correction in section I, from
+CHATGPT_REVIEW_D009_RAW_IDEAS_REGISTER_REV1_29-OCT-2026.txt (change-log row CL-29).
+
+PURPOSE AND GOVERNANCE STATUS
+Rama has explicitly clarified that the answers recorded in the D-009 answer guide are rough/raw ideas. They are starting
+inputs for a later, deep V2 design discussion, not final requirements or approved implementation decisions.
+
+Therefore:
+- Preserve Rama's answers as user-stated preliminary inputs.
+- Do not silently convert them into frozen requirements, formulas, configuration, or implementation.
+- Do not treat ChatGPT suggestions as decisions made by Rama.
+- Keep questions open where Rama said "discuss later", "not understood", "not sure", or "OPEN / UNRESOLVED".
+- Do not alter Rama's answers to fix inconsistencies. Record each inconsistency as a question for the design
+  discussion.
+- Legacy system remains DEAD / REFERENCE ONLY. No legacy-source access is authorised by this note.
+- D-006 remains DEFERRED / NOT CLOSED; D-007 remains BLOCKED / NOT CLOSED.
+- No requirements freeze, repository write, storage, commit, push, tests, or implementation is authorised by this note.
+
+SOURCE
+The user's uploaded file:
+D009_RAMA_ANSWER_GUIDE_REAL_MARKET_EXAMPLES_AND_CHATGPT_SUGGESTIONS_29-OCT-2026(1).txt
+- Claude received this file as D009_RAMA_ANSWER_GUIDE_REAL_MARKET_EXAMPLES_AND_CHATGPT_SUGGESTIONS_29-OCT-2026.txt,
+  without the "(1)". Whether the two copies are byte-identical has not been checked.
+- Source of truth: the guide's "RAMA'S ANSWER" sections are the only record of Rama's exact wording. The guide is
+  preserved unchanged.
+- The numbered items below are paraphrases, not verbatim quotations. Text in quotation marks inside them is copied from
+  the guide.
+- Some answers adopt ChatGPT's suggestions rather than giving Rama's own wording. None of these is an independent,
+  fully reasoned requirement from Rama:
+  - Q6, Q8 and Q9: Rama did not understand the question and asked for ChatGPT's best current opinion ("as per your best
+    opinion now").
+  - Q11 and Q12: Rama agreed provisionally with ChatGPT's suggestions ("Yes agreed with your suggestion").
+  - Q4: Rama repeated ChatGPT's suggested wording and added a point of his own.
+- Q5, Q7 and Q14 open with ChatGPT's suggested wording: "I don't recall which component; the records should be
+  reviewed separately" (Q5); "Defer detailed R:R behavior to the E-topic" (Q7); "No, I do not recall that behaviour or
+  Not sure" (Q14). In Q5 and Q7, Rama's own words follow.
+
+RAW INPUTS FROM RAMA - PARAPHRASED, NOT VERBATIM (NOT FROZEN)
+1. (Q1, intraday) Intraday S&R timeframe idea: 1-hour + daily + weekly ("1Hr + 1D + 1W"); compare the levels and
+   consider the nearest S&R.
+   - Rama's ITC example: levels at Rs 250 (1Hr), Rs 260 (1D) and Rs 270 (1W); R:R "1:2 (Risk 1: Return 2)".
+   - It says the trade is rejected at a CMP of Rs 246. At a CMP of Rs 251 it says the trade can be taken, because the
+     1D level at Rs 260 "will accommodate R:R".
+   - The example's level labels and arithmetic are open questions (C).
+2. (Q1, delivery) Delivery S&R timeframe idea: daily + weekly + monthly ("1D + 1W + 1M"), with the same concept. Rama
+   noted that this is a rough idea only; the timeframes and any improved logic are to be discussed deeply later.
+3. (Q2) Near-day-high example: check the next, nearest S&R point. If the SL and target fit before it, trade; "else
+   outright reject".
+   - The example: a signal at Rs 996, the nearest S&R assumed at Rs 1,000, "SL Rs 2: TGT Rs 4". This puts the target at
+     the level itself (D).
+   - An initial concept only, to be discussed deeply later.
+4. (Q3) Role of S&R in V2 Trade/Reject decisions: "Not understood well"; discuss later.
+   - Items 1, 3, 8 and 14 appear to imply a reject-if-SL/target-do-not-fit concept.
+   - That reading is an interpretation, not Rama's answer to Q3; it needs his discussion and explicit decision (G).
+5. (Q4) Rama repeated ChatGPT's suggested wording: "Common baseline, with strategy-specific differences only where
+   explicitly defined and tested". He added that breakout and pullback strategy logic is "equally opposite", with S&R
+   considerations applied accordingly. Details later.
+6. (Q5) Which legacy S&R component Rama meant: not recalled. The records should be reviewed separately, and the
+   relevant issue discussed in V2.
+7. (Q6) Shadow/log-only phase: Rama did not understand the question and asked for ChatGPT's best current opinion ("as
+   per your best opinion now"); to be discussed later in the new-system design.
+   - ChatGPT's suggestion in the guide: consider a non-trading evidence phase before any authority to affect trades is
+     considered.
+   - No shadow phase is approved (I).
+8. (Q7) R:R and S&R: detailed R:R is deferred to the E-topic. Rama's rough concept:
+   - once a stock is eligible to order, pull the nearest S&R points by comparing 1hr + 1D + 1W;
+   - then check that the R:R points are within S&R: the "risk point is above 'support point'" and the "reward point
+     must be below 'resistance point'" ("safest approach");
+   - if it holds, place the order; else reject.
+   Q13 places the SL differently (D). This is not an approved formula.
+9. (Q8) D-009 boundaries with D-010 to D-012 and J topics: Rama did not understand the question and asked for ChatGPT's
+   best current opinion.
+   - ChatGPT's working proposal in the guide: D-009 whether S&R is used and its high-level role; D-010 zones; D-011
+     strength; D-012 freshness; J topics the legacy-engine disposition review.
+   - This is for later discussion, not a frozen choice.
+10. (Q9) Entry/SL/target boundary: Rama did not understand the question and asked for ChatGPT's best current opinion.
+    - ChatGPT's working proposal in the guide: D-009 keeps the high-level decision-input question; detailed entry
+      behaviour goes to D-013 to D-016; stop and target mechanics go to the named E and J topics.
+    - This is for later discussion, not a frozen choice.
+11. (Q10) Timeframes: explicitly OPEN / UNRESOLVED.
+    - Rama's provisional ideas: intraday 1-hour + daily + weekly; delivery daily + weekly + monthly; entry
+      confirmations may use 1 to 5 minute charts.
+    - These are ideas, not a hierarchy. D-007 remains BLOCKED / NOT CLOSED, so timeframe decisions remain OPEN /
+      UNRESOLVED (B).
+12. (Q11) Missing/late/suspect S&R data: provisional agreement with ChatGPT's suggestion ("Yes agreed with your
+    suggestion") to make the data-quality condition visible, record it and alert.
+    - Whether the signal proceeds, is deferred or is rejected remains a later decision.
+    - Alerting must not become an implicit trade or start blocker (H).
+13. (Q12) Retrospective evidence: provisional agreement with ChatGPT's suggestion ("Yes agreed with your suggestion")
+    that enough should be recorded to reconstruct what S&R information was available and whether or how it
+    influenced the decision. Storage design is not decided.
+14. (Q13) Room-to-S&R / late entry: discuss later. Rama's rough concept: take the trade only if the R:R is within the
+    nearest S&R. "Within" means both the SL and the target sit below their intended S&R:
+    - his example puts the SL at Rs 99.50 to 99.90 for support at Rs 100;
+    - and the target at Rs 199.50 to 199.90 for resistance at Rs 200.
+    This differs from item 8 on the SL side and from item 3 on the target (D). No buffer formula or threshold is
+    approved.
+15. (Q14) Testing-VM behavior: Rama does not recall it / is unsure; this is not evidence that the behavior did or did
+    not occur.
+16. (Additional notes) Rama does not recall a specific old incident. For V2, timeframe suitability for intraday and
+    delivery, improved S&R logic, and other improvements must be discussed deeply later.
+
+TECHNICAL AMBIGUITIES TO RETAIN FOR DESIGN DISCUSSION
+These are questions, not corrections or conclusions.
+
+A. "Nearest S&R" needs an exact meaning.
+- Nearest by absolute price distance?
+- For a long trade, which relevant support below price and resistance above price should be considered? For a short
+  trade, which relevant resistance above price and support below price should be considered? This is a question only;
+  it approves no selection method.
+- Select one timeframe first, or compare candidate levels across timeframes?
+- What if a level from one timeframe is closer but another is structurally stronger?
+- How are overlapping levels/zones represented?
+
+B. The timeframe ideas are not a validated hierarchy.
+- "1Hr + 1D + 1W" (intraday) and "1D + 1W + 1M" (delivery) are Rama's provisional timeframe ideas, not a hierarchy.
+- "1Hr > 1D > 1W" could mean priority order, preference, or a set of candidate timeframes. In the ITC example the level
+  used was the nearest one in the trade's direction, whatever its timeframe: Rs 250 from 1Hr, then Rs 260 from 1D.
+- None of this is to be read as a settled ranking rule. D-007 is BLOCKED / NOT CLOSED, so all timeframe decisions
+  remain OPEN / UNRESOLVED.
+
+C. The ITC numerical illustration (Q1) has label and arithmetic inconsistencies.
+They are recorded here as inconsistencies in the raw example, not corrected.
+- Labels: the example calls the 1Hr level at Rs 250 the "nearest support" while the CMP is Rs 246. For a price below
+  Rs 250 that level sits above price, which may make it overhead resistance for a long, depending on the market
+  structure.
+- Arithmetic at a CMP of Rs 246: the stated R:R is "1:2 (Risk 1: Return 2)", i.e. reward:risk 2:1, with a risk of Rs 5
+  and a reward of Rs 10. The target would then be Rs 246 + Rs 10 = Rs 256. The example writes "Rs 246+Rs 5 = Rs 251".
+  Both Rs 251 and Rs 256 are above Rs 250, so the stated rejection follows if the rule is that the target must stay
+  below that resistance.
+- A CMP of Rs 251: with the same Rs 5 risk and 2:1 reward:risk, the target would be Rs 261. That does not fit below the
+  stated Rs 260 (1D) level. So the example's statement that the trade can be taken because the 1D level at Rs 260
+  "will accommodate R:R" is not consistent with its own figures, and is not to be read as a valid outcome.
+- Whether the stop is set by the strategy first (and then checked against S&R) or derived from support is OPEN /
+  UNRESOLVED.
+- Preserve the example as Rama's rough illustration; do not use it as an approved example or formula.
+
+D. "SL and target within S&R" needs directional definitions.
+- For a long trade, a stop is usually below the entry and a target above it. Whether the stop/target must be strictly
+  inside, at, or beyond a level or zone requires explicit definition.
+- Conflict, preserved: Q7 says "for risk point is above 'support point'", i.e. the SL above support. Q13 gives an SL of
+  Rs 99.50 to 99.90 for support at Rs 100, i.e. below support.
+- Conflict, preserved: Q2 sets the target at the level itself (a signal at Rs 996, the level at Rs 1,000, "TGT Rs 4").
+  Q13 puts the target below resistance (Rs 199.50 to 199.90 for Rs 200).
+- Neither interpretation is chosen here; both are for the future design discussion.
+- All examples are long-side examples. Short-side symmetry and any exceptions remain OPEN / UNRESOLVED. Do not
+  generalise the long-side example to every strategy without discussion.
+
+E. Zone versus point.
+Rama's examples often describe a single price, but real S&R may be represented as a range/zone. Whether V2 uses points,
+zones, or both belongs in detailed design. No choice is made here.
+
+F. Strategy-specific behavior.
+Breakout and pullback strategies can use S&R differently. Need later to define what is common, what is
+strategy-specific, and how exceptions are governed and tested.
+
+G. Trade rejection authority.
+- Q3 remains not understood and to be discussed later (Rama: "Not understood well, So we will discuss later").
+- Q1, Q2, Q7 and Q13 appear to imply a possible concept: reject the trade if its SL/target do not fit relative to S&R.
+  This is an interpretation requiring Rama's discussion and explicit decision; it is not a decided role.
+- It must not become a live rejection gate by implication. Explicit governance must decide whether S&R is
+  informational, affects ranking, affects Trade/Reject, or participates in entry/risk calculations.
+
+H. Data quality and missing levels.
+- Rama's preliminary agreement (Q11) covers only recording and alerting the quality condition.
+- Whether a signal proceeds, waits, or is rejected when S&R is unavailable, stale, inconsistent, or suspect remains
+  OPEN / UNRESOLVED.
+- Alerting must not become an implicit trade blocker or system-start blocker. Any pre-flight behavior must be defined so
+  it does not accidentally become an unapproved hidden gate.
+
+I. Shadow / log-only evidence.
+- No shadow or log-only phase is approved. Whether to evaluate such a phase remains OPEN / UNRESOLVED.
+- If one is considered, the unresolved choice is between two options:
+  (i) gather S&R evidence before any V2 trading; or
+  (ii) trade without S&R authority during a log-only period.
+  Because V2 is live-only (DR-001), this is a governance issue requiring explicit review. It also bears on the
+  preliminary concept of rejecting a trade that does not fit (G; Rama in Q2: "else outright reject").
+- Its duration, sample size, evidence measures, acceptance criteria, ownership, and approval gate are not decided.
+
+J. Legacy claims.
+- Rama does not recall the specific old component or testing-VM behavior.
+- Two historical questions remain UNKNOWN / NOT ESTABLISHED:
+  - what the old "incorrect or unsuitable S&R range or interpretation" meant (A-001's record of the issue Rama
+    reported);
+  - whether any S&R component ran on a host or affected a live trade.
+  Stage 1 evidence does not establish either, and Rama's memory is not proof of runtime behavior.
+- Keep both UNKNOWN / NOT ESTABLISHED unless valid evidence later establishes them.
+
+DEPENDENCIES (LINKS ONLY; NOT DECIDED IN D-009)
+- S&R-based SL and R:R details stay with the relevant E topics, including E-006 (S&R-based SL). D-009 decides no SL,
+  target or R:R formula.
+- 1W and 1M S&R need appropriate weekly and monthly candle data. Their source and availability are a K-009 dependency,
+  not decided here.
+- S&R timing (when levels are computed relative to a signal) bears on latency and on missing-data handling (H). It is
+  not decided here.
+- D-008's broad-market context answer (DR-075, RQ8-01) does not decide stock-level S&R; the two are kept separate.
+- D-006 remains DEFERRED / NOT CLOSED; D-007 remains BLOCKED / NOT CLOSED.
+
+RECOMMENDED V2 DESIGN WORKFLOW (FUTURE, NOT AUTHORISED BY THIS NOTE)
+1. Preserve Rama's answers verbatim, from the guide's "RAMA'S ANSWER" sections, in the project record as preliminary
+   statements. The numbered items above are paraphrases, not verbatim.
+2. At the proper V2 design stage, take one question at a time and define the problem before choosing an algorithm.
+3. Use synthetic market examples for edge cases: long/short, breakout/pullback, levels above/below CMP, multiple
+   timeframe conflicts, overlapping zones, missing/stale candles, gaps, and insufficient room for SL/target.
+4. Compare alternative approaches with explicit benefits, risks, failure cases, data requirements, and testable
+   acceptance criteria.
+5. Separate measurement of S&R from authority to affect Trade/Reject, entry, sizing, stops, and targets.
+6. Keep D-007 timeframe decisions blocked until its governance status is resolved.
+7. Freeze a requirement only after Rama explicitly agrees to the final wording and the applicable governance workflow
+   is completed.
+
+STATUS
+D-009 answers are preliminary user inputs only.
+No D-009 requirements are frozen by this register.
+No legacy behavior is inferred from the rough examples.
+No implementation or repository action is authorised.
+Revision 1 is a local working copy for ChatGPT's review.

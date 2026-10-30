@@ -1,0 +1,89 @@
+D-009 — SUPPORT & RESISTANCE
+RAW-IDEAS STATUS AND FUTURE V2 DESIGN DISCUSSION REGISTER
+Date: 29-Oct-2026
+
+PURPOSE AND GOVERNANCE STATUS
+Rama has explicitly clarified that the answers recorded in the D-009 answer guide are rough/raw ideas. They are starting inputs for a later, deep V2 design discussion, not final requirements or approved implementation decisions.
+
+Therefore:
+- Preserve Rama's answers as user-stated preliminary inputs.
+- Do not silently convert them into frozen requirements, formulas, configuration, or implementation.
+- Do not treat ChatGPT suggestions as decisions made by Rama.
+- Keep questions open where Rama said “discuss later”, “not understood”, “not sure”, or “OPEN / UNRESOLVED”.
+- Legacy system remains DEAD / REFERENCE ONLY. No legacy-source access is authorised by this note.
+- D-006 remains DEFERRED / NOT CLOSED; D-007 remains BLOCKED / NOT CLOSED.
+- No requirements freeze, repository write, storage, commit, push, tests, or implementation is authorised by this note.
+
+SOURCE
+The user's uploaded file:
+D009_RAMA_ANSWER_GUIDE_REAL_MARKET_EXAMPLES_AND_CHATGPT_SUGGESTIONS_29-OCT-2026(1).txt
+
+RAW INPUTS RECORDED FROM RAMA (NOT FROZEN)
+1. Intraday S&R timeframe idea: 1-hour + daily + weekly; compare the levels and consider the nearest S&R. The example mentions ITC prices and an R:R of 1:2.
+2. Delivery S&R timeframe idea: daily + weekly + monthly.
+3. Near-day-high example: consider whether the intended SL/target fit before the relevant S&R level; otherwise reject. This is an initial concept only.
+4. Q3 role of S&R in V2 Trade/Reject decisions: not understood yet; discuss later.
+5. Common baseline with strategy-specific differences: Rama broadly agrees as a concept, noting breakout and pullback strategies may need opposite interpretations; details remain for later.
+6. Which legacy S&R component Rama meant: not recalled; review separately and discuss the relevant issue in V2.
+7. Shadow/log-only phase: Rama asked for ChatGPT's best current opinion but wants to discuss the issue later in the new-system design.
+8. R:R and S&R: detailed R:R is deferred to the relevant later topic. The rough concept is to compare the nearest S&R context across the proposed timeframes and ensure stop/target remain on the intended side of support/resistance; otherwise reject. This is not an approved formula.
+9. D-009 boundaries with D-010–D-012 and J topics: not understood yet; use a proposed boundary for discussion later, not as a frozen choice.
+10. Entry/SL/target boundary: not understood yet; discuss later.
+11. Timeframes: explicitly OPEN / UNRESOLVED. The provisional idea is intraday 1-hour + daily + weekly; delivery daily + weekly + monthly; entry confirmations may use 1–5 minute charts. D-007 remains blocked, so no hierarchy is approved.
+12. Missing/late/suspect S&R data: Rama agrees in principle with recording/alerting the quality condition, while the effect on whether a trade proceeds remains a later decision.
+13. Retrospective evidence: Rama agrees in principle that S&R context should be recorded sufficiently for later review; storage design is not decided.
+14. Room-to-S&R / late entry: discuss later. Rough concept is to ensure SL and target stay within the intended support/resistance boundaries, with illustrative buffers such as a stop just below support and target just below resistance. No buffer formula or threshold is approved.
+15. Testing-VM behavior: Rama does not recall it / is unsure; this is not evidence that the behavior did or did not occur.
+16. Additional note: Rama does not recall a specific old incident. For V2, timeframe suitability for intraday and delivery, improved S&R logic, and other improvements must be discussed deeply later.
+
+TECHNICAL AMBIGUITIES TO RETAIN FOR DESIGN DISCUSSION
+These are questions, not corrections or conclusions.
+
+A. “Nearest S&R” needs an exact meaning.
+- Nearest by absolute price distance?
+- Nearest relevant support for a long and nearest relevant resistance for a long?
+- Select one timeframe first, or compare candidate levels across timeframes?
+- What if a level from one timeframe is closer but another is structurally stronger?
+- How are overlapping levels/zones represented?
+
+B. The proposed timeframe order is not yet a validated hierarchy.
+“1Hr > 1D > 1W” could mean priority order, preference, or a set of candidate timeframes. It must not be interpreted as a settled ranking rule. Delivery's 1D + 1W + 1M proposal is also provisional. D-007 is blocked and must remain unresolved.
+
+C. The ITC numerical illustration needs careful reconstruction during design.
+The example says CMP ₹246 and a 1-hour S&R point at ₹250, describing it as “nearest support”. For a price below ₹250, that level may instead be overhead resistance depending on the market structure. The example also describes R:R as ₹5 risk / ₹10 reward, implying a ₹251 target from ₹246; whether that arithmetic, direction, stop, target, and level labels are mutually consistent is not established. Preserve it as Rama's rough illustration; do not use it as an approved example or formula.
+
+D. “SL and target within S&R” needs directional definitions.
+For a long trade, a stop is usually below the entry and a target above it; support/resistance placement and whether the stop/target must be strictly inside, at, or beyond a zone require explicit definition. Short trades may require the inverse logic. Do not generalise the long-side example to every strategy without discussion.
+
+E. Zone versus point.
+Rama's examples often describe a single price, but real S&R may be represented as a range/zone. Whether V2 uses points, zones, or both belongs in detailed design. No choice is made here.
+
+F. Strategy-specific behavior.
+Breakout and pullback strategies can use S&R differently. Need later to define what is common, what is strategy-specific, and how exceptions are governed and tested.
+
+G. Trade rejection authority.
+Rama's rough examples suggest rejecting a trade when SL/target cannot fit relative to S&R. This must not become a live rejection gate by implication. Explicit governance must decide whether S&R is informational, affects ranking, affects Trade/Reject, or participates in entry/risk calculations.
+
+H. Data quality and missing levels.
+Recording and alerting is a preliminary preference. Whether a signal proceeds, waits, or is rejected when S&R is unavailable, stale, inconsistent, or suspect remains open. Any pre-flight behavior must be defined so it does not accidentally become an unapproved hidden gate.
+
+I. Shadow / retrospective evidence.
+A log-only evidence phase is worth evaluating, but its duration, sample size, evidence measures, acceptance criteria, ownership, and approval gate are not decided.
+
+J. Legacy claims.
+Rama does not recall the specific old component or testing-VM behavior. Stage 1 evidence does not establish that the detector actually ran on a host or affected a live trade. Keep that historical question UNKNOWN / NOT ESTABLISHED unless valid evidence later establishes it.
+
+RECOMMENDED V2 DESIGN WORKFLOW (FUTURE, NOT AUTHORISED BY THIS NOTE)
+1. Preserve the raw inputs above verbatim in the project record as preliminary statements.
+2. At the proper V2 design stage, take one question at a time and define the problem before choosing an algorithm.
+3. Use synthetic market examples for edge cases: long/short, breakout/pullback, levels above/below CMP, multiple timeframe conflicts, overlapping zones, missing/stale candles, gaps, and insufficient room for SL/target.
+4. Compare alternative approaches with explicit benefits, risks, failure cases, data requirements, and testable acceptance criteria.
+5. Separate measurement of S&R from authority to affect Trade/Reject, entry, sizing, stops, and targets.
+6. Keep D-007 timeframe decisions blocked until its governance status is resolved.
+7. Freeze a requirement only after Rama explicitly agrees to the final wording and the applicable governance workflow is completed.
+
+STATUS
+D-009 answers are preliminary user inputs only.
+No D-009 requirements are frozen by this register.
+No legacy behavior is inferred from the rough examples.
+No implementation or repository action is authorised.
