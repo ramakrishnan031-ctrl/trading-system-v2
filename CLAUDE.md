@@ -6,6 +6,7 @@ Live-only NSE equity trading system via Zerodha. Design phase: discuss norms > f
 1. docs/governance/V2_DECISION_REGISTER.md (what V2 has actually decided)
 2. docs/governance/V2_DESIGN_LOG.md (lessons and open questions; review the lessons)
 3. The instruction card named in the task, from docs/web_claude_instructions/
+4. At the start of each agenda topic: the topic workflow, V2_DESIGN_LOG.md W-14 (full text: docs/inputs/reconciliation/Topic_Workflow.txt, with its applicability addendum beside it), and the topic's start package from ChatGPT
 
 ## Hard rules
 - No code is written against a norm that is not frozen. Do not carry legacy behaviour forward by default; a retained legacy element needs a recorded decision.
@@ -16,6 +17,7 @@ Live-only NSE equity trading system via Zerodha. Design phase: discuss norms > f
 - Investigate before acting: report what exists first, then change only what is needed.
 - Bug workflow: discuss root cause > design/implement > test > review. Root cause, not a patch.
 - At most 2 concurrent subagents unless the instruction card says otherwise.
+- One agenda topic at a time; stop at each topic boundary. No push to GitHub before an independent Claude review and ChatGPT's explicit OK TO PUSH (W-14, DR-082).
 
 ## Code standards (when building starts)
 - One responsibility per .py file, one clear entry point. snake_case functions, PascalCase classes, UPPER_CASE constants, lowercase file/folder names.
