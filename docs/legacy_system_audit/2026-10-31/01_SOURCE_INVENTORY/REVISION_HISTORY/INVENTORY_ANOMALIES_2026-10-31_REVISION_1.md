@@ -1,0 +1,263 @@
+# INVENTORY ANOMALIES AND LEADS
+
+- **Date:** 2026-10-31 · **Baseline:** `970aabf3c78d777d9d34549e021f7c8e756c7bdb`
+- These are **inventory-level leads**, not confirmed system defects. Each
+  entry states the observation (fact) and why it merits later investigation.
+  Classification uses AC-04 terms only where evidence already suffices;
+  most entries are leads feeding Stages 3–7. IDs INV-001 onward; cross-links
+  into the findings register will be added when the relevant stage examines
+  them.
+- The CSV's `BACKUP/ALT-NAMING` flag is a deliberately loose regex
+  (it also matches "templates", "final", "fix###"); this document is the
+  curated list. CSV flags not curated here were assessed as naming-heuristic
+  noise, with one standing exception: the `fix###` test-naming pattern
+  (INV-010).
+
+---
+
+**INV-001 — `.env.example` contains non-placeholder-shaped values** · *Confirmed observation; interpretation tentative; potential severity: Critical if real*
+- Path: `.env.example` (root, 50 lines, tracked).
+- Evidence: 20 filled assignments (Zerodha API key / secret / TOTP for 5
+  account-suffixed variable names — `LFL836`, `DR6114`, `D351962`, `ZA004`,
+  `ZA005` — plus Telegram bot token, 2 channel IDs, a personal chat ID, and
+  `WEBHOOK_SECRET`). Only **4 distinct values** among the 20 (same value
+  reused across fields), lengths 12–17, mixed charset; **none matches common
+  placeholder patterns** (your-/xxx/replace/changeme/<>/dummy…). Values were
+  shape-checked only and are not reproduced anywhere in the audit.
+- Why it matters: an "example" env file is expected to hold obvious
+  placeholders. Repetition across unrelated fields suggests placeholders;
+  the non-placeholder shapes (e.g., a chat-ID-shaped 12-char value) leave
+  open that one or more values are real. Real account identifiers appear in
+  the variable *names* regardless.
+- Later investigation: Rama can confirm offline whether any value is live;
+  Stage 7 history scan checks whether a real `.env` or earlier values were
+  ever committed. Area 11.
+
+**INV-002 — Exact duplicate root/docs copies of agent charters** · *Confirmed observation (byte-identical blobs)*
+- `AGENTS.md` ≡ `docs/AGENTS.md` (4,442 B, same blob hash); `GEMINI.md` ≡
+  `docs/GEMINI.md` (12,967 B, same blob). A third, different `AGENTS.md`
+  exists at `deploy/tools/claude/AGENTS.md`.
+- Why: duplicate sources of operator/agent instructions can drift and then
+  contradict (the third copy may already differ — unexamined). Area 14;
+  docs-vs-docs contradiction check.
+
+**INV-003 — V2 design material stored inside the legacy repository, including an exact duplicate** · *Confirmed observation*
+- `docs/v2_design_spec.md` ≡ `docs/web_claude/00_source_documents/v2_design_spec.md`
+  (52,144 B, identical blobs); plus `docs/web_claude/03_audit_responses/trading_system_v2_audit_report.md`
+  (175,224 B), `system_audit_v2_21042026.md`, and
+  `docs/web_claude/00_source_documents/locked_decisions.yaml` duplicated at
+  `docs/locked_decisions.yaml` (not yet compared — may differ).
+- Why: these in-repo files are in scope (they are part of this snapshot),
+  but the audit's V2-isolation rule means we analyze them only as *legacy-repo
+  documentation*, never as a window into the V2 repository. Flag for Rama:
+  confirm this treatment. Also a duplication/contradiction lead (Area 14).
+
+**INV-004 — `v3_chain/` package: an in-repo parallel implementation lineage ("V3") with its own docs, scripts and tests** · *Confirmed observation of presence; role unverified*
+- Paths: `v3_chain/` (9 Python files incl. `runner.py`, `pb01_entry.py`,
+  `score.py`, `forward_shadow.py`); `docs/v3/` (9 planning/gap-map docs);
+  `scripts/v3_hardgate_parity_recompute.py`, `scripts/v3_shadow_soak_report.py`;
+  13 `tests/unit/test_v3_*`/`test_sr_v2_*` files reference v3/sr-v2 naming.
+- Why: a second decision pipeline living beside the primary one is a prime
+  candidate for duplicated/contradictory logic and ambiguous ownership
+  (Areas 02, 03, 14). Its docstring self-describes as "V3 chain"; actual
+  integration unverified. Also note `docs/audit/pb01_and_v3_gate_scoping_2026-07-24.md`.
+
+**INV-005 — Reference-data CSVs duplicated between config and test fixtures** · *Confirmed observation (names; content not yet compared)*
+- `config/reference_data/**` (18 CSVs incl. `security_master_file.csv`) vs
+  `tests/fixtures/reference_data/**` (5 CSVs with 4 overlapping names:
+  `fno_symbols.csv`, `nifty_bank.csv`, `nifty_it.csv`, `nifty_private_bank.csv`).
+- Why: fixture copies that drift from real reference data make tests pass
+  against stale universes (Area 12); content diff deferred to Stage 6.
+
+**INV-006 — Oversized documentation artifacts** · *Confirmed observation*
+- `docs/SYSTEM_MAP.md` 705,794 B (largest file in repo);
+  `docs/audit/integrity_audit_2026.md` 368,033 B;
+  `docs/MASTER_PENDING_01-Aug-2026.md` 345,139 B;
+  `ops_dashboard/frontend/static/style.css` 438,424 B;
+  `ops_dashboard/frontend/templates/login.html` 151,863 B (a login page).
+- Why: machine-maintained or ever-growing docs drift from code (Area 14);
+  a 150 KB login template is a lead for embedded assets or generated code in
+  the dashboard (Areas 10/11). Content review deferred.
+
+**INV-007 — 44 committed screenshots/binaries under `docs/audit/`** · *Confirmed observation*
+- 34 PNG + 2 webp (e.g., `docs/audit/approval_final_19aug/S01…S22*.png`,
+  ~5.9 MB total), 3 `.docx` under `docs/web_claude/06_live_operations/`.
+- Why: binaries are unauditable as text and may contain sensitive dashboard
+  data (account numbers, P&L, tokens in UI). Metadata-only so far; a
+  screenshot-content review is an optional later step for Rama to approve
+  (they render the GUI with real-looking operational data).
+
+**INV-008 — Custom "copy-protection" security tooling in deploy** · *Confirmed observation of presence; purpose unverified*
+- `deploy/security/bin/copy-guard`, `deploy/security/bin/request-copy`
+  (extensionless executables), `deploy/security/install_copy_protection.sh`,
+  plus `scripts/copy_gate.py`, `scripts/request_copy.py`,
+  `tests/unit/test_copy_gate.py`, and polkit-style `*.rules` file.
+- Why: home-grown access-control layers are a classic source of both
+  security gaps and operational lockouts (Areas 10/11). Also unusual:
+  Windows-side `scripts/copy_token_to_vm.bat` implies tokens are copied
+  from a Windows PC to the VM — token-handling workflow to examine.
+
+**INV-009 — Token lifecycle implemented in at least four places (names)** · *Tentative interpretation from names + docstrings only*
+- `broker/token_monitor.py`, `scripts/auto_refresh_token.py`,
+  `deploy/token_watcher.sh` + `deploy/systemd/token-watcher.service`,
+  `scripts/copy_token_to_vm.bat`; tests reference token invalidation/relatch
+  (`test_fix062_token_invalidation.py`, `test_h11…`, `test_h13…`,
+  `test_fix128_token_monitor.py`, `test_fix135_auto_token.py`).
+- Why: multiple cooperating token mechanisms is a duplication/race lead
+  (Areas 07/09/14). Note: these files *handle* secrets; no secret values
+  observed in the inventory pass.
+
+**INV-010 — `fix###` naming shows ≥190 numbered fix campaigns; tests pin specific fixes** · *Confirmed observation of naming; interpretation tentative*
+- ~75 test files named `test_fixNNN_*.py` with NNN observed from 061 to 190
+  (non-contiguous), e.g. `tests/unit/test_fix190_exit_safety.py`,
+  `tests/integration/test_fix190_incident_replay.py`; plus
+  `docs/archive/CRON_FIX_2026_05_18.md`, `docs/web_claude/05_deployment/fixes/fix1…fix4`.
+- Why: the numbering implies a long sequence of production incidents/fixes —
+  the primary input for Stage 7 regression analysis (which fixes recur,
+  which were symptom-level). Also suggests test suite is organized around
+  incidents rather than behaviours (Area 12).
+
+**INV-011 — TEMP-config apparatus is reified in the repo** · *Confirmed observation of presence*
+- `docs/temp_config_tracker.md` (2,094 B), `scripts/revert_temp_config.py`,
+  `tests/unit/test_revert_temp_config.py`, `tests/crash_test/revert_temp_configs.sh`.
+- Why: AGENTS.md claims "7 TEMP config values active — will be reverted".
+  Dedicated revert tooling confirms temporary risk-relaxations are a managed
+  practice; which values, their blast radius, and whether tracker/code agree
+  is Area 08's question (U-002 in AC-07).
+
+**INV-012 — Five empty `__init__.py` files in core trading packages** · *Confirmed observation; benign-looking*
+- `capital/__init__.py`, `data/__init__.py`, `orders/__init__.py`,
+  `reports/__init__.py`, `signals/__init__.py` — 0 bytes (normal Python
+  practice; other packages have non-empty inits, e.g. `v3_chain/__init__.py`
+  645 B). Recorded for completeness; low priority (inconsistency only).
+
+**INV-013 — Duplicate basenames across packages (drift candidates)** · *Confirmed observation (names only)*
+- `models.py` ×4 (`allocation/`, `regime/`, `sr_detector/`, `v3_chain/`);
+  `runner.py` ×3; `engine.py`, `freshness.py`, `capacity.py`,
+  `operations.py` ×2 each — notably `ops_dashboard/backend/api/capacity.py`
+  vs `.../services/capacity.py` and `ops/control_tower/freshness.py` vs
+  `ops_dashboard/backend/services/freshness.py`.
+- Why: same-name modules in sibling layers often share copied logic
+  (Area 14 near-duplicate scan will compare bodies).
+
+**INV-014 — Second dashboard dependency manifest** · *Confirmed observation*
+- `ops_dashboard/backend/requirements.txt` beside root `requirements.txt`
+  and `requirements-dev.txt`; also `docs/web_claude/05_deployment/fixes/fix4_requirements_split.txt`
+  documents a historical "requirements split".
+- Why: split manifests can pin conflicting versions (Areas 10/11 dependency
+  review).
+
+**INV-015 — Operational report artifacts tracked in `reports/`** · *Confirmed observation*
+- 10 files incl. `reports/crash_test/day6_ct159_final.md` — runtime-style
+  outputs committed to source control (the live system reportedly writes to
+  `reports/`).
+- Why: tracked runtime-output directories blur source vs artifact and
+  invite accidental commits of operational data (Area 01/10). Contents
+  unexamined.
+
+**INV-016 — Root `GEMINI.md` + `deploy/tools/claude/` + `docs/web_claude/`: three AI-agent instruction surfaces** · *Confirmed observation of presence*
+- Root/docs `GEMINI.md` (duplicated, INV-002), `deploy/tools/claude/AGENTS.md`,
+  and an extensive `docs/web_claude/` instruction tree for external AI
+  workflows.
+- Why: multiple agent charters with write rules and operational authority
+  statements may contradict each other and the repo's actual layout (this
+  audit already handles one AGENTS.md conflict); docs-vs-docs comparison in
+  Area 14.
+
+---
+
+Count: 16 curated leads. None is asserted as a system defect at inventory
+level; INV-001 carries a potential-Critical marker pending verification.
+
+---
+
+## POST-REVIEW ERRATA AND CLARIFICATIONS — 2026-10-31 (IST)
+
+Appended after an independent review of Topic 01 relayed by Rama. Entries
+above are left unchanged for the audit trail; **where they conflict, this
+section governs.** Figures re-computed from `git ls-tree -r -l HEAD` and
+SOURCE_FILE_INVENTORY.csv at baseline `970aabf3c78d777d9d34549e021f7c8e756c7bdb`.
+
+**E-01 — INV-001 re-assessed: current `.env.example` values are fill-in placeholders (high confidence).**
+- The original check was incomplete: its placeholder word list omitted
+  "FILL", producing a false "not obviously placeholder" verdict.
+- Re-check (values still never printed or copied): all 4 distinct values
+  are upper-snake-case constants (A–Z, 0–9, `_` only) containing the marker
+  word "FILL". One 15-character value is shared by 17 fields of five
+  different credential types (all 15 Zerodha API-key / API-secret / TOTP
+  fields, the Telegram bot token and the webhook secret) — distinct
+  credential types cannot validly share one value. The other three values
+  (Telegram channel ×2, chat ID ×1) follow the same FILL-marked pattern.
+- Updated status: credential exposure **not indicated** in the current file.
+  Residual: (a) the repository is **public** (verified 2026-10-31 from
+  GitHub repository metadata), so any real value in *earlier* history would
+  be exposed — Stage 7 history scan; potential severity Critical *if*
+  found, likelihood unknown. (b) The five account-suffixed variable names
+  disclose account identifiers (metadata, lower sensitivity).
+- Handling note: later audit documents refer to these suffixes generically
+  (account #1–#5) rather than repeating them.
+
+**E-02 — INV-007 count and location corrected.** "44 committed
+screenshots/binaries under docs/audit/" is wrong. Correct: **39 binary
+files, 8,271,637 B** = 34 PNG screenshots, all under `docs/audit/`
+(`approval_19aug/` 10, `approval_final_19aug/` 22, `s06_rerender_24aug/` 2)
++ 2 WebP dashboard assets under `ops_dashboard/assets/` (`branding/logos/`,
+`illustrations/login/`) + 3 DOCX under `docs/web_claude/06_live_operations/`.
+The `approval_final_19aug/` PNG set totals 6,045,765 B (original: "~5.9 MB").
+
+**E-03 — INV-010 overstated; corrected.** "≥190 numbered fix campaigns" is
+not supported. Facts: **65 test files** carry a fix identifier in their name
+(63 named `test_fixNNN_*`, plus `tests/unit/test_order_placer_fix061.py` and
+`tests/unit/test_cnc_gtt_adoption_fix183.py`; the original "~75" was wrong),
+using **30 distinct identifiers: 1, 61–68, 73–75, 128–137, 140, 142, 148,
+164, 180, 181, 183, 190** (non-contiguous; the original "from 061" missed
+`tests/unit/test_fix1_carried_position_rehydrate.py`). Five documents also
+carry fix1–fix4 identifiers (`docs/web_claude/05_deployment/fixes/fix1…fix4_*.txt`,
+`docs/audit/fix2_preflight_capital_checks_10aug2026.md`), possibly a separate
+numbering scheme. The highest observed identifier is 190; the number,
+chronology and meaning of actual fix campaigns are **unverified** (Stage 7).
+
+**E-04 — INV-003 clarified: inside this snapshot, "v2" is the legacy system's own name.**
+`README.md` line 1 is "# Trading System v2"; `main.py`'s docstring reads
+"main.py -- Trading System v2 Entry Point"; `deploy/logrotate/trading-system`,
+`docs/v2_design_spec.md` and both in-repo audit reports use the same name.
+On their face these are the legacy system's own documents, not material
+from the separate `trading-system-v2` repository. The relationship between
+that repository and this snapshot is unknown and is **not** investigated
+(IOQ-11). Boundary rule applied: such files are read only as documents
+stored in the legacy snapshot; the separate V2 repository is never opened,
+cloned, queried or compared (treatment pending Rama's confirmation).
+Correction: `docs/locked_decisions.yaml` (167,677 B) and
+`docs/web_claude/00_source_documents/locked_decisions.yaml` (31,440 B) are
+**not** duplicates — different blobs (original: "may differ").
+
+**E-05 — INV-004 test count corrected.** 9 `test_v3_*` + 6 `test_sr_v2_*` =
+15 files (original: 13). The `sr_v2` tests appear to belong to a separate
+"SR v2" lineage; their relation to `v3_chain/` is unverified.
+
+**E-06 — INV-005 reframed.** The four fixture CSVs differ from, and are much
+smaller than, their config namesakes (16–25 B vs 72–1,669 B) — consistent
+with minimal test stubs, not stale copies. Open question becomes test
+realism (Area 12), not drift.
+
+**E-07 — INV-008 file type corrected.** `deploy/security/trading-security.rules`
+self-describes as `etc/audit/rules.d/trading-security.rules` — an **auditd**
+(Linux audit framework) rules file, not polkit/udev.
+
+**E-08 — INV-013 clarified.** No same-basename group is byte-identical except
+the root/docs `AGENTS.md` pair (INV-002): `models.py` 4 paths / 4 blobs;
+`runner.py` 3/3; `engine.py`, `freshness.py`, `capacity.py`, `operations.py`,
+`requirements.txt` 2/2 each. Shared names alone prove no shared logic.
+
+**E-09 — DUPLICATE-CONTENT is not a duplicate-code count.** The 39 flagged
+rows = 28 empty `.gitkeep` + 5 empty `__init__.py` (one shared empty blob) +
+6 non-empty documents in 3 identical pairs (`AGENTS.md`, `GEMINI.md`,
+`v2_design_spec.md`). **Zero** source or config files are exact duplicates;
+near-duplicates are Stage 5 work. (`reports/output/.gitkeep`, 36 B, holds a
+placeholder comment, hence unflagged.)
+
+**E-10 — Evidence status.** For INV-004, -005, -008, -009, -011, -013, -014
+and -015 only *presence* is established; activity, function, duplication,
+race risk, version conflicts and runtime status stay unverified until later
+static tracing. All inventory facts describe the GitHub snapshot at the
+baseline commit, not the live VM.
