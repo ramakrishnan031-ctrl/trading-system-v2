@@ -12,6 +12,7 @@ Live-only NSE equity trading system via Zerodha. Design phase: discuss norms > f
 - No code is written against a norm that is not frozen. Do not carry legacy behaviour forward by default; a retained legacy element needs a recorded decision.
 - V2 is live-only: no paper mode, no paper/live parity. No .xlsx report generators (DR-009).
 - docs/inputs/ is immutable: never edit, rename or overwrite anything there.
+- docs/inputs/legacy_baseline/ is out of scope for all work (option C, DR-073; W-15, DR-085): exclude it by git pathspec, or name only the files a step needs, before any search, listing, indexing or read, in every command Claude or a subagent runs for its own work and in every subagent's task scope; never filter output after access. If it is accessed by accident: stop, disclose it and seek a new decision. Whether git's own handling of the whole repository counts as access is pending (W-15; OB-06 of the D-006 to D-010 batch decision record).
 - Never write credential values (passwords, API secrets, tokens, TOTP secrets) into any file, report or log. Name the location/type only.
 - Do not add a file before checking for an existing one that does the job.
 - Investigate before acting: report what exists first, then change only what is needed.
