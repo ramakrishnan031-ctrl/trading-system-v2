@@ -1,0 +1,368 @@
+D-006 TO D-010 DOCUMENTATION BATCH - FOURTH INDEPENDENT REVIEW OF THE FINAL COMMIT (01-NOV-2026)
+*** THE FULL INDEPENDENT REVIEW OF THE EXACT COMMIT FOR CHATGPT: ITS BRIEF AS RECEIVED AND ITS REPORT AS WRITTEN ***
+Prepared 01-Nov-2026 (IST) by Claude, after the review. Reviewed: commit 42e653300310c901d01cc99ee48d1fa71b072bd6, tree
+  839729786920cfe9dcd3662599d690720d886aeb, parent 40bbd2d900e29558348bc8e612afd4daf493bd9c. This file is not in the
+  commit: a record of a review cannot be inside the commit it reviews. It goes with the pre-push report and will be
+  stored with the batch's post-push record.
+
+========================================================================================================================
+1. THE REVIEW, AND CLAUDE'S CHECK OF THE REVIEWER'S TRANSCRIPT
+========================================================================================================================
+- Reviewer: a separate Claude subagent with a fresh context, which drafted none of the batch and took part in none of
+  the earlier reviews; read-only on the repository; its brief carried the W-15 exclusion and the command forms, and kept
+  docs/legacy_system_audit/ out of scope too (section 2).
+- Result, in short (Claude's summary; the report in section 3 is the record): "PASS WITH FINDINGS": 0 HIGH, 0 MEDIUM and
+  3 LOW findings (BG-01 to BG-03), with every point of ChatGPT's audit and every item of the PD-01 instruction found
+  met, and all earlier findings (BR, BS, BD, BF) resolved with no regression (by its transcript, 08:55 to 09:16 IST; its
+  report gives 09:20 as the finish).
+- Claude's check of the reviewer's transcript (as in PD-01): 107 tool calls. Every whole-tree diff, listing and search
+  carried ':(exclude)docs/inputs/legacy_baseline' and ':(exclude)docs/legacy_system_audit' (in some commands through a
+  shell variable holding both), and every other git command named its files or folders. No git ls-tree, git read-tree,
+  git ls-files --others, fetch, clone, state-changing git command, comparison of the working tree or git status. The
+  folder's path occurs 129 times in 31 of its tool results, as the text of the brief and of V2 and batch records, never
+  followed by the name of anything in the folder. With the Write tool it wrote only its report; its scripts walked only
+  its own copies of named files, outside the repository, among which is no copy of either folder.
+
+========================================================================================================================
+2. THE BRIEF, AS RECEIVED (THE FIRST MESSAGE OF THE REVIEWER'S TRANSCRIPT; A FINAL LINE BREAK ADDED)
+SHA-256 95ddff841e89ad27d3b45a1426f837b582cac798e5d676f989f1395431eb598a, 9,074 bytes
+========================================================================================================================
+----- BEGIN -----
+You are an independent reviewer (W-12) for the V2 trading-system governance repository. You drafted none of the files you review and took part in none of the earlier reviews. This is a full independent review of the exact commit that will go to ChatGPT for its pre-push audit. You are read-only on the repository.
+
+REPOSITORY AND COMMITS
+- Repository: /home/claude/ramakrishnan031-ctrl/trading-system-v2, local branch d006-d010-docs-batch. The working tree equals the commit.
+- Review the exact local commit 42e653300310c901d01cc99ee48d1fa71b072bd6 (tree 839729786920cfe9dcd3662599d690720d886aeb). Its parent is 40bbd2d900e29558348bc8e612afd4daf493bd9c, GitHub main since 23:40 IST on 31-Oct (origin/main locally).
+- The batch was drafted on 6bd80a5302c215bc91b26b3ff2da546df03b694a (GitHub main until then); the manual manifests hash their sources at 6bd80a5. The parent 40bbd2d is a merge by Rama that adds files only under docs/legacy_system_audit/; the batch was rebased onto it.
+- Earlier local commits of the batch, never pushed: d06ceec64562e259649854a5126a55608de1cf72 (ChatGPT's pre-push audit: NOT APPROVED TO PUSH); 08f15ec07baf35e2d15eaa50c0244a260e3ff3e7 (second review: FAIL, BS-01 to BS-18); 87615401afcdc2e6c022cd13abb127f839a660ac (delta review: PASS WITH FINDINGS, BD-01 to BD-08); 396b4697a19d4fb592c95f0cc82f644e8be7cfbc (rebased as 52ffa34aa996d9333ff1e0758f8225653777d2a4); 52ffa34 (third review: PASS WITH FINDINGS, BF-01 to BF-10, 2 MEDIUM). The commits up to 396b4697 have the parent 6bd80a5; 52ffa34 has the parent 40bbd2d.
+- Do not change anything in the repository: no edits, no new files, no git command that changes state, no fetch, no clone, and never run "git status".
+- Write only your report, to /home/claude/docbatch/review5/ (it exists). You may keep working copies of named files in /home/claude/docbatch/review5/work/.
+
+THE LEGACY FOLDER: A HARD LIMIT (W-15, DR-085)
+- docs/inputs/legacy_baseline/ is out of scope. Every command you run must exclude it by git pathspec or name only the files it needs. Use these forms:
+  - git diff --name-status 40bbd2d900e29558348bc8e612afd4daf493bd9c 42e653300310c901d01cc99ee48d1fa71b072bd6 -- . ':(exclude)docs/inputs/legacy_baseline'
+  - git diff <commit> 42e653300310c901d01cc99ee48d1fa71b072bd6 -- . ':(exclude)docs/inputs/legacy_baseline' ':(exclude)docs/legacy_system_audit'
+  - git ls-files -- . ':(exclude)docs/inputs/legacy_baseline' ':(exclude)docs/legacy_system_audit'
+  - git grep -n PATTERN 42e653300310c901d01cc99ee48d1fa71b072bd6 -- . ':(exclude)docs/inputs/legacy_baseline' ':(exclude)docs/legacy_system_audit'
+  - git show <commit>:<path> for a named file.
+- Never use: git ls-tree on the whole tree or on docs/inputs; git read-tree; git ls-files --others; git diff, git grep, git show --stat or git log -p/--stat without that exclusion or named paths; a comparison of the working tree with a commit (compare commits only); a pipe that filters the folder out after listing it; a directory walk (os.walk, find, ls -R, grep -r) over the repository; a clone. No legacy repository, clone, host, VM, runtime, broker or database; no web. Do not read Claude's or any subagent's transcripts.
+- Also out of scope for this review: docs/legacy_system_audit/ (the archive in the parent commit). Do not open its files; exclude it from whole-tree listings and searches as above. The batch records note it as an open point (OB-09).
+- If any command touches either folder by accident, stop that line of work and report it plainly.
+
+AUTHORITY
+- docs/inputs/reconciliation/D006_D010_Documentation_Batch.txt (the batch instruction, ChatGPT's text at Rama's request).
+- docs/inputs/reconciliation/D006_D010_ChatGPT_PrePush_Audit.txt (ChatGPT's audit of d06ceec).
+- docs/inputs/reconciliation/PD01_Acceptance_Claude_Instructions.txt (ChatGPT's instruction after Rama accepted PD-01).
+- W-14 (DR-082) and its applicability addendum (docs/inputs/reconciliation/Topic_Workflow_W14_Applicability_Addendum_31-OCT-2026.txt); DR-083; CLAUDE.md.
+- The batch's records in docs/agenda/d006-d010-documentation-batch/. The independent review record reproduces the earlier reviewers' briefs and reports verbatim (sections 5 and 6; 7.5 and 7.6; 8.5 and 8.6; 9.5 and 9.6) and states how each finding was resolved (sections 2, 7.2, 8.2 and 9.2). The change log lists every change between the local commits (sections 2 to 7).
+
+WHAT TO REVIEW
+All 30 files the commit adds or changes against its parent 40bbd2d (26 added, 4 modified: README.md, CLAUDE.md, V2_DECISION_REGISTER.md, V2_DESIGN_LOG.md). Judge the commit as it stands, not only the changes since the earlier reviews.
+
+WHAT TO CHECK
+1. ChatGPT's audit, point by point, and the PD-01 instruction, item by item: is each requirement met in this commit? In particular: PD-01 kept accurately and in full, not minimised, not relabelled as no access, and "no name or line displayed or used" presented as Claude's report, not proven fact, in every file that touches it (including the topic manuals); the facts found or recognised after Rama's acceptance disclosed and left for decision (OB-05); Rama's acceptance recorded with its exact scope (one-time, this batch only, not precedent, option C unchanged) in DR-085 and the batch records; the corrective controls recorded and enforced (W-15; CLAUDE.md) and saying what the instruction says; each of the five review notes carrying the applicable findings of ChatGPT's combined pre-push audit and their disposition, kept apart from the independent Claude reviews and the earlier topic-level ChatGPT reviews; no ChatGPT verdict on any later commit invented; items marked as corrected / pending verification; the batch interpretation explicit (retrospective documentation completion; not authority for multi-topic agenda runs; not precedent; no change to the one-topic workflow).
+2. The earlier findings: BR-01 to BR-20, BS-01 to BS-18, BD-01 to BD-08 and BF-01 to BF-10 are each resolved in this commit as the review record says, with no regression.
+3. Status and scope guard: every topic status, decision, open question and boundary unchanged (D-006 DEFERRED / NOT CLOSED; D-007 BLOCKED / NOT CLOSED; D-008 DR-075 and all RQ8/OQ8 statuses; D-009 DR-076 DRAFT RECORDED - NO REQUIREMENT DECIDED, OQ9-01 to OQ9-25 OPEN; D-010 DR-077 and its open/unknown items); D-011 and D-012 untouched; D-013 NOT STARTED; BK-85 / OP-01 OPEN; register rows DR-001 to DR-083 unchanged; no requirement, formula, timeframe, zone, score, gate, target or R:R rule, schema, architecture or implementation added or decided.
+4. Accuracy throughout the 30 files (sample the manuals widely; check the record files closely): status wording; quotes exact and attributed to the right record and speaker; IDs; paths; line references (the files state a design-log line shift: lines at 6bd80a5 195 to 393 +2, 394 to 619 +3, later +5; the design log is the same at 6bd80a5 and 40bbd2d); counts; times; labels (FACT (V2 DECISION), FACT (V2 RECORD), FACT (HISTORICAL), RAMA (STATED), RAMA-AUTHORISED / DRAFTED BY CHATGPT, INTERPRETATION, PROVISIONAL, UNKNOWN / NOT ESTABLISHED, NOT RESEARCHED, KNOWN DEFECT, OPEN QUESTION).
+5. The manual manifests and the batch storage manifest: recompute SHA-256, bytes and lines of every file they list (sources at 6bd80a5; batch files at this commit); the completeness claims.
+6. The governance changes (DR-084, DR-085, W-15, the lesson rows, the section 4 notes, the section 6 lines, the BK-85 note, the CLAUDE.md rule, the README line): nothing else changed; table cell counts.
+7. Consistency between the decision record, the change log, the storage manifest, the independent review record and the five review notes and manifests; the change log against the actual diffs between the local commits.
+8. Security and scope: no credential values, tokens or secrets; no trading-account identifier; no IP address; no Claude session link; nothing that implies legacy-source access beyond what PD-01 and OB-05 to OB-07 disclose.
+
+REPORT
+Write /home/claude/docbatch/review5/BATCH_REVIEW5_FINDINGS.txt (plain ASCII, prose lines up to 120 characters, tables excepted):
+- the commit and tree reviewed, and the times you started and finished (IST);
+- a verdict: PASS, PASS WITH FINDINGS or FAIL;
+- a findings table: ID (BG-01, BG-02, ...) | file:line | severity | finding | evidence (exact text, file and line) | suggested fix. Severity: HIGH = a status or decision changed or promoted, a fabricated quote, review, verdict or fact, a minimised or altered PD-01, a requirement of ChatGPT's audit or the PD-01 instruction not met, or a security leak; MEDIUM = an inaccurate fact, citation, attribution or label that could mislead; LOW = wording, consistency or format;
+- for each point of ChatGPT's audit and each item of the PD-01 instruction: met or not met, with the evidence;
+- what you checked and what you did not check, and the commands you used, so that your compliance with the folder limits can be verified.
+Then reply in under 250 words: the verdict, the counts by severity, the file path, and anything you could not check.
+----- END -----
+
+========================================================================================================================
+3. THE REPORT, AS WRITTEN (/home/claude/docbatch/review5/BATCH_REVIEW5_FINDINGS.txt)
+SHA-256 e98c514ee4fd6271aa620e1dbfeb8483b83c9e905ad62dc1438495a7eeaba573, 30,080 bytes
+========================================================================================================================
+----- BEGIN -----
+D-006 TO D-010 DOCUMENTATION BATCH - FOURTH FULL INDEPENDENT REVIEW OF THE FINAL COMMIT (W-12)
+Reviewer: a separate Claude subagent that drafted none of the files reviewed and took part in none of the earlier
+  reviews. Read-only on the repository. This report is written only here, as the brief directs (the repository's
+  CLAUDE.md output rule names docs/claude_code_reports/, but this review may not write in the repository).
+Repository: /home/claude/ramakrishnan031-ctrl/trading-system-v2, local branch d006-d010-docs-batch. HEAD was the
+  reviewed commit throughout.
+Reviewed commit: 42e653300310c901d01cc99ee48d1fa71b072bd6, tree 839729786920cfe9dcd3662599d690720d886aeb, parent
+  40bbd2d900e29558348bc8e612afd4daf493bd9c (origin/main locally). Committed 08:54:51 IST on 01-Nov-2026 (commit
+  object; branch reflog "commit (amend)"). Drafting base: 6bd80a5302c215bc91b26b3ff2da546df03b694a.
+Review started: 01-Nov-2026, 08:55 IST. Review finished: 01-Nov-2026, 09:20 IST.
+Line numbers: "file:line" is the line at 42e6533 unless another commit is named. "Decision record", "change log",
+  "storage manifest", "review record", "acknowledgement" and "drafting brief record" are the batch files in
+  docs/agenda/d006-d010-documentation-batch/; "the audit" is
+  docs/inputs/reconciliation/D006_D010_ChatGPT_PrePush_Audit.txt; "the instruction" is
+  docs/inputs/reconciliation/PD01_Acceptance_Claude_Instructions.txt; "the batch instruction" is
+  docs/inputs/reconciliation/D006_D010_Documentation_Batch.txt. Topic files are in their docs/agenda/ folders.
+
+========================================================================================================================
+VERDICT: PASS WITH FINDINGS
+========================================================================================================================
+- No HIGH and no MEDIUM finding. Three LOW findings (BG-01 to BG-03), all wording or consistency in batch records or
+  one added design-log row; none touches a status, decision, PD-01 fact, quote attribution or security point.
+- PD-01 is kept in full in the decision record, section 5 (lead sentence, the four cases, the label "Claude's report,
+  not independently verified", the disposition and the facts found or recognised after the acceptance). Wherever the
+  "no name or line displayed or used" claim is restated (DR-085, the lesson row, the five manuals, the five manifests,
+  the five review notes, the storage manifest) it is Claude's report. It is nowhere called "no access", and "The
+  access cannot be undone." stands in DR-085 and the decision record.
+- Rama's acceptance is recorded with its scope (one-time; this batch only; not permission to access again; not a
+  precedent or standing waiver; option C unchanged) in DR-085, TB-09 and the decision record, section 5. W-15 and the
+  CLAUDE.md rule carry the four corrective controls in the instruction's terms.
+- Each review notes file carries, in 7.3, the audit's points 1 to 4 as they apply to the topic, with dispositions
+  marked CORRECTED / RECORDED / UNCHANGED (or DISPOSED BY RAMA for PD-01) "- PENDING CHATGPT VERIFICATION", apart from
+  the independent Claude reviews (7.2) and the topic-level reviews (section 2). No ChatGPT verdict on any commit after
+  d06ceec is given anywhere.
+- BR-01 to BR-20, BS-01 to BS-18, BD-01 to BD-08 and BF-01 to BF-10 are resolved in this commit as the review record
+  states; no regression found.
+- Every status, decision, open question and boundary is unchanged; DR-001 to DR-083 are byte-equal to 40bbd2d; D-011,
+  D-012, D-004 and D-005 files are untouched; D-013 NOT STARTED; BK-85 OPEN.
+- Recomputed: all 29 storage-manifest rows; all 231 manual-manifest entries (209 sources at 6bd80a5, 10 identity lines,
+  12 "also cite" hashes); the 8 verbatim blocks of the review record and the 5 of the drafting brief record. All match.
+- No credential value, token, trading-account identifier, IP address or Claude session link found.
+
+========================================================================================================================
+FINDINGS
+========================================================================================================================
+| ID | file:line | Severity | Finding | Evidence (exact text, file and line) | Suggested fix |
+|---|---|---|---|---|---|
+| BG-01 | decision record:133-136 | LOW | The sentence corrected under BF-06 lists what was "added to the plan's file list later", but leaves out CLAUDE.md. The acknowledgement's file-by-file table (section 3) has no CLAUDE.md row, and the commit changes CLAUDE.md (change log C-10, C-21, C-29; storage manifest section 3). A reader would take CLAUDE.md to have been in the plan of 10:48. | decision record:134-136: "The brief-and-prompts record, the acknowledgement itself, the change log and the two inputs received at 13:22 IST were added to the plan's file list later (corrected after the third review, BF-06)."; acknowledgement:19-31 (rows for the five topic folders, the batch folder, docs/inputs/reconciliation/, docs/inputs/chatgpt_originals_and_replies/, V2_DECISION_REGISTER.md, V2_DESIGN_LOG.md and README.md only) | "... the change log, the two inputs received at 13:22 IST and CLAUDE.md were added to the plan's file list later"; optionally add that DR-085, W-15 and the two lesson rows were added later to files the plan lists. |
+| BG-02 | V2_DESIGN_LOG.md:195 (rule cell) | LOW | The lesson's rule cell ends with two practices and then "(W-15)". W-15 (line 396) contains neither practice: it does not say that a subagent's brief gives the exact command, or that Claude checks the subagent's transcript before its output is used. Read as a citation, "(W-15)" says W-15 requires them. The row is not yet published. | V2_DESIGN_LOG.md:195: "A subagent's brief gives the exact command, and Claude checks the subagent's transcript before its output is used (W-15). /"; V2_DESIGN_LOG.md:396 (W-15): "Every drafting and review subagent receives the same explicit exclusion." (no transcript check, no exact-command rule) | Place the citation on the exclusion sentence (e.g. "... or a filter applied after the listing (W-15). A subagent's brief gives the exact command, and Claude checks the subagent's transcript before its output is used."), or drop "(W-15)". |
+| BG-03 | review record:3-7 | LOW | The header dates the whole record "Prepared 31-Oct-2026 (IST)" and says that section 9 was written after the third review, which took place on 01-Nov (9.1); and it names the instruction (item 6) as authority only "for the second review and the delta review", although the third review was also held under it (its brief, 9.5, AUTHORITY; decision record TB-12) and the fourth review is too. | review record:3-7: "Prepared 31-Oct-2026 (IST) by Claude: sections 1 to 6, the first review, after that review; section 7, the second review, section 8, the delta review, and section 9, the third review, each after that review. ... for the second review and the delta review also PD01_Acceptance_Claude_Instructions.txt (stored in the same folder), item 6."; review record:1031: "01-Nov, 08:14 to 08:45 IST" | "Prepared 31-Oct-2026 and (section 9) 01-Nov-2026 (IST) ..."; "for the second review, the delta review and the third review also PD01_Acceptance_Claude_Instructions.txt ...". |
+
+Counts: HIGH 0; MEDIUM 0; LOW 3 (BG-01 to BG-03). Total 3.
+
+Observations (not findings; for Rama and ChatGPT where marked):
+- O-1. W-15 (V2_DESIGN_LOG.md:396) says the folder "is excluded before any search, file listing, indexing or read" and
+  then, as INTERPRETATION (Claude) pending OB-06, that git's own handling "(its index, fetch, commit, push, clone and
+  checkout) is not counted as access". The two read against each other on "indexing"/"index" until ChatGPT answers
+  OB-06. The tension is labelled and disclosed (OB-06 names W-15 and the CLAUDE.md rule as dependent texts), so it is
+  not a finding; ChatGPT may wish to settle OB-06 before W-15 governs another topic.
+- O-2. The topic-level summaries of OB-05 (review notes 7.1 and manifests, e.g. D-010_review_notes.md:228) say the
+  routine untracked-file, unstaged-change and rebuild checks "ran without the exclusion"; the decision record:229-233
+  says the first two "took in the folder" and that the rebuild check loaded "the folder's entries included". The
+  summaries' trailing "(NOT ESTABLISHED whether git read inside the folder)" attaches to the commit-to-commit diffs,
+  as in the decision record:234-239. The full facts are in the decision record, which the summaries cite.
+- O-3. The drafting brief record:22 keeps the instruction's attachment path, whose directory name is a session-scoped
+  identifier (also the name of this review's local session directory). It is not a link and is disclosed in that
+  record's header (:7-8). W-8 ("no session link") is not engaged in my reading; Rama and ChatGPT may decide otherwise.
+- O-4. The first reviewer's verbatim report (review record:276-277) says "I did not open /home/claude/legacy". It
+  names a local path and states it was not opened; nothing in the batch implies that the path was used.
+- O-5. Audit point 2 says the final verdict and closure status are to be "added only after the revised exact commit is
+  reviewed"; the batch puts them in the post-push record, since a change to the review notes after OK TO PUSH would
+  void it (OB-08, open for ChatGPT). This is disclosed and does not invent a verdict.
+- O-6. D-010's section 2 also holds D-010's own topic-level independent Claude review (2.10, 30-Oct). 7.2 and 7.3
+  distinguish the batch's reviews from "the topic-level ChatGPT reviews of section 2"; 2.10 is separately headed, so
+  the three categories the instruction names stay distinct.
+
+========================================================================================================================
+CHATGPT'S PRE-PUSH AUDIT OF d06ceec, POINT BY POINT
+========================================================================================================================
+Point 1 (BLOCKER, PD-01)
+- "Preserve PD-01 as a permanent, accurate disclosure. Do not minimise it, relabel it as no access, or remove it from
+  the record." MET. Decision record:192-280 keeps the lead sentence ("one search read the text of that folder's files"),
+  the four cases (os.walk; the git ls-files pipes; the git grep that "read the text of the folder's files to search
+  them"; the git ls-tree scripts), the label at :210, the disposition at :220-225 and the later facts at :226-241.
+  DR-085: "a D-010 drafting subagent's git grep read text inside that folder"; "The access cannot be undone." Lesson
+  row V2_DESIGN_LOG.md:195. Each manual names PD-01 where it speaks of the folder (D-006:15, D-007:15, D-008:50,
+  D-009:9 and :412, D-010:7, :320 and :420). A search of the Claude-written files found no minimising wording ("Minor:"
+  appears only for the helper-script writes, listed separately).
+- "Do not conduct any further access to that folder." MET AS RECORDED, NOT VERIFIABLE: Claude's report, so labelled,
+  in the change log (:45-48, :74-77, :94-96, :117-119, :138-140) and the storage manifest (:126-127); git's own
+  handling since then is listed in OB-06. This review made no access (process section below).
+- "Do not amend historical records to imply the deviation did not occur." MET: the register diff only appends DR-084
+  and DR-085 (DR-001 to DR-083 byte-equal to 40bbd2d); every design-log change is a pure insertion (difflib: two
+  lesson rows, W-15, two section 6 lines, and notes inserted inside cell 2 of the five section 4 rows and cell 3 of
+  BK-85, no character of earlier text removed or changed).
+- "Rama must decide ... ChatGPT is not granting a waiver on Rama's behalf." MET: DR-085 records Rama's answer
+  "Accepted your suggestion" (RAMA (STATED); transcribed in the decision record, section 8) apart from the
+  instruction's wording; TB-09.
+Point 2 (ChatGPT's findings in the five review notes) - MET in all five. 7.3 of each tabulates points 1 to 4 for the
+  topic with dispositions; 7.2 says the independent reviews "are not the topic-level ChatGPT reviews of section 2, and
+  not ChatGPT's combined pre-push audit (7.3)"; 7.3 says the audit "is not one of the topic-level ChatGPT reviews of
+  section 2, and not an independent Claude review (7.2)"; every row is marked "... - PENDING CHATGPT VERIFICATION";
+  "no ChatGPT verdict on the revised commit is given here". The audit's quotes in 7.3 are exact (checked against the
+  stored audit). Closure location: O-5 / OB-08.
+Point 3 (process and scope interpretations)
+- (a) MET: DR-084 ("a reading that ChatGPT's pre-push audit accepted"); TB-11; decision record:104-107; OB-04.
+- (b) MET: DR-084 ("not authority to progress or decide agenda topics in a multi-topic run, not a precedent for one,
+  and no change to W-14's one-topic-at-a-time workflow (ChatGPT's pre-push audit, point 3(b); the PD-01 instruction,
+  item 5)"); decision record:137-143, with both quotes exact.
+- (c) MET: TB-07, TB-11, TB-12, OB-03; no D-013 file or work in the commit; each mention keeps D-013 NOT STARTED.
+Point 4 (status and scope guard) - MET (STATUS AND SCOPE GUARD below).
+Point 5 (next step) - MET as far as the repository shows: Rama's disposition recorded; the review notes updated; the
+  batch records updated with a change log covering every local commit; a new exact commit and tree; this review is a
+  fresh full independent review of that exact commit. The package outside the repository (full contents, complete
+  diff from d06ceec, pre-push report) is not checked.
+
+========================================================================================================================
+THE PD-01 INSTRUCTION, ITEM BY ITEM
+========================================================================================================================
+- AUTHORITY / DECISION ("narrow acceptance ... this batch only"; "NOT permission to access the legacy baseline again";
+  option C not relaxed): MET. DR-085 quotes "AS A DISCLOSED, ONE-TIME PROCESS DEVIATION, WITH RECORDED EXCEPTION AND
+  CORRECTIVE CONTROLS" (exact against the instruction:8-9), "for this batch only", and "This is not permission to
+  access the legacy baseline again, does not relax option C (DR-073) and is not a precedent or standing waiver."
+- PRESERVE THE FACTS 1 and 2: MET (DR-085; decision record:194-209; lesson row :195). Fact 3, "Preserve this as
+  Claude's report, not as independently proven fact": MET in every file that restates it (DR-085 "is Claude's report,
+  not independently proven"; decision record:210; lesson row; all five manuals "as Claude reports"; all five manifests'
+  evidence and process bullets; all five review notes 7.1; storage manifest:124). "Do not erase, minimise, reclassify
+  as "no access", or rewrite": MET. "Do not claim the access can be undone": MET; review notes 7.3 row 1 reads
+  "DISPOSED BY RAMA (DR-085); CONTROLS RECORDED", not CORRECTED.
+- Item 1 (acceptance and its exact scope in the governance record and the batch record; no requirement or status
+  change): MET. DR-085 (register:96, DECIDED, 6 cells); TB-09; decision record:220-225; "No topic requirement or status
+  changes." (DR-085).
+- Item 2 (corrective controls recorded and enforced): MET. W-15 (V2_DESIGN_LOG.md:396) words all four: "remains
+  prohibited for all future work"; "excluded before any search, file listing, indexing or read, and from every
+  subagent's task scope ... never by filtering output after access"; "Every drafting and review subagent receives the
+  same explicit exclusion."; "If any accidental access occurs, that work stops, the access is disclosed and a new
+  decision is sought; DR-085's one-time acceptance of PD-01 is not a precedent or standing waiver." CLAUDE.md:15 adds
+  the hard rule, with its git-handling scope marked pending (OB-06). Enforcement: this review's brief carried the
+  explicit exclusion and command forms. See O-1 and BG-02.
+- Item 3 (five review notes, three kinds of review kept apart, no final verdict, items pending verification): MET.
+- Item 4 (statuses, decisions, open questions, boundaries; D-011, D-012; D-013; BK-85 / OP-01): MET (below).
+- Item 5 (batch interpretation explicit; not authority for multi-topic runs; no change to the one-topic workflow):
+  MET (DR-084; decision record:137-143, quoting item 5 exactly; review notes 7.3 row 3).
+- Item 6 (new exact commit; checks; fresh independent review of that exact commit; updated review notes, decision and
+  batch records and change log; full package manifest; complete diff; review record; pre-push report): new commit MET;
+  this is the fresh full review of 42e6533; updated review notes, records, change log, storage manifest and review
+  record present. The complete diff from d06ceec and the pre-push report are outside the repository: not checked.
+- STOP CONDITION: MET at review time. "git branch -r --contains 42e6533" returns nothing; origin/main is 40bbd2d; no
+  D-013 work.
+
+========================================================================================================================
+EARLIER FINDINGS AND THE CHANGE LOG
+========================================================================================================================
+- BR-01 to BR-20: resolved as review record section 2 states, as checked in the files: e.g. BR-01 (the five process
+  bullets name each topic's PD-01 cases), BR-02 (lesson row and decision record say the grep read the text), BR-03
+  (D-009 manual "FACT (HISTORICAL), user-reported"), BR-04 (line-shift sentences in the ten topic files and the
+  decision record header), BR-05 (D-006_manual.md:35 "At 6bd80a5 it was the only file"), BR-08 (one definition of the
+  label in the four manuals that list it), BR-09, BR-11 (lesson rows at :195-196 above the 2026-10-05 row), BR-17,
+  BR-18 (D-008 2.1 to 2.14), BR-19 (acknowledgement stored, hash equal to Claude's working copy), BR-20. BR-06's
+  wording was replaced under BS-17, as recorded.
+- BS-01 to BS-18 and BD-01 to BD-08: their resolutions stand in the final commit (e.g. BS-01 evidence bullets; BS-05
+  row 1; BS-10 and BD-07 CLAUDE.md:15; BS-11 W-15 provenance; BD-03 row marks; BD-05 "Found or recognised"; BD-06
+  "(Claude's report)"). The "Resolution in 87615401" texts quoted in review record 7.2 exist at 87615401 (checked by
+  git grep on named files), so the historical quotes are accurate.
+- BF-01 to BF-10: all resolved: BF-01 D-010_manual.md:7, :320, :420 and D-009_manual.md:412; BF-02 storage
+  manifest:133-134; BF-03 DR-085 "found or recognised"; BF-04 D-010 manifest:103 and review notes:228, D-006 and D-007
+  manifests :83 and review notes :160/:153; BF-05 V2_DESIGN_LOG.md:624 "pending the fourth review"; BF-06 decision
+  record:134-136 (but see BG-01); BF-07 decision record:39, change log:18, review record:746 and :762; BF-08
+  README.md:10; BF-09 OB-09; BF-10 change log C-24.
+- Change log against the diffs (both folders excluded): f1dda50 to d06ceec 21 files (section 2 via BR-12 and BR-19);
+  d06ceec to 08f15ec 23 files = C-01 to C-11 (C-06 withdrawn: the review record is not in that diff); 08f15ec to
+  87615401 21 files = C-12 to C-21; 87615401 to 396b4697 16 files = C-22 to C-29 (register not changed, as stated);
+  396b4697 to the rebased 430738e no difference; 396b4697 to 52ffa34 3 files = C-30 to C-32; 52ffa34 to 42e6533 19
+  files = C-33 to C-42 (CLAUDE.md, the stored inputs and the D-006 to D-008 manuals unchanged, as stated). Commit and
+  tree hashes and times in change log section 1 and decision record section 1 agree with the commit objects and the
+  branch and origin/main reflogs (branch created 10:45:38; commits 12:12:24, 13:06:57, 13:37:24, 14:40:47, 15:25:11;
+  fetch 08:06:46 and rebase 08:08:40 on 01-Nov; 52ffa34 08:13:21; 42e6533 08:54:51).
+
+========================================================================================================================
+STATUS AND SCOPE GUARD
+========================================================================================================================
+- Register: DR-084 and DR-085 appended after line 94; lines 1 to 94 byte-equal to 40bbd2d; both rows 6 cells, DECIDED.
+- Design log: as point 1 above; lesson rows 3 cells, section 4 rows 3 cells, BK-85 5 cells with status "OPEN".
+  The stated shift (lines at 6bd80a5 195 to 393 +2, 394 to 619 +3, later +5) equals the insertions; the design log is
+  the same at 6bd80a5 and 40bbd2d (diff with both folders excluded is empty).
+- D-006 DEFERRED / NOT CLOSED (DR-072); D-007 BLOCKED / NOT CLOSED (DR-073); D-008 V2 REQUIREMENTS RECORDED
+  (DR-075), RQ8 labels as DR-075 ("Provisional, not decided" for RQ8-02 and RQ8-06), OQ8-01 to OQ8-09 and OQ8-11 to
+  OQ8-13 OPEN, OQ8-10 closed administratively; D-009 DRAFT RECORDED - NO REQUIREMENT DECIDED (DR-076), OQ9-01 to
+  OQ9-25 open, OQ9-09 to OQ9-12 with their recorded status, word for word as the requirements record; D-010 V2
+  REQUIREMENTS RECORDED (DR-077), OQ10-01 to OQ10-20 status cells word for word as the requirements record. D-007's
+  manual quotes legacy timeframes only as FACT (HISTORICAL) with "not a D-007 finding, not a timeframe rule" and
+  cites other topics' timeframe items by ID and status only.
+- Files: 26 added and 4 modified; under docs/agenda only additions (the five topic folders and the batch folder);
+  under docs/inputs only the five stored inputs added; nothing in D-004, D-005, D-011 or D-012 changed.
+- No requirement, formula, timeframe, zone, score, gate, target or R:R rule, schema, architecture or implementation
+  added or decided.
+
+========================================================================================================================
+WHAT I CHECKED
+========================================================================================================================
+1. Authority files read in full: the batch instruction, the audit, the instruction, CLAUDE.md, the two topic-workflow
+   records stored by the batch, and the six batch records (the review record's own text in full; of its verbatim
+   blocks, the third reviewer's report in full and the others by hash).
+2. Quotes: every double-quoted fragment of 8 characters or more in the 15 topic files and the batch records, searched
+   by script (whitespace normalised; long dash as "--" and "-"; "..." and "[...]" split) in the 860 base files (read by
+   name from a listing that excluded both folders; the .doc file's strings), the five stored inputs and the four
+   governance files, with each file's own text left out of the corpus. All found except: pairing artefacts of the
+   script; the decision record's transcriptions of 10:30, 10:44 and 13:22 and their reuse (declared exceptions, not
+   verifiable); the subagent-report quote; quotes of earlier reviewers' wording, found in the verbatim reports; the
+   review record's quotes of text at earlier commits, found at those commits.
+3. IDs and line references: about 40 base line references (design log 367 to 372, 596 to 601, 610, 699 to 703, 713,
+   717 to 723; Master Agenda 201, 219, 289, 298, 311 to 317; D-004:48 and :64; D-005:13 and :156; register 83 to 94),
+   the OBS-01 to OBS-10 sources and lines, and the R-03 erratum against DR-072 and DR-073: all correct.
+4. Manifests: the 5 manual manifests' 231 entries (git show by named path; sources at 6bd80a5 also byte-equal at
+   40bbd2d), their section-coverage line ranges and source counts against the manuals' headings, their completeness
+   counts (topic-folder files 4/4/12/14/15; docs/inputs files 1/4/25/23/16 from an excluded listing; register rows and
+   bookmark rows naming each topic) and label counts: all match. The storage manifest's 29 rows (25 file rows, 4
+   governance rows): all match; it does not list itself (29 + 1 = 30).
+5. Verbatim blocks: the 8 SHA-256 and byte counts of review record sections 5, 6, 7.5, 7.6, 8.5, 8.6, 9.5 and 9.6
+   (briefs without, reports with the final line break) and the 5 of the drafting brief record match; the four report
+   files in /home/claude/docbatch/review*/ and Claude's copies of the drafting brief and the acknowledgement have the
+   stored hashes and sizes (sha256sum and wc -c only).
+6. The push line V2_DESIGN_LOG.md:623 is byte-equal to line 95 of the stored topic-workflow post-push record and occurs
+   once; the OK TO PUSH file's hash equals the post-push record's (4c26fc4f..., 3,550 bytes).
+7. Review notes: D-006 and D-010 section 7 read in full; the 7.1 process bullets of all five read; the 7.2 finding
+   lists of all five compared with the review record's "Where" columns; 7.3 of all five.
+8. Manuals sampled: D-007 sections 1 to 5 and 8; D-008 section 6 and the KNOWN DEFECT line; D-009 sections 4 and 7
+   and 11; D-010 sections 1, 6 and the OQ table, 8 and 11; all five searched for statements on legacy access and the
+   folder, and their label tables and label counts.
+9. Format: the 21 Claude-written batch and topic files are ASCII, LF, no trailing whitespace, final newline; no .txt
+   prose line over 120 characters outside a table or verbatim block; the added governance lines are ASCII; four of the
+   five stored inputs hold non-ASCII as received; README parentheses balanced (11/11).
+10. Security: the 30 files and the commit message scanned: no IPv4 address, no credential-like assignment in added
+   text, no claude.ai link (the hits are descriptions of absence), and the trading-account identifier and the
+   production host address searched for (values not written here): no match. Commit message: subject and the
+   Co-Authored-By line only (W-8).
+
+========================================================================================================================
+WHAT I DID NOT CHECK
+========================================================================================================================
+- Anything under docs/inputs/legacy_baseline/ or docs/legacy_system_audit/: whether the commit adds, changes or removes
+  anything under docs/inputs/legacy_baseline/ is not verified (every listing and diff excluded it); the docs/inputs
+  tree hash at 6bd80a5 and 40bbd2d (not computed, since it covers the folder); the "27 files" of the archive (OB-09).
+- The transcriptions of Rama's 10:30 message and the 10:44 and 13:22 screenshots and the quotes taken from them (not
+  stored, DR-008); that the five stored inputs equal what was received; that the stored briefs are what the reviewers
+  received (only their hashes against Claude's working copies, for the drafting brief).
+- Any transcript (not read, as the brief requires): so Claude's and the subagents' commands, the counts of the
+  folder's path in tool results, the 13:28 test clone, the earlier full clones (OB-07), the stopped review attempt.
+- The package outside the repository (the .txt files, the complete diff from d06ceec, the pre-push report); the remote
+  (no fetch).
+- The manuals' content beyond the sample in item 8 (the first reviewer read all five at f1dda50; each has changed since
+  in one to three lines, all of which I read in the diffs).
+
+========================================================================================================================
+PROCESS AND COMMANDS (FOR CHECKING THE FOLDER LIMITS, W-15 / DR-085)
+========================================================================================================================
+- Read-only on the repository: no edit, no new file, no state-changing git command, no git status, no fetch, no clone,
+  no network. No git ls-tree, git read-tree, git ls-files (of any form), comparison of the working tree with a commit,
+  directory walk of the repository, or pipe that filters after listing.
+- Metadata: git rev-parse HEAD, --abbrev-ref HEAD, origin/main, <commit>^{tree} and <commit>^; git log -1 --format on
+  the seven batch commits, 6bd80a5 and 40bbd2d (no paths, no -p/--stat); git log --format -n 4 <commit> -- README.md and
+  -n 1 -- CLAUDE.md; git reflog show of the branch and origin/main; git branch -r --contains 42e6533; git for-each-ref.
+- Listings: git diff --name-status 40bbd2d 42e6533 -- . ':(exclude)docs/inputs/legacy_baseline' (the brief's first
+  form; its output held no path in either folder); every other whole-tree diff (--name-status, --name-only, --stat,
+  between each pair of local commits, 6bd80a5..40bbd2d, 396b4697..430738e, and from the empty tree to 6bd80a5) carried
+  both exclusions; git diff --name-only from the empty tree to 6bd80a5 on named folders (docs/inputs with the
+  legacy_baseline exclusion; the five topic folders, D-004 and D-005). A grep -c of the saved lists for both prefixes
+  returned 0.
+- Content: git show <commit>:<named path> for the 30 files, the parent versions of the 4 modified files and named
+  sources; git cat-file --batch fed only "<6bd80a5>:<path>" lines from the excluded listing, with a script assertion
+  that no path began with either folder; git diff -U0 / --word-diff on named files; git grep -c -F on named files.
+- Outside the repository: working copies in /home/claude/docbatch/review5/work/ (the 30 files and 4 parents); base
+  copies (860 files, both folders absent) and Python scripts (run with python3 -I) in my session scratchpad; grep, sed,
+  awk and find on those copies only. The base copies include docs/governance/LEGACY_REFERENCE.md, a V2 record whose
+  text names files of the folder; my scripts loaded it into the quote corpus and printed nothing from it. ls of
+  /home/claude/docbatch/ (names only); sha256sum and wc -c of the four earlier reports and of Claude's copies of the
+  drafting brief and the acknowledgement; no other file there, no transcript and no image was opened.
+- The path docs/inputs/legacy_baseline appeared in my commands only inside exclusion pathspecs, in assertions and as a
+  search string over my own copies; docs/legacy_system_audit only inside exclusion pathspecs and assertions. No
+  command listed, searched, hashed or read either folder; no file of either was opened. There is no accidental access
+  to report.
+----- END -----
