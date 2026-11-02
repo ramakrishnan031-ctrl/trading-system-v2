@@ -1,0 +1,167 @@
+INDEPENDENT RECHECK - THE SO-01 CORRECTION TO THE ACCESS-WORDING ADDENDUM - FINDINGS (02-NOV-2026)
+Written 02-Nov-2026 at 11:10 IST (current-time service: 2026-11-02T11:10:39+05:30; check started 11:08:19 IST).
+Reviewer: an independent Claude reviewer with a fresh context; it drafted none of the files and did no earlier review,
+  check or audit of them. Report only: no file changed except this report; nothing decided for D-011.
+Brief: SO01_CHECK_BRIEF.txt (sm/). Instruction checked against: ChatGPT's D011_SO01_Final_Correction_Instructions.txt,
+  section 3 ("verify only the changed addendum lines against the three cited earlier records and confirm no other
+  file changed").
+
+========================================================================================================================
+1. VERDICT AND COUNTS
+========================================================================================================================
+VERDICT: PASS WITH FINDINGS
+  HIGH 0 | MEDIUM 0 | LOW 1 (SP-01) | 4 observations (no severity)
+- The changed addendum lines equal ChatGPT's section 1 text word for word; every claim in them is true against the
+  three cited records and ChatGPT's section C; nothing else in the addendum changed.
+- Activity report: sections 1 to 4 byte-identical to the version before; section 5's hashes, sizes, line counts and
+  times are correct; one sentence cites section 2 for four hashes it does not hold (SP-01).
+- No other file changed: all 21 files checked (section 4) equal their recorded SHA-256 values.
+- HEAD a4247239ac656661fbe4747430447d2500540320, as the brief states.
+
+========================================================================================================================
+2. SO-01 RESULT
+========================================================================================================================
+SO-01: RESOLVED (applied word for word; no error introduced).
+- Word-for-word: addendum lines 18 to 21 (new), joined with the two-space continuation indents removed, equal
+  ChatGPT's section 1 quoted text (its line 9, outer quotation marks excluded) exactly, character for character,
+  including the leading "- ", the straight quotes and apostrophes. The only difference is line wrapping: greedy at 120
+  characters (line lengths 116, 120, 111, 12; adding the next word to lines 18, 19, 20 would give 122, 126, 122).
+- Nothing else changed: old lines 1 to 17 = new lines 1 to 17; old lines 21 to 27 = new lines 22 to 28 (difflib: one
+  opcode, replace old 18-20 by new 18-21). Format of the new file: ASCII only, LF only, one final LF, no CR, no tab,
+  no trailing whitespace, maximum line 120.
+- Claims in the changed lines, each against the cited records:
+  | Claim | Audit s.8 (AUDIT_D011_FINDINGS.txt l.268-272) | Cover note s.2 (l.20-25) | Proposal s.C (l.193-217) | Result |
+  |---|---|---|---|---|
+  | the auditor's "git ls-files --with-tree=a4247239" | "git ls-files --with-tree=a4247239" | "git ls-files --with-tree=a4247239 2>/dev/null / head -0" | "git ls-files --with-tree=a4247239" | TRUE |
+  | run without a pathspec | "with no pathspec" | "(no pathspec: ...)" | "with no pathspec" | TRUE |
+  | enumerates the whole index | "it enumerates the index" | "git enumerates the whole index" | "it enumerates the whole index" | TRUE |
+  | whose paths include both protected folders | "whose paths include the protected folders" | "protected-folder paths included" | "protected-folder paths included"; l.216 "the protected folders' path names" | TRUE (see OB-3) |
+  | path names may therefore have been enumerated internally, as ChatGPT's section C puts it | - | - | - | TRUE: ChatGPT's C (l.57): "path names may have been enumerated internally by the whole-index command" |
+  | Nothing shows otherwise. | "nothing was printed" (output, not enumeration) | "though nothing is printed" | l.216-217: "is not shown by any output and is not disputed" | TRUE: no cited record or ChatGPT's C says otherwise |
+  (In the cover-note cell "/" stands for the pipe character of the original.)
+- The cited section numbers are right: the audit's section 8 is "AUDITOR'S OWN DEVIATIONS (DISCLOSED)"; the cover
+  note's section 2 "THE AUDITOR'S DEVIATION"; the proposal's section C "THE AUDITOR'S PROCESS DEVIATION (PRESERVED)
+  AND THE OUTPUT DISCREPANCY".
+- ChatGPT's four conditions (its section 1) hold in the new text: whole-index enumeration and the protected folders
+  stated; the conclusion kept as "may ... have been enumerated internally"; no claim that protected-folder content
+  was displayed or read (line 22 of the addendum, unchanged, says none appears in the shown output); the deviation
+  stays disclosed (line 2 and lines 27 to 28, unchanged).
+
+========================================================================================================================
+3. ACTIVITY REPORT (sm/out/D011_SM_CORRECTION_ACTIVITY_REPORT_02-NOV-2026.txt)
+========================================================================================================================
+- Before (sm/r2/): 105 lines, 9,389 bytes, SHA-256 e2e794b51f0cb493c87f146cee29947a20d6780ba51ab8193bec3e0c24447bee.
+  After (sm/out/): 121 lines, 10,836 bytes, SHA-256 46d72c836b1972f5c8092828f4ddfa94b4a73db588474338a177dfa89b340e6a.
+- Sections 1 to 4 unchanged: the after file begins with the before file byte for byte; the change is 16 appended
+  lines (a blank line and section 5). ASCII, LF only, no tab, no trailing whitespace, maximum line 120.
+- Section 5 claims checked:
+  | Claim | Check | Result |
+  |---|---|---|
+  | before 27 lines; 2,327 bytes; e17b6786... ("section 2 above") | r2 addendum recomputed; section 2 line 73 holds that value | TRUE |
+  | after 28 lines; 2,420 bytes; 29aea640...d9ff4 | recomputed | TRUE |
+  | diff SHA-256 376715039a9e...cd40 | recomputed | TRUE |
+  | checker's wording, word for word, replaces section 2 first bullet (lines 18 to 20); wrapped at 120 | section 2 above; REVIEW_SN_CHECK_FINDINGS.txt l.141-144 holds the same wording (from "enumerates the whole index,") | TRUE |
+  | No other line of the addendum changed | section 2 above | TRUE |
+  | relayed by Rama at 11:06 IST; update at 11:07 IST | file times: the SO-01 instruction 11:06:20 IST, addendum 11:06:44 IST, activity report 11:07:01 IST | CONSISTENT (the relay itself is not verifiable from files) |
+  | sections 1 to 4 "as sent at 10:58 IST" | r2 copy byte-equal to the prefix; its file time 10:59:31 IST | CONSISTENT (what was sent is not verifiable here) |
+  | the other files "keep the SHA-256 values of section 2" | all unchanged (section 4 below); but see SP-01 | TRUE in fact; citation wrong for 4 files |
+- Both diffs reproduce: the hunk bodies of D011_SO01_ADDENDUM_DIFF_02-NOV-2026.txt and
+  D011_SO01_ACTIVITY_REPORT_DIFF_02-NOV-2026.txt equal a difflib unified diff (3 lines of context) of the r2 and new
+  files; their "index" lines equal the git blob SHA-1 of the files (cad4d5c..0f5e3b8; 989c578..224d4c7), computed in
+  python, not by git.
+
+========================================================================================================================
+4. FILE-BY-FILE HASH RESULTS (SHA-256 RECOMPUTED; ALL MATCH)
+========================================================================================================================
+D-011 files (staging/), final values of section 2, with lines and bytes:
+  D-011_manual.md               e00145b6c315bc82999c32e708f650b346567968c61da09dc7b5c8f5d48a8873  406  77,839  MATCH
+  D-011_review_notes.md         e4f225a0a04dc96d82f2c5e7f8db94459ce936318e35c5e3eb259a788358edfd  165  39,966  MATCH
+  D-011_manual_manifest.md      97d9d7911250ceeed435b0ed829644c5f74479cea5e3cf60910d1f25ecd7fb13   95  16,293  MATCH
+Generator inputs (srcs/d-011/) and generator (scratchpad/settle/):
+  D-011_manual_sources.txt      295425f786adb8e2b133739e48000583b4ebac6dea3690951a405bc0f854ff80   33   3,385  MATCH
+  D-011_PROCESS_LINE.txt        6206b17e5ce2c565e0f2fad1215e771f6e98c84f969556718020ad8a91917d8a    1   3,312  MATCH
+  make_d011_manifest.py         fb7d2a3ea2888c730822cf991334c4b59b04621280e6fad152dc6522cc929362  334  19,710  MATCH
+Diffs of section 2 (sm/out/):
+  D011_SM_CORRECTIONS_DIFF_02-NOV-2026.txt       437b768d3ce644c4f3c4d73f62441ace821bd4176bfc3e2ad5235441e052c79e  165  51,815  MATCH
+  D011_SM_CORRECTIONS_WORD_DIFF_02-NOV-2026.txt  31132e11bf5eca1ace66b74211e43abcd74666a14692ae2ad50c6452b9e84228  MATCH
+Other files of this round (sm/ and sm/out/), the addendum excepted:
+  SM01_CHATGPT_ANSWER_AS_RECEIVED.txt     1b79b47afd5b0d8c69ac794bc14ce9d299b117c9696d8475d3ad3d7342f3c1eb  MATCH
+  SM_REVIEW_BRIEF.txt                     616888309dba91e3dd43c1e4bc25c04065d464c0099a85f86bf5176e12815015  MATCH
+  SM_REVIEW_PROMPT_AS_SENT.txt            e4164da1eda8bcaec4b3f0a3ed543e9010fffdcec287542745545c75836a494f  MATCH
+  REVIEW_SM_CORRECTIONS_FINDINGS.txt      a5bdad6fd6471b3d729d5511447528d6f5516f846dd7fbe3b11746877c3cac56  MATCH
+  SN_CHECK_BRIEF.txt                      e079608857e5546247a02099e326f478d3225e1d5c265ad1284cd3081cf0d765  MATCH
+  SN_CHECK_PROMPT_AS_SENT.txt             25b7b476a5138cfb44c73a597d6c3616f7d2429d9085ae44bf5f98aa365db474  MATCH
+  REVIEW_SN_CHECK_FINDINGS.txt            3c9405b75214ea3754c6d0f24fc048c627787f5da1edbaa70dce3ea8e3e00ba7  MATCH
+  D011_SN_FIX_WORD_DIFF_02-NOV-2026.txt   c44a7532ffa09ba35294426c961a70c7d9412d237ab96a4d9c55d517cf06a428  MATCH
+  D011_SM_REVIEWS_02-NOV-2026.txt         1f2b81baeccce12ae2063924aaa3391f0daedbed0f3e0332c893f0675dd883fc  MATCH
+Earlier records named in the brief:
+  AUDIT_D011_FINDINGS.txt (audit/)        60d23598231e89bde059a81a2460efd95be8b883024024de149f6e94b6a5639e  331  33,209  MATCH
+  D011_AUDIT_COVER_NOTE_01-NOV-2026.txt   4c8a3862c4246e12b240fcaa396457a4d89d6291bff61ac75579c95d9df51c49  MATCH (brief gives the
+                                          prefix 4c8a3862c4246e12 only; full value as computed)
+  D011_SM01_SM10_CORRECTION_PROPOSAL_01-NOV-2026.txt (proposal/)
+                                          35aa2958f9eb13f02023f46d0484bb3253b4488fa658e831e1a597cbc54f4cec  MATCH
+  D011_AUDIT_DEVIATION_TRANSCRIPT_EXCERPT_01-NOV-2026.txt (proposal/)
+                                          00cf0b53b441372e7021f2f35f27bf7853d24e0b9aab762de14d4d3cb186d260  MATCH
+The addendum (for completeness): r2 copy e17b6786... (27 lines, 2,327 bytes) MATCH "before"; current 29aea640...
+  (28 lines, 2,420 bytes) MATCH "after".
+File times (supporting, not proof): in staging/, srcs/d-011/, audit/, proposal/, sm/ and sm/out/, and for the
+  generator, every file's modification time is before 10:59:31 IST except the addendum (11:06:44), the activity
+  report and the two SO-01 diffs (11:07:01) and the brief (11:07:20); sm/orig/ and sm/r1/ files are older still.
+
+========================================================================================================================
+5. FINDINGS
+========================================================================================================================
+SP-01 | LOW | activity report, section 5, third bullet (lines 118 to 120) | citation of values not in section 2
+  Text: "the audit, the cover note, the proposal, the transcript excerpt and the review records keep the SHA-256
+  values of section 2."
+  Evidence: section 2 (lines 48 to 84) gives no SHA-256 for the audit, the cover note, the proposal or the transcript
+  excerpt; a search of the whole report for 60d23598, 4c8a3862, 35aa2958 and 00cf0b53 finds none. The files are in
+  fact unchanged (section 4 above, against the brief's values); only the reference is wrong for those four.
+  Correction (for Claude and ChatGPT; e.g.): "... keep the SHA-256 values of section 2 (the D-011 files, the
+  generator and its inputs, the review records) and, for the audit, the cover note, the proposal and the transcript
+  excerpt, 60d23598..., 4c8a3862..., 35aa2958... and 00cf0b53... respectively."
+
+Observations (no severity; nothing to decide here):
+- OB-1: the addendum carries no in-file mark of its 11:06 change (line 3 still reads "Written 02-Nov-2026 by Claude,
+  at 10:37 IST"); the change is recorded only in the activity report's section 5 and the diff. This follows
+  ChatGPT's "Make only the SO-01 wording correction"; whether a revision line is wanted is ChatGPT's call.
+- OB-2: the pre-change addendum value e17b6786... still stands unlabelled in the activity report's section 2 (line
+  73), and in REVIEW_SN_CHECK_FINDINGS.txt (line 11) and D011_SM_REVIEWS_02-NOV-2026.txt (line 411). Section 5 labels
+  it "before" and gives the new value; the review records are historical and correctly not edited (ChatGPT's section
+  3). A reader of section 2 alone sees the old value.
+- OB-3: "both protected folders" rests on the three records' statements ("the protected folders",
+  "protected-folder paths"); the audit's command 19 carries exactly two excludes, so "both" is consistent. This check
+  did not, and under its limits may not, inspect the index itself.
+- OB-4: "relayed by Rama at 11:06 IST" and "as sent at 10:58 IST" are consistent with the file times above but not
+  verifiable from files.
+
+========================================================================================================================
+6. COMMANDS RUN (READ-ONLY EXCEPT THIS REPORT)
+========================================================================================================================
+Reads with the file-reading tool: SO01_CHECK_BRIEF.txt; ChatGPT's D011_SO01_Final_Correction_Instructions.txt;
+  the addendum (sm/ and sm/r2/); D011_SO01_ADDENDUM_DIFF_02-NOV-2026.txt; AUDIT_D011_FINDINGS.txt;
+  D011_AUDIT_COVER_NOTE_01-NOV-2026.txt; D011_SM01_SM10_CORRECTION_PROPOSAL_01-NOV-2026.txt; ChatGPT's
+  D011_Claude_Review_Instructions.txt; the activity report (sm/out/); D011_SO01_ACTIVITY_REPORT_DIFF_02-NOV-2026.txt.
+1. current-time service (11:08:19 IST; again 11:10:39 IST before writing)
+2. ls -la --time-style=full-iso of sm/, sm/out/, sm/r2/, staging/, srcs/d-011/, audit/, proposal/ and the generator
+3. git -C /home/claude/ramakrishnan031-ctrl/trading-system-v2 rev-parse HEAD
+4. python3 -I (inline): SHA-256, line and byte counts of the 24 files in section 4 against the recorded values
+5. python3 -I (inline): instruction line 9 against new addendum lines 18 to 21; old/new line comparison (difflib);
+   format and wrap checks; git blob SHA-1 of the four before/after files; diff reconstruction; activity report prefix
+   and format checks
+6. python3 -I (inline): diff hunk bodies re-compared (step 5's first comparison counted a trailing empty string)
+7. content search (search tool): the activity report for 60d23598|4c8a3862|35aa2958|00cf0b53; sm/ for e17b6786;
+   REVIEW_SN_CHECK_FINDINGS.txt for "whose paths include both protected" (lines 140 to 145 shown)
+8. stat -c '%y %s %n' of the two ChatGPT instruction files
+9. ls -la --time-style=full-iso of sm/orig/ and sm/r1/
+10. write of this report; ASCII check of this report (python3 -I)
+
+========================================================================================================================
+7. DEVIATIONS OF MY OWN
+========================================================================================================================
+- None from the hard limits: no file written except this report; no scratch file; no script of Claude's run (the
+  generator was only read for its hash); the one repository command was git rev-parse HEAD; nothing under
+  docs/inputs/legacy_baseline/ or docs/legacy_system_audit/ opened, listed or read; no web.
+- Minor reads beyond the files the brief names, all read-only and outside the repository: lines 140 to 145 of
+  REVIEW_SN_CHECK_FINDINGS.txt (to confirm "the checker's wording"), file times of the two ChatGPT instructions, and
+  listings of sm/orig/ and sm/r1/ (file times only).
