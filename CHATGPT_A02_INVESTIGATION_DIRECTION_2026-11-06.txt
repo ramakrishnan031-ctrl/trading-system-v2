@@ -1,0 +1,216 @@
+A02 INVESTIGATION DIRECTION — CONFIGURATION AND EFFECTIVE SETTINGS
+Project: Trading_System-v2_redesign / algocore_system
+Date: 06-Nov-2026
+Issued by: ChatGPT
+For: Claude
+Status: AUTHORISED INVESTIGATION DIRECTION — Phase 1, topic A02 only
+
+1. GOVERNING POSITION AND START GATE
+
+A01 is CLOSED. ChatGPT verified the A01 approval commit b25c7e1 and the subsequent Topic Completion Register closure commit 777555a8ecee413ce1a5e90120cb33de8e66efdc on GitHub main. A01's 25 open issues remain visible and are carried forward. A02 is the next topic in the approved Master System Investigation Index.
+
+Phase 1 was authorised at the Pre-Phase → Phase 1 gate (D-27). Rama has now instructed ChatGPT to proceed, and this document is ChatGPT's A02 investigation direction under Document 04, section 4, step 1.
+
+This authorises ONLY the A02 Phase 1 investigation. It does not authorise A03, any other topic, Phase 2, V2 design, implementation, changes to the legacy system, or changes to the foundation documents.
+
+2. MANDATORY DOCUMENTS AND DECISIONS TO REVIEW
+
+Before fieldwork, review the current versions on algocore_system/main of:
+- Document 04 — Topic Investigation Workflow & AI Continuity Protocol, especially sections 2–12.
+- Document 02 — Project Phases & Master Workflow, especially sections 3 and 6.
+- Document 05 — Project Governance & Decision Control, especially sections 1–3, 5–6, 8, 10 and 11.
+- Document 06 — Technical Environment, Tools & Research Sources, especially sections 2–5.
+- Document 07 — Repository, Documentation & Record Management, especially sections 2–7.
+- Document 08 — Legacy Study & Audit Methodology, especially sections 3–11.
+- Document 10 — Master Project Index & Control Registers, especially sections 1, 3–8 and 10–11.
+- The approved Master System Investigation Index, especially rules 1–12, A02 in section 3, the A02 position in section 2, coverage item 17 in section 5, and Appendix A.
+- Decision Register: D-06, D-10, D-11, D-12, D-13, D-16, D-17, D-21, D-23, D-24, D-25, D-27, D-28 and D-30.
+- A01 RECONCILED TOPIC RECORD, especially section 15 (cross-topic handoffs), sections 10–11 and Part D; A01 AUDIT section 8; current Open Issues Register; Audit Findings Register; Topic Completion Register.
+
+Use GitHub main as source of truth. Confirm the current main HEAD and verify A01 remains CLOSED before starting. Do not rely on chat history as a substitute for these records.
+
+3. A02 IDENTITY, ORDER AND SCOPE
+
+Topic ID: A02
+Approved topic title: Configuration and effective settings
+Index order: P1, immediately after A01.
+Study prerequisites: None in the approved index. The overall topic sequence still requires A01 to be complete first; it is now CLOSED.
+Document 08 coverage: item 17 (Configuration), with supporting evidence for coverage items 5 to 14 and 18 where configuration is consumed by those topics.
+
+Approved scope:
+- Configuration sources and files.
+- Configuration schemas and validation.
+- Defaults, fallbacks and precedence.
+- Environment-variable names and their use.
+- Strategy configuration loading.
+- Configuration snapshots and change detection.
+- The effective settings produced by the code for Live behaviour.
+- Every code path that reads, sets, overrides, ignores, caches, transforms, validates or consumes an A02-owned setting, including cross-topic consumers.
+
+A02 owns the configuration source/intended side and the listed A02 components. Other topics own their business logic and must later trace their own actual consumption of settings. A02 must map the consumers and handoffs sufficiently to identify whether settings are interpreted consistently; it must not duplicate the full investigations owned by later topics.
+
+4. APPROVED PATH BOUNDARY
+
+Investigate these A02-owned paths at the fixed legacy baseline:
+- config/ — all YAML and CSV files, EXCEPT config/cron_registry.yaml, which belongs to A16.
+- core/config_loader.py
+- core/config_validator.py
+- core/config_auditor.py
+- core/config_snapshotter.py
+- strategies/schema.py
+- strategies/loader.py
+- .env.example — key names only; never expose or reproduce values.
+- scripts/revert_temp_config.py
+
+The Master System Investigation Index Appendix A assigns scripts/revert_temp_config.py to A02. Do not expand ownership of config/cron_registry.yaml or scheduler declarations; cross-reference A16.
+
+Record the exact path inventory and identify any discrepancy between the approved index and the actual tracked tree. Do not silently change the index or topic scope. Raise a material ownership or scope conflict to ChatGPT and Rama.
+
+5. FIXED BASELINE AND ACCESS RESTRICTIONS
+
+Study repository: trading-system-prod-snapshot
+Branch: main
+Fixed baseline commit (D-21): 970aabf3c78d777d9d34549e021f7c8e756c7bdb
+
+Use Claude's local read-only clone. Confirm the exact HEAD and clean working tree. All code citations must be to this baseline. Note later changes only as post-baseline history where relevant; do not treat later code as production behaviour.
+
+Do not:
+- Run the legacy system, tests, scripts, migrations, configuration tools or services.
+- Connect to a broker, database, VM or production environment.
+- Modify, repair, tune, configure, or write anything into the legacy repository or its clone.
+- Change any file in algocore_system during fieldwork unless the applicable working-record procedure permits it; do not commit or push any A02 document before ChatGPT's review where required by the workflow.
+- Inspect or use any repository other than algocore_system and trading-system-prod-snapshot. In particular, trading-system-v2 and trading-system-sbx-snapshot are ignored (D-12).
+- Reproduce credentials, secrets, tokens, TOTP values, private keys, account identifiers or secret values in reports, evidence, commands or logs.
+
+The five existing legacy technical records are admitted historical sources and remain unchanged. Check their relevant configuration statements against the baseline code; do not treat them as proof of effective runtime settings.
+
+6. A01 HANDOFFS THAT A02 MUST EXAMINE
+
+A01's approved RECONCILED TOPIC RECORD section 15 hands the following findings to A02:
+C7d, C10a, C10b, C12, C35, S-11, S-24, W-17, M-19, M-20 and M-24.
+
+These are mandatory A02 investigation inputs, not pre-decided conclusions about A02. Retrieve each complete finding from the A01 AUDIT and Audit Findings Register, identify exactly what configuration-side evidence and code path A02 must establish, and cross-reference the finding ID in A02. Preserve the owner boundaries and do not duplicate findings assigned to other topics.
+
+A01's Group H treatment also includes the Phase 2 input that no setting should be silently ignored or overridden, and credentials should be loaded at a controlled start rather than at import. The recorded treatment is Phase 2 input, not a V2 design decision. A02 must establish legacy facts and code behaviour only; it must not convert this treatment into a new-system requirement or design.
+
+7. INVESTIGATION QUESTIONS — STUDY
+
+Claude: trace the source and actual implementation; answer each question with evidence, or explicitly mark UNKNOWN / NOT ESTABLISHED.
+
+A. Configuration inventory and provenance
+1. What exact YAML and CSV files exist under config/ at the baseline, and which are A02-owned?
+2. What is each file's purpose according to its own content, comments, docstrings or other intent sources?
+3. Which files are required, optional, generated, historical, examples or apparently unused? Do not infer use from presence or filename alone.
+4. Are there configuration sources outside config/ (for example environment variables, .env.example, command-line paths, constants or database-backed settings) that feed A02's configuration pipeline? Map them without expanding ownership of other topics.
+5. Are any expected files absent from the baseline? Distinguish absence from proof of deletion or runtime non-use.
+
+B. Parsing, schemas and validation
+6. For each file format, identify the parser, schema, validation functions, validation order and caller.
+7. What types, allowed values, ranges, units, required keys, optional keys and cross-field constraints are actually enforced?
+8. Which values receive defaults, coercion, normalisation, fallback or silent substitution? Identify the exact source and precedence.
+9. What happens for missing files, missing keys, unknown keys, malformed YAML/CSV, wrong types, invalid encodings, duplicate entries, empty values and partially valid configuration?
+10. Are validation rules consistent between schemas, validators, loaders, auditors and actual consumers? Identify checks that are missing, duplicated, dead or contradicted.
+
+C. Loading and effective settings
+11. Trace the complete configuration load path from the entry point to the returned configuration objects, including CLI-supplied config paths and environment-variable names.
+12. Establish precedence among file values, environment variables, command-line options, defaults, constants, database state and code overrides wherever supported by evidence.
+13. Which settings are read at import time, process start, subsystem construction, per-session, per-signal or later? Identify caching, snapshots, reloads and stale-value risks.
+14. Does the code use the configured value, transform it, ignore it, override it or use a different hardcoded value? Search all reads and writes by key/name; do not stop at the obvious loader.
+15. Are settings read differently by different modules or processes? Map the consumer paths and cross-topic owner.
+16. Which configuration values are genuinely effective in Live paths? Keep configured value and code-effective value distinct. Do not claim a runtime value was in force on the terminated VM.
+
+D. Strategy configuration
+17. Trace strategies/schema.py and strategies/loader.py: discovery, file selection, parsing, schema validation, enabled/disabled state, defaults, error handling, caching and returned objects.
+18. Establish how strategy YAML values reach the strategy and screening consumers. A07 owns strategy selection, screening and trade-decision logic; A02 records only the configuration loading and handoff boundary.
+19. Check whether all strategy files follow the schema, whether unknown or extra keys are accepted, and whether validation differs across strategy types or consumers.
+
+E. Snapshots, hashes and configuration change handling
+20. Trace core/config_snapshotter.py and every caller/consumer. What is included or excluded in the snapshot and why?
+21. Establish how hashes are generated, stored, compared and interpreted; identify canonicalisation, ordering, encoding and path rules.
+22. Trace core/config_auditor.py and all callers. Does it inspect the same source and effective settings as the loader? What does it report, and what does it fail to detect?
+23. Establish behaviour for added, changed, removed, missing, unreadable and invalid configuration files, including failed starts and repeated starts.
+24. Cross-reference A01 finding S-11 and A01's treatment of configuration-change detection. Do not re-decide Rama's Phase 2 treatment.
+
+F. Temporary configuration mechanism
+25. Trace scripts/revert_temp_config.py statically. What markers and file patterns does it recognise, what does it change, what confirmation or safeguards exist, and what are its failure/partial-write paths?
+26. Establish whether the script is declared or invoked anywhere in the baseline. A declaration does not prove execution. Do not run it.
+
+G. Security and environment-variable handling
+27. Record environment-variable names, the code paths that read them, whether they are required/optional and their fallback behaviour. Never record their values.
+28. Identify where credential-related keys are declared, loaded and consumed, by type and location category only. Do not reproduce values or infer that a key is a valid secret.
+29. Check whether configuration snapshots, hashes, diffs, exceptions, logs or reports could expose secret values or sensitive configuration content. Describe the exposure path without copying any sensitive value.
+30. Identify configuration files or fields that appear to contain sensitive material. Do not quote values; flag the path and field/key name only.
+
+H. Cross-topic consumers and completeness
+31. Build a key-to-consumer map for all A02-owned settings: source file/key → loader/validator → transformation/default/override → consumer path/function → downstream topic.
+32. Search codebase-wide for reads, writes and aliases of A02-owned keys, including direct YAML/CSV reads that bypass the central loader.
+33. Identify duplicate settings, competing sources of truth, inconsistent units/time bases, stale names, unused definitions and settings with no clear owner.
+34. Cross-reference A01 handoffs C7d, C10a, C10b, C12, C35, S-11, S-24, W-17, M-19, M-20 and M-24. For each, state what A02 confirms, rejects or cannot establish, with exact evidence.
+35. Identify further cross-topic handoffs discovered during A02. Assign ownership according to the approved index; do not reassign topics yourself.
+
+8. INVESTIGATION QUESTIONS — AUDIT
+
+After the STUDY, audit the entire A02 scope against intended behaviour, not merely the loader or schema. Apply Document 04 section 5 and Document 08 section 6.
+
+For every setting and configuration flow:
+- Gather every admitted intent source: YAML/CSV content, schemas, comments, docstrings, variable/function names, logs, alerts, manuals, historical technical records, commit messages and any Rama statement already recorded. Keep conflicting sources separate.
+- Find every place the setting is read, set, defaulted, transformed, validated, cached, overridden, ignored or consumed. Search by key/name across the full repository.
+- Trace normal, missing-file, invalid-file, partial-file, fallback, error, retry, restart, Live/paper-shared-code and snapshot/diff branches as applicable. Paper-only workflows remain out of scope; inspect shared code only where needed to establish Live behaviour.
+- Compare intended and actual behaviour, including precedence, units, types, defaults, hardcoded values, rounding, encoding, path handling, state changes and error propagation.
+- Record matches as well as issues. Do not limit the audit to defects.
+- For every result, record the fields required by Document 04 section 5.4 and Document 10 section 7.
+- Do not silently repair or correct the legacy implementation in the documents.
+
+9. REQUIRED EVIDENCE AND DELIVERABLES
+
+Prepare one A02 topic folder under:
+doc/02_PHASE1_LEGACY_STUDY_AND_AUDIT/TOPIC_WISE_DOCUMENTATION/A02_CONFIGURATION_AND_EFFECTIVE_SETTINGS/
+
+This folder name follows D-28. Use the D-25 document names and an evidence/ subfolder.
+
+Prepare:
+1. A02_STUDY_2026-11-06.md
+2. A02_AUDIT_2026-11-06.md
+3. evidence/ files that support the study and audit, each dated and cited from the topic documents. Evidence files should be source inventories, crosswalks, extracts or focused technical evidence—not competing narrative reports.
+
+The STUDY must describe actual configuration implementation and flows, including a complete path/key inventory and key-to-consumer map. The AUDIT must contain the full actual-versus-intended audit table, matches, issues and UNKNOWNs. Both must cite the fixed baseline commit and exact paths, functions/classes and line references.
+
+Do not prepare the RECONCILED TOPIC RECORD yet. That follows only after ChatGPT has reviewed the STUDY and AUDIT, the issue discussion with Rama has taken place, and the workflow reaches Document 04 section 4 step 10.
+
+Do not update the Topic Completion Register to imply approval or completion. Open A02 as IN PROGRESS in the register according to Document 05 section 11.1 and Document 10 section 3. Keep A01 CLOSED. Update the Audit Findings Register for A02 findings using all required fields in Document 10 section 7. Add only genuine A02 issues needing Rama's decision to the Open Issues Register, with the required fields; do not create questions merely to fill a quota. Cross-reference existing A01 handoffs rather than duplicating them. Preserve existing entries and revision history.
+
+10. FACT DISCIPLINE AND UNKNOWN LIMITS
+
+Use the classifications from Document 04 section 6:
+FACT; UNKNOWN / NOT ESTABLISHED; INTERPRETATION; HISTORICAL; KNOWN DEFECT; OPEN QUESTION.
+
+Important:
+- The legacy VMs were terminated; there is no known surviving database, logs or crontab. Code/configuration establishes repository content and implementation, not what was actually in force or executed at runtime.
+- A configuration value in a YAML file is a configured value at the baseline, not proof it was effective in production.
+- A schema or comment is an intent source, not proof that code enforces it.
+- A scheduled invocation, script, loader or config file existing does not prove it ran.
+- Distinguish missing evidence from evidence of absence.
+- Do not silently choose between conflicting intent sources.
+- Do not turn Rama's Phase 2 treatment inputs into V2 design or requirements.
+
+11. REPORTING AND REVIEW HANDOFF
+
+Before any working commit, follow Document 07 section 6 and run the current validator against the complete tree to be committed. Working records and DRAFT topic materials may be committed under the working-commit rule, but every commit must be reported promptly to ChatGPT with the SHA, parent, files changed and validator result. Do not mark documents APPROVED. Do not commit the foundation documents or validator as part of A02 work.
+
+When the STUDY and AUDIT are ready, report:
+- Exact baseline commit and local clone status.
+- Complete A02-owned file inventory and any scope discrepancies.
+- All evidence files and their purpose.
+- Study and audit findings counts, with classifications.
+- Every A01 handoff disposition and cross-topic handoff.
+- All proposed Audit Findings Register and Open Issues Register changes.
+- All UNKNOWN / NOT ESTABLISHED items.
+- Validator result and exact commit(s), if any.
+
+Then share the complete A02 package for ChatGPT's independent review. Do not begin A03 until A02 has completed the workflow, ChatGPT has reviewed the complete package, and Rama has approved it under D-23.
+
+12. NEXT ACTION
+
+Start A02 only. First confirm the governing documents, current GitHub main HEAD and A01 CLOSED status. Then perform the read-only repository fieldwork and prepare the STUDY and AUDIT with evidence. Ask ChatGPT if an ambiguity changes the approved scope or ownership; do not resolve material ambiguity yourself.
+
+END OF A02 INVESTIGATION DIRECTION
